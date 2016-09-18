@@ -18,6 +18,10 @@ import sys
 import tempfile
 import unittest
 
+from unittest import main
+
+__version__ = '0.0.2'
+
 # DEFAULT_FAIL_DIR is the default location for writing failing output
 # if calls to check_string_against_file fail.
 #
@@ -27,20 +31,22 @@ import unittest
 #    if provided.
 #
 # 2. There is a class method, set_defaults, which can be called
-#    (with WritableTestCase.set_defaults(failDir=...) to override
+#    (with WritableTestCase.set_defaults(faildir=...) to override
 #    this variable.
 #
 # 3. Failing that, as below, if the environment variable TDDA_FAIL_DIR
 #    is set to a location, that will be used.
 #
-# 4. Finally, it defaults to /tmp, c:\temp or whatever, as appropriate
+# 4. Finally, it defaults to /tmp, c:\temp or whatever tempfile.gettempdir()
+#    returns, as appropriate.
 #
+
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
 def check_strings(actual, expected, actual_path, expected_path,
                   ignore_patterns, lstrip=False, rstrip=False):
     """
-    Compare two strings (actual and expected), line-by-line.
+    Compare two lists of strings (actual and expected), one-by-one.
 
     ignore_ patterns    is an optional list of substrings; lines containing
                         these substrings will be ignored in the comparison.
@@ -54,11 +60,11 @@ def check_strings(actual, expected, actual_path, expected_path,
 
     lstrip              if set to true, both strings are left stripped before
                         the comparison is carried out.
-                        Note: the stripping is not on a per-line basis.
+                        Note: the stripping on a per-line basis.
 
     rstrip              if set to true, both strings are right stripped before
                         the comparison is carried out.
-                        Note: the stripping is not on a per-line basis.
+                        Note: the stripping on a per-line basis.
 
     Returns 1 if there were any differences, and 0 otherwise.
     """
@@ -273,6 +279,12 @@ class WritableTestCase(unittest.TestCase):
 
         filename = os.path.split(expected_path)[1]
         actual_path = os.path.join(faildir or self.faildir, filename)
+        try:
+            with open(actual_path, 'w') as f:
+                f.write(actualString)
+        except IOError:
+            print('Failed to write actual string to %s.' % actual_path,
+                  file=sys.stderr)
         failures = check_strings(actualString.splitlines(),
                                  expectedString.splitlines(),
                                  actual_path, expected_path,
