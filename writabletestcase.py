@@ -20,7 +20,7 @@ import unittest
 
 from unittest import main
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
 # if calls to check_string_against_file fail.
