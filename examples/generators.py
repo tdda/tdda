@@ -50,7 +50,7 @@ div {padding: 12px 0 12px 0;}
   </div>
   %s
   <div>
-    It's not terribly exciting.
+    It is not terribly exciting.
     But it will serve to illustrate writabletestcase.WritableTestCase.
   </div>
 </body>
