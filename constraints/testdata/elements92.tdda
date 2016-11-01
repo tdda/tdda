@@ -1,0 +1,119 @@
+{
+    "fields": {
+        "Z": {
+            "type": "int",
+            "min": 1,
+            "max": 92,
+            "sign": "positive",
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "Name": {
+            "type": "string",
+            "min_length": 3,
+            "max_length": 12,
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "Symbol": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 2,
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "Period": {
+            "type": "int",
+            "min": 1,
+            "max": 7,
+            "sign": "positive",
+            "max_nulls": 0
+        },
+        "Group": {
+            "type": "int",
+            "min": 1,
+            "max": 18,
+            "sign": "positive"
+        },
+        "ChemicalSeries": {
+            "type": "string",
+            "min_length": 7,
+            "max_length": 20,
+            "max_nulls": 0,
+            "allowed_values": [
+                "Actinoid",
+                "Alkali metal",
+                "Alkaline earth metal",
+                "Halogen",
+                "Lanthanoid",
+                "Metalloid",
+                "Noble gas",
+                "Nonmetal",
+                "Poor metal",
+                "Transition metal"
+            ]
+        },
+        "AtomicWeight": {
+            "type": "real",
+            "min": 1.007946,
+            "max": 238.028914,
+            "sign": "positive",
+            "max_nulls": 0
+        },
+        "Etymology": {
+            "type": "string",
+            "min_length": 4,
+            "max_length": 39,
+            "max_nulls": 0
+        },
+        "RelativeAtomicMass": {
+            "type": "real",
+            "min": 1.007946,
+            "max": 238.028914,
+            "sign": "positive",
+            "max_nulls": 0
+        },
+        "MeltingPointC": {
+            "type": "real",
+            "min": -258.975,
+            "max": 3675.0,
+            "max_nulls": 1
+        },
+        "MeltingPointKelvin": {
+            "type": "real",
+            "min": 14.2,
+            "max": 3948.0,
+            "sign": "positive",
+            "max_nulls": 1
+        },
+        "BoilingPointC": {
+            "type": "real",
+            "min": -268.93,
+            "max": 5596.0,
+            "max_nulls": 0
+        },
+        "BoilingPointF": {
+            "type": "real",
+            "min": -452.07,
+            "max": 10105.0,
+            "max_nulls": 0
+        },
+        "Density": {
+            "type": "real",
+            "min": 8.9e-05,
+            "max": 22.610001,
+            "sign": "positive",
+            "max_nulls": 0
+        },
+        "Description": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 83
+        },
+        "Colour": {
+            "type": "string",
+            "min_length": 4,
+            "max_length": 80
+        }
+    }
+}
