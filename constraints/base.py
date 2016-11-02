@@ -574,7 +574,8 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
                             The Pandas code passes in a PandasVerification
                             class, which as a to_frame() method for turning
                             the result of the verification into a Pandas
-                            DataFrame.
+                            DataFrame. If not provided, Verification
+                            is used.
 
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.

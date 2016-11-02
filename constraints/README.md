@@ -26,6 +26,10 @@ For a fuller example, see:
 
     tdda/constraints/examples/elements92.tdda
 
+For a description of the `.tdda` file format, see:
+
+    tdda/constraints/examples/tdda_json_file_format.md
+
 Run tests with
 
     python testbase.py
