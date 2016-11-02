@@ -1,0 +1,23 @@
+{
+    "fields": {
+        "a": {
+            "type": "int", 
+            "min": 1, 
+            "max": 9, 
+            "sign": "positive", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "b": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 3, 
+            "max_nulls": 1, 
+            "no_duplicates": true, 
+            "allowed_values": [
+                "one", 
+                "two"
+            ]
+        }
+    }
+}
