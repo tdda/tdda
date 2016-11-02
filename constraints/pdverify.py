@@ -42,7 +42,7 @@ from tdda.constraints.pdconstraints import PandasConstraintVerifier, verify_df
 
 def verify_feather_df(df_path, constraints_path, **kwargs):
     df = load_df(df_path)
-    print(pdverify(df, constraints_path, **kwargs))
+    print(verify_df(df, constraints_path, **kwargs))
 
 
 def load_df(path):

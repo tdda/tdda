@@ -62,6 +62,10 @@ class TDDAObject(OrderedDict):
 
 
 class DatasetConstraints(object):
+    """
+    Container for constraints pertaining to a dataset.
+    Currently only supports per-field constraints.
+    """
     def __init__(self, per_field_constraints=None, loadpath=None):
         if loadpath:
             self.fields = Fields()
@@ -89,6 +93,18 @@ class DatasetConstraints(object):
         self.initialize_from_dict(sanitize(json.loads(text)))
 
     def initialize_from_dict(self, in_constraints):
+        """
+        Initializes this object from a dictionary in_constraints.
+        Currently, the only key used from in_constraints is fields.
+
+        The value of in_constraints['fields'] is expected to be
+        a dictionary, keyed on field name, whose values are the
+        constraints for that field.
+
+        They constraints are keyed on the kind of constraint, and should
+        contain either a single value (a scalar or a list), or a dictionary
+        of keyword arguments for the constraint initializer.
+        """
         fields = in_constraints['fields'] or []
         for fieldname, c in fields.items():
             fc = []
@@ -110,6 +126,10 @@ class DatasetConstraints(object):
                 self.add_field(FieldConstraints(fieldname, fc))
 
     def to_json(self):
+        """
+        Converts the constraints in this dictionary to JSON.
+        The resulting JSON is returned.
+        """
         return json.dumps({'fields': {f: v.to_dict_value()
                                          for f, v in self.fields.items()}},
                                          indent=4)
@@ -287,6 +307,9 @@ class Constraint(object):
 #
 
 class MinConstraint(Constraint):
+    """
+    Constraint specifying the minimum allowed value in a field.
+    """
     def __init__(self, value, precision=None):
         assert precision is None or precision in PRECISIONS
         Constraint.__init__(self, 'min', value, precision=precision)
@@ -300,6 +323,9 @@ class MinConstraint(Constraint):
 
 
 class MaxConstraint(Constraint):
+    """
+    Constraint specifying the maximum allowed value in a field.
+    """
     def __init__(self, value, precision=None):
         assert precision is None or precision in PRECISIONS
         Constraint.__init__(self, 'max', value, precision=precision)
@@ -313,12 +339,33 @@ class MaxConstraint(Constraint):
 
 
 class SignConstraint(Constraint):
+    """
+    Constraint specifying allowed sign of values in a field.
+    Used only for numeric fields (real, int, bool), and normally
+    used in addition to Min and Max constraints.
+
+    Possible values are 'positive', 'non-negative', 'zero',
+    'non-positive', 'negative' and 'null'.
+    """
     def __init__(self, value):
         assert value is None or value in SIGNS
         Constraint.__init__(self, 'sign', value)
 
 
 class TypeConstraint(Constraint):
+    """
+    Constraint specifying the allowed (TDDA) type of a field.
+    This can be a single value, chosen from
+        'bool'
+        'int'
+        'real'
+        'string'
+        'date'
+    or a list of such values (most commonly
+        ['int', 'real']
+    (sometimes used because of Pandas silent and automatic promotion
+    of integer fields to floats if NULLs are present.)
+    """
     def __init__(self, value):
         if type(value) in (list, tuple):
             assert all(t in TYPES for t in value)
@@ -328,27 +375,62 @@ class TypeConstraint(Constraint):
 
 
 class MaxNullsConstraint(Constraint):
+    """
+    Constraint on the maximum number of nulls allowed in a field.
+    Usually 0 or 1.
+    (The constraint generator only generates 0 and 1, but the verifier
+    will verify and number.)
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'max_nulls', value)
 
 
 class NoDuplicatesConstraint(Constraint):
+    """
+    Constraint specifying that non dupicate non-null values are allowed
+    in a field.
+
+    Currently only generated for string fields, though could be used
+    more broadly.
+    """
     def __init__(self, value=True):
         assert value is None or value == True
         Constraint.__init__(self, 'no_duplicates', value)
 
 
 class AllowedValuesConstraint(Constraint):
+    """
+    Constraint restricting the allowed values in a field to an explicity list.
+
+    Currently only used for string fields.
+
+    When generating constraints, this code will only generate such a
+    constraint if there are no more than MAX_CATEGORIES (= 20 at the
+    time of writing, but check above in case this comment rusts)
+    different values in the field.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'allowed_values', value)
 
 
 class MinLengthConstraint(Constraint):
+    """
+    Constraint restricting the minimum length of strings in a string field.
+
+    Generated instead of a MinConstraint by this generation code,
+    but can be used in conjunction with a MinConstraint.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'min_length', value)
 
 
 class MaxLengthConstraint(Constraint):
+    """
+    Constraint restricting the maximum length of strings in a string field.
+
+    Generated instead of a MaxConstraint by this generation code,
+    but can be used in conjunction with a MinConstraint.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'max_length', value)
 
@@ -359,30 +441,54 @@ class MaxLengthConstraint(Constraint):
 
 
 class LtConstraint(Constraint):
+    """
+    Constraint specifying that the first field of a pair should be
+    (strictly) less than the second, where both are non-null.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'lt', value)
 
 
 class LteConstraint(Constraint):
+    """
+    Constraint specifying that the first field of a pair should be
+    no greater than the second, where both are non-null.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'lte', value)
 
 class EqConstraint(Constraint):
+    """
+    Constraint specifying that two fields should have identical values
+    where they are both non-null.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'eq', value)
 
 
 class GtConstraint(Constraint):
+    """
+    Constraint specifying that the first field of a pair should be
+    (strictly) greater than the second, where both are non-null.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'gt', value)
 
 
 class GteConstraint(Constraint):
+    """
+    Constraint specifying that the first field of a pair should be
+    greater than or equal to the second, where both are non-null.
+    """
     def __init__(self, value):
         Constraint.__init__(self, 'gte', value)
 
 
 class Verification(object):
+    """
+    Container for the result of a constraint verification for a dataset
+    in the context of a given set of constraints.
+    """
     def __init__(self, constraints, report='all', one_per_line=False):
         self.fields = TDDAObject()
         self.failures = 0
@@ -444,6 +550,35 @@ def strip_lines(s, side='r'):
 
 
 def verify(constraints, verifiers, VerificationClass=None, **kwargs):
+    """
+    Perform a verification of a set of constraints.
+    This is primarily an internal function, intended to be used by
+    specific verifiers for various types of data.
+    (Specifically, at the moment, the Pandas verifier verify_df
+    uses this function.)
+
+    Inputs:
+
+        constraints         is a DatasetConstraints object.
+
+        verifiers           is a mapping from constraint kind to a verifier
+                            callable.
+
+                            NOTE: normally the verifier callable is a method
+                            on a class that "knows" the dataset to be verified.
+
+        VerificationClass   If provided, this should be a subclass of
+                            Verificatation. This option is provided so
+                            that callers can get back Verification object
+                            with extra convenience methods. For example,
+                            The Pandas code passes in a PandasVerification
+                            class, which as a to_frame() method for turning
+                            the result of the verification into a Pandas
+                            DataFrame.
+
+        kwargs              Any keyword arguments provided are passed to
+                            the VerificationClass chosen.
+    """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
     for name in constraints.fields:

@@ -320,6 +320,9 @@ class PandasConstraintVerifier:
         return self.get_cached_value('min', colname, self.calc_min)
 
     def calc_min(self, colname):
+        """
+        Calculates the minimum (non-null) value in the named column.
+        """
         if self.df[colname].dtype == np.dtype('O'):
             return self.df[colname].dropna().min()  # Otherwise -inf!
         else:
@@ -330,6 +333,9 @@ class PandasConstraintVerifier:
         return self.get_cached_value('max', colname, self.calc_max)
 
     def calc_max(self, colname):
+        """
+        Calculates the maximum (non-null) value in the named column.
+        """
         if self.df[colname].dtype == np.dtype('O'):
             return self.df[colname].dropna().max()
         else:
@@ -344,6 +350,9 @@ class PandasConstraintVerifier:
                                      self.calc_min_length)
 
     def calc_min_length(self, colname):
+        """
+        Calculates the length of the shortest string(s) in the named column.
+        """
         return min(len(s) for s in list(self.df[colname].unique())
                           if not pd.isnull(s))
 
@@ -356,6 +365,9 @@ class PandasConstraintVerifier:
                                      self.calc_max_length)
 
     def calc_max_length(self, colname):
+        """
+        Calculates the length of the longest string(s) in the named column.
+        """
         return max(len(s) for s in list(self.df[colname].unique())
                           if not pd.isnull(s))
 
@@ -413,6 +425,10 @@ class PandasConstraintVerifier:
                                      self.calc_all_non_nulls_boolean)
 
     def calc_all_non_nulls_boolean(self, colname):
+        """
+        Checks whether all the non-null values in a column are boolean.
+        Returns True of they are, and False otherwise.
+        """
         nn = self.df[colname].dropna()
         return all([type(v) is bool for i, v in nn.iteritems()])
 
@@ -437,6 +453,18 @@ class PandasConstraintVerifier:
 
 
 class PandasVerification(Verification):
+    """
+    A PandasVerification object adds a to_frame() method to a
+    tdda.base.Verification object. This allows the result of constraint
+    verification to be converted to a Pandas DataFrame, including columns
+    for the field (column) name, the numbers of passes and failures
+    and boolean columns for each constraint, with values:
+
+        True       - if the constraint was satified for the column
+        False      - if column failed to satisfy the constraint
+        null       - (pd.np.NaN) if there was no constraint of this
+                     kind for this field.
+    """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
 
@@ -447,6 +475,13 @@ class PandasVerification(Verification):
 
 
 def types_compatible(x, y, colname=None):
+    """
+    Returns boolean indicating whether the coarse_type of x and y are
+    the same.
+
+    If colname is provided, and the check fails, a warning is issued
+    to stderr.
+    """
     ok = coarse_type(x) == coarse_type(y)
     if not ok and colname:
         print('Warning: Failing incompatible types constraint for field %s '
@@ -456,11 +491,27 @@ def types_compatible(x, y, colname=None):
 
 
 def coarse_type(x):
+    """
+    Returns the TDDA coarse type of x, a column or scalar.
+    The coarse types combine 'bool', 'int' and 'real' into 'number'.
+
+    Obviously, some people will dislike treating booleans as numbers.
+    But is is necessary here.
+    """
     t = tdda_type(x)
     return 'number' if t in ('bool', 'int', 'real') else t
 
 
 def tdda_type(x):
+    """
+    Returns the TDDA type of a column or scalar.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+
+    If x is None or something Pandas classes as null, 'null' is returned.
+
+    If x is not recognized as one of these, 'other' is returned.
+    """
     dt = getattr(x, 'dtype', None)
     if type(x) == str or dt == np.dtype('O'):
         return 'string'
