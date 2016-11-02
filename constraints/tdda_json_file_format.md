@@ -93,13 +93,13 @@ This is an extremely simple example TDDA file:
 
 A `.tdda` file is a dictionary with two currently-supported top-level keys:
 
-    * `fields`: constraints for individual fields, keyed on the field name.
-      (In TDDA, we generally refer to dataset `columns` as fields.)
+ * `fields`: constraints for individual fields, keyed on the field name.
+   (In TDDA, we generally refer to dataset `columns` as fields.)
 
-    * `field_groups`: constraints specifying relations between two or more
-      fields (usually two, for now). `field_group` constraints are keyed
-      on a comma-separated list of the names of the fields to which they
-      relate, and order is significant.
+ * `field_groups`: constraints specifying relations between two or more
+   fields (usually two, for now). `field_group` constraints are keyed
+   on a comma-separated list of the names of the fields to which they
+   relate, and order is significant.
 
 Both top-level keys are optional (though if you have neither, there's not
 a whole lot of constraining going on!)
@@ -176,27 +176,27 @@ The semantics and values of the standard field constraint types are as follows:
     convenient to specify a level of precision. In particular,
     a minimum value can be
 
-        * `closed`: all non-null values in the field must be
-          greater than or equal to the value specified.
-        * `open`: all non-null values in the field must be
-          strictly greater than the value specified.
-        * `fuzzy`: when the precision is specified as *fuzzy*,
-          the verifier should allow a small degree of violation
-          of the constraint without generating a failure.
-          (This is the default.) Verifiers take a parameter,
-          `epsilon`, which specifies how the fuzzy constraints
-          should be taken to be: epsilon is a fraction of the
-          constraint value by which field values are allowed
-          to exceed the constraint without being considered
-          to fail the constraint. This detaults to 0.01 (i.e. 1%).
-          Notice that this means that constraint values of zero
-          are never fuzzy.
+      * `closed`: all non-null values in the field must be
+        greater than or equal to the value specified.
+      * `open`: all non-null values in the field must be
+        strictly greater than the value specified.
+      * `fuzzy`: when the precision is specified as *fuzzy*,
+        the verifier should allow a small degree of violation
+        of the constraint without generating a failure.
+        (This is the default.) Verifiers take a parameter,
+        `epsilon`, which specifies how the fuzzy constraints
+        should be taken to be: epsilon is a fraction of the
+        constraint value by which field values are allowed
+        to exceed the constraint without being considered
+        to fail the constraint. This detaults to 0.01 (i.e. 1%).
+        Notice that this means that constraint values of zero
+        are never fuzzy.
 
    Examples are:
 
-      * `{"min": 1}`,
-      * `{"min": 1.2}`,
-      * `{"min": {"value": 3.4}, {"precision": "fuzzy"}}`.
+     * `{"min": 1}`,
+     * `{"min": 1.2}`,
+     * `{"min": {"value": 3.4}, {"precision": "fuzzy"}}`.
 
   * `max`: the maximum allowed value for a field. Much like `min`,
     but for maximum values.
