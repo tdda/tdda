@@ -168,8 +168,8 @@ The semantics and values of the standard field constraint types are as follows:
 
     Examples:
 
-      * {"type": "int"}
-      * {"type": ["int", "real"]}
+      * `{"type": "int"}`
+      * `{"type": ["int", "real"]}`
 
   * `min`: the minimum allowed value for a field. This is often
     a simple value, but in the case of real fields, it can be
