@@ -64,11 +64,6 @@ def example_failing_verification():
     print('\n')
     return n_failures
 
-
-
-
-
-
 if __name__ == '__main__':
     failures = example_positive_verification()
     failures += example_failing_verification()

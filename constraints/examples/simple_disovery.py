@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-simple_generation.py
+simple_discovery.py
 
 This file writes constraints as JSON to /tmp/example_constraints.tdda
 by default.

@@ -20,6 +20,18 @@ Test-Driven Data Analysis Functions:
    datasets meet the constraints in the constraints file. See the README
    in the `constraints` subdirectory for usage details.
 
+Resources on these topics include:
+
+  * TDDA Blog: http//www.tdda.info
+  * Notes on WritableTestCase:
+    http://tdda.info/writabletestcase-example-use
+  * General Notes on Constraints and Assertions
+  * Notes on using the Pandas constraints library:
+    http://www.tdda.info/constraint-discovery-and-verification-for-pandas-dataframes
+  * PyCon UK Talk on TDDA:
+      - Video: https://www.youtube.com/watch?v=FIw_7aUuY50
+      - Slides and Rough Transcript:   http://www.tdda.info/slides-and-rough-transcript-of-tdda-talk-from-pycon-uk-2016
+
 
 Explanatory examples of how to use `writabletestcase` are in the `examples`
 subdirectory.

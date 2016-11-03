@@ -132,7 +132,7 @@ class DatasetConstraints(object):
         """
         return json.dumps({'fields': {f: v.to_dict_value()
                                          for f, v in self.fields.items()}},
-                                         indent=4)
+                                         indent=4) + '\n'
 
 
 class Fields(TDDAObject):

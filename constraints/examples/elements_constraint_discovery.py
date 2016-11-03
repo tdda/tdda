@@ -1,4 +1,4 @@
-# elements_constraint_generation.py
+# elements_constraints_discovery.py
 
 from __future__ import print_function
 import pandas as pd
