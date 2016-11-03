@@ -24,7 +24,7 @@ TDDA_FILE = os.path.join(THIS_DIR, 'example_constraints.tdda')
 
 def example_positive_verification():
     n_failures = 0
-    df = pd.DataFrame({'a': [2, 4], 'b': ["one", pd.np.NaN]})
+    df = pd.DataFrame({'a': [2, 4], 'b': ['one', pd.np.NaN]})
     v = verify_df(df, TDDA_FILE)
 
     if v.failures == 0:

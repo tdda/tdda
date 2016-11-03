@@ -853,7 +853,7 @@ def discover_constraints(df):
     import pandas as pd
     from tdda.constraints.pdconstraints import discover_constraints
 
-    df = pd.DataFrame({'a': [1,2,3], 'b': ["one", "two", pd.np.NaN]})
+    df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', pd.np.NaN]})
     constraints = discover_constraints(df)
     with open('/tmp/example_constraints.tdda', 'w') as f:
         f.write(constraints.to_json())
