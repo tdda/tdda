@@ -19,6 +19,16 @@ from collections import Counter, defaultdict, namedtuple
 str_type = unicode if sys.version_info.major < 3 else str
 bytes_type = str if sys.version_info.major < 3 else bytes
 
+USAGE = """USAGE:
+
+    python rexpy.py [input file [output file]]
+
+If input file is provided, it should contain one string per line;
+otherwise lines will be read from standard input.
+
+If output file is provided, regular expressions found will be written
+to that (one per line); otherwise they will be printed.
+"""
 
 SPECIALS = re.compile(r'[A-Za-z0-9\s]')
 PUNC = [chr(c) for c in range(32,127) if not re.match(SPECIALS, chr(c))]
@@ -27,6 +37,7 @@ MIN_MERGE_SIMILARITY = 0.5
 TERMINATE = True  # False
 
 N_ALIGNMENT_LEVELS = 1
+
 
 
 class SIZE:
@@ -892,3 +903,30 @@ def length_stats(patterns):
 def get_nCalls():
     global nCalls
     return nCalls
+
+
+def main(infile=None, outfile=None):
+    if infile:
+        with open(infile) as f:
+            strings = f.readlines()
+    else:
+        strings = sys.stdin.readlines()
+    patterns = extract(strings)
+    if outfile:
+        with open(outfile, 'w') as f:
+            for p in patterns:
+                f.write(p + '\n')
+    else:
+        for p in patterns:
+            print(p)
+
+
+
+if __name__ == '__main__':
+    if len(sys.argv) <= 3:
+        main(*tuple(sys.argv[1:]))
+    else:
+        print(USAGE, file=sys.stderr)
+        sys.exit(1)
+
+
