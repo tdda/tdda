@@ -71,14 +71,20 @@ def get_params(args):
             elif a in ('1', 'oneperline'):
                 params['one_per_line'] = True
             else:
-                raise Exception(USAGE)
+                usage_error()
         elif params['df_path'] is None:
             params['df_path'] = a
         elif params['constraints_path'] is None:
             params['constraints_path'] = a
         else:
-            raise Exception(USAGE)
+            usage_error()
     return params
+
+
+def usage_error():
+    print(USAGE, file=sys.stderr)
+    sys.exit(1)
+
 
 if __name__ == '__main__':
     params = get_params(sys.argv[1:])

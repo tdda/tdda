@@ -761,6 +761,44 @@ def extract(examples, tag=False, encoding=None, verbose=False):
     return r.results.rex
 
 
+def pdextract(cols):
+    """
+    Extract regular expression(s) from the pandas column (Series) object
+    or list of pandas columns given.
+
+    All columns provided should be string columns (i.e. of type np.dtype('O'),
+    possibly including null values, which will be ignored.
+
+    Example use:
+        import pandas as pd
+        from tdda.rexpy import pdextract
+
+        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+                           'a45': ['three', 'four', 'five']})
+
+        re3 = pdextract(df['a3'])
+        re45 = pdextract(df['a45'])
+        re345 = pdextract([df['a3'], df['a45']])
+
+    This should result in
+        re3   = '^[a-z]{3}$'
+        re5   = '^[a-z]{3}$'
+        re345 = '^[a-z]{3}$'
+    """
+    if not type(cols) in (list, tuple):
+        cols = [cols]
+    strings = []
+    for c in cols:
+        strings.extend(list(c.dropna().unique()))
+    try:
+        return extract(strings)
+    except:
+        if not(all(type(s) == str_type for s in strings)):
+            raise ValueError('Non-null, non-string values found in input.')
+        else:
+            raise
+
+
 def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
     """
     Find patterns in fragFreqCounters for which the frequency is n.
@@ -905,15 +943,17 @@ def get_nCalls():
     return nCalls
 
 
-def main(infile=None, outfile=None):
-    if infile:
-        with open(infile) as f:
+def main(in_path=None, out_path=None, skip_header=False):
+    if in_path:
+        with open(in_path) as f:
             strings = f.readlines()
     else:
         strings = sys.stdin.readlines()
+    if skip_header:
+        strings = strings[1:]
     patterns = extract(strings)
-    if outfile:
-        with open(outfile, 'w') as f:
+    if out_path:
+        with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
     else:
@@ -921,12 +961,38 @@ def main(infile=None, outfile=None):
             print(p)
 
 
+def get_params(args):
+    params = {
+        'in_path': '',
+        'out_path': None,
+        'skip_header': False,
+    }
+    for a in args:
+        if a.startswith('-'):
+            if a == '-':
+                params['in_path'] = None
+            elif a in ('-h', '--header'):
+                params['skip_header'] = True
+            else:
+                raise Exception(USAGE)
+        elif params['in_path'] == '':  # not previously set and not '-'
+            params['in_path'] = a
+        elif params['out_path'] is None:
+            params['out_path'] = a
+        else:
+            raise Exception(USAGE)
+    params['in_path'] = params['in_path']  or None  # replace '' with None
+    return params
+
+
+def usage_error():
+    print(USAGE, file=sys.stderr)
+    sys.exit(1)
+
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 3:
-        main(*tuple(sys.argv[1:]))
-    else:
-        print(USAGE, file=sys.stderr)
-        sys.exit(1)
+    params = get_params(sys.argv[1:])
+    main(**params)
+
 
 

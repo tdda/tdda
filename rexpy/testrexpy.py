@@ -208,11 +208,19 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import os
 import re
+import sys
 import unittest
 
+try:
+    import pandas
+except:
+    pandas = None
+pd = pandas
+
 #from artists.miro.writabletestcase import WritableTestCase
-from artists.miro.rexpy import *
+from tdda.rexpy import *
 
 
 class TestUtilityFunctions(unittest.TestCase):
@@ -821,6 +829,30 @@ class TestExtraction(unittest.TestCase):
             r'^http\:\/\/www\.[a-z]{6,19}\.co\.uk\/$',
         })
 
+    @unittest.skipIf(pandas is None, 'No pandas here')
+    def testpdextract(self):
+        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+                           'a45': ['three', 'four', 'five']})
+
+        re3 = pdextract(df['a3'])
+        re45 = pdextract(df['a45'])
+        re345 = pdextract([df['a3'], df['a45']])
+
+        self.assertEqual(re3, ['^[a-z]{3}$'])
+        self.assertEqual(re45, ['^[a-z]{4,5}$'])
+        self.assertEqual(re345, ['^[a-z]{3,5}$'])
+
+    @unittest.skipIf(pandas is None, 'No pandas here')
+    def testpdextract(self):
+        df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
+        self.assertRaisesRegexp(ValueError, 'Non-null, non-string',
+                                pdextract, df['ab'])
+
+    # def testextractcli(self):
+    #     examples_dir = os.path.join(os.path.abspath(__file__), 'examples')
+    #     ids_path = os.path.join(examples_dir, 'ids.txt')
+    #     params = get_params(ids_path)
+    #     main(params)
 
 
 
