@@ -829,6 +829,48 @@ class TestExtraction(unittest.TestCase):
             r'^http\:\/\/www\.[a-z]{6,19}\.co\.uk\/$',
         })
 
+    def test_agents(self):
+        # This is really just a check that it doesn't bomb out, for the
+        # moment. It's certainly not finding good REs at this point!
+        examples_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    'examples')
+        agents_path = os.path.join(examples_dir, 'agents9.txt')
+        with open(agents_path) as f:
+            examples = f.readlines()
+        self.assertEqual(set(extract(examples)), {
+            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ NT\ '
+            r'6\.0\;\ Trident\/4\.0\;\ \ \ Acoo\ Browser\;\ GTB5\;\ '
+            r'Mozilla\/4\.0\ \(compatible\;\ MSIE\ 6\.0\;\ Windows\ '
+            r'NT\ 5\.1\;\ \ \ SV1\)\ \;\ InfoPath\.1\;\ \.NET\ CLR\ '
+            r'3\.5\.30729\;\ \.NET\ CLR\ 3\.0\.30618\)$',
+
+            r'^Mozilla\/5\.0\ \(compatible\;\ ABrowse\ 0\.4\;\ Syllable\)$',
+
+            r'^Mozilla\/5\.0\ \(compatible\;\ U\;\ ABrowse\ 0\.6\;\ '
+            r'{1,2}Syllable\)\ AppleWebKit\/420\+\ \(KHTML\,\ like\ Gecko\)$',
+
+            r'^Mozilla\/5\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ '
+            r'NT\ 6\.0\;\ Trident\/4\.0\;\ Acoo\ Browser\ 1\.98\.744\;\ '
+            r'\.NET\ CLR\ {1,3}3\.5\.30729\)$',
+
+            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 7\.0\;\ Windows\ '
+            r'NT\ 6\.0\;\ Acoo\ Browser\;\ SLCC1\;\ \ \ \.NET\ CLR\ '
+            r'2\.0\.50727\;\ Media\ Center\ PC\ 5\.0\;\ \.NET\ CLR\ '
+            r'3\.0\.04506\)$',
+
+            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ '
+            r'NT\ 5\.1\;\ Trident\/4\.0\;\ SV1\;\ Acoo\ Browser\;\ '
+            r'\.NET\ CLR\ 2\.0\.50727\;\ \.NET\ CLR\ 3\.0\.4506\.2152\;\ '
+            r'\.NET\ CLR\ 3\.5\.30729\;\ Avant\ Browser\)$',
+
+            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 7\.0\;\ Windows\ '
+            r'NT\ 6\.0\;\ Acoo\ Browser\;\ GTB5\;\ Mozilla\/4\.0\ '
+            r'\(compatible\;\ MSIE\ 6\.0\;\ Windows\ NT\ 5\.1\;\ '
+            r'SV1\)\ \;\ Maxthon\;\ InfoPath\.1\;\ \.NET\ CLR\ 3\.5\.30729\;\ '
+            r'\.NET\ CLR\ 3\.0\.30618\)$',
+        })
+
+
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
         df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],

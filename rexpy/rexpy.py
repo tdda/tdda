@@ -38,6 +38,10 @@ TERMINATE = True  # False
 
 N_ALIGNMENT_LEVELS = 1
 
+MAX_GROUPS = 99   # re library fails with AssertionError:
+                  # sorry, but this version only supports 100 named groups
+                  # if you have too many groups.
+                  # Looks like actual limit might be 99, not 100...
 
 
 class SIZE:
@@ -62,7 +66,7 @@ def cre(rex):
     if c:
         return c
     else:
-        memo[rex] = c =re.compile(rex)
+        memo[rex] = c = re.compile(rex)
         return c
 
 
@@ -94,6 +98,11 @@ class Category:
         self.re_multiple = poss_term_cre(re_string + '+')
 
 
+class CODE:
+    ANY = '?'
+    PUNC = '.'
+
+
 class CATS:
     LETTER = Category('LETTER', 'A', '[A-Z]')
     letter = Category('letter', 'a', '[a-z]')
@@ -106,9 +115,10 @@ class CATS:
     alphanumeric = Category('alphanumeric', 'n', '[a-z0-9]')
     AlphaNumeric = Category('AlphaNumeric', 'C', '[A-Za-z0-9]')
     Whitespace = Category('Whitespace', ' ', r'\s')
-    Punctuation = Category('Punctuation', '.',
+    Punctuation = Category('Punctuation', CODE.PUNC,
                            '[%s]' % re.escape(''.join(PUNC)))
     Other = Category('Other', '*', r'[^!-~\s]')
+    Any = Category('Any', CODE.ANY, '.')
 
     def build_cat_map(self):
         """
@@ -447,7 +457,11 @@ def run_length_encode_coarse_classes(s):
     """
     Returns run-length encoded coarse classification
     """
-    return run_length_encode(coarse_classify(s))
+    rle = run_length_encode(coarse_classify(s))
+    if len(rle) <= MAX_GROUPS:
+        return rle
+    else:
+        return run_length_encode(CODE.ANY * len(s))
 
 
 def coarse_classify(s):
@@ -660,7 +674,8 @@ def refine_groups(pattern, examples):
                     break
             else:
                 refined = c
-        elif c == '.' and len(chars) <= SIZE.MAX_PUNC_IN_GROUP:  # Punctuation
+        elif (c == CODE.PUNC
+                 and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
             refined = '[%s]' % re.escape(char_str)
             fixed = True
         else:
