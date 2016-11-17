@@ -176,6 +176,8 @@ class Extractor(object):
         self.tag = tag                      # Returned tagged (grouped) RE
         self.verbose = verbose
         self.results = None
+        self.warnings = []
+        self.n_too_many_groups = 0
         if extract:
             self.extract()                  # Stores results
 
@@ -212,6 +214,14 @@ class Extractor(object):
                     examples.extend(random.sample(failures,
                                                   SIZE.DO_ALL_EXCEPTIONS))
                 attempt += 1
+        self.add_warnings()
+
+    def add_warnings(self):
+        if self.n_too_many_groups:
+            self.warnings.append('%d string%s assigned to .{m,n}  for needing '
+                                 '"too many" groups.'
+                                 % (self.n_too_many_groups,
+                                    's' if self.n_too_many_groups > 1 else ''))
 
     def clean(self, examples):
         """
@@ -237,7 +247,7 @@ class Extractor(object):
         """
         Find regular expressions for a batch of examples (as given).
         """
-        rles = [run_length_encode_coarse_classes(s) for s in examples]
+        rles = [self.run_length_encode_coarse_classes(s) for s in examples]
         rle_freqs = Counter()
         for r in rles:
             rle_freqs[r] += 1
@@ -255,6 +265,18 @@ class Extractor(object):
         mergedrex = [vrle2re(m, tagged=self.tag) for m in merged]
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex)
+
+    def run_length_encode_coarse_classes(self, s):
+        """
+        Returns run-length encoded coarse classification
+        """
+        rle = run_length_encode(coarse_classify(s))
+        if len(rle) <= MAX_GROUPS:
+            return rle
+        else:
+            self.n_too_many_groups += 1
+            return run_length_encode(CODE.ANY * len(s))
+
 
     def merge_patterns(self, patterns):
         if len(patterns) == 1:
@@ -451,17 +473,6 @@ class Extractor(object):
 
     def __str__(self):
         return str(self.results or 'No results (yet)')
-
-
-def run_length_encode_coarse_classes(s):
-    """
-    Returns run-length encoded coarse classification
-    """
-    rle = run_length_encode(coarse_classify(s))
-    if len(rle) <= MAX_GROUPS:
-        return rle
-    else:
-        return run_length_encode(CODE.ANY * len(s))
 
 
 def coarse_classify(s):
