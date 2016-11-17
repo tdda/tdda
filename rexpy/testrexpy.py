@@ -837,7 +837,8 @@ class TestExtraction(unittest.TestCase):
         agents_path = os.path.join(examples_dir, 'agents9.txt')
         with open(agents_path) as f:
             examples = f.readlines()
-        self.assertEqual(set(extract(examples)), {
+        r = extract(examples, as_object=True)
+        self.assertEqual(set(r.results.rex), {
             r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ NT\ '
             r'6\.0\;\ Trident\/4\.0\;\ \ \ Acoo\ Browser\;\ GTB5\;\ '
             r'Mozilla\/4\.0\ \(compatible\;\ MSIE\ 6\.0\;\ Windows\ '
@@ -869,6 +870,9 @@ class TestExtraction(unittest.TestCase):
             r'SV1\)\ \;\ Maxthon\;\ InfoPath\.1\;\ \.NET\ CLR\ 3\.5\.30729\;\ '
             r'\.NET\ CLR\ 3\.0\.30618\)$',
         })
+        self.assertEqual(r.n_too_many_groups, 1)
+        self.assertEqual(r.warnings[0], '1 string assigned to .{m,n} for '
+                                        'needing "too many" groups.')
 
 
     @unittest.skipIf(pandas is None, 'No pandas here')

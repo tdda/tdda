@@ -218,7 +218,7 @@ class Extractor(object):
 
     def add_warnings(self):
         if self.n_too_many_groups:
-            self.warnings.append('%d string%s assigned to .{m,n}  for needing '
+            self.warnings.append('%d string%s assigned to .{m,n} for needing '
                                  '"too many" groups.'
                                  % (self.n_too_many_groups,
                                     's' if self.n_too_many_groups > 1 else ''))
@@ -772,19 +772,25 @@ class ResultsSummary:
 
 
 
-def extract(examples, tag=False, encoding=None, verbose=False):
+def extract(examples, tag=False, encoding=None, as_object=False,
+            verbose=False):
     """
     Extract regular expression(s) from examples and return them.
 
     Normally, examples should be unicode (i.e. str in Python3,
     and unicode in Python2). However, encoded strings can be
     passed in provided the encoding is specified.
+
     Results will always be unicode.
+
+    If as_object is set, the extractor object is returned,
+    with results in .results.rex; otherwise, a list of regular
+    expressions, as unicode strings is returned.
     """
     if encoding:
         examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, verbose=verbose)
-    return r.results.rex
+    return r if as_object else r.results.rex
 
 
 def pdextract(cols):
