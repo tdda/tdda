@@ -683,7 +683,12 @@ class TestExtraction(unittest.TestCase):
         '0207.987.2287'
     ]
     def test_tels3(self):
-        self.assertEqual(extract(self.tels3),
+        r = extract(self.tels3, as_object=True)
+        self.assertEqual(r.warnings, [])
+        self.assertEqual(r.results.refrags,
+                         [[u'\\d{4}', u'[\\-\\.]', u'\\d{3}',
+                           u'[\\-\\.]', u'\\d{4}']])
+        self.assertEqual(r.results.rex,
                          [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'])
 
 

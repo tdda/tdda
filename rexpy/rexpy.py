@@ -263,8 +263,9 @@ class Extractor(object):
             rex.append(vrle2re(grouped))
         merged = self.merge_patterns(refined)
         mergedrex = [vrle2re(m, tagged=self.tag) for m in merged]
+        mergedfrags = [vrle2refrags(m) for m in merged]
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
-                              merged, mergedrex)
+                              merged, mergedrex, mergedfrags)
 
     def run_length_encode_coarse_classes(self, s):
         """
@@ -545,6 +546,14 @@ def vrle2re(vrles, tagged=False, as_re=True):
     return poss_term_re(''.join(parts))
 
 
+def vrle2refrags(vrles):
+    """
+    Convert variable run-length-encoded code string to regular expression
+    and list of fragments
+    """
+    return [fragment2re(frag, tagged=False, as_re=True) for frag in vrles]
+
+
 def fragment2re(fragment, tagged=False, as_re=True):
     (c, m, M) = fragment[:3]
     fixed = len(fragment) > 3
@@ -700,13 +709,14 @@ def refine_groups(pattern, examples):
 
 class ResultsSummary:
     def __init__(self, rles, rle_freqs, vrles,
-                 vrle_freqs, refined_vrles, rex):
+                 vrle_freqs, refined_vrles, rex, refrags):
         self.rles = rles
         self.rle_freqs = rle_freqs
         self.vrles = vrles
         self.vrle_freqs = vrle_freqs
         self.refined_vrles = refined_vrles
         self.rex = rex
+        self.refrags = refrags
 
     def to_string(self, rles=False, rle_freqs=False, vrles=False,
                   vrle_freqs=False, refined_vrles=False, rex=False,
@@ -1025,6 +1035,3 @@ def usage_error():
 if __name__ == '__main__':
     params = get_params(sys.argv[1:])
     main(**params)
-
-
-
