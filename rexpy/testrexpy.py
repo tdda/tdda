@@ -750,6 +750,47 @@ class TestExtraction(unittest.TestCase):
         'http://web.web',
     ]
 
+    POSTCODES = [
+        'EH3 1LH',
+        'G4 2BP',
+    ]
+    def test_POSTCODES(self):
+        self.assertEqual(extract(self.POSTCODES),
+                         [r'^[A-Z0-9]{2,3}\ [A-Z0-9]{3}$'])
+
+
+    Postcodes = [
+        'EH3 1LH',
+        'g4 2bp',
+    ]
+    def test_Postcodes(self):
+        self.assertEqual(extract(self.Postcodes),
+                         [r'^[A-Za-z0-9]{2,3}\ [A-Za-z0-9]{3}$'])
+
+    postcodes = [
+        'eh3 1lh',
+        'g4 2bp',
+    ]
+    def test_Postcodes(self):
+        self.assertEqual(extract(self.postcodes),
+                         [r'^[a-z0-9]{2,3}\ [a-z0-9]{3}$'])
+
+    postCODES = [
+        'eh3 1LH',
+        'g4 2BP',
+    ]
+    def test_postCODES(self):
+        self.assertEqual(extract(self.postCODES),
+                         [r'^[a-z0-9]{2,3}\ [A-Z0-9]{3}$'])
+
+    POSTcodes = [
+        'EH3 1lh',
+        'G4 2bp',
+    ]
+    def test_POSTcodes(self):
+        self.assertEqual(extract(self.POSTcodes),
+                         [r'^[A-Z0-9]{2,3}\ [a-z0-9]{3}$'])
+
     def test_urls1(self):
 
 #        print()
