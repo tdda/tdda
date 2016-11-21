@@ -798,11 +798,11 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls1, verbose=True)
 #        print(str(x))
         self.assertEqual(set(extract(self.urls1)),
-                         set([r'^http\:\/\/www\.[a-z]{6,19}\.com\/$',
+                         set([r'^http\:\/\/www\.[a-z]+\.com\/$',
                               r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
-                              r'^http\:\/\/[a-z]{5,19}\.com\/$',
-                              r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]{6,19}\.com$',
-                              r'^http\:\/\/www\.[a-z]{6,19}\.co\.uk\/$',]))
+                              r'^http\:\/\/[a-z]+\.com\/$',
+                              r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
+                              r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',]))
 
         # Sorted by length, these forms are:These are all:
         #
@@ -852,11 +852,11 @@ class TestExtraction(unittest.TestCase):
 #        print(str(x))
         self.assertEqual(set(extract(self.urls2)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
-            r'^[a-z]{5,19}\.com\/$',
-            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]{3,19}\.[a-z]{3}$',
-            r'^[a-z]{4,5}\:\/\/www\.[a-z]{6,19}\.com$',
+            r'^[a-z]+\.com\/$',
+            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-            r'^http\:\/\/www\.[a-z]{6,19}\.co\.uk\/$',
+            r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
         })
 
     def test_urls_all(self):
@@ -867,12 +867,12 @@ class TestExtraction(unittest.TestCase):
 #        print(str(x))
         self.assertEqual(set(extract(self.urls1 + self.urls2)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
-            r'^[a-z]{5,19}\.com\/$',
-            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]{3,19}\.[a-z]{3,4}$',
-            r'^http\:\/\/[a-z]{5,19}\.com\/$',
-            r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]{6,19}\.com$',
-            r'^http\:\/\/www\.[a-z]{6,19}\.com\/$',
-            r'^http\:\/\/www\.[a-z]{6,19}\.co\.uk\/$',
+            r'^[a-z]+\.com\/$',
+            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^http\:\/\/[a-z]+\.com\/$',
+            r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
+            r'^http\:\/\/www\.[a-z]+\.com\/$',
+            r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
         })
 
     def test_agents(self):

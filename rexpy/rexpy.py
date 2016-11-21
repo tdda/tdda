@@ -43,6 +43,9 @@ MAX_GROUPS = 99   # re library fails with AssertionError:
                   # if you have too many groups.
                   # Looks like actual limit might be 99, not 100...
 
+MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
+                    # x{m,n} when n - m ≤ 2
+
 
 class SIZE:
     DO_ALL = 1024               # Use all examples up to this many
@@ -603,6 +606,14 @@ def to_vrles(rles):
         maxes = [max(r[i][1] for r in rles) for i in range(nCats)]
         outs.append(tuple([(cat, m, M)
                     for (cat, m, M) in zip(cats, mins, maxes)]))
+
+    if MAX_VRLE_RANGE is not None:
+        outs2 = [tuple(((cat, m, M) if (M - m) <= MAX_VRLE_RANGE
+                                    else (cat, 1, None))
+                       for (cat, m, M) in pattern)
+                    for pattern in outs]
+        outs = list(set(outs2))
+        outs.sort()
     return outs
 
 
