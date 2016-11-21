@@ -686,7 +686,8 @@ def refine_groups(pattern, examples):
             fixed = True
         elif c == 'C':  # Alphanumeric
             for k in ('Digit',  'LETTER', 'letter', 'Letter',
-                      'HEX', 'hex', 'Hex'):
+                      'HEX', 'hex', 'Hex',
+                      'ALPHANUMERIC', 'alphanumeric'):
                 cat = getattr(Cats, k)
                 code = cat.code
                 if re.match(cat.re_multiple, char_str):
