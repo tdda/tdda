@@ -364,6 +364,7 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertEqual(ndigits(4, 0), '0' * 4)
 
     def test_aligned_parts1(self):
+        x = Extractor([])
         part1 = [
                     [('a', 1, 1, 'fixed'), ('b', 1, 1, 'fixed')],
                     [('c', 1, 1, 'fixed')],
@@ -376,9 +377,10 @@ class TestUtilityFunctions(unittest.TestCase):
         expected = '\n'.join(['|1 2|3|',
                               ' a b /',
                               ' c   /'])
-        self.assertEqual(aligned_parts(parts), expected)
+        self.assertEqual(x.aligned_parts(parts), expected)
 
     def test_aligned_parts2(self):
+        x = Extractor([])
         part1 = [
                     [('a', 1, 1, 'fixed'), ('b', 1, 1, 'fixed')],
                     [('c', 1, 1, 'fixed')],
@@ -399,61 +401,68 @@ class TestUtilityFunctions(unittest.TestCase):
         expected = '\n'.join(['|1 2|3|4|5|',
                               ' a b   . !',
                               ' c   /   !'])
-        self.assertEqual(aligned_parts(parts), expected)
+        self.assertEqual(x.aligned_parts(parts), expected)
 
 
 
 class TestHelperMethods(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.x = Extractor([])
+
     def test_coarse_character_classification(self):
+        x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for c in ' \t\r\n\f\v':
-            self.assertEqual(coarse_classify_char(c), ' ')
+            self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[\]^_`{|}~':
-            self.assertEqual(coarse_classify_char(c), '.')
+            self.assertEqual(x.coarse_classify_char(c), '.')
         for i in range(0, 0x1c):  # 1C to 1F are considered whitespace
                                   # in unicode
             c = chr(i)
             if not c in '\t\r\n\f\v':
-                self.assertEqual(coarse_classify_char(c), '*')
+                self.assertEqual(x.coarse_classify_char(c), '*')
 
     def test_coarse_string_classification(self):
+        x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
         for c in ' \t\r\n\f\v':
-            self.assertEqual(coarse_classify_char(c), ' ')
+            self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in ' \t\r\n\f\v':
-            self.assertEqual(coarse_classify_char(c), ' ')
+            self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[\]^_`{|}~':
-            self.assertEqual(coarse_classify_char(c), '.')
+            self.assertEqual(x.coarse_classify_char(c), '.')
         for i in range(0, 0x1c):  # 1C to 1F are considered whitespace
                                   # in unicode
             c = chr(i)
             if not c in '\t\r\n\f\v':
-                self.assertEqual(coarse_classify_char(c), '*')
-        self.assertEqual(coarse_classify_char(chr(127)), '*')
+                self.assertEqual(x.coarse_classify_char(c), '*')
+        self.assertEqual(x.coarse_classify_char(chr(127)), '*')
 
     def test_coarse_classification(self):
-        self.assertEqual(coarse_classify('255-SI-32'),
+        x = self.x
+        self.assertEqual(x.coarse_classify('255-SI-32'),
                                          'CCC.CC.CC')
         guid = '1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c'
         sig  = 'CCCCCCCC.CCCC.CCCC.CCCC.CCCCCCCCCCCC'
-        self.assertEqual(coarse_classify(guid), sig)
-        self.assertEqual(coarse_classify('(0131) 123 4567'),
-                                         '.CCCC. CCC CCCC')
-        self.assertEqual(coarse_classify('2016-01-02T10:11:12 +0300z'),
-                                         'CCCC.CC.CCCCC.CC.CC .CCCCC')
-        self.assertEqual(coarse_classify('2016-01-02T10:11:12\a+0300z'),
-                                         'CCCC.CC.CCCCC.CC.CC*.CCCCC')
+        self.assertEqual(x.coarse_classify(guid), sig)
+        self.assertEqual(x.coarse_classify('(0131) 123 4567'),
+                                           '.CCCC. CCC CCCC')
+        self.assertEqual(x.coarse_classify('2016-01-02T10:11:12 +0300z'),
+                                           'CCCC.CC.CCCCC.CC.CC .CCCCC')
+        self.assertEqual(x.coarse_classify('2016-01-02T10:11:12\a+0300z'),
+                                           'CCCC.CC.CCCCC.CC.CC*.CCCCC')
 
     def test_run_length_encoding(self):
         self.assertEqual(run_length_encode(''), ())
@@ -497,7 +506,7 @@ class TestHelperMethods(unittest.TestCase):
     def test_cleaning(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123']
-        x = Extractor(examples, extract=False)
+        x = Extractor(examples)
         self.assertEqual(set(x.example_freqs.keys()), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 1)
@@ -527,10 +536,11 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(freqs[key2], 1)
 
     def test_rle2re(self):
+        Cats = self.x.Cats
         rle = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
-        regex = rle2re(rle)
+        regex = self.x.rle2re(rle)
         self.assertEqual(regex,
                          '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an))
         cre = re.compile(regex)
@@ -553,10 +563,12 @@ class TestHelperMethods(unittest.TestCase):
         rrle = [('C', 2, 3), ('.', 1, 1),
                 ('C', 2, 2), ('.', 1, 1),
                 ('C', 3, 4)]
+        Cats = Extractor([]).Cats
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
         expected = '^%s{2,3}%s%s{2}%s%s{3,4}$' % (an, punc, an, punc, an)
-        self.assertEqual(vrle2re(rrle), expected)
+        x = Extractor([])
+        self.assertEqual(x.vrle2re(rrle), expected)
 
     def test_sort_by_len(self):
         # Really designed for sorting lists/tuples, but everything with
@@ -616,9 +628,32 @@ class TestHelperMethods(unittest.TestCase):
 
 class TestExtraction(unittest.TestCase):
     def test_re_pqs_id(self):
+        # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         self.assertEqual(extract(iids),
                          [r'^\d{2,3}\-[A-Z]{2}\-\d{3,4}$'])
+
+    def test_re_pqs_id_with_dash(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        self.assertEqual(extract(iids, extra_letters='-'),
+                         [r'^[A-Z0-9\-]{10}$'])
+
+    def test_re_pqs_id_with_dash2(self):
+        iids = ['123-AB-321', ' AB-1B-4A21', '', None, '321-BA-1A23']
+        self.assertEqual(extract(iids, extra_letters='-'),
+                         [r'^[A-Z0-9\-]{10,11}$'])
+
+    def test_re_pqs_id_with_underscore(self):
+        iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
+        self.assertEqual(extract(iids, extra_letters='_'),
+                         [r'^[A-Za-z0-9\_]+$'])
+
+    def test_re_pqs_id_with_underscore(self):
+        # Currently includes all extra letters.
+        # But could do simple check to remove.
+        iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
+        self.assertEqual(extract(iids, extra_letters='_-'),
+                         [r'^[A-Za-z0-9\_\-]+$'])
 
     def test_re_uuid(self):
         uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
@@ -937,8 +972,13 @@ class TestExtraction(unittest.TestCase):
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
         df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
-        self.assertRaisesRegexp(ValueError, 'Non-null, non-string',
-                                pdextract, df['ab'])
+        self.assertRaisesRegex(ValueError, 'Non-null, non-string',
+                               pdextract, df['ab'])
+
+
+if sys.version_info.major < 3:
+    # Quieten down Python3's vexatious complaining
+    TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
 
     # def testextractcli(self):
     #     examples_dir = os.path.join(os.path.abspath(__file__), 'examples')

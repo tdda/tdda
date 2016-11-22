@@ -78,8 +78,8 @@ class TestConstraints(unittest.TestCase):
             self.assertEqual(constraint_class(k), v)
 
     def testBadConstraints(self):
-        self.assertRaisesRegexp(TypeError, 'unexpected keyword',
-                                SignConstraint, precision='closed')
+        self.assertRaisesRegex(TypeError, 'unexpected keyword',
+                               SignConstraint, precision='closed')
         self.assertRaises(AssertionError,
                           MinConstraint, 3, precision='unknown')
         self.assertRaises(AssertionError,
@@ -142,6 +142,11 @@ class TestConstraints(unittest.TestCase):
         path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
         constraints = DatasetConstraints(loadpath=path)
 #        print(constraints)
+
+if sys.version_info.major < 3:
+    # Quieten down Python3's vexatious complaining
+    TestConstraints.assertRaisesRegex = TestConstraints.assertRaisesRegexp
+
 
 
 if __name__ == '__main__':

@@ -30,9 +30,6 @@ If output file is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
 """
 
-SPECIALS = re.compile(r'[A-Za-z0-9\s]')
-PUNC = [chr(c) for c in range(32,127) if not re.match(SPECIALS, chr(c))]
-
 MIN_MERGE_SIMILARITY = 0.5
 TERMINATE = True  # False
 
@@ -47,7 +44,7 @@ MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
                     # x{m,n} when n - m ≤ 2
 
 
-class SIZE:
+class SIZE(object):
     DO_ALL = 1024               # Use all examples up to this many
     DO_ALL = 100000000          # Use all examples up to this many
     DO_ALL_EXCEPTIONS = 4096    # Add in all failyres up to this many
@@ -92,7 +89,12 @@ else:
         return cre(expr)
 
 
-class Category:
+class CODE(object):
+    ANY = '?'
+    PUNC = '.'
+
+
+class Category(object):
     def __init__(self, name, code, re_string):
         self.name = name
         self.code = code
@@ -101,27 +103,55 @@ class Category:
         self.re_multiple = poss_term_cre(re_string + '+')
 
 
-class CODE:
-    ANY = '?'
-    PUNC = '.'
+class Categories(object):
+    def __init__(self, extra_letters=None):
+        if extra_letters:
+            assert all(L in '_-.' for L in extra_letters)  # for now
+            el_re = ''.join(r'\%s' % L for L in extra_letters)
+        else:
+            el_re = ''
+        punctuation = self.Punctuation(el_re)
+        self.LETTER = Category('LETTER', 'A', '[A-Z]')
+        self.letter = Category('letter', 'a', '[a-z]')
+        self.Letter = Category('Letter', 'L', '[A-Za-z]')
+        if extra_letters:
+            self.LETTER_ = Category('LETTER_', 'B', '[A-Z%s]' % el_re)
+            self.letter_ = Category('letter_', 'b', '[a-z%s]' % el_re)
+            self.Letter_ = Category('Letter_', 'M', '[A-Za-z%s]' % el_re)
+            ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_']
+        else:
+            ExtraLetterGroups = []
+        self.Digit = Category('Digit', 'D', r'\d')
+        self.hex = Category('hex', 'h', '[0-9a-f]')
+        self.HEX = Category('HEX', 'H', '[0-9A-F]')
+        self.Hex = Category('Hex', 'X', '[0-9a-fA-F]')
+        self.ALPHANUMERIC = Category('ALPHANUMERIC', 'N', '[A-Z0-9%s]' % el_re)
+        self.alphanumeric = Category('alphanumeric', 'n', '[a-z0-9%s]' % el_re)
+        self.AlphaNumeric = Category('AlphaNumeric', 'C',
+                                     '[A-Za-z0-9%s]' % el_re)
+        self.Whitespace = Category('Whitespace', ' ', r'\s')
+        self.Punctuation = Category('Punctuation', CODE.PUNC,
+                                    '[%s]' % re.escape(''.join(punctuation)))
+        self.Other = Category('Other', '*', r'[^!-~\s]')
+        self.Any = Category('Any', CODE.ANY, '.')
 
+        self.SpecificCoarseCats = [self.AlphaNumeric,
+                                   self.Whitespace,
+                                   self.Punctuation]
+        self.AllCoarseCats = self.SpecificCoarseCats + [self.Other]
+        self.IncreasinglyGeneralAlphanumerics = [
+            'Digit',
+            'LETTER', 'letter', 'Letter',
+        ] + ExtraLetterGroups + [
+            'HEX', 'hex', 'Hex',
+            'ALPHANUMERIC', 'alphanumeric'
+        ]
 
-class CATS:
-    LETTER = Category('LETTER', 'A', '[A-Z]')
-    letter = Category('letter', 'a', '[a-z]')
-    Letter = Category('Letter', 'L', '[A-Za-z]')
-    Digit = Category('Digit', 'D', r'\d')
-    hex = Category('hex', 'h', '[0-9a-f]')
-    HEX = Category('HEX', 'H', '[0-9A-F]')
-    Hex = Category('Hex', 'X', '[0-9a-fA-F]')
-    ALPHANUMERIC = Category('ALPHANUMERIC', 'N', '[A-Z0-9]')
-    alphanumeric = Category('alphanumeric', 'n', '[a-z0-9]')
-    AlphaNumeric = Category('AlphaNumeric', 'C', '[A-Za-z0-9]')
-    Whitespace = Category('Whitespace', ' ', r'\s')
-    Punctuation = Category('Punctuation', CODE.PUNC,
-                           '[%s]' % re.escape(''.join(PUNC)))
-    Other = Category('Other', '*', r'[^!-~\s]')
-    Any = Category('Any', CODE.ANY, '.')
+    def Punctuation(self, el_re):
+        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re)
+        return [chr(c) for c in range(32, 127) if not re.match(specials,
+                                                               chr(c))]
+
 
     def build_cat_map(self):
         """
@@ -133,8 +163,8 @@ class CATS:
             'X' --> self.Hex
         """
         self.code2cat = {}
-        for k in self.__class__.__dict__:
-            cat = self.__class__.__dict__[k]
+        for k in self.__dict__:
+            cat = self.__dict__[k]
             code = getattr(cat, 'code', None)
             if code:
                 self.code2cat[code] = cat
@@ -143,12 +173,6 @@ class CATS:
         if not hasattr(self, 'code2cat'):
             self.build_cat_map()
         return self.code2cat[k]
-
-Cats = CATS()
-
-
-SPECIFIC_COARSE_CATS = [Cats.AlphaNumeric, Cats.Whitespace, Cats.Punctuation]
-ALL_COARSE_CATS = SPECIFIC_COARSE_CATS + [Cats.Other]
 
 
 class Extractor(object):
@@ -163,12 +187,14 @@ class Extractor(object):
     which happens by default on initialization, but can be invoked
     manually.
     """
-    def __init__(self, examples, extract=True, tag=False, verbose=False):
+    def __init__(self, examples, extract=True, tag=False, extra_letters=None,
+                 verbose=False):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
 
+        self.Cats = Categories(extra_letters)
         self.example_freqs = Counter()      # Each string stored only once;
                                             # but multiplicity stored
 #        self.by_length = defaultdict(list)  # Examples also stored by length
@@ -211,7 +237,7 @@ class Extractor(object):
                 if len(failures) == 0:
                     break
                 elif (len(failures) <= SIZE.DO_ALL_EXCEPTIONS
-                         or attempt > SIZE.MAX_SAMPLED_ATTEMPTS):
+                      or attempt > SIZE.MAX_SAMPLED_ATTEMPTS):
                     examples.extend(failures)
                 else:
                     examples.extend(random.sample(failures,
@@ -261,20 +287,39 @@ class Extractor(object):
         rex = []
         for r in vrles:
             vrle_freqs[r] += 1
-            grouped = refine_groups(r, self.example_freqs)
+            grouped = self.refine_groups(r, self.example_freqs)
             refined.append(grouped)
-            rex.append(vrle2re(grouped))
+            rex.append(self.vrle2re(grouped))
         merged = self.merge_patterns(refined)
-        mergedrex = [vrle2re(m, tagged=self.tag) for m in merged]
-        mergedfrags = [vrle2refrags(m) for m in merged]
+        mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
+        mergedfrags = [self.vrle2refrags(m) for m in merged]
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex, mergedfrags)
+
+    def coarse_classify(self, s):
+        """
+        Classify each character in a string into one of the coarse categories
+        """
+        return ''.join(self.coarse_classify_char(c) for c in s)
+
+
+    def coarse_classify_char(self, c):
+        """
+        Classify character into one of the coarse categories
+        """
+        Cats = self.Cats
+        for cat in Cats.SpecificCoarseCats:
+            if re.match(cat.re_single, c):
+                return cat.code
+        assert re.match(Cats.Other.re_single, c)
+        return Cats.Other.code
+
 
     def run_length_encode_coarse_classes(self, s):
         """
         Returns run-length encoded coarse classification
         """
-        rle = run_length_encode(coarse_classify(s))
+        rle = run_length_encode(self.coarse_classify(s))
         if len(rle) <= MAX_GROUPS:
             return rle
         else:
@@ -312,7 +357,7 @@ class Extractor(object):
                 raise ValueError('Level out of range (%d)' % level)
         if self.verbose:
             print('\nOUT:')
-            print(aligned_parts(new_parts))
+            print(self.aligned_parts(new_parts))
         return new_parts
 
     def merge_fixed_omnipresent_at_pos(self, patterns):
@@ -329,7 +374,7 @@ class Extractor(object):
         # for this part.
         for frag in patterns[0]:  # first pattern
             if len(frag) == 4:  # fixed
-               frags.add(frag)
+                frags.add(frag)
         frags = list(frags)
 
         # Now remove fragments that aren't in every pattern
@@ -379,7 +424,7 @@ class Extractor(object):
         for pattern in patterns:
             for frag in pattern:  # first pattern
                 if len(frag) == 4:  # fixed
-                   frags.add(frag)
+                    frags.add(frag)
 
         if not frags:
             return [patterns]
@@ -422,8 +467,8 @@ class Extractor(object):
 
     def pad(self, p, q):
         if self.verbose:
-            print(vrle2re(self.despecify(p), True))
-            print(vrle2re(self.despecify(q), True))
+            print(self.vrle2re(self.despecify(p), True))
+            print(self.vrle2re(self.despecify(q), True))
             print()
         return p  # padded
 
@@ -439,7 +484,6 @@ class Extractor(object):
 
     def similarity(self, p, q):
         return 1
-
 
     def sample(self, nPerLength):
         """
@@ -475,26 +519,150 @@ class Extractor(object):
                     i -= 1
         return failures
 
+    def refine_groups(self, pattern, examples):
+        """
+        Refine the categories for variable run-length-encoded patterns
+        provided by narrowing the characters in the groups.
+        """
+        regex = cre(self.vrle2re(pattern, tagged=True))
+        n_groups = len(pattern)
+        group_chars = [set([]) for i in range(n_groups)]
+        group_strings = [set([]) for i in range(n_groups)]
+        n_strings = [0] * n_groups
+        for example in examples:
+            m = re.match(regex, example)
+            if m:
+                for i in range(n_groups):
+                    g = m.group(i + 1)
+                    if n_strings[i] <= SIZE.MAX_STRINGS_IN_GROUP:
+                        group_strings[i].add(g)
+                        n_strings[i] = len(group_strings[i])
+                    group_chars[i] = group_chars[i].union(set(list(g)))
+        out = []
+        Cats = self.Cats
+        for group, (chars, strings, fragment) in enumerate(zip(group_chars,
+                                                               group_strings,
+                                                               pattern)):
+            (c, m, M) = fragment
+            char_str = ''.join(sorted(chars))
+            fixed = False
+            refined = None
+            if len(strings) == 1:
+                refined = re.escape(list(strings)[0])
+                m = M = 1
+                fixed = True
+            elif len(chars) == 1:
+                refined = re.escape(list(chars)[0])
+                fixed = True
+            elif c == 'C':  # Alphanumeric
+                for k in Cats.IncreasinglyGeneralAlphanumerics:
+                    cat = getattr(Cats, k)
+                    if type(cat) == tuple:
+                        print('>>>', cat)
+                    code = cat.code
+                    if re.match(cat.re_multiple, char_str):
+                        refined = re.escape(code)
+                        break
+                else:
+                    refined = c
+            elif (c == CODE.PUNC
+                  and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
+                refined = '[%s]' % re.escape(char_str)
+                fixed = True
+            else:
+                refined = c
+            if fixed:
+                out.append((refined, m, M, 'fixed'))
+            else:
+                out.append((refined, m, M))
+        return out
+
+    def fragment2re(self, fragment, tagged=False, as_re=True):
+        (c, m, M) = fragment[:3]
+        fixed = len(fragment) > 3
+        Cats = self.Cats
+        regex = c if (fixed or not as_re) else Cats[c].re_string
+        if (m is None or m == 0) and M is None:
+            part = regex + '*'
+        elif M is None:
+            part = regex + '+'
+        elif m == M == 1:
+            part = regex
+        elif m == M:
+            part = regex + ('{%d}' % m)
+        else:
+            part = regex + ('{%d,%s}' % (m, M))
+        return ('(%s)' % part) if tagged else part
+
+    def vrle2re(self, vrles, tagged=False, as_re=True):
+        """
+        Convert variable run-length-encoded code string to regular expression
+        """
+        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re)
+                 for frag in vrles]
+        return poss_term_re(''.join(parts))
+
+
+    def vrle2refrags(self, vrles):
+        """
+        Convert variable run-length-encoded code string to regular expression
+        and list of fragments
+        """
+        return [self.fragment2re(frag, tagged=False, as_re=True)
+                for frag in vrles]
+
+    def rle2re(self, rles, tagged=False, as_re=True):
+        """
+        Convert run-length-encoded code string to regular expression
+        """
+        Cats = self.Cats
+        parts = []
+        for (c, freq) in rles:
+            desc = Cats[c].re_string if as_re else c
+            part = desc + ('{%d}' % freq if freq > 1 else '')
+            parts.append(('(%s)' % part) if tagged else part)
+        return poss_term_re(''.join(parts))
+
+
+    def humanish_frag(self, frag):
+        as_re = self.fragment2re(frag)
+        return as_re.replace('\\', '').replace(' ', '_')
+
+    def aligned_parts(self, parts):
+        """
+        Given a list of parts, each consisting of the fragments from a set
+        of partially aligned patterns, show them aligned, and in a somewhat
+        ambigous, numbered, fairly human-readable, compact form.
+        """
+        lines = [[] for i in range(len(parts[0]))]
+        widths = []
+        seps = []
+        out = []
+        for part in parts:
+            stats = length_stats(part)
+            for c in range(stats.max_length):  # col number in part
+                w = 0
+                for r, row in enumerate(part):
+                    if len(row) > c:
+                        frag = self.humanish_frag(row[c])
+                        lines[r].append(frag)
+                        w = max(w, len(frag))
+                    else:
+                        lines[r].append('')
+                seps.append(' ')
+                widths.append(w)
+            if stats.max_length:
+                seps[-1] = '|'
+        header = '|' + ''.join((ndigits(w, i) + seps[i - 1])
+                               for i, w in enumerate(widths, 1))
+        fmts = ['%%%ds' % w for w in widths]
+        body = '\n '.join(' '.join(fmt % frag
+                                   for (fmt, frag) in zip(fmts, line))
+                          for line in lines)
+        return '\n'.join([header, ' ' + body])
+
     def __str__(self):
         return str(self.results or 'No results (yet)')
-
-
-def coarse_classify(s):
-    """
-    Classify each character in a string into one of the coarse categories
-    """
-    return ''.join(coarse_classify_char(c) for c in s)
-
-
-def coarse_classify_char(c):
-    """
-    Classify character into one of the coarse categories
-    """
-    for cat in SPECIFIC_COARSE_CATS:
-        if re.match(cat.re_single, c):
-            return cat.code
-    assert re.match(Cats.Other.re_single, c)
-    return Cats.Other.code
 
 
 def run_length_encode(s):
@@ -529,56 +697,6 @@ def signature(rle):
     return ''.join(r[0] for r in rle)
 
 
-def rle2re(rles, tagged=False, as_re=True):
-    """
-    Convert run-length-encoded code string to regular expression
-    """
-    parts = []
-    for (c, freq) in rles:
-        desc = Cats[c].re_string if as_re else c
-        part = desc + ('{%d}' % freq if freq > 1 else '')
-        parts.append(('(%s)' % part) if tagged else part)
-    return poss_term_re(''.join(parts))
-
-
-def vrle2re(vrles, tagged=False, as_re=True):
-    """
-    Convert variable run-length-encoded code string to regular expression
-    """
-    parts = [fragment2re(frag, tagged=tagged, as_re=as_re) for frag in vrles]
-    return poss_term_re(''.join(parts))
-
-
-def vrle2refrags(vrles):
-    """
-    Convert variable run-length-encoded code string to regular expression
-    and list of fragments
-    """
-    return [fragment2re(frag, tagged=False, as_re=True) for frag in vrles]
-
-
-def fragment2re(fragment, tagged=False, as_re=True):
-    (c, m, M) = fragment[:3]
-    fixed = len(fragment) > 3
-    regex = c if (fixed or not as_re) else Cats[c].re_string
-    if (m is None or m == 0) and M is None:
-        part = regex + '*'
-    elif M is None:
-        part = regex + '+'
-    elif m == M == 1:
-        part = regex
-    elif m == M:
-        part = regex + ('{%d}' % m)
-    else:
-        part = regex + ('{%d,%s}' % (m, M))
-    return ('(%s)' % part) if tagged else part
-
-
-def to_re(patterns, grouped=False, as_re=True):
-    f = rle2re if len(patterns[0]) == 2 else vrle2re
-    return f(patterns, tagged=grouped, as_re=as_re)
-
-
 def to_vrles(rles):
     """
     Convert a list of run-length encodings to a list of variable run-length
@@ -605,50 +723,16 @@ def to_vrles(rles):
         mins = [min(r[i][1] for r in rles) for i in range(nCats)]
         maxes = [max(r[i][1] for r in rles) for i in range(nCats)]
         outs.append(tuple([(cat, m, M)
-                    for (cat, m, M) in zip(cats, mins, maxes)]))
+                           for (cat, m, M) in zip(cats, mins, maxes)]))
 
     if MAX_VRLE_RANGE is not None:
         outs2 = [tuple(((cat, m, M) if (M - m) <= MAX_VRLE_RANGE
                                     else (cat, 1, None))
                        for (cat, m, M) in pattern)
-                    for pattern in outs]
+                 for pattern in outs]
         outs = list(set(outs2))
         outs.sort()
     return outs
-
-
-def aligned_parts(parts):
-    """
-    Given a list of parts, each consisting of the fragments from a set
-    of partially aligned patterns, show them aligned, and in a somewhat
-    ambigous, numbered, fairly human-readable, compact form.
-    """
-    lines = [[] for i in range(len(parts[0]))]
-    widths = []
-    seps = []
-    out = []
-    for part in parts:
-        stats = length_stats(part)
-        for c in range(stats.max_length):  # col number in part
-            w = 0
-            for r, row in enumerate(part):
-                if len(row) > c:
-                    frag = humanish_frag(row[c])
-                    lines[r].append(frag)
-                    w = max(w, len(frag))
-                else:
-                    lines[r].append('')
-            seps.append(' ')
-            widths.append(w)
-        if stats.max_length:
-            seps[-1] = '|'
-    header = '|' + ''.join((ndigits(w, i) + seps[i - 1])
-                           for i, w in enumerate(widths, 1))
-    fmts = ['%%%ds' % w for w in widths]
-    body = '\n '.join(' '.join(fmt % frag
-                               for (fmt, frag) in zip(fmts, line))
-                      for line in lines)
-    return '\n'.join([header, ' ' + body])
 
 
 def ndigits(n, d):
@@ -656,70 +740,9 @@ def ndigits(n, d):
     return digit * n
 
 
-def humanish_frag(frag):
-    as_re = fragment2re(frag)
-    return as_re.replace('\\', '').replace(' ', '_')
 
 
-def refine_groups(pattern, examples):
-    """
-    Refine the categories for variable run-length-encoded patterns
-    provided by narrowing the characters in the groups.
-    """
-    regex = cre(vrle2re(pattern, tagged=True))
-    n_groups = len(pattern)
-    group_chars = [set([]) for i in range(n_groups)]
-    group_strings = [set([]) for i in range(n_groups)]
-    n_strings = [0] * n_groups
-    for example in examples:
-        m = re.match(regex, example)
-        if m:
-            for i in range(n_groups):
-                g = m.group(i + 1)
-                if n_strings[i] <= SIZE.MAX_STRINGS_IN_GROUP:
-                    group_strings[i].add(g)
-                    n_strings[i] = len(group_strings[i])
-                group_chars[i] = group_chars[i].union(set(list(g)))
-    out = []
-    for group, (chars, strings, fragment) in enumerate(zip(group_chars,
-                                                           group_strings,
-                                                           pattern)):
-        (c, m, M) = fragment
-        char_str = ''.join(sorted(chars))
-        fixed = False
-        refined = None
-        if len(strings) == 1:
-            refined = re.escape(list(strings)[0])
-            m = M = 1
-            fixed = True
-        elif len(chars) == 1:
-            refined = re.escape(list(chars)[0])
-            fixed = True
-        elif c == 'C':  # Alphanumeric
-            for k in ('Digit',  'LETTER', 'letter', 'Letter',
-                      'HEX', 'hex', 'Hex',
-                      'ALPHANUMERIC', 'alphanumeric'):
-                cat = getattr(Cats, k)
-                code = cat.code
-                if re.match(cat.re_multiple, char_str):
-                    refined = re.escape(code)
-                    break
-            else:
-                refined = c
-        elif (c == CODE.PUNC
-                 and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
-            refined = '[%s]' % re.escape(char_str)
-            fixed = True
-        else:
-            refined = c
-        if fixed:
-            out.append((refined, m, M, 'fixed'))
-        else:
-            out.append((refined, m, M))
-    return out
-
-
-class ResultsSummary:
+class ResultsSummary(object):
     def __init__(self, rles, rle_freqs, vrles,
                  vrle_freqs, refined_vrles, rex, refrags):
         self.rles = rles
@@ -743,7 +766,7 @@ class ResultsSummary:
             out.append('Run-length encoded patterns (rles):')
             for i, rle in enumerate(self.rles, 1):
                 out.append('%2d: %s'
-                           % (i, to_re(rle, as_re=as_re) if short
+                           % (i, self.to_re(rle, as_re=as_re) if short
                               else str(rle)))
             out.append('')
 
@@ -752,7 +775,8 @@ class ResultsSummary:
             for i, (rle, freq) in enumerate(self.rle_freqs.items(), 1):
                 out.append('%2d: %s: %d'
                            % (i,
-                              to_re(rle, as_re=as_re) if short else str(rle),
+                              self.to_re(rle, as_re=as_re) if short
+                                                           else str(rle),
                               freq))
             out.append('')
 
@@ -760,8 +784,8 @@ class ResultsSummary:
             out.append('Variable run-length encoded patterns (vrles):')
             for i, vrle in enumerate(self.vrle_freqs, 1):
                 out.append('%2d: %s'
-                           % (i, to_re(vrle, as_re=as_re) if short
-                                                          else str(vrle)))
+                           % (i, self.to_re(vrle, as_re=as_re) if short
+                                                               else str(vrle)))
             out.append('')
 
         if vrle_freqs or allFalse:
@@ -770,7 +794,8 @@ class ResultsSummary:
             for i, (vrle, freq) in enumerate(self.vrle_freqs.items(), 1):
                 out.append('%2d: %s: %d'
                            % (i,
-                              to_re(vrle, as_re=as_re) if short else str(vrle),
+                              self.to_re(vrle, as_re=as_re) if short
+                                                            else str(vrle),
                               freq))
             out.append('')
 
@@ -779,7 +804,8 @@ class ResultsSummary:
                        '(refined_vrles):')
             for i, p in enumerate(self.refined_vrles, 1):
                 out.append('%2d: %s'
-                           % (i, to_re(p, as_re=as_re) if short else str(p)))
+                           % (i, self.to_re(p, as_re=as_re) if short
+                                                            else str(p)))
             out.append('')
 
         if rex or allFalse:
@@ -789,13 +815,17 @@ class ResultsSummary:
             out.append('')
         return '\n'.join(out)
 
+    def to_re(self, patterns, grouped=False, as_re=True):
+        f = self.rle2re if len(patterns[0]) == 2 else self.vrle2re
+        return f(patterns, tagged=grouped, as_re=as_re)
+
     def __str__(self):
         return self.to_string()
 
 
 
 def extract(examples, tag=False, encoding=None, as_object=False,
-            verbose=False):
+            extra_letters=None, verbose=False):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -811,7 +841,8 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     """
     if encoding:
         examples = [x.decode(encoding) for x in examples]
-    r = Extractor(examples, tag=tag, verbose=verbose)
+    r = Extractor(examples, tag=tag, extra_letters=extra_letters,
+                  verbose=verbose)
     return r if as_object else r.results.rex
 
 
@@ -847,7 +878,7 @@ def pdextract(cols):
     try:
         return extract(strings)
     except:
-        if not(all(type(s) == str_type for s in strings)):
+        if not all(type(s) == str_type for s in strings):
             raise ValueError('Non-null, non-string values found in input.')
         else:
             raise
