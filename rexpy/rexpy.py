@@ -1053,7 +1053,7 @@ def get_nCalls():
     return nCalls
 
 
-def main(in_path=None, out_path=None, skip_header=False):
+def main(in_path=None, out_path=None, skip_header=False, **kwargs):
     if in_path:
         with open(in_path) as f:
             strings = f.readlines()
@@ -1061,7 +1061,7 @@ def main(in_path=None, out_path=None, skip_header=False):
         strings = sys.stdin.readlines()
     if skip_header:
         strings = strings[1:]
-    patterns = extract(strings)
+    patterns = extract(strings, **kwargs)
     if out_path:
         with open(out_path, 'w') as f:
             for p in patterns:
@@ -1076,6 +1076,8 @@ def get_params(args):
         'in_path': '',
         'out_path': None,
         'skip_header': False,
+        'extra_letters': None,
+        'tag': None,
     }
     for a in args:
         if a.startswith('-'):
