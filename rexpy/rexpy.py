@@ -639,6 +639,9 @@ class Extractor(object):
         """
         parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re)
                  for frag in vrles]
+        if self.n_stripped > 0:
+            ws = [r'\s*']
+            parts = ws + parts + ws
         return poss_term_re(''.join(parts))
 
 
@@ -647,9 +650,18 @@ class Extractor(object):
         Convert variable run-length-encoded code string to regular expression
         and list of fragments
         """
-        return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
-                         len(frag) < 4)
-                for frag in vrles]
+        if self.n_stripped > 0:
+            return [([Fragment(r'\s*', True)]
+                     + [Fragment(self.fragment2re(frag, tagged=False,
+                                                  as_re=True),
+                               len(frag) < 4)]
+                     + [Fragment(r'\s*', True)])
+                    for frag in vrles]
+
+        else:
+            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
+                             len(frag) < 4)
+                    for frag in vrles]
 
     def rle2re(self, rles, tagged=False, as_re=True):
         """
@@ -1073,7 +1085,7 @@ def get_nCalls():
 def main(in_path=None, out_path=None, skip_header=False, **kwargs):
     if in_path:
         with open(in_path) as f:
-            strings = f.readlines()
+            strings = f.read().splitlines()
     else:
         strings = sys.stdin.readlines()
     if skip_header:

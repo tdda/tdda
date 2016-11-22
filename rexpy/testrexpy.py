@@ -631,17 +631,17 @@ class TestExtraction(unittest.TestCase):
         # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         self.assertEqual(extract(iids),
-                         [r'^\d{2,3}\-[A-Z]{2}\-\d{3,4}$'])
+                         [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$'])
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         self.assertEqual(extract(iids, extra_letters='-'),
-                         [r'^[A-Z0-9\-]{10}$'])
+                         [r'^\s*[A-Z0-9\-]{10}\s*$'])
 
     def test_re_pqs_id_with_dash2(self):
         iids = ['123-AB-321', ' AB-1B-4A21', '', None, '321-BA-1A23']
         self.assertEqual(extract(iids, extra_letters='-'),
-                         [r'^[A-Z0-9\-]{10,11}$'])
+                         [r'^\s*[A-Z0-9\-]{10,11}\s*$'])
 
     def test_re_pqs_id_with_underscore(self):
         iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
@@ -939,7 +939,7 @@ class TestExtraction(unittest.TestCase):
                                     'examples')
         agents_path = os.path.join(examples_dir, 'agents9.txt')
         with open(agents_path) as f:
-            examples = f.readlines()
+            examples = f.read().splitlines()
         r = extract(examples, as_object=True)
         self.assertEqual(set(r.results.rex), {
             r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ NT\ '
