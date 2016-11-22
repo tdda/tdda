@@ -21,13 +21,38 @@ bytes_type = str if sys.version_info.major < 3 else bytes
 
 USAGE = """USAGE:
 
-    python rexpy.py [input file [output file]]
+    python rexpy.py [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
 
 If output file is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
+
+FLAGS are optional flags. Currently:
+
+  -h, --header      Discard first line, as a header.
+
+  -?, --help        Print this usage information and exit (without error)
+
+  -g, --group       Generate capture groups for each variable fragment
+                    of each regular expression generated, i.e. surround
+                    variable components with parentheses
+                        e.g.     '^([A-Z]+)\-([0-9]+)$'
+                        becomes  '^[A-Z]+\-[0-9]+$'
+
+  -u, --underscore  Allow underscore to be treated as a letter.
+                    Mostly useful for matching identifiers
+                    Also allow -_.
+
+  -d, --dot         Allow dot to be treated as a letter.
+                    Mostly useful for matching identifiers.
+                    Also -. --period.
+
+  -m, --minus       Allow minus to be treated as a letter.
+                    Mostly useful for matching identifiers.
+                    Also --hyphen or --dash.
+
 """
 
 MIN_MERGE_SIMILARITY = 0.5
@@ -1058,6 +1083,17 @@ def get_params(args):
                 params['in_path'] = None
             elif a in ('-h', '--header'):
                 params['skip_header'] = True
+            elif a in ('-g', '--group'):
+                params['tag'] = True
+            elif a in ('-u', '-_', '--underscore'):
+                params['extra_letters'] = (params['extra_letters'] or '') + '_'
+            elif a in ('-d', '-.', '--dot', '--period'):
+                params['extra_letters'] = (params['extra_letters'] or '') + '.'
+            elif a in ('-m', '--minus', '--hyphen', '--dash'):
+                params['extra_letters'] = (params['extra_letters'] or '') + '-'
+            elif a in ('-?', '--help'):
+                print(USAGE)
+                sys.exit(0)
             else:
                 raise Exception(USAGE)
         elif params['in_path'] == '':  # not previously set and not '-'
@@ -1067,6 +1103,10 @@ def get_params(args):
         else:
             raise Exception(USAGE)
     params['in_path'] = params['in_path']  or None  # replace '' with None
+    extras = params['extra_letters']
+    if extras:
+        params['extra_letters'] =  ''.join(sorted([c for c in extras]))
+        # Order always, for consistency
     return params
 
 
