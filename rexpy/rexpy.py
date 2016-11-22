@@ -651,12 +651,12 @@ class Extractor(object):
         and list of fragments
         """
         if self.n_stripped > 0:
-            return [([Fragment(r'\s*', True)]
-                     + [Fragment(self.fragment2re(frag, tagged=False,
-                                                  as_re=True),
-                               len(frag) < 4)]
+            return ([Fragment(r'\s*', True)]
+                    + [Fragment(self.fragment2re(frag, tagged=False,
+                                                 as_re=True),
+                              len(frag) < 4)
+                       for frag in vrles]
                      + [Fragment(r'\s*', True)])
-                    for frag in vrles]
 
         else:
             return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
