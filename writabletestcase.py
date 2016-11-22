@@ -293,3 +293,7 @@ class WritableTestCase(unittest.TestCase):
         if do_assert:
             self.assertEqual(failures, 0)
         return failures
+
+
+if __name__ == '__main__':
+    main(sys.argv)
