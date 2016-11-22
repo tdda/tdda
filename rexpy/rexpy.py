@@ -200,6 +200,9 @@ class Categories(object):
         return self.code2cat[k]
 
 
+Fragment = namedtuple('Fragment', 're group')
+
+
 class Extractor(object):
     """
     Regular expression 'extractor'.
@@ -319,7 +322,8 @@ class Extractor(object):
         mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
         mergedfrags = [self.vrle2refrags(m) for m in merged]
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
-                              merged, mergedrex, mergedfrags)
+                              merged, mergedrex, mergedfrags,
+                              extractor=self)
 
     def coarse_classify(self, s):
         """
@@ -617,7 +621,7 @@ class Extractor(object):
             part = regex + ('{%d}' % m)
         else:
             part = regex + ('{%d,%s}' % (m, M))
-        return ('(%s)' % part) if tagged else part
+        return ('(%s)' % part) if (tagged and not fixed) else part
 
     def vrle2re(self, vrles, tagged=False, as_re=True):
         """
@@ -633,7 +637,8 @@ class Extractor(object):
         Convert variable run-length-encoded code string to regular expression
         and list of fragments
         """
-        return [self.fragment2re(frag, tagged=False, as_re=True)
+        return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
+                         len(frag) < 4)
                 for frag in vrles]
 
     def rle2re(self, rles, tagged=False, as_re=True):
@@ -769,7 +774,7 @@ def ndigits(n, d):
 
 class ResultsSummary(object):
     def __init__(self, rles, rle_freqs, vrles,
-                 vrle_freqs, refined_vrles, rex, refrags):
+                 vrle_freqs, refined_vrles, rex, refrags, extractor=None):
         self.rles = rles
         self.rle_freqs = rle_freqs
         self.vrles = vrles
@@ -777,6 +782,7 @@ class ResultsSummary(object):
         self.refined_vrles = refined_vrles
         self.rex = rex
         self.refrags = refrags
+        self.extractor = extractor
 
     def to_string(self, rles=False, rle_freqs=False, vrles=False,
                   vrle_freqs=False, refined_vrles=False, rex=False,
@@ -841,7 +847,8 @@ class ResultsSummary(object):
         return '\n'.join(out)
 
     def to_re(self, patterns, grouped=False, as_re=True):
-        f = self.rle2re if len(patterns[0]) == 2 else self.vrle2re
+        f = (self.extractor.rle2re if len(patterns[0]) == 2
+                                   else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 
     def __str__(self):

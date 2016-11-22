@@ -721,8 +721,12 @@ class TestExtraction(unittest.TestCase):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
-                         [[u'\\d{4}', u'[\\-\\.]', u'\\d{3}',
-                           u'[\\-\\.]', u'\\d{4}']])
+                         [[(u'\\d{4}', True),
+                           (u'[\\-\\.]', False),
+                           (u'\\d{3}', True),
+                           (u'[\\-\\.]', False),
+                            (u'\\d{4}', True),
+                          ]])
         self.assertEqual(r.results.rex,
                          [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'])
 
@@ -892,6 +896,21 @@ class TestExtraction(unittest.TestCase):
             r'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+        })
+
+    def test_urls2_grouped(self):
+
+#        print()
+#        x = Extractor(self.urls2, verbose=True)
+#        x = Extractor(self.urls2)
+#        print(str(x))
+        self.assertEqual(set(extract(self.urls2, tag=True)), {
+            r'^([a-z]{4,5})\:\/\/www\.([a-z]+)\.com$',
+            r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
+            r'^([a-z]{3,4})\.([a-z]{2,4})$',
+            r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^([a-z]+)\.com\/$',
+            r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
         })
 
     def test_urls_all(self):
