@@ -222,7 +222,6 @@ class Extractor(object):
         Also performs exraction unless extract=False.
         """
 
-        self.Cats = Categories(extra_letters)
         self.example_freqs = Counter()      # Each string stored only once;
                                             # but multiplicity stored
 #        self.by_length = defaultdict(list)  # Examples also stored by length
@@ -235,8 +234,10 @@ class Extractor(object):
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
+        self.Cats = Categories(self.thin_extras(extra_letters))
         if extract:
             self.extract()                  # Stores results
+
 
     def extract(self):
         """
@@ -279,6 +280,15 @@ class Extractor(object):
                                  '"too many" groups.'
                                  % (self.n_too_many_groups,
                                     's' if self.n_too_many_groups > 1 else ''))
+
+    def thin_extras(self, extra_letters):
+        if not extra_letters or len(extra_letters) == 1:
+            return extra_letters
+        keep = []
+        for L in extra_letters:
+            if any(L in example for example in self.example_freqs):
+                keep.append(L)
+        return ''.join(keep) if keep else None
 
     def clean(self, examples):
         """

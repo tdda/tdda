@@ -648,11 +648,14 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(extract(iids, extra_letters='_'),
                          [r'^[A-Za-z0-9\_]+$'])
 
-    def test_re_pqs_id_with_underscore(self):
-        # Currently includes all extra letters.
-        # But could do simple check to remove.
+    def test_re_pqs_id_with_underscores2(self):
         iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
         self.assertEqual(extract(iids, extra_letters='_-'),
+                         [r'^[A-Za-z0-9\_]+$'])
+
+    def test_re_pqs_id_with_underscores3(self):
+        iids = ['123-AB_321', 'AB_1B-4A21', '', None, '321_BA_1A23ab2rj']
+        self.assertEqual(extract(iids, extra_letters='_-.'),
                          [r'^[A-Za-z0-9\_\-]+$'])
 
     def test_re_uuid(self):
