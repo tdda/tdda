@@ -1,6 +1,6 @@
 
-from tdda.referencetest.referencepytest import (set_data_location,
-                                                assertStringCorrect)
+from tdda.referencetest.referencepytest import *
+
 class my_module(object):
     @staticmethod
     def my_function(s):

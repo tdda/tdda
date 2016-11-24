@@ -532,3 +532,9 @@ class ReferenceTest(object):
     # Default print function
     print_fn = default_print_fn
 
+
+# Magic so that an instance of this class can masquerade as a module,
+# so that all of its methods can be made available as top-level functions,
+# to work will with frameworks like pytest.
+ReferenceTest.__all__ = dir(ReferenceTest)
+

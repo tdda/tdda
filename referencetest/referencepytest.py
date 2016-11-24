@@ -16,8 +16,7 @@ module functions rather than class methods, using python's native
 
 For example:
 
-    from tdda.referencetest.referencepytest import (set_data_location,
-                                                    assertStringCorrect)
+    from tdda.referencetest.referencepytest import *
     import my_module
 
     set_data_location(None, '/data')
