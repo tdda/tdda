@@ -25,20 +25,7 @@ from tdda.referencetest.checkfiles import FilesComparison
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
 # if assertStringCorrect or assertFileCorrect fail with 'preprocessing'
-# in place.
-#
-# There are several ways to control this:
-#
-# 1. There is a class method, set_defaults, which can be called
-#    (with ReferenceTest.set_defaults(faildir=...) to override
-#    this variable.
-#
-# 2. Failing that, as below, if the environment variable TDDA_FAIL_DIR
-#    is set to a location, that will be used.
-#
-# 3. Finally, it defaults to /tmp, c:\temp or whatever tempfile.gettempdir()
-#    returns, as appropriate.
-#
+# in place. This can be overridden using the set_defaults() class method.
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
 
@@ -114,6 +101,24 @@ class ReferenceTest(object):
                         as python's __future__ print function. If not
                         specified, a default print function is used which
                         writes unbuffered to sys.stdout.
+
+        tmp_dir         Sets the tmp_dir property globally, to specify the
+                        directory where temporary files are written. 
+                        Temporary files are created whenever a text file
+                        check fails and a 'preprocess' function has been
+                        specified. It's useful to be able to see the contents
+                        of the files after preprocessing has taken place,
+                        so preprocessed versions of the files are written
+                        to this directory, and their pathnames are included
+                        in the failure messages. If not explicitly set by
+                        set_defaults(), the environment variable TDDA_FAIL_DIR
+                        is used, or, if that is not defined, it defaults to
+                        /tmp, c:\temp or whatever tempfile.gettempdir()
+                        returns, as appropriate.
+
+        Other parameters may be made available in the future. Attempting
+        to set a not-yet-implemented parameter will succeed silently, but
+        without having any affect on the behaviour of the module.
         """
         cls.__dict__.update(kwargs)
 
