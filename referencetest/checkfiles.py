@@ -307,11 +307,14 @@ class FilesComparison(object):
         diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
         if actual_path and expected_path:
             self.info(msgs, 'File check failed.')
-            self.info(msgs, 'Compare with "%s %s %s".\n'
+            self.info(msgs, 'Compare with "%s %s %s".'
                             % (diffcmd, actual_path, expected_path))
         elif expected_path:
             self.info(msgs, 'Check failed.')
             self.info(msgs, 'Expected file %s' % expected_path)
+        elif actual_path:
+            self.info(msgs, 'Check failed.')
+            self.info(msgs, 'Actual file %s' % actual_path)
         if ignore_substrings or ignore_patterns:
             self.info(msgs, 'Note exclusions:')
         if ignore_substrings:
@@ -330,7 +333,7 @@ class FilesComparison(object):
                 f.write('\n'.join(actual))
             with open(modifiedRef, 'w') as f:
                 f.write('\n'.join(expected))
-            self.info(msgs, 'Compare preprocessed with "%s %s %s".\n'
+            self.info(msgs, 'Compare preprocessed with "%s %s %s".'
                             % (diffcmd, modifiedActual, modifiedRef))
 
     def info(self, msgs, s):

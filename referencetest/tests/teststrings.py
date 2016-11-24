@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Unit tests for tdda.referencetest.checkfiles
+# Unit tests for string functions from tdda.referencetest.checkfiles
 #
 
 from __future__ import absolute_import
@@ -15,14 +15,14 @@ from tdda.referencetest.checkfiles import FilesComparison
 
 class TestStrings(unittest.TestCase):
 
-    def test_simple_strings_ok(self):
+    def test_strings_ok(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings([], []), (0, []))
         self.assertEqual(compare.check_strings(['abc'], ['abc']), (0, []))
         self.assertEqual(compare.check_strings(['ab', 'c'], ['ab', 'c']),
                          (0, []))
 
-    def test_simple_strings_fail(self):
+    def test_strings_fail(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings([], ['x']),
                          (1, ['Strings have different numbers of lines']))
