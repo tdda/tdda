@@ -283,7 +283,9 @@ class ReferenceTest(object):
 
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
-        if not self.write_reference(actual_path, expected_path, kind=kind):
+        if self.should_regenerate(kind):
+            self.write_reference_file(actual_path, expected_path, kind=kind)
+        else:
             ref_df = self.pandas.load_csv(expected_path, loader=csv_read_fn)
             self.assertDatasetsEqual(df, ref_df,
                                      actual_path=actual_path,
@@ -347,7 +349,9 @@ class ReferenceTest(object):
 
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
-        if not self.write_reference(actual_path, expected_path, kind=kind):
+        if self.should_regenerate(kind):
+            self.write_reference_file(actual_path, expected_path, kind=kind)
+        else:
             r = self.pandas.check_csv_file(actual_path, expected_path,
                                            check_types=check_types,
                                            check_order=check_order,
@@ -401,7 +405,9 @@ class ReferenceTest(object):
                                to be identical.
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
-        if not self.write_reference_result(string, expected_path, kind=kind):
+        if self.should_regenerate(kind):
+            self.write_reference_result(string, expected_path, kind=kind)
+        else:
             ilc = ignore_substrings
             ip = ignore_patterns
             mpc = max_permutation_cases
@@ -462,7 +468,9 @@ class ReferenceTest(object):
         For csv files, use assertCSVFileCorrect instead.
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
-        if not self.write_reference(actual_path, expected_path, kind=kind):
+        if self.should_regenerate(kind):
+            self.write_reference_file(actual_path, expected_path, kind=kind)
+        else:
             mpc = max_permutation_cases
             r = self.files.check_file(actual_path, expected_path,
                                       lstrip=lstrip, rstrip=rstrip,
@@ -470,6 +478,67 @@ class ReferenceTest(object):
                                       ignore_patterns=ignore_patterns,
                                       preprocess=preprocess,
                                       max_permutation_cases=mpc)
+            (failures, msgs) = r
+            self.check_failures(failures, msgs)
+
+    def assertFilesCorrect(self, actual_paths, ref_csvs, kind=None,
+                           lstrip=False, rstrip=False,
+                           ignore_substrings=None,
+                           ignore_patterns=None, preprocess=None,
+                           max_permutation_cases=0):
+        """
+        Check that a collection of files matche the contents from
+        matching collection of reference text files.
+
+        actual_paths           is a list of paths for text files.
+        ref_csvs               is a list of names of the matching reference
+                               csv files.  The location of the reference files
+                               is determined by the configuration via
+                               set_data_location().
+        kind                   is the reference kind, used to locate the
+                               reference csv files.
+        lstrip                 if set to true, both strings are left stripped
+                               before the comparison is carried out.
+                               Note: the stripping on a per-line basis.
+        rstrip                 if set to true, both strings are right stripped
+                               before the comparison is carried out.
+                               Note: the stripping on a per-line basis.
+        ignore_substrings      is an optional list of substrings; lines
+                               containing any of these substrings will be
+                               ignored in the comparison.
+        ignore_patterns        is an optional list of regular expressions;
+                               lines will be considered to be the same if
+                               they only differ in substrings that match one
+                               of these regular expressions. The expressions
+                               must not contain parenthesised groups, and
+                               should only include explicit anchors if they
+                               need refer to the whole line.
+        preprocess             is an optional function that takes a list of
+                               strings and preprocesses it in some way; this
+                               function will be applied to both the actual
+                               and expected.
+        max_permutation_cases  is an optional number specifying the maximum
+                               number of permutations allowed; if the actual
+                               and expected lists differ only in that their
+                               lines are permutations of each other, and
+                               the number of such permutations does not
+                               exceed this limit, then the two are considered
+                               to be identical.
+
+        This should be used for unstructured data such as logfiles, etc.
+        For csv files, use assertCSVFileCorrect instead.
+        """
+        expected_paths = self.resolve_reference_paths(ref_csvs, kind=kind)
+        if self.should_regenerate(kind):
+            self.write_reference_files(actual_paths, expected_paths, kind=kind)
+        else:
+            mpc = max_permutation_cases
+            r = self.files.check_files(actual_paths, expected_paths,
+                                       lstrip=lstrip, rstrip=rstrip,
+                                       ignore_substrings=ignore_substrings,
+                                       ignore_patterns=ignore_patterns,
+                                       preprocess=preprocess,
+                                       max_permutation_cases=mpc)
             (failures, msgs) = r
             self.check_failures(failures, msgs)
 
@@ -487,35 +556,47 @@ class ReferenceTest(object):
                 raise Exception('No reference data location for "%s"' % kind)
         return path
 
-    def write_reference(self, actual_path, reference_path, kind=None):
+    def resolve_reference_paths(self, paths, kind=None):
         """
-        Internal method for regenerating reference data from new files, if
-        the appropriate 'regenerate' option has been set.
+        Internal method for resolving a list of reference data files,
+        all of the same kind.
+        """
+        return [self.resolve_reference_path(p, kind=kind) for p in paths]
+
+    def should_regenerate(self, kind):
+        """
+        Internal method to determine if a particular kind of file
+        should be regenerated.
         """
         if kind not in self.regenerate:
             kind = None
-        if kind in self.regenerate and self.regenerate[kind]:
-            with open(actual_path) as fin:
-                actual = fin.read()
-            return self.write_reference_result(actual_path, reference_path,
-                                               kind=kind)
-        else:
-            return False
+        return kind in self.regenerate and self.regenerate[kind]
 
-    def write_reference_result(self, string, reference_path, kind=None):
+    def write_reference_file(self, actual_path, reference_path):
+        """
+        Internal method for regenerating reference data.
+        """
+        with open(actual_path) as fin:
+            actual = fin.read()
+        self.write_reference_result(actual_path, reference_path)
+
+    def write_reference_files(self, actual_paths, reference_paths):
+        """
+        Internal method for regenerating reference data for a list of
+        files.
+        """
+        for (actual_path, expected_path) in zip(actual_paths, reference_paths):
+            self.write_reference_file(actual_path, reference_path)
+
+    def write_reference_result(self, string, reference_path):
         """
         Internal method for regenerating reference data from in-memory
-        results, if the appropriate 'regenerate' option has been set.
+        results.
         """
-        if kind not in self.regenerate:
-            kind = None
-        if kind in self.regenerate and self.regenerate[kind]:
-            with open(reference_path, 'w') as fout:
-                fout.write(output)
+        with open(reference_path, 'w') as fout:
+            fout.write(output)
+        if self.verbose:
             self.print_fn('Written %s' % reference_path)
-            return True
-        else:
-            return False
 
     def check_failures(self, failures, msgs):
         """
