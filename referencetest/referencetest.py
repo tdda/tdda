@@ -284,7 +284,7 @@ class ReferenceTest(object):
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
         if self.should_regenerate(kind):
-            self.write_reference_file(actual_path, expected_path, kind=kind)
+            self.write_reference_file(actual_path, expected_path)
         else:
             ref_df = self.pandas.load_csv(expected_path, loader=csv_read_fn)
             self.assertDatasetsEqual(df, ref_df,
@@ -301,7 +301,7 @@ class ReferenceTest(object):
                              kind='csv', csv_read_fn=None,
                              check_data=None, check_types=None,
                              check_order=None, condition=None, sortby=None,
-                             precision=None):
+                             precision=None, **kwargs):
         """
         Check that a csv file matches a reference one.
 
@@ -311,6 +311,10 @@ class ReferenceTest(object):
                           via set_data_location().
         kind              Reference kind, used to locate the reference csv
                           file.
+        csv_read_fn       A function to use to read a csv file to obtain
+                          a pandas dataframe. If None, then a default csv
+                          loader is used, which takes the same parameters
+                          as the standard pandas pd.read_csv() function.
         check_data        Option to specify fields to compare values.
         check_types       Option to specify fields to compare typees.
         check_order       Option to specify fields to compare field order.
@@ -324,9 +328,8 @@ class ReferenceTest(object):
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
-        loader            Function to use to read a csv file to obtain
-                          a pandas dataframe. If None, then a default csv
-                          loader is used.
+        **kwargs          Any additional named parameters are passed straight
+                          through to the csv_read_fn function.
 
         The check_* comparison flags can be of any of the following:
             - None (to apply that kind of comparison to all fields)
@@ -350,7 +353,7 @@ class ReferenceTest(object):
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
         if self.should_regenerate(kind):
-            self.write_reference_file(actual_path, expected_path, kind=kind)
+            self.write_reference_file(actual_path, expected_path)
         else:
             r = self.pandas.check_csv_file(actual_path, expected_path,
                                            check_types=check_types,
@@ -358,6 +361,73 @@ class ReferenceTest(object):
                                            condition=condition,
                                            sortby=sortby,
                                            precision=precision)
+            (failures, msgs) = r
+            self.check_failures(failures, msgs)
+
+    def assertCSVFilesCorrect(self, actual_paths, ref_csvs,
+                              kind='csv', csv_read_fn=None,
+                              check_data=None, check_types=None,
+                              check_order=None, condition=None, sortby=None,
+                              precision=None, **kwargs):
+        """
+        Check that a csv file matches a reference one.
+
+        actual_paths      List of Actual csv files.
+        ref_csvs          List of names of matching reference csv file. The
+                          location of the reference files is determined by
+                          the configuration via set_data_location().
+        kind              Reference kind, used to locate the reference csv
+                          files.
+        csv_read_fn       A function to use to read a csv file to obtain
+                          a pandas dataframe. If None, then a default csv
+                          loader is used, which takes the same parameters
+                          as the standard pandas pd.read_csv() function.
+        check_data        Option to specify fields to compare values.
+        check_types       Option to specify fields to compare typees.
+        check_order       Option to specify fields to compare field order.
+        check_extra_cols  Option to specify fields in the actual dataset
+                          to use to check that there are no unexpected
+                          extra columns.
+        sortby            Option to specify fields to sort by before comparing.
+        condition         Filter to be applied to datasets before comparing.
+                          It can be None, or can be a function that takes
+                          a dataframe as its single parameter and returns
+                          a vector of booleans (to specify which rows should
+                          be compared).
+        precision         Number of decimal places to compare float values.
+        **kwargs          Any additional named parameters are passed straight
+                          through to the csv_read_fn function.
+
+        The check_* comparison flags can be of any of the following:
+            - None (to apply that kind of comparison to all fields)
+            - False (to skip that kind of comparison completely)
+            - a list of field names
+            - a function taking a dataframe as its single parameter, and
+              returning a list of field names to use.
+
+        The default csv loader function is a wrapper around pandas
+        pd.read_csv(), with default options as follows:
+            index_col             is None
+            infer_datetime_format is True
+            quotechar             is ""
+            quoting               is csv.QUOTE_MINIMAL
+            escapechar            is \
+            na_values             are the empty string, NaN, and NULL
+            keep_default_na       is False
+
+        Raises NotImplementedError if Pandas is not available.
+
+        """
+        expected_paths = self.resolve_reference_paths(ref_csvs, kind=kind)
+        if self.should_regenerate(kind):
+            self.write_reference_files(actual_paths, expected_paths)
+        else:
+            r = self.pandas.check_csv_files(actual_paths, expected_paths,
+                                            check_types=check_types,
+                                            check_order=check_order,
+                                            condition=condition,
+                                            sortby=sortby,
+                                            precision=precision)
             (failures, msgs) = r
             self.check_failures(failures, msgs)
 
@@ -406,7 +476,7 @@ class ReferenceTest(object):
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
         if self.should_regenerate(kind):
-            self.write_reference_result(string, expected_path, kind=kind)
+            self.write_reference_result(string, expected_path)
         else:
             ilc = ignore_substrings
             ip = ignore_patterns
@@ -469,7 +539,7 @@ class ReferenceTest(object):
         """
         expected_path = self.resolve_reference_path(ref_csv, kind=kind)
         if self.should_regenerate(kind):
-            self.write_reference_file(actual_path, expected_path, kind=kind)
+            self.write_reference_file(actual_path, expected_path)
         else:
             mpc = max_permutation_cases
             r = self.files.check_file(actual_path, expected_path,
@@ -530,7 +600,7 @@ class ReferenceTest(object):
         """
         expected_paths = self.resolve_reference_paths(ref_csvs, kind=kind)
         if self.should_regenerate(kind):
-            self.write_reference_files(actual_paths, expected_paths, kind=kind)
+            self.write_reference_files(actual_paths, expected_paths)
         else:
             mpc = max_permutation_cases
             r = self.files.check_files(actual_paths, expected_paths,

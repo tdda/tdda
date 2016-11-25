@@ -10,7 +10,7 @@ import unittest
 
 from tdda.referencetest.tests.teststrings import *
 from tdda.referencetest.tests.testfiles import *
-from tdda.referencetest.tests.testdataframes import *
+from tdda.referencetest.tests.testpandas import *
 
 if __name__ == '__main__':
     unittest.main()

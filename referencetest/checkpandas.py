@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-checkpandas.py: comparison mechanism for pandas dataframes (and CSV files)
+checkpandas.py: comparison mechanism for pandas dataframes (and csv files)
 
 Source repository: http://github.com/tdda/tdda
 
@@ -36,7 +36,7 @@ class PandasNotImplemented(object):
 
 class PandasComparison(object):
     """
-    Comparison class for pandas dataframes (and CSV files).
+    Comparison class for pandas dataframes (and csv files).
     """
 
     def __new__(cls, *args, **kwargs):
@@ -69,10 +69,11 @@ class PandasComparison(object):
                           used for error messages.
         expected_path     Path for file where expected dataframe originated,
                           used for error messages.
-        check_data        Option to specify fields to use to compare values.
         check_types       Option to specify fields to use to compare typees.
         check_order       Option to specify fields to use to compare field
                           order.
+        check_data        Option to specify fields to use to compare cell
+                          values.
         check_extra_cols  Option to specify fields in the actual dataset
                           to use to check that there are no unexpected
                           extra columns.
@@ -103,21 +104,8 @@ class PandasComparison(object):
         if precision is None:
             precision = 6
 
-        if check_types:
-            if hasattr(check_types, '__call__'):
-                check_types = check_types(ref_df)
-        elif check_types is False:
-            check_types = []
-        else:
-            check_types = list(ref_df)
-
-        if check_extra_cols:
-            if hasattr(check_extra_cols, '__call__'):
-                check_extra_cols = check_extra_cols(df)
-        elif check_extra_cols is False:
-            check_extra_cols = []
-        else:
-            check_extra_cols = list(df)
+        check_types = resolve_option_flag(check_types, ref_df)
+        check_extra_cols = resolve_option_flag(check_extra_cols, df)
 
         missing_cols = []
         extra_cols = []
@@ -131,10 +119,7 @@ class PandasComparison(object):
         if check_extra_cols:
             extra_cols = set(check_extra_cols) - set(list(ref_df))
         if check_order != False and not missing_cols:
-            if check_order is None or check_order is True:
-                check_order = check_types
-            elif hasattr(check_order, '__call__'):
-                check_order = check_order(ref_df)
+            check_order = resolve_option_flag(check_order, ref_df)
             c1 = [c for c in list(df) if c in check_order]
             c2 = [c for c in list(ref_df) if c in check_order]
             wrong_ordering = (list(df[c1]) != list(ref_df[c2]))
@@ -142,17 +127,17 @@ class PandasComparison(object):
 
         if not same:
             if actual_path or expected_path:
-                self.info(msgs, '*** Differences found: %s %s'
+                self.info(msgs, 'Differences found: %s %s'
                                 % (actual_path or '', expected_path or ''))
-            self.info(msgs, '*** Column check failed')
+            self.info(msgs, 'Column check failed')
             if missing_cols:
-                self.info(msgs, '*** Missing columns: %s' % missing_cols)
+                self.info(msgs, 'Missing columns: %s' % missing_cols)
             if extra_cols:
-                self.info(msgs, '*** Extra columns: %s' % list(extra_cols))
+                self.info(msgs, 'Extra columns: %s' % list(extra_cols))
             if wrong_types:
                 for (c, dtype, ref_dtype) in wrong_types:
                     self.info(msgs,
-                              '*** Wrong column type %s (%s, expected %s)'
+                              'Wrong column type %s (%s, expected %s)'
                               % (c, dtype, ref_dtype))
             if wrong_ordering:
                 c1 = [c for c in list(df) if c in check_types]
@@ -165,47 +150,33 @@ class PandasComparison(object):
                     elif c != c2[i]:
                         ordermsg = ('found %s, expected %s' % (c, c2[i]))
                         break
-                self.info(msgs, '*** Wrong column ordering: %s' % ordermsg)
+                self.info(msgs, 'Wrong column ordering: %s' % ordermsg)
         else:
             if sortby:
-                if hasattr(sortby, '__call__'):
-                    sortby = sortby(ref_df)
+                sortby = resolve_option_flag(sortby, ref_df)
                 df.sort_values(sortby, inplace=True)
                 ref_df.sort_values(sortby, inplace=True)
             if condition:
                 df = df[condition(df)].reindex()
                 ref_df = ref_df[condition(ref_df)].reindex()
-            if check_data:
-                if hasattr(check_data, '__call__'):
-                    check_data = check_data(ref_df)
-                df = df[check_data]
-                ref_df = ref_df[check_data]
-
             same = len(df) == len(ref_df)
             if not same:
-                self.info(msgs, '*** File length check failed.')
-                self.info(msgs, '\n*** Found %d records, expected %d'
+                self.info(msgs, 'File length check failed.')
+                self.info(msgs, 'Found %d records, expected %d'
                                 % (len(df), len(ref_df)))
-
-        if same:
-            if check_order is None or check_order is True:
-                rounded = df.round(precision)
-                ref_rounded = ref_df.round(precision)
-            elif check_order is False:
-                rounded = df[list(ref_df)].round(precision)
-                ref_rounded = ref_df.round(precision)
             else:
-                rounded = df[check_order].round(precision)
-                ref_rounded = ref_df[check_order].round(precision)
-            rounded = rounded.reset_index(drop=True)
-            ref_rounded = ref_rounded.reset_index(drop=True)
-            same = rounded.equals(ref_rounded)
-            if not same:
-                self.info(msgs, '\n*** Dataframe contents check failed.')
-                for c in list(ref_rounded):
-                    if not rounded[c].equals(ref_rounded[c]):
-                        self.info(msgs, '*** Column values differ: %s' % c)
-
+                check_data = resolve_option_flag(check_data, ref_df)
+                if check_data:
+                    df = df[check_data]
+                    ref_df = ref_df[check_data]
+                    rounded = df.round(precision).reset_index(drop=True)
+                    ref_rounded = ref_df.round(precision).reset_index(drop=True)
+                    same = rounded.equals(ref_rounded)
+                    if not same:
+                        self.info(msgs, 'Dataframe contents check failed.')
+                        for c in list(ref_rounded):
+                            if not rounded[c].equals(ref_rounded[c]):
+                                self.info(msgs, 'Column values differ: %s' % c)
         return (0 if same else 1, msgs)
 
     def check_csv_file(self, actual_path, expected_path, loader=None,
@@ -213,18 +184,18 @@ class PandasComparison(object):
                        condition=None, sortby=None, precision=6, msgs=None,
                        **kwargs):
         """
-        Checks two CSV files are the same, by comparing them as dataframes.
+        Checks two csv files are the same, by comparing them as dataframes.
 
-        The parameters are the same as those used by check_dataframe,
-        in addition to:
-
-        loader          A function to use to read a CSV file to obtain
+        actual_path     Pathname for actual csv file.
+        expected_path   Pathname for expected csv file.
+        loader          A function to use to read a csv file to obtain
                         a pandas dataframe. If None, then a default csv
                         loader is used, which takes the same parameters
                         as the standard pandas pd.read_csv() function.
         **kwargs        Any additional named parameters are passed straight
                         through to the loader function.
 
+        The other parameters are the same as those used by check_dataframe,
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
         """
@@ -246,7 +217,20 @@ class PandasComparison(object):
                         condition=None, sortby=None, msgs=None, **kwargs):
         """
         Wrapper around the check_csv_file() method, used to compare
-        collections of actual and expected CSV files.
+        collections of actual and expected csv files.
+
+        actual_paths    List of pathnames for actual csv file.
+        expected_paths  List of pathnames for expected csv file.
+        loader          A function to use to read a csv file to obtain
+                        a pandas dataframe. If None, then a default csv
+                        loader is used, which takes the same parameters
+                        as the standard pandas pd.read_csv() function.
+        **kwargs        Any additional named parameters are passed straight
+                        through to the loader function.
+
+        The other parameters are the same as those used by check_dataframe.
+        Returns a tuple (failures, msgs), containing the number of failures,
+        and a list of error messages.
 
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
@@ -289,7 +273,7 @@ class PandasComparison(object):
 
     def load_csv(self, csvfile, loader=None, **kwargs):
         """
-        Function for constructing a pandas dataframe from a CSV file.
+        Function for constructing a pandas dataframe from a csv file.
         """
         if loader is None:
             loader = default_csv_loader
@@ -298,7 +282,7 @@ class PandasComparison(object):
 
 def default_csv_loader(csvfile, **kwargs):
     """
-    Default function for reading a CSV file.
+    Default function for reading a csv file.
 
     Wrapper around the standard pandas pd.read_csv() function, but with
     slightly different defaults:
@@ -322,4 +306,22 @@ def default_csv_loader(csvfile, **kwargs):
     }
     options.update(kwargs)
     return pd.read_csv(csvfile, **options)
+
+
+def resolve_option_flag(flag, df):
+    """
+    Method to resolve an option flag, which may be any of:
+       - None or True:     use all columns in the dataframe
+       - None:             use no columns 
+       - list of columns   use these columns
+       - function returning a list of columns
+    """
+    if flag is None or flag is True:
+        return list(df)
+    elif flag is False:
+        return []
+    elif hasattr(flag, '__call__'):
+         return flag(df)
+    else:
+        return flag
 
