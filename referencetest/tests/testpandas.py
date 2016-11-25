@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
 
+import os
 import unittest
 
 try:
@@ -18,10 +19,14 @@ except ImportError:
 from tdda.referencetest.checkpandas import PandasComparison
 
 
+def testdata(filename):
+    return os.path.join(os.path.dirname(__file__), 'testdata', filename)
+
+
 @unittest.skipIf(pd is None, 'no pandas')
 class TestStrings(unittest.TestCase):
 
-    def test_datasets_ok(self):
+    def test_frames_ok(self):
         compare = PandasComparison()
         df1 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
                             'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001]})
@@ -37,7 +42,7 @@ class TestStrings(unittest.TestCase):
                                                  check_data=['a']),
                          (0, []))
 
-    def test_datasets_fail(self):
+    def test_frames_fail(self):
         compare = PandasComparison()
         df1 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
                             'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001]})
@@ -55,6 +60,27 @@ class TestStrings(unittest.TestCase):
                          (1,
                           ['Column check failed',
                            'Wrong column type b (float64, expected int64)']))
+
+    def test_pandas_csv_ok(self):
+        compare = PandasComparison()
+        r = compare.check_csv_file(testdata('colours.txt'),
+                                   testdata('colours.txt'))
+        self.assertEqual(r, (0, []))
+
+    def test_pandas_csv_fail(self):
+        compare = PandasComparison()
+        r = compare.check_csv_file(testdata('single.txt'),
+                                   testdata('colours.txt'))
+        self.assertEqual(r, (1,
+                             ['Differences found: %s %s'
+                                  % (testdata('single.txt'),
+                                     testdata('colours.txt')),
+                              'Column check failed',
+                              'Missing columns: [%s]'
+                                  % ', '.join(["'%s'" % s for s in
+                                               ['Name', 'RGB', 'Hue',
+                                                'Saturation', 'Value']]),
+                              'Extra columns: [\'a single line\']']))
 
 
 if __name__ == '__main__':
