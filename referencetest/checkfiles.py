@@ -30,9 +30,9 @@ class FilesComparison(object):
 
     def check_strings(self, actual, expected,
                       actual_path=None, expected_path=None,
-                      lstrip=False, rstrip=False, ignore_substrings=None,
-                      ignore_patterns=None, preprocess=None,
-                      max_permutation_cases=0, msgs=None):
+                      lstrip=False, rstrip=False,
+                      ignore_substrings=None, ignore_patterns=None,
+                      preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
 
@@ -162,9 +162,9 @@ class FilesComparison(object):
         return (1 if ndiffs > 0 else 0, msgs)
 
     def check_string_against_file(self, actual, expected_path,
-                                  actual_path=None, ignore_substrings=None,
-                                  ignore_patterns=None,
+                                  actual_path=None,
                                   lstrip=False, rstrip=False,
+                                  ignore_substrings=None, ignore_patterns=None,
                                   preprocess=None, max_permutation_cases=0,
                                   msgs=None):
         """
@@ -203,8 +203,8 @@ class FilesComparison(object):
                                   msgs=msgs)
 
     def check_file(self, actual_path, expected_path,
-                   ignore_substrings=None, ignore_patterns=None,
                    lstrip=False, rstrip=False,
+                   ignore_substrings=None, ignore_patterns=None,
                    preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Check a pair of files, line by line, with optional
@@ -244,9 +244,9 @@ class FilesComparison(object):
                                   msgs=msgs)
 
     def check_files(self, actual_paths, expected_paths,
+                    lstrip=False, rstrip=False,
                     ignore_substrings=None, ignore_patterns=None,
-                    preprocess=None, lstrip=False, rstrip=False,
-                    max_permutation_cases=0, msgs=None):
+                    preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare a list of files against a list of reference files.
 
