@@ -7,8 +7,8 @@ License: MIT
 
 Copyright (c) Stochastic Solutions Limited 2016
 
-Supprot for comparing results against saved "known to be correct" reference
-results.
+Support for comparing test results against saved "known to be correct"
+reference results.
 
 This is typically useful when software produces either a (text or csv)
 file or a string as output.

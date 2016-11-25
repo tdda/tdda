@@ -171,8 +171,10 @@ class FilesComparison(object):
         Check a string (or list of strings) against the contents of a
         reference file.
 
-        This is a wrapper aroubd check_strings(), where the 'actual' string
-        is read from a file rather than being passed in explicitly.
+        This is a wrapper around check_strings(), where the 'expected'
+        strings are read from a file rather than being passed in explicitly.
+
+        Other parameters are the same as for check_strings().
 
         The actual_path parameter is the pathname of the file that the
         actual string originally came from (if it came from a file at all;
@@ -208,6 +210,13 @@ class FilesComparison(object):
         Check a pair of files, line by line, with optional
         ignore patterns (substrings) and optionally left-
         and/or right-stripping the contents of both files.
+
+        This is a wrapper around check_strings(), where both the 'actual'
+        and 'expected' strings are read from files rather than being passed
+        in explicitly.
+
+        Other parameters are the same as for check_strings().
+
         """
         if msgs is None:
             msgs = []
@@ -245,6 +254,9 @@ class FilesComparison(object):
         reports on any differences. This is different from calling
         check_file() separately for each pair, which will stop as soon
         as the first difference is found.
+
+        Other parameters are the same as for check_strings().
+
         """
         failures = 0
         if msgs is None:
