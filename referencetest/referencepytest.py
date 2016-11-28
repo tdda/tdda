@@ -16,23 +16,27 @@ module functions rather than class methods, using python's native
 
 For example:
 
-    from tdda.referencetest.referencepytest import *
+    from tdda.referencetest import referencepytest
     import my_module
 
-    set_data_location(None, '/data')
+    @pytest.fixture(scope='module')
+    def ref():
+        r = referencepytest.ref()
+        r.set_data_location(None, '/data')
+        return r
 
-    def test_my_table_function():
+    def test_my_table_function(ref):
         result = my_module.my_function()
-        assertStringCorrect(result, 'result.txt', kind='table')
+        ref.assertStringCorrect(result, 'result.txt', kind='table')
 
-    def test_my_graph_function():
+    def test_my_graph_function(ref):
         result = my_module.my_function()
-        assertStringCorrect(result, 'result.txt', kind='graph')
+        ref.assertStringCorrect(result, 'result.txt', kind='graph')
 
-There isn't (currently) any particularly good way to manage regeneration
-of reference data using this framework. You have to call set_regeneration()
-explicitly in your test code (or in your conftest.py).
 
+Put calls to ref().set_regeneration() in the test, or in conftest.py, to
+control regeneration of reference data. There is no command-line option
+for this, yet.
 """
 
 from __future__ import absolute_import
@@ -41,6 +45,8 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import sys
+
+import pytest
 
 from tdda.referencetest.referencetest import ReferenceTest
 
@@ -52,5 +58,8 @@ def pytest_assert(x, msg):
     assert x, msg
 
 
-sys.modules[__name__] = ReferenceTest(pytest_assert)
+@pytest.fixture(scope='module')
+def ref():
+    r = ReferenceTest(pytest_assert)
+    return r
 

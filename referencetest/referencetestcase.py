@@ -97,3 +97,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         else:
             unittest.main()
 
+
+def main():
+    ReferenceTestCase.main()
+

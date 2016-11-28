@@ -1,19 +1,24 @@
 
-from tdda.referencetest.referencepytest import *
+import pytest
 
-class my_module(object):
-    @staticmethod
-    def my_function(s):
-        return s
+from tdda.referencetest import referencepytest
 
-set_data_location(None, '../../tests/testdata')
-set_data_location('graph', '../../tests/testdata')
+def my_function(s):
+    return s
 
-def test_my_table_function():
-    result = my_module.my_function('a single line')
-    assertStringCorrect(result, 'single.txt', kind='table')
 
-def test_my_graph_function():
-    result = my_module.my_function('a single line')
-    assertStringCorrect(result, 'single.txt', kind='graph')
+@pytest.fixture(scope='module')
+def ref():
+    r = referencepytest.ref()
+    r.set_data_location(None, '../../tests/testdata')
+    r.set_data_location('graph', '../../tests/testdata')
+    return r
+
+def test_my_table_function(ref):
+    result = my_function('a single line')
+    ref.assertStringCorrect(result, 'single.txt', kind='table')
+
+def test_my_graph_function(ref):
+    result = my_function('a single line')
+    ref.assertStringCorrect(result, 'single.txt', kind='graph')
 
