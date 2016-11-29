@@ -492,7 +492,7 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self.check_failures(failures, msgs)
 
-    def assertFileCorrect(self, actual_path, ref_csv, kind=None,
+    def assertFileCorrect(self, actual_path, ref_path, kind=None,
                           lstrip=False, rstrip=False,
                           ignore_substrings=None,
                           ignore_patterns=None, preprocess=None,
@@ -501,11 +501,11 @@ class ReferenceTest(object):
         Check that a file matches the contents from a reference text file.
 
         actual_path            is a path for a text file.
-        ref_csv                is the name of the reference csv file. The
+        ref_path               is the name of the reference file. The
                                location of the reference file is determined by
                                the configuration via set_data_location().
         kind                   is the reference kind, used to locate the
-                               reference csv file.
+                               reference file.
         lstrip                 if set to true, both strings are left stripped
                                before the comparison is carried out.
                                Note: the stripping on a per-line basis.
@@ -537,7 +537,7 @@ class ReferenceTest(object):
         This should be used for unstructured data such as logfiles, etc.
         For csv files, use assertCSVFileCorrect instead.
         """
-        expected_path = self.resolve_reference_path(ref_csv, kind=kind)
+        expected_path = self.resolve_reference_path(ref_path, kind=kind)
         if self.should_regenerate(kind):
             self.write_reference_file(actual_path, expected_path)
         else:
@@ -551,7 +551,7 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self.check_failures(failures, msgs)
 
-    def assertFilesCorrect(self, actual_paths, ref_csvs, kind=None,
+    def assertFilesCorrect(self, actual_paths, ref_paths, kind=None,
                            lstrip=False, rstrip=False,
                            ignore_substrings=None,
                            ignore_patterns=None, preprocess=None,
@@ -561,12 +561,12 @@ class ReferenceTest(object):
         matching collection of reference text files.
 
         actual_paths           is a list of paths for text files.
-        ref_csvs               is a list of names of the matching reference
-                               csv files.  The location of the reference files
+        ref_paths              is a list of names of the matching reference
+                               files.  The location of the reference files
                                is determined by the configuration via
                                set_data_location().
         kind                   is the reference kind, used to locate the
-                               reference csv files.
+                               reference files.
         lstrip                 if set to true, both strings are left stripped
                                before the comparison is carried out.
                                Note: the stripping on a per-line basis.
@@ -598,7 +598,7 @@ class ReferenceTest(object):
         This should be used for unstructured data such as logfiles, etc.
         For csv files, use assertCSVFileCorrect instead.
         """
-        expected_paths = self.resolve_reference_paths(ref_csvs, kind=kind)
+        expected_paths = self.resolve_reference_paths(ref_paths, kind=kind)
         if self.should_regenerate(kind):
             self.write_reference_files(actual_paths, expected_paths)
         else:
@@ -648,7 +648,7 @@ class ReferenceTest(object):
         """
         with open(actual_path) as fin:
             actual = fin.read()
-        self.write_reference_result(actual_path, reference_path)
+        self.write_reference_result(actual, reference_path)
 
     def write_reference_files(self, actual_paths, reference_paths):
         """
@@ -658,13 +658,13 @@ class ReferenceTest(object):
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
             self.write_reference_file(actual_path, reference_path)
 
-    def write_reference_result(self, string, reference_path):
+    def write_reference_result(self, result, reference_path):
         """
         Internal method for regenerating reference data from in-memory
         results.
         """
         with open(reference_path, 'w') as fout:
-            fout.write(output)
+            fout.write(result)
         if self.verbose:
             self.print_fn('Written %s' % reference_path)
 
