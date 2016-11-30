@@ -46,21 +46,16 @@ class TestFiles(unittest.TestCase):
                                                testdata('single.txt'),
                                                actual_path='wrong.txt')
         self.assertEqual(r1, (1, ['Strings have different numbers of lines',
-                                  'Check failed.',
                                   'Expected file %s' % testdata('empty.txt')]))
         self.assertEqual(r2, (1, ['Strings have different numbers of lines',
-                                  'Check failed.',
                                   'Expected file %s' % testdata('empty.txt')]))
         self.assertEqual(r3, (1, ['Strings have different numbers of lines',
-                                  'Check failed.',
                                   'Expected file %s' % testdata('empty.txt')]))
         self.assertEqual(r4, (1,
                               ['1 line is different, starting at line 1',
-                               'Check failed.',
                                'Expected file %s' % testdata('single.txt')]))
         diff = '%s %s %s' % (self.diffcmd, 'wrong.txt', testdata('single.txt'))
         self.assertEqual(r5, (1, ['1 line is different, starting at line 1',
-                                  'File check failed.',
                                   'Compare with "%s".' % diff]))
 
     def test_files_ok(self):
@@ -86,13 +81,10 @@ class TestFiles(unittest.TestCase):
         diff3 = '%s %s %s' % (self.diffcmd,
                               testdata('single.txt'), testdata('colours.txt'))
         self.assertEqual(r1, (1, ['Files have different numbers of lines',
-                                  'File check failed.',
                                   'Compare with "%s".' % diff1]))
         self.assertEqual(r2, (1, ['Files have different numbers of lines',
-                                  'File check failed.',
                                   'Compare with "%s".' % diff2]))
         self.assertEqual(r3, (1, ['Files have different numbers of lines',
-                                  'File check failed.',
                                   'Compare with "%s".' % diff3]))
 
     def test_multiple_files_ok(self):
@@ -118,10 +110,8 @@ class TestFiles(unittest.TestCase):
         diff2 = '%s %s %s' % (self.diffcmd,
                               testdata('single.txt'), testdata('colours.txt'))
         self.assertEqual(r, (2, ['Files have different numbers of lines',
-                                 'File check failed.',
                                  'Compare with "%s".' % diff1,
                                  'Files have different numbers of lines',
-                                 'File check failed.',
                                  'Compare with "%s".' % diff2]))
 
 

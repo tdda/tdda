@@ -129,7 +129,7 @@ class PandasComparison(object):
             if actual_path or expected_path:
                 self.info(msgs, 'Differences found: %s %s'
                                 % (actual_path or '', expected_path or ''))
-            self.info(msgs, 'Column check failed')
+            self.info(msgs, 'Column check failed.')
             if missing_cols:
                 self.info(msgs, 'Missing columns: %s' % missing_cols)
             if extra_cols:
@@ -161,7 +161,7 @@ class PandasComparison(object):
                 ref_df = ref_df[condition(ref_df)].reindex()
             same = len(df) == len(ref_df)
             if not same:
-                self.info(msgs, 'File length check failed.')
+                self.info(msgs, 'Length check failed.')
                 self.info(msgs, 'Found %d records, expected %d'
                                 % (len(df), len(ref_df)))
             else:
@@ -173,7 +173,7 @@ class PandasComparison(object):
                     ref_rounded = ref_df.round(precision).reset_index(drop=True)
                     same = rounded.equals(ref_rounded)
                     if not same:
-                        self.info(msgs, 'Dataframe contents check failed.')
+                        self.info(msgs, 'Contents check failed.')
                         for c in list(ref_rounded):
                             if not rounded[c].equals(ref_rounded[c]):
                                 self.info(msgs, 'Column values differ: %s' % c)

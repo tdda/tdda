@@ -51,14 +51,14 @@ class TestStrings(unittest.TestCase):
         df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
                             'b': [1, 2, 3, 4, 5]})
         self.assertEqual(compare.check_dataframe(df1, df2),
-                         (1, ['Dataframe contents check failed.',
+                         (1, ['Contents check failed.',
                               'Column values differ: b']))
         self.assertEqual(compare.check_dataframe(df1, df3, check_types=['a']),
-                         (1, ['Dataframe contents check failed.',
+                         (1, ['Contents check failed.',
                               'Column values differ: b']))
         self.assertEqual(compare.check_dataframe(df1, df3, check_data=['a']),
                          (1,
-                          ['Column check failed',
+                          ['Column check failed.',
                            'Wrong column type b (float64, expected int64)']))
 
     def test_pandas_csv_ok(self):
@@ -75,7 +75,7 @@ class TestStrings(unittest.TestCase):
                              ['Differences found: %s %s'
                                   % (testdata('single.txt'),
                                      testdata('colours.txt')),
-                              'Column check failed',
+                              'Column check failed.',
                               'Missing columns: [%s]'
                                   % ', '.join(["'%s'" % s for s in
                                                ['Name', 'RGB', 'Hue',
