@@ -36,6 +36,4 @@ The module provides interfaces for this to be called from unit-tests
 based on either the standard python unittest framework, or on pytest.
 """
 
-__version__ = '0.0.7'
-
 from tdda.referencetest.referencetestcase import ReferenceTestCase
