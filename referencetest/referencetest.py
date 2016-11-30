@@ -76,8 +76,12 @@ class ReferenceTest(object):
 
     # Dictionary describing which kinds of reference files should be
     # regenerated when the tests are run. This should be set using the
-    # set_regeneration() class-method.
+    # set_regeneration() class-method. Can be initialized via the -w option.
     regenerate = {}
+
+    # Dictionary describing default location for reference data, for
+    # each kind. Can be initialized by set_default_data_location().
+    default_data_locations = {}
 
     @classmethod
     def set_defaults(cls, *kwargs):
@@ -135,6 +139,28 @@ class ReferenceTest(object):
         """
         cls.regenerate[kind] = regenerate
 
+    @classmethod
+    def set_default_data_location(self, location, kind=None):
+        """
+        Declare the default filesystem location for reference files of a
+        particular kind. This sets the location globally, and will affect
+        all instances of the ReferenceTest class subsequently created.
+
+        The instance method set_data_location() can be used to set
+        the per-kind data locations for an individual instance of the class.
+
+        If calls to assertFileCorrect() (etc) are made for kinds of reference
+        data that hasn't had its location defined explicitly, then the
+        default location is used. This is the location declared for kind=None,
+        which *must* be specified.
+
+        If you haven't even defined that None default, and you make calls to
+        assertFileCorrect() (etc) using relative pathnames for the reference
+        data files, then it can't check correctness so it will raise an
+        exception.
+        """
+        self.default_data_locations[kind] = location
+
     def __init__(self, assert_fn):
         """
         Initializer for a ReferenceTest instance.
@@ -148,14 +174,14 @@ class ReferenceTest(object):
                                   true).
         """
         self.assert_fn = assert_fn
-        self.reference_data_locations = {}
+        self.reference_data_locations = dict(self.default_data_locations)
         self.pandas = PandasComparison(print_fn=self.print_fn,
                                        verbose=self.verbose)
         self.files = FilesComparison(print_fn=self.print_fn,
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
 
-    def set_data_location(self, kind, location):
+    def set_data_location(self, location, kind=None):
         """
         Declare the filesystem location for reference files of a particular
         kind. Typically you would subclass ReferenceTestCase and pass in these

@@ -32,7 +32,7 @@ For example:
     class MyTest(ReferenceTestCase):
         def __init__(self, *args, **kwargs):
             ReferenceTestCase.__init__(self, *args, **kwargs)
-            self.set_data_location(None, '/data')
+            self.set_data_location('/data')
 
         def test_my_table_function(self):
             result = my_module.my_function()
