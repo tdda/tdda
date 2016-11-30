@@ -154,9 +154,9 @@ class ReferenceTest(object):
         default location is used. This is the location declared for kind=None,
         which *must* be specified.
 
-        If you haven't even defined that None default, and you make calls to
+        If you haven't even defined the None default, and you make calls to
         assertFileCorrect() (etc) using relative pathnames for the reference
-        data files, then it can't check correctness so it will raise an
+        data files, then it can't check correctness, so it will raise an
         exception.
         """
         self.default_data_locations[kind] = location
@@ -193,9 +193,12 @@ class ReferenceTest(object):
         default location is used. This is the location declared for kind=None,
         which *must* be specified.
 
-        If you haven't even defined that None default, and you make calls to
+        This method overrides any global defaults set from calls to the
+        set_default_data_location class-method.
+
+        If you haven't even defined the  None default, and you make calls to
         assertFileCorrect() (etc) using relative pathnames for the reference
-        data files, then it can't check correctness so it will raise an
+        data files, then it can't check correctness, so it will raise an
         exception.
         """
         self.reference_data_locations[kind] = location
@@ -691,7 +694,7 @@ class ReferenceTest(object):
         """
         with open(reference_path, 'w') as fout:
             fout.write(result)
-        if self.verbose:
+        if self.verbose and self.print_fn:
             self.print_fn('Written %s' % reference_path)
 
     def check_failures(self, failures, msgs):
