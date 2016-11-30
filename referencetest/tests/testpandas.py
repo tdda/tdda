@@ -19,7 +19,7 @@ except ImportError:
 from tdda.referencetest.checkpandas import PandasComparison
 
 
-def testdata(filename):
+def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
@@ -63,18 +63,18 @@ class TestStrings(unittest.TestCase):
 
     def test_pandas_csv_ok(self):
         compare = PandasComparison()
-        r = compare.check_csv_file(testdata('colours.txt'),
-                                   testdata('colours.txt'))
+        r = compare.check_csv_file(refloc('colours.txt'),
+                                   refloc('colours.txt'))
         self.assertEqual(r, (0, []))
 
     def test_pandas_csv_fail(self):
         compare = PandasComparison()
-        r = compare.check_csv_file(testdata('single.txt'),
-                                   testdata('colours.txt'))
+        r = compare.check_csv_file(refloc('single.txt'),
+                                   refloc('colours.txt'))
         self.assertEqual(r, (1,
                              ['Differences found: %s %s'
-                                  % (testdata('single.txt'),
-                                     testdata('colours.txt')),
+                                  % (refloc('single.txt'),
+                                     refloc('colours.txt')),
                               'Column check failed.',
                               'Missing columns: [%s]'
                                   % ', '.join(["'%s'" % s for s in
