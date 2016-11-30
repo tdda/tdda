@@ -19,9 +19,9 @@ import os
 import tempfile
 
 # ensure we can import the generators module in the directory above
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generators import (generate_string, generate_file)
+from generators import generate_string, generate_file
 
 
 def testExampleStringGeneration(ref):
