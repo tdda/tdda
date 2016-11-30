@@ -34,9 +34,8 @@ class TestExample(ReferenceTestCase):
 
     def testExampleStringGeneration(self):
         """
-        This test uses generate_string() from 
-            tdda.referencetest.examples.generators
-        to generate some HTML as a string.
+        This test uses generate_string() from generators.py to generate
+        some HTML as a string.
 
         It is similar to the reference HTML in
             tdda/referencetest/examples/reference/string_result.html
@@ -65,8 +64,8 @@ class TestExample(ReferenceTestCase):
 
     def testExampleFileGeneration(self):
         """
-        This test uses generate_file() from tdda.examples.generators
-        to generate some HTML as a file.
+        This test uses generate_file() from generators.py to generate
+        some HTML as a file.
 
         It is similar to the reference HTML in
         tdda/examples/reference/file_result.html except that the

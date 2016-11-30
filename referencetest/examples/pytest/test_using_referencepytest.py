@@ -26,9 +26,8 @@ from generators import (generate_string, generate_file)
 
 def testExampleStringGeneration(ref):
     """
-    This test uses generate_string() from 
-        tdda.referencetest.examples.generators
-    to generate some HTML as a string.
+    This test uses generate_string() from generators.py to generate
+    some HTML as a string.
 
     It is similar to the reference HTML in
         tdda/referencetest/examples/reference/string_result.html
@@ -57,8 +56,8 @@ def testExampleStringGeneration(ref):
 
 def testExampleFileGeneration(ref):
     """
-    This test uses generate_file() from tdda.examples.generators
-    to generate some HTML as a file.
+    This test uses generate_file() from generators.py to generate some
+    HTML as a file.
 
     It is similar to the reference HTML in
     tdda/examples/reference/file_result.html except that the

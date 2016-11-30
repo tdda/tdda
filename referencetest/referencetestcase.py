@@ -89,8 +89,8 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         if len(sys.argv) > 1 and sys.argv[1][:2] in ('-W', '-w'):
             kinds = sys.argv[1][2:] or None
             if kinds:
-                for k in kinds.split(','):
-                    ReferenceTestCase.set_regeneration(k)
+                for kind in kinds.split(','):
+                    ReferenceTestCase.set_regeneration(kind)
             else:
                 ReferenceTestCase.set_regeneration()
             unittest.main(argv=[sys.argv[0]] + sys.argv[2:])

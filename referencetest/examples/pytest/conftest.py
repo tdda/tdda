@@ -20,15 +20,23 @@ from tdda.referencetest import referencepytest
 
 
 @pytest.fixture(scope='module')
-def ref():
-    r = referencepytest.ref()
+def ref(request):
+    """
+    Declare a fixture called 'ref' which will inject a ReferenceTest
+    instance into a test. It's automatically configured to regenerate
+    results if the --w option is used on the command line, and in this
+    example is automatically configured to locate all reference data files
+    in the 'reference' directory above.
+    """
+    r = referencepytest.ref(request)
     this_dir = os.path.abspath(os.path.dirname(__file__))
     r.set_data_location(os.path.join(this_dir, '..', 'reference'))
     return r
 
 
-#pytest_plugins = 'tdda.referencetest'
-
 def pytest_addoption(parser):
-    pass
-    
+    """
+    Extend pytest to include the -w and -W regeneration command-line options.
+    """
+    referencepytest.addoption(parser)
+
