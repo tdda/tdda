@@ -18,6 +18,7 @@ from tdda.constraints.testconstraints import *
 if pandas:
     from tdda.constraints.testpdconstraints import *
 from tdda.rexpy.testrexpy import *
+from tdda.referencetest.tests.alltests import *
 
 
 if __name__ == '__main__':
