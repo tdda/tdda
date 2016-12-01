@@ -2,6 +2,9 @@
 """
 writabletestcase.py: extended test methods for test-driven data analysis.
 
+This interface has now been superseded by the newer, more featureful,
+tdda.referencetest implementation, in the 'refererencetest' subdirectory.
+
 Source repository: http://github.com/tdda/tdda
 
 License: MIT

@@ -84,7 +84,7 @@ class ReferenceTest(object):
     default_data_locations = {}
 
     @classmethod
-    def set_defaults(cls, *kwargs):
+    def set_defaults(cls, **kwargs):
         """
         Set default parameters, at the class level. These defaults will
         apply to all instances of ReferenceTest subsequently created.
@@ -120,11 +120,16 @@ class ReferenceTest(object):
                         /tmp, c:\temp or whatever tempfile.gettempdir()
                         returns, as appropriate.
 
-        Other parameters may be made available in the future. Attempting
-        to set a not-yet-implemented parameter will succeed silently, but
-        without having any affect on the behaviour of the module.
         """
-        cls.__dict__.update(kwargs)
+        for k in kwargs:
+            if k == 'verbose':
+                cls.verbose = kwargs[k]
+            elif k == 'print_fn':
+                cls.print_fn = kwargs[k]
+            elif k == 'tmp_dir':
+                cls.tmp_dir = kwargs[k]
+            else:
+                raise Exception('set_defaults: Unrecogized option %s' % k)
 
     @classmethod
     def set_regeneration(cls, kind=None, regenerate=True):

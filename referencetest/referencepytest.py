@@ -41,7 +41,7 @@ with a conftest.py containing:
         r.set_data_location('/data')
         return r
 
-Run with the --w= option to regenerate the reference data.
+Run with the --W option to regenerate the reference data.
 """
 
 from __future__ import absolute_import
@@ -70,15 +70,16 @@ def ref(request):
     A test's conftest.py should define a fixture function for injecting
     a ReferenceTest instance, which should just call this function.
     """
-    regen = request.config.getoption('--w') or request.config.getoption('--W')
-    if regen is not None:
+    if request.config.getoption('--wquiet'):
+        ReferenceTest.set_default(verbose=False)
+    if request.config.getoption('--W'):
+        ReferenceTest.set_regeneration()
+    else:
+        regen = request.config.getoption('--w')
         if regen:
             for r in regen:
-                kinds = r.split(',')
-                for kind in kinds:
-                    ReferenceTest.set_regeneration(kind or None)
-        else:
-            ReferenceTest.set_regeneration()
+                for kind in r.split(','):
+                    ReferenceTest.set_regeneration(kind)
     return ReferenceTest(pytest_assert)
 
 
@@ -93,18 +94,23 @@ def addoption(parser):
     which can be used to control regeneration of reference results.
 
     To regenerate all reference results:
-        pytest --w=
+        pytest -s --W
 
     To regenerate just a particular kind of reference (e.g. table results):
-        pytest --w=table
-    or  pytest --w table
+        pytest -s --w tables
 
     To regenerate a number of different kinds of reference (e.g. both table
     and graph results):
-        pytest --w=table,graph
-    or  pytest --w table graph
+        pytest -s --w tables graphs
+
+    Note that it reports on each file it regenerates, unless the --wquiet
+    option is set; but unless you run pytest with the -s option, this
+    reporting will be eaten up by pytest as part of its standard 'capturing'.
     """
-    for opt in ('--w', '--W'):
-        parser.addoption(opt, action='store', nargs='*', default=None,
-                         help='%s: rewrite reference test results' % opt)
+    parser.addoption('--w', action='store', nargs='+', default=None,
+                     help='--w: rewrite named reference results kinds')
+    parser.addoption('--W', action='store_true',
+                     help='--W: rewrite all reference results')
+    parser.addoption('--wquiet', action='store_true',
+                     help='--wquiet: when rewriting results, do so quietly')
 

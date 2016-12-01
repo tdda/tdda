@@ -2,14 +2,14 @@
 Examples of using tdda.refererencetest.
 
 To step through these examples, you should first take a copy of the
-entire 'examples' subdirectory, and put it somewhere else. You'll be
+entire `examples` subdirectory, and put it somewhere else. You'll be
 making modifications to it, to see the affect of change, and you don't
 want to be modifying the originals.
 
 
 Scenario:
 
-    You have a python module called 'generators.py', which is responsible
+    You have a python module called `generators.py`, which is responsible
     for generating some HTML.
 
     Testing that it's generated the correct HTML isn't hugely easy just
@@ -49,28 +49,30 @@ Step 2:
 Step 3:
 
     Make a substantive change to the generation code in the generate_string
-    function in generators.py to change the HTML output. For example, you
-    could change the constant 1000 in the comprehension at the end of the
-    generate_spiral() function to some other number.
+    function in `generators.py` to change the HTML output. See doc strings
+    inside to see how to make the tests fail.
 
     The test should then fail and suggest a diff command to run
     to see the difference.
 
     Rerun with
 
-        python test_using_referencetestcase.py -w
+        python test_using_referencetestcase.py -W
 
     or:
 
-        pytest pytest/test_using_referencepytest.py -w
+        pytest pytest/test_using_referencepytest.py --W
 
-    and it should re-write the reference output to match your
-    modified results.
+    and it will re-write the reference output to match your modified
+    results. The files in the `reference` subdirectory will have changed
+    to reflect your changes to the generators.
+
+    Running the tests should now pass again.
 
 Step 4:
 
     Make a non-substantive change (such as changing the version numbers)
-    in generators.py, and run the tests again (without the -w option; you're
+    in generators.py, and run the tests again (without the -W option; you're
     wanting to just run  the tests, not regenenerate the expected results).
 
     They should all still pass.

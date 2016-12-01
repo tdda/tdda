@@ -86,18 +86,57 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         """
         Wrapper around the unittest.main() entry point.
         """
-        if len(sys.argv) > 1 and sys.argv[1][:2] in ('-W', '-w'):
-            kinds = sys.argv[1][2:] or None
-            if kinds:
-                for kind in kinds.split(','):
+        unittest.main(argv=set_write_from_argv())
+
+
+def set_write_from_argv(argv=None):
+    """
+    This is used to set the class's write flag if a -w or -W option
+    is passed on the command line, either using the argv provided,
+    or sys.argv otherwise.
+
+    The -W option takes no parameters, and turns on reference-regeneration
+    for all kinds of results.
+
+    The -w option takes a list of parameter, constisting of names of
+    of result kinds to be regenerated. The names can be separate parameters,
+    or they can be a single comma-separated parameter.
+
+    The framework reports on each file being regenerated, by default. Use
+    The -wquiet option to make it rewrite files quietly.
+
+    Also recognizes --w, --W and --wquiet, for compatibility with the pytest
+    interface.
+
+    argv or sys.argv is returned, with any '-w' or '-W' removed.
+    """
+    if argv is None:
+        argv = sys.argv
+    if '-wquiet' in argv or '--wquiet' in argv:
+        idx = argv.index('-wquiet') or argv.index('--wquiet')
+        ReferenceTestCase.set_defaults(verbose=False)
+        argv = argv[:idx] + argv[idx+1:]
+    if '-W' in argv or '--W' in argv:
+        idx = argv.index('-W') or argv.index('--W')
+        ReferenceTestCase.set_regeneration()
+        return argv[:idx] + argv[idx+1:]
+    elif '-w' in argv or '--w' in argv:
+        idx = argv.index('-w') or argv.index('--w')
+        if idx < len(argv) - 1:
+            for r in argv[idx+1:]:
+                for kind in r.split(','):
                     ReferenceTestCase.set_regeneration(kind)
-            else:
-                ReferenceTestCase.set_regeneration()
-            unittest.main(argv=[sys.argv[0]] + sys.argv[2:])
         else:
-            unittest.main()
+            raise Exception('-w option requires parameters; '
+                            'use -W to regenerate all reference results')
+        return argv[:idx]
+    else:
+        return argv
 
 
 def main():
+    """
+    Wrapper around the unittest.main() entry point.
+    """
     ReferenceTestCase.main()
 
