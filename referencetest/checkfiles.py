@@ -13,7 +13,7 @@ Copyright (c) Stochastic Solutions Limited 2016
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 import os
 import re
@@ -158,7 +158,7 @@ class FilesComparison(object):
             self.add_failures(msgs, actual_path, expected_path,
                               ignore_substrings=ignore_substrings,
                               ignore_patterns=ignore_patterns,
-                              preprocess=preprocess)
+                              preprocess=preprocess, actual=actual)
         return (1 if ndiffs > 0 else 0, msgs)
 
     def check_string_against_file(self, actual, expected_path,
@@ -187,7 +187,7 @@ class FilesComparison(object):
                 expected = f.read().splitlines()
         except IOError:
             self.info(msgs, 'Reference file %s not found.' % expected_path)
-            self.add_failures(msgs, None, expected_path)
+            self.add_failures(msgs, None, expected_path, actual=actual)
             return (1, msgs)
 
         actuals = (actual if type(actual) in (list, tuple)
@@ -311,7 +311,7 @@ class FilesComparison(object):
 
     def add_failures(self, msgs, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
-                     preprocess=None):
+                     preprocess=None, actual=None):
         """
         Build a list of messages describing the way in which two files are
         different.
@@ -324,6 +324,8 @@ class FilesComparison(object):
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
             self.info(msgs, 'Actual file %s' % actual_path)
+        else:
+            self.info(msgs, '(Two strings)')
         if ignore_substrings or ignore_patterns:
             self.info(msgs, 'Note exclusions:')
         if ignore_substrings:
@@ -344,6 +346,16 @@ class FilesComparison(object):
                 f.write('\n'.join(expected))
             self.info(msgs, 'Compare preprocessed with "%s %s %s".'
                             % (diffcmd, modifiedActual, modifiedRef))
+        elif not actual_path:
+            expectedFilename = os.path.split(expected_path)[1]
+            tmpActualFilename = os.path.join(self.tmp_dir,
+                                            'actual-' + expectedFilename)
+            with open(tmpActualFilename, 'w') as f:
+                f.write('\n'.join(actual))
+            self.info(msgs, 'Compare with "%s %s %s".'
+                            % (diffcmd, tmpActualFilename, expected_path))
+        else:
+            self.info(msgs, 'Fell through.')
 
     def info(self, msgs, s):
         """
