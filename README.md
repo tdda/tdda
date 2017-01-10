@@ -23,6 +23,13 @@ These are like other tests except:
 
 See the `README.md` file in the `referencetest` subdirectory for usage details.
 
+An older implementation of these ideas is available as a `unittest`
+wrapper class, `WritableTestCase`, in `writabletestcase.py`.
+This can be imported directly with
+`from tdda.writabletestcase import WritableTestCase`. Examples of using
+this are currently available in the `deprecated` subdirectory. This older
+version will be fully deprecated and removed soon.
+
 *Level 1:*
 ----------
 The `tdda.constraints` library is used to 'discover' constraints
