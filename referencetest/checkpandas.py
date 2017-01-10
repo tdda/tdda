@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import unicode_literals
 
 import csv
+import os
 
 try:
     import pandas as pd
@@ -126,10 +127,8 @@ class PandasComparison(object):
         same = not any((missing_cols, extra_cols, wrong_types, wrong_ordering))
 
         if not same:
-            if actual_path or expected_path:
-                self.info(msgs, 'Differences found: %s %s'
-                                % (actual_path or '', expected_path or ''))
-            self.info(msgs, 'Column check failed.')
+            self.failure(msgs, 'Column check failed.',
+                         actual_path, expected_path)
             if missing_cols:
                 self.info(msgs, 'Missing columns: %s' % missing_cols)
             if extra_cols:
@@ -151,32 +150,43 @@ class PandasComparison(object):
                         ordermsg = ('found %s, expected %s' % (c, c2[i]))
                         break
                 self.info(msgs, 'Wrong column ordering: %s' % ordermsg)
-        else:
-            if sortby:
-                sortby = resolve_option_flag(sortby, ref_df)
+
+        if sortby:
+            sortby = resolve_option_flag(sortby, ref_df)
+            if any([c in sortby for c in missing_cols]):
+                self.info('Cannot sort on missing columns')
+            else:
                 df.sort_values(sortby, inplace=True)
                 ref_df.sort_values(sortby, inplace=True)
-            if condition:
-                df = df[condition(df)].reindex()
-                ref_df = ref_df[condition(ref_df)].reindex()
-            same = len(df) == len(ref_df)
-            if not same:
-                self.info(msgs, 'Length check failed.')
-                self.info(msgs, 'Found %d records, expected %d'
-                                % (len(df), len(ref_df)))
-            else:
-                check_data = resolve_option_flag(check_data, ref_df)
-                if check_data:
-                    df = df[check_data]
-                    ref_df = ref_df[check_data]
-                    rounded = df.round(precision).reset_index(drop=True)
-                    ref_rounded = ref_df.round(precision).reset_index(drop=True)
-                    same = rounded.equals(ref_rounded)
-                    if not same:
-                        self.info(msgs, 'Contents check failed.')
-                        for c in list(ref_rounded):
-                            if not rounded[c].equals(ref_rounded[c]):
-                                self.info(msgs, 'Column values differ: %s' % c)
+
+        if condition:
+            df = df[condition(df)].reindex()
+            ref_df = ref_df[condition(ref_df)].reindex()
+
+        same = len(df) == len(ref_df)
+        if not same:
+            self.failure(msgs, 'Length check failed.',
+                         actual_path, expected_path)
+            self.info(msgs, 'Found %d records, expected %d'
+                            % (len(df), len(ref_df)))
+        else:
+            check_data = resolve_option_flag(check_data, ref_df)
+            if check_data:
+                check_data = [c for c in check_data if c not in missing_cols]
+                df = df[check_data]
+                ref_df = ref_df[check_data]
+                rounded = df.round(precision).reset_index(drop=True)
+                ref_rounded = ref_df.round(precision).reset_index(drop=True)
+                same = rounded.equals(ref_rounded)
+                if not same:
+                    self.failure(msgs, 'Contents check failed.',
+                                 actual_path, expected_path)
+                    for c in list(ref_rounded):
+                        if not rounded[c].equals(ref_rounded[c]):
+                            self.info(msgs, 'Column values differ: %s' % c)
+
+        same = same and not any((missing_cols, extra_cols, wrong_types,
+                                 wrong_ordering))
         return (0 if same else 1, msgs)
 
     def check_csv_file(self, actual_path, expected_path, loader=None,
@@ -270,6 +280,22 @@ class PandasComparison(object):
         msgs.append(s)
         if self.verbose and self.print_fn:
             self.print_fn(s)
+
+    def failure(self, msgs, s, actual_path, expected_path):
+        """
+        Add a failure to the list of messages, and also display it immediately
+        if verbose is set. Also provide information about the two files
+        involved.
+        """
+        diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
+        if actual_path and expected_path:
+            self.info(msgs, 'Compare with "%s %s %s".'
+                            % (diffcmd, actual_path, expected_path))
+        elif expected_path:
+            self.info(msgs, 'Expected file %s' % expected_path)
+        elif actual_path:
+            self.info(msgs, 'Actual file %s' % actual_path)
+        self.info(msgs, s)
 
     def load_csv(self, csvfile, loader=None, **kwargs):
         """
