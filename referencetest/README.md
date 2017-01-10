@@ -1,3 +1,4 @@
+# tdda.referencetest:
 
 TDDA Reference Test, a wrapper for unit-testing frameworks, providing
 support for reference-testing through Test-Driven Data Analysis.
@@ -5,15 +6,22 @@ support for reference-testing through Test-Driven Data Analysis.
 Supports both unittest and pytest.
 
 
-Explanatory examples of how to use `writabletestcase` are in the `examples`
+Explanatory examples of how to use `tdda.referencetest` are in the `examples`
 subdirectory.
 
 Use
 
-    cd examples
-    python test_using_writabletestcase.py
+    cd examples/referencetest/unittest
+    python test_using_referencetestcase.py
 
-to run an example test.
+to run an example unittest test.
+
+Use
+
+    cd examples/referencetest/pytest
+    python test_using_referencepytest.py
+
+to run an example pytest test.
 
 See doc strings inside to see how to make the tests fail, then re-write
 the output.
@@ -22,13 +30,13 @@ Briefly: edit the generation functions in `examples/generators.py`
 to generate different output, re-run the tests, see them fail, check
 the output and then run
 
-    python test_using_writabletestcase.py -w
+    python test_using_referencetestcase.py -W
 
 to re-write the reference output in `examples/reference`,
 
 after which if you run again with
 
-    python test_using_writabletestcase.py
+    python test_using_referencetestcase.py
 
 Test tests should pass again.
 
