@@ -17,6 +17,14 @@ from tdda.referencetest.checkfiles import FilesComparison
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
+def check(compare, values, filename, diff=False, actual_path=None):
+    (code, errs) = compare.check_string_against_file(values, refloc(filename),
+                                                     actual_path=actual_path)
+    if diff:
+        return (code, errs)
+    else:
+        return (code, [e for e in errs if not e.startswith('Compare with ')])
+
 
 class TestFiles(unittest.TestCase):
     @classmethod
@@ -37,14 +45,12 @@ class TestFiles(unittest.TestCase):
 
     def test_strings_against_files_fail(self):
         compare = FilesComparison()
-        r1 = compare.check_string_against_file(['x'], refloc('empty.txt'))
-        r2 = compare.check_string_against_file('x', refloc('empty.txt'))
-        r3 = compare.check_string_against_file(['', ''], refloc('empty.txt'))
-        r4 = compare.check_string_against_file(['the wrong text'],
-                                              refloc('single.txt'))
-        r5 = compare.check_string_against_file(['the wrong text'],
-                                               refloc('single.txt'),
-                                               actual_path='wrong.txt')
+        r1 = check(compare, ['x'], 'empty.txt')
+        r2 = check(compare, 'x', 'empty.txt')
+        r3 = check(compare, ['', ''], 'empty.txt')
+        r4 = check(compare, ['the wrong text'], 'single.txt')
+        r5 = check(compare, ['the wrong text'], 'single.txt', diff=True,
+                   actual_path='wrong.txt')
         self.assertEqual(r1, (1, ['Strings have different numbers of lines',
                                   'Expected file %s' % refloc('empty.txt')]))
         self.assertEqual(r2, (1, ['Strings have different numbers of lines',

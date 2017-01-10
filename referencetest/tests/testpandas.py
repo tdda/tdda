@@ -69,18 +69,19 @@ class TestStrings(unittest.TestCase):
 
     def test_pandas_csv_fail(self):
         compare = PandasComparison()
-        r = compare.check_csv_file(refloc('single.txt'),
-                                   refloc('colours.txt'))
-        self.assertEqual(r, (1,
-                             ['Differences found: %s %s'
-                                  % (refloc('single.txt'),
-                                     refloc('colours.txt')),
-                              'Column check failed.',
-                              'Missing columns: [%s]'
-                                  % ', '.join(["'%s'" % s for s in
-                                               ['Name', 'RGB', 'Hue',
-                                                'Saturation', 'Value']]),
-                              'Extra columns: [\'a single line\']']))
+        (code, errs) = compare.check_csv_file(refloc('single.txt'),
+                                              refloc('colours.txt'))
+        errs = [e for e in errs if not e.startswith('Compare with ')]
+        self.assertEqual(code, 1)
+        self.assertEqual(errs,
+                         ['Column check failed.',
+                          'Missing columns: [%s]'
+                              % ', '.join(["'%s'" % s for s in
+                                           ['Name', 'RGB', 'Hue',
+                                            'Saturation', 'Value']]),
+                          'Extra columns: [\'a single line\']',
+                          'Length check failed.',
+                          'Found 0 records, expected 147'])
 
 
 if __name__ == '__main__':

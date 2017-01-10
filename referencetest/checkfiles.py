@@ -325,7 +325,7 @@ class FilesComparison(object):
         elif actual_path:
             self.info(msgs, 'Actual file %s' % actual_path)
         else:
-            self.info(msgs, '(Two strings)')
+            self.info(msgs, 'No files')
         if ignore_substrings or ignore_patterns:
             self.info(msgs, 'Note exclusions:')
         if ignore_substrings:
@@ -346,7 +346,7 @@ class FilesComparison(object):
                 f.write('\n'.join(expected))
             self.info(msgs, 'Compare preprocessed with "%s %s %s".'
                             % (diffcmd, modifiedActual, modifiedRef))
-        elif not actual_path:
+        elif expected_path and not actual_path:
             expectedFilename = os.path.split(expected_path)[1]
             tmpActualFilename = os.path.join(self.tmp_dir,
                                             'actual-' + expectedFilename)
@@ -354,8 +354,6 @@ class FilesComparison(object):
                 f.write('\n'.join(actual))
             self.info(msgs, 'Compare with "%s %s %s".'
                             % (diffcmd, tmpActualFilename, expected_path))
-        else:
-            self.info(msgs, 'Fell through.')
 
     def info(self, msgs, s):
         """
