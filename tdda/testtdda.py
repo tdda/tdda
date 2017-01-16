@@ -14,7 +14,6 @@ try:
 except ImportError:
     pandas = None
 
-from tdda.constraints.testconstraints import *
 if pandas:
     from tdda.constraints.testpdconstraints import *
 from tdda.rexpy.testrexpy import *
