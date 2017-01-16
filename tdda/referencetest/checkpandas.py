@@ -20,6 +20,7 @@ import os
 
 try:
     import pandas as pd
+    import numpy as np
 except ImportError:
     pd = None
 
@@ -183,11 +184,38 @@ class PandasComparison(object):
                                  actual_path, expected_path)
                     for c in list(ref_rounded):
                         if not rounded[c].equals(ref_rounded[c]):
+                            diffs = self.differences(c, rounded[c],
+                                                     ref_rounded[c], precision)
                             self.info(msgs, 'Column values differ: %s' % c)
+                            self.info(msgs, diffs)
 
         same = same and not any((missing_cols, extra_cols, wrong_types,
                                  wrong_ordering))
         return (0 if same else 1, msgs)
+
+    def differences(self, name, values, ref_values, precision):
+        """
+        Returns a short summary of where values differ, for two columns.
+        """
+        for i, val in enumerate(values):
+            if val != ref_values[i]:
+                limit = min(i+10, len(values))
+                if np.issubdtype(values.dtype, np.number):
+                    summary_vals = ', '.join([str('%.*f')
+                                              % (precision, values[j])
+                                               for j in range(i, limit)])
+                    summary_ref_vals = ', '.join([str('%.*f')
+                                                  % (precision, ref_values[j])
+                                                  for j in range(i, limit)])
+                else:
+                    summary_vals = [values[j] for j in range(i, limit)]
+                    summary_ref_vals = [ref_values[j] for j in range(i, limit)]
+                return 'From row %d: [%s] != [%s]' % (i, summary_vals,
+                                                    summary_ref_vals)
+        if values.dtype != ref_values.dtype:
+            return 'Different types'
+        else:
+            return 'But mysteriously appear to be identical!'
 
     def check_csv_file(self, actual_path, expected_path, loader=None,
                        check_data=None, check_types=None, check_order=None,

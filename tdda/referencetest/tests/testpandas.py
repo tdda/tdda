@@ -50,12 +50,27 @@ class TestStrings(unittest.TestCase):
                             'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002]})
         df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
                             'b': [1, 2, 3, 4, 5]})
-        self.assertEqual(compare.check_dataframe(df1, df2),
+        fromrow12 = ('From row 0: [1.000100, 2.000100, 3.000100, '
+                   '4.000100, 5.000100] != [1.000200, 2.000200, '
+                   '3.000200, 4.000200, 5.000200]')
+        fromrow13 = ('From row 0: [1.000100, 2.000100, 3.000100, '
+                   '4.000100, 5.000100] != [1.000000, 2.000000, '
+                   '3.000000, 4.000000, 5.000000]')
+        self.assertEqual(compare.check_dataframe(df1, df2, precision=3),
+                         (0, []))
+        self.assertEqual(compare.check_dataframe(df1, df2, precision=6),
                          (1, ['Contents check failed.',
-                              'Column values differ: b']))
+                              'Column values differ: b',
+                              fromrow12]))
+        self.assertEqual(compare.check_dataframe(df1, df3, check_types=['a'],
+                                                 precision=3),
+                         (1, ['Contents check failed.',
+                              'Column values differ: b',
+                              'Different types']))
         self.assertEqual(compare.check_dataframe(df1, df3, check_types=['a']),
                          (1, ['Contents check failed.',
-                              'Column values differ: b']))
+                              'Column values differ: b',
+                              fromrow13]))
         self.assertEqual(compare.check_dataframe(df1, df3, check_data=['a']),
                          (1,
                           ['Column check failed.',

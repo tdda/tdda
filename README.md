@@ -1,6 +1,25 @@
 # tdda
 Test-Driven Data Analysis Functions:
 
+Installation
+------------
+
+TDDA is not yet available in PyPi, but will be soon. When it is,
+the simplest way to install all of the TDDA Python modules will be with *pip*:
+
+    pip install tdda
+
+But note that it is not particularly easy to run through the examples using
+a PyPi binary installation like that. The full set of sources, including
+all examples, will be downloadable from PyPi with:
+
+    pip download --no-binary :all: tdda
+
+The sources are also publicly available from Github:
+
+    git clone git@github.com:tdda/tdda.git
+
+
 *Level 0:*
 ----------
 
@@ -21,7 +40,13 @@ These are like other tests except:
   6. It supports flags (-w and -W)  to rewrite the reference (expected)
      results once you have confirmed that the new actuals are correct.
 
-See the `README.md` file in the `referencetest` subdirectory for usage details.
+For usage details:
+
+    >>> import tdda.referencetest
+    >>> help(tdda.referencetest)
+
+For more details from a source checkout or distribution, see the `README.md`
+and `examples` subdirectory.
 
 An older implementation of these ideas is available as a `unittest`
 wrapper class, `WritableTestCase`, in `writabletestcase.py`.
@@ -36,7 +61,13 @@ The `tdda.constraints` library is used to 'discover' constraints
 from a (pandas) DataFrame, write them out as JSON, and to verify that
 datasets meet the constraints in the constraints file.
 
-See the `README.md` file in the `constraints` subdirectory for usage details.
+For usage details:
+
+    >>> import tdda.constraints
+    >>> help(tdda.constraints)
+
+For more details from a source checkout or distribution, see the `README.md`
+file in the `constraints` subdirectory.
 
 *Resources*
 -----------
@@ -53,7 +84,13 @@ Resources on these topics include:
       - Video: https://www.youtube.com/watch?v=FIw_7aUuY50
       - Slides and Rough Transcript:   http://www.tdda.info/slides-and-rough-transcript-of-tdda-talk-from-pycon-uk-2016
 
-The `tdda` repository also includes `rexpy`, a tool for automatically
-inferring regular expressions from data examples.
-
 All examples, tests and code should run under Python2 and Python3.
+
+The `tdda` repository also includes `rexpy`, a tool for automatically
+inferring regular expressions from a single field of data examples.
+
+For usage details:
+
+    >>> import tdda.rexpy
+    >>> help(tdda.rexpy)
+

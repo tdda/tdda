@@ -34,6 +34,17 @@ The main features are:
 
 The module provides interfaces for this to be called from unit-tests
 based on either the standard python unittest framework, or on pytest.
+
+For details of the unittest interface:
+
+    >>> import tdda.referencetest.referencetestcase
+    >>> help(tdda.referencetest.refererencetestcase)
+
+For details of the pytest interface:
+
+    >>> import tdda.referencetest.referencepytest
+    >>> help(tdda.referencetest.refererencepytest)
+
 """
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase
