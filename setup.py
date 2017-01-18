@@ -26,7 +26,7 @@ setup(
     author_email='info@StochasticSolutions.com',
     license='MIT',
     url='http://www.stochasticsolutions.com',
-    download_url='git@github.com:tdda/tdda.git',
+    download_url='https://github.com/tdda/tdda',
     keywords='tdda constraint referencetest rexpy',
     namespace_packages=['tdda'],
     packages=find_packages(),
