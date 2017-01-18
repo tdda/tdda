@@ -34,8 +34,8 @@ setup(
         'tdda.referencetest.tests': data(['tdda', 'referencetest', 'tests',
                                           'testdata']),
         'tdda.constraints.tests': data(['tdda', 'constraints', 'testdata']),
+        '': ['README.md', 'LICENSE.txt'],
     },
-    data_files=[('', ['README.md', 'LICENSE.txt'])],
     zip_safe=False,
 )
 
