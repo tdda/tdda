@@ -1,11 +1,10 @@
 # tdda
-Test-Driven Data Analysis Functions:
+Test-Driven Data Analysis Functions
 
 Installation
 ------------
 
-TDDA is not yet available in PyPi, but will be soon. When it is,
-the simplest way to install all of the TDDA Python modules will be with *pip*:
+The simplest way to install all of the TDDA Python modules is using *pip*:
 
     pip install tdda
 
@@ -25,17 +24,18 @@ The sources are also publicly available from Github:
 
 The `tdda.referencetest` library is used to support
 the creation of *reference tests*, based on either unittest or pytest.
+
 These are like other tests except:
 
   1. They have special support for comparing strings to files
-     and files to files
+     and files to files.
   2. That support includes the ability to provide exclusion patterns
-     (for things like dates and versions that might be in the output)
+     (for things like dates and versions that might be in the output).
   3. When a string/file assertion fails, it spits out the command you
-     need to diff the output
+     need to diff the output.
   4. If there were exclusion patterns, it also writes modified versions
      of both the actual and expected output and also prints the diff
-     command needed to compare those
+     command needed to compare those.
   5. They have special support for handling CSV files.
   6. It supports flags (-w and -W)  to rewrite the reference (expected)
      results once you have confirmed that the new actuals are correct.
@@ -45,8 +45,8 @@ For usage details:
     >>> import tdda.referencetest
     >>> help(tdda.referencetest)
 
-For more details from a source checkout or distribution, see the `README.md`
-and `examples` subdirectory.
+For more details from a source distribution or checkout, see the `README.md`
+file and examples in the `referencetest` subdirectory.
 
 An older implementation of these ideas is available as a `unittest`
 wrapper class, `WritableTestCase`, in `writabletestcase.py`.
@@ -57,6 +57,7 @@ version will be fully deprecated and removed soon.
 
 *Level 1:*
 ----------
+
 The `tdda.constraints` library is used to 'discover' constraints
 from a (pandas) DataFrame, write them out as JSON, and to verify that
 datasets meet the constraints in the constraints file.
@@ -66,8 +67,8 @@ For usage details:
     >>> import tdda.constraints
     >>> help(tdda.constraints)
 
-For more details from a source checkout or distribution, see the `README.md`
-file in the `constraints` subdirectory.
+For more details from a source distribution or checkout, see the `README.md`
+file and examples in the `constraints` subdirectory.
 
 *Resources*
 -----------
