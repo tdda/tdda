@@ -1,5 +1,5 @@
-# tdda
-Test-Driven Data Analysis Functions
+Test-Driven Data Analysis (Python TDDA library)
+===============================================
 
 Installation
 ------------

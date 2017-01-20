@@ -38,7 +38,7 @@ based on either the standard python unittest framework, or on pytest.
 For details of the unittest interface:
 
     >>> import tdda.referencetest.referencetestcase
-    >>> help(tdda.referencetest.refererencetestcase)
+    >>> help(tdda.referencetest.referencetestcase)
 
 For details of the pytest interface:
 
