@@ -44,7 +44,7 @@ def testExampleStringGeneration(ref):
 
     Rerun with
 
-        pytest test_using_referencepytest.py -w
+        pytest test_using_referencepytest.py --write-all
 
     and it should re-write the reference output to match your
     modified results.
@@ -74,7 +74,7 @@ def testExampleFileGeneration(ref):
 
     Rerun with
 
-        python test_using_referencepytest.py -w
+        python test_using_referencepytest.py --write-all
 
     and it should re-write the reference output to match your
     modified results.

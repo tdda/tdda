@@ -13,4 +13,8 @@ dataframe using a feather dataframe file:
 
     python -m tdda.constraints.pdverify df.feather [constraints.tdda]
 
+To copy examples to a specified directory:
+
+    python -m tdda.constraints.examples mydirectory
+
 """

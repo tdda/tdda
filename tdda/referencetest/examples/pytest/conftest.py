@@ -36,7 +36,8 @@ def ref(request):
 
 def pytest_addoption(parser):
     """
-    Extend pytest to include the --w and --W regeneration command-line options.
+    Extend pytest to include the --write and --write-all regeneration
+    command-line options.
     """
     referencepytest.addoption(parser)
 

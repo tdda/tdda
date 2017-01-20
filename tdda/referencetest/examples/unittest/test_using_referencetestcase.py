@@ -52,7 +52,7 @@ class TestExample(ReferenceTestCase):
 
         Rerun with
 
-            python test_using_referencetestcase.py -w
+            python test_using_referencetestcase.py --write-all
 
         and it should re-write the reference output to match your
         modified results.
@@ -82,7 +82,7 @@ class TestExample(ReferenceTestCase):
 
         Rerun with
 
-            python test_using_referencetestcase.py -w
+            python test_using_referencetestcase.py --write-all
 
         and it should re-write the reference output to match your
         modified results.

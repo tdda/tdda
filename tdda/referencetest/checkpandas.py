@@ -210,7 +210,7 @@ class PandasComparison(object):
                 else:
                     summary_vals = [values[j] for j in range(i, limit)]
                     summary_ref_vals = [ref_values[j] for j in range(i, limit)]
-                return 'From row %d: [%s] != [%s]' % (i, summary_vals,
+                return 'From row %d: [%s] != [%s]' % (i+1, summary_vals,
                                                     summary_ref_vals)
         if values.dtype != ref_values.dtype:
             return 'Different types'

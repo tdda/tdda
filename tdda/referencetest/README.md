@@ -30,7 +30,7 @@ Briefly: edit the generation functions in `examples/generators.py`
 to generate different output, re-run the tests, see them fail, check
 the output and then run
 
-    python test_using_referencetestcase.py -W
+    python test_using_referencetestcase.py --write-all
 
 to re-write the reference output in `examples/reference`,
 

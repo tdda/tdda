@@ -45,6 +45,10 @@ For details of the pytest interface:
     >>> import tdda.referencetest.referencepytest
     >>> help(tdda.referencetest.refererencepytest)
 
+To copy examples to a specified directory:
+
+    python -m tdda.referencetest.examples mydirectory
+
 """
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase

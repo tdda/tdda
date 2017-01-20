@@ -13,6 +13,10 @@ For details, including API use:
     >>> import tdda.rexpy.rexpy
     >>> help(tdda.rexpy.rexpy)
 
+To copy examples to a specified directory:
+
+    python -m tdda.constraints.examples mydirectory
+
 """
 
 from tdda.rexpy.rexpy import *

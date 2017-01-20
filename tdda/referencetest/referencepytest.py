@@ -41,7 +41,7 @@ with a conftest.py containing:
         r.set_data_location('/data')
         return r
 
-Run with the --W option to regenerate the reference data.
+Run with the --write-all option to regenerate the reference data.
 """
 
 from __future__ import absolute_import
@@ -72,10 +72,10 @@ def ref(request):
     """
     if request.config.getoption('--wquiet'):
         ReferenceTest.set_default(verbose=False)
-    if request.config.getoption('--W'):
+    if request.config.getoption('--write-all'):
         ReferenceTest.set_regeneration()
     else:
-        regen = request.config.getoption('--w')
+        regen = request.config.getoption('--write')
         if regen:
             for r in regen:
                 for kind in r.split(','):
@@ -85,32 +85,32 @@ def ref(request):
 
 def addoption(parser):
     """
-    Support for the --w and --W command-line options.
+    Support for the --write and --write-all command-line options.
 
     A test's conftest.py should declare extra options by defining a
     pytest_addoption function which should just call this.
 
-    It extends pytest to include an optional --w (and --W) option,
+    It extends pytest to include --write and --write-all option flags
     which can be used to control regeneration of reference results.
 
     To regenerate all reference results:
-        pytest -s --W
+        pytest -s --write-all
 
     To regenerate just a particular kind of reference (e.g. table results):
-        pytest -s --w tables
+        pytest -s --write tables
 
     To regenerate a number of different kinds of reference (e.g. both table
     and graph results):
-        pytest -s --w tables graphs
+        pytest -s --write tables graphs
 
     Note that it reports on each file it regenerates, unless the --wquiet
     option is set; but unless you run pytest with the -s option, this
     reporting will be eaten up by pytest as part of its standard 'capturing'.
     """
-    parser.addoption('--w', action='store', nargs='+', default=None,
-                     help='--w: rewrite named reference results kinds')
-    parser.addoption('--W', action='store_true',
-                     help='--W: rewrite all reference results')
+    parser.addoption('--write', action='store', nargs='+', default=None,
+                     help='--write: rewrite named reference results kinds')
+    parser.addoption('--write-all', action='store_true',
+                     help='--write-all: rewrite all reference results')
     parser.addoption('--wquiet', action='store_true',
                      help='--wquiet: when rewriting results, do so quietly')
 
