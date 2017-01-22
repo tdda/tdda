@@ -15,8 +15,9 @@ def data(path, pathitems):
         dirname = os.path.join(*subpath)
         for name in os.listdir(dirname):
             pathname = os.path.join(relpath, name)
-            if os.path.isdir(pathname):
-                names.extend(data(subpath, [name]))
+            fullpathname = os.path.join(dirname, name)
+            if os.path.isdir(fullpathname):
+                names.extend(data(path, [pathname]))
             else:
                 names.append(pathname)
     return names
@@ -32,7 +33,6 @@ setup(
     url='http://www.stochasticsolutions.com',
     download_url='https://github.com/tdda/tdda',
     keywords='tdda constraint referencetest rexpy',
-    namespace_packages=['tdda'],
     packages=find_packages(),
     package_data={
         'tdda.referencetest': data(['tdda', 'referencetest'], ['examples']),
@@ -41,8 +41,8 @@ setup(
         'tdda.constraints': data(['tdda', 'constraints'],
                                   ['testdata', 'examples']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
-        '': ['README.md', 'LICENSE.txt'],
+        'tdda': ['README.md', 'LICENSE.txt'],
     },
-    zip_safe=False,
+    include_package_data=True,
 )
 
