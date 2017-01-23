@@ -10,12 +10,12 @@ To run the rexpy tool:
 
 For details, including API use:
 
-    >>> import tdda.rexpy.rexpy
-    >>> help(tdda.rexpy.rexpy)
+    >>> from tdda.rexpy import rexpy
+    >>> help(rexpy)
 
-To copy examples to a specified directory:
+To copy the examples to your own 'rexpy-examples' directory:
 
-    python -m tdda.constraints.examples mydirectory
+    python -m tdda.rexpy.examples [mydirectory]
 
 """
 
