@@ -34,7 +34,7 @@ class ReferenceTest(object):
     Class for comparing results against saved "known to be correct" reference
     results.
 
-    This is typically useful when software produces either a (text or csv)
+    This is typically useful when software produces either a (text or CSV)
     file or a string as output.
 
     The main features are:
@@ -268,16 +268,16 @@ class ReferenceTest(object):
                              precision=None, **kwargs):
         """
         Check that an in-memory  Pandas dataset matches a reference one from
-        a saved reference csv file.
+        a saved reference CSV file.
 
         df                Actual dataframe.
-        ref_csv           Name of reference csv file. The location of the
+        ref_csv           Name of reference CSV file. The location of the
                           reference file is determined by the configuration
                           via set_data_location().
         actual_path       Optional parameter, giving path for file where
                           actual dataframe originated, used for error
                           messages.
-        kind              Reference kind, used to locate the reference csv
+        kind              Reference kind, used to locate the reference CSV
                           file.
         check_data        Option to specify fields to compare values.
         check_types       Option to specify fields to compare typees.
@@ -292,8 +292,8 @@ class ReferenceTest(object):
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
-        loader            Function to use to read a csv file to obtain
-                          a pandas dataframe. If None, then a default csv
+        loader            Function to use to read a CSV file to obtain
+                          a pandas dataframe. If None, then a default CSV
                           loader is used.
 
         The check_* comparison flags can be of any of the following:
@@ -303,7 +303,7 @@ class ReferenceTest(object):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
 
-        The default csv loader function is a wrapper around pandas
+        The default CSV loader function is a wrapper around pandas
         pd.read_csv(), with default options as follows:
             index_col             is None
             infer_datetime_format is True
@@ -337,16 +337,16 @@ class ReferenceTest(object):
                              check_order=None, condition=None, sortby=None,
                              precision=None, **kwargs):
         """
-        Check that a csv file matches a reference one.
+        Check that a CSV file matches a reference one.
 
-        actual_path       Actual csv file.
-        ref_csv           Name of reference csv file. The location of the
+        actual_path       Actual CSV file.
+        ref_csv           Name of reference CSV file. The location of the
                           reference file is determined by the configuration
                           via set_data_location().
-        kind              Reference kind, used to locate the reference csv
+        kind              Reference kind, used to locate the reference CSV
                           file.
-        csv_read_fn       A function to use to read a csv file to obtain
-                          a pandas dataframe. If None, then a default csv
+        csv_read_fn       A function to use to read a CSV file to obtain
+                          a pandas dataframe. If None, then a default CSV
                           loader is used, which takes the same parameters
                           as the standard pandas pd.read_csv() function.
         check_data        Option to specify fields to compare values.
@@ -372,7 +372,7 @@ class ReferenceTest(object):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
 
-        The default csv loader function is a wrapper around pandas
+        The default CSV loader function is a wrapper around pandas
         pd.read_csv(), with default options as follows:
             index_col             is None
             infer_datetime_format is True
@@ -404,16 +404,16 @@ class ReferenceTest(object):
                               check_order=None, condition=None, sortby=None,
                               precision=None, **kwargs):
         """
-        Check that a csv file matches a reference one.
+        Check that a CSV file matches a reference one.
 
-        actual_paths      List of Actual csv files.
-        ref_csvs          List of names of matching reference csv file. The
+        actual_paths      List of Actual CSV files.
+        ref_csvs          List of names of matching reference CSV file. The
                           location of the reference files is determined by
                           the configuration via set_data_location().
-        kind              Reference kind, used to locate the reference csv
+        kind              Reference kind, used to locate the reference CSV
                           files.
-        csv_read_fn       A function to use to read a csv file to obtain
-                          a pandas dataframe. If None, then a default csv
+        csv_read_fn       A function to use to read a CSV file to obtain
+                          a pandas dataframe. If None, then a default CSV
                           loader is used, which takes the same parameters
                           as the standard pandas pd.read_csv() function.
         check_data        Option to specify fields to compare values.
@@ -439,7 +439,7 @@ class ReferenceTest(object):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
 
-        The default csv loader function is a wrapper around pandas
+        The default CSV loader function is a wrapper around pandas
         pd.read_csv(), with default options as follows:
             index_col             is None
             infer_datetime_format is True
@@ -475,11 +475,11 @@ class ReferenceTest(object):
         text file.
 
         string                 is the actual string.
-        ref_csv                is the name of the reference csv file. The
+        ref_csv                is the name of the reference CSV file. The
                                location of the reference file is determined by
                                the configuration via set_data_location().
         kind                   is the reference kind, used to locate the
-                               reference csv file.
+                               reference CSV file.
         lstrip                 if set to true, both strings are left stripped
                                before the comparison is carried out.
                                Note: the stripping on a per-line basis.
@@ -569,7 +569,7 @@ class ReferenceTest(object):
                                to be identical.
 
         This should be used for unstructured data such as logfiles, etc.
-        For csv files, use assertCSVFileCorrect instead.
+        For CSV files, use assertCSVFileCorrect instead.
         """
         expected_path = self.resolve_reference_path(ref_path, kind=kind)
         if self.should_regenerate(kind):
@@ -630,7 +630,7 @@ class ReferenceTest(object):
                                to be identical.
 
         This should be used for unstructured data such as logfiles, etc.
-        For csv files, use assertCSVFileCorrect instead.
+        For CSV files, use assertCSVFileCorrect instead.
         """
         expected_paths = self.resolve_reference_paths(ref_paths, kind=kind)
         if self.should_regenerate(kind):

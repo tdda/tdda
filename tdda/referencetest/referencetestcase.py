@@ -105,8 +105,7 @@ def set_write_from_argv(argv=None):
     The framework reports on each file being regenerated, by default. Use
     The -wquiet option to make it rewrite files quietly.
 
-    Also recognizes --write, --write-all and --wquiet, for compatibility with
-    the pytest interface.
+    The --wquiet option causes files to be rewritten silently.
 
     argv or sys.argv is returned, with any of the 'rewrite' options removed.
     """
@@ -118,12 +117,13 @@ def set_write_from_argv(argv=None):
         argv = argv[:idx] + argv[idx+1:]
     if any(writeflag in argv for writeflag in ('-W', '--W', '--write-all')):
         ReferenceTestCase.set_regeneration()
-        for writeall in ('-W', '--W', '--write-all'):
+    for writeflag in ('-W', '--W', '--write-all'):
+        if writeflag in argv:
             idx = argv.index(writeflag)
             if idx:
                 return argv[:idx] + argv[idx+1:]
-    elif any(writeflag in argv for writeflag in ('-w', '--w', '--write')):
-        for writeflag in ('-w', '--w', '--write'):
+    for writeflag in ('-w', '--w', '--write'):
+        if writeflag in argv:
             idx = argv.index(writeflag)
             if idx:
                 if idx < len(argv) - 1:

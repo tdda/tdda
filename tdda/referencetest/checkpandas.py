@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-checkpandas.py: comparison mechanism for pandas dataframes (and csv files)
+checkpandas.py: comparison mechanism for pandas dataframes (and CSV files)
 
 Source repository: http://github.com/tdda/tdda
 
@@ -38,7 +38,7 @@ class PandasNotImplemented(object):
 
 class PandasComparison(object):
     """
-    Comparison class for pandas dataframes (and csv files).
+    Comparison class for pandas dataframes (and CSV files).
     """
 
     def __new__(cls, *args, **kwargs):
@@ -222,12 +222,12 @@ class PandasComparison(object):
                        condition=None, sortby=None, precision=6, msgs=None,
                        **kwargs):
         """
-        Checks two csv files are the same, by comparing them as dataframes.
+        Checks two CSV files are the same, by comparing them as dataframes.
 
-        actual_path     Pathname for actual csv file.
-        expected_path   Pathname for expected csv file.
-        loader          A function to use to read a csv file to obtain
-                        a pandas dataframe. If None, then a default csv
+        actual_path     Pathname for actual CSV file.
+        expected_path   Pathname for expected CSV file.
+        loader          A function to use to read a CSV file to obtain
+                        a pandas dataframe. If None, then a default CSV
                         loader is used, which takes the same parameters
                         as the standard pandas pd.read_csv() function.
         **kwargs        Any additional named parameters are passed straight
@@ -255,12 +255,12 @@ class PandasComparison(object):
                         condition=None, sortby=None, msgs=None, **kwargs):
         """
         Wrapper around the check_csv_file() method, used to compare
-        collections of actual and expected csv files.
+        collections of actual and expected CSV files.
 
-        actual_paths    List of pathnames for actual csv file.
-        expected_paths  List of pathnames for expected csv file.
-        loader          A function to use to read a csv file to obtain
-                        a pandas dataframe. If None, then a default csv
+        actual_paths    List of pathnames for actual CSV file.
+        expected_paths  List of pathnames for expected CSV file.
+        loader          A function to use to read a CSV file to obtain
+                        a pandas dataframe. If None, then a default CSV
                         loader is used, which takes the same parameters
                         as the standard pandas pd.read_csv() function.
         **kwargs        Any additional named parameters are passed straight
@@ -327,7 +327,7 @@ class PandasComparison(object):
 
     def load_csv(self, csvfile, loader=None, **kwargs):
         """
-        Function for constructing a pandas dataframe from a csv file.
+        Function for constructing a pandas dataframe from a CSV file.
         """
         if loader is None:
             loader = default_csv_loader

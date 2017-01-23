@@ -41,7 +41,9 @@ with a conftest.py containing:
         r.set_data_location('/data')
         return r
 
-Run with the --write-all option to regenerate the reference data.
+Run with the --write-all option to regenerate the reference data. If the
+-s option is also provided (to disable pytest output capturing), it will
+report the names of the files it has regenerated.
 """
 
 from __future__ import absolute_import

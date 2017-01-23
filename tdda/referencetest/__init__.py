@@ -10,7 +10,7 @@ Copyright (c) Stochastic Solutions Limited 2016
 Support for comparing test results against saved "known to be correct"
 reference results.
 
-This is typically useful when software produces either a (text or csv)
+This is typically useful when software produces either a (text or CSV)
 file or a string as output.
 
 The main features are:
@@ -35,17 +35,26 @@ The main features are:
 The module provides interfaces for this to be called from unit-tests
 based on either the standard python unittest framework, or on pytest.
 
-For details of the unittest interface:
+For details of the API:
 
-    >>> import tdda.referencetest.referencetestcase
-    >>> help(tdda.referencetest.referencetestcase)
+    >>> from tdda.referencetest import referencetest
+    >>> help(referencetest)
 
-For details of the pytest interface:
+For use with unittest, the referencetest API is provided as an extension
+to the unittest.TestCase class, with methods that can be called directly
+from unittest tests. For details of this unittest interface:
 
-    >>> import tdda.referencetest.referencepytest
-    >>> help(tdda.referencetest.refererencepytest)
+    >>> from tdda.referencetest import referencetestcase
+    >>> help(referencetestcase)
 
-To copy examples to a specified directory:
+For use with pytest, the referencetest API is provided as a set of functions
+that can be called directly from pytest tests. For details of this pytest
+interface:
+
+    >>> from tdda.referencetest import referencepytest
+    >>> help(referencepytest)
+
+To copy the examples to a specified directory:
 
     python -m tdda.referencetest.examples mydirectory
 

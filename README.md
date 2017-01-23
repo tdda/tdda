@@ -42,8 +42,8 @@ These are like other tests except:
 
 For usage details:
 
-    >>> import tdda.referencetest
-    >>> help(tdda.referencetest)
+    >>> from tdda import referencetest
+    >>> help(referencetest)
 
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `referencetest` subdirectory.
@@ -59,13 +59,13 @@ version will be fully deprecated and removed soon.
 ----------
 
 The `tdda.constraints` library is used to 'discover' constraints
-from a (pandas) DataFrame, write them out as JSON, and to verify that
+from a (Pandas) DataFrame, write them out as JSON, and to verify that
 datasets meet the constraints in the constraints file.
 
 For usage details:
 
-    >>> import tdda.constraints
-    >>> help(tdda.constraints)
+    >>> from tdda import constraints
+    >>> help(constraints)
 
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `constraints` subdirectory.
@@ -92,6 +92,6 @@ inferring regular expressions from a single field of data examples.
 
 For usage details:
 
-    >>> import tdda.rexpy
-    >>> help(tdda.rexpy)
+    >>> from tdda import rexpy
+    >>> help(rexpy)
 
