@@ -111,10 +111,11 @@ def set_write_from_argv(argv=None):
     """
     if argv is None:
         argv = sys.argv
-    if '-wquiet' in argv or '--wquiet' in argv:
-        idx = argv.index('-wquiet') or argv.index('--wquiet')
-        ReferenceTestCase.set_defaults(verbose=False)
-        argv = argv[:idx] + argv[idx+1:]
+    for quietflag in ('-wquiet', '--wquiet'):
+        if quietflag in argv:
+            idx = argv.index(quietflag)
+            ReferenceTestCase.set_defaults(verbose=False)
+            argv = argv[:idx] + argv[idx+1:]
     if any(writeflag in argv for writeflag in ('-W', '--W', '--write-all')):
         ReferenceTestCase.set_regeneration()
     for writeflag in ('-W', '--W', '--write-all'):
