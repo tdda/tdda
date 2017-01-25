@@ -198,24 +198,46 @@ class PandasComparison(object):
         Returns a short summary of where values differ, for two columns.
         """
         for i, val in enumerate(values):
-            if val != ref_values[i]:
-                limit = min(i+10, len(values))
-                if np.issubdtype(values.dtype, np.number):
-                    summary_vals = ', '.join([str('%.*f')
-                                              % (precision, values[j])
-                                               for j in range(i, limit)])
-                    summary_ref_vals = ', '.join([str('%.*f')
-                                                  % (precision, ref_values[j])
-                                                  for j in range(i, limit)])
-                else:
-                    summary_vals = [values[j] for j in range(i, limit)]
-                    summary_ref_vals = [ref_values[j] for j in range(i, limit)]
-                return 'From row %d: [%s] != [%s]' % (i+1, summary_vals,
-                                                    summary_ref_vals)
+            refval = ref_values[i]
+            if val != refval and not (pd.isnull(val) and pd.isnull(refval)):
+                stop = self.ndifferences(values, ref_values, i)
+                summary_vals = self.sample_format(values, i, stop, precision)
+                summary_ref_vals = self.sample_format(ref_values, i, stop,
+                                                      precision)
+                return 'From row %d: [%s] != [%s]' % (i+1,
+                                                      summary_vals,
+                                                      summary_ref_vals)
         if values.dtype != ref_values.dtype:
             return 'Different types'
         else:
             return 'But mysteriously appear to be identical!'
+
+    def sample(self, values, start, stop):
+        return [None if pd.isnull(values[i]) else values[i]
+                for i in range(start, stop)]
+
+    def sample_format(self, values, start, stop, precision):
+        s = self.sample(values, start, stop)
+        r = ', '.join(['null' if pd.isnull(v)
+                       else str('%d' % v)
+                              if type(v) in (np.int, np.int32, np.int64)
+                       else str('%.*f' % (precision, v))
+                              if type(v) in (np.float, np.float32, np.float64)
+                       else str('"%s"' % v) if values.dtype == object
+                       else str(v)
+                       for v in s])
+        if len(s) < stop - start:
+            r += ' ...'
+        return r
+
+    def ndifferences(self, values1, values2, start, limit=10):
+        stop = min(start+limit, len(values1))
+        for i in range(start, stop):
+            v1 = values1[i]
+            v2 = values2[i]
+            if v1 == v2 or (pd.isnull(v1) and pd.isnull(v2)):
+                return i
+        return stop
 
     def check_csv_file(self, actual_path, expected_path, loader=None,
                        check_data=None, check_types=None, check_order=None,
