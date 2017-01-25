@@ -134,7 +134,7 @@ def set_write_from_argv(argv=None):
                     raise Exception('--write option requires parameters; '
                                     'use --write-all to regenerate all '
                                     'reference results')
-        return argv[:idx]
+            return argv[:idx]
     else:
         return argv
 
