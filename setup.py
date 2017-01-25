@@ -43,6 +43,6 @@ setup(
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],
     },
-    include_package_data=True,
+    zip_safe=False,
 )
 
