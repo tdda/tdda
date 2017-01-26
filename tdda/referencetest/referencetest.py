@@ -87,7 +87,7 @@ class ReferenceTest(object):
     def set_defaults(cls, **kwargs):
         """
         Set default parameters, at the class level. These defaults will
-        apply to all instances of ReferenceTest subsequently created.
+        apply to all instances of the class.
 
         The following parameters can be set:
 
@@ -135,21 +135,21 @@ class ReferenceTest(object):
     def set_regeneration(cls, kind=None, regenerate=True):
         """
         Set the regeneration flag for a particular kind of reference file,
-        globally, for all instances of the ReferenceTest class.
+        globally, for all instances of the class.
 
         If the regenerate flag is set to True, then the framework will
         regenerate reference data of that kind, rather than comparing.
 
-        All of the regenerate flags are set to False by default.
+        All of the regeneration flags are set to False by default.
         """
         cls.regenerate[kind] = regenerate
 
     @classmethod
-    def set_default_data_location(self, location, kind=None):
+    def set_default_data_location(cls, location, kind=None):
         """
         Declare the default filesystem location for reference files of a
-        particular kind. This sets the location globally, and will affect
-        all instances of the ReferenceTest class subsequently created.
+        particular kind. This sets the location globally, and will apply
+        to all instances of the class.
 
         The instance method set_data_location() can be used to set
         the per-kind data locations for an individual instance of the class.
@@ -164,7 +164,7 @@ class ReferenceTest(object):
         data files, then it can't check correctness, so it will raise an
         exception.
         """
-        self.default_data_locations[kind] = location
+        cls.default_data_locations[kind] = location
 
     def __init__(self, assert_fn):
         """
@@ -465,7 +465,7 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self.check_failures(failures, msgs)
 
-    def assertStringCorrect(self, string, ref_csv, kind=None,
+    def assertStringCorrect(self, string, ref_path, kind=None,
                             lstrip=False, rstrip=False,
                             ignore_substrings=None,
                             ignore_patterns=None, preprocess=None,
@@ -475,11 +475,11 @@ class ReferenceTest(object):
         text file.
 
         string                 is the actual string.
-        ref_csv                is the name of the reference CSV file. The
+        ref_path               is the name of the reference file. The
                                location of the reference file is determined by
                                the configuration via set_data_location().
         kind                   is the reference kind, used to locate the
-                               reference CSV file.
+                               reference file.
         lstrip                 if set to true, both strings are left stripped
                                before the comparison is carried out.
                                Note: the stripping on a per-line basis.
