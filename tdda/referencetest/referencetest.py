@@ -508,7 +508,7 @@ class ReferenceTest(object):
                                exceed this limit, then the two are considered
                                to be identical.
         """
-        expected_path = self.resolve_reference_path(ref_csv, kind=kind)
+        expected_path = self.resolve_reference_path(ref_path, kind=kind)
         if self.should_regenerate(kind):
             self.write_reference_result(string, expected_path)
         else:
