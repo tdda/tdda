@@ -184,23 +184,37 @@ class FilesComparison(object):
             msgs = []
         try:
             with open(expected_path) as f:
-                expected = f.read().splitlines()
+                content = f.read()
+                expected_ends_with_newline = content.endswith('\n')
+                expected = content.splitlines()
         except IOError:
             self.info(msgs, 'Reference file %s not found.' % expected_path)
             self.add_failures(msgs, None, expected_path, actual=actual)
             return (1, msgs)
 
-        actuals = (actual if type(actual) in (list, tuple)
-                          else actual.splitlines())
-        return self.check_strings(actuals, expected,
-                                  actual_path=actual_path,
-                                  expected_path=expected_path,
-                                  lstrip=lstrip, rstrip=rstrip,
-                                  ignore_substrings=ignore_substrings,
-                                  ignore_patterns=ignore_patterns,
-                                  preprocess=preprocess,
-                                  max_permutation_cases=max_permutation_cases,
-                                  msgs=msgs)
+        if type(actual) in (list, tuple):
+            actuals = actual
+            actual_ends_with_newline = expected_ends_with_newline
+        else:
+            actuals = actual.splitlines()
+            actual_ends_with_newline = actual.endswith('\n')
+        (code, msgs) = self.check_strings(actuals, expected,
+                                          actual_path=actual_path,
+                                          expected_path=expected_path,
+                                          lstrip=lstrip, rstrip=rstrip,
+                                          ignore_substrings=ignore_substrings,
+                                          ignore_patterns=ignore_patterns,
+                                          preprocess=preprocess,
+                                          max_permutation_cases=
+                                              max_permutation_cases,
+                                          msgs=msgs)
+        #if expected_ends_with_newline != actual_ends_with_newline:
+        #    code = 1
+        #    if actual_ends_with_newline:
+        #        self.info(msgs, 'Actual string has unexpected newline at end')
+        #    else:
+        #        self.info(msgs, 'Actual string is missing newline at end')
+        return (code, msgs)
 
     def check_file(self, actual_path, expected_path,
                    lstrip=False, rstrip=False,
@@ -222,27 +236,39 @@ class FilesComparison(object):
             msgs = []
         try:
             with open(expected_path) as f:
-                expected = f.read().splitlines()
+                content = f.read()
+                expected_ends_with_newline = content.endswith('\n')
+                expected = content.splitlines()
         except IOError:
             self.info(msgs, 'Reference file %s not found.' % expected_path)
             return (1, msgs)
         try:
             with open(actual_path) as f:
-                actual = f.read().splitlines()
+                content = f.read()
+                actual_ends_with_newline = content.endswith('\n')
+                actuals = content.splitlines()
         except IOError:
             self.info(msgs, 'Actual file %s not found.'
                             % os.path.normpath(actual_path))
             self.add_failures(msgs, actual_path, expected_path)
             return (1, msgs)
-        return self.check_strings(actual, expected,
-                                  actual_path=actual_path,
-                                  expected_path=expected_path,
-                                  lstrip=lstrip, rstrip=rstrip,
-                                  ignore_substrings=ignore_substrings,
-                                  ignore_patterns=ignore_patterns,
-                                  preprocess=preprocess,
-                                  max_permutation_cases=max_permutation_cases,
-                                  msgs=msgs)
+        (code, msgs) = self.check_strings(actuals, expected,
+                                          actual_path=actual_path,
+                                          expected_path=expected_path,
+                                          lstrip=lstrip, rstrip=rstrip,
+                                          ignore_substrings=ignore_substrings,
+                                          ignore_patterns=ignore_patterns,
+                                          preprocess=preprocess,
+                                          max_permutation_cases=
+                                              max_permutation_cases,
+                                          msgs=msgs)
+        #if expected_ends_with_newline != actual_ends_with_newline:
+        #    code = 1
+        #    if actual_ends_with_newline:
+        #        self.info(msgs, 'Actual string has unexpected newline at end')
+        #    else:
+        #        self.info(msgs, 'Actual string is missing newline at end')
+        return (code, msgs)
 
     def check_files(self, actual_paths, expected_paths,
                     lstrip=False, rstrip=False,

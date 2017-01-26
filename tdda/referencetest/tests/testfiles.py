@@ -48,8 +48,8 @@ class TestFiles(unittest.TestCase):
         r1 = check(compare, ['x'], 'empty.txt')
         r2 = check(compare, 'x', 'empty.txt')
         r3 = check(compare, ['', ''], 'empty.txt')
-        r4 = check(compare, ['the wrong text'], 'single.txt')
-        r5 = check(compare, ['the wrong text'], 'single.txt', diff=True,
+        r4 = check(compare, ['the wrong text\n'], 'single.txt')
+        r5 = check(compare, ['the wrong text\n'], 'single.txt', diff=True,
                    actual_path='wrong.txt')
         self.assertEqual(r1, (1, ['Strings have different numbers of lines',
                                   'Expected file %s' % refloc('empty.txt')]))
