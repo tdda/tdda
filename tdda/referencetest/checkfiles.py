@@ -230,7 +230,8 @@ class FilesComparison(object):
             with open(actual_path) as f:
                 actual = f.read().splitlines()
         except IOError:
-            self.info(msgs, 'Actual file %s not found.' % actual_path)
+            self.info(msgs, 'Actual file %s not found.'
+                            % os.path.normpath(actual_path))
             self.add_failures(msgs, actual_path, expected_path)
             return (1, msgs)
         return self.check_strings(actual, expected,
@@ -274,7 +275,8 @@ class FilesComparison(object):
                 failures += n
             except Exception as e:
                 self.info(msgs, 'Error comparing %s and %s (%s %s)'
-                                % (actual_path, expected_path,
+                                % (os.path.normpath(actual_path),
+                                   expected_path,
                                    e.__class__.__name__, str(e)))
                 failures += 1
         return (failures, msgs)
@@ -319,11 +321,12 @@ class FilesComparison(object):
         diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
         if actual_path and expected_path:
             self.info(msgs, 'Compare with "%s %s %s".'
-                            % (diffcmd, actual_path, expected_path))
+                            % (diffcmd, os.path.normpath(actual_path),
+                               expected_path))
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
-            self.info(msgs, 'Actual file %s' % actual_path)
+            self.info(msgs, 'Actual file %s' % os.path.normpath(actual_path))
         else:
             self.info(msgs, 'No files')
         if ignore_substrings or ignore_patterns:

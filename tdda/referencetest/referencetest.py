@@ -164,7 +164,7 @@ class ReferenceTest(object):
         data files, then it can't check correctness, so it will raise an
         exception.
         """
-        self.default_data_locations[kind] = location
+        self.default_data_locations[kind] = os.path.normpath(location)
 
     def __init__(self, assert_fn):
         """
@@ -206,24 +206,24 @@ class ReferenceTest(object):
         data files, then it can't check correctness, so it will raise an
         exception.
         """
-        self.reference_data_locations[kind] = location
+        self.reference_data_locations[kind] = os.path.normpath(location)
 
-    def assertDatasetsEqual(self, df, ref_df,
-                            actual_path=None, expected_path=None,
-                            check_data=None, check_types=None,
-                            check_order=None, condition=None, sortby=None,
-                            precision=None):
+    def assertDataFramesEqual(self, df, ref_df,
+                              actual_path=None, expected_path=None,
+                              check_data=None, check_types=None,
+                              check_order=None, condition=None, sortby=None,
+                              precision=None):
         """
-        Check that an in-memory Pandas dataframe matches an in-memory
+        Check that an in-memory Pandas DataFrame matches an in-memory
         reference one.
 
-        df                Actual dataframe.
-        ref_df            Expected dataframe.
+        df                Actual DataFrame.
+        ref_df            Expected DataFrame.
         actual_path       Optional parameter, giving path for file where
-                          actual dataframe originated, used for error
+                          actual DataFrame originated, used for error
                           messages.
         expected_path     Optional parameter, giving path for file where
-                          expected dataframe originated, used for error
+                          expected DataFrame originated, used for error
                           messages.
         check_data        Option to specify fields to compare values.
         check_types       Option to specify fields to compare typees.
@@ -234,7 +234,7 @@ class ReferenceTest(object):
         sortby            Option to specify fields to sort by before comparing.
         condition         Filter to be applied to datasets before comparing.
                           It can be None, or can be a function that takes
-                          a dataframe as its single parameter and returns
+                          a DataFrame as its single parameter and returns
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
@@ -243,7 +243,7 @@ class ReferenceTest(object):
             - None (to apply that kind of comparison to all fields)
             - False (to skip that kind of comparison completely)
             - a list of field names
-            - a function taking a dataframe as its single parameter, and
+            - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
         Raises NotImplementedError if Pandas is not available.
@@ -261,21 +261,21 @@ class ReferenceTest(object):
         (failures, msgs) = r
         self.check_failures(failures, msgs)
 
-    def assertDatasetCorrect(self, df, ref_csv, actual_path=None,
-                             kind='csv', csv_read_fn=None,
-                             check_data=None, check_types=None,
-                             check_order=None, condition=None, sortby=None,
-                             precision=None, **kwargs):
+    def assertDataFrameCorrect(self, df, ref_csv, actual_path=None,
+                               kind='csv', csv_read_fn=None,
+                               check_data=None, check_types=None,
+                               check_order=None, condition=None, sortby=None,
+                               precision=None, **kwargs):
         """
-        Check that an in-memory  Pandas dataset matches a reference one from
+        Check that an in-memory Pandas DataFrame matches a reference one from
         a saved reference CSV file.
 
-        df                Actual dataframe.
+        df                Actual DataFrame.
         ref_csv           Name of reference CSV file. The location of the
                           reference file is determined by the configuration
                           via set_data_location().
         actual_path       Optional parameter, giving path for file where
-                          actual dataframe originated, used for error
+                          actual DataFrame originated, used for error
                           messages.
         kind              Reference kind, used to locate the reference CSV
                           file.
@@ -288,19 +288,19 @@ class ReferenceTest(object):
         sortby            Option to specify fields to sort by before comparing.
         condition         Filter to be applied to datasets before comparing.
                           It can be None, or can be a function that takes
-                          a dataframe as its single parameter and returns
+                          a DataFrame as its single parameter and returns
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
         loader            Function to use to read a CSV file to obtain
-                          a pandas dataframe. If None, then a default CSV
+                          a pandas DataFrame. If None, then a default CSV
                           loader is used.
 
         The check_* comparison flags can be of any of the following:
             - None (to apply that kind of comparison to all fields)
             - False (to skip that kind of comparison completely)
             - a list of field names
-            - a function taking a dataframe as its single parameter, and
+            - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
         The default CSV loader function is a wrapper around pandas
@@ -346,7 +346,7 @@ class ReferenceTest(object):
         kind              Reference kind, used to locate the reference CSV
                           file.
         csv_read_fn       A function to use to read a CSV file to obtain
-                          a pandas dataframe. If None, then a default CSV
+                          a pandas DataFrame. If None, then a default CSV
                           loader is used, which takes the same parameters
                           as the standard pandas pd.read_csv() function.
         check_data        Option to specify fields to compare values.
@@ -358,7 +358,7 @@ class ReferenceTest(object):
         sortby            Option to specify fields to sort by before comparing.
         condition         Filter to be applied to datasets before comparing.
                           It can be None, or can be a function that takes
-                          a dataframe as its single parameter and returns
+                          a DataFrame as its single parameter and returns
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
@@ -369,7 +369,7 @@ class ReferenceTest(object):
             - None (to apply that kind of comparison to all fields)
             - False (to skip that kind of comparison completely)
             - a list of field names
-            - a function taking a dataframe as its single parameter, and
+            - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
         The default CSV loader function is a wrapper around pandas
@@ -404,7 +404,7 @@ class ReferenceTest(object):
                               check_order=None, condition=None, sortby=None,
                               precision=None, **kwargs):
         """
-        Check that a CSV file matches a reference one.
+        Check that a set of CSV files match corresponding reference ones.
 
         actual_paths      List of Actual CSV files.
         ref_csvs          List of names of matching reference CSV file. The
@@ -413,7 +413,7 @@ class ReferenceTest(object):
         kind              Reference kind, used to locate the reference CSV
                           files.
         csv_read_fn       A function to use to read a CSV file to obtain
-                          a pandas dataframe. If None, then a default CSV
+                          a pandas DataFrame. If None, then a default CSV
                           loader is used, which takes the same parameters
                           as the standard pandas pd.read_csv() function.
         check_data        Option to specify fields to compare values.
@@ -425,7 +425,7 @@ class ReferenceTest(object):
         sortby            Option to specify fields to sort by before comparing.
         condition         Filter to be applied to datasets before comparing.
                           It can be None, or can be a function that takes
-                          a dataframe as its single parameter and returns
+                          a DataFrame as its single parameter and returns
                           a vector of booleans (to specify which rows should
                           be compared).
         precision         Number of decimal places to compare float values.
@@ -436,7 +436,7 @@ class ReferenceTest(object):
             - None (to apply that kind of comparison to all fields)
             - False (to skip that kind of comparison completely)
             - a list of field names
-            - a function taking a dataframe as its single parameter, and
+            - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
         The default CSV loader function is a wrapper around pandas

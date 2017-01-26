@@ -317,7 +317,8 @@ class PandasComparison(object):
                 failures += n
             except Exception as e:
                 self.info(msgs, 'Error comparing %s and %s (%s %s)'
-                                % (actual_path, expected_path,
+                                % (os.path.normpath(actual_path),
+                                   expected_path,
                                    e.__class__.__name__, str(e)))
                 failures += 1
         return (failures, msgs)
@@ -340,11 +341,12 @@ class PandasComparison(object):
         diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
         if actual_path and expected_path:
             self.info(msgs, 'Compare with "%s %s %s".'
-                            % (diffcmd, actual_path, expected_path))
+                            % (diffcmd, os.path.normpath(actual_path),
+                               expected_path))
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
-            self.info(msgs, 'Actual file %s' % actual_path)
+            self.info(msgs, 'Actual file %s' % os.path.normpath(actual_path))
         self.info(msgs, s)
 
     def load_csv(self, csvfile, loader=None, **kwargs):
