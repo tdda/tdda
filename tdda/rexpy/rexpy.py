@@ -713,8 +713,46 @@ class Extractor(object):
                           for line in lines)
         return '\n'.join([header, ' ' + body])
 
+
+    def coverage(self, dedup=False):
+        """
+        Get a list of frequencies for each regular expression,
+        i.e the number of the (stripped) input strings it matches.
+        The list is in the same order as the regular expressions
+        in self.results.rex.
+
+        If dedup is set to True, shows only the number of distinct (stripped)
+        input examples matches
+        """
+        return rex_coverage(self.results.rex, self.example_freqs, dedup)
+
     def __str__(self):
         return str(self.results or 'No results (yet)')
+
+
+def rex_coverage(patterns, example_freqs, dedup=False):
+    """
+    Given a list of regular expressions and a dictionary of examples
+    and their frequencies, this counts the number of times each pattern
+    matches a an example.
+
+    If dedup is set to True, the frequencies are ignored, so that only
+    the number of keys is returned.
+   """
+    results = []
+    for p in patterns:
+        p = '%s%s%s' % ('' if p.startswith('^') else '^',
+                        p,
+                        '' if p.endswith('$') else '$')
+        r = re.compile(p)
+        if dedup:
+            results.append(sum(1 if re.match(r, k) else 0
+                           for k in example_freqs))
+        else:
+            results.append(sum(n if re.match(r, k) else 0
+                           for (k, n) in example_freqs.items()))
+    return results
+
 
 
 def run_length_encode(s):

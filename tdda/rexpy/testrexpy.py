@@ -715,6 +715,33 @@ class TestExtraction(unittest.TestCase):
                          set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
                               r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$']))
 
+    def test_coverage_tels2(self):
+        x = Extractor(self.tels2)
+        rex = x.results.rex
+        d = dict(zip(rex, x.coverage()))
+        self.assertEqual(d,
+                         {
+                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 5,
+                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
+                         })
+
+    def test_coverage_tels2_dedup(self):
+        x = Extractor(self.tels2 + self.tels2[:6])
+        rex = x.results.rex
+        self.assertEqual(type(rex), list)
+        d = dict(zip(rex, x.coverage()))
+        self.assertEqual(d,
+                         {
+                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 9,
+                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 6,
+                         })
+        d = dict(zip(rex, x.coverage(dedup=True)))
+        self.assertEqual(d,
+                         {
+                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 5,
+                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
+                         })
+
 
     tels3 = [
         '0131-222-9876',
