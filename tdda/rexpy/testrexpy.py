@@ -213,6 +213,8 @@ import re
 import sys
 import unittest
 
+from collections import OrderedDict
+
 try:
     import pandas
 except:
@@ -725,6 +727,16 @@ class TestExtraction(unittest.TestCase):
                             r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
                          })
 
+    def test_sequential_coverage_tels2(self):
+        x = Extractor(self.tels2)
+        rex = x.results.rex
+        od = x.sequential_coverage()
+        self.assertEqual(od,
+                         OrderedDict((
+                            (r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$', 5),
+                            (r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$', 4),
+                         )))
+
     def test_coverage_tels2_dedup(self):
         x = Extractor(self.tels2 + self.tels2[:6])
         rex = x.results.rex
@@ -742,11 +754,21 @@ class TestExtraction(unittest.TestCase):
                             r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
                          })
 
+    def test_sequential_coverage_tels2_dedup(self):
+        x = Extractor(self.tels2 + self.tels2[:6])
+        rex = x.results.rex
+        od = x.sequential_coverage(dedup=True)
+        self.assertEqual(od,
+                         OrderedDict((
+                            (r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$', 5),
+                            (r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$', 4),
+                         )))
 
     tels3 = [
         '0131-222-9876',
         '0207.987.2287'
     ]
+
     def test_tels3(self):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
@@ -898,7 +920,7 @@ class TestExtraction(unittest.TestCase):
     urls2 = [
         'stochasticsolutions.com/',
         'apple.com/',
-        'stochasticsolutions.com/',
+        'stochasticsolutions.com/',  # actual duplicate
         'http://www.stochasticsolutions.co.uk/',
         'http://www.google.co.uk/',
         'http://www.google.com',
@@ -927,6 +949,41 @@ class TestExtraction(unittest.TestCase):
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
         })
+
+    def test_sequential_coverage_urls2(self):
+        x = Extractor(self.urls2)
+        od = x.sequential_coverage()
+        expected = OrderedDict((
+                      (u'^[a-z]{4,5}\\:\\/\\/www\\.[a-z]+\\.com$', 4),
+                      (u'^[a-z]+\\.com\\/$', 3),
+                      (u'^http\\:\\/\\/www\\.[a-z]+\\.co\\.uk\\/$', 3),
+                      (u'^[a-z]{3,4}[\\.\\/\\:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                      (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
+                      (u'^http\\:\\/\\/www\\.[a-z]{6,8}\\.com\\/$', 2)))
+        self.assertEqual(od, expected)
+        self.assertEqual(x.n_examples(), 16)
+
+        expected_dd = OrderedDict((
+                         (u'^[a-z]{4,5}\\:\\/\\/www\\.[a-z]+\\.com$', 4),
+                         (u'^http\\:\\/\\/www\\.[a-z]+\\.co\\.uk\\/$', 3),
+                         (u'^[a-z]+\\.com\\/$', 2),
+                         (u'^[a-z]{3,4}[\\.\\/\\:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                         (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
+                         (u'^http\\:\\/\\/www\\.[a-z]{6,8}\\.com\\/$', 2)))
+        od = x.sequential_coverage(dedup=True)
+        self.assertEqual(od, expected_dd)
+        self.assertEqual(x.n_examples(dedup=True), 15)
+
+
+        x = Extractor(self.urls2 * 2)
+        doubled = OrderedDict([(k, n * 2) for k, n in expected.items()])
+        od = x.sequential_coverage()
+        self.assertEqual(od, doubled)
+        self.assertEqual(x.n_examples(), 32)
+
+        od = x.sequential_coverage(dedup=True)
+        self.assertEqual(od, expected_dd)
+        self.assertEqual(x.n_examples(dedup=True), 15)
 
     def test_urls2_grouped(self):
 

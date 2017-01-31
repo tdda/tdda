@@ -14,7 +14,7 @@ import re
 import string
 import sys
 
-from collections import Counter, defaultdict, namedtuple
+from collections import Counter, defaultdict, namedtuple, OrderedDict
 
 str_type = unicode if sys.version_info.major < 3 else str
 bytes_type = str if sys.version_info.major < 3 else bytes
@@ -726,6 +726,32 @@ class Extractor(object):
         """
         return rex_coverage(self.results.rex, self.example_freqs, dedup)
 
+    def sequential_coverage(self, dedup=False, debug=False):
+        """
+        Returns an ordered dictionary of regular expressions,
+        sorted by the number of new examples they match/explain,
+        from most to fewest, with ties broken by pattern sort order.
+        The values in the results dictionary are the numbers of (new)
+        examples matched.
+
+        If dedup is set to True, frequencies are ignored.
+        """
+        return rex_sequential_coverage(self.results.rex,
+                                       self.example_freqs,
+                                       dedup, debug=debug)
+
+    def n_examples(self, dedup=False):
+        """
+        Returns the total number of examples used by rexpy.
+        If dedup is set to True, this the number of different examples,
+        otherwise it is the "raw" number of examples.
+        In all cases, examples have been stripped.
+        """
+        if dedup:
+            return len(self.example_freqs)
+        else:
+            return sum(self.example_freqs.values())
+
     def __str__(self):
         return str(self.results or 'No results (yet)')
 
@@ -754,6 +780,111 @@ def rex_coverage(patterns, example_freqs, dedup=False):
     return results
 
 
+def rex_sequential_coverage(patterns, example_freqs, dedup=False, debug=False):
+    """
+    Given a list of regular expressions and a dictionary of examples
+    and their frequencies, this computes their sequential coverage,
+    i.e. it produces an ordered dictionary, sorted from the "most useful"
+    patterns (the one that matches the most examples) to the least useful.
+    Usefulness is defined as "matching the most previously unmatched patterns".
+    The dictionary entries are the number of (new) matches for the pattern.
+
+    If dedup is set to True, the frequencies are ignored when computing
+    match rate; if set to false, patterns get credit for the nmultiplicity
+    of examples they match.
+
+    Ties are broken by lexical order of the (terminated) patterns.
+
+    For example, given patterns p1, p2, and p3, and examples e1, e2 and e3,
+    with a match profile as follows (where the numbers are multiplicities)
+
+            p1      p2      p3
+
+    e1       2       2       0
+    e2       0       3       3
+    e3       1       0       0
+    e4       0       0       4
+    e5       1       0       1
+
+    TOTAL    4       4       8
+
+    If dedup is False this would produce
+
+        OrderedDict(
+            (p3, 8),
+            (p1, 3),
+            (p2, 0)
+        )
+    because:
+     - p3 matches the most, with 8
+     - Of the strings unmatched by p3, p1 accounts for 3 (e1 x 2 and e3 x 1)
+       whereas p2 accounts for no new strings.
+
+    With dedup set to True, the matrix transforms to
+
+            p1      p2      p3
+
+    e1       1       1       0
+    e2       0       1       1
+    e3       1       0       0
+    e4       0       0       1
+    e5       1       0       1
+
+    TOTAL    3       2       3
+
+    So p1 and p3 are tied.
+
+    If we assume the p1 sorts before p3, the result would then be:
+
+        OrderedDict(
+            (p1, 3),
+            (p3, 2),
+            (p2, 0)
+        )
+    """
+
+    # First build up list of matches, 1 per example, with a boolean]
+    # to say whether it matches each pattern.
+
+    rows = []
+    patterns = ['%s%s%s' % ('' if p.startswith('^') else '^',
+                            p,
+                            '' if p.endswith('$') else '$')
+                for p in sorted(patterns)]  # ensure terminated & compile
+    rexes = [re.compile(p) for p in patterns]
+    if debug:
+        print('NUMBER OF EXAMPLES:', len(example_freqs), dedup)
+    for (x, n) in example_freqs.items():
+        if dedup:
+            rows.append([1 if re.match(r, x) else 0 for r in rexes])
+        else:
+            rows.append([n if re.match(r, x) else 0 for r in rexes])
+
+    # Now find patterns, in order of # of matches, and pull out freqs.
+    # Then set overlapping matches to zero and repeat.
+    # Returns ordered dict, sorted by sequential match rate,
+    # with number of (previously unaccounted for) strings matched.
+
+    results = OrderedDict()
+    np = len(patterns)
+    zeros = [0] * np
+    while len(results) < np:
+        totals = [sum(row[i] for row in rows) for i in range(np)]
+        M = max(totals)
+        if debug:
+            print()
+            for row in rows:
+                print(row)
+            print(str(totals) + ' totals')
+            print()
+        p = 0  # index of pattern
+        while totals[p] < M:
+            p += 1
+        results[patterns[p]] = M
+        for i, x in enumerate(example_freqs):
+            if rows[i][p]:
+                rows[i] = zeros
+    return results
 
 def run_length_encode(s):
     """
