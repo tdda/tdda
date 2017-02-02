@@ -201,6 +201,7 @@ class Categories(object):
 
 
 Fragment = namedtuple('Fragment', 're group')
+Coverage = namedtuple('Coverage', 'n n_uniq seq seq_uniq')
 
 
 class Extractor(object):
@@ -740,6 +741,33 @@ class Extractor(object):
                                        self.example_freqs,
                                        dedup, debug=debug)
 
+    def full_sequential_coverage(self, dedup=False, debug=False):
+        """
+        Returns an ordered dictionary of regular expressions,
+        sorted by the number of new examples they match/explain,
+        from most to fewest, with ties broken by pattern sort order.
+        The values in the results dictionary are the numbers of (new)
+        examples matched.
+
+        If dedup is set to True, frequencies are ignored.
+
+        Each result is Coverage object with the following attributes:
+
+            n:         number of examples matched including duplicatesb
+
+            n_uniq:    number of examples matched, excluding duplicates
+
+            seq:       number of previously unmatched examples matched,
+                       including duplicates
+
+            seq_uniq:  number of previously unmatched examples matched,
+                       excluding duplicates
+
+        """
+        return rex_full_sequential_coverage(self.results.rex,
+                                            self.example_freqs,
+                                            dedup, debug=debug)
+
     def n_examples(self, dedup=False):
         """
         Returns the total number of examples used by rexpy.
@@ -777,6 +805,47 @@ def rex_coverage(patterns, example_freqs, dedup=False):
         else:
             results.append(sum(n if re.match(r, k) else 0
                            for (k, n) in example_freqs.items()))
+    return results
+
+
+def rex_full_sequential_coverage(patterns, example_freqs, dedup=False,
+                                 debug=False):
+    """
+    Returns an ordered dictionary containing, keyed on terminate
+    regular expressions from patterns, sorted in decreasing order
+    of sequential coverage, i.e. with the pattern matching
+    the most first, followed by the one matching the most remaining
+    examples etc.
+
+    If dedup is set to True, the ordering ignores duplicate examples;
+    otherise, duplicates help determine the sort order.
+
+    Each entry in the dictionary returned is a Coverage object
+    with the following attributes:
+
+        n:         number of examples matched including duplicatesb
+
+        n_uniq:    number of examples matched, excluding duplicates
+
+        seq:       number of previously unmatched examples matched,
+                   including duplicates
+
+        seq_uniq:  number of previously unmatched examples matched,
+                   excluding duplicates
+    """
+    patterns = terminate_patterns(patterns)
+    matrix, deduped = coverage_matrices(patterns, example_freqs)
+    return matrices2sequential_coverage(patterns, matrix, deduped,
+                                        example_freqs, dedup=dedup)
+
+
+
+def terminate_patterns(patterns):
+    results = ['%s%s%s' % ('' if p.startswith('^') else '^',
+                        p,
+                        '' if p.endswith('$') else '$')
+                for p in patterns]
+    results.sort()
     return results
 
 
@@ -842,49 +911,69 @@ def rex_sequential_coverage(patterns, example_freqs, dedup=False, debug=False):
             (p2, 0)
         )
     """
+    results = rex_full_sequential_coverage(patterns, example_freqs,
+                                           dedup=dedup, debug=False)
+    if dedup:
+        return OrderedDict((k, v.seq_uniq) for (k, v) in results.items())
+    else:
+        return OrderedDict((k, v.seq) for (k, v) in results.items())
 
-    # First build up list of matches, 1 per example, with a boolean]
-    # to say whether it matches each pattern.
 
-    rows = []
-    patterns = ['%s%s%s' % ('' if p.startswith('^') else '^',
-                            p,
-                            '' if p.endswith('$') else '$')
-                for p in sorted(patterns)]  # ensure terminated & compile
+def coverage_matrices(patterns, example_freqs):
+    # Compute the 2 coverage matrices:
+    #   matrix:  1 row per example, with a count of number of matches
+    #   deduped: 1 row per example, with a boolean where it matches
+
+    matrix = []
+    deduped = []  # deduped version of same
     rexes = [re.compile(p) for p in patterns]
-    if debug:
-        print('NUMBER OF EXAMPLES:', len(example_freqs), dedup)
     for (x, n) in example_freqs.items():
-        if dedup:
-            rows.append([1 if re.match(r, x) else 0 for r in rexes])
-        else:
-            rows.append([n if re.match(r, x) else 0 for r in rexes])
+        row = [n if re.match(r, x) else 0 for r in rexes]
+        matrix.append(row)
+        deduped.append([1 if r else 0 for r in row])
+    return matrix, deduped
 
-    # Now find patterns, in order of # of matches, and pull out freqs.
-    # Then set overlapping matches to zero and repeat.
-    # Returns ordered dict, sorted by sequential match rate,
-    # with number of (previously unaccounted for) strings matched.
 
+def matrices2sequential_coverage(patterns, matrix, deduped,
+                                 example_freqs, dedup=False):
+    """
+    Find patterns, in order of # of matches, and pull out freqs.
+    Then set overlapping matches to zero and repeat.
+    Returns ordered dict, sorted by sequential match rate,
+    with number of (previously unaccounted for) strings matched.
+    """
     results = OrderedDict()
+    sort_matrix = deduped if dedup else matrix
     np = len(patterns)
     zeros = [0] * np
+    pattern_freqs = [sum(matrix[i][r] for i, x in enumerate(example_freqs))
+                     for r in range(np)]
+    pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(example_freqs))
+                     for r in range(np)]
     while len(results) < np:
-        totals = [sum(row[i] for row in rows) for i in range(np)]
-        M = max(totals)
-        if debug:
-            print()
-            for row in rows:
-                print(row)
-            print(str(totals) + ' totals')
-            print()
+        totals = [sum(row[i] for row in matrix) for i in range(np)]
+        uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
+        M, uM = max(totals), max(uniq_totals)
+        if dedup:
+            sort_totals = uniq_totals
+            target = uM
+        else:
+            sort_totals = totals
+            target = M
         p = 0  # index of pattern
-        while totals[p] < M:
+        while sort_totals[p] < target:
             p += 1
-        results[patterns[p]] = M
+        rex = patterns[p]
+        results[rex] = Coverage(n = pattern_freqs[p],
+                                n_uniq = pattern_uniqs[p],
+                                seq = totals[p],
+                                seq_uniq = uniq_totals[p])
         for i, x in enumerate(example_freqs):
-            if rows[i][p]:
-                rows[i] = zeros
+            if matrix[i][p]:
+                matrix[i] = zeros
+                deduped[i] = zeros
     return results
+
 
 def run_length_encode(s):
     """

@@ -985,6 +985,141 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(od, expected_dd)
         self.assertEqual(x.n_examples(dedup=True), 15)
 
+
+    def test_full_sequential_coverage(self):
+        freqs = {
+            'One': 1,
+            'one': 1,
+            'two': 2,
+            'three': 3,
+            'four': 4,
+            'five': 5,
+            'six': 6,
+            'seven': 7,
+        }
+        patterns = ['^f.+$', '^.{3}$', '^[st].+$']
+        results = rexpy.rex_full_sequential_coverage(patterns, freqs)
+#        for k in results:
+#            print("            (u'%s',\n             rexpy.%s),"
+#                  % (k, results[k]))
+        expected = OrderedDict((
+            (u'^[st].+$',
+             rexpy.Coverage(n=18,      # 2 + 3 + 6 + 7,
+                            n_uniq=4,  # two, three, six, seven
+                            seq=18,
+                            seq_uniq=4)),
+            (u'^f.+$',
+             rexpy.Coverage(n=9,       # 4 + 5
+                            n_uniq=2,  # four, five
+                            seq=9,     # four (4), five (5)
+                            seq_uniq=2)),
+            (u'^.{3}$',
+             rexpy.Coverage(n=10,      # 1 + 1 + 2 + 6
+                            n_uniq=4,  # One, one, two, six
+                            seq=2, # One (1), one (1)
+                            seq_uniq=2)),
+        ))
+        self.assertEqual(results, expected)
+
+        results = rexpy.rex_full_sequential_coverage(patterns, freqs,
+                                                     dedup=True)
+        expected = OrderedDict((
+            (u'^.{3}$',
+             rexpy.Coverage(n=10,      # 1 + 1 + 2 + 6
+                            n_uniq=4,  # One, one, two, six
+                            seq=10,    # One (1), one (1), two (2), six (6)
+                            seq_uniq=4)),
+            (u'^[st].+$',
+             rexpy.Coverage(n=18,      # 2 + 3 + 6 + 7,
+                            n_uniq=4,  # two, three, six, seven
+                            seq=10,    # three (3), seven (7)
+                            seq_uniq=2)),
+            (u'^f.+$',
+             rexpy.Coverage(n=9,       # 4 + 5
+                            n_uniq=2,  # four, five
+                            seq=9,     # four (4), five (5)
+                            seq_uniq=2)),
+        ))
+        self.assertEqual(results, expected)
+
+    def test_full_sequential_coverage_urls2(self):
+        x = Extractor(self.urls2)
+        od = x.full_sequential_coverage()
+        expected = OrderedDict((
+            (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
+             rexpy.Coverage(n=4, n_uniq=4, seq=4, seq_uniq=4)),
+            (u'^[a-z]+\.com\/$',
+             rexpy.Coverage(n=3, n_uniq=2, seq=3, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             rexpy.Coverage(n=3, n_uniq=3, seq=3, seq_uniq=3)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+        ))
+
+        self.assertEqual(od, expected)
+        self.assertEqual(x.n_examples(), 16)
+        expected_dd = OrderedDict((
+            (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
+             rexpy.Coverage(n=4, n_uniq=4, seq=4, seq_uniq=4)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             rexpy.Coverage(n=3, n_uniq=3, seq=3, seq_uniq=3)),
+            (u'^[a-z]+\.com\/$',
+             rexpy.Coverage(n=3, n_uniq=2, seq=3, seq_uniq=2)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             rexpy.Coverage(n=2, n_uniq=2, seq=2, seq_uniq=2)),
+        ))
+
+        od = x.full_sequential_coverage(dedup=True)
+        self.assertEqual(od, expected_dd)
+        self.assertEqual(x.n_examples(dedup=True), 15)
+
+        x = Extractor(self.urls2 * 2)
+        doubled = OrderedDict((
+            (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
+             rexpy.Coverage(n=8, n_uniq=4, seq=8, seq_uniq=4)),
+            (u'^[a-z]+\.com\/$',
+             rexpy.Coverage(n=6, n_uniq=2, seq=6, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             rexpy.Coverage(n=6, n_uniq=3, seq=6, seq_uniq=3)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+        ))
+        od = x.full_sequential_coverage()
+
+        self.assertEqual(od, doubled)
+        self.assertEqual(x.n_examples(), 32)
+
+        od = x.full_sequential_coverage(dedup=True)
+
+        expected_doubled_dd = OrderedDict((
+            (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
+             rexpy.Coverage(n=8, n_uniq=4, seq=8, seq_uniq=4)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             rexpy.Coverage(n=6, n_uniq=3, seq=6, seq_uniq=3)),
+            (u'^[a-z]+\.com\/$',
+             rexpy.Coverage(n=6, n_uniq=2, seq=6, seq_uniq=2)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             rexpy.Coverage(n=4, n_uniq=2, seq=4, seq_uniq=2)),
+        ))
+        self.assertEqual(od, expected_doubled_dd)
+        self.assertEqual(x.n_examples(dedup=True), 15)
+
     def test_urls2_grouped(self):
 
 #        print()
@@ -1080,6 +1215,15 @@ class TestExtraction(unittest.TestCase):
         df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
+
+
+def print_ordered_dict(od):
+    print()
+    print('        expected = OrderedDict((')
+    for k in od:
+        print("            (u'%s',\n             rexpy.%s),"
+              % (k, od[k]))
+    print('        ))')
 
 
 if sys.version_info.major < 3:
