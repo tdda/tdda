@@ -215,6 +215,9 @@ class Extractor(object):
     Results are stored in self.results once extraction has occurred,
     which happens by default on initialization, but can be invoked
     manually.
+
+    The examples may be given as a list or as a dictionary:
+    if a dictionary, the values are assumed to be string frequencies.
     """
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
                  verbose=False):
@@ -296,18 +299,23 @@ class Extractor(object):
         Compute length of each string and count number of examples
         of each length.
         """
+        isdict = isinstance(examples, dict)
         for s in examples:
+            n = examples[s] if isdict else 1
             if s is None:
                 self.n_nulls += 1
             else:
                 stripped = s.strip()
                 L = len(stripped)
                 if L == 0:
-                    self.n_empties += 1
+                    self.n_empties += n
                 else:
-                    self.example_freqs[stripped] += 1
+                    self.example_freqs[stripped] += n
                     if len(stripped) != len(s):
-                        self.n_stripped += 1
+                        self.n_stripped += n
+        for k, n in self.example_freqs.items():
+            if n == 0:
+                del self.example_freqs[k]
 #                    if self.example_freqs[stripped] == 1:
 #                        self.by_length[L].append(stripped)
 
@@ -1152,7 +1160,10 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     expressions, as unicode strings is returned.
     """
     if encoding:
-        examples = [x.decode(encoding) for x in examples]
+        if isinstance(examples, dict):
+            examples ={x.decode(encoding): n for (x, n) in examples.items()}
+        else:
+            examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
                   verbose=verbose)
     return r if as_object else r.results.rex
