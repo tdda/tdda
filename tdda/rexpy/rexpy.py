@@ -201,7 +201,7 @@ class Categories(object):
 
 
 Fragment = namedtuple('Fragment', 're group')
-Coverage = namedtuple('Coverage', 'n n_uniq seq seq_uniq')
+Coverage = namedtuple('Coverage', 'n n_uniq seq seq_uniq index')
 
 
 class Extractor(object):
@@ -975,7 +975,8 @@ def matrices2sequential_coverage(patterns, matrix, deduped,
         results[rex] = Coverage(n = pattern_freqs[p],
                                 n_uniq = pattern_uniqs[p],
                                 seq = totals[p],
-                                seq_uniq = uniq_totals[p])
+                                seq_uniq = uniq_totals[p],
+                                index=p)
         for i, x in enumerate(example_freqs):
             if matrix[i][p]:
                 matrix[i] = zeros
