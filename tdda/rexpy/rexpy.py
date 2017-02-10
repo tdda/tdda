@@ -841,20 +841,26 @@ def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
         incr_uniq:  number of previously unmatched examples matched,
                     excluding duplicates
     """
-    patterns = terminate_patterns(patterns)
+    patterns, indexes = terminate_patterns_and_sort(patterns)
     matrix, deduped = coverage_matrices(patterns, example_freqs)
-    return matrices2incremental_coverage(patterns, matrix, deduped,
-                                         example_freqs, dedup=dedup)
+    return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
+                                         example_freqs, dedup=dedup,)
 
 
 
-def terminate_patterns(patterns):
+def terminate_patterns_and_sort(patterns):
+    """
+    Given a list of regular expressions, this terminates any that are
+    not and returns them in sorted order.
+    Also returns a list of the original indexes of the results.
+    """
     results = ['%s%s%s' % ('' if p.startswith('^') else '^',
                         p,
                         '' if p.endswith('$') else '$')
                 for p in patterns]
-    results.sort()
-    return results
+    z = zip(results, range(len(results)))
+    z.sort()  # Sort to fix the order of tiebreaks
+    return [r[0] for r in z], [r[1] for r in z]
 
 
 def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
@@ -942,7 +948,7 @@ def coverage_matrices(patterns, example_freqs):
     return matrix, deduped
 
 
-def matrices2incremental_coverage(patterns, matrix, deduped,
+def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                                   example_freqs, dedup=False):
     """
     Find patterns, in order of # of matches, and pull out freqs.
@@ -972,11 +978,11 @@ def matrices2incremental_coverage(patterns, matrix, deduped,
         while sort_totals[p] < target:
             p += 1
         rex = patterns[p]
-        results[rex] = Coverage(n = pattern_freqs[p],
-                                n_uniq = pattern_uniqs[p],
-                                incr = totals[p],
-                                incr_uniq = uniq_totals[p],
-                                index=p)
+        results[rex] = Coverage(n=pattern_freqs[p],
+                                n_uniq=pattern_uniqs[p],
+                                incr=totals[p],
+                                incr_uniq=uniq_totals[p],
+                                index=indexes[p])
         for i, x in enumerate(example_freqs):
             if matrix[i][p]:
                 matrix[i] = zeros

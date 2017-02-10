@@ -1009,19 +1009,19 @@ class TestExtraction(unittest.TestCase):
                             n_uniq=4,  # two, three, six, seven
                             incr=18,
                             incr_uniq=4,
-                            index=1)),
+                            index=2)),
             (u'^f.+$',
              rexpy.Coverage(n=9,        # 4 + 5
                             n_uniq=2,   # four, five
                             incr=9,     # four (4), five (5)
                             incr_uniq=2,
-                            index=2)),
+                            index=0)),
             (u'^.{3}$',
              rexpy.Coverage(n=10,      # 1 + 1 + 2 + 6
                             n_uniq=4,  # One, one, two, six
                             incr=2,    # One (1), one (1)
                             incr_uniq=2,
-                            index=0)),
+                            index=1)),
         ))
         self.assertEqual(results, expected)
 
@@ -1033,19 +1033,19 @@ class TestExtraction(unittest.TestCase):
                             n_uniq=4,   # One, one, two, six
                             incr=10,    # One (1), one (1), two (2), six (6)
                             incr_uniq=4,
-                            index=0)),
+                            index=1)),
             (u'^[st].+$',
              rexpy.Coverage(n=18,       # 2 + 3 + 6 + 7,
                             n_uniq=4,   # two, three, six, seven
                             incr=10,    # three (3), seven (7)
                             incr_uniq=2,
-                            index=1)),
+                            index=2)),
             (u'^f.+$',
              rexpy.Coverage(n=9,        # 4 + 5
                             n_uniq=2,   # four, five
                             incr=9,     # four (4), five (5)
                             incr_uniq=2,
-                            index=2)),
+                            index=0)),
         ))
         self.assertEqual(results, expected)
 
@@ -1056,15 +1056,15 @@ class TestExtraction(unittest.TestCase):
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              rexpy.Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=0)),
+             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=4)),
+             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=5)),
+             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
         self.assertEqual(od, expected)
@@ -1073,15 +1073,15 @@ class TestExtraction(unittest.TestCase):
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              rexpy.Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=4)),
+             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=0)),
+             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=5)),
+             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
         od = x.full_incremental_coverage(dedup=True)
@@ -1093,15 +1093,15 @@ class TestExtraction(unittest.TestCase):
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              rexpy.Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=0)),
+             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
+             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=5)),
+             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         od = x.full_incremental_coverage()
         self.assertEqual(od, doubled)
@@ -1113,15 +1113,15 @@ class TestExtraction(unittest.TestCase):
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              rexpy.Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
+             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=0)),
+             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=5)),
+             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         self.assertEqual(od, expected_doubled_dd)
         self.assertEqual(x.n_examples(dedup=True), 15)
