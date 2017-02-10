@@ -201,7 +201,7 @@ class Categories(object):
 
 
 Fragment = namedtuple('Fragment', 're group')
-Coverage = namedtuple('Coverage', 'n n_uniq seq seq_uniq index')
+Coverage = namedtuple('Coverage', 'n n_uniq incr incr_uniq index')
 
 
 class Extractor(object):
@@ -735,7 +735,7 @@ class Extractor(object):
         """
         return rex_coverage(self.results.rex, self.example_freqs, dedup)
 
-    def sequential_coverage(self, dedup=False, debug=False):
+    def incremental_coverage(self, dedup=False, debug=False):
         """
         Returns an ordered dictionary of regular expressions,
         sorted by the number of new examples they match/explain,
@@ -745,11 +745,11 @@ class Extractor(object):
 
         If dedup is set to True, frequencies are ignored.
         """
-        return rex_sequential_coverage(self.results.rex,
-                                       self.example_freqs,
-                                       dedup, debug=debug)
+        return rex_incremental_coverage(self.results.rex,
+                                        self.example_freqs,
+                                        dedup, debug=debug)
 
-    def full_sequential_coverage(self, dedup=False, debug=False):
+    def full_incremental_coverage(self, dedup=False, debug=False):
         """
         Returns an ordered dictionary of regular expressions,
         sorted by the number of new examples they match/explain,
@@ -761,20 +761,20 @@ class Extractor(object):
 
         Each result is Coverage object with the following attributes:
 
-            n:         number of examples matched including duplicatesb
+            n:          number of examples matched including duplicatesb
 
-            n_uniq:    number of examples matched, excluding duplicates
+            n_uniq:     number of examples matched, excluding duplicates
 
-            seq:       number of previously unmatched examples matched,
-                       including duplicates
+            incr:       number of previously unmatched examples matched,
+                        including duplicates
 
-            seq_uniq:  number of previously unmatched examples matched,
-                       excluding duplicates
+            incr_uniq:  number of previously unmatched examples matched,
+                        excluding duplicates
 
         """
-        return rex_full_sequential_coverage(self.results.rex,
-                                            self.example_freqs,
-                                            dedup, debug=debug)
+        return rex_full_incremental_coverage(self.results.rex,
+                                             self.example_freqs,
+                                             dedup, debug=debug)
 
     def n_examples(self, dedup=False):
         """
@@ -816,12 +816,12 @@ def rex_coverage(patterns, example_freqs, dedup=False):
     return results
 
 
-def rex_full_sequential_coverage(patterns, example_freqs, dedup=False,
-                                 debug=False):
+def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
+                                  debug=False):
     """
     Returns an ordered dictionary containing, keyed on terminate
     regular expressions from patterns, sorted in decreasing order
-    of sequential coverage, i.e. with the pattern matching
+    of incremental coverage, i.e. with the pattern matching
     the most first, followed by the one matching the most remaining
     examples etc.
 
@@ -831,20 +831,20 @@ def rex_full_sequential_coverage(patterns, example_freqs, dedup=False,
     Each entry in the dictionary returned is a Coverage object
     with the following attributes:
 
-        n:         number of examples matched including duplicatesb
+        n:          number of examples matched including duplicatesb
 
-        n_uniq:    number of examples matched, excluding duplicates
+        n_uniq:     number of examples matched, excluding duplicates
 
-        seq:       number of previously unmatched examples matched,
-                   including duplicates
+        incr:       number of previously unmatched examples matched,
+                    including duplicates
 
-        seq_uniq:  number of previously unmatched examples matched,
-                   excluding duplicates
+        incr_uniq:  number of previously unmatched examples matched,
+                    excluding duplicates
     """
     patterns = terminate_patterns(patterns)
     matrix, deduped = coverage_matrices(patterns, example_freqs)
-    return matrices2sequential_coverage(patterns, matrix, deduped,
-                                        example_freqs, dedup=dedup)
+    return matrices2incremental_coverage(patterns, matrix, deduped,
+                                         example_freqs, dedup=dedup)
 
 
 
@@ -857,10 +857,10 @@ def terminate_patterns(patterns):
     return results
 
 
-def rex_sequential_coverage(patterns, example_freqs, dedup=False, debug=False):
+def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
     """
     Given a list of regular expressions and a dictionary of examples
-    and their frequencies, this computes their sequential coverage,
+    and their frequencies, this computes their incremental coverage,
     i.e. it produces an ordered dictionary, sorted from the "most useful"
     patterns (the one that matches the most examples) to the least useful.
     Usefulness is defined as "matching the most previously unmatched patterns".
@@ -919,12 +919,12 @@ def rex_sequential_coverage(patterns, example_freqs, dedup=False, debug=False):
             (p2, 0)
         )
     """
-    results = rex_full_sequential_coverage(patterns, example_freqs,
-                                           dedup=dedup, debug=False)
+    results = rex_full_incremental_coverage(patterns, example_freqs,
+                                            dedup=dedup, debug=False)
     if dedup:
-        return OrderedDict((k, v.seq_uniq) for (k, v) in results.items())
+        return OrderedDict((k, v.incr_uniq) for (k, v) in results.items())
     else:
-        return OrderedDict((k, v.seq) for (k, v) in results.items())
+        return OrderedDict((k, v.incr) for (k, v) in results.items())
 
 
 def coverage_matrices(patterns, example_freqs):
@@ -942,12 +942,12 @@ def coverage_matrices(patterns, example_freqs):
     return matrix, deduped
 
 
-def matrices2sequential_coverage(patterns, matrix, deduped,
-                                 example_freqs, dedup=False):
+def matrices2incremental_coverage(patterns, matrix, deduped,
+                                  example_freqs, dedup=False):
     """
     Find patterns, in order of # of matches, and pull out freqs.
     Then set overlapping matches to zero and repeat.
-    Returns ordered dict, sorted by sequential match rate,
+    Returns ordered dict, sorted by incremental match rate,
     with number of (previously unaccounted for) strings matched.
     """
     results = OrderedDict()
@@ -974,8 +974,8 @@ def matrices2sequential_coverage(patterns, matrix, deduped,
         rex = patterns[p]
         results[rex] = Coverage(n = pattern_freqs[p],
                                 n_uniq = pattern_uniqs[p],
-                                seq = totals[p],
-                                seq_uniq = uniq_totals[p],
+                                incr = totals[p],
+                                incr_uniq = uniq_totals[p],
                                 index=p)
         for i, x in enumerate(example_freqs):
             if matrix[i][p]:
