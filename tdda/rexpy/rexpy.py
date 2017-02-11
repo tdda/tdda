@@ -858,7 +858,7 @@ def terminate_patterns_and_sort(patterns):
                         p,
                         '' if p.endswith('$') else '$')
                 for p in patterns]
-    z = zip(results, range(len(results)))
+    z = list(zip(results, range(len(results))))
     z.sort()  # Sort to fix the order of tiebreaks
     return [r[0] for r in z], [r[1] for r in z]
 
