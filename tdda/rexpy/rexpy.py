@@ -1,27 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-rexpy.py: Regular expression extraction (induction) from examples
-"""
+USAGE::
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-import random
-import re
-import string
-import sys
-
-from collections import Counter, defaultdict, namedtuple, OrderedDict
-
-str_type = unicode if sys.version_info.major < 3 else str
-bytes_type = str if sys.version_info.major < 3 else bytes
-
-USAGE = """USAGE:
-
-    python rexpy.py [FLAGS] [input file [output file]]
+    python -m tdda.rexpy.rexpy [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
@@ -54,6 +36,23 @@ FLAGS are optional flags. Currently:
                     Also --hyphen or --dash.
 
 """
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import random
+import re
+import string
+import sys
+
+from collections import Counter, defaultdict, namedtuple, OrderedDict
+
+str_type = unicode if sys.version_info.major < 3 else str
+bytes_type = str if sys.version_info.major < 3 else bytes
+
+USAGE = __doc__.replace('USAGE::', 'USAGE:')
 
 MIN_MERGE_SIMILARITY = 0.5
 TERMINATE = True  # False
@@ -881,17 +880,18 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
     For example, given patterns p1, p2, and p3, and examples e1, e2 and e3,
     with a match profile as follows (where the numbers are multiplicities)
 
-            p1      p2      p3
-
+    ======= ====    ====    ====
+    example p1      p2      p3
+    ======= ====    ====    ====
     e1       2       2       0
     e2       0       3       3
     e3       1       0       0
     e4       0       0       4
     e5       1       0       1
-
     TOTAL    4       4       8
+    ======= ====    ====    ====
 
-    If dedup is False this would produce
+    If dedup is False this would produce::
 
         OrderedDict(
             (p3, 8),
@@ -905,25 +905,27 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
 
     With dedup set to True, the matrix transforms to
 
-            p1      p2      p3
-
+    ======= ====    ====    ====
+    example p1      p2      p3
+    ======= ====    ====    ====
     e1       1       1       0
     e2       0       1       1
     e3       1       0       0
     e4       0       0       1
     e5       1       0       1
-
     TOTAL    3       2       3
+    ======= ====    ====    ====
 
     So p1 and p3 are tied.
 
-    If we assume the p1 sorts before p3, the result would then be:
+    If we assume the p1 sorts before p3, the result would then be::
 
         OrderedDict(
             (p1, 3),
             (p3, 2),
             (p2, 0)
         )
+
     """
     results = rex_full_incremental_coverage(patterns, example_freqs,
                                             dedup=dedup, debug=False)
@@ -1027,16 +1029,17 @@ def to_vrles(rles):
     Convert a list of run-length encodings to a list of variable run-length
     encodings, one for each common signature.
 
-    For example, given inputs of:
+    For example, given inputs of::
 
             (('C', 2),)
             (('C', 3),)
         and (('C', 2), ('.', 1))
 
-    this would return
+    this would return::
 
             (('C', 2, 3),)
         and (('C', 2, 2), ('.', 1, 1))
+
     """
     by_sig = defaultdict(list)
     outs = []
@@ -1220,7 +1223,9 @@ def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
 
     fragFreqCounters is a dictionary (usually keyed on 'fragments')
     of whose values are dictionaries mapping positions to frequencies.
-    For example:
+
+    For example::
+
         {
             ('a', 1, 1, 'fixed'): {1: 7, -1: 7, 3: 4},
             ('b', 1, 1, 'fixed'): {2: 6, 3: 4},
@@ -1231,7 +1236,7 @@ def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
     pattern ('b', 1, 1, 'fixed') has frequency 6 at position 2 and
     4 at position 3.
 
-    With n set to 7, this returns
+    With n set to 7, this returns::
 
         [
             (('a', 1, 1, 'fixed'), -1)
@@ -1239,6 +1244,7 @@ def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
         ]
 
     (sorted on pos; each pos really should occur at most once.)
+
     """
     out = []
     for frag, fragFreqs in fragFreqCounters.items():
@@ -1256,7 +1262,8 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
 
     fragFreqCounters is a dictionary (usually keyed on 'fragments')
     of whose values are dictionaries mapping positions to frequencies.
-    For example:
+
+    For example::
         {
             ('a', 1, 1, 'fixed'): {1: 7, -1: 7, 3: 4},
             ('b', 1, 1, 'fixed'): {2: 6},
@@ -1267,13 +1274,14 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
         and frequency 4 at position 3;
       - pattern ('b', 1, 1, 'fixed') has frequency 6 at position 2 (only)
 
-    So this would return
+    So this would return::
 
         [
             (('b', 1, 1, 'fixed'), 2)
         ]
 
     (sorted on pos; each pos really should occur at most once.)
+
     """
     out = []
     print(fragFreqCounters)

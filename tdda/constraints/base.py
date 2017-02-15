@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-tdda.base.constraints.py:
 Base Constraint Functionality for Test-Driven Data Analysis (TDDA)
 """
 from __future__ import division
@@ -356,15 +355,16 @@ class SignConstraint(Constraint):
 class TypeConstraint(Constraint):
     """
     Constraint specifying the allowed (TDDA) type of a field.
-    This can be a single value, chosen from
-        'bool'
-        'int'
-        'real'
-        'string'
-        'date'
-    or a list of such values (most commonly
-        ['int', 'real']
-    (sometimes used because of Pandas silent and automatic promotion
+    This can be a single value, chosen from:
+
+        - 'bool'
+        - 'int'
+        - 'real'
+        - 'string'
+        - 'date'
+
+    or a list of such values, most commonly ``['int', 'real']``,
+    sometimes used because of Pandas silent and automatic promotion
     of integer fields to floats if NULLs are present.)
     """
     def __init__(self, value):

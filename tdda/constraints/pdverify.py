@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-pdverify.py: verify TDDA constraints for feather dataset
+pdverify.py: verify TDDA constraints for ``Pandas`` through
+:py:mod:`feather` datasets.
+
 """
 
 from __future__ import division

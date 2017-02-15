@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Utility for copying the example data to some directory outside of the
-distribution.
+The :py:mod:`tdda.rexpy` module includes a set of examples.
+
+To copy these examples to your own *rexpy-examples* subdirectory
+(or to a location of your choice)::
+
+    $ python -m tdda.rexpy.examples [mydirectory]
+
 """
 from __future__ import absolute_import
 

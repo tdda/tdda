@@ -1,0 +1,49 @@
+Constraints
+===========
+
+**CONTENTS**
+
+  - :ref:`constraint_summary`
+  - :ref:`discovery`
+  - :ref:`verification`
+  - :ref:`constraint_base`
+  - :ref:`constraint_examples`
+
+.. _constraint_summary:
+
+Summary
+-------
+
+.. automodule:: tdda.constraints
+    :members:
+
+.. _discovery:
+
+Discovery
+---------
+
+.. automodule:: tdda.constraints.pdconstraints
+    :members:
+
+.. _verification:
+
+Verification
+------------
+
+.. automodule:: tdda.constraints.pdverify
+    :members:
+
+.. _constraint_base:
+
+Shared Classes:
+---------------
+
+.. automodule:: tdda.constraints.base
+    :members:
+
+.. _constraint_examples:
+
+Examples
+--------
+.. automodule:: tdda.constraints.examples
+    :members:

@@ -1,0 +1,26 @@
+.. tdda documentation master file, created by
+   sphinx-quickstart on Tue Feb 14 15:12:30 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Test-Driven Data Analysis (Python TDDA library)
+===============================================
+
+**CONTENTS**
+
+.. toctree::
+   :maxdepth: 2
+
+   overview.txt
+   referencetest.txt
+   constraints.txt
+   rexpy.txt
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

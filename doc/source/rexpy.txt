@@ -1,0 +1,32 @@
+Rexpy
+=====
+
+**CONTENTS**
+
+  - :ref:`rexpy_summary`
+  - :ref:`rexpy`
+  - :ref:`rexpy_examples`
+
+.. _rexpy_summary:
+
+Summary
+-------
+
+.. automodule:: tdda.rexpy
+    :members:
+
+.. _rexpy:
+
+Rexpy
+-----
+
+.. automodule:: tdda.rexpy.rexpy
+    :members:
+
+
+.. _rexpy_examples:
+
+Examples
+--------
+.. automodule:: tdda.rexpy.examples
+    :members:
