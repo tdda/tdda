@@ -14,15 +14,23 @@ For example::
     from tdda.referencetest import referencepytest
     import my_module
 
+    def test_my_csv_function(ref):
+        resultfile = my_module.my_csv_function(ref.tmp_dir)
+        ref.assertCSVFileCorrect(resultfile, 'result.csv')
+
+    def test_my_pandas_dataframe_function(ref):
+        resultframe = my_modile.my_dataframe_function()
+        ref.assertDataFrameCorrect(resultframe, 'result.csv')
+
     def test_my_table_function(ref):
-        result = my_module.my_function()
-        ref.assertStringCorrect(result, 'result.txt', kind='table')
+        result = my_module.my_table_function()
+        ref.assertStringCorrect(result, 'table.txt', kind='table')
 
     def test_my_graph_function(ref):
-        result = my_module.my_function()
-        ref.assertStringCorrect(result, 'result.txt', kind='graph')
+        result = my_module.my_graph_function()
+        ref.assertStringCorrect(result, 'graph.txt', kind='graph')
 
-with a conftest.py containing::
+with a ``conftest.py`` containing::
 
     import pytest
     from tdda.referencetest import referencepytest
@@ -33,7 +41,7 @@ with a conftest.py containing::
     @pytest.fixture(scope='module')
     def ref(request):
         r = referencepytest.ref(request)
-        r.set_data_location('/data')
+        r.set_data_location('testdata')
         return r
 
 To regenerate all reference results (or generate them for the first time)::
@@ -85,7 +93,10 @@ def ref(request):
     Support for dependency injection via a ``pytest`` fixture.
 
     A test's conftest.py should define a fixture function for injecting
-    a ReferenceTest instance, which should just call this function.
+    a :py:class:`~tdda.referencetest.referencetest.ReferenceTest` instance,
+    which should just call this function.
+
+    This allows tests to get access to a private instance of that class.
     """
     if request.config.getoption('--wquiet'):
         ReferenceTest.set_default(verbose=False)
@@ -98,6 +109,41 @@ def ref(request):
                 for kind in r.split(','):
                     ReferenceTest.set_regeneration(kind)
     return ReferenceTest(pytest_assert)
+
+
+def set_defaults(**kwargs):
+    """
+    This provides a mechanism for setting default attributes in
+    the :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class.
+
+    It takes the same parameters as
+    :py:meth:`tdda.referencetest.referencetest.ReferenceTest.set_defaults`,
+    and can be used for setting parameters such as the *tmp_dir* property.
+
+    If you want the same defaults for all your tests, it can be easier to
+    set them with a call to this function, rather than having to set them
+    explicitly in each test (or in your ``@pytest.fixture`` *ref* definition
+    in your ``conftest.py`` file).
+    """
+    ReferenceTest.set_defaults(**kwargs)
+
+
+def set_default_data_location(location, kind=None):
+    """
+    This provides a mechanism for setting the default reference data
+    location in the :py:class:`~tdda.referencetest.referencetest.ReferenceTest`
+    class.
+
+    It takes the same parameters as
+    :py:meth:`tdda.referencetest.referencetest.ReferenceTest.set_default_data_location`.
+
+    If you want the same data locations for all your tests, it can be easier
+    to set them with calls to this function, rather than having to set them
+    explicitly in each test (or using
+    :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.set_data_location`
+    in your ``@pytest.fixture`` *ref* definition in your ``conftest.py`` file).
+    """
+    ReferenceTest.set_default_data_location(location, kind=kind)
 
 
 def addoption(parser):

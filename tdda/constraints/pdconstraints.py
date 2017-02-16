@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-TDDA constraint discovery and verification (checking) for ``Pandas``.
+TDDA constraint discovery and verification for Pandas.
+
+The top-level functions are:
+
+    :py:func:`discover_constraints`:
+        Discover constraints from a Pandas DataFrame.
+
+    :py:func:`verify_df`:
+        Verify (check) a Pandas DataFrame, against a set of previously
+        discovered constraints.
+
+API
+---
+
 """
 from __future__ import division
 from __future__ import print_function
@@ -456,6 +469,7 @@ class PandasVerification(Verification):
     """
     A :py:class:`PandasVerification` object adds a :py:meth:`to_frame()`
     method to a :py:class:`tdda.constraints.base.Verification` object.
+
     This allows the result of constraint verification to be converted to a
     Pandas DataFrame, including columns for the field (column) name,
     the numbers of passes and failures and boolean columns for each
@@ -463,13 +477,15 @@ class PandasVerification(Verification):
 
         - ``True``       --- if the constraint was satified for the column
         - ``False``      --- if column failed to satisfy the constraint
-        - null           --- (``pd.np.NaN``) if there was no constraint of
-                             this kind for this field.
+        - null           --- (``pd.np.NaN``) if there was no constraint of this kind for this field.
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
 
     def to_frame(self):
+        """
+        Converts object to a Pandas DataFrame.
+        """
         return verification_to_dataframe(self)
 
     to_dataframe = to_frame
@@ -540,8 +556,9 @@ def discover_field_constraints(field):
 
     Input:
 
-        *field* --- a single field (column; Series) object, usually from
-        a Pandas DataFrame.
+        *field*:
+            a single field (column; Series) object, usually from
+            a Pandas DataFrame.
 
     Returns:
 
@@ -631,7 +648,7 @@ def discover_field_constraints(field):
 
 def verification_to_dataframe(ver):
     """
-    Convert a PandasVerification object to a Pandas DataFrame.
+    Convert a :py:class:`PandasVerification` object to a Pandas DataFrame.
     """
     fields = ver.fields
     df = pd.DataFrame(OrderedDict((
@@ -676,8 +693,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             constraint can be exceeded without causing
                             a constraint violation to be issued.
                             With the default value of epsilon
-                            (EPSILON_DEFAULT = 0.01, i.e. 1%), values
-                            can be up to 1% larger than a max constraint
+                            (:py:const:`EPSILON_DEFAULT` = 0.01, i.e. 1%),
+                            values can be up to 1% larger than a max constraint
                             without generating constraint failure,
                             and minimum values can be up to 1% smaller
                             that the minimum constraint value without
@@ -704,21 +721,20 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
                             If this is set to strict, a Pandas "float"
                             column c will only be allowed to satisfy a
-                            an "int" type constraint if::
+                            an "int" type constraint if:
 
-                                c.dropnulls().astype(int) == c.dropnulls()
+                                `c.dropnulls().astype(int) == c.dropnulls()`
 
                             Similarly, Object fields will satisfy a
-                            'bool' constraint only if::
+                            'bool' constraint only if:
 
-                                c.dropnulls().astype(bool) == c.dropnulls()
+                                `c.dropnulls().astype(bool) == c.dropnulls()`
 
         *report*:
-                            'all' or 'fields'
+                            'all' or 'fields'.
                             This controls the behaviour of the
-                            :py:meth:`__str__`
-                            method on the resulting
-                            :py:class:`~tdda.constraints.pdconstraints.PandasVerification`
+                            :py:meth:`~PandasVerification.__str__` method on
+                            the resulting :py:class:`~PandasVerification`
                             object (but not its content).
 
                             The default is 'all', which means that
@@ -737,16 +753,17 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
     Returns:
 
-        :py:class:`~tdda.constraints.pdconstraints.PandasVerification` object.
+        :py:class:`~PandasVerification` object.
+
         This object has attributes:
 
             - *passed*      --- Number of passing constriants
             - *failures*    --- Number of failing constraints
 
-        It also has a :py:meth:`to_frame()` method for converting the results
-        of the verification to a Pandas DataFrame, and a :py:meth:`__str__`
-        method to print both the detailed and summary results of
-        the verification.
+        It also has a :py:meth:`~PandasVerification.to_frame()` method for
+        converting the results of the verification to a Pandas DataFrame,
+        and a :py:meth:`~PandasVerification.__str__` method to print
+        both the detailed and summary results of the verification.
 
     Example usage::
 
@@ -762,8 +779,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         print(str(v))
         print(v.to_frame())
 
-    See *tdda/constraints/examples/simple_verification.py*
-    for slightly fuller example.
+    See *simple_verification.py* in the :ref:`constraint_examples`
+    for a slightly fuller example.
 
     """
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
@@ -780,7 +797,8 @@ def discover_constraints(df):
 
     Input:
 
-        *df* --- any Pandas DataFrame.
+        *df*:
+            any Pandas DataFrame.
 
     Possible return values:
 
@@ -837,21 +855,21 @@ def discover_constraints(df):
                 If all the values in a numeric field have consistent sign,
                 a sign constraint will be written with a value chosen from:
 
-                     - positive        --- For all values v in field: v > 0
-                     - non-negative    --- For all values v in field: v >= 0
-                     - zero            --- For all values v in field: v == 0
-                     - non-positive    --- For all values v in field: v <= 0
-                     - negative        --- For all values v in field: v < 0
-                     - null            --- For all values v in field: v is null
+                    - positive     --- For all values *v* in field: `v > 0`
+                    - non-negative --- For all values *v* in field: `v >= 0`
+                    - zero         --- For all values *v* in field: `v == 0`
+                    - non-positive --- For all values *v* in field: `v <= 0`
+                    - negative     --- For all values *v* in field: `v < 0`
+                    - null         --- For all values *v* in field: `v is null`
 
         *max_nulls*:
                 The maximum number of nulls allowed in the field.
 
-                     - If the field has no nulls, a constraint
-                       will be written with max_nulls set to zero.
-                     - If the field has a single null, a constraint will
-                       be written with max_nulls set to one.
-                     - If the field has more than 1 null, no constraint
+                    - If the field has no nulls, a constraint
+                      will be written with max_nulls set to zero.
+                    - If the field has a single null, a constraint will
+                      be written with max_nulls set to one.
+                    - If the field has more than 1 null, no constraint
                        will be generated.
 
         *no_duplicates*:
@@ -876,11 +894,11 @@ def discover_constraints(df):
 
         df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', pd.np.NaN]})
         constraints = discover_constraints(df)
-        with open('/tmp/example_constraints.tdda', 'w') as f:
+        with open('example_constraints.tdda', 'w') as f:
             f.write(constraints.to_json())
 
-    See *tdda/constraints/examples/simple_generation.py*
-    for slightly fuller example.
+    See *simple_generation.py* in the :ref:`constraint_examples`
+    for a slightly fuller example.
 
     """
     field_constraints = []

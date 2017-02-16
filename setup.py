@@ -39,7 +39,10 @@ setup(
         'tdda.referencetest.tests': data(['tdda', 'referencetest', 'tests'],
                                          ['testdata']),
         'tdda.constraints': data(['tdda', 'constraints'],
-                                  ['testdata', 'examples']),
+                                  ['testdata', 'examples']
+                              +
+                            [os.path.join('tdda', 'constraints',
+                                          'tdda_json_file_format.md')],
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],
     },

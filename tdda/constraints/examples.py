@@ -5,7 +5,7 @@ The :py:mod:`tdda.constraints` module includes a set of examples.
 To copy these examples to your own *constraints-examples* subdirectory
 (or to a location of your choice)::
 
-    $ python -m tdda.constraints.examples [mydirectory]
+    python -m tdda.constraints.examples [mydirectory]
 
 """
 from __future__ import absolute_import

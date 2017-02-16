@@ -44,6 +44,27 @@ class ReferenceTest(object):
           :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class,
           exposed as functions that can be called directly from tests
           in a :py:mod:`pytest` suite.
+
+    In addition to the various test-assertion methods, the module also
+    provides some useful instance variables: All of these can be set
+    explicitly in test setup code, using the :py:meth:`set_defaults`
+    class method.
+
+        :py:attr:`tmp_dir`:
+            The location where temporary files can be written to. It defaults
+            to a system-specific temporary area.
+
+        :py:attr:`print_fn`:
+            The function to use to display information while running tests,
+            which should have the same signature as Python's *__future__*
+            standard print function.
+
+        :py:attr:`verbose`:
+            Boolean verbose flag, to control reporting of errors while running
+            tests. Reference tests tend to take longer to run than traditional
+            unit tests, so it is often useful to be able to see
+            information from failing tests as they happen, rather
+            than waiting for the full report at the end.
     """
 
     # Verbose flag
@@ -69,34 +90,38 @@ class ReferenceTest(object):
 
         The following parameters can be set:
 
-        verbose ---     Sets the boolean verbose flag globally, to control
-                        reporting of errors while running tests. Reference
-                        tests tend to take longer to run than traditional
-                        unit tests, so it is often useful to be able to see
-                        information from failing tests as they happen, rather
-                        than waiting for the full report at the end. Verbose
-                        is set to True by default.
+            *verbose*:
+                Sets the boolean verbose flag globally, to control
+                reporting of errors while running tests. Reference
+                tests tend to take longer to run than traditional
+                unit tests, so it is often useful to be able to see
+                information from failing tests as they happen, rather
+                than waiting for the full report at the end. Verbose
+                is set to ``True`` by default.
 
-        print_fn ---    Sets the print function globally, to specify the
-                        function to use to display information while running
-                        tests.  The function should have the same signature
-                        as python's __future__ print function. If not
-                        specified, a default print function is used which
-                        writes unbuffered to sys.stdout.
+            *print_fn*:
+                Sets the print function globally, to specify the
+                function to use to display information while running
+                tests.  The function should have the same signature
+                as Python's *__future__* print function. If not
+                specified, a default print function is used which
+                writes unbuffered to sys.stdout.
 
-        tmp_dir ---     Sets the tmp_dir property globally, to specify the
-                        directory where temporary files are written.
-                        Temporary files are created whenever a text file
-                        check fails and a 'preprocess' function has been
-                        specified. It's useful to be able to see the contents
-                        of the files after preprocessing has taken place,
-                        so preprocessed versions of the files are written
-                        to this directory, and their pathnames are included
-                        in the failure messages. If not explicitly set by
-                        set_defaults(), the environment variable TDDA_FAIL_DIR
-                        is used, or, if that is not defined, it defaults to
-                        /tmp, c:\temp or whatever tempfile.gettempdir()
-                        returns, as appropriate.
+            *tmp_dir*:
+                Sets the tmp_dir property globally, to specify the
+                directory where temporary files are written.
+                Temporary files are created whenever a text file
+                check fails and a 'preprocess' function has been
+                specified. It's useful to be able to see the contents
+                of the files after preprocessing has taken place,
+                so preprocessed versions of the files are written
+                to this directory, and their pathnames are included
+                in the failure messages. If not explicitly set by
+                :py:meth:`set_defaults()`, the environment variable
+                *TDDA_FAIL_DIR* is used, or, if that is not defined,
+                it defaults to */tmp*, *c:\\temp* or whatever
+                py:func:`tempfile.gettempdir()` returns, as
+                appropriate.
 
         """
         for k in kwargs:
@@ -150,14 +175,14 @@ class ReferenceTest(object):
         """
         Initializer for a ReferenceTest instance.
 
-        assert_fn  --- Function to be used to make assertions for
-                       unit-tests. It should take two parameters:
+            *assert_fn*:
+                Function to be used to make assertions for
+                unit-tests. It should take two parameters:
 
-                           - a value (which should evaluate as ``True`` for
-                             the test to pass)
-                           - a string (to report details of how a test
-                              failed, if the value does not evaluate as
-                              ``True``).
+                    - a value (which should evaluate as ``True`` for
+                      the test to pass)
+                    - a string (to report details of how a test
+                      failed, if the value does not evaluate as ``True``).
         """
         self.assert_fn = assert_fn
         self.reference_data_locations = dict(self.default_data_locations)
@@ -197,41 +222,48 @@ class ReferenceTest(object):
                               check_order=None, condition=None, sortby=None,
                               precision=None):
         """
-        Check that an in-memory ``Pandas DataFrame`` matches an in-memory
+        Check that an in-memory Pandas DataFrame matches an in-memory
         reference one.
 
-        *df*              --- Actual DataFrame.
+            *df*:
+                Actual DataFrame.
 
-        *ref_df*          --- Expected DataFrame.
+            *ref_df*:
+                Expected DataFrame.
 
-        *actual_path*     --- Optional parameter, giving path for file where
-                              actual DataFrame originated, used for error
-                              messages.
+            *actual_path*:
+                Optional parameter, giving path for file where
+                actual DataFrame originated, used for error messages.
 
-        *expected_path*   --- Optional parameter, giving path for file where
-                              expected DataFrame originated, used for error
-                              messages.
+            *expected_path*:
+                Optional parameter, giving path for file where
+                expected DataFrame originated, used for error messages.
 
-        *check_data*      --- Option to specify fields to compare values.
+            *check_data*:
+                Option to specify fields to compare values.
 
-        *check_types*     --- Option to specify fields to compare typees.
+            *check_types*:
+                Option to specify fields to compare typees.
 
-        *check_order*     --- Option to specify fields to compare field order.
+            *check_order*:
+                Option to specify fields to compare field order.
 
-        *check_extra_cols*  --- Option to specify fields in the actual dataset
-                                to use to check that there are no unexpected
-                                extra columns.
+            *check_extra_cols*:
+                Option to specify fields in the actual dataset
+                to use to check that there are no unexpected extra columns.
 
-        *sortby*          --- Option to specify fields to sort by before
-                              comparing.
+            *sortby*:
+                Option to specify fields to sort by before comparing.
 
-        *condition*       --- Filter to be applied to datasets before comparing.
-                              It can be ``None``, or can be a function that
-                              takes a DataFrame as its single parameter and
-                              returns a vector of booleans (to specify which
-                              rows should be compared).
+            *condition*:
+                Filter to be applied to datasets before comparing.
+                It can be ``None``, or can be a function that
+                takes a DataFrame as its single parameter and
+                returns a vector of booleans (to specify which rows
+                should be compared).
 
-        *precision*       --- Number of decimal places to compare float values.
+            *precision*:
+                Number of decimal places to compare float values.
 
         The ``check`` comparison flags can be of any of the following:
 
@@ -241,7 +273,7 @@ class ReferenceTest(object):
             - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
-        Raises :py:class:`NotImplementedError` if ``Pandas`` is not available.
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
         r = self.pandas.check_dataframe(df, ref_df,
@@ -262,46 +294,55 @@ class ReferenceTest(object):
                                check_order=None, condition=None, sortby=None,
                                precision=None, **kwargs):
         """
-        Check that an in-memory ``Pandas DataFrame`` matches a reference one
+        Check that an in-memory Pandas DataFrame matches a reference one
         from a saved reference CSV file.
 
-        *df*              --- Actual DataFrame.
+            *df*:
+                Actual DataFrame.
 
-        *ref_csv*         --- Name of reference CSV file. The location of the
-                              reference file is determined by the configuration
-                              via :py:meth:`set_data_location()`.
+            *ref_csv*:
+                Name of reference CSV file. The location of the
+                reference file is determined by the configuration
+                via :py:meth:`set_data_location()`.
 
-        *actual_path*     --- Optional parameter, giving path for file where
-                              actual DataFrame originated, used for error
-                              messages.
+            *actual_path*:
+                Optional parameter, giving path for file where
+                actual DataFrame originated, used for error
+                messages.
 
-        *kind*            --- Reference kind, used to locate the reference CSV
-                              file.
+            *kind*:
+                Reference kind, used to locate the reference CSV file.
 
-        *check_data*      --- Option to specify fields to compare values.
+            *check_data*:
+                Option to specify fields to compare values.
 
-        *check_types*     --- Option to specify fields to compare typees.
+            *check_types*:
+                Option to specify fields to compare typees.
 
-        *check_order*     --- Option to specify fields to compare field order.
+            *check_order*:
+                Option to specify fields to compare field order.
 
-        *check_extra_cols*  --- Option to specify fields in the actual dataset
-                                to use to check that there are no unexpected
-                                extra columns.
+            *check_extra_cols*:
+                Option to specify fields in the actual dataset
+                to use to check that there are no unexpected extra columns.
 
-        *sortby*          --- Option to specify fields to sort by before
-                              comparing.
+            *sortby*:
+                Option to specify fields to sort by before comparing.
 
-        *condition*       --- Filter to be applied to datasets before comparing.
-                              It can be ``None``, or can be a function that
-                              takes a DataFrame as its single parameter and
-                              returns a vector of booleans (to specify which
-                              rows should be compared).
+            *condition*:
+                Filter to be applied to datasets before comparing.
+                It can be ``None``, or can be a function that
+                takes a DataFrame as its single parameter and
+                returns a vector of booleans (to specify which
+                rows should be compared).
 
-        *precision*       --- Number of decimal places to compare float values.
+            *precision*:
+                Number of decimal places to compare float values.
 
-        *loader*          --- Function to use to read a CSV file to obtain
-                              a pandas DataFrame. If ``None``, then a default
-                              CSV loader is used.
+            *loader*:
+                Function to use to read a CSV file to obtain
+                a pandas DataFrame. If ``None``, then a default
+                CSV loader is used.
 
         The ``check`` comparison flags can be of any of the following:
 
@@ -322,7 +363,7 @@ class ReferenceTest(object):
             - na_values             are the empty string, "NaN", and "NULL"
             - keep_default_na       is ``False``
 
-        Raises :py:class:`NotImplementedError` if ``Pandas`` is not available.
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
         expected_path = self._resolve_reference_path(ref_csv, kind=kind)
@@ -348,44 +389,52 @@ class ReferenceTest(object):
         """
         Check that a CSV file matches a reference one.
 
-        *actual_path*     --- Actual CSV file.
+            *actual_path*:
+                Actual CSV file.
 
-        *ref_csv*         --- Name of reference CSV file. The location of the
-                              reference file is determined by the configuration
-                              via :py:meth:`set_data_location()`.
+            *ref_csv*:
+                Name of reference CSV file. The location of the
+                reference file is determined by the configuration
+                via :py:meth:`set_data_location()`.
 
-        *kind*            --- Reference *kind*, used to locate the reference CSV
-                              file.
+            *kind*:
+                Reference *kind*, used to locate the reference CSV file.
 
-        *csv_read_fn*     --- A function to use to read a CSV file to obtain
-                              a pandas DataFrame. If ``None``, then a default
-                              CSV loader is used, which takes the same
-                              parameters as the standard pandas
-                              ``pd.read_csv()`` function.
+            *csv_read_fn*:
+                A function to use to read a CSV file to obtain
+                a pandas DataFrame. If ``None``, then a default
+                CSV loader is used, which takes the same
+                parameters as the standard pandas ``pd.read_csv()`` function.
 
-        *check_data*      --- Option to specify fields to compare values.
+            *check_data*:
+                Option to specify fields to compare values.
 
-        *check_types*     --- Option to specify fields to compare typees.
+            *check_types*:
+                Option to specify fields to compare typees.
 
-        *check_order*     --- Option to specify fields to compare field order.
+            *check_order*:
+                Option to specify fields to compare field order.
 
-        *check_extra_cols*  --- Option to specify fields in the actual dataset
-                                to use to check that there are no unexpected
-                                extra columns.
+            *check_extra_cols*:
+                Option to specify fields in the actual dataset
+                to use to check that there are no unexpected extra columns.
 
-        *sortby*          --- Option to specify fields to sort by before
-                              comparing.
+            *sortby*:
+                Option to specify fields to sort by before comparing.
 
-        *condition*       --- Filter to be applied to datasets before comparing.
-                              It can be ``None``, or can be a function that
-                              takes a DataFrame as its single parameter and
-                              returns a vector of booleans (to specify which
-                              rows should be compared).
+            *condition*:
+                Filter to be applied to datasets before comparing.
+                It can be ``None``, or can be a function that
+                takes a DataFrame as its single parameter and
+                returns a vector of booleans (to specify which
+                rows should be compared).
 
-        *precision*       --- Number of decimal places to compare float values.
+            *precision*:
+                Number of decimal places to compare float values.
 
-        *\*\*kwargs*      --- Any additional named parameters are passed
-                              straight through to the *csv_read_fn* function.
+            *\*\*kwargs*:
+                Any additional named parameters are passed
+                straight through to the *csv_read_fn* function.
 
         The ``check`` comparison flags can be of any of the following:
 
@@ -406,7 +455,7 @@ class ReferenceTest(object):
             - na_values             are the empty string, "NaN", and "NULL"
             - keep_default_na       is ``False``
 
-        Raises :py:class:`NotImplementedError` if ``Pandas`` is not available.
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
         expected_path = self._resolve_reference_path(ref_csv, kind=kind)
@@ -430,45 +479,53 @@ class ReferenceTest(object):
         """
         Check that a set of CSV files match corresponding reference ones.
 
-        *actual_paths*    --- List of Actual CSV files.
+            *actual_paths*:
+                List of Actual CSV files.
 
-        *ref_csvs*        --- List of names of matching reference CSV file. The
-                              location of the reference files is determined by
-                              the configuration via
-                              :py:meth:`set_data_location()`.
+            *ref_csvs*:
+                List of names of matching reference CSV file. The
+                location of the reference files is determined by
+                the configuration via
+                :py:meth:`set_data_location()`.
 
-        *kind*            --- Reference *kind*, used to locate the reference
-                              CSV files.
+            *kind*:
+                Reference *kind*, used to locate the reference CSV files.
 
-        *csv_read_fn*     --- A function to use to read a CSV file to obtain
-                              a pandas DataFrame. If ``None``, then a default
-                              CSV loader is used, which takes the same
-                              parameters as the standard pandas
-                              ``pd.read_csv()`` function.
+            *csv_read_fn*:
+                A function to use to read a CSV file to obtain
+                a pandas DataFrame. If ``None``, then a default
+                CSV loader is used, which takes the same
+                parameters as the standard pandas ``pd.read_csv()`` function.
 
-        *check_data*      --- Option to specify fields to compare values.
+            *check_data*:
+                Option to specify fields to compare values.
 
-        *check_types*     --- Option to specify fields to compare typees.
+            *check_types*:
+                Option to specify fields to compare typees.
 
-        *check_order*     --- Option to specify fields to compare field order.
+            *check_order*:
+                Option to specify fields to compare field order.
 
-        *check_extra_cols*  --- Option to specify fields in the actual dataset
-                                to use to check that there are no unexpected
-                                extra columns.
+            *check_extra_cols*:
+                Option to specify fields in the actual dataset
+                to use to check that there are no unexpected extra columns.
 
-        *sortby*          --- Option to specify fields to sort by before
-                              comparing.
+            *sortby*:
+                Option to specify fields to sort by before comparing.
 
-        *condition*       --- Filter to be applied to datasets before comparing.
-                              It can be ``None``, or can be a function that
-                              takes a DataFrame as its single parameter and
-                              returns a vector of booleans (to specify which
-                              rows should be compared).
+            *condition*:
+                Filter to be applied to datasets before comparing.
+                It can be ``None``, or can be a function that
+                takes a DataFrame as its single parameter and
+                returns a vector of booleans (to specify which
+                rows should be compared).
 
-        *precision*       --- Number of decimal places to compare float values.
+            *precision*
+                Number of decimal places to compare float values.
 
-        *\*\*kwargs*      --- Any additional named parameters are passed
-                              straight through to the *csv_read_fn* function.
+            *\*\*kwargs*:
+                Any additional named parameters are passed
+                straight through to the *csv_read_fn* function.
 
         The check_* comparison flags can be of any of the following:
 
@@ -489,7 +546,7 @@ class ReferenceTest(object):
             - na_values             are the empty string, "NaN", and "NULL"
             - keep_default_na       is ``False``
 
-        Raises :py:class:`NotImplementedError` if ``Pandas`` is not available.
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
         expected_paths = self._resolve_reference_paths(ref_csvs, kind=kind)
@@ -514,51 +571,54 @@ class ReferenceTest(object):
         Check that an in-memory string matches the contents from a reference
         text file.
 
-        *string*               --- The actual string.
+            *string*:
+                The actual string.
 
-        *ref_path*             --- The name of the reference file. The
-                                   location of the reference file is
-                                   determined by the configuration via
-                                   :py:meth:`set_data_location()`.
+            *ref_path*:
+                The name of the reference file. The
+                location of the reference file is
+                determined by the configuration via
+                :py:meth:`set_data_location()`.
 
-        *kind*                 --- The reference *kind*, used to locate the
-                                    reference file.
+            *kind*:
+                The reference *kind*, used to locate the reference file.
 
-        *lstrip*               --- If set to ``True``, both strings are
-                                   left-stripped before the comparison is
-                                   carried out.
-                                   Note: the stripping is on a per-line basis.
+            *lstrip*:
+                If set to ``True``, both strings are
+                left-stripped before the comparison is carried out.
+                Note: the stripping is on a per-line basis.
 
-        *rstrip*               --- If set to ``True``, both strings are
-                                   right-stripped before the comparison is
-                                   carried out.
-                                   Note: the stripping is on a per-line basis.
+            *rstrip*:
+                If set to ``True``, both strings are
+                right-stripped before the comparison is carried out.
+                Note: the stripping is on a per-line basis.
 
-        *ignore_substrings*    --- An optional list of substrings; lines
-                                   containing any of these substrings will be
-                                   ignored in the comparison.
+            *ignore_substrings*:
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                ignored in the comparison.
 
-        *ignore_patterns*      --- An optional list of regular expressions;
-                                   lines will be considered to be the same if
-                                   they only differ in substrings that match
-                                   one of these regular expressions.
-                                   The expressions must not contain
-                                   parenthesised groups, and
-                                   should only include explicit anchors if they
-                                   need to refer to the whole line.
+            *ignore_patterns*:
+                An optional list of regular expressions;
+                lines will be considered to be the same if
+                they only differ in substrings that match
+                one of these regular expressions.
+                The expressions must not contain parenthesised groups, and
+                should only include explicit anchors if they
+                need to refer to the whole line.
 
-        *preprocess*           --- An optional function that takes a list of
-                                   strings and preprocesses it in some way; this
-                                   function will be applied to both the actual
-                                   and expected.
+            *preprocess*:
+                An optional function that takes a list of
+                strings and preprocesses it in some way; this
+                function will be applied to both the actual and expected.
 
-        *max_permutation_cases*  --- An optional number specifying the maximum
-                               number of permutations allowed; if the actual
-                               and expected lists differ only in that their
-                               lines are permutations of each other, and
-                               the number of such permutations does not
-                               exceed this limit, then the two are considered
-                               to be identical.
+            *max_permutation_cases*:
+                An optional number specifying the maximum
+                number of permutations allowed; if the actual
+                and expected lists differ only in that their
+                lines are permutations of each other, and
+                the number of such permutations does not
+                exceed this limit, then the two are considered to be identical.
 
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
@@ -587,50 +647,52 @@ class ReferenceTest(object):
         """
         Check that a file matches the contents from a reference text file.
 
-        *actual_path*          --- A path for a text file.
+            *actual_path*:
+                A path for a text file.
 
-        *ref_path*             --- The name of the reference file. The
-                               location of the reference file is determined by
-                               the configuration via
-                               :py:meth:`set_data_location()`.
+            *ref_path*:
+                The name of the reference file. The
+                location of the reference file is determined by
+                the configuration via
+                :py:meth:`set_data_location()`.
 
-        *kind*                 --- The reference *kind*, used to locate the
-                               reference file.
+            *kind*:
+                The reference *kind*, used to locate the reference file.
 
-        *lstrip*               --- If set to ``True``, both strings are
-                               left-stripped
-                               before the comparison is carried out.
-                               Note: the stripping is on a per-line basis.
+            *lstrip*:
+                If set to ``True``, lines are left-stripped
+                before the comparison is carried out.
 
-        *rstrip*               --- If set to ``True``, both strings are
-                               right-stripped before the comparison is
-                               carried out.
-                               Note: the stripping is on a per-line basis.
+            *rstrip*:
+                If set to ``True``, lines are right-stripped before
+                the comparison is carried out.
 
-        *ignore_substrings*    --- An optional list of substrings; lines
-                               containing any of these substrings will be
-                               ignored in the comparison.
+            *ignore_substrings*:
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                ignored in the comparison.
 
-        *ignore_patterns*      --- An optional list of regular expressions;
-                               lines will be considered to be the same if
-                               they only differ in substrings that match one
-                               of these regular expressions. The expressions
-                               must not contain parenthesised groups, and
-                               should only include explicit anchors if they
-                               need refer to the whole line.
+            *ignore_patterns*:
+                An optional list of regular expressions;
+                lines will be considered to be the same if
+                they only differ in substrings that match one
+                of these regular expressions. The expressions
+                must not contain parenthesised groups, and
+                should only include explicit anchors if they
+                need to refer to the whole line.
 
-        *preprocess*           --- An optional function that takes a list of
-                               strings and preprocesses it in some way; this
-                               function will be applied to both the actual
-                               and expected.
+            *preprocess*:
+                An optional function that takes a list of
+                strings and preprocesses it in some way; this
+                function will be applied to both the actual and expected.
 
-        *max_permutation_cases*  --- An optional number specifying the maximum
-                               number of permutations allowed; if the actual
-                               and expected lists differ only in that their
-                               lines are permutations of each other, and
-                               the number of such permutations does not
-                               exceed this limit, then the two are considered
-                               to be identical.
+            *max_permutation_cases*:
+                An optional number specifying the maximum
+                number of permutations allowed; if the actual
+                and expected lists differ only in that their
+                lines are permutations of each other, and
+                the number of such permutations does not
+                exceed this limit, then the two are considered to be identical.
 
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
@@ -659,50 +721,55 @@ class ReferenceTest(object):
         Check that a collection of files matche the contents from
         matching collection of reference text files.
 
-        *actual_paths*         --- A list of paths for text files.
+            *actual_paths*:
+                A list of paths for text files.
 
-        *ref_paths*            --- A list of names of the matching reference
-                               files.  The location of the reference files
-                               is determined by the configuration via
-                               :py:meth:`set_data_location()`.
+            *ref_paths*:
+                A list of names of the matching reference
+                files.  The location of the reference files
+                is determined by the configuration via
+                :py:meth:`set_data_location()`.
 
-        *kind*                 --- The reference *kind*, used to locate the
-                               reference files.
+            *kind*:
+                The reference *kind*, used to locate the reference files.
+                All the files must be of the same kind.
 
-        *lstrip*               --- If set to ``True``, both strings are
-                               left-stripped before the comparison is
-                               carried out.
-                               Note: the stripping is on a per-line basis.
+            *lstrip*:
+                If set to ``True``, lines are left-stripped before
+                the comparison is carried out.
 
-        *rstrip*               --- If set to ``True``, both strings are
-                               right-stripped before the comparison is
-                               carried out.
-                               Note: the stripping is on a per-line basis.
+            *rstrip*:
+                If set to ``True``, lines are right-stripped before the
+                comparison is carried out.
 
-        *ignore_substrings*    --- An optional list of substrings; lines
-                               containing any of these substrings will be
-                               ignored in the comparison.
+            *ignore_substrings*:
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                ignored in the comparison.
 
-        *ignore_patterns*      --- An optional list of regular expressions;
-                               lines will be considered to be the same if
-                               they only differ in substrings that match one
-                               of these regular expressions. The expressions
-                               must not contain parenthesised groups, and
-                               should only include explicit anchors if they
-                               need refer to the whole line.
+            *ignore_patterns*:
+                An optional list of regular expressions;
+                lines will be considered to be the same if
+                they only differ in substrings that match one
+                of these regular expressions. The expressions
+                must not contain parenthesised groups, and
+                should only include explicit anchors if they
+                need to refer to the whole line.
 
-        *preprocess*           --- An optional function that takes a list of
-                               strings and preprocesses it in some way; this
-                               function will be applied to both the actual
-                               and expected.
+            *preprocess*:
+                An optional function that takes a list of
+                strings and preprocesses it in some way; this
+                function will be applied to both the actual
+                and expected.
 
-        *max_permutation_cases*  --- An optional number specifying the maximum
-                               number of permutations allowed; if the actual
-                               and expected lists differ only in that their
-                               lines are permutations of each other, and
-                               the number of such permutations does not
-                               exceed this limit, then the two are considered
-                               to be identical.
+            *max_permutation_cases*:
+                An optional number specifying the maximum
+                number of permutations allowed; if the actual
+                and expected lists differ only in that their
+                lines are permutations of each other, and
+                the number of such permutations does not
+                exceed this limit, then the two are considered
+                to be identical.
 
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
@@ -786,11 +853,9 @@ class ReferenceTest(object):
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):
-        """
-        Sometimes the framework needs to print messages. By default, it
-        will use this print function, but you can override it by passing
-        in a print_fn parameter to __init__.
-        """
+        # Sometimes the framework needs to print messages. By default, it
+        # will use this print function, but you can override it by passing
+        # in a print_fn parameter to __init__.
         print(*args, **kwargs)
         outfile = kwargs.get('file', sys.stdout)
         outfile.flush()

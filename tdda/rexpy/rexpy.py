@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-USAGE::
+Usage::
 
     python -m tdda.rexpy.rexpy [FLAGS] [input file [output file]]
 
@@ -11,7 +11,7 @@ otherwise lines will be read from standard input.
 If output file is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
 
-FLAGS are optional flags. Currently:
+FLAGS are optional flags. Currently::
 
   -h, --header      Discard first line, as a header.
 
@@ -35,6 +35,13 @@ FLAGS are optional flags. Currently:
                     Mostly useful for matching identifiers.
                     Also --hyphen or --dash.
 
+Python API
+----------
+
+The :py:mod:`tdda.rexpy.rexpy` module also provides a Python API, to allow
+discovery of regular expressions to be incorporated into other Python
+programs.
+
 """
 
 from __future__ import division
@@ -52,7 +59,7 @@ from collections import Counter, defaultdict, namedtuple, OrderedDict
 str_type = unicode if sys.version_info.major < 3 else str
 bytes_type = str if sys.version_info.major < 3 else bytes
 
-USAGE = __doc__.replace('USAGE::', 'USAGE:')
+USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
 MIN_MERGE_SIMILARITY = 0.5
 TERMINATE = True  # False
@@ -758,17 +765,21 @@ class Extractor(object):
 
         If dedup is set to True, frequencies are ignored.
 
-        Each result is Coverage object with the following attributes:
+        Each result is a Coverage object with the following attributes:
 
-            n:          number of examples matched including duplicatesb
+            *n*:
+                number of examples matched including duplicatesb
 
-            n_uniq:     number of examples matched, excluding duplicates
+            *n_uniq*:
+                number of examples matched, excluding duplicates
 
-            incr:       number of previously unmatched examples matched,
-                        including duplicates
+            *incr*:
+                number of previously unmatched examples matched,
+                including duplicates
 
-            incr_uniq:  number of previously unmatched examples matched,
-                        excluding duplicates
+            *incr_uniq*:
+                number of previously unmatched examples matched,
+                excluding duplicates
 
         """
         return rex_full_incremental_coverage(self.results.rex,
@@ -830,15 +841,19 @@ def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
     Each entry in the dictionary returned is a Coverage object
     with the following attributes:
 
-        n:          number of examples matched including duplicatesb
+        *n*:
+            number of examples matched including duplicatesb
 
-        n_uniq:     number of examples matched, excluding duplicates
+        *n_uniq*:
+            number of examples matched, excluding duplicates
 
-        incr:       number of previously unmatched examples matched,
-                    including duplicates
+        *incr*:
+            number of previously unmatched examples matched,
+            including duplicates
 
-        incr_uniq:  number of previously unmatched examples matched,
-                    excluding duplicates
+        *incr_uniq*:
+            number of previously unmatched examples matched,
+            excluding duplicates
     """
     patterns, indexes = terminate_patterns_and_sort(patterns)
     matrix, deduped = coverage_matrices(patterns, example_freqs)
@@ -1159,8 +1174,8 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     """
     Extract regular expression(s) from examples and return them.
 
-    Normally, examples should be unicode (i.e. str in Python3,
-    and unicode in Python2). However, encoded strings can be
+    Normally, examples should be unicode (i.e. :py:type:`str` in Python3,
+    and :py:type:`unicode` in Python2). However, encoded strings can be
     passed in provided the encoding is specified.
 
     Results will always be unicode.
@@ -1187,7 +1202,8 @@ def pdextract(cols):
     All columns provided should be string columns (i.e. of type np.dtype('O'),
     possibly including null values, which will be ignored.
 
-    Example use:
+    Example use::
+
         import pandas as pd
         from tdda.rexpy import pdextract
 
@@ -1198,10 +1214,12 @@ def pdextract(cols):
         re45 = pdextract(df['a45'])
         re345 = pdextract([df['a3'], df['a45']])
 
-    This should result in
+    This should result in::
+
         re3   = '^[a-z]{3}$'
         re5   = '^[a-z]{3}$'
         re345 = '^[a-z]{3}$'
+
     """
     if not type(cols) in (list, tuple):
         cols = [cols]
@@ -1264,6 +1282,7 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
     of whose values are dictionaries mapping positions to frequencies.
 
     For example::
+
         {
             ('a', 1, 1, 'fixed'): {1: 7, -1: 7, 3: 4},
             ('b', 1, 1, 'fixed'): {2: 6},
@@ -1325,7 +1344,9 @@ def right_parts(patterns, fixed):
 
     fixed is a list of (fragment, pos) pairs where position specifies
     the position from the right, i.e a position that can be indexed as
-    -position. Fixed should be sorted, increasing on position, i.e.
+    -position.
+
+    Fixed should be sorted, increasing on position, i.e.
     sorted from the right-most pattern.
     The positions specify points at which to split the patterns.
 
@@ -1352,8 +1373,10 @@ def length_stats(patterns):
     """
     Given a list of patterns, returns named tuple containing
 
-        all_same_length: boolean, True if all patterns are the same length
-        max_length:      length of the longest pattern in patterns
+        *all_same_length*:
+            boolean, True if all patterns are the same length
+        *max_length*:
+            length of the longest pattern in patterns
     """
     lengths = [len(p) for p in patterns]
     L0 = lengths[0] if lengths else 0

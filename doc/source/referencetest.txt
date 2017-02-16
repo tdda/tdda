@@ -2,38 +2,19 @@
 Reference Tests
 ===============
 
-**CONTENTS**
-
-  - :ref:`reference_test_summary`
-  - :ref:`reference_test_api`
-  - :ref:`unittest`
-  - :ref:`pytest`
-  - :ref:`reference_test_examples`
-
-.. _reference_test_summary:
-
-Summary
--------
-
 .. automodule:: tdda.referencetest
     :members:
-
-.. _reference_test_api:
 
 Methods and Functions
 ---------------------
 .. automodule:: tdda.referencetest.referencetest
     :members:
 
-.. _unittest:
-
 ``unittest`` Framework Support
 ------------------------------
 
 .. automodule:: tdda.referencetest.referencetestcase
     :members:
-
-.. _pytest:
 
 ``pytest`` Framework Support
 ----------------------------

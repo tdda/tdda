@@ -24,17 +24,23 @@ For example::
     import my_module
 
     class MyTest(ReferenceTestCase):
-        def __init__(self, *args, **kwargs):
-            ReferenceTestCase.__init__(self, *args, **kwargs)
-            self.set_data_location('/data')
+        def test_my_csv_function(self):
+            result = my_module.my_csv_function(self.tmp_dir)
+            self.assertCSVFileCorrect(result, 'result.csv')
+
+        def test_my_pandas_dataframe_function(self):
+            result = my_module.my_dataframe_function()
+            self.assertDataFrameCorrect(result, 'result.csv')
 
         def test_my_table_function(self):
-            result = my_module.my_function()
-            self.assertStringCorrect(result, 'result.txt', kind='table')
+            result = my_module.my_table_function()
+            self.assertStringCorrect(result, 'table.txt', kind='table')
 
         def test_my_graph_function(self):
-            result = my_module.my_function()
-            self.assertStringCorrect(result, 'result.txt', kind='graph')
+            result = my_module.my_graph_function()
+            self.assertStringCorrect(result, 'graph.txt', kind='graph')
+
+    MyTest.set_default_data_location('testdata')
 
     if __name__ == '__main__':
         ReferenceTestCase.main()

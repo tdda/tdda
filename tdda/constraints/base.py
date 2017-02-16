@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Base Constraint Functionality for Test-Driven Data Analysis (TDDA)
+Base Constraint Functionality
+-----------------------------
 """
 from __future__ import division
 from __future__ import print_function
@@ -499,6 +500,13 @@ class Verification(object):
         assert report in ('all', 'fields', 'constraints')
 
     def __str__(self):
+        """
+        Returns string representation of the :py:class:`Verification` object.
+
+        The format of the string is controlled by the value of the
+        object's :py:attr:`report` property. If this is set to 'fields',
+        then it reports only those fields that have failures.
+        """
         if self.report == 'fields':  # Report only fields with failures
             field_items = list((field, ver)
                                       for (field, ver) in self.fields.items()

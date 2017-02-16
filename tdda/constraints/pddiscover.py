@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 
 """
-*pdverify*
-----------
+*pddiscover*
+------------
 
-Verify TDDA constraints for DataFrames saved as :py:mod:`feather` datasets,
-against a JSON constraints file.
+Discover TDDA constraints for DataFrames saved as :py:mod:`feather` datasets,
+and save generated constraints as a JSON file.
 
 Usage::
 
-    python -m tdda.constraints.pdverify df.feather [constraints.tdda]
+    python -m tdda.constraints.pddiscover df.feather [constraints.tdda]
 
 where *df.feather* is a :py:mod:`feather` file containing a dataframe.
 
-If *constraints.tdda* is provided, this is a JSON *.tdda* file
-constaining constraints. If no constraints file is provided,
-a file with the same path as the feather file, a *.tdda* extension
-will be tried.
+If *constraints.tdda* is provided, this is a JSON *.tdda* file to
+which the generated constraints will be written.
 """
 
 from __future__ import division
@@ -43,12 +41,17 @@ except ImportError:
               file=sys.stderr)
         raise
 
-from tdda.constraints.pdconstraints import verify_df
+from tdda.constraints.pdconstraints import discover_constraints
 
 
-def verify_feather_df(df_path, constraints_path, **kwargs):
+def discover_feather_df(df_path, constraints_path, **kwargs):
     df = load_df(df_path)
-    print(verify_df(df, constraints_path, **kwargs))
+    constraints = discover_constraints(df)
+    if constraints_path:
+        with open(constraints_path, 'w') as f:
+            f.write(constraints.to_json())
+    else:
+        print(constraints.to_json())
 
 
 def load_df(path):
@@ -97,5 +100,5 @@ if __name__ == '__main__':
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
-    verify_feather_df(**params)
+    discover_feather_df(**params)
 

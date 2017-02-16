@@ -36,43 +36,54 @@ class FilesComparison(object):
         """
         Compare two lists of strings (actual and expected), one-by-one.
 
-        actual                 is a list of strings.
-        expected               is the expected list of strings.
-        actual_path            is the path of the file where the actual
-                               string originated (used for reporting errors).
-        expected_path          is the path from which expected was read; it is
-                               used to suggest a diff command to use on files
-                               for strings failing the check.
-        lstrip                 if set to true, both strings are left stripped
-                               before the comparison is carried out.
-                               Note: the stripping on a per-line basis.
-        rstrip                 if set to true, both strings are right stripped
-                               before the comparison is carried out.
-                               Note: the stripping on a per-line basis.
-        ignore_substrings      is an optional list of substrings; lines
-                               containing any of these substrings will be
-                               ignored in the comparison.
-        ignore_patterns        is an optional list of regular expressions;
-                               lines will be considered to be the same if
-                               they only differ in substrings that match one
-                               of these regular expressions. The expressions
-                               must not contain parenthesised groups, and
-                               should only include explicit anchors if they
-                               need refer to the whole line.
-        preprocess             is an optional function that takes a list of
-                               strings and preprocesses it in some way; this
-                               function will be applied to both the actual
-                               and expected.
-        max_permutation_cases  is an optional number specifying the maximum
-                               number of permutations allowed; if the actual
-                               and expected lists differ only in that their
-                               lines are permutations of each other, and
-                               the number of such permutations does not
-                               exceed this limit, then the two are considered
-                               to be identical.
-        msgs                   is an optional list, where information about
-                               differences will be appended; if not specified,
-                               a new list will be created and returned.
+            *actual*
+                                is a list of strings.
+            *expected*
+                                is the expected list of strings.
+            *actual_path*
+                                is the path of the file where the actual
+                                string originated (used for reporting errors).
+            *expected_path*
+                                is the path from which expected was read; it is
+                                used to suggest a diff command to use on files
+                                for strings failing the check.
+            *lstrip*
+                                if set to true, both strings are left-stripped
+                                before the comparison is carried out.
+                                Note: the stripping on a per-line basis.
+            *rstrip*
+                                if set to true, both strings are right-stripped
+                                before the comparison is carried out.
+                                Note: the stripping on a per-line basis.
+            *ignore_substrings*
+                                is an optional list of substrings; lines
+                                containing any of these substrings will be
+                                ignored in the comparison.
+            *ignore_patterns*
+                                is an optional list of regular expressions;
+                                lines will be considered to be the same if
+                                they only differ in substrings that match one
+                                of these regular expressions. The expressions
+                                must not contain parenthesised groups, and
+                                should only include explicit anchors if they
+                                need refer to the whole line.
+            *preprocess*
+                                is an optional function that takes a list of
+                                strings and preprocesses it in some way; this
+                                function will be applied to both the actual
+                                and expected.
+            *max_permutation_cases*
+                                is an optional number specifying the maximum
+                                number of permutations allowed; if the actual
+                                and expected lists differ only in that their
+                                lines are permutations of each other, and
+                                the number of such permutations does not
+                                exceed this limit, then the two are considered
+                                to be identical.
+            *msgs*
+                                is an optional list, where information about
+                                differences will be appended; if not specified,
+                                a new list will be created and returned.
 
         Returns a tuple (failures, msgs), where failures is 1 if the lists
         differ and 0 if they are the same. The returned msgs is a list
@@ -174,7 +185,7 @@ class FilesComparison(object):
         This is a wrapper around check_strings(), where the 'expected'
         strings are read from a file rather than being passed in explicitly.
 
-        Other parameters are the same as for check_strings().
+        Other parameters are the same as for py:meth:`check_strings()`.
 
         The actual_path parameter is the pathname of the file that the
         actual string originally came from (if it came from a file at all;
@@ -229,7 +240,7 @@ class FilesComparison(object):
         and 'expected' strings are read from files rather than being passed
         in explicitly.
 
-        Other parameters are the same as for check_strings().
+        Other parameters are the same as for :py:meth:`check_strings()`.
 
         """
         if msgs is None:
@@ -282,7 +293,7 @@ class FilesComparison(object):
         check_file() separately for each pair, which will stop as soon
         as the first difference is found.
 
-        Other parameters are the same as for check_strings().
+        Other parameters are the same as for :py:meth:`check_strings()`.
 
         """
         failures = 0

@@ -1,45 +1,26 @@
 Constraints
 ===========
 
-**CONTENTS**
-
-  - :ref:`constraint_summary`
-  - :ref:`discovery`
-  - :ref:`verification`
-  - :ref:`constraint_base`
-  - :ref:`constraint_examples`
-
-.. _constraint_summary:
-
-Summary
--------
-
 .. automodule:: tdda.constraints
     :members:
 
-.. _discovery:
+Tools for DataFrames in Feather files
+-------------------------------------
 
-Discovery
----------
-
-.. automodule:: tdda.constraints.pdconstraints
+.. automodule:: tdda.constraints.pddiscover
     :members:
-
-.. _verification:
-
-Verification
-------------
 
 .. automodule:: tdda.constraints.pdverify
     :members:
 
-.. _constraint_base:
+Constraints in Pandas DataFrames
+--------------------------------
 
-Shared Classes:
----------------
+.. automodule:: tdda.constraints.pdconstraints
+    :members:
 
 .. automodule:: tdda.constraints.base
-    :members:
+    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, Verification
 
 .. _constraint_examples:
 

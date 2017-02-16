@@ -64,35 +64,49 @@ class PandasComparison(object):
         """
         Compare two pandas dataframes.
 
-        df                Actual dataframe
-        ref_df            Expected dataframe
-        actual_path       Path for file where actual dataframe originated,
-                          used for error messages.
-        expected_path     Path for file where expected dataframe originated,
-                          used for error messages.
-        check_types       Option to specify fields to use to compare typees.
-        check_order       Option to specify fields to use to compare field
-                          order.
-        check_data        Option to specify fields to use to compare cell
-                          values.
-        check_extra_cols  Option to specify fields in the actual dataset
-                          to use to check that there are no unexpected
-                          extra columns.
-        sortby            Option to specify fields to sort by before comparing.
-        condition         Filter to be applied to datasets before comparing.
-                          It can be None, or can be a function that takes
-                          a dataframe as its single parameter and returns
-                          a vector of booleans (to specify which rows should
-                          be compared).
-        precision         Number of decimal places to compare float values.
-        msgs              List of strings
+            *df*
+                            Actual dataframe
+            *ref_df*
+                            Expected dataframe
+            *actual_path*
+                            Path for file where actual dataframe originated,
+                            used for error messages.
+            *expected_path*
+                            Path for file where expected dataframe originated,
+                            used for error messages.
+            *check_types*
+                            Option to specify fields to use to compare typees.
+            *check_order*
+                            Option to specify fields to use to compare field
+                            order.
+            *check_data*
+                            Option to specify fields to use to compare cell
+                            values.
+            *check_extra_cols*
+                            Option to specify fields in the actual dataset
+                            to use to check that there are no unexpected
+                            extra columns.
+            *sortby*
+                            Option to specify fields to sort by before
+                            comparing.
+            *condition*
+                            Filter to be applied to datasets before comparing.
+                            It can be ``None``, or can be a function that takes
+                            a DataFrame as its single parameter and returns
+                            a vector of booleans (to specify which rows should
+                            be compared).
+            *precision*
+                            Number of decimal places to compare float values.
+            *msgs*
+                            List of strings
 
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
 
         the comparison 'Option' flags can be of any of the following:
-            - None (to apply that kind of comparison to all fields)
-            - False (to skip that kind of comparison completely)
+
+            - ``None`` (to apply that kind of comparison to all fields)
+            - ``False`` (to skip that kind of comparison completely)
             - a list of field names
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
@@ -245,16 +259,21 @@ class PandasComparison(object):
         """
         Checks two CSV files are the same, by comparing them as dataframes.
 
-        actual_path     Pathname for actual CSV file.
-        expected_path   Pathname for expected CSV file.
-        loader          A function to use to read a CSV file to obtain
-                        a pandas dataframe. If None, then a default CSV
-                        loader is used, which takes the same parameters
-                        as the standard pandas pd.read_csv() function.
-        **kwargs        Any additional named parameters are passed straight
-                        through to the loader function.
+            *actual_path*
+                            Pathname for actual CSV file.
+            *expected_path*
+                            Pathname for expected CSV file.
+            *loader*
+                            A function to use to read a CSV file to obtain
+                            a pandas dataframe. If None, then a default CSV
+                            loader is used, which takes the same parameters
+                            as the standard pandas pd.read_csv() function.
+            *\*\*kwargs*
+                            Any additional named parameters are passed straight
+                            through to the loader function.
 
-        The other parameters are the same as those used by check_dataframe,
+        The other parameters are the same as those used by
+        :py:mod:`check_dataframe`.
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
         """
@@ -278,16 +297,21 @@ class PandasComparison(object):
         Wrapper around the check_csv_file() method, used to compare
         collections of actual and expected CSV files.
 
-        actual_paths    List of pathnames for actual CSV file.
-        expected_paths  List of pathnames for expected CSV file.
-        loader          A function to use to read a CSV file to obtain
-                        a pandas dataframe. If None, then a default CSV
-                        loader is used, which takes the same parameters
-                        as the standard pandas pd.read_csv() function.
-        **kwargs        Any additional named parameters are passed straight
-                        through to the loader function.
+            *actual_paths*
+                            List of pathnames for actual CSV file.
+            *expected_paths*
+                            List of pathnames for expected CSV file.
+            *loader*
+                            A function to use to read a CSV file to obtain
+                            a pandas dataframe. If None, then a default CSV
+                            loader is used, which takes the same parameters
+                            as the standard pandas pd.read_csv() function.
+            *\*\*kwargs*
+                            Any additional named parameters are passed straight
+                            through to the loader function.
 
-        The other parameters are the same as those used by check_dataframe.
+        The other parameters are the same as those used by
+        :py:mod:`check_dataframe`.
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
 
@@ -364,13 +388,13 @@ def default_csv_loader(csvfile, **kwargs):
     Wrapper around the standard pandas pd.read_csv() function, but with
     slightly different defaults:
 
-    index_col             is None
-    infer_datetime_format is True
-    quotechar             is ""
-    quoting               is csv.QUOTE_MINIMAL
-    escapechar            is \
-    na_values             are the empty string, NaN, and NULL
-    keep_default_na       is False
+        - index_col             is ``None``
+        - infer_datetime_format is ``True``
+        - quotechar             is ""
+        - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+        - escapechar            is \\\\
+        - na_values             are the empty string, "NaN", and "NULL"
+        - keep_default_na       is ``False``
     """
     options = {
         'index_col': None,
@@ -388,10 +412,14 @@ def default_csv_loader(csvfile, **kwargs):
 def resolve_option_flag(flag, df):
     """
     Method to resolve an option flag, which may be any of:
-       - None or True:     use all columns in the dataframe
-       - None:             use no columns 
-       - list of columns   use these columns
-       - function returning a list of columns
+
+       ``None`` or ``True``:
+                use all columns in the dataframe
+       ``None``:
+                use no columns
+       list of columns
+                use these columns
+       function returning a list of columns
     """
     if flag is None or flag is True:
         return list(df)
