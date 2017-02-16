@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 The :py:mod:`tdda.referencetest` module includes a set of examples,
-for both ``unittest`` and ``pytest``.
+for both :py:mod:`unittest` and :py:mod:`pytest`.
 
 To copy these examples to your own *referencetest-examples* subdirectory
 (or to a location of your choice)::

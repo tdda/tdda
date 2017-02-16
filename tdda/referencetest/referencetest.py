@@ -28,17 +28,16 @@ class ReferenceTest(object):
     provides support for comparing results against a set of reference
     "known to be correct" results.
 
-    The functionality provided by this class can be used in two different
-    ways:
+    The functionality provided by this class can be used with:
 
-        - Through the standard Python :py:mod:`unittest` framework, using the
+        - the standard Python :py:mod:`unittest` framework, using the
           :py:class:`~tdda.referencetest.referencetestcase.ReferenceTestCase`
           class. This is a subclass of, and therefore a drop-in replacement
-          for :py:class:`unittest.TestCase`. It extends that class with all
+          for, :py:class:`unittest.TestCase`. It extends that class with all
           of the methods from the
           :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class.
 
-        - Through the :py:mod:`pytest` framework, using the
+        - the :py:mod:`pytest` framework, using the
           :py:mod:`~tdda.referencetest.referencepytest` module.
           This module provides all of the methods from the
           :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class,
@@ -46,20 +45,20 @@ class ReferenceTest(object):
           in a :py:mod:`pytest` suite.
 
     In addition to the various test-assertion methods, the module also
-    provides some useful instance variables: All of these can be set
+    provides some useful instance variables. All of these can be set
     explicitly in test setup code, using the :py:meth:`set_defaults`
-    class method.
+    class method:
 
-        :py:attr:`tmp_dir`:
+        *tmp_dir*
             The location where temporary files can be written to. It defaults
             to a system-specific temporary area.
 
-        :py:attr:`print_fn`:
+        *print_fn*
             The function to use to display information while running tests,
             which should have the same signature as Python's *__future__*
             standard print function.
 
-        :py:attr:`verbose`:
+        *verbose*
             Boolean verbose flag, to control reporting of errors while running
             tests. Reference tests tend to take longer to run than traditional
             unit tests, so it is often useful to be able to see
@@ -243,7 +242,7 @@ class ReferenceTest(object):
                 Option to specify fields to compare values.
 
             *check_types*:
-                Option to specify fields to compare typees.
+                Option to specify fields to compare types.
 
             *check_order*:
                 Option to specify fields to compare field order.
@@ -317,7 +316,7 @@ class ReferenceTest(object):
                 Option to specify fields to compare values.
 
             *check_types*:
-                Option to specify fields to compare typees.
+                Option to specify fields to compare types.
 
             *check_order*:
                 Option to specify fields to compare field order.
@@ -340,7 +339,7 @@ class ReferenceTest(object):
                 Number of decimal places to compare float values.
 
             *loader*:
-                Function to use to read a CSV file to obtain
+                Function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
                 CSV loader is used.
 
@@ -352,8 +351,8 @@ class ReferenceTest(object):
             - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
-        The default CSV loader function is a wrapper around pandas
-        pd.read_csv(), with default options as follows:
+        The default CSV loader function is a wrapper around Pandas
+        :py:func:`pd.read_csv()`, with default options as follows:
 
             - index_col             is ``None``
             - infer_datetime_format is ``True``
@@ -401,16 +400,17 @@ class ReferenceTest(object):
                 Reference *kind*, used to locate the reference CSV file.
 
             *csv_read_fn*:
-                A function to use to read a CSV file to obtain
+                A function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
                 CSV loader is used, which takes the same
-                parameters as the standard pandas ``pd.read_csv()`` function.
+                parameters as the standard Pandas :py:func:`pd.read_csv()`
+                function.
 
             *check_data*:
                 Option to specify fields to compare values.
 
             *check_types*:
-                Option to specify fields to compare typees.
+                Option to specify fields to compare types.
 
             *check_order*:
                 Option to specify fields to compare field order.
@@ -444,8 +444,8 @@ class ReferenceTest(object):
             - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
-        The default CSV loader function is a wrapper around pandas
-        pd.read_csv(), with default options as follows:
+        The default CSV loader function is a wrapper around Pandas
+        :py:func:`pd.read_csv()`, with default options as follows:
 
             - index_col             is ``None``
             - infer_datetime_format is ``True``
@@ -480,28 +480,28 @@ class ReferenceTest(object):
         Check that a set of CSV files match corresponding reference ones.
 
             *actual_paths*:
-                List of Actual CSV files.
+                List of actual CSV files.
 
             *ref_csvs*:
-                List of names of matching reference CSV file. The
+                List of names of matching reference CSV files. The
                 location of the reference files is determined by
-                the configuration via
-                :py:meth:`set_data_location()`.
+                the configuration via :py:meth:`set_data_location()`.
 
             *kind*:
                 Reference *kind*, used to locate the reference CSV files.
 
             *csv_read_fn*:
-                A function to use to read a CSV file to obtain
+                A function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
                 CSV loader is used, which takes the same
-                parameters as the standard pandas ``pd.read_csv()`` function.
+                parameters as the standard Pandas :py:func:`pd.read_csv()`
+                function.
 
             *check_data*:
                 Option to specify fields to compare values.
 
             *check_types*:
-                Option to specify fields to compare typees.
+                Option to specify fields to compare types.
 
             *check_order*:
                 Option to specify fields to compare field order.
@@ -527,7 +527,7 @@ class ReferenceTest(object):
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
 
-        The check_* comparison flags can be of any of the following:
+        The ``check`` comparison flags can be of any of the following:
 
             - ``None`` (to apply that kind of comparison to all fields)
             - ``False`` (to skip that kind of comparison completely)
@@ -535,8 +535,8 @@ class ReferenceTest(object):
             - a function taking a DataFrame as its single parameter, and
               returning a list of field names to use.
 
-        The default CSV loader function is a wrapper around pandas
-        pd.read_csv(), with default options as follows:
+        The default CSV loader function is a wrapper around Pandas
+        :py:func:`pd.read_csv()`, with default options as follows:
 
             - index_col             is ``None``
             - infer_datetime_format is ``True``

@@ -157,10 +157,14 @@ def addoption(parser):
     flags which can be used to control regeneration of reference results.
 
     """
-    parser.addoption('--write', action='store', nargs='+', default=None,
-                     help='--write: rewrite named reference results kinds')
-    parser.addoption('--write-all', action='store_true',
-                     help='--write-all: rewrite all reference results')
-    parser.addoption('--wquiet', action='store_true',
-                     help='--wquiet: when rewriting results, do so quietly')
+    try:
+        parser.addoption('--write', action='store', nargs='+', default=None,
+                         help='--write: rewrite named reference results kinds')
+        parser.addoption('--write-all', action='store_true',
+                         help='--write-all: rewrite all reference results')
+        parser.addoption('--wquiet', action='store_true',
+                         help='--wquiet: when rewriting results, do so quietly')
+    except ValueError:
+        # ignore attempts to add parser options multiple times
+        pass
 

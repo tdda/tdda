@@ -8,9 +8,9 @@ The :py:mod:`tdda.referencetest` library is used to support the creation of
 reference tests, based on either :py:mod:`unittest` or :py:mod:`pytest`.
 
 The :py:mod:`tdda.constraints` library is used to *discover* constraints
-from a (``Pandas``) DataFrame, write them out as JSON, and to *verify* that
+from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
 datasets meet the constraints in the constraints file.
 
-The :py:mod:`tdda.rexpy`` library is a tool for automatically
+The :py:mod:`tdda.rexpy` library is a tool for automatically
 inferring regular expressions from a single field of data examples.
 

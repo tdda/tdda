@@ -28,8 +28,8 @@ The main features are:
           as values.
         - the ability to specify the precision (as number of decimal places)
           for the comparison of floating-point values.
-        - clear reporting of where the differences lie, if the comparison
-          should fail.
+        - clear reporting of where the differences are, if the comparison
+          fails.
 
     - There is support for ignoring lines within the strings/files
       that contain particular patterns or regular expressions.
@@ -43,18 +43,39 @@ The main features are:
       either because the previous output was in fact wrong,
       or because the intended behaviour has changed.
 
+    - It allows you to group your reference results into different *kinds*.
+      This means you can keep different kinds of reference result files in
+      different locations. It also means that you can selectively
+      choose to only regenerate particular kinds of reference results,
+      if they need to be updated because they turned out to have been
+      wrong or if the intended behaviour has changed.
+
+
+Prerequisites
+-------------
+
+    - :py:mod:`pandas` (required for CSV file support)
+
+This can be installed with::
+
+    pip install pandas
+
 The module provides interfaces for this to be called from unit-tests
-based on either the standard Python ``unittest`` framework, or on ``pytest``.
+based on either the standard Python :py:mod:`unittest` framework,
+or on :py:mod:`pytest`.
 
 
-**Simple ``unittest`` example:**
+Simple Examples
+---------------
 
-For use with ``unittest``, the
+**Simple unittest example:**
+
+For use with :py:mod:`unittest`, the
 :py:class:`~tdda.referencetest.referencetest.ReferenceTest` API is provided
 through the :py:class:`~tdda.referencetest.referencetestcase.ReferenceTestCase`
 class. This is an extension to the standard :py:class:`unittest.TestCase`
 class, so that the ``ReferenceTest`` methods can be called directly from
-``unittest`` tests.
+:py:mod:`unittest` tests.
 
 This example shows how to write a test for a function that generates
 a CSV file::
@@ -72,6 +93,10 @@ a CSV file::
     if __name__ == '__main__':
         ReferenceTestCase.main()
 
+To run the test::
+
+    python mytest.py
+
 The first time you run the test, it will fail because the reference test
 results do not exist yet. You can create the reference results automatically::
 
@@ -79,20 +104,17 @@ results do not exist yet. You can create the reference results automatically::
 
 Having generated the reference results, you should examine the files it has
 produced in the data output location, to check that they are as expected.
-Once you're happy that they are correct, then you have a unit-test that you
-can rerun as often as you like to check for regressions::
-
-    python mytest.py
 
 
-**Simple ``pytest`` example:**
+**Simple pytest example:**
 
 
-For use with ``pytest``, the
+For use with :py:mod:`pytest`, the
 :py:class:`~tdda.referencetest.referencetest.ReferenceTest` API is provided
 through the :py:mod:`~tdda.referencetest.referencepytest` module. This is
 a module that can be imported directly from ``pytest`` tests, allowing them
-to call ``ReferenceTest`` methods as though they were functions.
+to access :py:class:`~tdda.referencetest.referencetest.ReferenceTest`
+methods and properties.
 
 This example shows how to write a test for a function that generates
 a CSV file::
@@ -101,7 +123,7 @@ a CSV file::
     import my_module
 
     def test_my_csv_function(ref):
-        resultfile = my_module.produce_a_csv_file(self.tmp_dir)
+        resultfile = my_module.produce_a_csv_file(ref.tmp_dir)
         ref.assertCSVFileCorrect(resultfile, 'result.csv')
 
     referencepytest.set_default_data_location('testdata')
@@ -120,6 +142,10 @@ You also need a ``conftest.py`` file, to define the fixtures and defaults::
 
     referencepytest.set_default_data_location('testdata')
 
+To run the test::
+
+    pytest
+
 The first time you run the test, it will fail because the reference test
 results do not exist yet. You can create the reference results automatically::
 
@@ -127,20 +153,6 @@ results do not exist yet. You can create the reference results automatically::
 
 Having generated the reference results, you should examine the files it has
 produced in the data output location, to check that they are as expected.
-Once you're happy that they are correct, then you have a unit-test that you
-can rerun as often as you like to check for regressions::
-
-    pytest
-
-
-Prerequisites
--------------
-
-    - :py:mod:`pandas` (required for CSV file support)
-
-This can be installed with::
-
-    pip install pandas
 
 """
 
