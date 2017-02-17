@@ -11,6 +11,7 @@ License: MIT
 
 Copyright (c) Stochastic Solutions Limited 2016
 """
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
