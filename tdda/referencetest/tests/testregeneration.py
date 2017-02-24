@@ -15,17 +15,18 @@ import unittest
 from tdda.referencetest.referencetest import ReferenceTest
 
 
-class TestRegenerate(ReferenceTest):
+class TestRegenerate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmpdir = tempfile.gettempdir()
 
     def setUp(self):
         ReferenceTest.set_default_data_location(self.tmpdir)
+        ReferenceTest.set_defaults(verbose=False)
 
     def tearDown(self):
-        ReferenceTest.set_regeneration(False)
-        
+        ReferenceTest.set_regeneration(regenerate=False)
+
     def test_regenerate_all(self):
         ReferenceTest.set_regeneration()
         ref = ReferenceTest(assert_fn=self.assertTrue)
@@ -46,9 +47,9 @@ class TestRegenerate(ReferenceTest):
         txtfile = os.path.join(self.tmpdir, txtname)
         csvfile = os.path.join(self.tmpdir, csvname)
         with self.assertRaises(Exception):
-            self.assertStringCorrect('Start\nMiddle\nEnd\n', txtname,
+            ref.assertStringCorrect('End\nMiddle\nStart\n', txtname,
                                      kind='txt')
-        self.assertStringCorrect('Start\nMiddle\nEnd\n', csvname, kind='csv')
+        ref.assertStringCorrect('Start\nMiddle\nEnd\n', csvname, kind='csv')
         with open(csvfile) as f:
             self.assertEqual(f.read(), 'Start\nMiddle\nEnd\n')
         ref.assertStringCorrect('Completely different content', csvname,

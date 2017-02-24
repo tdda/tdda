@@ -54,7 +54,8 @@ The main features are:
 Prerequisites
 -------------
 
-    - :py:mod:`pandas` (required for CSV file support)
+    - :py:mod:`pandas` (required for CSV file support,
+                        see `http://pandas.pydata.org`_)
 
 This can be installed with::
 
