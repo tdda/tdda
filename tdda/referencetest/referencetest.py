@@ -213,7 +213,7 @@ class ReferenceTest(object):
         raise an exception.
 
         """
-        self.reference_data_locations[kind] = normalize_path(location)
+        self.reference_data_locations[kind] = os.path.normpath(location)
 
     def assertDataFramesEqual(self, df, ref_df,
                               actual_path=None, expected_path=None,
