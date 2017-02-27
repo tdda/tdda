@@ -50,12 +50,12 @@ To regenerate all reference results (or generate them for the first time)::
 
 To regenerate just a particular kind of reference (e.g. table results)::
 
-    pytest -s --write tables
+    pytest -s --write table
 
 To regenerate a number of different kinds of reference (e.g. both table
 and graph results)::
 
-    pytest -s --write tables graphs
+    pytest -s --write table graph
 
 
 If the **-s** option is also provided (to disable ``pytest``

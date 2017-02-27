@@ -119,7 +119,7 @@ class ReferenceTest(object):
                 :py:meth:`set_defaults()`, the environment variable
                 *TDDA_FAIL_DIR* is used, or, if that is not defined,
                 it defaults to */tmp*, *c:\\temp* or whatever
-                py:func:`tempfile.gettempdir()` returns, as
+                :py:func:`tempfile.gettempdir()` returns, as
                 appropriate.
 
         """
@@ -193,10 +193,11 @@ class ReferenceTest(object):
 
     def set_data_location(self, location, kind=None):
         """
-        Declare the filesystem location for reference files of a particular
-        kind. Typically you would subclass ReferenceTestCase and pass in these
-        locations though its __init__ method when constructing an instance
-        of ReferenceTestCase as a superclass.
+        Declare the filesystem location for reference files of a
+        particular kind. Typically you would subclass
+        `ReferenceTestCase` and pass in these locations though its
+        __init__ method when constructing an instance of
+        ReferenceTestCase as a superclass.
 
         If calls to :py:meth:`assertFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
@@ -220,57 +221,75 @@ class ReferenceTest(object):
                               check_data=None, check_types=None,
                               check_order=None, condition=None, sortby=None,
                               precision=None):
-        """
-        Check that an in-memory Pandas DataFrame matches an in-memory
+        """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
 
             *df*:
-                Actual DataFrame.
+                Actual `DataFrame`.
 
             *ref_df*:
-                Expected DataFrame.
+                Expected `DataFrame`.
 
             *actual_path*:
-                Optional parameter, giving path for file where
+                (Optional) path for file where
                 actual DataFrame originated, used for error messages.
 
             *expected_path*:
-                Optional parameter, giving path for file where
+                (Optional) path for file where
                 expected DataFrame originated, used for error messages.
 
             *check_data*:
-                Option to specify fields to compare values.
+                (Optional) restriction of fields whose values should
+                be compared.
+                Possible values are:
+
+                    - ``None`` or ``True`` (to apply the comparison to
+                      *all* fields; this is the default).
+                    - ``False`` (to skip the comparison completely)
+                    - a list of field names (to check only these fields)
+                    - a function taking a ``DataFrame`` as its single
+                      parameter,
+                      and returning a list of field names to check.
 
             *check_types*:
-                Option to specify fields to compare types.
+                (Optional) restriction of fields whose types should be
+                compared.
+                See *check_data* (above) for possible values.
 
             *check_order*:
-                Option to specify fields to compare field order.
+                (Optional) restriction of fields whose (relative)
+                order should be compared.
+                See *check_data* (above) for possible values.
 
             *check_extra_cols*:
-                Option to specify fields in the actual dataset
-                to use to check that there are no unexpected extra columns.
+                (Optional) restriction of extra fields in the actual dataset
+                which, if found, will cause the check to fail.
+                See *check_data* (above) for possible values.
 
             *sortby*:
-                Option to specify fields to sort by before comparing.
+                (Optional) specification of fields to sort by before comparing.
+
+                    - ``None`` or ``False`` (do not sort; this is the default)
+                    - ``True`` (to sort on all fields based on their
+                      order in the reference datasets; you probably
+                      don't want to use this option)
+                    - a list of field names (to sort on these fields, in order)
+                    - a function taking a ``DataFrame`` (which will be
+                      the reference data frame) as its single
+                      parameter,
+                      and returning a list of field names to sort on.
 
             *condition*:
-                Filter to be applied to datasets before comparing.
+                (Optional) filter to be applied to datasets before comparing.
                 It can be ``None``, or can be a function that
-                takes a DataFrame as its single parameter and
+                takes a `DataFrame` as its single parameter and
                 returns a vector of booleans (to specify which rows
                 should be compared).
 
             *precision*:
-                Number of decimal places to compare float values.
-
-        The ``check`` comparison flags can be of any of the following:
-
-            - ``None`` (to apply that kind of comparison to all fields)
-            - ``False`` (to skip that kind of comparison completely)
-            - a list of field names
-            - a function taking a DataFrame as its single parameter, and
-              returning a list of field names to use.
+                (Optional) number of decimal places to use for
+                floating-point comparisons.  Default is not to perform
+                rounding.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -292,8 +311,7 @@ class ReferenceTest(object):
                                check_data=None, check_types=None,
                                check_order=None, condition=None, sortby=None,
                                precision=None, **kwargs):
-        """
-        Check that an in-memory Pandas DataFrame matches a reference one
+        """Check that an in-memory Pandas DataFrame matches a reference one
         from a saved reference CSV file.
 
             *df*:
@@ -310,57 +328,77 @@ class ReferenceTest(object):
                 messages.
 
             *kind*:
-                Reference kind, used to locate the reference CSV file.
+                (Optional) reference kind (a string; see above), used to locate
+                the reference CSV file.
 
-            *check_data*:
-                Option to specify fields to compare values.
-
-            *check_types*:
-                Option to specify fields to compare types.
-
-            *check_order*:
-                Option to specify fields to compare field order.
-
-            *check_extra_cols*:
-                Option to specify fields in the actual dataset
-                to use to check that there are no unexpected extra columns.
-
-            *sortby*:
-                Option to specify fields to sort by before comparing.
-
-            *condition*:
-                Filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a DataFrame as its single parameter and
-                returns a vector of booleans (to specify which
-                rows should be compared).
-
-            *precision*:
-                Number of decimal places to compare float values.
-
-            *loader*:
-                Function to read a CSV file to obtain
+            *csv_read_fn*:
+                (Optional) function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
                 CSV loader is used.
 
-        The ``check`` comparison flags can be of any of the following:
+                The default CSV loader function is a wrapper around Pandas
+                :py:func:`pd.read_csv()`, with default options as follows:
 
-            - ``None`` (to apply that kind of comparison to all fields)
-            - ``False`` (to skip that kind of comparison completely)
-            - a list of field names
-            - a function taking a DataFrame as its single parameter, and
-              returning a list of field names to use.
+                    - index_col             is ``None``
+                    - infer_datetime_format is ``True``
+                    - quotechar             is ``"``
+                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+                    - escapechar            is \\\\ (backslash)
+                    - na_values             are the empty string, "NaN", and "NULL"
+                    - keep_default_na       is ``False``
 
-        The default CSV loader function is a wrapper around Pandas
-        :py:func:`pd.read_csv()`, with default options as follows:
+            *check_data*:
+                (Optional) restriction of fields whose values should
+                be compared.
+                Possible values are:
 
-            - index_col             is ``None``
-            - infer_datetime_format is ``True``
-            - quotechar             is ""
-            - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-            - escapechar            is \\\\ (backslash)
-            - na_values             are the empty string, "NaN", and "NULL"
-            - keep_default_na       is ``False``
+                    - ``None`` or ``True`` (to apply the comparison to
+                      *all* fields; this is the default).
+                    - ``False`` (to skip the comparison completely)
+                    - a list of field names (to check only these fields)
+                    - a function taking a ``DataFrame`` as its single
+                      parameter,
+                      and returning a list of field names to check.
+
+            *check_types*:
+                (Optional) restriction of fields whose types should be
+                compared.
+                See *check_data* (above) for possible values.
+
+            *check_order*:
+                (Optional) restriction of fields whose (relative)
+                order should be compared.
+                See *check_data* (above) for possible values.
+
+            *check_extra_cols*:
+                (Optional) restriction of extra fields in the actual dataset
+                which, if found, will cause the check to fail.
+                See *check_data* (above) for possible values.
+
+            *sortby*:
+                (Optional) specification of fields to sort by before comparing.
+
+                    - ``None`` or ``False`` (do not sort; this is the default)
+                    - ``True`` (to sort on all fields based on their
+                      order in the reference datasets; you probably
+                      don't want to use this option)
+                    - a list of field names (to sort on these fields, in order)
+                    - a function taking a ``DataFrame`` (which will be
+                      the reference data frame) as its single
+                      parameter,
+                      and returning a list of field names to sort on.
+
+            *condition*:
+                (Optional) filter to be applied to datasets before comparing.
+                It can be ``None``, or can be a function that
+                takes a `DataFrame` as its single parameter and
+                returns a vector of booleans (to specify which rows
+                should be compared).
+
+            *precision*:
+                (Optional) number of decimal places to use for
+                floating-point comparisons.  Default is not to perform
+                rounding.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -385,8 +423,7 @@ class ReferenceTest(object):
                              check_data=None, check_types=None,
                              check_order=None, condition=None, sortby=None,
                              precision=None, **kwargs):
-        """
-        Check that a CSV file matches a reference one.
+        """Check that a CSV file matches a reference one.
 
             *actual_path*:
                 Actual CSV file.
@@ -397,63 +434,81 @@ class ReferenceTest(object):
                 via :py:meth:`set_data_location()`.
 
             *kind*:
-                Reference *kind*, used to locate the reference CSV file.
+                (Optional) reference kind (a string; see above), used to locate
+                the reference CSV file.
 
             *csv_read_fn*:
-                A function to read a CSV file to obtain
+                (Optional) function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
-                CSV loader is used, which takes the same
-                parameters as the standard Pandas :py:func:`pd.read_csv()`
-                function.
+                CSV loader is used.
+
+                The default CSV loader function is a wrapper around Pandas
+                :py:func:`pd.read_csv()`, with default options as follows:
+
+                    - index_col             is ``None``
+                    - infer_datetime_format is ``True``
+                    - quotechar             is ``"``
+                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+                    - escapechar            is \\\\ (backslash)
+                    - na_values             are the empty string, "NaN", and "NULL"
+                    - keep_default_na       is ``False``
 
             *check_data*:
-                Option to specify fields to compare values.
+                (Optional) restriction of fields whose values should
+                be compared.
+                Possible values are:
+
+                    - ``None`` or ``True`` (to apply the comparison to
+                      *all* fields; this is the default).
+                    - ``False`` (to skip the comparison completely)
+                    - a list of field names (to check only these fields)
+                    - a function taking a ``DataFrame`` as its single
+                      parameter,
+                      and returning a list of field names to check.
 
             *check_types*:
-                Option to specify fields to compare types.
+                (Optional) restriction of fields whose types should be
+                compared.
+                See *check_data* (above) for possible values.
 
             *check_order*:
-                Option to specify fields to compare field order.
+                (Optional) restriction of fields whose (relative)
+                order should be compared.
+                See *check_data* (above) for possible values.
 
             *check_extra_cols*:
-                Option to specify fields in the actual dataset
-                to use to check that there are no unexpected extra columns.
+                (Optional) restriction of extra fields in the actual dataset
+                which, if found, will cause the check to fail.
+                See *check_data* (above) for possible values.
 
             *sortby*:
-                Option to specify fields to sort by before comparing.
+                (Optional) specification of fields to sort by before comparing.
+
+                    - ``None`` or ``False`` (do not sort; this is the default)
+                    - ``True`` (to sort on all fields based on their
+                      order in the reference datasets; you probably
+                      don't want to use this option)
+                    - a list of field names (to sort on these fields, in order)
+                    - a function taking a ``DataFrame`` (which will be
+                      the reference data frame) as its single
+                      parameter,
+                      and returning a list of field names to sort on.
 
             *condition*:
-                Filter to be applied to datasets before comparing.
+                (Optional) filter to be applied to datasets before comparing.
                 It can be ``None``, or can be a function that
-                takes a DataFrame as its single parameter and
-                returns a vector of booleans (to specify which
-                rows should be compared).
+                takes a `DataFrame` as its single parameter and
+                returns a vector of booleans (to specify which rows
+                should be compared).
 
             *precision*:
-                Number of decimal places to compare float values.
+                (Optional) number of decimal places to use
+                for floating-point comparisons.  Default is not to
+                perform rounding.
 
             *\*\*kwargs*:
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
-
-        The ``check`` comparison flags can be of any of the following:
-
-            - ``None`` (to apply that kind of comparison to all fields)
-            - ``False`` (to skip that kind of comparison completely)
-            - a list of field names
-            - a function taking a DataFrame as its single parameter, and
-              returning a list of field names to use.
-
-        The default CSV loader function is a wrapper around Pandas
-        :py:func:`pd.read_csv()`, with default options as follows:
-
-            - index_col             is ``None``
-            - infer_datetime_format is ``True``
-            - quotechar             is ""
-            - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-            - escapechar            is \\\\ (backslash)
-            - na_values             are the empty string, "NaN", and "NULL"
-            - keep_default_na       is ``False``
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -476,8 +531,7 @@ class ReferenceTest(object):
                               check_data=None, check_types=None,
                               check_order=None, condition=None, sortby=None,
                               precision=None, **kwargs):
-        """
-        Check that a set of CSV files match corresponding reference ones.
+        """Check that a set of CSV files match corresponding reference ones.
 
             *actual_paths*:
                 List of actual CSV files.
@@ -488,63 +542,79 @@ class ReferenceTest(object):
                 the configuration via :py:meth:`set_data_location()`.
 
             *kind*:
-                Reference *kind*, used to locate the reference CSV files.
+                (Optional) reference kind (a string; see above), used to locate
+                the reference CSV file.
 
             *csv_read_fn*:
-                A function to read a CSV file to obtain
+                (Optional) function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
-                CSV loader is used, which takes the same
-                parameters as the standard Pandas :py:func:`pd.read_csv()`
-                function.
+                CSV loader is used.
+
+                The default CSV loader function is a wrapper around Pandas
+                :py:func:`pd.read_csv()`, with default options as follows:
+
+                    - index_col             is ``None``
+                    - infer_datetime_format is ``True``
+                    - quotechar             is ``"``
+                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+                    - escapechar            is \\\\ (backslash)
+                    - na_values             are the empty string, "NaN", and "NULL"
+                    - keep_default_na       is ``False``
 
             *check_data*:
-                Option to specify fields to compare values.
+                (Optional) restriction of fields whose values should
+                be compared.
+                Possible values are:
+
+                    - ``None`` or ``True`` (to apply the comparison to
+                      *all* fields; this is the default).
+                    - ``False`` (to skip the comparison completely)
+                    - a list of field names (to check only these fields)
+                    - a function taking a ``DataFrame`` as its single
+                      parameter,
+                      and returning a list of field names to check.
 
             *check_types*:
-                Option to specify fields to compare types.
+                (Optional) restriction of fields whose types should be
+                compared.
+                See *check_data* (above) for possible values.
 
             *check_order*:
-                Option to specify fields to compare field order.
+                (Optional) restriction of fields whose (relative)
+                order should be compared.
+                See *check_data* (above) for possible values.
 
             *check_extra_cols*:
-                Option to specify fields in the actual dataset
-                to use to check that there are no unexpected extra columns.
+                (Optional) restriction of extra fields in the actual dataset
+                which, if found, will cause the check to fail.
+                See *check_data* (above) for possible values.
 
             *sortby*:
-                Option to specify fields to sort by before comparing.
+                (Optional) specification of fields to sort by before comparing.
+
+                    - ``None`` or ``False`` (do not sort; this is the default)
+                    - ``True`` (to sort on all fields based on their
+                      order in the reference datasets; you probably
+                      don't want to use this option)
+                    - a list of field names (to sort on these fields, in order)
+                    - a function taking a ``DataFrame`` (which will be
+                      the reference data frame) as its single
+                      parameter,
+                      and returning a list of field names to sort on.
 
             *condition*:
-                Filter to be applied to datasets before comparing.
+                (Optional) filter to be applied to datasets before comparing.
                 It can be ``None``, or can be a function that
-                takes a DataFrame as its single parameter and
-                returns a vector of booleans (to specify which
-                rows should be compared).
+                takes a ``DataFrame`` as its single parameter and
+                returns a vector of booleans (to specify which rows
+                should be compared).
 
-            *precision*
-                Number of decimal places to compare float values.
-
-            *\*\*kwargs*:
-                Any additional named parameters are passed
-                straight through to the *csv_read_fn* function.
-
-        The ``check`` comparison flags can be of any of the following:
-
-            - ``None`` (to apply that kind of comparison to all fields)
-            - ``False`` (to skip that kind of comparison completely)
-            - a list of field names
-            - a function taking a DataFrame as its single parameter, and
-              returning a list of field names to use.
-
-        The default CSV loader function is a wrapper around Pandas
-        :py:func:`pd.read_csv()`, with default options as follows:
-
-            - index_col             is ``None``
-            - infer_datetime_format is ``True``
-            - quotechar             is ""
-            - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-            - escapechar            is \\\\ (backslash)
-            - na_values             are the empty string, "NaN", and "NULL"
-            - keep_default_na       is ``False``
+            *precision*:
+                (Optional) number of decimal places to use for
+                floating-point comparisons.  Default is not to perform
+                rounding.  *\*\*kwargs*: Any additional named
+                parameters are passed straight through to the
+                *csv_read_fn* function.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 

@@ -1,6 +1,4 @@
-"""
-
-The :py:mod:`~tdda.referencetest` module provides support for unit tests,
+"""The :py:mod:`~tdda.referencetest` module provides support for unit tests,
 allowing them to easily compare test results against saved
 "known to be correct" reference results.
 
@@ -49,13 +47,12 @@ The main features are:
       choose to only regenerate particular kinds of reference results,
       if they need to be updated because they turned out to have been
       wrong or if the intended behaviour has changed.
-
+      Kinds are strings.
 
 Prerequisites
 -------------
 
-    - :py:mod:`pandas` (required for CSV file support,
-                        see `http://pandas.pydata.org`_)
+ - :py:mod:`pandas` (required for CSV file support), see http://pandas.pydata.org.
 
 This can be installed with::
 
@@ -98,13 +95,15 @@ To run the test::
 
     python mytest.py
 
-The first time you run the test, it will fail because the reference test
-results do not exist yet. You can create the reference results automatically::
+The first time you run the test, it will produce an error unless you
+have already created the expected ("reference") results. You can
+create the reference results automatically::
 
     python mytest.py --write-all
 
-Having generated the reference results, you should examine the files it has
-produced in the data output location, to check that they are as expected.
+Having generated the reference results, you should carefully examine
+the files it has produced in the data output location, to check that
+they are as expected.
 
 
 **Simple pytest example:**
@@ -147,8 +146,9 @@ To run the test::
 
     pytest
 
-The first time you run the test, it will fail because the reference test
-results do not exist yet. You can create the reference results automatically::
+The first time you run the test, it will produce an error unless you
+have already created the expected ("reference") results. You can
+create the reference results automatically::
 
     pytest --write-all -s
 

@@ -132,6 +132,8 @@ class PandasComparison(object):
             elif df[c].dtype != ref_df[c].dtype:
                 wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
         if check_extra_cols:
+        # todo: shouldn't check_extra_cols be a boolean?
+        #       ... and set(check_extra_cols) be set(list(df))
             extra_cols = set(check_extra_cols) - set(list(ref_df))
         if check_order != False and not missing_cols:
             check_order = resolve_option_flag(check_order, ref_df)
@@ -189,8 +191,13 @@ class PandasComparison(object):
                 check_data = [c for c in check_data if c not in missing_cols]
                 df = df[check_data]
                 ref_df = ref_df[check_data]
-                rounded = df.round(precision).reset_index(drop=True)
-                ref_rounded = ref_df.round(precision).reset_index(drop=True)
+                if precision is not None:
+                    rounded = df.round(precision).reset_index(drop=True)
+                    ref_rounded = (ref_df.round(precision)
+                                         .reset_index(drop=True))
+                else:
+                    rounded = df
+                    ref_rounded = ref_df
                 same = rounded.equals(ref_rounded)
                 if not same:
                     self.failure(msgs, 'Contents check failed.',
