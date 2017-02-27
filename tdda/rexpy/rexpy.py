@@ -3,6 +3,10 @@
 """
 Usage::
 
+    rexpy [FLAGS] [input file [output file]]
+
+or
+
     python -m tdda.rexpy.rexpy [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
@@ -206,8 +210,28 @@ class Categories(object):
         return self.code2cat[k]
 
 
-Fragment = namedtuple('Fragment', 're group')
-Coverage = namedtuple('Coverage', 'n n_uniq incr incr_uniq index')
+class Fragment(namedtuple('Fragment', 're group')):
+    """
+    Container for a fragment.
+
+    Attributes:
+
+      * *re:* the regular expression for the fragment
+      * *group:* True if it forms a capture group (i.e. is not constant)
+    """
+
+class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
+    """
+    Container for coverage information.
+
+    Attributes:
+
+     * *n:* number of matches
+     * *n_unique:* number matches, deduplicating strings
+     * *incr:* number of new (unique) matches for this regex
+     * *incr_uniq:* number of new (unique) deduplicated matches for this regex
+     * *index:* index of this regex in original list returned.
+    """
 
 
 class Extractor(object):
@@ -417,8 +441,7 @@ class Extractor(object):
     def merge_fixed_omnipresent_at_pos(self, patterns):
         """
         Find unusual columns in fixed positions relative to ends.
-        Align those
-        Split and recurse
+        Align those, split and recurse
         """
         lstats = length_stats(patterns)
         if lstats.max_length <= 1:
@@ -768,7 +791,7 @@ class Extractor(object):
         Each result is a Coverage object with the following attributes:
 
             *n*:
-                number of examples matched including duplicatesb
+                number of examples matched including duplicates
 
             *n_uniq*:
                 number of examples matched, excluding duplicates
@@ -1009,9 +1032,9 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
 
 def run_length_encode(s):
     """
-    Return run-length-encoding of string s, e.g.
+    Return run-length-encoding of string s, e.g.::
 
-    'CCC-BB-A' --> (('C', 3), ('-', 1), ('B', 2), ('-', 1), ('A', 1))
+        'CCC-BB-A' --> (('C', 3), ('-', 1), ('B', 2), ('-', 1), ('A', 1))
     """
     out = []
     last = None
@@ -1081,8 +1104,6 @@ def to_vrles(rles):
 def ndigits(n, d):
     digit = chr((d + ord('0')) if d < 10 else (ord('A') + d - 10))
     return digit * n
-
-
 
 
 class ResultsSummary(object):
@@ -1174,8 +1195,8 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     """
     Extract regular expression(s) from examples and return them.
 
-    Normally, examples should be unicode (i.e. :py:type:`str` in Python3,
-    and :py:type:`unicode` in Python2). However, encoded strings can be
+    Normally, examples should be unicode (i.e. ``str`` in Python3,
+    and ``unicode`` in Python2). However, encoded strings can be
     passed in provided the encoding is specified.
 
     Results will always be unicode.
@@ -1249,7 +1270,7 @@ def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
             ('b', 1, 1, 'fixed'): {2: 6, 3: 4},
         }
 
-    This indicates that the pattern ('a', 1, 1, 'fixed'} has frequency
+    This indicates that the pattern ('a', 1, 1, 'fixed') has frequency
     7 at positions 1 and -1, and frequency 4 at position 3, while
     pattern ('b', 1, 1, 'fixed') has frequency 6 at position 2 and
     4 at position 3.

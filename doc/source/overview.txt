@@ -4,7 +4,7 @@ Overview
 The :py:mod:`tdda` package provides Python support for
 test-driven data analysis
 (see `1-page summary <http://StochasticSolutions.com/>`_
- with references, or the `blog <http://tdda.info>`_
+with references, or the `blog <http://tdda.info>`_)
 
 The :py:mod:`tdda.referencetest` library is used to support the creation of
 *reference tests,*

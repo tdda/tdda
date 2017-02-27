@@ -9,14 +9,29 @@ against a JSON constraints file.
 
 Usage::
 
-    python -m tdda.constraints.pdverify df.feather [constraints.tdda]
+    pdverify [FLAGS] df.feather [constraints.tdda]
 
-where *df.feather* is a :py:mod:`feather` file containing a dataframe.
+or::
 
-If *constraints.tdda* is provided, this is a JSON *.tdda* file
-constaining constraints. If no constraints file is provided,
-a file with the same path as the feather file, a *.tdda* extension
-will be tried.
+    python -m tdda.constraints.pdverify [FLAGS] df.feather [constraints.tdda]
+
+where
+
+  * *df.feather* is a :py:mod:`feather` file containing a DataFrame,
+
+  * *constraints.tdda*, if provided, is a JSON *.tdda* file
+    constaining constraints. If no constraints file is provided,
+    a file with the same path as the feather file, a *.tdda* extension
+    will be tried.
+
+Optional flags are:
+
+    -a, --all          Report all fields, even if there are no failures
+    -f, --fields       Report only fields with failures
+    -c, --constraints  Report only individual constraints that fail.
+                       Not yet implemented.
+    -1, --oneperline   Report each constraint failure on a separate line.
+                       Not yet implemented.
 """
 
 from __future__ import division
@@ -74,7 +89,7 @@ def get_params(args):
                 params['report'] = 'fields'
             elif a in ('-c', '--constraints'):
                 params['report'] = 'constraints'
-            elif a in ('1', 'oneperline'):
+            elif a in ('-1', '--oneperline'):
                 params['one_per_line'] = True
             else:
                 usage_error()

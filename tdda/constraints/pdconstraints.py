@@ -477,7 +477,7 @@ class PandasVerification(Verification):
 
         - ``True``       --- if the constraint was satified for the column
         - ``False``      --- if column failed to satisfy the constraint
-        - null           --- (``pd.np.NaN``) if there was no constraint of this kind for this field.
+        - ``pd.np.NaN``  --- if there was no constraint of this kind for this field.
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
@@ -513,7 +513,7 @@ def coarse_type(x):
     The coarse types combine 'bool', 'int' and 'real' into 'number'.
 
     Obviously, some people will dislike treating booleans as numbers.
-    But is is necessary here.
+    But it is necessary here.
     """
     t = tdda_type(x)
     return 'number' if t in ('bool', 'int', 'real') else t
@@ -745,11 +745,13 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             If report is set to 'fields', only fields for
                             which at least one constraint failed are shown.
 
-                            NOTE: The method also accepts
-                            'constraints', which will be used to
+                            NOTE: The method also accepts two further
+                            parameters to control (not yet implemented)
+                            behaviour. 'constraints', will be used to
                             indicate that only failing constraints for
                             failing fields should be shown.
-                            This behaviour is not yet implented.
+                            'one_per_line' will indicate that each constraint
+                            failure should be reported on a separate line.
 
     Returns:
 
@@ -828,11 +830,11 @@ def discover_constraints(df):
 
         *type*:
                 the (coarse, TDDA) type of the field. One of
-                bool, int, real, string or date.
+                'bool', 'int', 'real', 'string' or 'date'.
 
 
         *min*:
-                jfor non-string fields, the minimum value in the column.
+                for non-string fields, the minimum value in the column.
                 Not generated for all-null columns.
 
         *max*:
@@ -870,7 +872,7 @@ def discover_constraints(df):
                     - If the field has a single null, a constraint will
                       be written with max_nulls set to one.
                     - If the field has more than 1 null, no constraint
-                       will be generated.
+                      will be generated.
 
         *no_duplicates*:
                 For string fields (only, for now), if every

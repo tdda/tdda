@@ -509,8 +509,8 @@ class Verification(object):
         """
         if self.report == 'fields':  # Report only fields with failures
             field_items = list((field, ver)
-                                      for (field, ver) in self.fields.items()
-                                      if ver.failures > 0)
+                               for (field, ver) in self.fields.items()
+                               if ver.failures > 0)
         else:
             field_items = self.fields.items()
         fields = '\n\n'.join('%s: %s  %s  %s'

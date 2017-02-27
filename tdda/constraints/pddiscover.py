@@ -9,12 +9,18 @@ and save generated constraints as a JSON file.
 
 Usage::
 
+    pddiscover df.feather [constraints.tdda]
+
+or::
+
     python -m tdda.constraints.pddiscover df.feather [constraints.tdda]
 
-where *df.feather* is a :py:mod:`feather` file containing a dataframe.
+where
 
-If *constraints.tdda* is provided, this is a JSON *.tdda* file to
-which the generated constraints will be written.
+  * *df.feather* is a :py:mod:`feather` file containing a DataFrame,
+
+  * *constraints.tdda*, if provided, is a JSON *.tdda* file to
+    which the generated constraints will be written.
 """
 
 from __future__ import division
@@ -66,22 +72,9 @@ def get_params(args):
     params = {
         'df_path': None,
         'constraints_path': None,
-        'report': 'all',
-        'one_per_line': False,
     }
     for a in args:
-        if a.startswith('-'):
-            if a in ('-a', '--all'):
-                params['report'] = 'all'
-            elif a in ('-f', '--fields'):
-                params['report'] = 'fields'
-            elif a in ('-c', '--constraints'):
-                params['report'] = 'constraints'
-            elif a in ('1', 'oneperline'):
-                params['one_per_line'] = True
-            else:
-                usage_error()
-        elif params['df_path'] is None:
+        if params['df_path'] is None:
             params['df_path'] = a
         elif params['constraints_path'] is None:
             params['constraints_path'] = a
