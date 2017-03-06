@@ -59,6 +59,7 @@ import string
 import sys
 
 from collections import Counter, defaultdict, namedtuple, OrderedDict
+from pprint import pprint
 
 str_type = unicode if sys.version_info.major < 3 else str
 bytes_type = str if sys.version_info.major < 3 else bytes
@@ -95,6 +96,10 @@ class SIZE(object):
 nCalls = 0
 memo = {}
 def cre(rex):
+    """
+    Compiled regular expression
+    Memoized implementation.
+    """
     global nCalls, memo
     nCalls += 1
     c = memo.get(rex)
@@ -181,12 +186,12 @@ class Categories(object):
             'HEX', 'hex', 'Hex',
             'ALPHANUMERIC', 'alphanumeric'
         ]
+        self.FineAlphanumerics = ['Digit', 'LETTER', 'letter']
 
     def Punctuation(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
-
 
     def build_cat_map(self):
         """
@@ -248,14 +253,19 @@ class Extractor(object):
 
     The examples may be given as a list or as a dictionary:
     if a dictionary, the values are assumed to be string frequencies.
+
+    Verbose is usually 0 or False. It can be to True or 1 for various
+    extra output, and to higher numbers for even more verbose output.
+    The highest level currently used is 2.
     """
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
-                 verbose=False):
+                 verbose=0):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
 
+        self.verbose = verbose
         self.example_freqs = Counter()      # Each string stored only once;
                                             # but multiplicity stored
 #        self.by_length = defaultdict(list)  # Examples also stored by length
@@ -264,7 +274,6 @@ class Extractor(object):
         self.n_nulls = 0                    # Number of nulls found
         self.clean(examples)                # Fill in previous attrubutes
         self.tag = tag                      # Returned tagged (grouped) RE
-        self.verbose = verbose
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
@@ -348,6 +357,10 @@ class Extractor(object):
                 del self.example_freqs[k]
 #                    if self.example_freqs[stripped] == 1:
 #                        self.by_length[L].append(stripped)
+        if self.verbose > 1:
+            print('Examples:')
+            pprint(self.example_freqs)
+            print()
 
     def batch_extract(self, examples):
         """
@@ -605,6 +618,10 @@ class Extractor(object):
         n_groups = len(pattern)
         group_chars = [set([]) for i in range(n_groups)]
         group_strings = [set([]) for i in range(n_groups)]
+
+        group_rlefcs = [None] * n_groups  # Start as None; end as False or VRLE
+        group_rlecs = [None] * n_groups   # Start as None; end as False or VRLE
+
         n_strings = [0] * n_groups
         for example in examples:
             m = re.match(regex, example)
@@ -615,31 +632,55 @@ class Extractor(object):
                         group_strings[i].add(g)
                         n_strings[i] = len(group_strings[i])
                     group_chars[i] = group_chars[i].union(set(list(g)))
+                    (group_rlefcs[i],
+                     group_rlecs[i]) = self.rle_fc_c(g, pattern[i],
+                                                     group_rlefcs[i],
+                                                     group_rlecs[i])
+        if self.verbose >= 2:
+            print('Fine Class VRLE:', group_rlefcs)
+            print('      Char VRLE:', group_rlecs)
         out = []
         Cats = self.Cats
-        for group, (chars, strings, fragment) in enumerate(zip(group_chars,
-                                                               group_strings,
-                                                               pattern)):
+
+        for group, (chars,
+                    strings,
+                    rlefc,
+                    rlec,
+                    fragment) in enumerate(zip(group_chars,
+                                               group_strings,
+                                               group_rlefcs,
+                                               group_rlecs,
+                                               pattern)):
             (c, m, M) = fragment
             char_str = ''.join(sorted(chars))
             fixed = False
             refined = None
-            if len(strings) == 1:
+            if len(strings) == 1:   # Same string for whole group
                 refined = re.escape(list(strings)[0])
                 m = M = 1
                 fixed = True
-            elif len(chars) == 1:
+            elif len(chars) == 1:   # Same character, possibly repeated
                 refined = re.escape(list(chars)[0])
                 fixed = True
             elif c == 'C':  # Alphanumeric
+                if rlec:  # Always same sequence of chars
+                    if self.verbose >= 2:
+                        print('SAME CHARS: %s' % rlec)
+                    out.extend(plusify_vrles(rlec))
+                    continue
+                elif rlefc:  # Always same sequence of fine classes
+                    if self.verbose >= 2:
+                        print('SAME CLASSES: %s' % rlefc)
+                    out.extend(plusify_vrles(rlefc))
+                    continue
                 for k in Cats.IncreasinglyGeneralAlphanumerics:
                     cat = getattr(Cats, k)
                     if type(cat) == tuple:
-                        print('>>>', cat)
+                        print('>>>', cat)  # This cannot happen
                     code = cat.code
                     if re.match(cat.re_multiple, char_str):
                         refined = re.escape(code)
-                        break
+                        break  # <-- continue?
                 else:
                     refined = c
             elif (c == CODE.PUNC
@@ -653,6 +694,77 @@ class Extractor(object):
             else:
                 out.append((refined, m, M))
         return out
+
+    def rle_fc_c(self, s, pattern, rlefc_in, rlec_in):
+        """
+        Convert a string, matching a 'C'-(fragment) pattern, to
+            - a run-length encoded sequence of fine classes
+            - a run-length encoded sequence of characters
+
+        Given inputs:
+                s     a string representing the actual substring of an
+                      example that matches a pattern fragment described
+                      by pattern
+
+            pattern   a VRLE of coarse classes
+
+            rlefc_in  a VRLE of fine classes, or None, or False
+
+            rlec_in  a VRLE of characters, or None, or False
+
+        Returns new rlefc and rlec, each of which is:
+
+            False, if the string doesn't match the corresponding input VRLE
+
+            a possibly expanded VRLE, if it does match, or would match
+            if expanded (by allowing more of fewer repetitions).
+        """
+        if pattern[0] != 'C' or (rlefc_in == False and rlec_in == False):
+            return (False, False)  # Indicates, neither applies
+                                   # Either 'cos not coarse class C
+                                   # Or because previously found wanting...
+
+        rlefc = []      # run-length encoded list of fine classes
+        rlec = []       # run-length encoded list of characters
+        last_fc = None  # last fine class
+        last_c = None   # last character
+
+        for c in s:
+            fc = self.fine_class(c)
+            if fc == last_fc:
+                nfc += 1
+            else:
+                if last_fc:
+                    rlefc.append((last_fc, nfc))
+                last_fc = fc
+                nfc = 1
+            if c == last_c:
+                nc += 1
+            else:
+                if last_c:
+                    rlec.append((last_c, nc))
+                last_c = c
+                nc = 1
+        if last_c:  # i.e. there were any; probably always the case
+            rlefc.append((last_fc, nfc))
+            rlec.append((last_c, nc))
+
+        return (expand_or_falsify_vrle(rlefc, rlefc_in),
+                expand_or_falsify_vrle(rlec, rlec_in, fixed=True))
+
+
+    def fine_class(self, c):
+        """
+        Map a string in coarse class 'C' (AlphaNumeric) to a fine class.
+        """
+        cats = self.Cats
+        if c.isdigit():
+            return cats.Digit.code
+        elif 'a' <= c <= 'z':
+            return cats.letter.code
+        else:
+            return cats.LETTER.code  # which might include _-.
+
 
     def fragment2re(self, fragment, tagged=False, as_re=True):
         (c, m, M) = fragment[:3]
@@ -1097,6 +1209,7 @@ def to_vrles(rles):
                        for (cat, m, M) in pattern)
                  for pattern in outs]
         outs = list(set(outs2))
+#        outs = list(set(plusify_vrles(outs)))
         outs.sort()
     return outs
 
@@ -1104,6 +1217,23 @@ def to_vrles(rles):
 def ndigits(n, d):
     digit = chr((d + ord('0')) if d < 10 else (ord('A') + d - 10))
     return digit * n
+
+
+def plusify_vrle(vrle):
+    cat, m, M = vrle[:3]
+    if M is None:
+        return vrle
+    fixed = vrle[3] if len(vrle) > 3 else None
+    if (M - m) <= MAX_VRLE_RANGE:
+        return vrle
+    elif fixed:
+        return (cat, m, None, fixed)
+    else:
+        return (cat, m, None)
+
+
+def plusify_vrles(vrles):
+    return [plusify_vrle(v) for v in vrles]
 
 
 class ResultsSummary(object):
@@ -1467,6 +1597,51 @@ def get_params(args):
         params['extra_letters'] =  ''.join(sorted([c for c in extras]))
         # Order always, for consistency
     return params
+
+
+def expand_or_falsify_vrle(rle, vrle, fixed=False):
+    """
+    Given a run-length encoded sequence
+        (e.g. [('A', 3), ('B', 4)])
+    and (usually) a variable run-length encoded sequence
+        (e.g. [('A', 2, 3), ('B', 1, 2)])
+
+    expand the VRLE to include the case of the RLE, if they can be consistent.
+
+    If they cannot, return False.
+
+    If vrle is None, this indicates it hasn't been found yet, so rle is
+    simply expanded to a VRLE.
+
+    If vrle is False, this indicates that a counterexample has already
+    been found, so False is returned again.
+    """
+    suf = ['fixed'] if fixed else []
+    if vrle == False:
+        return False
+    elif vrle is None:
+        return [((r[0], r[1], r[1], 'fixed') if fixed else (r[0], r[1], r[1]))
+                for r in rle]  # Just accept the new one
+
+    out = []
+    if len(rle) == len(vrle):
+        for (r, v) in zip(rle, vrle):
+            c, m, M = v[:3]
+            n = r[1]
+            if r[0] == c:
+                if n >= m and n <= M:
+                    out.append(v)
+                elif n < m:
+                    out.append((c, n, M, 'fixed') if fixed else (c, n, M))
+                else:  # n > M
+                    out.append((c, m, n, 'fixed') if fixed else (c, m, n))
+            else:
+                return False
+        # All consistent
+        return out
+    else:
+        return False
+
 
 
 def usage_error():
