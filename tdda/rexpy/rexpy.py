@@ -1545,7 +1545,7 @@ def main(in_path=None, out_path=None, skip_header=False, **kwargs):
         with open(in_path) as f:
             strings = f.read().splitlines()
     else:
-        strings = sys.stdin.readlines()
+        strings = [s.strip() for s in sys.stdin.readlines()]
     if skip_header:
         strings = strings[1:]
     patterns = extract(strings, **kwargs)
