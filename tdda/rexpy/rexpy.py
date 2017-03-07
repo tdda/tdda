@@ -671,8 +671,10 @@ class Extractor(object):
                 elif rlefc:  # Always same sequence of fine classes
                     if self.verbose >= 2:
                         print('SAME CLASSES: %s' % rlefc)
-                    out.extend(plusify_vrles(rlefc))
-                    continue
+                    if n_groups + len(rlefc) - 1 <= MAX_GROUPS:
+                        out.extend(plusify_vrles(rlefc))
+                        n_groups += len(rlefc) - 1
+                        continue
                 for k in Cats.IncreasinglyGeneralAlphanumerics:
                     cat = getattr(Cats, k)
                     if type(cat) == tuple:
