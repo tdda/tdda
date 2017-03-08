@@ -768,9 +768,10 @@ class Extractor(object):
             return cats.Digit.code
         elif 'a' <= c <= 'z':
             return cats.letter.code
+        elif not c in '_-.':
+            return cats.LETTER.code
         else:
-            return cats.LETTER.code  # which might include _-.
-
+            return cats.LETTER_.code
 
     def fragment2re(self, fragment, tagged=False, as_re=True):
         (c, m, M) = fragment[:3]
