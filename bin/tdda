@@ -1,0 +1,24 @@
+#!/bin/sh
+
+if [ -z "$1" ]
+then
+    echo "Use tdda discover or tdda verify" 1>&2
+    exit 1
+fi
+
+name=$1
+shift
+
+case $name in
+    discover|disco)
+        exec python -m tdda.constraints.pddiscover "$@"
+        ;;
+    verify)
+        exec python -m tdda.constraints.pdverify  "$@"
+        ;;
+    *)
+        echo "Use tdda discover or tdda verify" 1>&2
+        exit 1
+        ;;
+esac
+

@@ -638,7 +638,11 @@ class TestExtraction(unittest.TestCase):
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         self.assertEqual(extract(iids, extra_letters='-'),
-                         [r'^\s*[A-Z0-9\-]{10}\s*$'])
+                         [r'^\s*\d{2,3}[A-Z]{4}\d{3,4}\s*$'])
+        # Test result has changed with improved behaviour.
+        # Now us spots that the base sequence is the same
+        # Previously this found this:
+        #        [r'^\s*[A-Z0-9\-]{10}\s*$'])
 
     def test_re_pqs_id_with_dash2(self):
         iids = ['123-AB-321', ' AB-1B-4A21', '', None, '321-BA-1A23']
@@ -847,7 +851,10 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTCODES(self):
         self.assertEqual(extract(self.POSTCODES),
-                         [r'^[A-Z0-9]{2,3}\ [A-Z0-9]{3}$'])
+                         [r'^[A-Z]{1,2}\d\ \d[A-Z]{2}$'])
+        # Improved answer
+        # Previously
+        #    [r'^[A-Z0-9]{2,3}\ [A-Z0-9]{3}$'])
 
 
     Postcodes = [
@@ -862,9 +869,12 @@ class TestExtraction(unittest.TestCase):
         'eh3 1lh',
         'g4 2bp',
     ]
-    def test_Postcodes(self):
+    def test_Postcodes2(self):
         self.assertEqual(extract(self.postcodes),
-                         [r'^[a-z0-9]{2,3}\ [a-z0-9]{3}$'])
+                         [r'^[a-z]{1,2}\d\ \d[a-z]{2}$'])
+        # Improved answer.
+        # Previously:
+        #     [r'^[a-z0-9]{2,3}\ [a-z0-9]{3}$'])
 
     postCODES = [
         'eh3 1LH',
@@ -872,7 +882,10 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_postCODES(self):
         self.assertEqual(extract(self.postCODES),
-                         [r'^[a-z0-9]{2,3}\ [A-Z0-9]{3}$'])
+                         [r'^[a-z]{1,2}\d\ \d[A-Z]{2}$'])
+        # Improved answer.
+        # Previously:
+        #     [r'^[a-z0-9]{2,3}\ [A-Z0-9]{3}$'])
 
     POSTcodes = [
         'EH3 1lh',
@@ -880,9 +893,80 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTcodes(self):
         self.assertEqual(extract(self.POSTcodes),
-                         [r'^[A-Z0-9]{2,3}\ [a-z0-9]{3}$'])
+                         [r'^[A-Z]{1,2}\d\ \d[a-z]{2}$'])
+#                         [r'^[A-Z0-9]{2,3}\ [a-z0-9]{3}$'])
+
+
+    names1 = [
+        'Euclid',
+        'Homer',
+        'Plato',
+    ]
+
+    names1L = names1 + ['Socrates']
+
+    names2 = [
+        'Albert Einstein',
+        'Richard Feynman',
+        'Miles Davis',
+    ]
+    names3 = [
+        'James Clerk Maxwell',
+        'Ralph Waldo Emerson',
+        'Carl Friedrich Gauss',
+    ]
+
+    names_dot_initial = [
+        'John F. Kennedy',
+        'George W. Bush',
+    ]
+
+
+    def test_names1(self):
+        self.assertEqual(extract(self.names1), [r'^[A-Z][a-z]{4,5}$'])
+
+
+    def test_names1L(self):
+        self.assertEqual(extract(self.names1L), [r'^[A-Z][a-z]+$'])
+
+
+    def test_names2(self):
+        self.assertEqual(extract(self.names2),
+                         [r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$'])
+
+
+    def test_names3(self):
+        self.assertEqual(extract(self.names3),
+                         [r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$'])
+
+    def test_names_dot_initial(self):
+        self.assertEqual(extract(self.names_dot_initial),
+                         [r'^[A-Z][a-z]{3,5}\ [A-Z]\.\ [A-Z][a-z]+$'])
+
+    def test_names1L23(self):
+        self.assertEqual(extract(self.names1L + self.names2 + self.names3),
+                         [r'^[A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$'])
+
+    def test_names1L23_dot_initial(self):
+        self.assertEqual(extract(self.names1L + self.names2 + self.names3
+                                 + self.names_dot_initial),
+                         [r'^[A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$',
+                          r'^[A-Z][a-z]{3,5}\ [A-Z]\.\ [A-Z][a-z]+$'])
+
+    abplus = ['ab', 'abb', 'abbb', 'abbbbb', 'abbbbbbb',
+              'ab', 'abbbbbbb', 'abbbb', 'ab', 'abbbb',]
+    aplusbplus = ['ab', 'abb', 'abbb', 'abbbbb', 'aaaaaaaaaaabbbbbbb',
+                  'aab', 'aaabb', 'aaabbbb', 'ab', 'abbbb',]
+
+    def test_abplus(self):
+        self.assertEqual(extract(self.abplus), [r'^ab+$'])
 
     def test_urls1(self):
+        self.assertEqual(extract(self.aplusbplus), [r'^a+b+$'])
 
 #        print()
 #        x = Extractor(self.urls1, verbose=True)

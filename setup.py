@@ -44,6 +44,7 @@ setup(
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],
     },
+    scripts=[os.path.join('bin', 'rexpy'), os.path.join('bin', 'tdda')],
     zip_safe=False,
 )
 
