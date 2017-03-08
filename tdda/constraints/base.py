@@ -27,9 +27,9 @@ DATE_VALUED_CONSTRAINTS = ('min', 'max')
 UTF8 = 'UTF-8'
 
 
-RD = re.compile(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})')
-RDT = re.compile(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
-                 r'(\d{1,2}):(\d{2}):(\d{2})')
+RD = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$')
+RDT = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
+                 r'(\d{1,2}):(\d{2}):(\d{2})$')
 
 
 class Marks:
@@ -300,7 +300,8 @@ class Constraint(object):
                                    (', ' + kws) if kws else '')
 
     def to_dict_value(self):
-        return self.value
+        return (self.value if type(self.value) != datetime.datetime
+                else str(self.value))
 
 
 #

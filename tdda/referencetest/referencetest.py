@@ -343,8 +343,8 @@ class ReferenceTest(object):
                     - infer_datetime_format is ``True``
                     - quotechar             is ``"``
                     - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is \\\\ (backslash)
-                    - na_values             are the empty string, "NaN", and "NULL"
+                    - escapechar            is ``\\`` (backslash)
+                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
                     - keep_default_na       is ``False``
 
             *check_data*:
@@ -449,8 +449,8 @@ class ReferenceTest(object):
                     - infer_datetime_format is ``True``
                     - quotechar             is ``"``
                     - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is \\\\ (backslash)
-                    - na_values             are the empty string, "NaN", and "NULL"
+                    - escapechar            is ``\\`` (backslash)
+                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
                     - keep_default_na       is ``False``
 
             *check_data*:
@@ -557,8 +557,8 @@ class ReferenceTest(object):
                     - infer_datetime_format is ``True``
                     - quotechar             is ``"``
                     - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is \\\\ (backslash)
-                    - na_values             are the empty string, "NaN", and "NULL"
+                    - escapechar            is ``\\`` (backslash)
+                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
                     - keep_default_na       is ``False``
 
             *check_data*:

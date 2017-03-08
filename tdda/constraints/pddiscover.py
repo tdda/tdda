@@ -1,26 +1,41 @@
 # -*- coding: utf-8 -*-
 
 """
-*pddiscover*
-------------
+*tdda discover*
+---------------
 
 Discover TDDA constraints for DataFrames saved as :py:mod:`feather` datasets,
 and save generated constraints as a JSON file.
 
 Usage::
 
-    pddiscover df.feather [constraints.tdda]
+    tdda discover input-file [constraints.tdda]
 
 or::
 
-    python -m tdda.constraints.pddiscover df.feather [constraints.tdda]
+    python -m tdda.constraints.pddiscover input-file [constraints.tdda]
 
 where
 
-  * *df.feather* is a :py:mod:`feather` file containing a DataFrame,
+  * *input-file* is either:
+        - a csv file
+        - a :py:mod:`feather` file containing a DataFrame,
+          with extension ``.feather``
 
-  * *constraints.tdda*, if provided, is a JSON *.tdda* file to
-    which the generated constraints will be written.
+  * *constraints.tdda*, if provided, specifies the name of a file to
+    which the generated constraints will be written in JSON.
+
+If a CSV file is used, it will be processed by the Pandas CSV file reader
+with the following settings:
+
+ - index_col             is ``None``
+ - infer_datetime_format is ``True``
+ - quotechar             is ``"``
+ - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+ - escapechar            is ``\\`` (backslash)
+ - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
+ - keep_default_na       is ``False``
+
 """
 
 from __future__ import division
@@ -32,8 +47,10 @@ import sys
 import pandas as pd
 import numpy as np
 
-USAGE = __doc__.replace('Usage::', 'Usage:').replace(':py:mod:`feather`',
-                                                     'feather')
+USAGE = (__doc__.replace('Usage::', 'Usage:')
+                .replace(':py:mod:`feather`', 'feather')
+                .replace(':py:const:`csv.QUOTE_MINIMAL`',
+                         'csv.QUOTE_MINIMAL'))
 
 try:
     from pmmif import featherpmm
@@ -47,10 +64,12 @@ except ImportError:
               file=sys.stderr)
         raise
 
+from tdda import __version__
 from tdda.constraints.pdconstraints import discover_constraints
+from tdda.referencetest.checkpandas import default_csv_loader
 
 
-def discover_feather_df(df_path, constraints_path, **kwargs):
+def discover_constraints_from_file(df_path, constraints_path, **kwargs):
     df = load_df(df_path)
     constraints = discover_constraints(df)
     if constraints_path:
@@ -61,7 +80,9 @@ def discover_feather_df(df_path, constraints_path, **kwargs):
 
 
 def load_df(path):
-    if featherpmm:
+    if os.path.splitext(path)[1] != '.feather':
+        return default_csv_loader(path)
+    elif featherpmm:
         ds = featherpmm.read_dataframe(path)
         return ds.df
     else:
@@ -89,9 +110,12 @@ def usage_error():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] in ('-v', '--version'):
+        print(__version__)
+        sys.exit(0)
     params = get_params(sys.argv[1:])
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
-    discover_feather_df(**params)
+    discover_constraints_from_file(**params)
 

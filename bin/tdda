@@ -2,7 +2,7 @@
 
 if [ -z "$1" ]
 then
-    echo "Use tdda discover or tdda verify" 1>&2
+    echo "Use tdda discover or tdda verify or tdda -v" 1>&2
     exit 1
 fi
 
@@ -16,8 +16,11 @@ case $name in
     verify)
         exec python -m tdda.constraints.pdverify  "$@"
         ;;
+    -v|--version)
+        exec python -m tdda.constraints.pdverify  "-v"
+        ;;
     *)
-        echo "Use tdda discover or tdda verify" 1>&2
+        echo "Use tdda discover or tdda verify or tdda -v" 1>&2
         exit 1
         ;;
 esac

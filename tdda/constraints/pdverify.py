@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 
 """
-*pdverify*
-----------
+*tdda verify*
+-------------
 
-Verify TDDA constraints for DataFrames saved as :py:mod:`feather` datasets,
-against a JSON constraints file.
+Verify TDDA constraints for CSV files or DataFrames saved as
+:py:mod:`feather` datasets, against a JSON constraints file.
 
 Usage::
 
-    pdverify [FLAGS] df.feather [constraints.tdda]
+    tdda verify [FLAGS] input-file [constraints.tdda]
 
 or::
 
-    python -m tdda.constraints.pdverify [FLAGS] df.feather [constraints.tdda]
+    python -m tdda.constraints.pdverify [FLAGS] input-file [constraints.tdda]
 
 where
 
-  * *df.feather* is a :py:mod:`feather` file containing a DataFrame,
+  * *input-file* is either:
+        - a csv file
+        - a :py:mod:`feather` file containing a DataFrame,
+          with extension ``.feather``
 
   * *constraints.tdda*, if provided, is a JSON *.tdda* file
     constaining constraints. If no constraints file is provided,
-    a file with the same path as the feather file, a *.tdda* extension
+    a file with the same path as the input file, with a *.tdda* extension
     will be tried.
 
 Optional flags are:
@@ -32,6 +35,18 @@ Optional flags are:
                        Not yet implemented.
     -1, --oneperline   Report each constraint failure on a separate line.
                        Not yet implemented.
+
+If a CSV file is used, it will be processed by the Pandas CSV file reader
+with the following settings:
+
+ - index_col             is ``None``
+ - infer_datetime_format is ``True``
+ - quotechar             is ``"``
+ - quoting               is :py:const:`csv.QUOTE_MINIMAL`
+ - escapechar            is ``\\`` (backslash)
+ - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
+ - keep_default_na       is ``False``
+
 """
 
 from __future__ import division
@@ -43,8 +58,11 @@ import sys
 import pandas as pd
 import numpy as np
 
-USAGE = __doc__.replace('Usage::', 'Usage:').replace(':py:mod:`feather`',
-                                                     'feather')
+
+USAGE = (__doc__.replace('Usage::', 'Usage:')
+                .replace(':py:mod:`feather`', 'feather')
+                .replace(':py:const:`csv.QUOTE_MINIMAL`',
+                         'csv.QUOTE_MINIMAL'))
 
 try:
     from pmmif import featherpmm
@@ -58,16 +76,20 @@ except ImportError:
               file=sys.stderr)
         raise
 
+from tdda import __version__
 from tdda.constraints.pdconstraints import verify_df
+from tdda.referencetest.checkpandas import default_csv_loader
 
 
-def verify_feather_df(df_path, constraints_path, **kwargs):
+def verify_df_from_file(df_path, constraints_path, **kwargs):
     df = load_df(df_path)
     print(verify_df(df, constraints_path, **kwargs))
 
 
 def load_df(path):
-    if featherpmm:
+    if os.path.splitext(path)[1] != '.feather':
+        return default_csv_loader(path)
+    elif featherpmm:
         ds = featherpmm.read_dataframe(path)
         return ds.df
     else:
@@ -108,9 +130,12 @@ def usage_error():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] in ('-v', '--version'):
+        print(__version__)
+        sys.exit(0)
     params = get_params(sys.argv[1:])
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
-    verify_feather_df(**params)
+    verify_df_from_file(**params)
 

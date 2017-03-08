@@ -4,8 +4,8 @@ Constraints
 .. automodule:: tdda.constraints
     :members:
 
-Tools for DataFrames in Feather files
--------------------------------------
+Tools for CSV Files and DataFrames in Feather files
+---------------------------------------------------
 
 .. automodule:: tdda.constraints.pddiscover
     :members:
@@ -13,8 +13,8 @@ Tools for DataFrames in Feather files
 .. automodule:: tdda.constraints.pdverify
     :members:
 
-Constraints in Pandas DataFrames
---------------------------------
+Constraints in CSV Files and Pandas DataFrames
+----------------------------------------------
 
 .. automodule:: tdda.constraints.pdconstraints
     :members:

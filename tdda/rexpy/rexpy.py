@@ -39,6 +39,8 @@ FLAGS are optional flags. Currently::
                     Mostly useful for matching identifiers.
                     Also --hyphen or --dash.
 
+  -v, --version     Print the version number.
+
 Python API
 ----------
 
@@ -60,6 +62,8 @@ import sys
 
 from collections import Counter, defaultdict, namedtuple, OrderedDict
 from pprint import pprint
+
+from tdda import __version__
 
 str_type = unicode if sys.version_info.major < 3 else str
 bytes_type = str if sys.version_info.major < 3 else bytes
@@ -1582,6 +1586,9 @@ def get_params(args):
                 params['extra_letters'] = (params['extra_letters'] or '') + '.'
             elif a in ('-m', '--minus', '--hyphen', '--dash'):
                 params['extra_letters'] = (params['extra_letters'] or '') + '-'
+            elif a in ('-v', '--version'):
+                print(__version__)
+                sys.exit(0)
             elif a in ('-?', '--help'):
                 print(USAGE)
                 sys.exit(0)

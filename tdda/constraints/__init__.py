@@ -1,12 +1,13 @@
 """
 The :py:mod:`~tdda.constraints` module provides support for
 constraint generation and verification for datasets, including
-Pandas DataFrames.
+CSV files and Pandas DataFrames.
 
 The module includes:
 
     - Tools :py:mod:`~tdda.constraints.pddiscover` for discovering constraints
-      in Pandas DataFrames saved in :py:mod:`feather` files,
+      in Pandas DataFrames saved in :py:mod:`feather` files or read from
+      CSV files,
       and :py:mod:`~tdda.constraints.pdverify` for validating :py:mod:`feather`
       files against previously-generated sets of constraints.
     - A Python library :py:mod:`~tdda.constraints.pdconstraints` containing

@@ -611,15 +611,23 @@ def discover_field_constraints(field):
                     max_length_constraint = MaxLengthConstraint(M)
             else:
                 # Non-string fields all potentially get min and max values
-                m = field.min().item()
-                M = field.max().item()
+                if type_ == 'date':
+                    m = field.min()
+                    M = field.max()
+                    if pd.notnull(m):
+                        m = m.to_pydatetime()
+                    if pd.notnull(M):
+                        M = M.to_pydatetime()
+                else:
+                    m = field.min().item()
+                    M = field.max().item()
                 if pd.notnull(m):
                     min_constraint = MinConstraint(m)
                 if pd.notnull(M):
                     max_constraint = MaxConstraint(M)
 
-                # Non-date fields potentiall get a sign constraint too.
-                if min_constraint and max_constraint and type != 'date':
+                # Non-date fields potentially get a sign constraint too.
+                if min_constraint and max_constraint and type_ != 'date':
                     if m == M == 0:
                         sign_constraint = SignConstraint('zero')
                     elif m >= 0:
@@ -630,7 +638,7 @@ def discover_field_constraints(field):
                         sign_constraint = SignConstraint(sign)
                     # else:
                         # mixed
-                elif pd.isnull(m) and type != 'date':
+                elif pd.isnull(m) and type_ != 'date':
                     sign_constraint = SignConstraint('null')
 
         if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
