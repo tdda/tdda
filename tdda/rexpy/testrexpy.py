@@ -629,16 +629,26 @@ class TestHelperMethods(unittest.TestCase):
 
 
 class TestExtraction(unittest.TestCase):
+
+    def check_result(self, result, rexes, examples):
+        self.assertEqual(result, rexes)
+        compiled = [re.compile(r) for r in rexes]
+        self.assertEqual(all(any(re.match(rex, x) for rex in compiled)
+                             for x in examples if x),
+                         True)
+
     def test_re_pqs_id(self):
         # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
-        self.assertEqual(extract(iids),
-                         [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$'])
+        rexes = [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$']
+        x = extract(iids)
+        self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
-        self.assertEqual(extract(iids, extra_letters='-'),
-                         [r'^\s*\d{2,3}[A-Z]{4}\d{3,4}\s*$'])
+        rexes = [r'^\s*\d{2,3}[A-Z\-][A-Z]{2}[A-Z\-]\d{3,4}\s*$']
+        x = extract(iids, extra_letters='-')
+        self.check_result(x, rexes, iids)
         # Test result has changed with improved behaviour.
         # Now us spots that the base sequence is the same
         # Previously this found this:
@@ -646,23 +656,27 @@ class TestExtraction(unittest.TestCase):
 
     def test_re_pqs_id_with_dash2(self):
         iids = ['123-AB-321', ' AB-1B-4A21', '', None, '321-BA-1A23']
-        self.assertEqual(extract(iids, extra_letters='-'),
-                         [r'^\s*[A-Z0-9\-]{10,11}\s*$'])
+        rexes = [r'^\s*[A-Z0-9\-]{10,11}\s*$']
+        x = extract(iids, extra_letters='-')
+        self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscore(self):
         iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
-        self.assertEqual(extract(iids, extra_letters='_'),
-                         [r'^[A-Za-z0-9\_]+$'])
+        rexes = [r'^[A-Za-z0-9\_]+$']
+        x = extract(iids, extra_letters='_')
+        self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscores2(self):
         iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
-        self.assertEqual(extract(iids, extra_letters='_-'),
-                         [r'^[A-Za-z0-9\_]+$'])
+        rexes = [r'^[A-Za-z0-9\_]+$']
+        x = extract(iids, extra_letters='_-')
+        self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscores3(self):
         iids = ['123-AB_321', 'AB_1B-4A21', '', None, '321_BA_1A23ab2rj']
-        self.assertEqual(extract(iids, extra_letters='_-.'),
-                         [r'^[A-Za-z0-9\_\-]+$'])
+        rexes = [r'^[A-Za-z0-9\_\-]+$']
+        x = extract(iids, extra_letters='_-.')
+        self.check_result(x, rexes, iids)
 
     def test_re_uuid(self):
         uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
@@ -673,10 +687,12 @@ class TestExtraction(unittest.TestCase):
                  'aac65b99-92ff-11e6-b97d-b8f6b118f191',
                  '6fa459ea-ee8a-3ca4-894e-db77e160355e',
                  '886313e1-3b8a-5372-9b90-0c9aee199e5d']
-        self.assertEqual(extract(uuids),
-                         ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
-                          '[0-9a-f]{4}\\-[0-9a-f]{12}$'])
+        rexes = ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
+                 '[0-9a-f]{4}\\-[0-9a-f]{12}$']
+        x = extract(uuids)
+        self.check_result(x, rexes, uuids)
 
+    def test_re_uuid4(self):
         uuid4s = ['2ffb8eaa-dd75-41c2-aca6-0444914b8713',
                   'f69c5651-0b97-4909-b896-8ef0891f81ff',
                   '13f984fe-65db-4646-99d4-a93c06f78472',
@@ -684,10 +700,11 @@ class TestExtraction(unittest.TestCase):
                   '2d4429df-9a80-4581-9565-27880ce171b0',
                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
 
-        self.assertEqual(extract(uuid4s),       # Not refining down yet
-                         [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
-                          r'[0-9a-f]{4}\-[0-9a-f]{12}$'])
+        rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
+                 r'[0-9a-f]{4}\-[0-9a-f]{12}$']
 
+        x = extract(uuid4s)       # Not refining down yet
+        self.check_result(x, rexes, uuid4s)
 
     tels1 = [
         '(0131) 496 0091',
@@ -701,8 +718,8 @@ class TestExtraction(unittest.TestCase):
         '(0141) 496 0324'
     ]
     def test_tels1(self):
-        self.assertEqual(extract(self.tels1),
-                         [r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'])
+        x = extract(self.tels1)
+        self.check_result(x, [r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'], self.tels1)
 
 
     tels2 = [
@@ -717,9 +734,10 @@ class TestExtraction(unittest.TestCase):
         '(0141) 496 0324',
     ]
     def test_tels2(self):
-        self.assertEqual(set(extract(self.tels2)),
-                         set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
-                              r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$']))
+        x = set(extract(self.tels2))
+        rexes = set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
+                     r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'])
+        self.check_result(x, rexes, self.tels2)
 
     def test_coverage_tels2(self):
         x = Extractor(self.tels2)
@@ -730,6 +748,9 @@ class TestExtraction(unittest.TestCase):
                             r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 5,
                             r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
                          })
+        expected = set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
+                        r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'])
+        self.check_result(set(rex), expected, self.tels2)
 
     def test_incremental_coverage_tels2(self):
         x = Extractor(self.tels2)
@@ -783,9 +804,8 @@ class TestExtraction(unittest.TestCase):
                            (u'[\\-\\.]', False),
                             (u'\\d{4}', True),
                           ]])
-        self.assertEqual(r.results.rex,
-                         [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'])
-
+        self.check_result(r.results.rex, [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'],
+                          self.tels3)
 
     tels4 = [
         '222-678-8834',
@@ -794,9 +814,8 @@ class TestExtraction(unittest.TestCase):
         '191-777-2043'
     ]
     def test_tels4(self):
-#        print(extract(self.tels4))
-        self.assertEqual(extract(self.tels4),
-                         [r'^\d{3}\-\d{3}\-\d{4}$'])
+        x = extract(self.tels4)
+        self.check_result(x, [r'^\d{3}\-\d{3}\-\d{4}$'], self.tels4)
 
 
     tels5 = [
@@ -811,24 +830,27 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_tels5(self):
 #        print(Extractor(self.tels5))
-        self.assertEqual(extract(self.tels5), [
+        x = extract(self.tels5)
+        rexes = [
             r'^\d{3}\ \d{3}\ \d{4}$',
             r'^\d{3}\-\d{3}\-\d{4}$',
             r'^1\ \d{3}\ \d{3}\ \d{4}$',
             r'^\(\d{3}\)\ \d{3}\ \d{4}$',
-        ])
+        ]
+        self.check_result(x, rexes, self.tels5)
 
     def test_tels_1to5(self):
         tels = self.tels1 + self.tels2 + self.tels3 + self.tels4 + self.tels5
 #        print(Extractor(tels, tag=True))
-        self.assertEqual(extract(tels), [
+        x = extract(tels)
+        rexes = [
             r'^\d{3}\ \d{3}\ \d{4}$',
             r'^\d{3,4}[\-\.]\d{3}[\-\.]\d{4}$',
             r'^1\ \d{3}\ \d{3}\ \d{4}$',
             r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$',
             r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
-        ])
-
+        ]
+        self.check_result(x, rexes, tels)
 
     urls1 = [
         'http://www.stochasticsolutions.com/',
