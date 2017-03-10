@@ -113,8 +113,8 @@ class FilesComparison(object):
                 ignore_substrings = ignore_substrings or []
                 ignore_patterns = ignore_patterns or []
                 anchored_patterns = [('' if p.startswith('^') else '^(.*)')
-                                       + p
-                                       + ('' if p.endswith('$') else '(.*)$')
+                                      + p
+                                      + ('' if p.endswith('$') else '(.*)$')
                                      for p in ignore_patterns]
                 cPatterns = [re.compile(p) for p in anchored_patterns]
                 if any(cp.groups > 3 for cp in cPatterns):
@@ -135,23 +135,28 @@ class FilesComparison(object):
                                     # matched an anchored expression
                                     break
                                 lhs = mActual.group(1) + mActual.group(3)
-                                rhs = mExpected.group(1) + mExpected.group(3)
+                                rhs = (mExpected.group(1)
+                                       + mExpected.group(3))
                                 if lhs == rhs:
                                     actual[i] = (mActual.group(1) + '...'
                                                  + mActual.group(3))
-                                    expected[i] = (mExpected.group(1) + '...'
+                                    expected[i] = (mExpected.group(1)
+                                                   + '...'
                                                    + mExpected.group(3))
                                     break
                         else:
                             # difference can't be ignored
                             if first_error is None:
                                 first_error = (
-                                    '%d line%s different, starting at line %d'
+                                    '%d line%s different, starting at line'
+                                    ' %d'
                                     % (ndiffs,
-                                       's are' if ndiffs != 1 else ' is', i+1))
+                                       's are' if ndiffs != 1
+                                               else ' is', i+1))
                             if len(failure_cases) < max_permutation_cases:
                                 failure_cases.append((i,
-                                                      actual[i], expected[i]))
+                                                      actual[i],
+                                                      expected[i]))
                             else:
                                 break
                     # ignored a line, so there is one fewer to report
@@ -175,7 +180,8 @@ class FilesComparison(object):
     def check_string_against_file(self, actual, expected_path,
                                   actual_path=None,
                                   lstrip=False, rstrip=False,
-                                  ignore_substrings=None, ignore_patterns=None,
+                                  ignore_substrings=None,
+                                  ignore_patterns=None,
                                   preprocess=None, max_permutation_cases=0,
                                   msgs=None):
         """
@@ -381,7 +387,8 @@ class FilesComparison(object):
             modifiedRef = os.path.join(self.tmp_dir,
                                        'expected-' + actualFilename)
             with open(modifiedActual, 'w') as f:
-                f.write('\n'.join(actual))
+                f.write(actual if type(actual) == str
+                        else '\n'.join(actual))
             with open(modifiedRef, 'w') as f:
                 f.write('\n'.join(expected))
             self.info(msgs, 'Compare preprocessed with "%s %s %s".'
