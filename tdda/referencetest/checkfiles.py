@@ -398,7 +398,8 @@ class FilesComparison(object):
             tmpActualFilename = os.path.join(self.tmp_dir,
                                             'actual-' + expectedFilename)
             with open(tmpActualFilename, 'w') as f:
-                f.write('\n'.join(actual))
+                f.write(actual if type(actual) == str
+                        else '\n'.join(actual))
             self.info(msgs, 'Compare with "%s %s %s".'
                             % (diffcmd, tmpActualFilename, expected_path))
 
