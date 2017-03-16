@@ -635,8 +635,8 @@ class ReferenceTest(object):
     def assertStringCorrect(self, string, ref_path, kind=None,
                             lstrip=False, rstrip=False,
                             ignore_substrings=None,
-                            ignore_patterns=None, preprocess=None,
-                            max_permutation_cases=0):
+                            ignore_patterns=None, ignore_lines=None,
+                            preprocess=None, max_permutation_cases=0):
         """
         Check that an in-memory string matches the contents from a reference
         text file.
@@ -677,6 +677,13 @@ class ReferenceTest(object):
                 should only include explicit anchors if they
                 need to refer to the whole line.
 
+            *ignore_lines*
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                completely removed before carrying out the
+                comparison. This is the means by which you
+                would exclude 'optional' content.
+
             *preprocess*:
                 An optional function that takes a list of
                 strings and preprocesses it in some way; this
@@ -704,6 +711,7 @@ class ReferenceTest(object):
                                                      rstrip=rstrip,
                                                      ignore_substrings=ilc,
                                                      ignore_patterns=ip,
+                                                     ignore_lines=ignore_lines,
                                                      preprocess=preprocess,
                                                      max_permutation_cases=mpc)
             (failures, msgs) = r
@@ -712,8 +720,8 @@ class ReferenceTest(object):
     def assertFileCorrect(self, actual_path, ref_path, kind=None,
                           lstrip=False, rstrip=False,
                           ignore_substrings=None,
-                          ignore_patterns=None, preprocess=None,
-                          max_permutation_cases=0):
+                          ignore_patterns=None, ignore_lines=None,
+                          preprocess=None, max_permutation_cases=0):
         """
         Check that a file matches the contents from a reference text file.
 
@@ -751,6 +759,13 @@ class ReferenceTest(object):
                 should only include explicit anchors if they
                 need to refer to the whole line.
 
+            *ignore_lines*
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                completely removed before carrying out the
+                comparison. This is the means by which you
+                would exclude 'optional' content.
+
             *preprocess*:
                 An optional function that takes a list of
                 strings and preprocesses it in some way; this
@@ -777,6 +792,7 @@ class ReferenceTest(object):
                                       lstrip=lstrip, rstrip=rstrip,
                                       ignore_substrings=ignore_substrings,
                                       ignore_patterns=ignore_patterns,
+                                      ignore_lines=ignore_lines,
                                       preprocess=preprocess,
                                       max_permutation_cases=mpc)
             (failures, msgs) = r
@@ -785,8 +801,8 @@ class ReferenceTest(object):
     def assertFilesCorrect(self, actual_paths, ref_paths, kind=None,
                            lstrip=False, rstrip=False,
                            ignore_substrings=None,
-                           ignore_patterns=None, preprocess=None,
-                           max_permutation_cases=0):
+                           ignore_patterns=None, ignore_lines=None,
+                           preprocess=None, max_permutation_cases=0):
         """
         Check that a collection of files matche the contents from
         matching collection of reference text files.
@@ -826,6 +842,13 @@ class ReferenceTest(object):
                 should only include explicit anchors if they
                 need to refer to the whole line.
 
+            *ignore_lines*
+                An optional list of substrings; lines
+                containing any of these substrings will be
+                completely removed before carrying out the
+                comparison. This is the means by which you
+                would exclude 'optional' content.
+
             *preprocess*:
                 An optional function that takes a list of
                 strings and preprocesses it in some way; this
@@ -854,6 +877,7 @@ class ReferenceTest(object):
                                        lstrip=lstrip, rstrip=rstrip,
                                        ignore_substrings=ignore_substrings,
                                        ignore_patterns=ignore_patterns,
+                                       ignore_lines=ignore_lines,
                                        preprocess=preprocess,
                                        max_permutation_cases=mpc)
             (failures, msgs) = r

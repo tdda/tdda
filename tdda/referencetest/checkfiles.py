@@ -32,6 +32,7 @@ class FilesComparison(object):
                       actual_path=None, expected_path=None,
                       lstrip=False, rstrip=False,
                       ignore_substrings=None, ignore_patterns=None,
+                      ignore_lines=None,
                       preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
@@ -67,6 +68,12 @@ class FilesComparison(object):
                                 must not contain parenthesised groups, and
                                 should only include explicit anchors if they
                                 need refer to the whole line.
+            *ignore_lines*
+                                is an optional list of substrings; lines
+                                containing any of these substrings will be
+                                completely removed before carrying out the
+                                comparison. This is the means by which you
+                                would exclude 'optional' content.
             *preprocess*
                                 is an optional function that takes a list of
                                 strings and preprocesses it in some way; this
@@ -103,6 +110,12 @@ class FilesComparison(object):
             actual = actual[:-1]
         if expected and len(expected[-1]) == 0:
             expected = expected[:-1]
+
+        if ignore_lines:
+            actual = [a for a in actual
+                      if not any(i in a for i in ignore_lines)]
+            expected = [a for a in expected
+                        if not any(i in a for i in ignore_lines)]
 
         if len(actual) == len(expected):
             normalize = self.normalize_function(lstrip, rstrip)
@@ -182,6 +195,7 @@ class FilesComparison(object):
                                   lstrip=False, rstrip=False,
                                   ignore_substrings=None,
                                   ignore_patterns=None,
+                                  ignore_lines=None,
                                   preprocess=None, max_permutation_cases=0,
                                   msgs=None):
         """
@@ -221,6 +235,7 @@ class FilesComparison(object):
                                           lstrip=lstrip, rstrip=rstrip,
                                           ignore_substrings=ignore_substrings,
                                           ignore_patterns=ignore_patterns,
+                                          ignore_lines=ignore_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=
                                               max_permutation_cases,
@@ -236,6 +251,7 @@ class FilesComparison(object):
     def check_file(self, actual_path, expected_path,
                    lstrip=False, rstrip=False,
                    ignore_substrings=None, ignore_patterns=None,
+                   ignore_lines=None,
                    preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Check a pair of files, line by line, with optional
@@ -275,6 +291,7 @@ class FilesComparison(object):
                                           lstrip=lstrip, rstrip=rstrip,
                                           ignore_substrings=ignore_substrings,
                                           ignore_patterns=ignore_patterns,
+                                          ignore_lines=ignore_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=
                                               max_permutation_cases,
@@ -290,6 +307,7 @@ class FilesComparison(object):
     def check_files(self, actual_paths, expected_paths,
                     lstrip=False, rstrip=False,
                     ignore_substrings=None, ignore_patterns=None,
+                    ignore_lines=None,
                     preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare a list of files against a list of reference files.
@@ -310,6 +328,7 @@ class FilesComparison(object):
                 r = self.check_file(actual_path, expected_path,
                                     ignore_substrings=ignore_substrings,
                                     ignore_patterns=ignore_patterns,
+                                    ignore_lines=ignore_lines,
                                     preprocess=preprocess,
                                     lstrip=lstrip, rstrip=rstrip,
                                     max_permutation_cases=max_permutation_cases,
