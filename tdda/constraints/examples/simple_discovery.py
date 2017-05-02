@@ -19,7 +19,7 @@ import pandas as pd
 
 from tdda.constraints.pdconstraints import discover_constraints
 
-OUTDIR = '/tmp'
+OUTDIR = '.'
 OUTPATH = os.path.join(OUTDIR, 'example_constraints.tdda')
 
 def example_constraint_generation(path=OUTPATH):
