@@ -1,16 +1,15 @@
+# Examples of using tdda.refererencetest.
 
-Examples of using tdda.refererencetest.
-
-To step through these examples, you should first take a copy of the
-entire `examples` subdirectory, and put it somewhere else. You'll be
-making modifications to it, to see the affect of change, and you don't
-want to be modifying the originals.
+**If you have a source distribution of the tdda library (typically cloned
+from Github), you should first copy the directory containing this README
+file to somewhere else so that you do not modify the original.**
 
 
 Scenario:
 
     You have a python module called `generators.py`, which is responsible
-    for generating some HTML.
+    for generating some two different HTML pages. (You can look at these
+    in `reference/file_result.html` and `reference/string_result.html`.)
 
     Testing that it's generated the correct HTML isn't hugely easy just
     using the standard unit-testing tools on their own. You're continually
@@ -20,19 +19,12 @@ Scenario:
     do need to be checked.
 
 
-This examples directory contains the generators.py file, and also a unit-test
-module, for testing it using tdda.referencetest. In fact there are two test
-modules - one using the standard unittest framework, and the other using the
+This directory contains the generators.py file, and two test modules
+--- one using the standard unittest framework, and the other using the
 www.pytest.org pytest framework.
 
 
 Step 1:
-
-    Take a *copy* of the entire examples directory, if you haven't already
-    done so. All subsequent steps should be carried out in that copy, not
-    in the original source.
-
-Step 2:
 
     Run the tests using the initial unmodified version of generators.py.
 
@@ -42,15 +34,18 @@ Step 2:
 
     or:
 
-        pytest pytest/test_using_referencepytest.py
+        cd pytest
+        pytest
+        cd ..
 
-    The tests should all pass.
+    The tests should pass. (There are two of them.)
 
-Step 3:
+Step 2:
 
-    Make a substantive change to the generation code in the generate_string
-    function in `generators.py` to change the HTML output. See doc strings
-    inside to see how to make the tests fail.
+    Make a one or more changes to the generation code in the generate_string
+    function in `generators.py` to change the HTML output.
+    Specifically, try changing the title in <h1> ... </h1>
+    in some way (e.g. to upper case) in the generate_string function..
 
     The test should then fail and suggest a diff command to run
     to see the difference.
@@ -69,7 +64,7 @@ Step 3:
 
     Running the tests should now pass again.
 
-Step 4:
+Step 3:
 
     Make a non-substantive change (such as changing the version numbers)
     in generators.py, and run the tests again (without the -W option; you're

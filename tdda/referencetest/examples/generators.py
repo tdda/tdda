@@ -33,16 +33,17 @@ def generate_string():
     Copyright (c) Stochastic Solutions, 2016
     Version 1.0.0
     -->
-<meta charset="UTF-8"/>
-<style type="text/css">
-body {font-family: Palatino, "Palatino Linotype", Times; text-align: center}
-h1 {font-size: large; text-align: center;}
-div {padding: 12px 0 12px 0;}
-</style>
-<title>
-  Python-Generated HTML Example for tdda.referencetest
-</title>
-</head>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+      body {font-family: Palatino, "Palatino Linotype", Times;
+            text-align: center}
+      h1 {font-size: large; text-align: center;}
+      div {padding: 12px 0 12px 0;}
+    </style>
+    <title>
+      Python-Generated HTML Example for tdda.referencetest
+    </title>
+  </head>
 <body>
   <h1>Python-Generated HTML Example for tdda.referencetest</h1>
   <div>
@@ -66,16 +67,17 @@ def generate_file(path):
     Copyright (c) Stochastic Solutions, 2016
     Version 1.0.0
     -->
-<meta charset="UTF-8"/>
-<style type="text/css">
-body {font-family: Palatino, "Palatino Linotype", Times; text-align: center;}
-h1 {font-size: large; text-align: center;}
-div {padding-top: 12px; padding-bottom: 12px;}
-</style>
- <title>
-  Python-Genel./rated HTML Example for tdda.referencetest
-</title>
-</head>
+    <meta charset="UTF-8"/>
+    <style type="text/css">
+      body {font-family: Palatino, "Palatino Linotype", Times;
+            text-align: center;}
+      h1 {font-size: large; text-align: center;}
+      div {padding-top: 12px; padding-bottom: 12px;}
+    </style>
+    <title>
+      Python-Generated HTML Example for tdda.referencetest
+    </title>
+  </head>
 <body>
   <h1>Python-Generated HTML Example for tdda.referencetest</h1>
   <div>
