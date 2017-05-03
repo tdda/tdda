@@ -50,7 +50,7 @@ class TestStructuredDataExample(ReferenceTestCase):
         df = generate_dataframe(nrows=10, precision=3)
         columns = self.all_fields_except(['random'])
         self.assertDataFrameCorrect(df, 'dataframe_result.csv',
-                                    check_data=columns)
+                                    check_data=columns, check_types=columns)
 
     def testExampleCSVGeneration(self):
         """
@@ -65,7 +65,7 @@ class TestStructuredDataExample(ReferenceTestCase):
         outpath = os.path.join(self.tmp_dir, 'csv_result.csv')
         columns = self.all_fields_except(['random'])
         self.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
-                                  check_data=columns)
+                                  check_data=columns, check_types=columns)
 
     def testExampleMultipleCSVGeneration(self):
         """

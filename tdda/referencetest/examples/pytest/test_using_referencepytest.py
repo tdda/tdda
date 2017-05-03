@@ -44,7 +44,7 @@ def testExampleDataFrameGeneration(ref):
     df = generate_dataframe(nrows=10, precision=3)
     columns = ref.all_fields_except(['random'])
     ref.assertDataFrameCorrect(df, 'dataframe_result.csv',
-                               check_data=columns)
+                               check_data=columns, check_types=columns)
 
 
 @pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
@@ -62,7 +62,7 @@ def testExampleCSVGeneration(ref):
     df.to_csv(outpath, index=False)
     columns = ref.all_fields_except(['random'])
     ref.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
-                             check_data=columns)
+                             check_data=columns, check_types=columns)
 
 
 @pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
