@@ -190,6 +190,18 @@ class ReferenceTest(object):
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
 
+    def all_fields_except(self, exclusions):
+        """
+        Helper function, for using with *check_data*, *check_types* and
+        *check_order* parameters to assertion functions for Pandas DataFrames.
+
+        It returns the names of all of the fields in the DataFrame being
+        checked, apart from the ones given.
+
+        *exclusions* is a list of field names.
+        """
+        return self.pandas.all_fields_except(exclusions)
+
     def set_data_location(self, location, kind=None):
         """
         Declare the filesystem location for reference files of a
@@ -404,18 +416,18 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_csv, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_dataset(df, expected_path)
         else:
             ref_df = self.pandas.load_csv(expected_path, loader=csv_read_fn)
-            self.assertDatasetsEqual(df, ref_df,
-                                     actual_path=actual_path,
-                                     expected_path=expected_path,
-                                     check_data=check_data,
-                                     check_types=check_types,
-                                     check_order=check_order,
-                                     condition=condition,
-                                     sortby=sortby,
-                                     precision=precision)
+            self.assertDataFramesEqual(df, ref_df,
+                                       actual_path=actual_path,
+                                       expected_path=expected_path,
+                                       check_data=check_data,
+                                       check_types=check_types,
+                                       check_order=check_order,
+                                       condition=condition,
+                                       sortby=sortby,
+                                       precision=precision)
 
     def assertCSVFileCorrect(self, actual_path, ref_csv,
                              kind='csv', csv_read_fn=None,
@@ -611,9 +623,11 @@ class ReferenceTest(object):
             *precision*:
                 (Optional) number of decimal places to use for
                 floating-point comparisons.  Default is not to perform
-                rounding.  *\*\*kwargs*: Any additional named
-                parameters are passed straight through to the
-                *csv_read_fn* function.
+                rounding.
+
+            *\*\*kwargs*:
+                Any additional named parameters are passed straight
+                through to the *csv_read_fn* function.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -927,6 +941,12 @@ class ReferenceTest(object):
         """
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
             self._write_reference_file(actual_path, reference_path)
+
+    def _write_reference_dataset(self, df, reference_path):
+        """
+        Internal method for regenerating reference data for a Pandas dataset
+        """
+        self.pandas.write_csv(df, reference_path)
 
     def _write_reference_result(self, result, reference_path):
         """

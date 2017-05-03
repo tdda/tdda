@@ -18,10 +18,33 @@ import sys
 import os
 import tempfile
 
+import pytest
+
 # ensure we can import the generators module in the directory above
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generators import generate_string, generate_file
+
+try:
+    from dataframes import generate_dataframe
+except ImportError:
+    generate_dataframe = None
+
+
+@pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
+def testExampleDataFrameGeneration(ref):
+    """
+    This test uses generate_dataframe() from dataframes.py to
+    generate a simple Pandas dataframe.
+
+    The test checks the dataframe is as expected, in terms of both
+    data content (the values) and metadata (the types, order, etc)
+    of the columns.
+    """
+    df = generate_dataframe(nrows=10, precision=3)
+    columns = ref.all_fields_except(['random'])
+    ref.assertDataFrameCorrect(df, 'dataframe_result.csv',
+                               check_data=columns)
 
 
 def testExampleStringGeneration(ref):
@@ -79,7 +102,7 @@ def testExampleFileGeneration(ref):
     and it should re-write the reference output to match your
     modified results.
     """
-    outdir = tempfile.gettempdir()
+    outdir = ref.tmp_dir
     outpath = os.path.join(outdir, 'file_result.html')
     generate_file(outpath)
     ref.assertFileCorrect(outpath, 'file_result.html',

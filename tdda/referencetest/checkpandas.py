@@ -379,6 +379,18 @@ class PandasComparison(object):
             self.info(msgs, 'Actual file %s' % os.path.normpath(actual_path))
         self.info(msgs, s)
 
+    def all_fields_except(self, exclusions):
+        """
+        Helper function, for using with *check_data*, *check_types* and
+        *check_order* parameters to assertion functions for Pandas DataFrames.
+
+        It returns the names of all of the fields in the DataFrame being
+        checked, apart from the ones given.
+
+        *exclusions* is a list of field names.
+        """
+        return lambda df: list(set(list(df)) - set(exclusions))
+
     def load_csv(self, csvfile, loader=None, **kwargs):
         """
         Function for constructing a pandas dataframe from a CSV file.
@@ -386,6 +398,15 @@ class PandasComparison(object):
         if loader is None:
             loader = default_csv_loader
         return loader(csvfile, **kwargs)
+
+    def write_csv(self, df, csvfile, writer=None, **kwargs):
+        """
+        Function for saving a Pandas DataFrame to a CSV file.
+        Used when regenerating DataFrame reference results.
+        """
+        if writer is None:
+            writer = default_csv_writer
+        writer(df, csvfile, **kwargs)
 
 
 def default_csv_loader(csvfile, **kwargs):
@@ -414,6 +435,17 @@ def default_csv_loader(csvfile, **kwargs):
     }
     options.update(kwargs)
     return pd.read_csv(csvfile, **options)
+
+
+def default_csv_writer(df, csvfile, **kwargs):
+    """
+    Default function for writing a csv file.
+    """
+    options = {
+        'index': False
+    }
+    options.update(kwargs)
+    df.to_csv(csvfile, **options)
 
 
 def resolve_option_flag(flag, df):

@@ -17,21 +17,43 @@ from __future__ import unicode_literals
 import sys
 import os
 import tempfile
+import unittest
 
 from tdda.referencetest import ReferenceTestCase
 
 # ensure we can import the generators module in the directory above
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# directory where reference results are kept
+reference_data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                  '..', 'reference')
+
 from generators import generate_string, generate_file
 
+try:
+    from dataframes import generate_dataframe
+except ImportError:
+    generate_dataframe = None
 
-class TestExample(ReferenceTestCase):
-    def __init__(self, *args, **kwargs):
-        ReferenceTestCase.__init__(self, *args, **kwargs)
-        this_dir = os.path.abspath(os.path.dirname(__file__))
-        self.set_data_location(os.path.join(this_dir, '..', 'reference'))
 
+@unittest.skipIf(generate_dataframe is None, 'Pandas tests skipped')
+class TestStructuredDataExample(ReferenceTestCase):
+    def testExampleDatafFameGeneration(self):
+        """
+        This test uses generate_dataframe() from dataframes.py to
+        generate a simple Pandas DataFrame.
+
+        The test checks the DataFrame is as expected, in terms of both
+        data content (the values) and metadata (the types, order, etc)
+        of the columns.
+        """
+        df = generate_dataframe(nrows=10, precision=3)
+        columns = self.all_fields_except(['random'])
+        self.assertDataFrameCorrect(df, 'dataframe_result.csv',
+                                    check_data=columns)
+
+
+class TestUnstructuredDataExample(ReferenceTestCase):
     def testExampleStringGeneration(self):
         """
         This test uses generate_string() from generators.py to generate
@@ -92,6 +114,10 @@ class TestExample(ReferenceTestCase):
         generate_file(outpath)
         self.assertFileCorrect(outpath, 'file_result.html',
                                ignore_patterns=['Copyright', 'Version'])
+
+
+TestStructuredDataExample.set_default_data_location(reference_data_dir)
+TestUnstructuredDataExample.set_default_data_location(reference_data_dir)
 
 
 if __name__ == '__main__':
