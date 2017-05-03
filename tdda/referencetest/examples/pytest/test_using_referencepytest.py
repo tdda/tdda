@@ -47,6 +47,47 @@ def testExampleDataFrameGeneration(ref):
                                check_data=columns)
 
 
+@pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
+def testExampleCSVGeneration(ref):
+    """
+    This test uses generate_dataframe() from dataframes.py to
+    generate a simple Pandas dataframe, and then saves it to a CSV file.
+
+    The test checks the generated CSV file is as expected, in terms of both
+    data content (the values) and metadata (the types, order, etc)
+    of the columns.
+    """
+    df = generate_dataframe(nrows=10, precision=3)
+    outpath = os.path.join(ref.tmp_dir, 'csv_result.csv')
+    df.to_csv(outpath, index=False)
+    columns = ref.all_fields_except(['random'])
+    ref.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
+                             check_data=columns)
+
+
+@pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
+def testExampleMultipleCSVGeneration(ref):
+    """
+    This test uses generate_dataframe() from dataframes.py to
+    generate two simple Pandas dataframe, and then saves each to a CSV
+    file.
+
+    The test checks the generated CSV files are as expected, in terms of
+    both data content (the values) and metadata (the types, order, etc)
+    of the columns.
+    """
+    df1 = generate_dataframe(nrows=10, precision=3)
+    df2 = generate_dataframe(nrows=20, precision=4)
+    outpath1 = os.path.join(ref.tmp_dir, 'csv_result1.csv')
+    outpath2 = os.path.join(ref.tmp_dir, 'csv_result2.csv')
+    df1.to_csv(outpath1, index=False)
+    df2.to_csv(outpath2, index=False)
+    columns = ref.all_fields_except(['random'])
+    ref.assertCSVFilesCorrect([outpath1, outpath2],
+                              ['dataframe_result.csv', 'dataframe_result2.csv'],
+                              check_data=columns)
+
+
 def testExampleStringGeneration(ref):
     """
     This test uses generate_string() from generators.py to generate

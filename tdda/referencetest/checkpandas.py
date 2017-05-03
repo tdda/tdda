@@ -284,7 +284,6 @@ class PandasComparison(object):
         Returns a tuple (failures, msgs), containing the number of failures,
         and a list of error messages.
         """
-
         ref_df = self.load_csv(expected_path, loader=loader, **kwargs)
         df = self.load_csv(actual_path, loader=loader, **kwargs)
         return self.check_dataframe(df, ref_df,
@@ -333,6 +332,8 @@ class PandasComparison(object):
         doesn't stop as soon as it hits the first error, it continues through
         right to the end.
         """
+        if msgs is None:
+            msgs = []
         failures = 0
         for (actual_path, expected_path) in zip(actual_paths, expected_paths):
             try:

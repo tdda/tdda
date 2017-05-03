@@ -529,6 +529,7 @@ class ReferenceTest(object):
             self._write_reference_file(actual_path, expected_path)
         else:
             r = self.pandas.check_csv_file(actual_path, expected_path,
+                                           check_data=check_data,
                                            check_types=check_types,
                                            check_order=check_order,
                                            condition=condition,
@@ -637,6 +638,7 @@ class ReferenceTest(object):
             self._write_reference_files(actual_paths, expected_paths)
         else:
             r = self.pandas.check_csv_files(actual_paths, expected_paths,
+                                            check_data=check_data,
                                             check_types=check_types,
                                             check_order=check_order,
                                             condition=condition,
@@ -940,7 +942,7 @@ class ReferenceTest(object):
         files.
         """
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
-            self._write_reference_file(actual_path, reference_path)
+            self._write_reference_file(actual_path, expected_path)
 
     def _write_reference_dataset(self, df, reference_path):
         """
