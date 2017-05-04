@@ -47,7 +47,7 @@ class TestStructuredDataExample(ReferenceTestCase):
         data content (the values) and metadata (the types, order, etc)
         of the columns.
         """
-        df = generate_dataframe(nrows=10, precision=3)
+        df = generate_dataframe()
         columns = self.all_fields_except(['random'])
         self.assertDataFrameCorrect(df, 'dataframe_result.csv',
                                     check_data=columns, check_types=columns)
@@ -61,8 +61,9 @@ class TestStructuredDataExample(ReferenceTestCase):
         data content (the values) and metadata (the types, order, etc)
         of the columns.
         """
-        df = generate_dataframe(nrows=10, precision=3)
         outpath = os.path.join(self.tmp_dir, 'csv_result.csv')
+        df = generate_dataframe()
+        df.to_csv(outpath, index=False)
         columns = self.all_fields_except(['random'])
         self.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
                                   check_data=columns, check_types=columns)
@@ -77,8 +78,8 @@ class TestStructuredDataExample(ReferenceTestCase):
         both data content (the values) and metadata (the types, order, etc)
         of the columns.
         """
-        df1 = generate_dataframe(nrows=10, precision=3)
-        df2 = generate_dataframe(nrows=20, precision=4)
+        df1 = generate_dataframe(nrows=10)
+        df2 = generate_dataframe(nrows=20)
         outpath1 = os.path.join(self.tmp_dir, 'csv_result1.csv')
         outpath2 = os.path.join(self.tmp_dir, 'csv_result2.csv')
         df1.to_csv(outpath1, index=False)
