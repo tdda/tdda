@@ -20,6 +20,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import datetime
+import re
 import sys
 
 from collections import OrderedDict
@@ -32,6 +33,7 @@ from tdda.constraints.base import (
     SIGNS,
     STANDARD_FIELD_CONSTRAINTS,
     verify,
+    sanitize,
     DatasetConstraints,
     FieldConstraints,
     Verification,
@@ -41,6 +43,7 @@ from tdda.constraints.base import (
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
 )
+DEBUG = True
 
 from tdda.rexpy import pdextract
 
@@ -81,6 +84,7 @@ class PandasConstraintVerifier:
             'max_nulls': self.verify_max_nulls_constraint,
             'no_duplicates': self.verify_no_duplicates_constraint,
             'allowed_values': self.verify_allowed_values_constraint,
+            'rex': self.verify_rex_constraint,
         }
 
     def verify_min_constraint(self, colname, constraint):
@@ -278,6 +282,32 @@ class PandasConstraintVerifier:
                                                       # counting them with
                                                       # .nunique()
         return len(violations) == 0
+
+    def verify_rex_constraint(self, colname, constraint):
+        """
+        Verify whether a given column satisfies a given regular
+        expression constraint (by matching at least one of the regular
+        expressions given).
+        """
+        rexes = constraint.value
+        if rexes is None:      # a null value is not considered
+            return True                 # to be an active constraint,
+                                        # so is always satisfied
+        rexes = [re.compile(r) for r in rexes]
+        nRex = len(rexes)
+        strings = [sanitize(s) for s in self.df[colname].dropna().unique()]
+
+        for s in strings:
+            matched = False
+            for r in rexes:
+                if re.match(r, s):
+                    matched = True
+                    break
+            if not matched:
+                if DEBUG:
+                    print('*** Unmatched string: "%s"' % s)
+                return False  # At least one string didn't match
+        return True
 
     def fuzzy_greater_than(self, a, b):
         """

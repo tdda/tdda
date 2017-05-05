@@ -18,7 +18,7 @@ from collections import OrderedDict
 PRECISIONS = ('open', 'closed', 'fuzzy')
 STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
                               'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values')
+                              'allowed_values', 'rex')
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
          'zero', 'null')
