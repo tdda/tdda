@@ -39,8 +39,10 @@ from tdda.constraints.base import (
     MinConstraint, MaxConstraint, SignConstraint,
     MinLengthConstraint, MaxLengthConstraint,
     NoDuplicatesConstraint, MaxNullsConstraint,
-    AllowedValuesConstraint,
+    AllowedValuesConstraint, RexConstraint,
 )
+
+from tdda.rexpy import pdextract
 
 TYPE_CHECKING_OPTIONS = ('strict', 'sloppy')
 DEFAULT_TYPE_CHECKING = 'sloppy'
@@ -550,7 +552,7 @@ def tdda_type(x):
     return 'other'
 
 
-def discover_field_constraints(field):
+def discover_field_constraints(field, inc_rex=True):
     """
     Discover constraints for a single field (column) from a Pandas DataFrame.
 
@@ -559,6 +561,9 @@ def discover_field_constraints(field):
         *field*:
             a single field (column; Series) object, usually from
             a Pandas DataFrame.
+
+    inc_rex: if the field is of type string, and inc_rex is True,
+             a regular expression (rex) constraint will be generated.
 
     Returns:
 
@@ -571,6 +576,7 @@ def discover_field_constraints(field):
     min_length_constraint = max_length_constraint = None
     sign_constraint = no_duplicates_constraint = None
     max_nulls_constraint = allowed_values_constraint = None
+    rex_constraint = None
 
     type_ = tdda_type(field)
     if type_ == 'other':
@@ -644,12 +650,16 @@ def discover_field_constraints(field):
         if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
             no_duplicates_constraint = NoDuplicatesConstraint()
 
+    if type_ == 'string' and inc_rex:
+        rex_constraint = RexConstraint(pdextract(field))
+
     constraints = [c for c in [type_constraint,
                                min_constraint, max_constraint,
                                min_length_constraint, max_length_constraint,
                                sign_constraint, max_nulls_constraint,
                                no_duplicates_constraint,
-                               allowed_values_constraint]
+                               allowed_values_constraint,
+                               rex_constraint]
                      if c is not None]
     return FieldConstraints(field.name, constraints)
 

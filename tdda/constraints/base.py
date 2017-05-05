@@ -438,6 +438,15 @@ class MaxLengthConstraint(Constraint):
         Constraint.__init__(self, 'max_length', value)
 
 
+class RexConstraint(Constraint):
+    """
+    Constraint restricting a string field to match (at least) one of
+    the regular expressions in a list given.
+    """
+    def __init__(self, value):
+        Constraint.__init__(self, 'rex', [sanitize(v) for v in value])
+
+
 #
 # MULTI-FIELD CONSTRAINTS
 #
