@@ -126,14 +126,19 @@ class DatasetConstraints(object):
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
 
+    def to_dict(self):
+        """
+        Converts the constraints in this object to a dictionary.
+        """
+        return {'fields': {f: v.to_dict_value()
+                           for f, v in self.fields.items()}}
+
     def to_json(self):
         """
-        Converts the constraints in this dictionary to JSON.
+        Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps({'fields': {f: v.to_dict_value()
-                                         for f, v in self.fields.items()}},
-                                         indent=4) + '\n'
+        return json.dumps(self.to_dict(), indent=4) + '\n'
 
 
 class Fields(TDDAObject):
@@ -501,12 +506,14 @@ class Verification(object):
     Container for the result of a constraint verification for a dataset
     in the context of a given set of constraints.
     """
-    def __init__(self, constraints, report='all', one_per_line=False):
+    def __init__(self, constraints, report='all', one_per_line=False,
+                 safe=False):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
         self.report = report
         self.one_per_line = one_per_line
+        self.safe = safe
         assert report in ('all', 'fields', 'constraints')
 
     def __str__(self):
@@ -527,7 +534,7 @@ class Verification(object):
                            % (field,
                               plural(ver.failures, 'failure'),
                               plural(ver.passes, 'pass', 'es'),
-                             '  '.join('%s %s' % (c, tcn(s))
+                              '  '.join('%s %s' % (c, tcn(s, self.safe))
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
@@ -598,6 +605,9 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
 
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.
+
+                            report, one_per_line and safe can all be set
+                            this way.
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
@@ -623,12 +633,13 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
     return results
 
 
-def tcn(sat):
+def tcn(sat, safe=False):
     """
     Convert True/False/None value to the appropriate tick, cross
     or nothing mark for printing.
     """
-    return Marks.nothing if sat is None else Marks.tick if sat else Marks.cross
+    marks = SafeMarks if safe else Marks
+    return marks.nothing if sat is None else marks.tick if sat else marks.cross
 
 
 def warn(s):

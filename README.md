@@ -20,6 +20,12 @@ The sources are also publicly available from Github:
 
 Documentation is available at [http://pythonhosted.org/tdda/](http://pythonhosted.org/tdda/).
 
+If you clone the Github repo, use
+
+    python setup.py install
+
+afterwards to install the command-line tools (`tdda` and `rexpy`).
+
 
 *Level 0:*
 ----------
@@ -42,7 +48,7 @@ These are like other tests except:
   6. It supports flags (-w and -W)  to rewrite the reference (expected)
      results once you have confirmed that the new actuals are correct.
 
-For usage details:
+The package includes docstrings, available with:
 
     >>> from tdda import referencetest
     >>> help(referencetest)
@@ -78,9 +84,9 @@ file and examples in the `constraints` subdirectory.
 Resources on these topics include:
 
   * TDDA Blog: http//www.tdda.info
-  * Notes on WritableTestCase:
-    http://tdda.info/writabletestcase-example-use
-  * General Notes on Constraints and Assertions
+  * Quick Reference Guide ("Cheatsheet"): http://www.tdda.info/pdf/tdda-quickref.pdf
+  * Full documentation: http://pythonhosted.org/tdda/
+  * General Notes on Constraints and Assertions: http://www.tdda.info/constraints-and-assertions
   * Notes on using the Pandas constraints library:
     http://www.tdda.info/constraint-discovery-and-verification-for-pandas-dataframes
   * PyCon UK Talk on TDDA:
@@ -92,8 +98,7 @@ All examples, tests and code should run under Python2 and Python3.
 The `tdda` repository also includes `rexpy`, a tool for automatically
 inferring regular expressions from a single field of data examples.
 
-For usage details:
+The package also has doc strings, which you can see with:
 
     >>> from tdda import rexpy
     >>> help(rexpy)
-

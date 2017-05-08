@@ -8,7 +8,10 @@ import json
 import math
 import os
 import time
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
 
 from collections import OrderedDict
@@ -854,6 +857,13 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         self.assertTrue(pdc.verification_to_dataframe(results3)
                            .equals(expected))
 
+        pdcv3 = pdc.PandasConstraintVerifier(df3)
+        results3 = verify(dsc3, pdcv3.verifiers(), safe=True)
+        expected = ('FIELDS:\n\n'
+                    'i: 0 failures  1 pass  type OK\n\n'
+                    'SUMMARY:\n\nPasses: 1\nFailures: 0')
+        self.assertEqual(str(results3), expected)
+
     def testElements92(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
@@ -902,6 +912,48 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                     self.assertTrue(actual in ('int', 'real'))
                 else:
                     self.assertEqual(actual, expected)
+
+    def testTDDACommand(self):
+        tmpdir = tempfile.gettempdir()
+        constraintsdir = os.path.abspath(os.path.dirname(__file__))
+        tddaTopDir = os.path.dirname(os.path.dirname(constraintsdir))
+        binDir = os.path.join(tddaTopDir, 'bin')
+        issource = os.path.isdir(binDir)
+        cmd = os.path.join(binDir, 'tdda') if issource else 'tdda'
+        dirs = ['referencetest-examples', 'constraints-examples',
+                'rexpy-examples']
+        testDataDir = os.path.join(tmpdir, 'constraints-examples', 'testdata')
+        e92csv = os.path.join(testDataDir, 'elements92.csv')
+        e118csv = os.path.join(testDataDir, 'elements118.csv')
+        e92tdda = os.path.join(tmpdir, 'elements92.tdda')
+        rmdirs(tmpdir, dirs)
+        try:
+            start = 'Copied example files for tdda.referencetest to'
+            result = subprocess.check_output([cmd, 'examples', tmpdir])
+            self.assertTrue(result.startswith(start))
+            self.assertEqual(len(result.splitlines()), 3)
+            result = subprocess.check_output([cmd, 'discover', e92csv,
+                                              e92tdda])
+            self.assertEqual(result, '')
+            self.assertTrue(os.path.exists(e92tdda))
+            result = subprocess.check_output([cmd, 'verify', e92csv,
+                                              e92tdda])
+            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                    'Passes: 72\n'
+                                                    'Failures: 0'))
+            result = subprocess.check_output([cmd, 'verify', e118csv,
+                                              e92tdda])
+            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                    'Passes: 57\n'
+                                                    'Failures: 15'))
+        finally:
+            pass
+            #rmdirs(tmpdir, dirs)
+
+
+def rmdirs(parent, dirs):
+    for d in dirs:
+        shutil.rmtree(os.path.join(parent, d), ignore_errors=True)
 
 
 if __name__ == '__main__':
