@@ -126,14 +126,19 @@ class DatasetConstraints(object):
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
 
+    def to_dict(self):
+        """
+        Converts the constraints in this object to a dictionary.
+        """
+        return {'fields': {f: v.to_dict_value()
+                           for f, v in self.fields.items()}}
+
     def to_json(self):
         """
-        Converts the constraints in this dictionary to JSON.
+        Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps({'fields': {f: v.to_dict_value()
-                                         for f, v in self.fields.items()}},
-                                         indent=4) + '\n'
+        return json.dumps(self.to_dict(), indent=4) + '\n'
 
 
 class Fields(TDDAObject):
