@@ -959,7 +959,5 @@ def check_shell_output(args):
     return native_definite(result)
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
