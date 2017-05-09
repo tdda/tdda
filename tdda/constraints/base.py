@@ -509,13 +509,13 @@ class Verification(object):
     in the context of a given set of constraints.
     """
     def __init__(self, constraints, report='all', one_per_line=False,
-                 safe=False):
+                 ascii=False):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
         self.report = report
         self.one_per_line = one_per_line
-        self.safe = safe
+        self.ascii = ascii
         assert report in ('all', 'fields', 'constraints')
 
     def __str__(self):
@@ -536,7 +536,7 @@ class Verification(object):
                            % (field,
                               plural(ver.failures, 'failure'),
                               plural(ver.passes, 'pass', 'es'),
-                              '  '.join('%s %s' % (c, tcn(s, self.safe))
+                              '  '.join('%s %s' % (c, tcn(s, self.ascii))
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
@@ -608,7 +608,7 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.
 
-                            report, one_per_line and safe can all be set
+                            report, one_per_line and ascii can all be set
                             this way.
     """
     VerificationClass = VerificationClass or Verification
@@ -635,12 +635,12 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
     return results
 
 
-def tcn(sat, safe=False):
+def tcn(sat, ascii=False):
     """
     Convert True/False/None value to the appropriate tick, cross
     or nothing mark for printing.
     """
-    marks = SafeMarks if safe else Marks
+    marks = SafeMarks if ascii else Marks
     return marks.nothing if sat is None else marks.tick if sat else marks.cross
 
 

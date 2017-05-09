@@ -860,7 +860,7 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                            .equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = verify(dsc3, pdcv3.verifiers(), safe=True)
+        results3 = verify(dsc3, pdcv3.verifiers(), ascii=True)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
                     'SUMMARY:\n\nPasses: 1\nFailures: 0')

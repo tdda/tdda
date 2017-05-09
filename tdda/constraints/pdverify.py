@@ -102,7 +102,7 @@ def get_params(args):
         'constraints_path': None,
         'report': 'all',
         'one_per_line': False,
-        'safe': False,
+        'ascii': False,
     }
     for a in args:
         if a.startswith('-'):
@@ -114,8 +114,8 @@ def get_params(args):
                 params['report'] = 'constraints'
             elif a in ('-1', '--oneperline'):
                 params['one_per_line'] = True
-            elif a in ('-s', '--safe'):
-                params['safe'] = True
+            elif a in ('-7', '--ascii'):
+                params['ascii'] = True
             else:
                 usage_error()
         elif params['df_path'] is None:
