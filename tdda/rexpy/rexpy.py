@@ -1547,7 +1547,7 @@ def get_nCalls():
     return nCalls
 
 
-def main(in_path=None, out_path=None, skip_header=False, **kwargs):
+def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
     if in_path:
         with open(in_path) as f:
             strings = f.read().splitlines()
@@ -1659,6 +1659,11 @@ def usage_error():
     sys.exit(1)
 
 
+def main(argv):
+    params = get_params(argv[1:])
+    rexpy_streams(**params)
+
+
 if __name__ == '__main__':
-    params = get_params(sys.argv[1:])
-    main(**params)
+    main(sys.argv)
+

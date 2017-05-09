@@ -44,7 +44,12 @@ setup(
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],
     },
-    scripts=[os.path.join('bin', 'rexpy'), os.path.join('bin', 'tdda')],
+    entry_points = {
+        'console_scripts': [
+            'tdda = tdda.constraints.console:main',
+            'rexpy = tdda.rexpy.rexpy:main',
+        ],
+    },
     zip_safe=False,
 )
 

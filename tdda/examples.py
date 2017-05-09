@@ -7,15 +7,16 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2017
 """
 
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import sys
 import os
+import shutil
+import sys
 
 
 def copy_examples(name, destination='.'):
@@ -29,8 +30,8 @@ def copy_examples(name, destination='.'):
               file=sys.stderr)
         sys.exit(1)
     outdir = os.path.join(destination, '%s-examples' % name)
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
+    shutil.rmtree(outdir, ignore_errors=True)
+    os.mkdir(outdir)
     copy(srcdir, outdir)
     print('Copied example files for tdda.%s to %s' % (name, outdir))
 

@@ -132,13 +132,17 @@ def usage_error():
     sys.exit(1)
 
 
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] in ('-v', '--version'):
+def main(argv):
+    if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
-    params = get_params(sys.argv[1:])
+    params = get_params(argv[1:])
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
     verify_df_from_file(**params)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
 

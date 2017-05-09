@@ -21,4 +21,5 @@ from tdda.referencetest.tests.alltests import *
 
 
 if __name__ == '__main__':
-     unittest.main()
+    unittest.main()
+
