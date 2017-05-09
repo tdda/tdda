@@ -71,10 +71,7 @@ except ImportError:
     try:
         import feather as feather
     except ImportError:
-        print('pdverify requires feather to be available.\n'
-              'Use:\n    pip install feather-format\nto add capability.\n',
-              file=sys.stderr)
-        raise
+        feather = None
 
 from tdda import __version__
 from tdda.constraints.pdconstraints import verify_df
@@ -92,8 +89,12 @@ def load_df(path):
     elif featherpmm:
         ds = featherpmm.read_dataframe(path)
         return ds.df
-    else:
+    elif feather:
         return feather.read_dataframe(path)
+    else:
+        raise Exception('pdverify requires feather to be available.\n'
+                        'Use:\n    pip install feather-format\n'
+                        'to add capability.\n', file=sys.stderr)
 
 
 def get_params(args):

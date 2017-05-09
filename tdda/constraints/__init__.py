@@ -19,7 +19,8 @@ Prerequisites
 
     - :py:mod:`numpy`
     - :py:mod:`pandas`
-    - :py:mod:`feather-format` (required for the :py:mod:`~tdda.constraints.pdverify` tool)
+    - :py:mod:`feather-format` (required for discovering and verifying
+      constraints in :py:mod:`feather` files; not required for CSV files.)
 
 These can be installed with::
 
@@ -27,5 +28,8 @@ These can be installed with::
     pip install pandas
     pip install feather-format
 
+To install :py:mod:`feather-format` on Windows, you will need to install
+:py:mod:`cython` as a prerequisite, which might also require you to install
+the Microsoft Visual C++ compiler for python, from http://aka.ms/vcpython27.
 
 """
