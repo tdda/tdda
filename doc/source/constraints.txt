@@ -20,7 +20,7 @@ Constraints in CSV Files and Pandas DataFrames
     :members:
 
 .. automodule:: tdda.constraints.base
-    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, Verification
+    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, RexConstraint, Verification
 
 .. _constraint_examples:
 

@@ -1,9 +1,16 @@
 #!/bin/sh
 
-HELP="Use tdda discover or tdda verify or tdda examples or tdda -v"
+HELP="""Use
+    tdda discover  to perform constraint discovery
+    tdda verify    to verify data against constraints
+    tdda examples  to copy the example data and code
+    tdda version   to print the TDDA version number
+    tdda help      to print this help
+    tdda test      to run the tdda library's tests."""
+
 if [ -z "$1" ]
 then
-    echo $HELP 1>&2
+    echo "$HELP" 1>&2
     exit 1
 fi
 
@@ -23,14 +30,17 @@ case $name in
         python -m tdda.constraints.examples "$@"
         exec python -m tdda.rexpy.examples "$@"
         ;;
-    -v|--version)
+    version|-v|--version)
         exec python -m tdda.constraints.pdverify  "-v"
         ;;
+    test)
+        exec python -m tdda.testtdda
+        ;;
     help|-h|-?|--help)
-        echo $HELP
+        echo "$HELP"
         ;;
     *)
-        echo $HELP 1>&2
+        echo "$HELP" 1>&2
         exit 1
         ;;
 esac

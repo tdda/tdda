@@ -35,7 +35,8 @@ from tdda.constraints.base import (
     Fields,
     FieldConstraints,
     verify,
-    sanitize,
+    native_definite,
+    UTF8DefiniteObject
 )
 
 isPython2 = sys.version_info.major < 3
@@ -889,9 +890,9 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         ref_constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
         with open(ref_constraints_path) as f:
             refjson = f.read()
-        ref = sanitize(json.loads(refjson))
+        ref = native_definite(json.loads(refjson))
         constraints = discover_constraints(df)
-        discovered = sanitize(json.loads(constraints.to_json()))
+        discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         ref_fields = ref['fields']
         self.assertEqual(set(discovered_fields.keys()),
@@ -929,20 +930,17 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         rmdirs(tmpdir, dirs)
         try:
             start = 'Copied example files for tdda.referencetest to'
-            result = subprocess.check_output([cmd, 'examples', tmpdir])
+            result = check_shell_output([cmd, 'examples', tmpdir])
             self.assertTrue(result.startswith(start))
             self.assertEqual(len(result.splitlines()), 3)
-            result = subprocess.check_output([cmd, 'discover', e92csv,
-                                              e92tdda])
+            result = check_shell_output([cmd, 'discover', e92csv, e92tdda])
             self.assertEqual(result, '')
             self.assertTrue(os.path.exists(e92tdda))
-            result = subprocess.check_output([cmd, 'verify', e92csv,
-                                              e92tdda])
+            result = check_shell_output([cmd, 'verify', e92csv, e92tdda])
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Passes: 72\n'
                                                     'Failures: 0'))
-            result = subprocess.check_output([cmd, 'verify', e118csv,
-                                              e92tdda])
+            result = check_shell_output([cmd, 'verify', e118csv, e92tdda])
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Passes: 57\n'
                                                     'Failures: 15'))
@@ -954,6 +952,13 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
 def rmdirs(parent, dirs):
     for d in dirs:
         shutil.rmtree(os.path.join(parent, d), ignore_errors=True)
+
+
+def check_shell_output(args):
+    result = subprocess.check_output(UTF8DefiniteObject(args))
+    return native_definite(result)
+
+
 
 
 if __name__ == '__main__':

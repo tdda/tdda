@@ -1379,7 +1379,7 @@ def pdextract(cols):
         re345 = '^[a-z]{3}$'
 
     """
-    if not type(cols) in (list, tuple):
+    if type(cols) not in (list, tuple):
         cols = [cols]
     strings = []
     for c in cols:

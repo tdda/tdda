@@ -31,6 +31,8 @@ RD = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$')
 RDT = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
                  r'(\d{1,2}):(\d{2}):(\d{2})$')
 
+UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
+
 
 class Marks:
     tick = '✓'     # This is a tick mark; whether or not it displays in editors
@@ -40,8 +42,8 @@ class Marks:
 
 class SafeMarks:
     tick = 'OK'
-    cross = ' X'
-    nothing = ' -'
+    cross = 'X'
+    nothing = '-'
 
 
 class TDDAObject(OrderedDict):
@@ -91,7 +93,7 @@ class DatasetConstraints(object):
         """
         with open(path) as f:
             text = f.read()
-        self.initialize_from_dict(sanitize(json.loads(text)))
+        self.initialize_from_dict(native_definite(json.loads(text)))
 
     def initialize_from_dict(self, in_constraints):
         """
@@ -449,7 +451,7 @@ class RexConstraint(Constraint):
     the regular expressions in a list given.
     """
     def __init__(self, value):
-        Constraint.__init__(self, 'rex', [sanitize(v) for v in value])
+        Constraint.__init__(self, 'rex', [native_definite(v) for v in value])
 
 
 #
@@ -673,8 +675,9 @@ def plural(n, s, pl=None):
         return '%s %s%s' % (n, s, pl)
 
 
-def sanitize(o):
-    return o if sys.version_info.major >= 3 else UTF8DefiniteObject(o)
+def native_definite(o):
+    return (UnicodeDefinite(o) if sys.version_info.major >= 3
+                               else UTF8DefiniteObject(o))
 
 
 def UTF8Definite(s):
@@ -682,14 +685,23 @@ def UTF8Definite(s):
     Converts a string to UTF-8 if it is unicode.
     Otherwise just returns the string.
     """
-    return s if type(s) == types.StringType else s.encode(UTF8)
+    return s if type(s) == bytes else s.encode(UTF8)
+
+
+def UnicodeDefinite(s):
+    """
+    Converts a string to unicode if it is unicode.
+    Otherwise just returns the string.
+    """
+    return s.decode(UTF8) if type(s) == bytes else s
+
 
 def UTF8DefiniteObject(s):
     """
     Converts all unicode within scalar or object, recursively, to unicode.
     Handles lists, tuples and dictionaries, as well as scalars.
     """
-    if type(s) == unicode:
+    if type(s) == UNICODE_TYPE:
         return s.encode(UTF8)
     elif type(s) == list:
         return [UTF8DefiniteObject(v) for v in s]

@@ -33,7 +33,7 @@ from tdda.constraints.base import (
     SIGNS,
     STANDARD_FIELD_CONSTRAINTS,
     verify,
-    sanitize,
+    native_definite,
     DatasetConstraints,
     FieldConstraints,
     Verification,
@@ -291,19 +291,17 @@ class PandasConstraintVerifier:
         """
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
-            return True                 # to be an active constraint,
-                                        # so is always satisfied
+            return True        # to be an active constraint,
+                               # so is always satisfied
         rexes = [re.compile(r) for r in rexes]
-        nRex = len(rexes)
-        strings = [sanitize(s) for s in self.df[colname].dropna().unique()]
+        strings = [native_definite(s)
+                   for s in self.df[colname].dropna().unique()]
 
         for s in strings:
-            matched = False
             for r in rexes:
                 if re.match(r, s):
-                    matched = True
                     break
-            if not matched:
+            else:
                 if DEBUG:
                     print('*** Unmatched string: "%s"' % s)
                 return False  # At least one string didn't match
@@ -582,7 +580,7 @@ def tdda_type(x):
     return 'other'
 
 
-def discover_field_constraints(field, inc_rex=True):
+def discover_field_constraints(field, inc_rex=False):
     """
     Discover constraints for a single field (column) from a Pandas DataFrame.
 
@@ -840,7 +838,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                   VerificationClass=PandasVerification, **kwargs)
 
 
-def discover_constraints(df):
+def discover_constraints(df, inc_rex=False):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -953,7 +951,7 @@ def discover_constraints(df):
     """
     field_constraints = []
     for col in df:
-        constraints = discover_field_constraints(df[col])
+        constraints = discover_field_constraints(df[col], inc_rex=inc_rex)
         if constraints:
             field_constraints.append(constraints)
     if field_constraints:

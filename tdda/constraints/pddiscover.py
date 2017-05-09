@@ -9,11 +9,11 @@ and save generated constraints as a JSON file.
 
 Usage::
 
-    tdda discover input-file [constraints.tdda]
+    tdda discover [FLAGS] input-file [constraints.tdda]
 
 or::
 
-    python -m tdda.constraints.pddiscover input-file [constraints.tdda]
+    python -m tdda.constraints.pddiscover [FLAGS] input-file [constraints.tdda]
 
 where
 
@@ -24,6 +24,11 @@ where
 
   * *constraints.tdda*, if provided, specifies the name of a file to
     which the generated constraints will be written in JSON.
+
+  * supported flags are
+
+      * -r or --rex    to include regular expression generation
+      * -R or --norex  to exclude regular expression generation
 
 If a CSV file is used, it will be processed by the Pandas CSV file reader
 with the following settings:
@@ -71,7 +76,7 @@ from tdda.referencetest.checkpandas import default_csv_loader
 
 def discover_constraints_from_file(df_path, constraints_path, **kwargs):
     df = load_df(df_path)
-    constraints = discover_constraints(df)
+    constraints = discover_constraints(df, **kwargs)
     if constraints_path:
         with open(constraints_path, 'w') as f:
             f.write(constraints.to_json())
@@ -93,9 +98,17 @@ def get_params(args):
     params = {
         'df_path': None,
         'constraints_path': None,
+        'inc_rex': False,
     }
     for a in args:
-        if params['df_path'] is None:
+        if a.startswith('-'):
+            if a in ('-r', '--rex'):
+                params['inc_rex'] = True
+            elif a in ('-R', '--norex'):
+                params['inc_rex'] = False
+            else:
+                usage_error()
+        elif params['df_path'] is None:
             params['df_path'] = a
         elif params['constraints_path'] is None:
             params['constraints_path'] = a
