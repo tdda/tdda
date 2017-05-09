@@ -954,7 +954,7 @@ def rmdirs(parent, dirs):
 
 def check_shell_output(args):
     result = subprocess.check_output(UTF8DefiniteObject(args))
-    return native_definite(result)
+    return native_definite(result).replace('\r', '')
 
 
 if __name__ == '__main__':
