@@ -874,6 +874,14 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
+    def testElements92rex(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        v = verify_df(df, constraints_path)
+        self.assertEqual(v.passes, 78)
+        self.assertEqual(v.failures, 0)
+
     def testElements118(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -885,14 +893,26 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         vdf.sort_values('field', inplace=True)
         # Check dataframe!
 
-    def testConstraintGeneration(self):
+    def testElements118rex(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        v = verify_df(df, constraints_path, report='fields')
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 17)
+        vdf = v.to_dataframe()
+        vdf.sort_values('field', inplace=True)
+        # Check dataframe!
+
+    def constraintsGenerationTest(self, inc_rex=False):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
-        ref_constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        ref_name = 'elements92%s.tdda' % ('rex' if inc_rex else '')
+        ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
         with open(ref_constraints_path) as f:
             refjson = f.read()
         ref = native_definite(json.loads(refjson))
-        constraints = discover_constraints(df)
+        constraints = discover_constraints(df, inc_rex=inc_rex)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         ref_fields = ref['fields']
@@ -914,6 +934,12 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                     self.assertTrue(actual in ('int', 'real'))
                 else:
                     self.assertEqual(actual, expected)
+
+    def testConstraintGenerationNoRex(self):
+        self.constraintsGenerationTest(inc_rex=False)
+
+    def testConstraintGenerationWithRex(self):
+        self.constraintsGenerationTest(inc_rex=True)
 
     @unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
     def testTDDACommand(self):

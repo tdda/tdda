@@ -43,7 +43,7 @@ from tdda.constraints.base import (
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
 )
-DEBUG = True
+DEBUG = False
 
 from tdda.rexpy import pdextract
 

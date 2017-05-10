@@ -1216,9 +1216,13 @@ def to_vrles(rles):
                        for (cat, m, M) in pattern)
                  for pattern in outs]
         outs = list(set(outs2))
-#        outs = list(set(plusify_vrles(outs)))
-        outs.sort()
+        outs.sort(key=none_to_m1)
     return outs
+
+
+def none_to_m1(vrle):
+    return tuple(tuple((-1 if t is None else t) for t in tup)
+                 for tup in vrle)
 
 
 def ndigits(n, d):
