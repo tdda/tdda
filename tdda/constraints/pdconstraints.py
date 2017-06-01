@@ -42,6 +42,7 @@ from tdda.constraints.base import (
     MinLengthConstraint, MaxLengthConstraint,
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
+    EPSILON_DEFAULT
 )
 DEBUG = False
 
@@ -52,9 +53,6 @@ DEFAULT_TYPE_CHECKING = 'sloppy'
 
 MAX_CATEGORIES = 20     # String fields with up to 20 categories will
                         # generate AllowedValues constraints
-
-EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
-                        # real (i.e. floating point) fields.
 
 
 if sys.version_info.major >= 3:

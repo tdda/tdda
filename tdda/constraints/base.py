@@ -33,6 +33,10 @@ RDT = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
 
 UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
 
+EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
+                        # real (i.e. floating point) fields.
+
+
 
 class Marks:
     tick = '✓'     # This is a tick mark; whether or not it displays in editors
