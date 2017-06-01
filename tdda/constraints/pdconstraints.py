@@ -42,7 +42,8 @@ from tdda.constraints.base import (
     MinLengthConstraint, MaxLengthConstraint,
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
-    EPSILON_DEFAULT
+    EPSILON_DEFAULT,
+    fuzzy_greater_than, fuzzy_less_than
 )
 DEBUG = False
 
@@ -112,7 +113,7 @@ class PandasConstraintVerifier:
         elif precision == 'open':
             return m > value
         else:
-            return self.fuzzy_greater_than(m, value)
+            return fuzzy_greater_than(m, value, self.epsilon)
 
 
     def verify_max_constraint(self, colname, constraint):
@@ -141,7 +142,7 @@ class PandasConstraintVerifier:
         elif precision == 'open':
             return M < value
         else:
-            return self.fuzzy_less_than(M, value)
+            return fuzzy_less_than(M, value, self.epsilon)
 
     def verify_min_length_constraint(self, colname, constraint):
         """
@@ -304,57 +305,6 @@ class PandasConstraintVerifier:
                     print('*** Unmatched string: "%s"' % s)
                 return False  # At least one string didn't match
         return True
-
-    def fuzzy_greater_than(self, a, b):
-        """
-        Returns a >~ b (a is greater than or approximately equal to b)
-
-        At the moment, this simply reduces b by 1% if it is positive,
-        and makes it 1% more negative if it is negative.
-        """
-        if a >= b:
-            return True
-        return (a >= self.fuzz_down(b))
-
-
-    def fuzzy_less_than(self, a, b):
-        """
-        Returns a <~ b (a is greater than or approximately equal to b)
-
-        At the moment, this increases b by 1% if it is positive,
-        and makes it 1% less negative if it is negative.
-        """
-        if a <= b:
-            return True
-        return (a <= self.fuzz_up(b))
-
-    def fuzz_down(self, v):
-        """
-        Adjust v downwards, by a proportion controlled by self.epsilon.
-        This is typically used for fuzzy minimum constraints.
-
-        By default, positive values of v are reduced by 1% so that slightly
-        smaller values can pass the fuzzy minimum constraint.
-
-        Similarly, negative values are made 1% more negative, so that
-        slightly more negative values can still pass a fuzzy minimum
-        constraint.
-        """
-        return v * ((1 - self.epsilon) if v >= 0 else (1 + self.epsilon))
-
-    def fuzz_up(self, v):
-        """
-        Adjust v upwards, by a proportion controlled by self.epsilon.
-        This is typically used for fuzzy maximum constraints.
-
-        By default, positive values of v are increased by 1% so that
-        slightly larger values can pass the fuzzy maximum constraint.
-
-        Similarly, negative values are made 1% less negative, so that
-        slightly less negative values can still pass a fuzzy maximum
-        constraint.
-        """
-        return v * ((1 + self.epsilon) if v >= 0 else (1 - self.epsilon))
 
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""

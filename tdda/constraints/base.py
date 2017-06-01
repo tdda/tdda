@@ -734,3 +734,57 @@ def to_preferred_order(keys, preferred_order):
     return ([k for k in preferred_order if k in list(keys)]
                + list(sorted(set(keys) - set(preferred_order))))
 
+
+
+def fuzzy_greater_than(a, b, epsilon):
+    """
+    Returns a >~ b (a is greater than or approximately equal to b)
+
+    At the moment, this simply reduces b by 1% if it is positive,
+    and makes it 1% more negative if it is negative.
+    """
+    if a >= b:
+        return True
+    return (a >= fuzz_down(b, epsilon))
+
+
+def fuzzy_less_than(a, b, epsilon):
+    """
+    Returns a <~ b (a is greater than or approximately equal to b)
+
+    At the moment, this increases b by 1% if it is positive,
+    and makes it 1% less negative if it is negative.
+    """
+    if a <= b:
+        return True
+    return (a <= fuzz_up(b, epsilon))
+
+
+def fuzz_down(v, epsilon):
+    """
+    Adjust v downwards, by a proportion controlled by self.epsilon.
+    This is typically used for fuzzy minimum constraints.
+
+    By default, positive values of v are reduced by 1% so that slightly
+    smaller values can pass the fuzzy minimum constraint.
+
+    Similarly, negative values are made 1% more negative, so that
+    slightly more negative values can still pass a fuzzy minimum
+    constraint.
+    """
+    return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
+
+def fuzz_up(v, epsilon):
+    """
+    Adjust v upwards, by a proportion controlled by self.epsilon.
+    This is typically used for fuzzy maximum constraints.
+
+    By default, positive values of v are increased by 1% so that
+    slightly larger values can pass the fuzzy maximum constraint.
+
+    Similarly, negative values are made 1% less negative, so that
+    slightly less negative values can still pass a fuzzy maximum
+    constraint.
+    """
+    return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
+

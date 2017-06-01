@@ -37,7 +37,10 @@ from tdda.constraints.base import (
     FieldConstraints,
     verify,
     native_definite,
-    UTF8DefiniteObject
+    UTF8DefiniteObject,
+    fuzzy_less_than,
+    fuzzy_greater_than,
+    EPSILON_DEFAULT,
 )
 
 isPython2 = sys.version_info.major < 3
@@ -175,15 +178,16 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
 
     def test_fuzzy_less_than_zero(self):
         verifier = pdc.PandasConstraintVerifier(df=None)
+        epsilon = EPSILON_DEFAULT
         for x in NEG_REALS:
-            self.assertTrue(verifier.fuzzy_less_than(x, 0.0))
-            self.assertFalse(verifier.fuzzy_less_than(0.0, x))
+            self.assertTrue(fuzzy_less_than(x, 0.0, epsilon))
+            self.assertFalse(fuzzy_less_than(0.0, x, epsilon))
         for x in POS_REALS:
-            self.assertFalse(verifier.fuzzy_less_than(x, 0.0))
-            self.assertTrue(verifier.fuzzy_less_than(0.0, x))
+            self.assertFalse(fuzzy_less_than(x, 0.0, epsilon))
+            self.assertTrue(fuzzy_less_than(0.0, x, epsilon))
 
-        self.assertTrue(verifier.fuzzy_less_than(0.0, 0.0))
-        self.assertTrue(verifier.fuzzy_less_than(0.0, SMALL / 2))  # == 0.0
+        self.assertTrue(fuzzy_less_than(0.0, 0.0, epsilon))
+        self.assertTrue(fuzzy_less_than(0.0, SMALL / 2, epsilon))  # == 0.0
         self.assertEqual(SMALL / 2, 0.0)
 
     def test_fuzzy_less_than(self):
@@ -232,22 +236,24 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
 
         cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(MILLION + 10000 + SMALL, MILLION + 10000)
+        epsilon = EPSILON_DEFAULT
         for (x, y) in goods + bad_goods:
-            cvt.fuzzy_less_than(x, y).isTrue()
+            self.assertTrue(fuzzy_less_than(x, y, epsilon))
         for (x, y) in bads:
-            cvt.fuzzy_less_than(x, y).isFalse()
+            self.assertFalse(fuzzy_less_than(x, y, epsilon))
 
     def test_fuzzy_greater_than_zero(self):
         cvt = ConstraintVerificationTester(self, df=None)
+        epsilon = EPSILON_DEFAULT
         for x in POS_REALS:
-            cvt.fuzzy_greater_than(x, 0.0).isTrue()
-            cvt.fuzzy_greater_than(0.0, x).isFalse()
+            self.assertTrue(fuzzy_greater_than(x, 0.0, epsilon))
+            self.assertFalse(fuzzy_greater_than(0.0, x, epsilon))
         for x in NEG_REALS:
-            cvt.fuzzy_greater_than(x, 0.0).isFalse()
-            cvt.fuzzy_greater_than(0.0, x).isTrue()
+            self.assertFalse(fuzzy_greater_than(x, 0.0, epsilon))
+            self.assertTrue(fuzzy_greater_than(0.0, x, epsilon))
 
-        cvt.fuzzy_greater_than(0.0, 0.0).isTrue()
-        cvt.fuzzy_greater_than(0.0, SMALL / 2).isTrue()  # == 0.0
+        self.assertTrue(fuzzy_greater_than(0.0, 0.0, epsilon))
+        self.assertTrue(fuzzy_greater_than(0.0, SMALL / 2, epsilon))  # == 0.0
         self.assertEqual(SMALL / 2, 0.0)
 
     def test_fuzzy_greater_than(self):
@@ -293,10 +299,11 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         )
         cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(999900 - SMALL, 999900)
+        epsilon = EPSILON_DEFAULT
         for (x, y) in goods + bad_goods:
-            cvt.fuzzy_greater_than(x, y).isTrue()
+            self.assertTrue(fuzzy_greater_than(x, y, epsilon))
         for (x, y) in bads:
-            cvt.fuzzy_greater_than(x, y).isFalse()
+            self.assertFalse(fuzzy_greater_than(x, y, epsilon))
 
     def test_caching(self):
         df = pd.DataFrame({
