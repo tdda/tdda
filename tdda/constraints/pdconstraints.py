@@ -40,8 +40,6 @@ from tdda.constraints.base import (
     MinLengthConstraint, MaxLengthConstraint,
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
-    EPSILON_DEFAULT,
-    fuzzy_greater_than, fuzzy_less_than,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintVerifier,
@@ -163,7 +161,7 @@ class PandasVerification(Verification):
 
         - ``True``       --- if the constraint was satified for the column
         - ``False``      --- if column failed to satisfy the constraint
-        - ``pd.np.NaN``  --- if there was no constraint of this kind for this field.
+        - ``pd.np.NaN``  --- if there was no constraint of this kind
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
