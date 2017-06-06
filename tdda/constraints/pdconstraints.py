@@ -4,7 +4,7 @@ TDDA constraint discovery and verification for Pandas.
 
 The top-level functions are:
 
-    :py:func:`discover_constraints`:
+    :py:func:`discover_df`:
         Discover constraints from a Pandas DataFrame.
 
     :py:func:`verify_df`:
@@ -29,8 +29,6 @@ import pandas as pd
 import numpy as np
 
 from tdda.constraints.base import (
-    PRECISIONS,
-    SIGNS,
     STANDARD_FIELD_CONSTRAINTS,
     verify,
     native_definite,
@@ -43,251 +41,53 @@ from tdda.constraints.base import (
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
     EPSILON_DEFAULT,
-    fuzzy_greater_than, fuzzy_less_than
+    fuzzy_greater_than, fuzzy_less_than,
 )
+from tdda.constraints.baseconstraints import (
+    BaseConstraintVerifier,
+    BaseConstraintDiscoverer,
+    MAX_CATEGORIES,
+)
+
 DEBUG = False
 
 from tdda.rexpy import pdextract
-
-TYPE_CHECKING_OPTIONS = ('strict', 'sloppy')
-DEFAULT_TYPE_CHECKING = 'sloppy'
-
-MAX_CATEGORIES = 20     # String fields with up to 20 categories will
-                        # generate AllowedValues constraints
-
 
 if sys.version_info.major >= 3:
     long = int
 
 
-class PandasConstraintVerifier:
+class PandasConstraintVerifier(BaseConstraintVerifier):
+    """
+    A :py:class:`PandasConstraintVerifier` object provides methods
+    for verifying every type of constraint against a Pandas DataFrame.
+    """
     def __init__(self, df, epsilon=None, type_checking=None):
         self.df = df
-        self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
-        self.type_checking = type_checking or DEFAULT_TYPE_CHECKING
-        assert self.type_checking in TYPE_CHECKING_OPTIONS
-        self.cache = {}
+        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
+                                        type_checking=type_checking)
 
-    def verifiers(self):
-        """
-        Returns a dictionary mapping constraint types to their callable
-        (bound) verification methods.
-        """
-        return {
-            'type': self.verify_tdda_type_constraint,
-            'min': self.verify_min_constraint,
-            'max': self.verify_max_constraint,
-            'min_length': self.verify_min_length_constraint,
-            'max_length': self.verify_max_length_constraint,
-            'sign': self.verify_sign_constraint,
-            'max_nulls': self.verify_max_nulls_constraint,
-            'no_duplicates': self.verify_no_duplicates_constraint,
-            'allowed_values': self.verify_allowed_values_constraint,
-            'rex': self.verify_rex_constraint,
-        }
+    def is_null(self, value):
+        return pd.isnull(value)
 
-    def verify_min_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the minimum value
-        constraint specified.
-        """
-        value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        assert precision in PRECISIONS
+    def to_datetime(self, value):
+        return pd.to_datetime(value)
 
-        if pd.isnull(value):      # a null minimum is not considered to be an
-            return True           # active constraint, so is always satisfied
-
-        m = self.get_min(colname)
-        if pd.isnull(m):          # If there are no values, no value can
-            return True           # the minimum constraint
-
-        if isinstance(value, datetime.datetime):
-            m = pd.to_datetime(m)
-
-        if not types_compatible(m, value, colname):
-            return False
-
-        if precision == 'closed':
-            return m >= value
-        elif precision == 'open':
-            return m > value
-        else:
-            return fuzzy_greater_than(m, value, self.epsilon)
-
-
-    def verify_max_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the maximum value
-        constraint specified.
-        """
-        value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        assert precision in ('open', 'closed', 'fuzzy')
-
-        if pd.isnull(value):      # a null maximum is not considered to be an
-            return True           # active constraint, so is always satisfied
-
-        M = self.get_max(colname)
-        if pd.isnull(M):          # If there are no values, no value can
-            return True           # the maximum constraint
-
-        if isinstance(value, datetime.datetime):
-            M = pd.to_datetime(M)
-        if not types_compatible(M, value, colname):
-            return False
-
-        if precision == 'closed':
-            return M <= value
-        elif precision == 'open':
-            return M < value
-        else:
-            return fuzzy_less_than(M, value, self.epsilon)
-
-    def verify_min_length_constraint(self, colname, constraint):
-        """
-        Verify whether a given (string) column satisfies the minimum length
-        constraint specified.
-        """
-        value = constraint.value
-
-        if pd.isnull(value):      # a null minimum length is not considered
-            return True           # to be an active constraint, so is always
-                                  # satisfied
-
-        m = self.get_min_length(colname)
-        if pd.isnull(m):          # If there are no values, no value can
-            return True           # the minimum length constraint
-
-        return m >= value
-
-    def verify_max_length_constraint(self, colname, constraint):
-        """
-        Verify whether a given (string) column satisfies the maximum length
-        constraint specified.
-        """
-        value = constraint.value
-
-        if pd.isnull(value):      # a null minimum length is not considered
-            return True           # to be an active constraint, so is always
-                                  # satisfied
-
-        M = self.get_max_length(colname)
-        if pd.isnull(M):          # If there are no values, no value can
-            return True           # the maximum length constraint
-
-        return M <= value
-
-    def verify_tdda_type_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the supplied type constraint.
-        """
-        required_type = constraint.value
-        allowed_types = (required_type if type(required_type) in (list, tuple)
-                         else [required_type])
-        if len(allowed_types) == 1 and pd.isnull(allowed_types[0]):
-            return True  # a null type is not considered to be an
-                         # active constraint, so is always satisfied
-
-        actual_type = self.get_tdda_type(colname)
-        if self.type_checking == 'strict':
-            return actual_type in allowed_types
-        else:
-            if actual_type in allowed_types:
-                return True       # definitely OK of the types actuall match
-            elif 'int' in allowed_types and actual_type == 'real':
-                return self.get_non_integer_values_count(colname) == 0
-            elif 'bool' in allowed_types and actual_type == 'string':
-                # boolean columns with nulls get converted to dtype
-                # object, which is usually used for strings
-                return self.get_all_non_nulls_boolean(colname)
-            else:
-                return False
-
-    def verify_sign_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the supplied sign constraint.
-        """
-        value = constraint.value
-        if pd.isnull(value):      # a null value (as opposed to the string
-                                  # 'null') is not considered to be an
-            return True           # active constraint, so is always satisfied
-
-        m = self.get_min(colname)
-        M = self.get_max(colname)
-        if pd.isnull(m):
-            return True  # no values: cannot violate constraint
-        if value == 'null':
-            return False
-        elif value == 'positive':
-            return m > 0
-        elif value == 'non-negative':
-            return m >= 0
-        elif value == 'zero':
-            return m == M == 0
-        elif value == 'non-positive':
-            return M <= 0
-        elif value == 'negative':
-            return M < 0
-        assert value in SIGNS
-
-    def verify_max_nulls_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the supplied constraint
-        that it should contain no nulls.
-        """
-        value = constraint.value
-        if pd.isnull(value):      # a null value is not considered to be an
-            return True           # active constraint, so is always satisfied
-        return self.get_null_count(colname) <= value
-
-    def verify_no_duplicates_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the constraint supplied,
-        that it should contain no duplicate (non-null) values.
-        """
-        value = constraint.value
-        if pd.isnull(value):      # a null value is not considered to be an
-            return True           # active constraint, so is always satisfied
-
-        assert value == True      # value not really used; but should be True
-
-        non_nulls = len(self.df) - self.get_null_count(colname)
-        return self.get_nunique(colname) == non_nulls
+    def types_compatible(self, x, y, colname):
+        return types_compatible(x, y, colname)
 
     def verify_allowed_values_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies the constraint on allowed
-        (string) values provided.
-        """
-        allowed_values = constraint.value
-        if allowed_values is None:      # a null value is not considered
-            return True                 # to be an active constraint,
-                                        # so is always satisfied
-
-        n_allowed_values = len(allowed_values)
-        n_actual_values = self.get_nunique(colname)
-
-        if n_actual_values > n_allowed_values:
-            return False
-
-        actual_values = self.get_unique_values(colname)
-
-        violations = (set(actual_values) - set(allowed_values)
-                      - set([None, np.nan, pd.NaT]))  # remarkably, Pandas
-                                                      # returns various kinds
-                                                      # of nulls as unique
-                                                      # values, despite not
-                                                      # counting them with
-                                                      # .nunique()
-        return len(violations) == 0
+        exclusions = [None, np.nan, pd.NaT] # remarkably, Pandas returns
+                                            # various kinds of nulls as
+                                            # unique values, despite not
+                                            # counting them with .nunique()
+        v = BaseConstraintVerifier.verify_allowed_values_constraint(self,
+                                                                    colname,
+                                                                    constraint,
+                                                                    exclusions)
+        return v
 
     def verify_rex_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies a given regular
-        expression constraint (by matching at least one of the regular
-        expressions given).
-        """
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
             return True        # to be an active constraint,
@@ -306,141 +106,49 @@ class PandasConstraintVerifier:
                 return False  # At least one string didn't match
         return True
 
-    def get_min(self, colname):
-        """Looks up cached minimum of column, or calculates and caches it"""
-        return self.get_cached_value('min', colname, self.calc_min)
-
     def calc_min(self, colname):
-        """
-        Calculates the minimum (non-null) value in the named column.
-        """
         if self.df[colname].dtype == np.dtype('O'):
             return self.df[colname].dropna().min()  # Otherwise -inf!
         else:
             return self.df[colname].min()
 
-    def get_max(self, colname):
-        """Looks up cached maximum of column, or calculates and caches it"""
-        return self.get_cached_value('max', colname, self.calc_max)
-
     def calc_max(self, colname):
-        """
-        Calculates the maximum (non-null) value in the named column.
-        """
         if self.df[colname].dtype == np.dtype('O'):
             return self.df[colname].dropna().max()
         else:
             return self.df[colname].max()
 
-    def get_min_length(self, colname):
-        """
-        Looks up cached minimum string length in column,
-        or calculates and caches it
-        """
-        return self.get_cached_value('min_length', colname,
-                                     self.calc_min_length)
-
     def calc_min_length(self, colname):
-        """
-        Calculates the length of the shortest string(s) in the named column.
-        """
         return min(len(s) for s in list(self.df[colname].unique())
                           if not pd.isnull(s))
 
-    def get_max_length(self, colname):
-        """
-        Looks up cached maximum string length in column,
-        or calculates and caches it
-        """
-        return self.get_cached_value('max_length', colname,
-                                     self.calc_max_length)
-
     def calc_max_length(self, colname):
-        """
-        Calculates the length of the longest string(s) in the named column.
-        """
         return max(len(s) for s in list(self.df[colname].unique())
                           if not pd.isnull(s))
 
-    def get_tdda_type(self, colname):
-        """
-        Looks up cached tdda type of a column,
-        or calculates and caches it
-        """
-        return self.get_cached_value('tdda_type', colname,
-                                     lambda x: tdda_type(self.df[colname]))
+    def calc_tdda_type(self, colname):
+        return tdda_column_type(self.df[colname])
 
-    def get_null_count(self, colname):
-        """
-        Looks up or caches the number of nulls in a column,
-        or calculates and caches it
-        """
-        f = lambda x: len(self.df) - self.df[colname].count()
-        return self.get_cached_value('null_count', colname, f)
+    def calc_null_count(self, colname):
+        return len(self.df) - self.df[colname].count()
 
-    def get_nunique(self, colname):
-        """
-        Looks up or caches the number of unique (distinct) values in a column,
-        or calculates and caches it.
-        """
-        return self.get_cached_value('nunique', colname,
-                                     lambda x: self.df[colname].nunique())
+    def calc_non_null_count(self, colname):
+        return len(self.df) - self.get_null_count(colname)
 
-    def get_unique_values(self, colname):
-        """
-        Looks up or caches the list of unique (distinct) values in a column,
-        or calculates and caches it.
-        """
-        return self.get_cached_value('uniques', colname,
-                                     lambda x: self.df[colname].unique())
+    def calc_nunique(self, colname):
+        return self.df[colname].nunique()
 
-    def get_non_integer_values_count(self, colname):
-        """
-        Looks up or caches the number of non-integer values in a real column,
-        or calculates and caches it.
-        """
-        return self.get_cached_value('non_integer_values_count', colname,
-                                     self.calc_non_integer_values_count)
+    def calc_unique_values(self, colname):
+        return self.df[colname].unique()
 
     def calc_non_integer_values_count(self, colname):
         values = self.df[colname].dropna()
         non_nulls = self.df[colname].count()
         return non_nulls - (values.astype(int) == values).astype(int).sum()
 
-    def get_all_non_nulls_boolean(self, colname):
-        """
-        Looks up or caches the number of non-integer values in a real column,
-        or calculates and caches it.
-        """
-        return self.get_cached_value('all_non_nulls_boolean', colname,
-                                     self.calc_all_non_nulls_boolean)
-
     def calc_all_non_nulls_boolean(self, colname):
-        """
-        Checks whether all the non-null values in a column are boolean.
-        Returns True of they are, and False otherwise.
-        """
         nn = self.df[colname].dropna()
         return all([type(v) is bool for i, v in nn.iteritems()])
-
-    def get_cached_value(self, value, colname, f):
-        """
-        Return cached value of colname, calculating it and caching it
-        first, if it is not already there.
-        """
-        col_cache = self.cache_values(colname)
-        if not value in col_cache:
-            col_cache[value] = f(colname)
-        return col_cache[value]
-
-    def cache_values(self, colname):
-        """
-        Returns the dictionary for colname from the cache, first creating
-        it if there isn't one on entry.
-        """
-        if not colname in self.cache:
-            self.cache[colname] = {}
-        return self.cache[colname]
 
 
 class PandasVerification(Verification):
@@ -464,15 +172,186 @@ class PandasVerification(Verification):
         """
         Converts object to a Pandas DataFrame.
         """
-        return verification_to_dataframe(self)
+        return self.verification_to_dataframe(self)
+
+    @staticmethod
+    def verification_to_dataframe(ver):
+        fields = ver.fields
+        df = pd.DataFrame(OrderedDict((
+            ('field', list(fields.keys())),
+            ('failures', [v.failures for k, v in fields.items()]),
+            ('passes', [v.passes for k, v in fields.items()]),
+        )))
+        kinds_used = set([])
+        for field, constraints in fields.items():
+            kinds_used = kinds_used.union(set(list(constraints.keys())))
+        base_kinds = [k for k in STANDARD_FIELD_CONSTRAINTS if k in kinds_used]
+        other_kinds = [k for k in kinds_used if not k in base_kinds]
+        for kind in base_kinds + other_kinds:
+            df[kind] = [fields[field].get(kind, np.nan) for field in fields]
+        return df
 
     to_dataframe = to_frame
+
+
+class PandasConstraintDiscoverer(BaseConstraintDiscoverer):
+    """
+    A :py:class:`PandasConstraintDiscoverer` object is used to discover
+    constraints on a Pandas DataFrame.
+    """
+    def __init__(self, df, inc_rex=False):
+        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
+        self.df = df
+
+    def get_column_names(self):
+        return list(self.df)
+
+    def discover_field_constraints(self, fieldname):
+        """
+        Discover constraints for a single field (column) from a
+        Pandas DataFrame.
+
+        Input:
+
+            *fieldname*:
+                a single field name, which must exist as a (column; Series)
+                object in the DataFrame.
+
+        Returns:
+
+            - :py:class:`tdda.base.FieldConstraints` object,
+              if any constraints were found.
+            - ``None``, otherwise.
+
+        """
+        min_constraint = max_constraint = None
+        min_length_constraint = max_length_constraint = None
+        sign_constraint = no_duplicates_constraint = None
+        max_nulls_constraint = allowed_values_constraint = None
+        rex_constraint = None
+
+        field = self.df[fieldname]
+        type_ = tdda_column_type(field)
+        if type_ == 'other':
+            return None         # Unrecognized or complex
+        else:
+            type_constraint = TypeConstraint(type_)
+        length = len(field)
+
+        if length > 0:  # Things are not very interesting when there is no data
+            nNull = int(field.isnull().sum().astype(int))
+            nNonNull = int(field.notnull().sum().astype(int))
+            assert nNull + nNonNull == length
+            if nNull < 2:
+                max_nulls_constraint = MaxNullsConstraint(nNull)
+
+            # Useful info:
+            uniqs = None
+            n_unique = -1   # won't equal number of non-nulls later on
+            if type_ in ('string', 'int'):
+                n_unique = field.nunique()          # excludes NaN
+                if type_ == 'string':
+                    if n_unique <= MAX_CATEGORIES:
+                        uniqs = list(field.dropna().unique())
+                    if uniqs:
+                        allowed_values_constraint = AllowedValuesConstraint(uniqs)
+
+            if nNonNull > 0:
+                if type_ == 'string':
+                    # We don't generate a min, max or sign constraints for strings
+                    # But we do generate min and max length constraints
+                    if (uniqs is None         # There were too many for us to have
+                        and n_unique > 0):    # bothered getting them all
+                        uniqs = list(field.dropna().unique())  # need them now
+                    if uniqs:
+                        m = min(len(v) for v in uniqs)
+                        M = max(len(v) for v in uniqs)
+                        min_length_constraint = MinLengthConstraint(m)
+                        max_length_constraint = MaxLengthConstraint(M)
+                else:
+                    # Non-string fields all potentially get min and max values
+                    if type_ == 'date':
+                        m = field.min()
+                        M = field.max()
+                        if pd.notnull(m):
+                            m = m.to_pydatetime()
+                        if pd.notnull(M):
+                            M = M.to_pydatetime()
+                    else:
+                        m = field.min().item()
+                        M = field.max().item()
+                    if pd.notnull(m):
+                        min_constraint = MinConstraint(m)
+                    if pd.notnull(M):
+                        max_constraint = MaxConstraint(M)
+
+                    # Non-date fields potentially get a sign constraint too.
+                    if min_constraint and max_constraint and type_ != 'date':
+                        if m == M == 0:
+                            sign_constraint = SignConstraint('zero')
+                        elif m >= 0:
+                            sign = 'positive' if m > 0 else 'non-negative'
+                            sign_constraint = SignConstraint(sign)
+                        elif M <= 0:
+                            sign = 'negative' if M < 0 else 'non-positive'
+                            sign_constraint = SignConstraint(sign)
+                        # else:
+                            # mixed
+                    elif pd.isnull(m) and type_ != 'date':
+                        sign_constraint = SignConstraint('null')
+
+            if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
+                no_duplicates_constraint = NoDuplicatesConstraint()
+
+        if type_ == 'string' and self.inc_rex:
+            rex_constraint = RexConstraint(pdextract(field))
+
+        constraints = [c for c in [type_constraint,
+                                   min_constraint, max_constraint,
+                                   min_length_constraint, max_length_constraint,
+                                   sign_constraint, max_nulls_constraint,
+                                   no_duplicates_constraint,
+                                   allowed_values_constraint,
+                                   rex_constraint]
+                         if c is not None]
+        return FieldConstraints(field.name, constraints)
+
+
+def tdda_column_type(x):
+    """
+    Returns the TDDA type of a column.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+
+    If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
+
+    If *x* is not recognized as one of these, 'other' is returned.
+
+    TODO: this implementation knows about Pandas, and it ought not to!
+    """
+    dt = getattr(x, 'dtype', None)
+    if dt == np.dtype('O'):
+        return 'string'
+    dts = str(dt)
+    if 'bool' in dts:
+        return 'bool'
+    if 'int' in dts:
+        return 'int'
+    if 'float' in dts:
+        return 'real'
+    if 'datetime' in dts:
+        return 'date'
+    if not isinstance(x, pd.core.series.Series) and pd.isnull(x):
+        return 'null'
+    # Everything else is other, for now, including compound types,
+    # unicode in Python2, bytes in Python3 etc.
+    return 'other'
 
 
 def types_compatible(x, y, colname=None):
     """
     Returns boolean indicating whether the coarse_type of *x* and *y* are
-    the same.
+    the same, for scalar values.
 
     If *colname* is provided, and the check fails, a warning is issued
     to stderr.
@@ -487,7 +366,7 @@ def types_compatible(x, y, colname=None):
 
 def coarse_type(x):
     """
-    Returns the TDDA coarse type of *x*, a column or scalar.
+    Returns the TDDA coarse type of *x*, a scalar value.
     The coarse types combine 'bool', 'int' and 'real' into 'number'.
 
     Obviously, some people will dislike treating booleans as numbers.
@@ -498,166 +377,25 @@ def coarse_type(x):
 
 
 def tdda_type(x):
-    """
-    Returns the TDDA type of a column or scalar.
-
-    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
-
-    If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
-
-    If *x* is not recognized as one of these, 'other' is returned.
-    """
-    dt = getattr(x, 'dtype', None)
-    if type(x) == str or dt == np.dtype('O'):
-        return 'string'
-    dts = str(dt)
-    if type(x) == bool or 'bool' in dts:
-        return 'bool'
-    if type(x) in (int, long) or 'int' in dts:
-        return 'int'
-    if type(x) == float or 'float' in dts:
-        return 'real'
-    if (type(x) == datetime.datetime or 'datetime' in dts
-                or type(x) == pd.tslib.Timestamp):
-        return 'date'
-    if x is None or (not isinstance(x, pd.core.series.Series)
-                     and pd.isnull(x)):
-        return 'null'
-    # Everything else is other, for now, including compound types,
-    # unicode in Python2, bytes in Python3 etc.
-    return 'other'
-
-
-def discover_field_constraints(field, inc_rex=False):
-    """
-    Discover constraints for a single field (column) from a Pandas DataFrame.
-
-    Input:
-
-        *field*:
-            a single field (column; Series) object, usually from
-            a Pandas DataFrame.
-
-    inc_rex: if the field is of type string, and inc_rex is True,
-             a regular expression (rex) constraint will be generated.
-
-    Returns:
-
-        - :py:class:`tdda.base.FieldConstraints` object,
-          if any constraints were found.
-        - ``None``, otherwise.
-
-    """
-    min_constraint = max_constraint = None
-    min_length_constraint = max_length_constraint = None
-    sign_constraint = no_duplicates_constraint = None
-    max_nulls_constraint = allowed_values_constraint = None
-    rex_constraint = None
-
-    type_ = tdda_type(field)
-    if type_ == 'other':
-        return None         # Unrecognized or complex
-    else:
-        type_constraint = TypeConstraint(type_)
-    length = len(field)
-
-    if length > 0:  # Things are not very interesting when there is no data
-        nNull = int(field.isnull().sum().astype(int))
-        nNonNull = int(field.notnull().sum().astype(int))
-        assert nNull + nNonNull == length
-        if nNull < 2:
-            max_nulls_constraint = MaxNullsConstraint(nNull)
-
-        # Useful info:
-        uniqs = None
-        n_unique = -1   # won't equal number of non-nulls later on
-        if type_ in ('string', 'int'):
-            n_unique = field.nunique()          # excludes NaN
-            if type_ == 'string':
-                if n_unique <= MAX_CATEGORIES:
-                    uniqs = list(field.dropna().unique())
-                if uniqs:
-                    allowed_values_constraint = AllowedValuesConstraint(uniqs)
-
-        if nNonNull > 0:
-            if type_ == 'string':
-                # We don't generate a min, max or sign constraints for strings
-                # But we do generate min and max length constraints
-                if (uniqs is None         # There were too many for us to have
-                    and n_unique > 0):    # bothered getting them all
-                    uniqs = list(field.dropna().unique())  # need them now
-                if uniqs:
-                    m = min(len(v) for v in uniqs)
-                    M = max(len(v) for v in uniqs)
-                    min_length_constraint = MinLengthConstraint(m)
-                    max_length_constraint = MaxLengthConstraint(M)
-            else:
-                # Non-string fields all potentially get min and max values
-                if type_ == 'date':
-                    m = field.min()
-                    M = field.max()
-                    if pd.notnull(m):
-                        m = m.to_pydatetime()
-                    if pd.notnull(M):
-                        M = M.to_pydatetime()
-                else:
-                    m = field.min().item()
-                    M = field.max().item()
-                if pd.notnull(m):
-                    min_constraint = MinConstraint(m)
-                if pd.notnull(M):
-                    max_constraint = MaxConstraint(M)
-
-                # Non-date fields potentially get a sign constraint too.
-                if min_constraint and max_constraint and type_ != 'date':
-                    if m == M == 0:
-                        sign_constraint = SignConstraint('zero')
-                    elif m >= 0:
-                        sign = 'positive' if m > 0 else 'non-negative'
-                        sign_constraint = SignConstraint(sign)
-                    elif M <= 0:
-                        sign = 'negative' if M < 0 else 'non-positive'
-                        sign_constraint = SignConstraint(sign)
-                    # else:
-                        # mixed
-                elif pd.isnull(m) and type_ != 'date':
-                    sign_constraint = SignConstraint('null')
-
-        if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
-            no_duplicates_constraint = NoDuplicatesConstraint()
-
-    if type_ == 'string' and inc_rex:
-        rex_constraint = RexConstraint(pdextract(field))
-
-    constraints = [c for c in [type_constraint,
-                               min_constraint, max_constraint,
-                               min_length_constraint, max_length_constraint,
-                               sign_constraint, max_nulls_constraint,
-                               no_duplicates_constraint,
-                               allowed_values_constraint,
-                               rex_constraint]
-                     if c is not None]
-    return FieldConstraints(field.name, constraints)
-
-
-def verification_to_dataframe(ver):
-    """
-    Convert a :py:class:`PandasVerification` object to a Pandas DataFrame.
-    """
-    fields = ver.fields
-    df = pd.DataFrame(OrderedDict((
-        ('field', list(fields.keys())),
-        ('failures', [v.failures for k, v in fields.items()]),
-        ('passes', [v.passes for k, v in fields.items()]),
-    )))
-    kinds_used = set([])
-    for field, constraints in fields.items():
-        kinds_used = kinds_used.union(set(list(constraints.keys())))
-    base_kinds = [k for k in STANDARD_FIELD_CONSTRAINTS if k in kinds_used]
-    other_kinds = [k for k in kinds_used if not k in base_kinds]
-    for kind in base_kinds + other_kinds:
-        df[kind] = [fields[field].get(kind, np.nan) for field in fields]
-    return df
+     dt = getattr(x, 'dtype', None)
+     if type(x) == str or dt == np.dtype('O'):
+         return 'string'
+     dts = str(dt)
+     if type(x) == bool or 'bool' in dts:
+         return 'bool'
+     if type(x) in (int, long) or 'int' in dts:
+         return 'int'
+     if type(x) == float or 'float' in dts:
+         return 'real'
+     if (type(x) == datetime.datetime or 'datetime' in dts
+                 or type(x) == pd.tslib.Timestamp):
+         return 'date'
+     if x is None or (not isinstance(x, pd.core.series.Series)
+                      and pd.isnull(x)):
+         return 'null'
+     # Everything else is other, for now, including compound types,
+     # unicode in Python2, bytes in Python3 etc.
+     return 'other'
 
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,
@@ -786,7 +524,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                   VerificationClass=PandasVerification, **kwargs)
 
 
-def discover_constraints(df, inc_rex=False):
+def discover_df(df, inc_rex=False):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -897,12 +635,14 @@ def discover_constraints(df, inc_rex=False):
     for a slightly fuller example.
 
     """
-    field_constraints = []
-    for col in df:
-        constraints = discover_field_constraints(df[col], inc_rex=inc_rex)
-        if constraints:
-            field_constraints.append(constraints)
-    if field_constraints:
-        return DatasetConstraints(field_constraints)
-    else:
-        return None
+    disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
+    return disco.discover()
+
+
+def discover_constraints(df, inc_rex=False):
+    """
+    Wrapper function to expose :py:func:`discover_df` under an older
+    legacy name.
+    """
+    return discover_df(df, inc_rex=inc_rex)
+

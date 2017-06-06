@@ -21,7 +21,7 @@ import pandas as pd
 import numpy as np
 
 from tdda.constraints import pdconstraints as pdc
-from tdda.constraints.pdconstraints import verify_df, discover_constraints
+from tdda.constraints.pdconstraints import verify_df, discover_df
 from tdda.constraints.base import (
     MinConstraint,
     MaxConstraint,
@@ -819,8 +819,8 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                         ('max_nulls', [True]),
                         ('no_duplicates', [True]),
                         )))
-        self.assertTrue(pdc.verification_to_dataframe(results1)
-                           .equals(expected))
+        vdf = pdc.PandasVerification.verification_to_dataframe(results1)
+        self.assertTrue(vdf.equals(expected))
 
         df2 = pd.DataFrame({'i': [1, 2, 2, 6, np.nan]})
         dfc2 = [ic2]
@@ -844,8 +844,8 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                         ('max_nulls', [False]),
                         ('no_duplicates', [False]),
                         )))
-        self.assertTrue(pdc.verification_to_dataframe(results2)
-                           .equals(expected))
+        vdf = pdc.PandasVerification.verification_to_dataframe(results2)
+        self.assertTrue(vdf.equals(expected))
 
         ic3 = FieldConstraints('i', [TypeConstraint('int')])
         df3 = df1
@@ -863,8 +863,8 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                         ('passes', [1]),
                         ('type', [True]),
                    )))
-        self.assertTrue(pdc.verification_to_dataframe(results3)
-                           .equals(expected))
+        vdf = pdc.PandasVerification.verification_to_dataframe(results3)
+        self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
         results3 = verify(dsc3, pdcv3.verifiers(), ascii=True)
@@ -919,7 +919,7 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         with open(ref_constraints_path) as f:
             refjson = f.read()
         ref = native_definite(json.loads(refjson))
-        constraints = discover_constraints(df, inc_rex=inc_rex)
+        constraints = discover_df(df, inc_rex=inc_rex)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         ref_fields = ref['fields']
