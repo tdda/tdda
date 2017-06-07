@@ -480,8 +480,7 @@ class BaseConstraintDiscoverer(object):
         Input:
 
             *fieldname*:
-                a single field name, which must exist as a (column; Series)
-                object in the DataFrame.
+                a single field name, which must exist.
 
         Returns:
 

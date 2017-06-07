@@ -205,23 +205,6 @@ class PandasConstraintDiscoverer(BaseConstraintDiscoverer):
         return list(self.df)
 
     def discover_field_constraints(self, fieldname):
-        """
-        Discover constraints for a single field (column) from a
-        Pandas DataFrame.
-
-        Input:
-
-            *fieldname*:
-                a single field name, which must exist as a (column; Series)
-                object in the DataFrame.
-
-        Returns:
-
-            - :py:class:`tdda.base.FieldConstraints` object,
-              if any constraints were found.
-            - ``None``, otherwise.
-
-        """
         min_constraint = max_constraint = None
         min_length_constraint = max_length_constraint = None
         sign_constraint = no_duplicates_constraint = None

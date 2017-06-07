@@ -136,8 +136,10 @@ class DatasetConstraints(object):
         """
         Converts the constraints in this object to a dictionary.
         """
-        return {'fields': {f: v.to_dict_value()
-                           for f, v in self.fields.items()}}
+        constraints = OrderedDict((
+            (f, v.to_dict_value()) for f, v in self.fields.items()
+        ))
+        return OrderedDict((('fields', constraints),))
 
     def to_json(self):
         """
