@@ -252,14 +252,16 @@ class PandasConstraintDiscoverer(BaseConstraintDiscoverer):
                     if n_unique <= MAX_CATEGORIES:
                         uniqs = list(field.dropna().unique())
                     if uniqs:
-                        allowed_values_constraint = AllowedValuesConstraint(uniqs)
+                        avc = AllowedValuesConstraint(uniqs)
+                        allowed_values_constraint = avc
 
             if nNonNull > 0:
                 if type_ == 'string':
-                    # We don't generate a min, max or sign constraints for strings
-                    # But we do generate min and max length constraints
-                    if (uniqs is None         # There were too many for us to have
-                        and n_unique > 0):    # bothered getting them all
+                    # We don't generate a min, max or sign constraints for
+                    # strings. But we do generate min and max length
+                    # constraints
+                    if (uniqs is None       # There were too many for us to
+                        and n_unique > 0):  # have bothered getting them all
                         uniqs = list(field.dropna().unique())  # need them now
                     if uniqs:
                         m = min(len(v) for v in uniqs)
