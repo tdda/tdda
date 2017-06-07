@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-*tdda verify*
--------------
+*tdda verify* for CSV files and feather datasets
+------------------------------------------------
 
 Verify TDDA constraints for CSV files or DataFrames saved as
 :py:mod:`feather` datasets, against a JSON constraints file.
@@ -35,6 +35,7 @@ Optional flags are:
                        Not yet implemented.
     -1, --oneperline   Report each constraint failure on a separate line.
                        Not yet implemented.
+    -7, --ascii        Report in ASCII form, without using special characters.
 
 If a CSV file is used, it will be processed by the Pandas CSV file reader
 with the following settings:
