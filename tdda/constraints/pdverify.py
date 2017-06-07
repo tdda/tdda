@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-*tdda verify* for CSV files and feather datasets
-------------------------------------------------
+*tdda verify*
+-------------
 
 Verify TDDA constraints for CSV files or DataFrames saved as
 :py:mod:`feather` datasets, against a JSON constraints file.
