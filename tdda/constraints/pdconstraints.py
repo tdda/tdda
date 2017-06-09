@@ -137,7 +137,7 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
         return self.df[colname].nunique()
 
     def calc_unique_values(self, colname):
-        return self.df[colname].unique()
+        return sorted(self.df[colname].unique())
 
     def calc_non_integer_values_count(self, colname):
         values = self.df[colname].dropna()
