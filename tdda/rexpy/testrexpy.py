@@ -508,13 +508,35 @@ class TestHelperMethods(unittest.TestCase):
     def test_cleaning(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123']
-        x = Extractor(examples)
+        x = Extractor(examples, remove_empties=True)
         self.assertEqual(set(x.example_freqs.keys()), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 1)
         self.assertEqual(x.n_nulls, 1)
         items = x.example_freqs.keys()
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123'})
+
+    def test_cleaning_keep_empties(self):
+        examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
+        keys = ['123-AB-321', '321-BA-123', '']
+        x = Extractor(examples, remove_empties=False)
+        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(x.n_stripped, 2)
+        self.assertEqual(x.n_empties, 0)
+        self.assertEqual(x.n_nulls, 1)
+        items = x.example_freqs.keys()
+        self.assertEqual(set(items), {'123-AB-321', '321-BA-123', ''})
+
+    def test_cleaning_no_strip_no_empties(self):
+        examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
+        keys = ['123-AB-321', '', ' 123-AB-321', '321-BA-123 ']
+        x = Extractor(examples, remove_empties=False, strip=False)
+        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(x.n_stripped, 0)
+        self.assertEqual(x.n_empties, 0)
+        self.assertEqual(x.n_nulls, 1)
+        items = x.example_freqs.keys()
+        self.assertEqual(set(items), set(keys))
 
     def test_batch_rle_extract_single(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']

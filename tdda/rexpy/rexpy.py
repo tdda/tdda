@@ -263,12 +263,11 @@ class Extractor(object):
     The highest level currently used is 2.
     """
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
-                 verbose=0):
+                 remove_empties=False, strip=False, verbose=0):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
-
         self.verbose = verbose
         self.example_freqs = Counter()      # Each string stored only once;
                                             # but multiplicity stored
@@ -276,8 +275,10 @@ class Extractor(object):
         self.n_stripped = 0                 # Number that required stripping
         self.n_empties = 0                  # Number of empty string found
         self.n_nulls = 0                    # Number of nulls found
-        self.clean(examples)                # Fill in previous attrubutes
+        self.remove_empties = remove_empties
+        self.strip = strip
         self.tag = tag                      # Returned tagged (grouped) RE
+        self.clean(examples)                # Fill in previous attributes
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
@@ -348,9 +349,9 @@ class Extractor(object):
             if s is None:
                 self.n_nulls += 1
             else:
-                stripped = s.strip()
+                stripped = s.strip() if self.strip else s
                 L = len(stripped)
-                if L == 0:
+                if self.remove_empties and L == 0:
                     self.n_empties += n
                 else:
                     self.example_freqs[stripped] += n
@@ -359,8 +360,6 @@ class Extractor(object):
         for k, n in self.example_freqs.items():
             if n == 0:
                 del self.example_freqs[k]
-#                    if self.example_freqs[stripped] == 1:
-#                        self.by_length[L].append(stripped)
         if self.verbose > 1:
             print('Examples:')
             pprint(self.example_freqs)
