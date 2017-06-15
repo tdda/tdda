@@ -148,7 +148,7 @@ class Category(object):
 
 
 class Categories(object):
-    def __init__(self, extra_letters=None):
+    def __init__(self, extra_letters=None, full_escape=False):
         if extra_letters:
             assert all(L in '_-.' for L in extra_letters)  # for now
             el_re = ''.join(r'\%s' % L for L in extra_letters)
@@ -175,7 +175,8 @@ class Categories(object):
                                      '[A-Za-z0-9%s]' % el_re)
         self.Whitespace = Category('Whitespace', ' ', r'\s')
         self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    '[%s]' % re.escape(''.join(punctuation)))
+                                    '[%s]' % escape(''.join(punctuation),
+                                                    full=full_escape))
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
 
@@ -263,7 +264,7 @@ class Extractor(object):
     The highest level currently used is 2.
     """
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
-                 verbose=0):
+                 full_escape=False, verbose=0):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -281,7 +282,9 @@ class Extractor(object):
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
-        self.Cats = Categories(self.thin_extras(extra_letters))
+        self.Cats = Categories(self.thin_extras(extra_letters),
+                               full_escape=full_escape)
+        self.full_escape = full_escape
         if extract:
             self.extract()                  # Stores results
 
@@ -660,11 +663,11 @@ class Extractor(object):
             fixed = False
             refined = None
             if len(strings) == 1:   # Same string for whole group
-                refined = re.escape(list(strings)[0])
+                refined = escape(list(strings)[0], full=self.full_escape)
                 m = M = 1
                 fixed = True
             elif len(chars) == 1:   # Same character, possibly repeated
-                refined = re.escape(list(chars)[0])
+                refined = escape(list(chars)[0], full=self.full_escape)
                 fixed = True
             elif c == 'C':  # Alphanumeric
                 if rlec:  # Always same sequence of chars
@@ -685,13 +688,13 @@ class Extractor(object):
                         print('>>>', cat)  # This cannot happen
                     code = cat.code
                     if re.match(cat.re_multiple, char_str):
-                        refined = re.escape(code)
+                        refined = escape(code, full=self.full_escape)
                         break  # <-- continue?
                 else:
                     refined = c
             elif (c == CODE.PUNC
                   and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
-                refined = '[%s]' % re.escape(char_str)
+                refined = '[%s]' % escape(char_str, full=self.full_escape)
                 fixed = True
             else:
                 refined = c
@@ -1332,7 +1335,7 @@ class ResultsSummary(object):
 
 
 def extract(examples, tag=False, encoding=None, as_object=False,
-            extra_letters=None, verbose=False):
+            extra_letters=None, full_escape=False, verbose=False):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1352,7 +1355,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
         else:
             examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
-                  verbose=verbose)
+                  full_escape=full_escape, verbose=verbose)
     return r if as_object else r.results.rex
 
 
@@ -1656,6 +1659,13 @@ def expand_or_falsify_vrle(rle, vrle, fixed=False):
     else:
         return False
 
+
+def escape(s, full=False):
+    if full:
+        return re.escape(s)
+    else:
+        unescapes = ' '
+        return ''.join((c if c in unescapes else re.escape(c)) for c in s)
 
 
 def usage_error():

@@ -83,8 +83,8 @@ Goal:
 
 TELEPHONES 2
 
- \(\d{3,4}\)\ \d{3,4}\ \d{4}
- \+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}
+ \(\d{3,4}\) \d{3,4} \d{4}
+ \+\d{1,2} \d{2,3} \d{3,4} \d{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -118,10 +118,10 @@ Goal
 
 TELEPHONES 5
 
- \d{3}\ \d{3}\ \d{4}
+ \d{3} \d{3} \d{4}
  \d{3}\-\d{3}\-\d{4}
- 1\ \d{3}\ \d{3}\ \d{4}
- \(\d{3}\)\ \d{3}\ \d{4}
+ 1 \d{3} \d{3} \d{4}
+ \(\d{3}\) \d{3} \d{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -176,11 +176,11 @@ Goal:
 
 TELS 1-5
 
- \d{3}\ \d{3}\ \d{4}
+ \d{3} \d{3} \d{4}
  \d{3,4}[\-\.]\d{3}[\-\.]\d{4}
- 1\ \d{3}\ \d{3}\ \d{4}
- \(\d{3,4}\)\ \d{3,4}\ \d{4}
- \+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}
+ 1 \d{3} \d{3} \d{4}
+ \(\d{3,4}\) \d{3,4} \d{4}
+ \+\d{1,2} \d{2,3} \d{3,4} \d{4}
 
 
 ** With s replacing space and backslashes removed, spaced in groups:
@@ -719,7 +719,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_tels1(self):
         x = extract(self.tels1)
-        self.check_result(x, [r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'], self.tels1)
+        self.check_result(x, [r'^\(\d{3,4}\) \d{3,4} \d{4}$'], self.tels1)
 
 
     tels2 = [
@@ -735,8 +735,8 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_tels2(self):
         x = set(extract(self.tels2))
-        rexes = set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
-                     r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'])
+        rexes = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
+                     r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
         self.check_result(x, rexes, self.tels2)
 
     def test_coverage_tels2(self):
@@ -745,11 +745,11 @@ class TestExtraction(unittest.TestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 5,
-                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
+                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
+                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
                          })
-        expected = set([r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
-                        r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$'])
+        expected = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
+                        r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
         self.check_result(set(rex), expected, self.tels2)
 
     def test_incremental_coverage_tels2(self):
@@ -758,8 +758,8 @@ class TestExtraction(unittest.TestCase):
         od = x.incremental_coverage()
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$', 5),
-                            (r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$', 4),
+                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
+                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
                          )))
 
     def test_coverage_tels2_dedup(self):
@@ -769,14 +769,14 @@ class TestExtraction(unittest.TestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 9,
-                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 6,
+                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 9,
+                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 6,
                          })
         d = dict(zip(rex, x.coverage(dedup=True)))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$': 5,
-                            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$': 4,
+                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
+                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
                          })
 
     def test_incremental_coverage_tels2_dedup(self):
@@ -785,8 +785,8 @@ class TestExtraction(unittest.TestCase):
         od = x.incremental_coverage(dedup=True)
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$', 5),
-                            (r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$', 4),
+                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
+                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
                          )))
 
     tels3 = [
@@ -832,10 +832,10 @@ class TestExtraction(unittest.TestCase):
 #        print(Extractor(self.tels5))
         x = extract(self.tels5)
         rexes = [
-            r'^\d{3}\ \d{3}\ \d{4}$',
+            r'^\d{3} \d{3} \d{4}$',
             r'^\d{3}\-\d{3}\-\d{4}$',
-            r'^1\ \d{3}\ \d{3}\ \d{4}$',
-            r'^\(\d{3}\)\ \d{3}\ \d{4}$',
+            r'^1 \d{3} \d{3} \d{4}$',
+            r'^\(\d{3}\) \d{3} \d{4}$',
         ]
         self.check_result(x, rexes, self.tels5)
 
@@ -844,11 +844,11 @@ class TestExtraction(unittest.TestCase):
 #        print(Extractor(tels, tag=True))
         x = extract(tels)
         rexes = [
-            r'^\d{3}\ \d{3}\ \d{4}$',
+            r'^\d{3} \d{3} \d{4}$',
             r'^\d{3,4}[\-\.]\d{3}[\-\.]\d{4}$',
-            r'^1\ \d{3}\ \d{3}\ \d{4}$',
-            r'^\(\d{3,4}\)\ \d{3,4}\ \d{4}$',
-            r'^\+\d{1,2}\ \d{2,3}\ \d{3,4}\ \d{4}$',
+            r'^1 \d{3} \d{3} \d{4}$',
+            r'^\(\d{3,4}\) \d{3,4} \d{4}$',
+            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
         ]
         self.check_result(x, rexes, tels)
 
@@ -873,10 +873,10 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTCODES(self):
         self.assertEqual(extract(self.POSTCODES),
-                         [r'^[A-Z]{1,2}\d\ \d[A-Z]{2}$'])
+                         [r'^[A-Z]{1,2}\d \d[A-Z]{2}$'])
         # Improved answer
         # Previously
-        #    [r'^[A-Z0-9]{2,3}\ [A-Z0-9]{3}$'])
+        #    [r'^[A-Z0-9]{2,3} [A-Z0-9]{3}$'])
 
 
     Postcodes = [
@@ -885,7 +885,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_Postcodes(self):
         self.assertEqual(extract(self.Postcodes),
-                         [r'^[A-Za-z0-9]{2,3}\ [A-Za-z0-9]{3}$'])
+                         [r'^[A-Za-z0-9]{2,3} [A-Za-z0-9]{3}$'])
 
     postcodes = [
         'eh3 1lh',
@@ -893,10 +893,10 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_Postcodes2(self):
         self.assertEqual(extract(self.postcodes),
-                         [r'^[a-z]{1,2}\d\ \d[a-z]{2}$'])
+                         [r'^[a-z]{1,2}\d \d[a-z]{2}$'])
         # Improved answer.
         # Previously:
-        #     [r'^[a-z0-9]{2,3}\ [a-z0-9]{3}$'])
+        #     [r'^[a-z0-9]{2,3} [a-z0-9]{3}$'])
 
     postCODES = [
         'eh3 1LH',
@@ -904,10 +904,10 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_postCODES(self):
         self.assertEqual(extract(self.postCODES),
-                         [r'^[a-z]{1,2}\d\ \d[A-Z]{2}$'])
+                         [r'^[a-z]{1,2}\d \d[A-Z]{2}$'])
         # Improved answer.
         # Previously:
-        #     [r'^[a-z0-9]{2,3}\ [A-Z0-9]{3}$'])
+        #     [r'^[a-z0-9]{2,3} [A-Z0-9]{3}$'])
 
     POSTcodes = [
         'EH3 1lh',
@@ -915,8 +915,8 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTcodes(self):
         self.assertEqual(extract(self.POSTcodes),
-                         [r'^[A-Z]{1,2}\d\ \d[a-z]{2}$'])
-#                         [r'^[A-Z0-9]{2,3}\ [a-z0-9]{3}$'])
+                         [r'^[A-Z]{1,2}\d \d[a-z]{2}$'])
+#                         [r'^[A-Z0-9]{2,3} [a-z0-9]{3}$'])
 
 
     names1 = [
@@ -954,30 +954,30 @@ class TestExtraction(unittest.TestCase):
 
     def test_names2(self):
         self.assertEqual(extract(self.names2),
-                         [r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$'])
+                         [r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$'])
 
 
     def test_names3(self):
         self.assertEqual(extract(self.names3),
-                         [r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$'])
+                         [r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$'])
 
     def test_names_dot_initial(self):
         self.assertEqual(extract(self.names_dot_initial),
-                         [r'^[A-Z][a-z]{3,5}\ [A-Z]\.\ [A-Z][a-z]+$'])
+                         [r'^[A-Z][a-z]{3,5} [A-Z]\. [A-Z][a-z]+$'])
 
     def test_names1L23(self):
         self.assertEqual(extract(self.names1L + self.names2 + self.names3),
                          [r'^[A-Z][a-z]+$',
-                          r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$',
-                          r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$'])
+                          r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$'])
 
     def test_names1L23_dot_initial(self):
         self.assertEqual(extract(self.names1L + self.names2 + self.names3
                                  + self.names_dot_initial),
                          [r'^[A-Z][a-z]+$',
-                          r'^[A-Z][a-z]{4,6}\ [A-Z][a-z]+$',
-                          r'^[A-Z][a-z]{3,4}\ [A-Z][a-z]+\ [A-Z][a-z]{4,6}$',
-                          r'^[A-Z][a-z]{3,5}\ [A-Z]\.\ [A-Z][a-z]+$'])
+                          r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$',
+                          r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$',
+                          r'^[A-Z][a-z]{3,5} [A-Z]\. [A-Z][a-z]+$'])
 
     abplus = ['ab', 'abb', 'abbb', 'abbbbb', 'abbbbbbb',
               'ab', 'abbbbbbb', 'abbbb', 'ab', 'abbbb',]
@@ -1273,36 +1273,36 @@ class TestExtraction(unittest.TestCase):
             examples = f.read().splitlines()
         r = extract(examples, as_object=True)
         self.assertEqual(set(r.results.rex), {
-            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ NT\ '
-            r'6\.0\;\ Trident\/4\.0\;\ \ \ Acoo\ Browser\;\ GTB5\;\ '
-            r'Mozilla\/4\.0\ \(compatible\;\ MSIE\ 6\.0\;\ Windows\ '
-            r'NT\ 5\.1\;\ \ \ SV1\)\ \;\ InfoPath\.1\;\ \.NET\ CLR\ '
-            r'3\.5\.30729\;\ \.NET\ CLR\ 3\.0\.30618\)$',
+            r'^Mozilla\/4\.0 \(compatible\; MSIE 8\.0\; Windows NT '
+            r'6\.0\; Trident\/4\.0\;   Acoo Browser\; GTB5\; '
+            r'Mozilla\/4\.0 \(compatible\; MSIE 6\.0\; Windows '
+            r'NT 5\.1\;   SV1\) \; InfoPath\.1\; \.NET CLR '
+            r'3\.5\.30729\; \.NET CLR 3\.0\.30618\)$',
 
-            r'^Mozilla\/5\.0\ \(compatible\;\ ABrowse\ 0\.4\;\ Syllable\)$',
+            r'^Mozilla\/5\.0 \(compatible\; ABrowse 0\.4\; Syllable\)$',
 
-            r'^Mozilla\/5\.0\ \(compatible\;\ U\;\ ABrowse\ 0\.6\;\ '
-            r'{1,2}Syllable\)\ AppleWebKit\/420\+\ \(KHTML\,\ like\ Gecko\)$',
+            r'^Mozilla\/5\.0 \(compatible\; U\; ABrowse 0\.6\; '
+            r'{1,2}Syllable\) AppleWebKit\/420\+ \(KHTML\, like Gecko\)$',
 
-            r'^Mozilla\/5\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ '
-            r'NT\ 6\.0\;\ Trident\/4\.0\;\ Acoo\ Browser\ 1\.98\.744\;\ '
-            r'\.NET\ CLR\ {1,3}3\.5\.30729\)$',
+            r'^Mozilla\/5\.0 \(compatible\; MSIE 8\.0\; Windows '
+            r'NT 6\.0\; Trident\/4\.0\; Acoo Browser 1\.98\.744\; '
+            r'\.NET CLR {1,3}3\.5\.30729\)$',
 
-            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 7\.0\;\ Windows\ '
-            r'NT\ 6\.0\;\ Acoo\ Browser\;\ SLCC1\;\ \ \ \.NET\ CLR\ '
-            r'2\.0\.50727\;\ Media\ Center\ PC\ 5\.0\;\ \.NET\ CLR\ '
+            r'^Mozilla\/4\.0 \(compatible\; MSIE 7\.0\; Windows '
+            r'NT 6\.0\; Acoo Browser\; SLCC1\;   \.NET CLR '
+            r'2\.0\.50727\; Media Center PC 5\.0\; \.NET CLR '
             r'3\.0\.04506\)$',
 
-            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 8\.0\;\ Windows\ '
-            r'NT\ 5\.1\;\ Trident\/4\.0\;\ SV1\;\ Acoo\ Browser\;\ '
-            r'\.NET\ CLR\ 2\.0\.50727\;\ \.NET\ CLR\ 3\.0\.4506\.2152\;\ '
-            r'\.NET\ CLR\ 3\.5\.30729\;\ Avant\ Browser\)$',
+            r'^Mozilla\/4\.0 \(compatible\; MSIE 8\.0\; Windows '
+            r'NT 5\.1\; Trident\/4\.0\; SV1\; Acoo Browser\; '
+            r'\.NET CLR 2\.0\.50727\; \.NET CLR 3\.0\.4506\.2152\; '
+            r'\.NET CLR 3\.5\.30729\; Avant Browser\)$',
 
-            r'^Mozilla\/4\.0\ \(compatible\;\ MSIE\ 7\.0\;\ Windows\ '
-            r'NT\ 6\.0\;\ Acoo\ Browser\;\ GTB5\;\ Mozilla\/4\.0\ '
-            r'\(compatible\;\ MSIE\ 6\.0\;\ Windows\ NT\ 5\.1\;\ '
-            r'SV1\)\ \;\ Maxthon\;\ InfoPath\.1\;\ \.NET\ CLR\ 3\.5\.30729\;\ '
-            r'\.NET\ CLR\ 3\.0\.30618\)$',
+            r'^Mozilla\/4\.0 \(compatible\; MSIE 7\.0\; Windows '
+            r'NT 6\.0\; Acoo Browser\; GTB5\; Mozilla\/4\.0 '
+            r'\(compatible\; MSIE 6\.0\; Windows NT 5\.1\; '
+            r'SV1\) \; Maxthon\; InfoPath\.1\; \.NET CLR 3\.5\.30729\; '
+            r'\.NET CLR 3\.0\.30618\)$',
         })
         self.assertEqual(r.n_too_many_groups, 1)
         self.assertEqual(r.warnings[0], '1 string assigned to .{m,n} for '
