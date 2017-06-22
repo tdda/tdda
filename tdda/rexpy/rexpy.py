@@ -616,6 +616,22 @@ class Extractor(object):
                     i -= 1
         return failures
 
+    def pattern_matches(self):
+        compiled = [cre(r) for r in self.results.rex]
+        results = OrderedDict()
+        for x in self.example_freqs.keys():
+            for i, r in enumerate(self.results.rex):
+                cr = cre(r)
+                if re.match(cr, x):
+                    try:
+                        results[i].append(x)
+                    except:
+                        results[i] = [x]
+                    break
+            else:
+                print('Example "%s" did not match any pattern' % x)
+        return results
+
     def refine_groups(self, pattern, examples):
         """
         Refine the categories for variable run-length-encoded patterns
@@ -974,8 +990,8 @@ def rex_coverage(patterns, example_freqs, dedup=False):
 def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
                                   debug=False):
     """
-    Returns an ordered dictionary containing, keyed on terminate
-    regular expressions from patterns, sorted in decreasing order
+    Returns an ordered dictionary containing, keyed on terminated
+    regular expressions, from patterns, sorted in decreasing order
     of incremental coverage, i.e. with the pattern matching
     the most first, followed by the one matching the most remaining
     examples etc.
@@ -1004,7 +1020,6 @@ def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
     matrix, deduped = coverage_matrices(patterns, example_freqs)
     return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                                          example_freqs, dedup=dedup,)
-
 
 
 def terminate_patterns_and_sort(patterns):
