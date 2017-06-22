@@ -1,0 +1,134 @@
+\documentclass{article}
+
+\usepackage{times}
+\parskip=\baselineskip
+\parindent=0pt
+
+%\usepackage{draftwatermark}
+%\usepackage{njrnamed}
+%\usepackage{njrcite}
+%\usepackage{graphicx}
+%\usepackage{bbold}
+%\usepackage{tikz}
+%\usepackage{rotating}
+\usepackage{a4}
+
+%\usepackage{fancyhdr}
+%\pagestyle{fancy}
+
+%\def\baselinestretch{.9}
+
+%\def\textScale{1200}
+
+\input njrbasics
+
+\begin{document}
+
+\title{Rexpy: Automatic Construction of Regular Expressions from Examples}
+\author{Stochastic Solutions}
+\date{Algorithm version 1; software version 0.xx\\22nd June 2017}
+
+\section{Algorithm}
+
+\subsection{Examples Dictionary}
+
+However they are supplied, the examples are stored in a dictionary
+(\verb+dict+) keyed on the string, in unicode. (The dictionary is in
+fact a \verb+Counter+ from \verb+collections+, though this is not important.)
+
+For example, the input:
+
+\begin{verbatim}
+['EH7 8BQ', 'W1 1AA', 'G5 1NN', 'AL7 3RT', 'EH7 8BQ']
+\end{verbatim}
+
+will result in the dictionary,
+\begin{verbatim}
+{'EH7 8BQ': 2, 'W1 1AA': 1, 'G5 1NN': 1, 'AL7 3RT': 1}
+\end{verbatim}
+
+\subsection{Run-length encoding of Coarse Classes}
+
+The next stage transforms each string by {\it coarse-classing\/}
+the characters in it and then producing a run-length encoding of the result.
+
+The default coarse classes are:
+\begin{itemize}
+  \item \verb+'C'+: alphanumeric, either case, i.e. \verb+[A-Za-z0-9%s]+
+  \item \verb+' '+: whitespace, \verb+\s+
+  \item \verb+'.'+: punctuation: all other characters in the range
+                    32--126 (0x20--0x7E) inclusive.
+  \item \verb+'*'+: other: all other characters
+\end{itemize}
+
+For example:
+\begin{verbatim}
+  'EH7 8BQ'  $\longmapsto$ 'CCC CCC'
+\end{verbatim}
+
+{\bf NOTE:} Clearly, Rexpy uses '.' and '*' to have very different meanings in
+its coarse classifications from their meanings in regular expressions.
+There is rarely any confusion from context and using short, clear,
+single-character names for the coarse classes makes the expressions easier
+to read.
+
+After coarse classing, we run-length encode the result.
+The rexpy software displays this in a regular-expression-inspired format,
+using \verb+{n}+ to indicate \verb+n+ repetitions, and using carat (\verb+^+)
+and dollar (\verb+$+) symbols as anchors for the start and end of the string.
+So the result of the initial run-length encoding is:
+
+For our example, this results in the RLE frequencies:
+\begin{verbatim}
+    ^C{3} C{3}$: 2
+    ^C{2} C{3}$: 2
+\end{verbatim}
+
+\subsection{Variable run-length encoding}
+
+We next collapse down patterns that differ only in the number of repetitions
+of character classes to produce what we call {\it variable run-length
+encodings.\/} In this case, clearly the only difference between the
+two patterns we have found is the number of alphanumerics at the start.
+Again, we use regular-expression-inspired syntax to show the results.
+In the example, the resulting single VRLE is:
+\begin{verbatim}
+    ^C{2,3} C{3}$: 2
+\end{verbatim}
+
+
+\subsection{Refining the coarse classes}
+
+Having classified each character and run-length encoded, we next refine
+the classes, where possible.
+
+The goal of this phase is to make finer distinctions, initially
+between digits, hex digits, lower-case letters and upper-case letters,
+and also detecting when there are only a small number of different characters
+(especially, a single character).
+
+We use the following fine classes (some of which overlap):
+
+\begin{itemize}
+  \item \verb+'D'+: digit, i.e. \verb+\d+ \ (= \verb+[0-9]+)
+  \item \verb+'A'+: upper-case letter \verb+[A-Z]+
+  \item \verb+'a'+: lower-case letter \verb+[a-z]+
+  \item \verb+'L'+: letter ignoring case \verb+[A-Za-z]+
+  \item \verb+'H'+: upper-case hex digit \verb+[0-9A-F]+
+  \item \verb+'h'+: lower-case hex digit \verb+[0-9a-f]+
+  \item \verb+'N'+: alphanumeric, upper case \verb+[A-Z0-9]+
+  \item \verb+'n'+: alphanumeric, lower case \verb+[a-z0-9]+
+  \item \verb+'C'+: Alphanumeric, ignoring case \verb+[A-Za-z0-9]+ (as before)
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
