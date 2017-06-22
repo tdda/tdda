@@ -1673,11 +1673,11 @@ def usage_error():
     sys.exit(1)
 
 
-def main(argv):
-    params = get_params(argv[1:])
+def main():
+    params = get_params(sys.argv[1:])
     rexpy_streams(**params)
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
 
