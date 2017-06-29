@@ -1331,7 +1331,8 @@ class ResultsSummary(object):
 
 
 def extract(examples, tag=False, encoding=None, as_object=False,
-            extra_letters=None, verbose=False):
+            extra_letters=None, remove_empties=False, strip=False,
+            verbose=False):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1351,6 +1352,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
         else:
             examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
+                  remove_empties=remove_empties, strip=strip,
                   verbose=verbose)
     return r if as_object else r.results.rex
 
