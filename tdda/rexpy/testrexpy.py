@@ -508,7 +508,7 @@ class TestHelperMethods(unittest.TestCase):
     def test_cleaning(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123']
-        x = Extractor(examples)
+        x = Extractor(examples, remove_empties=True, strip=True)
         self.assertEqual(set(x.example_freqs.keys()), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 1)
@@ -516,8 +516,39 @@ class TestHelperMethods(unittest.TestCase):
         items = x.example_freqs.keys()
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123'})
 
+    def test_cleaning_keep_empties(self):
+        examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
+        keys = ['123-AB-321', '321-BA-123', '']
+        x = Extractor(examples, remove_empties=False, strip=True)
+        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(x.n_stripped, 2)
+        self.assertEqual(x.n_empties, 0)
+        self.assertEqual(x.n_nulls, 1)
+        items = x.example_freqs.keys()
+        self.assertEqual(set(items), {'123-AB-321', '321-BA-123', ''})
+
+    def test_cleaning_no_strip_no_empties(self):
+        examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
+        keys = ['123-AB-321', '', ' 123-AB-321', '321-BA-123 ']
+        x = Extractor(examples, remove_empties=False, strip=False)
+        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(x.n_stripped, 0)
+        self.assertEqual(x.n_empties, 0)
+        self.assertEqual(x.n_nulls, 1)
+        items = x.example_freqs.keys()
+        self.assertEqual(set(items), set(keys))
+
     def test_batch_rle_extract_single(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
+        x = Extractor(examples, strip=True, remove_empties=True)
+        freqs = x.results.rle_freqs
+        self.assertEqual(len(freqs), 1)
+        key = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
+        self.assertEqual(list(freqs.keys()), [key])
+        self.assertEqual(freqs[key], 2)
+
+    def test_batch_rle_extract_single(self):
+        examples = ['123-AB-321', '123-AB-321',  None, '321-BA-123']
         x = Extractor(examples)
         freqs = x.results.rle_freqs
         self.assertEqual(len(freqs), 1)
@@ -526,7 +557,7 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(freqs[key], 2)
 
     def test_batch_rle_extract_pair(self):
-        examples = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        examples = ['123-AB-321', '12-AB-4321', None, '321-BA-123']
         x = Extractor(examples)
         freqs = x.results.rle_freqs
         self.assertEqual(len(freqs), 2)
@@ -641,12 +672,12 @@ class TestExtraction(unittest.TestCase):
         # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         rexes = [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$']
-        x = extract(iids)
+        x = extract(iids, strip=True, remove_empties=True)
         self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_dash(self):
-        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
-        rexes = [r'^\s*\d{2,3}[A-Z\-][A-Z]{2}[A-Z\-]\d{3,4}\s*$']
+        iids = ['123-AB-321', '12-AB-4321', '', None, '321-BA-123']
+        rexes = [r'^$', r'^\d{2,3}[A-Z\-][A-Z]{2}[A-Z\-]\d{3,4}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
         # Test result has changed with improved behaviour.
@@ -655,25 +686,25 @@ class TestExtraction(unittest.TestCase):
         #        [r'^\s*[A-Z0-9\-]{10}\s*$'])
 
     def test_re_pqs_id_with_dash2(self):
-        iids = ['123-AB-321', ' AB-1B-4A21', '', None, '321-BA-1A23']
-        rexes = [r'^\s*[A-Z0-9\-]{10,11}\s*$']
+        iids = ['123-AB-321', 'AB-1B-4A21', None, '321-BA-1A23']
+        rexes = [r'^[A-Z0-9\-]{10,11}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscore(self):
-        iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
+        iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
         rexes = [r'^[A-Za-z0-9\_]+$']
         x = extract(iids, extra_letters='_')
         self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscores2(self):
-        iids = ['123_AB_321', 'AB_1B_4A21', '', None, '321_BA_1A23ab2rj']
+        iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
         rexes = [r'^[A-Za-z0-9\_]+$']
         x = extract(iids, extra_letters='_-')
         self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_with_underscores3(self):
-        iids = ['123-AB_321', 'AB_1B-4A21', '', None, '321_BA_1A23ab2rj']
+        iids = ['123-AB_321', 'AB_1B-4A21', None, '321_BA_1A23ab2rj']
         rexes = [r'^[A-Za-z0-9\_\-]+$']
         x = extract(iids, extra_letters='_-.')
         self.check_result(x, rexes, iids)
