@@ -42,7 +42,112 @@ MAX_CATEGORIES = 20     # String fields with up to 20 categories will
                         # generate AllowedValues constraints
 
 
-class BaseConstraintVerifier:
+class BaseConstraintCalculator:
+    """
+    These are all of the methods that need to be overridden in order
+    to implement a constraint discoverer or verifier.
+    """
+    def is_null(self, value):
+        """
+        Determine whether a value is null
+        """
+        return value is None
+
+    def to_datetime(self, value):
+        """
+        Convert a value to a datetime
+        """
+        return value
+
+    def types_compatible(self, x, y, colname):
+        """
+        Determine whether the types of two values are compatible
+        """
+        raise NotImplementedError('types_compatible')
+
+    def allowed_values_exclusions(self):
+        """
+        Get list of values to ignore when computing allowed values
+        """
+        return [None]
+
+    def calc_tdda_type(self, colname):
+        """
+        Calculates the TDDA type of a column
+        """
+        raise NotImplementedError('min')
+
+    def calc_min(self, colname):
+        """
+        Calculates the minimum (non-null) value in the named column.
+        """
+        raise NotImplementedError('min')
+
+    def calc_max(self, colname):
+        """
+        Calculates the maximum (non-null) value in the named column.
+        """
+        raise NotImplementedError('max')
+
+    def calc_min_length(self, colname):
+        """
+        Calculates the length of the shortest string(s) in the named column.
+        """
+        raise NotImplementedError('min_length')
+
+    def calc_max_length(self, colname):
+        """
+        Calculates the length of the longest string(s) in the named column.
+        """
+        raise NotImplementedError('max_length')
+
+    def calc_null_count(self, colname):
+        """
+        Calculates the number of nulls in a columns
+        """
+        raise NotImplementedError('null_count')
+
+    def calc_non_null_count(self, colname):
+        """
+        Calculates the number of nulls in a columns
+        """
+        raise NotImplementedError('non_null_count')
+
+    def calc_nunique(self, colname):
+        """
+        Calculates the number of unique non-null values in a columns
+        """
+        raise NotImplementedError('nunique')
+
+    def calc_unique_values(self, colname):
+        """
+        Calculates the set of unique non-null values in a columns
+        """
+        raise NotImplementedError('unique_values')
+
+    def calc_non_integer_values_count(self, colname):
+        """
+        Calculates the number of unique non-integer values in a columns
+        """
+        raise NotImplementedError('non_integer_values_count')
+
+    def calc_all_non_nulls_boolean(self, colname):
+        """
+        Checks whether all the non-null values in a column are boolean.
+        Returns True of they are, and False otherwise.
+        """
+        raise NotImplementedError('all_non_nulls_boolean')
+
+    def calc_rex_constraint(self, colname, constraint):
+        """
+        Verify whether a given column satisfies a given regular
+        expression constraint (by matching at least one of the regular
+        expressions given).
+        """
+        raise NotImplementedError('rex')
+
+
+class BaseConstraintVerifier(BaseConstraintCalculator):
     def __init__(self, epsilon=None, type_checking=None):
         self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
         self.type_checking = type_checking or DEFAULT_TYPE_CHECKING
@@ -66,24 +171,6 @@ class BaseConstraintVerifier:
             'allowed_values': self.verify_allowed_values_constraint,
             'rex': self.verify_rex_constraint,
         }
-
-    def is_null(self, value):
-        """
-        Determine whether a value is null
-        """
-        return value is None
-
-    def to_datetime(self, value):
-        """
-        Convert a value to a datetime
-        """
-        return value
-
-    def types_compatible(self, x, y, colname):
-        """
-        Determine whether the types of two values are compatible
-        """
-        raise NotImplementedError('types_compatible')
 
     def get_cached_value(self, value, colname, f):
         """
@@ -271,12 +358,12 @@ class BaseConstraintVerifier:
         non_nulls = self.get_non_null_count(colname)
         return self.get_nunique(colname) == non_nulls
 
-    def verify_allowed_values_constraint(self, colname, constraint,
-                                         exclusions=None):
+    def verify_allowed_values_constraint(self, colname, constraint):
         """
         Verify whether a given column satisfies the constraint on allowed
         (string) values provided.
         """
+        exclusions = self.allowed_values_exclusions()
         allowed_values = constraint.value
         if allowed_values is None:      # a null value is not considered
             return True                 # to be an active constraint,
@@ -300,27 +387,15 @@ class BaseConstraintVerifier:
         expression constraint (by matching at least one of the regular
         expressions given).
         """
-        raise NotImplementedError('rex')
+        return self.calc_rex_constraint(colname, constraint)
 
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""
         return self.get_cached_value('min', colname, self.calc_min)
 
-    def calc_min(self, colname):
-        """
-        Calculates the minimum (non-null) value in the named column.
-        """
-        raise NotImplementedError('min')
-
     def get_max(self, colname):
         """Looks up cached maximum of column, or calculates and caches it"""
         return self.get_cached_value('max', colname, self.calc_max)
-
-    def calc_max(self, colname):
-        """
-        Calculates the maximum (non-null) value in the named column.
-        """
-        raise NotImplementedError('max')
 
     def get_min_length(self, colname):
         """
@@ -330,12 +405,6 @@ class BaseConstraintVerifier:
         return self.get_cached_value('min_length', colname,
                                      self.calc_min_length)
 
-    def calc_min_length(self, colname):
-        """
-        Calculates the length of the shortest string(s) in the named column.
-        """
-        raise NotImplementedError('min_length')
-
     def get_max_length(self, colname):
         """
         Looks up cached maximum string length in column,
@@ -344,24 +413,12 @@ class BaseConstraintVerifier:
         return self.get_cached_value('max_length', colname,
                                      self.calc_max_length)
 
-    def calc_max_length(self, colname):
-        """
-        Calculates the length of the longest string(s) in the named column.
-        """
-        raise NotImplementedError('max_length')
-
     def get_tdda_type(self, colname):
         """
         Looks up cached tdda type of a column,
         or calculates and caches it
         """
         return self.get_cached_value('tdda_type', colname, self.calc_tdda_type)
-
-    def calc_tdda_type(self, colname):
-        """
-        Calculates the TDDA type of a column
-        """
-        raise NotImplementedError('min')
 
     def get_null_count(self, colname):
         """
@@ -371,12 +428,6 @@ class BaseConstraintVerifier:
         return self.get_cached_value('null_count', colname,
                                      self.calc_null_count)
 
-    def calc_null_count(self, colname):
-        """
-        Calculates the number of nulls in a columns
-        """
-        raise NotImplementedError('null_count')
-
     def get_non_null_count(self, colname):
         """
         Looks up or caches the number of non-null values in a column,
@@ -385,24 +436,12 @@ class BaseConstraintVerifier:
         return self.get_cached_value('non_null_count', colname,
                                      self.calc_non_null_count)
 
-    def calc_non_null_count(self, colname):
-        """
-        Calculates the number of nulls in a columns
-        """
-        raise NotImplementedError('non_null_count')
-
     def get_nunique(self, colname):
         """
         Looks up or caches the number of unique (distinct) values in a column,
         or calculates and caches it.
         """
         return self.get_cached_value('nunique', colname, self.calc_nunique)
-
-    def calc_nunique(self, colname):
-        """
-        Calculates the number of unique non-null values in a columns
-        """
-        raise NotImplementedError('nunique')
 
     def get_unique_values(self, colname):
         """
@@ -412,12 +451,6 @@ class BaseConstraintVerifier:
         return self.get_cached_value('uniques', colname,
                                      self.calc_unique_values)
 
-    def calc_unique_values(self, colname):
-        """
-        Calculates the set of unique non-null values in a columns
-        """
-        raise NotImplementedError('unique_values')
-
     def get_non_integer_values_count(self, colname):
         """
         Looks up or caches the number of non-integer values in a real column,
@@ -425,12 +458,6 @@ class BaseConstraintVerifier:
         """
         return self.get_cached_value('non_integer_values_count', colname,
                                      self.calc_non_integer_values_count)
-
-    def calc_non_integer_values_count(self, colname):
-        """
-        Calculates the number of unique non-integer values in a columns
-        """
-        raise NotImplementedError('non_integer_values_count')
 
     def get_all_non_nulls_boolean(self, colname):
         """
@@ -440,18 +467,17 @@ class BaseConstraintVerifier:
         return self.get_cached_value('all_non_nulls_boolean', colname,
                                      self.calc_all_non_nulls_boolean)
 
-    def calc_all_non_nulls_boolean(self, colname):
-        """
-        Checks whether all the non-null values in a column are boolean.
-        Returns True of they are, and False otherwise.
-        """
-        raise NotImplementedError('all_non_nulls_boolean')
 
-
-class BaseConstraintDiscoverer(object):
+class BaseConstraintDiscoverer:
     """
     A :py:class:`BaseConstraintDiscoverer` object is used to discover
     constraints.
+
+    It needs to do the same calculations as a BaseConstraintCalculator,
+    but it isn't just a matter of providing override definitions for all
+    of those methods. Instead, you need to override two methods:
+        - get_column_names
+        - discover_field_constraints
     """
     def __init__(self, inc_rex=False):
         self.inc_rex = inc_rex

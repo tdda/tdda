@@ -54,6 +54,12 @@ from tdda.rexpy import pdextract
 if sys.version_info.major >= 3:
     long = int
 
+# pd.tslib is deprecated in newer versions of Pandas
+if hasattr(pd, 'Timestamp'):
+    pandas_Timestamp = pd.Timestamp
+else:
+    pandas_Timestamp = pd.tslib.Timestamp
+
 
 class PandasConstraintVerifier(BaseConstraintVerifier):
     """
@@ -74,18 +80,12 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
     def types_compatible(self, x, y, colname):
         return types_compatible(x, y, colname)
 
-    def verify_allowed_values_constraint(self, colname, constraint):
-        exclusions = [None, np.nan, pd.NaT] # remarkably, Pandas returns
-                                            # various kinds of nulls as
-                                            # unique values, despite not
-                                            # counting them with .nunique()
-        v = BaseConstraintVerifier.verify_allowed_values_constraint(self,
-                                                                    colname,
-                                                                    constraint,
-                                                                    exclusions)
-        return v
+    def allowed_values_exclusions(self):
+        # remarkably, Pandas returns various kinds of nulls as
+        # unique values, despite not counting them with .nunique()
+        return [None, np.nan, pd.NaT]
 
-    def verify_rex_constraint(self, colname, constraint):
+    def calc_rex_constraint(self, colname, constraint):
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
             return True        # to be an active constraint,
@@ -374,7 +374,7 @@ def tdda_type(x):
      if type(x) == float or 'float' in dts:
          return 'real'
      if (type(x) == datetime.datetime or 'datetime' in dts
-                 or type(x) == pd.tslib.Timestamp):
+                 or type(x) == pandas_Timestamp):
          return 'date'
      if x is None or (not isinstance(x, pd.core.series.Series)
                       and pd.isnull(x)):
