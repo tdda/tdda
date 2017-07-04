@@ -43,6 +43,7 @@ from tdda.constraints.base import (
     EPSILON_DEFAULT,
 )
 from tdda.constraints.console import main_with_argv
+from tdda.constraints.pddiscover import discover_constraints_from_file
 from tdda.constraints.pdverify import verify_df_from_file
 
 isPython2 = sys.version_info.major < 3
@@ -1009,6 +1010,20 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         #     tell it that 'elevens' is a string field.
         self.assertEqual(v.passes, 60)
         self.assertEqual(v.failures, 1)
+
+    def testDDD_discover_and_verify(self):
+        # both discovery and verification done using Pandas
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        c = discover_constraints_from_file(csv_path, constraints_path=None,
+                                            verbose=False)
+        tmpdir = tempfile.gettempdir()
+        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
+        with open(tmpfile, 'w') as f:
+            f.write(c)
+        v = verify_df_from_file(csv_path, tmpfile, report='fields',
+                                verbose=False)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 0)
 
     def command_line(self, wrapper):
         # common code for testTDDACommand and testTDDACLI

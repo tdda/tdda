@@ -30,6 +30,9 @@ UTF8 = 'UTF-8'
 RD = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$')
 RDT = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
                  r'(\d{1,2}):(\d{2}):(\d{2})$')
+RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
+                  r'(\d{1,2}):(\d{2}):(\d{2})'
+                  r'\.(\d+)$')
 
 UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
 
@@ -732,7 +735,7 @@ def UTF8DefiniteObject(s):
 
 
 def get_date(d):
-    for rex, L in ((RD, 3), (RDT, 6)):
+    for rex, L in ((RD, 3), (RDT, 6), (RDTM, 7)):
         m = re.match(rex, d)
         if m:
             try:
