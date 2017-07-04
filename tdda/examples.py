@@ -19,7 +19,7 @@ import shutil
 import sys
 
 
-def copy_examples(name, destination='.'):
+def copy_examples(name, destination='.', verbose=True):
     """
     Copy example files to a specified directory
     """
@@ -33,7 +33,8 @@ def copy_examples(name, destination='.'):
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
     copy(srcdir, outdir)
-    print('Copied example files for tdda.%s to %s' % (name, outdir))
+    if verbose:
+        print('Copied example files for tdda.%s to %s' % (name, outdir))
 
 
 def copy(srcdir, destination):
@@ -57,10 +58,10 @@ def copy(srcdir, destination):
                     fout.write(fin.read())
 
 
-def copy_main(name):
+def copy_main(name, verbose=True):
     if len(sys.argv) > 2:
         print('USAGE: examples [destination-directory]', file=sys.stderr)
         sys.exit(1)
     destination = sys.argv[1] if len(sys.argv) == 2 else '.'
-    copy_examples(name, destination)
+    copy_examples(name, destination, verbose=verbose)
 

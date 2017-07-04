@@ -300,6 +300,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
                 return True       # definitely OK of the types actually match
             elif 'int' in allowed_types and actual_type == 'real':
                 return self.get_non_integer_values_count(colname) == 0
+            elif 'bool' in allowed_types and actual_type == 'real':
+                return self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'string':
                 # boolean columns with nulls get converted to dtype
                 # object, which is usually used for strings

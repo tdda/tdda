@@ -42,6 +42,8 @@ from tdda.constraints.base import (
     fuzzy_greater_than,
     EPSILON_DEFAULT,
 )
+from tdda.constraints.console import main_with_argv
+from tdda.constraints.pdverify import verify_df_from_file
 
 isPython2 = sys.version_info.major < 3
 
@@ -827,12 +829,36 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         dsc2 = DatasetConstraints(dfc2)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
         results2 = verify(dsc2, pdcv2.verifiers())
+        # expect the boolean->real type constraint to pass with sloppy types
+        expected = ('FIELDS:\n\n'
+                    'i: 5 failures  1 pass  '
+                    'type ✓  min ✗  max ✗  sign ✗  '
+                    'max_nulls ✗  no_duplicates ✗\n\n'
+                    'SUMMARY:\n\nPasses: 1\nFailures: 5')
+        self.assertEqual(str(results2), expected)
+        expected = pd.DataFrame(OrderedDict((
+                        ('field', ['i']),
+                        ('failures', [5]),
+                        ('passes', [1]),
+                        ('type', [True]),
+                        ('min', [False]),
+                        ('max', [False]),
+                        ('sign', [False]),
+                        ('max_nulls', [False]),
+                        ('no_duplicates', [False]),
+                        )))
+        vdf = pdc.PandasVerification.verification_to_dataframe(results2)
+        self.assertTrue(vdf.equals(expected))
+
+        pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
+        results2strict = verify(dsc2, pdcv2strict.verifiers())
+        # expect the boolean->real type constraint to fail with strict types
         expected = ('FIELDS:\n\n'
                     'i: 6 failures  0 passes  '
                     'type ✗  min ✗  max ✗  sign ✗  '
                     'max_nulls ✗  no_duplicates ✗\n\n'
                     'SUMMARY:\n\nPasses: 0\nFailures: 6')
-        self.assertEqual(str(results2), expected)
+        self.assertEqual(str(results2strict), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
                         ('failures', [6]),
@@ -844,7 +870,7 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
                         ('max_nulls', [False]),
                         ('no_duplicates', [False]),
                         )))
-        vdf = pdc.PandasVerification.verification_to_dataframe(results2)
+        vdf = pdc.PandasVerification.verification_to_dataframe(results2strict)
         self.assertTrue(vdf.equals(expected))
 
         ic3 = FieldConstraints('i', [TypeConstraint('int')])
@@ -950,6 +976,42 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
 
     @unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
     def testTDDACommand(self):
+        # similar test to testTDDACLI, but using the command-line wrapper
+        self.command_line(wrapper=True)
+
+    def testTDDACLI(self):
+        # similar test to testTDDACommand, but using the console API
+        self.command_line(wrapper=False)
+
+    def testDDD_df(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df(df, constraints_path)
+        # expect 3 failures:
+        #   - the pandas CSV reader will have read 'elevens' as an int
+        #   - the pandas CSV reader will have read the date columns as strings
+        self.assertEqual(v.passes, 58)
+        self.assertEqual(v.failures, 3)
+
+    def testDDD_csv(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        # expect 1 failure:
+        #   - the enhanced CSV reader will have initially read 'elevens' as
+        #     an int field and then (correctly) converted it to string, but
+        #     it doesn't know that it would need to pad with initial zeros,
+        #     so that means it will have computed its minimum as being '0'
+        #     not '00', so the minimum string length won't be the same as
+        #     Miro would compute (since Miro has the advantage of having
+        #     additional metadata available when it read the CSV file, to
+        #     tell it that 'elevens' is a string field.
+        self.assertEqual(v.passes, 60)
+        self.assertEqual(v.failures, 1)
+
+    def command_line(self, wrapper):
+        # common code for testTDDACommand and testTDDACLI
         tmpdir = tempfile.gettempdir()
         constraintsdir = os.path.abspath(os.path.dirname(__file__))
         tddaTopDir = os.path.dirname(os.path.dirname(constraintsdir))
@@ -962,13 +1024,25 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         rmdirs(tmpdir, dirs)
         try:
             start = 'Copied example files for tdda.referencetest to'
-            result = check_shell_output(['tdda', 'examples', tmpdir])
-            self.assertTrue(result.startswith(start))
-            self.assertEqual(len(result.splitlines()), 3)
-            result = check_shell_output(['tdda', 'discover', e92csv, e92tdda])
-            self.assertEqual(result, '')
+            argv = ['tdda', 'examples', tmpdir]
+            if wrapper:
+                result = check_shell_output(argv)
+                self.assertTrue(result.startswith(start))
+                self.assertEqual(len(result.splitlines()), 3)
+            else:
+                main_with_argv(argv, verbose=False)
+            argv = ['tdda', 'discover', e92csv, e92tdda]
+            if wrapper:
+                result = check_shell_output(argv)
+                self.assertEqual(result, '')
+            else:
+                main_with_argv(argv, verbose=False)
+            argv = ['tdda', 'verify', e92csv, e92tdda]
             self.assertTrue(os.path.exists(e92tdda))
-            result = check_shell_output(['tdda', 'verify', e92csv, e92tdda])
+            if wrapper:
+                result = check_shell_output(argv)
+            else:
+                result = str(main_with_argv(argv, verbose=False))
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Passes: 72\n'
                                                     'Failures: 0'))

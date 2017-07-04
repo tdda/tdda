@@ -79,9 +79,12 @@ from tdda.constraints.pdconstraints import verify_df
 from tdda.referencetest.checkpandas import default_csv_loader
 
 
-def verify_df_from_file(df_path, constraints_path, **kwargs):
+def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     df = load_df(df_path)
-    print(verify_df(df, constraints_path, **kwargs))
+    v = verify_df(df, constraints_path, **kwargs)
+    if verbose:
+        print(v)
+    return v
 
 
 def load_df(path):
@@ -134,7 +137,7 @@ def usage_error():
     sys.exit(1)
 
 
-def main(argv):
+def main(argv, verbose=True):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
@@ -142,7 +145,7 @@ def main(argv):
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
-    verify_df_from_file(**params)
+    return verify_df_from_file(verbose=verbose, **params)
 
 
 if __name__ == '__main__':

@@ -435,7 +435,25 @@ def default_csv_loader(csvfile, **kwargs):
         'keep_default_na': False,
     }
     options.update(kwargs)
-    return pd.read_csv(csvfile, **options)
+    df = pd.read_csv(csvfile, **options)
+
+    # the reader won't have inferred any datetime columns (even though we
+    # told it to), because we didn't explicitly tell it the column names
+    # in advance. so.... we'll do it by hand (looking at string columns, and
+    # seeing if we can convert them safely to datetimes).
+    colnames = df.columns.tolist()
+    for c in colnames:
+        if df[c].dtype == pd.np.dtype('O'):
+            try:
+                datecol = pd.to_datetime(df[c])
+                if datecol.dtype == pd.np.dtype('datetime64[ns]'):
+                    df[c] = datecol
+            except Exception as e:
+                pass
+    ndf = pd.DataFrame()
+    for c in colnames:
+        ndf[c] = df[c]
+    return ndf
 
 
 def default_csv_writer(df, csvfile, **kwargs):

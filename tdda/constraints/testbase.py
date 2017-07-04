@@ -11,6 +11,8 @@ import time
 import sys
 import unittest
 
+from collections import OrderedDict
+
 from tdda.constraints.base import (
     DatasetConstraints,
     Fields,
@@ -26,6 +28,7 @@ from tdda.constraints.base import (
     MaxLengthConstraint,
     constraint_class,
     strip_lines,
+    sort_constraint_dict,
 )
 TESTDATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                             'testdata')
@@ -142,7 +145,12 @@ class TestConstraints(unittest.TestCase):
     def testload(self):
         path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
         constraints = DatasetConstraints(loadpath=path)
-#        print(constraints)
+        constraints.sort_fields()
+        actual = constraints.to_json()
+        with open(path) as f:
+            expected = json.dumps(sort_constraint_dict(json.loads(f.read())),
+                                  indent=4) + '\n'
+            self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

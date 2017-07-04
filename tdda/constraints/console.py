@@ -78,33 +78,33 @@ def load_all_extensions(argv):
         return []
 
 
-def main():
-    extensions = load_all_extensions(sys.argv[1:])
+def main_with_argv(argv, verbose=True):
+    extensions = load_all_extensions(argv[1:])
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         help(extensions, stream=sys.stderr)
         sys.exit(1)
-    name = sys.argv[1]
+    name = argv[1]
 
     if name in ('discover', 'disco'):
         for ext in extensions:
             if ext.applicable():
                 return ext.discover()
         if pddiscover:
-            return pddiscover.main(sys.argv[1:])
+            return pddiscover.main(argv[1:], verbose=verbose)
         print('No discovery available', file=sys.stderr)
     elif name in ('verify',):
         for ext in extensions:
             if ext.applicable():
                 return ext.verify()
         if pdverify:
-            return pdverify.main(sys.argv[1:])
+            return pdverify.main(argv[1:], verbose=verbose)
         print('No verification available', file=sys.stderr)
     elif name in ('examples',):
-        dest = sys.argv[2] if len(sys.argv) > 2 else '.'
-        copy_examples('referencetest', destination=dest)
-        copy_examples('constraints', destination=dest)
-        copy_examples('rexpy', destination=dest)
+        dest = argv[2] if len(argv) > 2 else '.'
+        copy_examples('referencetest', destination=dest, verbose=verbose)
+        copy_examples('constraints', destination=dest, verbose=verbose)
+        copy_examples('rexpy', destination=dest, verbose=verbose)
     elif name in ('version', '-v', '--version'):
         pdverify.main(['tdda', '-v'])
     elif name in ('test',):
@@ -114,6 +114,10 @@ def main():
     else:
         help(extensions, stream=sys.stderr)
         sys.exit(1)
+
+
+def main():
+    main_with_argv(sys.argv)
 
 
 if __name__ == '__main__':

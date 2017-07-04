@@ -148,6 +148,18 @@ class DatasetConstraints(object):
         """
         return json.dumps(self.to_dict(), indent=4) + '\n'
 
+    def sort_fields(self, fields=None):
+        """
+        Sorts the field constraints within the object by field order,
+        by default by alphabetical order.
+
+        If a list of field names is provided, then the fields will appear
+        in that given order (with any additional fields appended at the end).
+        """
+        if fields is None:
+            fields = sorted(self.fields.keys())
+        self.fields.set_key_order(fields)
+
 
 class Fields(TDDAObject):
     def __init__(self, constraints=None):
@@ -789,4 +801,25 @@ def fuzz_up(v, epsilon):
     constraint.
     """
     return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
+
+
+def sort_constraint_dict(d):
+    """
+    Helper function for tests, to sort a constraints dictionary (read
+    from a .tdda file) into alphabetical order by field name, and with
+    all of the individual constraints in the same order in which they
+    are generated.
+    """
+    constraintkey = ['type', 'min', 'max', 'min_length', 'max_length',
+                     'sign', 'max_nulls', 'no_duplicates', 'allowed_values',
+                     'rex']
+    def sort_by_key(x, y):
+        XA = constraintkey.index(x[0])
+        YA = constraintkey.index(y[0])
+        return cmp(XA, YA)
+    fields = OrderedDict((
+        (f, OrderedDict(((k, kv) for k, kv in sorted(v.items(), sort_by_key))))
+        for f, v in sorted(d['fields'].items())
+    ))
+    return OrderedDict((('fields', fields),))
 

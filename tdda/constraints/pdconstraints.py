@@ -151,6 +151,43 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
         nn = self.df[colname].dropna()
         return all([type(v) is bool for i, v in nn.iteritems()])
 
+    def repair_field_types(self, constraints):
+        # We sometimes haven't inferred the field types correctly for
+        # the dataframe (e.g. if we read it from a csv file, "string"
+        # fields might look like numeric ones, if they only contain digits).
+        # We can try to use the constraint information to try to repair this,
+        # but it's not always going to be successful.
+        for c in self.df.columns.tolist():
+            ser = self.df[c]
+            try:
+                ctype = constraints[c]['type'].value
+                dtype = ser.dtype
+                if ctype == 'string' and dtype != pd.np.dtype('O'):
+                    is_numeric = True
+                    is_real = False
+                    for limit in ('min', 'max'):
+                        if limit in constraints[c]:
+                            limitval = constraints[c][limit].value
+                            if type(limitval) in (int, long, float):
+                                if type(limitval) == float:
+                                    is_real = True
+                            else:
+                                is_numeric = False
+                                break
+                    if is_numeric:
+                        if is_real:
+                            is_real = self.calc_non_integer_values_count(c) > 0
+                        self.df.loc[ser.notnull(), c] = ser.astype(str)
+                        if not is_real:
+                            self.df[c] = self.df[c].str.replace('.0', '')
+                elif ctype == 'bool' and dtype == pd.np.dtype('int64'):
+                    self.df[c] = ser.astype(bool)
+                elif ctype == 'bool' and dtype == pd.np.dtype('int32'):
+                    self.df[c] = ser.astype(bool)
+            except Exception as e:
+                print(e)
+                pass
+
 
 class PandasVerification(Verification):
     """
@@ -506,6 +543,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
     constraints = DatasetConstraints(loadpath=constraints_path)
+    pdv.repair_field_types(constraints)
     return verify(constraints, pdv.verifiers(),
                   VerificationClass=PandasVerification, **kwargs)
 

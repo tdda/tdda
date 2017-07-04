@@ -71,14 +71,17 @@ from tdda.constraints.pdconstraints import discover_constraints
 from tdda.referencetest.checkpandas import default_csv_loader
 
 
-def discover_constraints_from_file(df_path, constraints_path, **kwargs):
+def discover_constraints_from_file(df_path, constraints_path, verbose=True,
+                                   **kwargs):
     df = load_df(df_path)
     constraints = discover_constraints(df, **kwargs)
+    output = constraints.to_json()
     if constraints_path:
         with open(constraints_path, 'w') as f:
-            f.write(constraints.to_json())
-    else:
-        print(constraints.to_json())
+            f.write(output)
+    elif verbose:
+        print(output)
+    return output
 
 
 def load_df(path):
@@ -123,7 +126,7 @@ def usage_error():
     sys.exit(1)
 
 
-def main(argv):
+def main(argv, verbose=True):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
@@ -131,7 +134,7 @@ def main(argv):
     if not(params['df_path']):
         print(USAGE, file=sys.stderr)
         sys.exit(1)
-    discover_constraints_from_file(**params)
+    return discover_constraints_from_file(verbose=verbose, **params)
 
 
 if __name__ == '__main__':
