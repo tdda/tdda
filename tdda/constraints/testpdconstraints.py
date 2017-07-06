@@ -1061,7 +1061,11 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Passes: 72\n'
                                                     'Failures: 0'))
-            result = check_shell_output(['tdda', 'verify', e118csv, e92tdda])
+            argv = ['tdda', 'verify', e118csv, e92tdda]
+            if wrapper:
+                result = check_shell_output(argv)
+            else:
+                result = str(main_with_argv(argv, verbose=False))
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Passes: 57\n'
                                                     'Failures: 15'))
