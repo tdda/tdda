@@ -42,6 +42,7 @@ from tdda.constraints.base import (
     AllowedValuesConstraint, RexConstraint,
 )
 from tdda.constraints.baseconstraints import (
+    BaseConstraintCalculator,
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
@@ -49,7 +50,7 @@ from tdda.constraints.baseconstraints import (
 
 DEBUG = False
 
-from tdda.rexpy import pdextract
+from tdda import rexpy
 
 if sys.version_info.major >= 3:
     long = int
@@ -61,15 +62,9 @@ else:
     pandas_Timestamp = pd.tslib.Timestamp
 
 
-class PandasConstraintVerifier(BaseConstraintVerifier):
-    """
-    A :py:class:`PandasConstraintVerifier` object provides methods
-    for verifying every type of constraint against a Pandas DataFrame.
-    """
-    def __init__(self, df, epsilon=None, type_checking=None):
+class PandasConstraintCalculator(BaseConstraintCalculator):
+    def __init__(self, df):
         self.df = df
-        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
-                                        type_checking=type_checking)
 
     def is_null(self, value):
         return pd.isnull(value)
@@ -77,32 +72,14 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
     def to_datetime(self, value):
         return pd.to_datetime(value)
 
+    def get_column_names(self):
+        return list(self.df)
+
+    def get_nrecords(self):
+        return len(self.df)
+
     def types_compatible(self, x, y, colname):
         return types_compatible(x, y, colname)
-
-    def allowed_values_exclusions(self):
-        # remarkably, Pandas returns various kinds of nulls as
-        # unique values, despite not counting them with .nunique()
-        return [None, np.nan, pd.NaT]
-
-    def calc_rex_constraint(self, colname, constraint):
-        rexes = constraint.value
-        if rexes is None:      # a null value is not considered
-            return True        # to be an active constraint,
-                               # so is always satisfied
-        rexes = [re.compile(r) for r in rexes]
-        strings = [native_definite(s)
-                   for s in self.df[colname].dropna().unique()]
-
-        for s in strings:
-            for r in rexes:
-                if re.match(r, s):
-                    break
-            else:
-                if DEBUG:
-                    print('*** Unmatched string: "%s"' % s)
-                return False  # At least one string didn't match
-        return True
 
     def calc_min(self, colname):
         if self.df[colname].dtype == np.dtype('O'):
@@ -131,14 +108,15 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
         return len(self.df) - self.df[colname].count()
 
     def calc_non_null_count(self, colname):
-        return len(self.df) - self.get_null_count(colname)
+        return len(self.df) - self.calc_null_count(colname)
 
     def calc_nunique(self, colname):
         return self.df[colname].nunique()
 
-    def calc_unique_values(self, colname):
+    def calc_unique_values(self, colname, include_nulls=True):
         values = self.df[colname].unique()
-        nullvalues = [v for v in values if pd.isnull(v)]
+        nullvalues = ([v for v in values if pd.isnull(v)] if include_nulls
+                      else [])
         nonnullvalues = [v for v in values if not pd.isnull(v)]
         return nullvalues + sorted(nonnullvalues)
 
@@ -151,6 +129,48 @@ class PandasConstraintVerifier(BaseConstraintVerifier):
         nn = self.df[colname].dropna()
         return all([type(v) is bool for i, v in nn.iteritems()])
 
+    def allowed_values_exclusions(self):
+        # remarkably, Pandas returns various kinds of nulls as
+        # unique values, despite not counting them with .nunique()
+        return [None, np.nan, pd.NaT]
+
+    def find_rexes(self, colname, values=None):
+        if values is None:
+            return rexpy.pdextract(self.df[colname])
+        else:
+            return rexpy.extract(values)
+
+    def verify_rex_constraint(self, colname, constraint):
+        rexes = constraint.value
+        if rexes is None:      # a null value is not considered
+            return True        # to be an active constraint,
+                               # so is always satisfied
+        rexes = [re.compile(r) for r in rexes]
+        strings = [native_definite(s)
+                   for s in self.df[colname].dropna().unique()]
+
+        for s in strings:
+            for r in rexes:
+                if re.match(r, s):
+                    break
+            else:
+                if DEBUG:
+                    print('*** Unmatched string: "%s"' % s)
+                return False  # At least one string didn't match
+        return True
+
+
+
+class PandasConstraintVerifier(PandasConstraintCalculator,
+                               BaseConstraintVerifier):
+    """
+    A :py:class:`PandasConstraintVerifier` object provides methods
+    for verifying every type of constraint against a Pandas DataFrame.
+    """
+    def __init__(self, df, epsilon=None, type_checking=None):
+        PandasConstraintCalculator.__init__(self, df)
+        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
+                                        type_checking=type_checking)
     def repair_field_types(self, constraints):
         # We sometimes haven't inferred the field types correctly for
         # the dataframe (e.g. if we read it from a csv file, "string"
@@ -232,7 +252,8 @@ class PandasVerification(Verification):
     to_dataframe = to_frame
 
 
-class PandasConstraintDiscoverer(BaseConstraintDiscoverer):
+class PandasConstraintDiscoverer(PandasConstraintCalculator,
+                                 BaseConstraintDiscoverer):
     """
     A :py:class:`PandasConstraintDiscoverer` object is used to discover
     constraints on a Pandas DataFrame.
@@ -241,10 +262,8 @@ class PandasConstraintDiscoverer(BaseConstraintDiscoverer):
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
         self.df = df
 
-    def get_column_names(self):
-        return list(self.df)
-
-    def discover_field_constraints(self, fieldname):
+    def discover_field_constraints_pandas_specifically(self, fieldname):
+        # TODO: REMOVE THIS, IT'S NOW DONE IN baseconstraints.py
         min_constraint = max_constraint = None
         min_length_constraint = max_length_constraint = None
         sign_constraint = no_duplicates_constraint = None

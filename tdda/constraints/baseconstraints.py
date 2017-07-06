@@ -59,6 +59,18 @@ class BaseConstraintCalculator:
         """
         return value
 
+    def get_column_names(self):
+        """
+        Returns a list containing the names of all the columns
+        """
+        raise NotImplementedError('column_names')
+
+    def get_nrecords(self):
+        """
+        Return total number of records
+        """
+        raise NotImplementedError('nrecords')
+
     def types_compatible(self, x, y, colname):
         """
         Determine whether the types of two values are compatible
@@ -75,7 +87,7 @@ class BaseConstraintCalculator:
         """
         Calculates the TDDA type of a column
         """
-        raise NotImplementedError('min')
+        raise NotImplementedError('type')
 
     def calc_min(self, colname):
         """
@@ -103,31 +115,32 @@ class BaseConstraintCalculator:
 
     def calc_null_count(self, colname):
         """
-        Calculates the number of nulls in a columns
+        Calculates the number of nulls in a column
         """
         raise NotImplementedError('null_count')
 
     def calc_non_null_count(self, colname):
         """
-        Calculates the number of nulls in a columns
+        Calculates the number of nulls in a column
         """
         raise NotImplementedError('non_null_count')
 
     def calc_nunique(self, colname):
         """
-        Calculates the number of unique non-null values in a columns
+        Calculates the number of unique non-null values in a column
         """
         raise NotImplementedError('nunique')
 
-    def calc_unique_values(self, colname):
+    def calc_unique_values(self, colname, include_nulls=True):
         """
-        Calculates the set of unique non-null values in a columns
+        Calculates the set of unique values (including or excluding nulls)
+        in a column
         """
         raise NotImplementedError('unique_values')
 
     def calc_non_integer_values_count(self, colname):
         """
-        Calculates the number of unique non-integer values in a columns
+        Calculates the number of unique non-integer values in a column
         """
         raise NotImplementedError('non_integer_values_count')
 
@@ -138,13 +151,20 @@ class BaseConstraintCalculator:
         """
         raise NotImplementedError('all_non_nulls_boolean')
 
-    def calc_rex_constraint(self, colname, constraint):
+    def find_rexes(self, colname, values=None):
+        """
+        Generate a list of regular expressions that cover all of
+        the patterns found in the (string) column.
+        """
+        raise NotImplementedError('find_rexes')
+
+    def verify_rex_constraint(self, colname, constraint):
         """
         Verify whether a given column satisfies a given regular
         expression constraint (by matching at least one of the regular
         expressions given).
         """
-        raise NotImplementedError('rex')
+        raise NotImplementedError('verify_rex')
 
 
 class BaseConstraintVerifier(BaseConstraintCalculator):
@@ -383,14 +403,6 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         violations = set(actual_values) - set(allowed_values) - set(exclusions)
         return len(violations) == 0
 
-    def verify_rex_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies a given regular
-        expression constraint (by matching at least one of the regular
-        expressions given).
-        """
-        return self.calc_rex_constraint(colname, constraint)
-
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""
         return self.get_cached_value('min', colname, self.calc_min)
@@ -470,25 +482,18 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
                                      self.calc_all_non_nulls_boolean)
 
 
-class BaseConstraintDiscoverer:
+class BaseConstraintDiscoverer(BaseConstraintCalculator):
     """
     A :py:class:`BaseConstraintDiscoverer` object is used to discover
     constraints.
 
     It needs to do the same calculations as a BaseConstraintCalculator,
     but it isn't just a matter of providing override definitions for all
-    of those methods. Instead, you need to override two methods:
-        - get_column_names
+    of those methods. Instead, you need to override this method:
         - discover_field_constraints
     """
     def __init__(self, inc_rex=False):
         self.inc_rex = inc_rex
-
-    def get_column_names(self):
-        """
-        Returns a list containing the names of all the columns
-        """
-        raise NotImplementedError('get_column_names')
 
     def discover(self):
         field_constraints = []
@@ -518,4 +523,102 @@ class BaseConstraintDiscoverer:
 
         """
         raise NotImplementedError('discover_field_constraints')
+
+    def discover_field_constraints(self, fieldname):
+        min_constraint = max_constraint = None
+        min_length_constraint = max_length_constraint = None
+        sign_constraint = no_duplicates_constraint = None
+        max_nulls_constraint = allowed_values_constraint = None
+        rex_constraint = None
+
+        type_ = self.calc_tdda_type(fieldname)
+        if type_ == 'other':
+            return None         # Unrecognized or complex
+        else:
+            type_constraint = TypeConstraint(type_)
+        length = self.get_nrecords()
+
+        if length > 0:  # Things are not very interesting when there is no data
+            nNull = self.calc_null_count(fieldname)
+            nNonNull = self.calc_non_null_count(fieldname)
+            assert nNull + nNonNull == length
+            if nNull < 2:
+                max_nulls_constraint = MaxNullsConstraint(nNull)
+
+            # Useful info:
+            uniqs = None
+            n_unique = -1   # won't equal number of non-nulls later on
+            if type_ in ('string', 'int'):
+                n_unique = self.calc_nunique(fieldname)
+                if type_ == 'string':
+                    if n_unique <= MAX_CATEGORIES:
+                        uniqs = self.calc_unique_values(fieldname,
+                                                        include_nulls=False)
+                    if uniqs:
+                        avc = AllowedValuesConstraint(uniqs)
+                        allowed_values_constraint = avc
+
+            if nNonNull > 0:
+                if type_ == 'string':
+                    # We don't generate a min, max or sign constraints for
+                    # strings. But we do generate min and max length
+                    # constraints
+                    if (uniqs is None and n_unique > 0):
+                        # There were too many for us to have bothered getting
+                        # them all before, but we need them now.
+                        uniqs = self.calc_unique_values(fieldname,
+                                                        include_nulls=False)
+                    if uniqs:
+                        m = min(len(v) for v in uniqs)
+                        M = max(len(v) for v in uniqs)
+                        min_length_constraint = MinLengthConstraint(m)
+                        max_length_constraint = MaxLengthConstraint(M)
+                else:
+                    # Non-string fields all potentially get min and max values
+                    if type_ == 'date':
+                        m = self.calc_min(fieldname)
+                        M = self.calc_max(fieldname)
+                        if not self.is_null(m):
+                            m = m.to_pydatetime()   #TODO
+                        if not self.is_null(M):
+                            M = M.to_pydatetime()   #TODO
+                    else:
+                        m = self.calc_min(fieldname)
+                        M = self.calc_max(fieldname)
+                    if not self.is_null(m):
+                        min_constraint = MinConstraint(m)
+                    if not self.is_null(M):
+                        max_constraint = MaxConstraint(M)
+
+                    # Non-date fields potentially get a sign constraint too.
+                    if min_constraint and max_constraint and type_ != 'date':
+                        if m == M == 0:
+                            sign_constraint = SignConstraint('zero')
+                        elif m >= 0:
+                            sign = 'positive' if m > 0 else 'non-negative'
+                            sign_constraint = SignConstraint(sign)
+                        elif M <= 0:
+                            sign = 'negative' if M < 0 else 'non-positive'
+                            sign_constraint = SignConstraint(sign)
+                        # else:
+                            # mixed
+                    elif self.is_null(m) and type_ != 'date':
+                        sign_constraint = SignConstraint('null')
+
+            if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
+                no_duplicates_constraint = NoDuplicatesConstraint()
+
+        if type_ == 'string' and self.inc_rex:
+            rex_constraint = RexConstraint(self.find_rexes(fieldname,
+                                                           values=uniqs))
+
+        constraints = [c for c in [type_constraint,
+                                   min_constraint, max_constraint,
+                                   min_length_constraint, max_length_constraint,
+                                   sign_constraint, max_nulls_constraint,
+                                   no_duplicates_constraint,
+                                   allowed_values_constraint,
+                                   rex_constraint]
+                         if c is not None]
+        return FieldConstraints(fieldname, constraints)
 
