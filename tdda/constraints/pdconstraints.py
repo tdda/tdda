@@ -11,9 +11,6 @@ The top-level functions are:
         Verify (check) a Pandas DataFrame, against a set of previously
         discovered constraints.
 
-API
----
-
 """
 from __future__ import division
 from __future__ import print_function
@@ -63,6 +60,10 @@ else:
 
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
+    """
+    Implementation of the Constraint Calculator methods for
+    Pandas dataframes.
+    """
     def __init__(self, df):
         self.df = df
 

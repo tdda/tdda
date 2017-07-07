@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Base Constraint Functionality
------------------------------
+Classes for representing individual constraints.
 """
 from __future__ import division
 from __future__ import print_function

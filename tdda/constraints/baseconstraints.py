@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
+
 """
 TDDA constraint discovery and verification, common underlying functionality.
-
-API
----
-
 """
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -141,6 +139,9 @@ class BaseConstraintCalculator:
     def calc_non_integer_values_count(self, colname):
         """
         Calculates the number of unique non-integer values in a column
+
+        This is only required for implementations where a dataset column
+        may contain values of mixed type.
         """
         raise NotImplementedError('non_integer_values_count')
 
@@ -148,6 +149,9 @@ class BaseConstraintCalculator:
         """
         Checks whether all the non-null values in a column are boolean.
         Returns True of they are, and False otherwise.
+
+        This is only required for implementations where a dataset column
+        may contain values of mixed type.
         """
         raise NotImplementedError('all_non_nulls_boolean')
 
