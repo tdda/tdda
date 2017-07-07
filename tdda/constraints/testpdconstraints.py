@@ -136,48 +136,48 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         assert ConstraintVerificationTester.outstandingAssertions == 0
 
     def test_tdda_types_of_base_types(self):
-        self.assertEqual(pdc.tdda_type(None), 'null')
+        self.assertEqual(pdc.pandas_tdda_type(None), 'null')
         for v in BOOLS:
-            self.assertEqual(pdc.tdda_type(v), 'bool')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'bool')
         for v in INTS:
-            self.assertEqual(pdc.tdda_type(v), 'int')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'int')
         for v in REALS:
-            self.assertEqual(pdc.tdda_type(v), 'real')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'real')
         for v in STRINGS:
-            self.assertEqual(pdc.tdda_type(v), 'string')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'string')
         for v in DATES:
-            self.assertEqual(pdc.tdda_type(v), 'date')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'date')
         for v in OTHERS:
-            self.assertEqual(pdc.tdda_type(v), 'other')
+            self.assertEqual(pdc.pandas_tdda_type(v), 'other')
 
     def test_coarse_types_of_base_types(self):
-        self.assertEqual(pdc.tdda_type(None), 'null')
+        self.assertEqual(pdc.pandas_tdda_type(None), 'null')
         for v in BOOLS:
-            self.assertEqual(pdc.coarse_type(v), 'number')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
         for v in INTS:
-            self.assertEqual(pdc.coarse_type(v), 'number')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
         for v in REALS:
-            self.assertEqual(pdc.coarse_type(v), 'number')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
         for v in STRINGS:
-            self.assertEqual(pdc.coarse_type(v), 'string')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'string')
         for v in DATES:
-            self.assertEqual(pdc.coarse_type(v), 'date')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'date')
         for v in OTHERS:
-            self.assertEqual(pdc.coarse_type(v), 'other')
+            self.assertEqual(pdc.pandas_coarse_type(v), 'other')
 
     def test_compatibility(self):
         for kind in (NUMBERS, STRINGS, DATES):
             x = kind[0]
             y = kind[-1]
-            self.assertTrue(pdc.types_compatible(x, y))
-            self.assertTrue(pdc.types_compatible(x, x))
+            self.assertTrue(pdc.pandas_types_compatible(x, y))
+            self.assertTrue(pdc.pandas_types_compatible(x, x))
 
     def test_incompatibility(self):
         for X in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
             for Y in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
                 if X is not Y:
-                    self.assertFalse(pdc.types_compatible(X[0], Y[0]))
-                    self.assertFalse(pdc.types_compatible(Y[0], X[0]))
+                    self.assertFalse(pdc.pandas_types_compatible(X[0], Y[0]))
+                    self.assertFalse(pdc.pandas_types_compatible(Y[0], X[0]))
 
     def test_fuzzy_less_than_zero(self):
         verifier = pdc.PandasConstraintVerifier(df=None)

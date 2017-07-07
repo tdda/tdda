@@ -487,10 +487,8 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     A :py:class:`BaseConstraintDiscoverer` object is used to discover
     constraints.
 
-    It needs to do the same calculations as a BaseConstraintCalculator,
-    but it isn't just a matter of providing override definitions for all
-    of those methods. Instead, you need to override this method:
-        - discover_field_constraints
+    It inherits from BaseConstraintCalculator to allow it to compute
+    all the results it needs.
     """
     def __init__(self, inc_rex=False):
         self.inc_rex = inc_rex
@@ -505,24 +503,6 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
             return DatasetConstraints(field_constraints)
         else:
             return None
-
-    def discover_field_constraints(self, fieldname):
-        """
-        Discover constraints for a single field (column).
-
-        Input:
-
-            *fieldname*:
-                a single field name, which must exist.
-
-        Returns:
-
-            - :py:class:`tdda.base.FieldConstraints` object,
-              if any constraints were found.
-            - ``None``, otherwise.
-
-        """
-        raise NotImplementedError('discover_field_constraints')
 
     def discover_field_constraints(self, fieldname):
         min_constraint = max_constraint = None
@@ -575,16 +555,8 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         max_length_constraint = MaxLengthConstraint(M)
                 else:
                     # Non-string fields all potentially get min and max values
-                    if type_ == 'date':
-                        m = self.calc_min(fieldname)
-                        M = self.calc_max(fieldname)
-                        if not self.is_null(m):
-                            m = m.to_pydatetime()   #TODO
-                        if not self.is_null(M):
-                            M = M.to_pydatetime()   #TODO
-                    else:
-                        m = self.calc_min(fieldname)
-                        M = self.calc_max(fieldname)
+                    m = self.calc_min(fieldname)
+                    M = self.calc_max(fieldname)
                     if not self.is_null(m):
                         min_constraint = MinConstraint(m)
                     if not self.is_null(M):

@@ -79,19 +79,29 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return len(self.df)
 
     def types_compatible(self, x, y, colname):
-        return types_compatible(x, y, colname)
+        return pandas_types_compatible(x, y, colname)
 
     def calc_min(self, colname):
         if self.df[colname].dtype == np.dtype('O'):
-            return self.df[colname].dropna().min()  # Otherwise -inf!
+            m = self.df[colname].dropna().min()  # Otherwise -inf!
         else:
-            return self.df[colname].min()
+            m = self.df[colname].min()
+        if pandas_tdda_type(m) == 'date':
+            m = m.to_pydatetime()
+        elif hasattr(m, 'item'):
+            m = m.item()
+        return m
 
     def calc_max(self, colname):
         if self.df[colname].dtype == np.dtype('O'):
-            return self.df[colname].dropna().max()
+            M = self.df[colname].dropna().max()
         else:
-            return self.df[colname].max()
+            M = self.df[colname].max()
+        if pandas_tdda_type(M) == 'date':
+            M = M.to_pydatetime()
+        elif hasattr(M, 'item'):
+            M = M.item()
+        return M
 
     def calc_min_length(self, colname):
         return min(len(s) for s in list(self.df[colname].unique())
@@ -102,16 +112,16 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
                           if not pd.isnull(s))
 
     def calc_tdda_type(self, colname):
-        return tdda_column_type(self.df[colname])
+        return pandas_tdda_column_type(self.df[colname])
 
     def calc_null_count(self, colname):
-        return len(self.df) - self.df[colname].count()
+        return int(len(self.df) - self.df[colname].count())
 
     def calc_non_null_count(self, colname):
-        return len(self.df) - self.calc_null_count(colname)
+        return int(len(self.df) - self.calc_null_count(colname))
 
     def calc_nunique(self, colname):
-        return self.df[colname].nunique()
+        return int(self.df[colname].nunique())
 
     def calc_unique_values(self, colname, include_nulls=True):
         values = self.df[colname].unique()
@@ -123,7 +133,8 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
     def calc_non_integer_values_count(self, colname):
         values = self.df[colname].dropna()
         non_nulls = self.df[colname].count()
-        return non_nulls - (values.astype(int) == values).astype(int).sum()
+        return int(non_nulls
+                   - (values.astype(int) == values).astype(int).sum())
 
     def calc_all_non_nulls_boolean(self, colname):
         nn = self.df[colname].dropna()
@@ -160,7 +171,6 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return True
 
 
-
 class PandasConstraintVerifier(PandasConstraintCalculator,
                                BaseConstraintVerifier):
     """
@@ -171,6 +181,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
         PandasConstraintCalculator.__init__(self, df)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
+
     def repair_field_types(self, constraints):
         # We sometimes haven't inferred the field types correctly for
         # the dataframe (e.g. if we read it from a csv file, "string"
@@ -259,107 +270,11 @@ class PandasConstraintDiscoverer(PandasConstraintCalculator,
     constraints on a Pandas DataFrame.
     """
     def __init__(self, df, inc_rex=False):
+        PandasConstraintCalculator.__init__(self, df)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
-        self.df = df
-
-    def discover_field_constraints_pandas_specifically(self, fieldname):
-        # TODO: REMOVE THIS, IT'S NOW DONE IN baseconstraints.py
-        min_constraint = max_constraint = None
-        min_length_constraint = max_length_constraint = None
-        sign_constraint = no_duplicates_constraint = None
-        max_nulls_constraint = allowed_values_constraint = None
-        rex_constraint = None
-
-        field = self.df[fieldname]
-        type_ = tdda_column_type(field)
-        if type_ == 'other':
-            return None         # Unrecognized or complex
-        else:
-            type_constraint = TypeConstraint(type_)
-        length = len(field)
-
-        if length > 0:  # Things are not very interesting when there is no data
-            nNull = int(field.isnull().sum().astype(int))
-            nNonNull = int(field.notnull().sum().astype(int))
-            assert nNull + nNonNull == length
-            if nNull < 2:
-                max_nulls_constraint = MaxNullsConstraint(nNull)
-
-            # Useful info:
-            uniqs = None
-            n_unique = -1   # won't equal number of non-nulls later on
-            if type_ in ('string', 'int'):
-                n_unique = field.nunique()          # excludes NaN
-                if type_ == 'string':
-                    if n_unique <= MAX_CATEGORIES:
-                        uniqs = list(field.dropna().unique())
-                    if uniqs:
-                        avc = AllowedValuesConstraint(uniqs)
-                        allowed_values_constraint = avc
-
-            if nNonNull > 0:
-                if type_ == 'string':
-                    # We don't generate a min, max or sign constraints for
-                    # strings. But we do generate min and max length
-                    # constraints
-                    if (uniqs is None       # There were too many for us to
-                        and n_unique > 0):  # have bothered getting them all
-                        uniqs = list(field.dropna().unique())  # need them now
-                    if uniqs:
-                        m = min(len(v) for v in uniqs)
-                        M = max(len(v) for v in uniqs)
-                        min_length_constraint = MinLengthConstraint(m)
-                        max_length_constraint = MaxLengthConstraint(M)
-                else:
-                    # Non-string fields all potentially get min and max values
-                    if type_ == 'date':
-                        m = field.min()
-                        M = field.max()
-                        if pd.notnull(m):
-                            m = m.to_pydatetime()
-                        if pd.notnull(M):
-                            M = M.to_pydatetime()
-                    else:
-                        m = field.min().item()
-                        M = field.max().item()
-                    if pd.notnull(m):
-                        min_constraint = MinConstraint(m)
-                    if pd.notnull(M):
-                        max_constraint = MaxConstraint(M)
-
-                    # Non-date fields potentially get a sign constraint too.
-                    if min_constraint and max_constraint and type_ != 'date':
-                        if m == M == 0:
-                            sign_constraint = SignConstraint('zero')
-                        elif m >= 0:
-                            sign = 'positive' if m > 0 else 'non-negative'
-                            sign_constraint = SignConstraint(sign)
-                        elif M <= 0:
-                            sign = 'negative' if M < 0 else 'non-positive'
-                            sign_constraint = SignConstraint(sign)
-                        # else:
-                            # mixed
-                    elif pd.isnull(m) and type_ != 'date':
-                        sign_constraint = SignConstraint('null')
-
-            if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
-                no_duplicates_constraint = NoDuplicatesConstraint()
-
-        if type_ == 'string' and self.inc_rex:
-            rex_constraint = RexConstraint(pdextract(field))
-
-        constraints = [c for c in [type_constraint,
-                                   min_constraint, max_constraint,
-                                   min_length_constraint, max_length_constraint,
-                                   sign_constraint, max_nulls_constraint,
-                                   no_duplicates_constraint,
-                                   allowed_values_constraint,
-                                   rex_constraint]
-                         if c is not None]
-        return FieldConstraints(field.name, constraints)
 
 
-def tdda_column_type(x):
+def pandas_tdda_column_type(x):
     """
     Returns the TDDA type of a column.
 
@@ -368,8 +283,6 @@ def tdda_column_type(x):
     If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
 
     If *x* is not recognized as one of these, 'other' is returned.
-
-    TODO: this implementation knows about Pandas, and it ought not to!
     """
     dt = getattr(x, 'dtype', None)
     if dt == np.dtype('O'):
@@ -390,7 +303,7 @@ def tdda_column_type(x):
     return 'other'
 
 
-def types_compatible(x, y, colname=None):
+def pandas_types_compatible(x, y, colname=None):
     """
     Returns boolean indicating whether the coarse_type of *x* and *y* are
     the same, for scalar values.
@@ -398,7 +311,7 @@ def types_compatible(x, y, colname=None):
     If *colname* is provided, and the check fails, a warning is issued
     to stderr.
     """
-    ok = coarse_type(x) == coarse_type(y)
+    ok = pandas_coarse_type(x) == pandas_coarse_type(y)
     if not ok and colname:
         print('Warning: Failing incompatible types constraint for field %s '
               'of type %s.\n(Constraint value %s of type %s.)'
@@ -406,7 +319,7 @@ def types_compatible(x, y, colname=None):
     return ok
 
 
-def coarse_type(x):
+def pandas_coarse_type(x):
     """
     Returns the TDDA coarse type of *x*, a scalar value.
     The coarse types combine 'bool', 'int' and 'real' into 'number'.
@@ -414,11 +327,11 @@ def coarse_type(x):
     Obviously, some people will dislike treating booleans as numbers.
     But it is necessary here.
     """
-    t = tdda_type(x)
+    t = pandas_tdda_type(x)
     return 'number' if t in ('bool', 'int', 'real') else t
 
 
-def tdda_type(x):
+def pandas_tdda_type(x):
      dt = getattr(x, 'dtype', None)
      if type(x) == str or dt == np.dtype('O'):
          return 'string'
