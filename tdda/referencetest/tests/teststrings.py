@@ -117,7 +117,7 @@ class TestStrings(unittest.TestCase):
                                                ['spangle','spanner', 'abc'],
                                                max_permutation_cases=3),
                          (0, []))
-        
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,6 +17,8 @@ from __future__ import division
 import csv
 import os
 
+from tdda.referencetest.basecomparison import BaseComparison
+
 try:
     import pandas as pd
     import numpy as np
@@ -35,7 +37,7 @@ class PandasNotImplemented(object):
         raise NotImplementedError('%s: Pandas not available.' % name)
 
 
-class PandasComparison(object):
+class PandasComparison(BaseComparison):
     """
     Comparison class for pandas dataframes (and CSV files).
     """
@@ -44,18 +46,6 @@ class PandasComparison(object):
         if pd is None:
             return PandasNotImplemented()
         return super(PandasComparison, cls).__new__(cls)
-
-    def __init__(self, print_fn=None, verbose=True):
-        """
-        Constructor for an instance of the PandasComparison class.
-
-        The optional print_fn parameter is a function to be used to
-        display information while comparison operations are running.
-        If specified, it should be a function with the same signature
-        as python's builtin (__future__) print function.
-        """
-        self.print_fn = print_fn
-        self.verbose = verbose
 
     def check_dataframe(self, df, ref_df, actual_path=None, expected_path=None,
                         check_data=None, check_types=None, check_order=None,
@@ -354,26 +344,15 @@ class PandasComparison(object):
                 failures += 1
         return (failures, msgs)
 
-    def info(self, msgs, s):
-        """
-        Add an item to the list of messages, and also display it immediately
-        if verbose is set.
-        """
-        msgs.append(s)
-        if self.verbose and self.print_fn:
-            self.print_fn(s)
-
     def failure(self, msgs, s, actual_path, expected_path):
         """
         Add a failure to the list of messages, and also display it immediately
         if verbose is set. Also provide information about the two files
         involved.
         """
-        diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
         if actual_path and expected_path:
-            self.info(msgs, 'Compare with "%s %s %s".'
-                            % (diffcmd, os.path.normpath(actual_path),
-                               expected_path))
+            self.info(msgs, self.compare_with(os.path.normpath(actual_path),
+                                              expected_path))
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:

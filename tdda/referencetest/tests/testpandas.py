@@ -17,7 +17,7 @@ except ImportError:
     pd = None
 
 from tdda.referencetest.checkpandas import PandasComparison
-
+from tdda.referencetest.basecomparison import diffcmd
 
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
@@ -85,7 +85,8 @@ class TestStrings(unittest.TestCase):
         compare = PandasComparison()
         (code, errs) = compare.check_csv_file(refloc('single.txt'),
                                               refloc('colours.txt'))
-        errs = [e for e in errs if not e.startswith('Compare with ')]
+        errs = [e for e in errs if not e.startswith('Compare with:')
+                                   and not e.startswith('    ' + diffcmd())]
         self.assertEqual(code, 1)
         self.assertEqual(errs,
                          ['Column check failed.',

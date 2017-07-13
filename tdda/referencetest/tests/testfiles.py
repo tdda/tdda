@@ -12,6 +12,7 @@ import os
 import unittest
 
 from tdda.referencetest.checkfiles import FilesComparison
+from tdda.referencetest.basecomparison import diffcmd
 
 
 def refloc(filename):
@@ -20,16 +21,13 @@ def refloc(filename):
 def check(compare, values, filename, diff=False, actual_path=None):
     (code, errs) = compare.check_string_against_file(values, refloc(filename),
                                                      actual_path=actual_path)
-    if diff:
-        return (code, errs)
-    else:
-        return (code, [e for e in errs if not e.startswith('Compare with ')])
+    if not diff:
+        errs = [e for e in errs if not e.startswith('    ' + diffcmd())]
+        errs = [e for e in errs if not e.startswith('Compare with:')]
+    return (code, errs)
 
 
 class TestFiles(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.diffcmd = 'diff' if os.name == 'posix' else 'fc'
 
     def test_strings_against_files_ok(self):
         compare = FilesComparison()
@@ -60,9 +58,9 @@ class TestFiles(unittest.TestCase):
         self.assertEqual(r4, (1,
                               ['1 line is different, starting at line 1',
                                'Expected file %s' % refloc('single.txt')]))
-        diff = '%s %s %s' % (self.diffcmd, 'wrong.txt', refloc('single.txt'))
+        diff = '%s %s %s' % (diffcmd(), 'wrong.txt', refloc('single.txt'))
         self.assertEqual(r5, (1, ['1 line is different, starting at line 1',
-                                  'Compare with "%s".' % diff]))
+                                  'Compare with:\n    %s\n' % diff]))
 
     def test_files_ok(self):
         compare = FilesComparison()
@@ -80,18 +78,18 @@ class TestFiles(unittest.TestCase):
         r2 = compare.check_file(refloc('single.txt'), refloc('empty.txt'))
         r3 = compare.check_file(refloc('single.txt'),
                                 refloc('colours.txt'))
-        diff1 = '%s %s %s' % (self.diffcmd,
+        diff1 = '%s %s %s' % (diffcmd(),
                               refloc('empty.txt'), refloc('single.txt'))
-        diff2 = '%s %s %s' % (self.diffcmd,
+        diff2 = '%s %s %s' % (diffcmd(),
                               refloc('single.txt'), refloc('empty.txt'))
-        diff3 = '%s %s %s' % (self.diffcmd,
+        diff3 = '%s %s %s' % (diffcmd(),
                               refloc('single.txt'), refloc('colours.txt'))
         self.assertEqual(r1, (1, ['Files have different numbers of lines',
-                                  'Compare with "%s".' % diff1]))
+                                  'Compare with:\n    %s\n' % diff1]))
         self.assertEqual(r2, (1, ['Files have different numbers of lines',
-                                  'Compare with "%s".' % diff2]))
+                                  'Compare with:\n    %s\n' % diff2]))
         self.assertEqual(r3, (1, ['Files have different numbers of lines',
-                                  'Compare with "%s".' % diff3]))
+                                  'Compare with:\n    %s\n' % diff3]))
 
     def test_multiple_files_ok(self):
         compare = FilesComparison()
@@ -111,14 +109,14 @@ class TestFiles(unittest.TestCase):
                                 [refloc('single.txt'),
                                  refloc('colours.txt'),
                                  refloc('colours.txt')])
-        diff1 = '%s %s %s' % (self.diffcmd,
+        diff1 = '%s %s %s' % (diffcmd(),
                               refloc('empty.txt'), refloc('single.txt'))
-        diff2 = '%s %s %s' % (self.diffcmd,
+        diff2 = '%s %s %s' % (diffcmd(),
                               refloc('single.txt'), refloc('colours.txt'))
         self.assertEqual(r, (2, ['Files have different numbers of lines',
-                                 'Compare with "%s".' % diff1,
+                                 'Compare with:\n    %s\n' % diff1,
                                  'Files have different numbers of lines',
-                                 'Compare with "%s".' % diff2]))
+                                 'Compare with:\n    %s\n' % diff2]))
 
 
 if __name__ == '__main__':

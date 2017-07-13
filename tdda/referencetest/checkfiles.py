@@ -20,13 +20,10 @@ import re
 import sys
 import tempfile
 
+from tdda.referencetest.basecomparison import BaseComparison
 
-class FilesComparison(object):
 
-    def __init__(self, print_fn=None, verbose=True, tmp_dir=None):
-        self.print_fn = print_fn
-        self.verbose = verbose
-        self.tmp_dir = tmp_dir or tempfile.gettempdir()
+class FilesComparison(BaseComparison):
 
     def check_strings(self, actual, expected,
                       actual_path=None, expected_path=None,
@@ -380,11 +377,9 @@ class FilesComparison(object):
         Build a list of messages describing the way in which two files are
         different.
         """
-        diffcmd = 'fc' if os.name and os.name != 'posix' else 'diff'
         if actual_path and expected_path:
-            self.info(msgs, 'Compare with "%s %s %s".'
-                            % (diffcmd, os.path.normpath(actual_path),
-                               expected_path))
+            self.info(msgs, self.compare_with(os.path.normpath(actual_path),
+                                              expected_path))
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
@@ -410,8 +405,8 @@ class FilesComparison(object):
                         else '\n'.join(actual))
             with open(modifiedRef, 'w') as f:
                 f.write('\n'.join(expected))
-            self.info(msgs, 'Compare preprocessed with "%s %s %s".'
-                            % (diffcmd, modifiedActual, modifiedRef))
+            self.info(msgs, compare_with(modifiedActual, modifiedRef,
+                                         qualifier='preprocessed'))
         elif expected_path and not actual_path:
             expectedFilename = os.path.split(expected_path)[1]
             tmpActualFilename = os.path.join(self.tmp_dir,
@@ -419,15 +414,6 @@ class FilesComparison(object):
             with open(tmpActualFilename, 'w') as f:
                 f.write(actual if type(actual) == str
                         else '\n'.join(actual))
-            self.info(msgs, 'Compare with "%s %s %s".'
-                            % (diffcmd, tmpActualFilename, expected_path))
-
-    def info(self, msgs, s):
-        """
-        Add an item to the list of messages, and also display it immediately
-        if verbose is set.
-        """
-        msgs.append(s)
-        if self.verbose and self.print_fn:
-            self.print_fn(s)
+            self.info(msgs,
+                      self.compare_with(tmpActualFilename, expected_path))
 
