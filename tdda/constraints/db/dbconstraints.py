@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-TDDA constraint discovery and verification for databases, for supported
-DB-API (PEP-0249) compliant databases , and also for a number of other
+TDDA constraint discovery and verification is provided for a number
+of DB-API (PEP-0249) compliant databases, and also for a number of other
 (NoSQL) databases.
 
 The top-level functions are:
@@ -359,8 +359,8 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 
         This object has attributes:
 
-            - *passed*      --- Number of passing constriants
-            - *failures*    --- Number of failing constraints
+        - *passed*      --- Number of passing constriants
+        - *failures*    --- Number of failing constraints
 
     Example usage::
 
@@ -405,8 +405,8 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
 
     Possible return values:
 
-       -  :py:class:`~tdda.constraints.base.DatasetConstraints` object
-       -  ``None``    --- (if no constraints were found).
+    -  :py:class:`~tdda.constraints.base.DatasetConstraints` object
+    -  ``None``    --- (if no constraints were found).
 
     This function goes through each column in the table and, where
     appropriate, generates constraints that describe (and are satisified
@@ -458,22 +458,22 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
                 If all the values in a numeric field have consistent sign,
                 a sign constraint will be written with a value chosen from:
 
-                    - positive     --- For all values *v* in field: `v > 0`
-                    - non-negative --- For all values *v* in field: `v >= 0`
-                    - zero         --- For all values *v* in field: `v == 0`
-                    - non-positive --- For all values *v* in field: `v <= 0`
-                    - negative     --- For all values *v* in field: `v < 0`
-                    - null         --- For all values *v* in field: `v is null`
+                - positive     --- For all values *v* in field: `v > 0`
+                - non-negative --- For all values *v* in field: `v >= 0`
+                - zero         --- For all values *v* in field: `v == 0`
+                - non-positive --- For all values *v* in field: `v <= 0`
+                - negative     --- For all values *v* in field: `v < 0`
+                - null         --- For all values *v* in field: `v is null`
 
         *max_nulls*:
                 The maximum number of nulls allowed in the field.
 
-                    - If the field has no nulls, a constraint
-                      will be written with max_nulls set to zero.
-                    - If the field has a single null, a constraint will
-                      be written with max_nulls set to one.
-                    - If the field has more than 1 null, no constraint
-                      will be generated.
+                - If the field has no nulls, a constraint
+                  will be written with max_nulls set to zero.
+                - If the field has a single null, a constraint will
+                  be written with max_nulls set to one.
+                - If the field has more than 1 null, no constraint
+                  will be generated.
 
         *no_duplicates*:
                 For string fields (only, for now), if every
@@ -506,6 +506,9 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
     """
     disco = DatabaseConstraintDiscoverer(dbtype, db, tablename,
                                          inc_rex=inc_rex)
+    if not disco.check_table_exists(tablename):
+        print('No table %s' % tablename, file=sys.stderr)
+        sys.exit(1)
     return disco.discover()
 
 

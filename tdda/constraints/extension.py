@@ -62,27 +62,30 @@ class ExtensionBase:
 
     def help(self, stream=sys.stdout):
         """
+        help(self, stream=sys.stdout)
         The :py:meth:`help` method should document itself by writing
         lines to the given output stream.
 
         This is used by the ``tdda`` command's ``help`` option.
-
-        TODO: document the stream better.
         """
         pass
+
+    def spec(self):
+        """
+        The :py:meth:`spec` method should return a short one-line string
+        describing, briefly, how to specify the input source.
+        """
+        return ''
 
     def discover(self):
         """
         The :py:meth:`discover` method should implement constraint
         discovery.
 
-        It should implement the optional ``-o`` flag to specify that
-        constraints should be written to a specified ``.tdda`` file,
-        rather than to :py:const:`sys.stdout`.
-
         It should allow whatever other optional or mandatory flags or
         parameters are required to specify the data from which constraints
-        are to be discovered.
+        are to be discovered, and the name of the file to which the
+        constraints are to be written.
         """
         pass
 

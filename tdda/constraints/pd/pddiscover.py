@@ -7,16 +7,32 @@ Support for Pandas constraint discovery from the command-line tool
 from __future__ import division
 from __future__ import print_function
 
+USAGE = '''
+Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
+as feather files, and save the generated constraints as a .tdda JSON file.
+
+Usage:
+
+    tdda discover [FLAGS] input-file [constraints.tdda]
+
+where
+
+  * input-file is one of:
+
+    - a csv file
+    - a .feather file containing a saved Pandas or R DataFrame
+
+  * constraints.tdda, if provided, specifies the name of a file to
+    which the generated constraints will be written.
+
+  * supported flags are
+
+     -r or --rex    to include regular expression generation
+     -R or --norex  to exclude regular expression generation
+'''
+
 import os
 import sys
-
-import pandas as pd
-import numpy as np
-
-USAGE = (__doc__.replace('Usage::', 'Usage:')
-                .replace(':py:mod:`feather`', 'feather')
-                .replace(':py:const:`csv.QUOTE_MINIMAL`',
-                         'csv.QUOTE_MINIMAL'))
 
 try:
     from pmmif import featherpmm
@@ -28,8 +44,7 @@ except ImportError:
         feather = None
 
 from tdda import __version__
-from tdda.referencetest.checkpandas import default_csv_loader
-from tdda.constraints.pd.pdconstraints import discover_df
+from tdda.constraints.pd.pdconstraints import discover_df, load_df
 
 
 def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
@@ -42,20 +57,6 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     elif verbose:
         print(output)
     return output
-
-
-def load_df(path):
-    if os.path.splitext(path)[1] != '.feather':
-        return default_csv_loader(path)
-    elif featherpmm:
-        ds = featherpmm.read_dataframe(path)
-        return ds.df
-    elif feather:
-        return feather.read_dataframe(path)
-    else:
-        raise Exception('pdverify requires feather to be available.\n'
-                        'Use:\n    pip install feather-format\n'
-                        'to add capability.\n', file=sys.stderr)
 
 
 def get_params(args):
@@ -95,6 +96,9 @@ class PandasDiscoverer:
         params = get_params(self.argv[1:])
         if not(params['df_path']):
             print(USAGE, file=sys.stderr)
+            sys.exit(1)
+        elif not os.path.isfile(params['df_path']):
+            print('%s does not exist' % params['df_path'])
             sys.exit(1)
         return discover_df_from_file(verbose=self.verbose, **params)
 

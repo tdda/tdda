@@ -1,33 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Database connection information can be stored in a ``tdda_db_conn`` file.
-
-This is a JSON file of the form:
-
-    {
-        "dbtype": DBTYPE,
-        "db": DATABASE,
-        "host": HOSTNAME,
-        "port": PORTNUMBER,
-        "user": USERNAME,
-        "password": PASSWORD
-    }
-
-All the entries are all optional.
-
-If a ``password`` is provided, then care should be taken to ensure that the
-file has appropriate filesystem permissions so that it cannot be read by
-other users.
-
-A database connection file ``.tdda_db_conn``, in your home directory, is used,
-if it exists.  If you have specified a database type on the command line
-as a parameter to the ``tdda verify`` or ``tdda discover`` commands, but no
-other details, then a database connection file ``.tdda_db_conn_DBTYPE`` is
-used (where ``DBTYPE`` is the database type, in lower case).
-
-Any other database-related options passed in on the command line will
-override the default settings from the connection file.
+Common database library support
 """
 
 from __future__ import division
@@ -61,6 +35,29 @@ except ImportError:
     pymongo = None
 
 from tdda.constraints.base import UNICODE_TYPE
+
+
+DATABASE_USAGE = '''
+
+Database connection flags:
+
+  * -conn FILE              Database connection file
+  * -dbtype DBTYPE          Type of database
+  * -db DATABASE            Name of database to connect to
+  * -host HOSTNAME          Name of server to connect to
+  * -port PORTNUMBER        IP port number to connect to
+  * -user USERNAME          Username to connect as
+  * -password PASSWORD      Password to authenticate with
+
+If ``-conn`` is provided, then none of the other options are required, and
+the database connection details are read from the specified file.
+
+If the database type is specified (with the ``-dbtype`` option, or by
+prefixing the table name, such as ``postgresql:mytable``), then a default
+connection file ``.tdda_db_conn_dbtype`` (in your home directory) is used,
+if present.
+
+'''
 
 
 def parse_table_name(table, dbtype):

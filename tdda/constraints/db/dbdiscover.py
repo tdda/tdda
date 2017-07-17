@@ -7,19 +7,40 @@ Support for database constraint discovery from the command-line tool
 from __future__ import division
 from __future__ import print_function
 
+USAGE = ''''
+Discover TDDA constraints for database tables, and save the generated
+constraints as a .tdda JSON file.
+
+Usage:
+
+    tdda discover [FLAGS] database-table [constraints.tdda]
+
+where
+
+  * database-table is one of:
+
+     - a database table name
+     - a schema-qualified table name of the form schema.table
+     - a database table name qualified by database type, of the
+       form dbtype:table or dbtype:schema.table
+
+  * constraints.tdda, if provided, specifies the name of a file to
+    which the generated constraints will be written.
+
+  * supported flags are
+
+     -r or --rex    to include regular expression generation
+     -R or --norex  to exclude regular expression generation
+'''
+
 import argparse
 import os
 import sys
 
-USAGE = (__doc__.replace('Usage::', 'Usage:')
-                .replace(':py:mod:`feather`', 'feather')
-                .replace(':py:const:`csv.QUOTE_MINIMAL`',
-                         'csv.QUOTE_MINIMAL'))
-
-
 from tdda import __version__
 from tdda.constraints.db.dbconstraints import discover_db_table
-from tdda.constraints.db.dbbase import database_connection, parse_table_name
+from tdda.constraints.db.dbbase import (database_connection, parse_table_name,
+                                        DATABASE_USAGE)
 
 
 def discover_constraints_from_database(table, constraints_path=None,
@@ -56,7 +77,7 @@ def get_params(args):
         'user': None,
         'password': None,
     }
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='tdda discover')
     parser.add_argument('-?', '--?', action='help',
                         help='same as -h or --help')
     parser.add_argument('-r', '--rex', action='store_true',
@@ -73,6 +94,9 @@ def get_params(args):
                         nargs=1, help='database server IP port')
     parser.add_argument('-user', '--user', nargs=1, help='username')
     parser.add_argument('-password', '--password', nargs=1, help='password')
+    parser.add_argument('table', nargs=1, help='database table name')
+    parser.add_argument('constraints', nargs='?',
+                        help='name of constraints file to create')
     flags, more = parser.parse_known_args(args)
 
     if flags.rex:
@@ -93,16 +117,16 @@ def get_params(args):
         params['user'] = flags.user[0]
     if flags.password:
         params['password'] = flags.password[0]
-    if len(more) not in (1, 2):
+    params['table'] = flags.table[0] if flags.table else None
+    params['constraints_path'] = (flags.constraints[0] if flags.constraints
+                                  else None)
+    if len(more) > 0:
         usage_error()
-    params['table'] = more[0]
-    if len(more) > 1:
-        params['constraints_path'] = more[1]
     return params
 
 
 def usage_error():
-    print(USAGE, file=sys.stderr)
+    print(USAGE + DATABASE_USAGE, file=sys.stderr)
     sys.exit(1)
 
 

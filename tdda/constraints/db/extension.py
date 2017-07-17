@@ -32,6 +32,9 @@ class TDDADatabaseExtension(ExtensionBase):
         print('  - Collections from MongoDB NoSQL databases '
               '("mongodb:collection-name")', file=stream)
 
+    def spec(self):
+        return 'DBTYPE:tablename, or -dbtype DBTYPE and a database table'
+
     def discover(self):
         return DatabaseDiscoverer(self.argv, verbose=self.verbose).discover()
 

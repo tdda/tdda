@@ -17,6 +17,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import datetime
+import os
 import re
 import sys
 
@@ -24,6 +25,7 @@ from collections import OrderedDict
 
 import pandas as pd
 import numpy as np
+
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
@@ -45,18 +47,19 @@ from tdda.constraints.baseconstraints import (
     MAX_CATEGORIES,
 )
 
-DEBUG = False
-
+from tdda.referencetest.checkpandas import default_csv_loader
 from tdda import rexpy
-
-if sys.version_info.major >= 3:
-    long = int
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
     pandas_Timestamp = pd.Timestamp
 else:
     pandas_Timestamp = pd.tslib.Timestamp
+
+if sys.version_info.major >= 3:
+    long = int
+
+DEBUG = False
 
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
@@ -231,9 +234,9 @@ class PandasVerification(Verification):
     the numbers of passes and failures and boolean columns for each
     constraint, with values:
 
-        - ``True``       --- if the constraint was satified for the column
-        - ``False``      --- if column failed to satisfy the constraint
-        - ``pd.np.NaN``  --- if there was no constraint of this kind
+    - ``True``       --- if the constraint was satified for the column
+    - ``False``      --- if column failed to satisfy the constraint
+    - ``pd.np.NaN``  --- if there was no constraint of this kind
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
@@ -447,8 +450,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
         This object has attributes:
 
-            - *passed*      --- Number of passing constriants
-            - *failures*    --- Number of failing constraints
+        - *passed*      --- Number of passing constriants
+        - *failures*    --- Number of failing constraints
 
         It also has a :py:meth:`~PandasVerification.to_frame()` method for
         converting the results of the verification to a Pandas DataFrame,
@@ -493,8 +496,8 @@ def discover_df(df, inc_rex=False):
 
     Possible return values:
 
-       -  :py:class:`~tdda.constraints.base.DatasetConstraints` object
-       -  ``None``    --- (if no constraints were found).
+    -  :py:class:`~tdda.constraints.base.DatasetConstraints` object
+    -  ``None``    --- (if no constraints were found).
 
     This function goes through each column in the DataFrame and, where
     appropriate, generates constraints that describe (and are satisified
@@ -546,22 +549,22 @@ def discover_df(df, inc_rex=False):
                 If all the values in a numeric field have consistent sign,
                 a sign constraint will be written with a value chosen from:
 
-                    - positive     --- For all values *v* in field: `v > 0`
-                    - non-negative --- For all values *v* in field: `v >= 0`
-                    - zero         --- For all values *v* in field: `v == 0`
-                    - non-positive --- For all values *v* in field: `v <= 0`
-                    - negative     --- For all values *v* in field: `v < 0`
-                    - null         --- For all values *v* in field: `v is null`
+                - positive     --- For all values *v* in field: `v > 0`
+                - non-negative --- For all values *v* in field: `v >= 0`
+                - zero         --- For all values *v* in field: `v == 0`
+                - non-positive --- For all values *v* in field: `v <= 0`
+                - negative     --- For all values *v* in field: `v < 0`
+                - null         --- For all values *v* in field: `v is null`
 
         *max_nulls*:
                 The maximum number of nulls allowed in the field.
 
-                    - If the field has no nulls, a constraint
-                      will be written with max_nulls set to zero.
-                    - If the field has a single null, a constraint will
-                      be written with max_nulls set to one.
-                    - If the field has more than 1 null, no constraint
-                      will be generated.
+                - If the field has no nulls, a constraint
+                  will be written with max_nulls set to zero.
+                - If the field has a single null, a constraint will
+                  be written with max_nulls set to one.
+                - If the field has more than 1 null, no constraint
+                  will be generated.
 
         *no_duplicates*:
                 For string fields (only, for now), if every
@@ -596,6 +599,20 @@ def discover_df(df, inc_rex=False):
     return disco.discover()
 
 
+def load_df(path):
+    if os.path.splitext(path)[1] != '.feather':
+        return default_csv_loader(path)
+    elif featherpmm:
+        ds = featherpmm.read_dataframe(path)
+        return ds.df
+    elif feather:
+        return feather.read_dataframe(path)
+    else:
+        raise Exception('The Python feather module is not installed.\n'
+                        'Use:\n    pip install feather-format\n'
+                        'to add capability.\n', file=sys.stderr)
+
+
 def discover_constraints(df, inc_rex=False):
     """
     Wrapper function to expose :py:func:`discover_df` under an older
@@ -613,4 +630,5 @@ def applicable(argv):
         if a.endswith('.csv') or a.endswith('.feather'):
             return True
     return False
+
 

@@ -27,6 +27,9 @@ class TDDAPandasExtension(ExtensionBase):
         print('  - CSV files', file=stream)
         print('  - Pandas DataFrames as .feather files', file=stream)
 
+    def spec(self):
+        return 'a CSV file or a .feather file'
+
     def discover(self):
         return PandasDiscoverer(self.argv, verbose=self.verbose).discover()
 

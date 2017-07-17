@@ -44,12 +44,11 @@ STANDARD_EXTENSIONS = [
 def help(extensions, stream=sys.stdout):
     print(HELP, file=stream)
     print(file=stream)
-    if extensions:
-        print('Constraint discovery and verification is available for the '
-              'following:\n', file=stream)
-        for ext in extensions:
-            ext.help(stream=stream)
-            print(file=stream)
+    print('Constraint discovery and verification is available for:\n',
+          file=stream)
+    for ext in extensions:
+        ext.help(stream=stream)
+        print(file=stream)
 
 
 def load_extension(ext):
@@ -78,6 +77,26 @@ def load_all_extensions(argv, verbose=False):
     return [e(argv, verbose=verbose) for e in extension_classes if e]
 
 
+def no_constraints(msg, argv, extensions):
+    """
+    When no constraint discovery or verification could be done, show
+    some help about it.
+    """
+    inputs = [a for a in argv
+                if not a.startswith('-') and not a.endswith('.tdda')]
+    if inputs:
+        print('%s for %s' % (msg, ' '.join(inputs)), file=sys.stderr)
+    else:
+        print('No data specified\n', file=sys.stderr)
+        print('Input data should be specifed as one of:\n', file=sys.stderr)
+        for ext in extensions:
+            print('  * ' + ext.spec(), file=sys.stderr)
+    print(file=sys.stderr)
+    print('For more detailed help on how to specify a data source, pass in\n'
+          'appropriate parameters for one of the above, and add --help.',
+          file=sys.stderr)
+
+
 def main_with_argv(argv, verbose=True):
     extensions = load_all_extensions(argv[1:], verbose=verbose)
 
@@ -90,12 +109,12 @@ def main_with_argv(argv, verbose=True):
         for ext in extensions:
             if ext.applicable():
                 return ext.discover()
-        print('No discovery available', file=sys.stderr)
+        no_constraints('No discovery available', argv[2:], extensions)
     elif name == 'verify':
         for ext in extensions:
             if ext.applicable():
                 return ext.verify()
-        print('No verification available', file=sys.stderr)
+        no_constraints('No verification available', argv[2:], extensions)
     elif name == 'examples':
         dest = argv[2] if len(argv) > 2 else '.'
         copy_examples('referencetest', destination=dest, verbose=verbose)

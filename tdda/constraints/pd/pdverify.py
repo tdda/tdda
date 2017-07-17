@@ -7,17 +7,47 @@ Support for Pandas constraint verification from the command-line tool
 from __future__ import division
 from __future__ import print_function
 
+USAGE = '''
+Verify CSV files, or Pandas or R DataFrames saved as feather files,
+against a constraints from .tdda JSON file.
+constraints file.
+
+Usage:
+
+    tdda verify [FLAGS] input-file [constraints.tdda]
+
+where:
+
+  * input is one of:
+
+      - a csv file
+      - a feather file containing a Pandas or R DataFrame
+
+  * constraints.tdda, if provided, is a JSON .tdda file constaining
+    constraints.
+
+If no constraints file is provided, a file with the same path as the
+input file, with a .tdda extension will be tried.
+
+Optional flags are:
+
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+  * -c, --constraints
+      Report only individual constraints that fail.  Not yet implemented.
+  * -1, --oneperline
+      Report each constraint failure on a separate line.  Not yet implemented.
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+'''
+
 import os
 import sys
 
 import pandas as pd
 import numpy as np
-
-
-USAGE = (__doc__.replace('Usage::', 'Usage:')
-                .replace(':py:mod:`feather`', 'feather')
-                .replace(':py:const:`csv.QUOTE_MINIMAL`',
-                         'csv.QUOTE_MINIMAL'))
 
 try:
     from pmmif import featherpmm
@@ -29,8 +59,7 @@ except ImportError:
         feather = None
 
 from tdda import __version__
-from tdda.referencetest.checkpandas import default_csv_loader
-from tdda.constraints.pd.pdconstraints import verify_df
+from tdda.constraints.pd.pdconstraints import verify_df, load_df
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
@@ -39,20 +68,6 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     if verbose:
         print(v)
     return v
-
-
-def load_df(path):
-    if os.path.splitext(path)[1] != '.feather':
-        return default_csv_loader(path)
-    elif featherpmm:
-        ds = featherpmm.read_dataframe(path)
-        return ds.df
-    elif feather:
-        return feather.read_dataframe(path)
-    else:
-        raise Exception('pdverify requires feather to be available.\n'
-                        'Use:\n    pip install feather-format\n'
-                        'to add capability.\n', file=sys.stderr)
 
 
 def get_params(args):
@@ -100,6 +115,9 @@ class PandasVerifier:
         params = get_params(self.argv[1:])
         if not(params['df_path']):
             print(USAGE, file=sys.stderr)
+            sys.exit(1)
+        elif not os.path.isfile(params['df_path']):
+            print('%s does not exist' % params['df_path'])
             sys.exit(1)
         return verify_df_from_file(verbose=self.verbose, **params)
 

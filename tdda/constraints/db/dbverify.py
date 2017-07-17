@@ -7,19 +7,48 @@ Support for database constraint verification from the command-line tool
 from __future__ import division
 from __future__ import print_function
 
+USAGE = ''''
+Verify CSV files, or Pandas or R DataFrames saved as feather files,
+against a constraints from .tdda JSON file.
+constraints file.
+
+Usage:
+
+    tdda verify [FLAGS] database-table constraints.tdda
+
+where:
+
+  * database-table is one of:
+
+     - a database table name
+     - a schema-qualified table name of the form schema.table
+     - a database table name qualified by database type, of the
+       form dbtype:table or dbtype:schema.table
+
+  * constraints.tdda is a JSON .tdda file constaining constraints.
+
+Optional flags are:
+
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+  * -c, --constraints
+      Report only individual constraints that fail.  Not yet implemented.
+  * -1, --oneperline
+      Report each constraint failure on a separate line.  Not yet implemented.
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+'''
+
 import argparse
 import os
 import sys
 
-
-USAGE = (__doc__.replace('Usage::', 'Usage:')
-                .replace(':py:mod:`feather`', 'feather')
-                .replace(':py:const:`csv.QUOTE_MINIMAL`',
-                         'csv.QUOTE_MINIMAL'))
-
 from tdda import __version__
 from tdda.constraints.db.dbconstraints import verify_db_table
-from tdda.constraints.db.dbbase import database_connection, parse_table_name
+from tdda.constraints.db.dbbase import (database_connection, parse_table_name,
+                                        DATABASE_USAGE)
 
 
 def verify_database_table_from_file(table, constraints_path,
@@ -54,7 +83,7 @@ def get_params(args):
         'user': None,
         'password': None,
     }
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='tdda verify')
     parser.add_argument('-?', '--?', action='help',
                         help='same as -h or --help')
     parser.add_argument('-a', '--all', action='store_true',
@@ -79,6 +108,9 @@ def get_params(args):
                         nargs=1, help='database server IP port')
     parser.add_argument('-user', '--user', nargs=1, help='username')
     parser.add_argument('-password', '--password', nargs=1, help='password')
+    parser.add_argument('table', nargs=1, help='database table name')
+    parser.add_argument('constraints', nargs=1,
+                        help='constraints file to verify against')
     flags, more = parser.parse_known_args(args)
 
     if flags.all:
@@ -105,15 +137,16 @@ def get_params(args):
         params['user'] = flags.user[0]
     if flags.password:
         params['password'] = flags.password[0]
-    if len(more) != 2:
+    params['table'] = flags.table[0] if flags.table else None
+    params['constraints_path'] = (flags.constraints[0] if flags.constraints
+                                  else None)
+    if len(more) > 0:
         usage_error()
-    params['table'] = more[0]
-    params['constraints_path'] = more[1]
     return params
 
 
 def usage_error():
-    print(USAGE, file=sys.stderr)
+    print(USAGE + DATABASE_USAGE, file=sys.stderr)
     sys.exit(1)
 
 
