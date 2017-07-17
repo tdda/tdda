@@ -1,0 +1,23 @@
+Command Line Tools
+==================
+
+The :py:mod:`tdda` package includes two command-line utilities:
+
+tdda
+----
+
+The ``tdda`` command provides a command-line interface for constraint
+discovery and verification, for a variety of data sources.
+
+It also provides a simple way to get access to example data and tests.
+
+See Constraint :ref:`tdda_command_line_tool`.
+
+rexpy
+-----
+
+The ``rexpy`` command provides a command-line interface for
+Regular Expression generation from data examples.
+
+See Rexpy :ref:`rexpy_command_line_tool`.
+
