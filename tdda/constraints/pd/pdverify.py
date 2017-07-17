@@ -30,7 +30,7 @@ except ImportError:
 
 from tdda import __version__
 from tdda.referencetest.checkpandas import default_csv_loader
-from tdda.constraints.ext_pandas.pdconstraints import verify_df
+from tdda.constraints.pd.pdconstraints import verify_df
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):

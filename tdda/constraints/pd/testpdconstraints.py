@@ -50,7 +50,7 @@ from tdda.constraints.console import main_with_argv
 from tdda.constraints.pd import pdconstraints as pdc
 from tdda.constraints.pd.pdconstraints import verify_df, discover_df
 from tdda.constraints.pd.pddiscover import discover_df_from_file
-from tdda.constraints.ext_pandas.pdverify import verify_df_from_file
+from tdda.constraints.pd.pdverify import verify_df_from_file
 
 isPython2 = sys.version_info.major < 3
 
