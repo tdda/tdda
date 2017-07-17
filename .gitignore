@@ -60,3 +60,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# MacOS indexing
+.DS_Store
+
+# vim temporary files
+*.swp
+

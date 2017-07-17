@@ -16,6 +16,7 @@ Test-Driven Data Analysis (Python TDDA library)
    referencetest.txt
    constraints.txt
    rexpy.txt
+   examples.txt
 
 
 Indices and tables

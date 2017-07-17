@@ -1,0 +1,10 @@
+Examples
+========
+
+The TDDA package includes embedded examples of code and data.
+
+To copy these examples to a directory of your choice (or, if you don't
+specify a location, then to the current directory), run::
+
+    tdda examples [mydirectory]
+

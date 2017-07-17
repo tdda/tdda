@@ -7,6 +7,11 @@ To copy these examples to your own *constraints-examples* subdirectory
 
     python -m tdda.constraints.examples [mydirectory]
 
+But it is easiest to copy *all* the TDDA examples (for all of its packages)
+with the command::
+
+    tdda examples
+
 """
 from __future__ import absolute_import
 

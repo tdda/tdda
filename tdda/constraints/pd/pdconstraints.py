@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-TDDA constraint discovery and verification for Pandas.
+The :py:mod:`tdda.constraints.pd.pdconstraints` module provides an
+implementation of TDDA constraint discovery and verification 
+for Pandas Dataframes.
+
+This allows it to be used for data in CSV files, or for Pandas or R
+DataFrames saved as Feather files.
 
 The top-level functions are:
 

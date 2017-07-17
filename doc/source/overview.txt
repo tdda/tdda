@@ -6,19 +6,17 @@ test-driven data analysis
 (see `1-page summary <http://StochasticSolutions.com/>`_
 with references, or the `blog <http://tdda.info>`_)
 
-The :py:mod:`tdda.referencetest` library is used to support the creation of
-*reference tests,*
-based on either :py:mod:`unittest` or :py:mod:`pytest`.
+* The :py:mod:`tdda.referencetest` library is used to support the creation of
+  *reference tests*, based on either :py:mod:`unittest` or :py:mod:`pytest`.
 
-The :py:mod:`tdda.constraints` library is used to *discover* constraints
-from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
-datasets meet the constraints in the constraints file.
-There are also a command-line utilities for discovering and verifying
-constriants.
+* The :py:mod:`tdda.constraints` library is used to *discover* constraints
+  from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
+  datasets meet the constraints in the constraints file.
+  There is also a command-line utility for discovering and verifying
+  constriants.
 
-The :py:mod:`tdda.rexpy` library is a tool for automatically
-inferring regular expressions from a column in a Pandas DataFrame
-or from a (Python) list examples.
-Again, there is also a command-line utility for Rexpy.
-
+* The :py:mod:`tdda.rexpy` library is a tool for automatically
+  inferring regular expressions from a column in a Pandas DataFrame
+  or from a (Python) list examples.
+  There is also a command-line utility for Rexpy.
 

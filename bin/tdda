@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Wrapper script for tdda (unix only), for development use when the real
+# 'tdda' command has not been installed, or when you want to force use of
+# PYTHONPATH to find the libraries in preference to installed eggs/wheels.
+#
+
+exec python -m tdda.constraints.console "$@"
