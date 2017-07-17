@@ -67,6 +67,12 @@ It takes commands in the following forms:
 * ``tdda help`` to show help on how to use the tool.
 * ``tdda test`` to run the TDDA library's internal tests.
 
+See :ref:`examples` for more detail on the code and data
+examples that are included as part of the ``tdda`` package.
+
+See :ref:`tests` for more detail on the ``tdda`` package's own tests,
+used to test that the package is installed and configured correctly.
+
 .. _tdda_discover_tool:
 
 *tdda discover*

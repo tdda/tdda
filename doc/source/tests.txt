@@ -1,0 +1,28 @@
+
+.. _tests:
+
+Tests:
+======
+
+The TDDA package includes a set of unit-tests, for testing that the package
+is correctly installed and configured, and does not include any regressions.
+
+To run these tests::
+
+    tdda test
+
+The output should look something like::
+
+    .................................................................s....
+    .........................s........................
+    ----------------------------------------------------------------------
+    Ran 120 tests in 1.849s
+
+    OK (skipped=2)
+
+Some tests may be skipped, if they depend on modules that are not installed
+in your local environment (for instance, for testing TDDA database
+functionality for databases for which you do not have drivers installed).
+
+The overall test status should always be **OK**.
+
