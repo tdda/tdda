@@ -1,35 +1,272 @@
 Constraints
 ===========
 
-.. automodule:: tdda.constraints
-    :members:
+The :py:mod:`~tdda.constraints` module provides support for
+constraint generation and verification for datasets, including
+CSV files and Pandas DataFrames.
 
-Tools for CSV Files and DataFrames in Feather files
----------------------------------------------------
+The module includes:
 
-.. automodule:: tdda.constraints.pddiscover
-    :members:
+* A :ref:`tdda_command_line_tool` for discovering constraints in data
+  from various sources, and for verifying data against those constraints,
+  using the ``.tdda`` :ref`tdda_file_format`.
+* A Python library :py:mod:`~tdda.constraints` containing classes that
+  implement constraint discovery and validation, for use from within
+  other Python programs.
+* Python implementations of constraint discovery and verification for a
+  number of data sources:
 
-.. automodule:: tdda.constraints.pdverify
-    :members:
+  - CSV files
+  - Pandas and R DataFrames saved as ``.feather`` files
+  - PostgreSQL database tables
+  - MySQL database tables
+  - Sqlite database tables
+  - Mongodb document collections
 
-Constraints in CSV Files and Pandas DataFrames
-----------------------------------------------
+Python Prerequisites
+--------------------
 
-.. automodule:: tdda.constraints.pdconstraints
+* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
+* :py:mod:`feather-format` (required for :py:mod:`feather` files)
+* :py:mod:`pygresql` (required for PostgreSQL database tables)
+* :py:mod:`mysql`` (required for MySQL database tables)
+
+These can be installed with::
+
+    pip install numpy
+    pip install pandas
+    pip install feather-format
+    pip install pygresql
+    pip install mysql-python
+
+The :py:mod:`sqlite3` module is provided by default as part of the
+standard Python libraries, so Sqlite database tables can be used without
+having to explicitly install it.
+
+To install :py:mod:`feather-format` on Windows, you will need to install
+:py:mod:`cython` as a prerequisite, which might also require you to install
+the Microsoft Visual C++ compiler for python, from http://aka.ms/vcpython27.
+
+.. _tdda_command_line_tool:
+
+Command-line Tool
+-----------------
+
+The ``tdda`` command-line utility provides a tool for discovering constraints
+in data and saving them as a ``.tdda`` file using the TDDA JSON format, and
+also for verifying constraints in data against a previously prepared ``.tdda``
+file.
+
+It also provides some other functionality to help with using the tool.
+It takes commands in the following forms:
+
+* :ref:`tdda_discover_tool` to perform constraint discovery.
+* :ref:`tdda_verify_tool` to verify data against constraints.
+* ``tdda examples`` to copy example data and code where you can see them.
+* ``tdda help`` to show help on how to use the tool.
+* ``tdda test`` to run the TDDA library's internal tests.
+
+.. _tdda_discover_tool:
+
+*tdda discover*
+~~~~~~~~~~~~~~~
+
+Discover TDDA constraints for DataFrames saved as :py:mod:`feather` datasets,
+and save generated constraints as a JSON file.
+
+Usage::
+
+    tdda discover [FLAGS] input-file [constraints.tdda]
+
+where
+
+  * *input* is one of:
+
+    - a csv file
+    - a :py:mod:`feather` file containing a DataFrame, with extension
+      ``.feather``
+    - a database table name
+    - a schema-qualified table name of the form *schema*.*table*.
+    - a database table name qualified by database type, of the
+      form *dbtype*:*table* or *dbtype*:*schema*.*table*.
+
+  * *constraints.tdda*, if provided, specifies the name of a file to
+    which the generated constraints will be written in JSON.
+
+  * supported flags are
+
+    - -r or --rex    to include regular expression generation
+    - -R or --norex  to exclude regular expression generation
+
+See :ref:`tdda_csv_file` for details of how a CSV file is read.
+
+See :ref:`tdda_db_table` for details of how database tables are accessed.
+
+.. _tdda_verify_tool:
+
+*tdda verify*
+~~~~~~~~~~~~~
+
+Verify TDDA constraints for CSV files or DataFrames saved as
+:py:mod:`feather` datasets, against a JSON constraints file.
+
+Usage::
+
+    tdda verify [FLAGS] input [constraints.tdda]
+
+where:
+
+  * *input* is one of:
+
+    - a csv file
+    - a :py:mod:`feather` file containing a DataFrame, with extension
+      ``.feather``
+    - a database table name
+    - a schema-qualified table name of the form *schema*.*table*.
+    - a database table name qualified by database type, of the
+      form *dbtype*:*table* or *dbtype*:*schema*.*table*.
+
+  * *constraints.tdda*, if provided, is a JSON *.tdda* file
+    constaining constraints. If no constraints file is provided,
+    a file with the same path as the input file, with a *.tdda* extension
+    will be tried.
+
+Optional flags are:
+
+* -a, --all          Report all fields, even if there are no failures
+* -f, --fields       Report only fields with failures
+* -c, --constraints  Report only individual constraints that fail.
+                     Not yet implemented.
+* -1, --oneperline   Report each constraint failure on a separate line.
+                     Not yet implemented.
+* -7, --ascii        Report in ASCII form, without using special characters.
+
+See :ref:`tdda_csv_file` for details of how a CSV file is read.
+
+See :ref:`tdda_db_table` for details of how database tables are accessed.
+
+
+Constraints for CSV Files and Pandas DataFrames
+-----------------------------------------------
+
+.. _tdda_csv_file:
+
+CSV Files
+~~~~~~~~~
+
+If a CSV file is used with the ``tdda`` command-line tool, it will be
+processed by the Pandas CSV file reader with the following settings:
+
+* index_col             is ``None``
+* infer_datetime_format is ``True``
+* quotechar             is ``"``
+* quoting               is :py:const:`csv.QUOTE_MINIMAL`
+* escapechar            is ``\\`` (backslash)
+* na_values             are the empty string, ``"NaN"``, and ``"NULL"``
+* keep_default_na       is ``False``
+
+API
+~~~
+
+.. automodule:: tdda.constraints.pd.pdconstraints
     :members: discover_df, verify_df, PandasConstraintCalculator, PandasConstraintVerifier, PandasVerification, PandasConstraintDiscoverer
 
-General Constraints API
------------------------
+Constraints for Databases
+-------------------------
+
+.. _tdda_db_table:
+
+Database Tables
+~~~~~~~~~~~~~~~
+
+If a database table is used with the ``tdda`` command-line tool, it will be
+processed by using the following optional flags to specify the database
+connection details:
+
+* -conn FILE
+    Database connection file
+* -dbtype DBTYPE
+    Type of database
+* -db DATABASE
+    Name of database to connect to
+* -host HOSTNAME
+    Name of server to connect to
+* -port PORTNUMBER
+    IP port number to connect to
+* -user USERNAME
+    Username to connect as
+* -password PASSWORD  Password to authenticate with
+
+If ``-conn`` is provided, then none of the other options are required, and
+the database connection details are read from the specified file.
+
+If the database type is specified (with the ``-dbtype`` option, or by
+prefixing the table name, such as ``postgresql:mytable``), then a default
+connection file ``.tdda_db_conn_dbtype`` (in your home directory) is used,
+if present.
+
+Database Connection Files
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Database connection information can be stored in a ``tdda_db_conn`` file.
+
+This is a JSON file of the form::
+
+    {
+        "dbtype": DBTYPE,
+        "db": DATABASE,
+        "host": HOSTNAME,
+        "port": PORTNUMBER,
+        "user": USERNAME,
+        "password": PASSWORD
+    }
+
+All the entries are optional.
+
+If a ``password`` is provided, then care should be taken to ensure that the
+file has appropriate filesystem permissions so that it cannot be read by
+other users.
+
+A database connection file ``.tdda_db_conn``, in your home directory, is used,
+if it exists.  If you have specified a database type on the command line
+as a parameter to the ``tdda verify`` or ``tdda discover`` commands, but no
+other details, then a database connection file ``.tdda_db_conn_DBTYPE`` is
+used (where ``DBTYPE`` is the database type, in lower case).
+
+Any other database-related options passed in on the command line will
+override the default settings from the connection file.
+
+
+API
+~~~
+
+.. automodule:: tdda.constraints.db.dbconstraints
+    :members: discover_db_table, verify_db_table, DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
+
+Extension Framework
+-------------------
+
+.. automodule:: tdda.constraints.extension
+    :members:
+
+Constraints API
+---------------
 
 .. automodule:: tdda.constraints.baseconstraints
     :members:
 
-Base Constraint Classes
------------------------
+Underlying API Classes
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: tdda.constraints.base
     :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, RexConstraint, Verification
+
+. _tdda_file_format:
+
+TDDA JSON file format
+---------------------
+
+TODO
 
 .. _constraint_examples:
 

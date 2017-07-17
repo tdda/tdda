@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+"""
+Test Suite
+"""
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -20,8 +25,6 @@ from distutils.spawn import find_executable
 import pandas as pd
 import numpy as np
 
-from tdda.constraints import pdconstraints as pdc
-from tdda.constraints.pdconstraints import verify_df, discover_df
 from tdda.constraints.base import (
     MinConstraint,
     MaxConstraint,
@@ -43,8 +46,11 @@ from tdda.constraints.base import (
     EPSILON_DEFAULT,
 )
 from tdda.constraints.console import main_with_argv
-from tdda.constraints.pddiscover import discover_constraints_from_file
-from tdda.constraints.pdverify import verify_df_from_file
+
+from tdda.constraints.pd import pdconstraints as pdc
+from tdda.constraints.pd.pdconstraints import verify_df, discover_df
+from tdda.constraints.pd.pddiscover import discover_df_from_file
+from tdda.constraints.ext_pandas.pdverify import verify_df_from_file
 
 isPython2 = sys.version_info.major < 3
 
@@ -71,8 +77,8 @@ OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
                                                               else (b'u',))
 
 
-TESTDATA_DIR = os.path.join(os.path.split(os.path.abspath(__file__))[0],
-                            'testdata')
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
 
 class ConstraintVerificationTester:
@@ -1014,8 +1020,8 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
         csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        c = discover_constraints_from_file(csv_path, constraints_path=None,
-                                            verbose=False)
+        c = discover_df_from_file(csv_path, constraints_path=None,
+                                  verbose=False)
         tmpdir = tempfile.gettempdir()
         tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
         with open(tmpfile, 'w') as f:

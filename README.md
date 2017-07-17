@@ -18,7 +18,7 @@ The sources are also publicly available from Github:
 
     git clone git@github.com:tdda/tdda.git
 
-Documentation is available at [http://pythonhosted.org/tdda/](http://pythonhosted.org/tdda/).
+Documentation is available at http://pythonhosted.org/tdda/
 
 If you clone the Github repo, use
 

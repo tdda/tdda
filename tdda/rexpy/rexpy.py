@@ -1073,7 +1073,9 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
             (p1, 3),
             (p2, 0)
         )
+
     because:
+
      - p3 matches the most, with 8
      - Of the strings unmatched by p3, p1 accounts for 3 (e1 x 2 and e3 x 1)
        whereas p2 accounts for no new strings.

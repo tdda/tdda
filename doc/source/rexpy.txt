@@ -4,8 +4,10 @@ Rexpy
 .. automodule:: tdda.rexpy
     :members:
 
-Rexpy
------
+.. _rexpy_command_line_tool:
+
+Command-line Tool
+-----------------
 
 .. automodule:: tdda.rexpy.rexpy
     :members:

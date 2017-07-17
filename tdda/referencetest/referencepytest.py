@@ -3,8 +3,7 @@
 """
 This provides all of the methods in the
 :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class,
-but as module functions rather than class methods, using Python's native
-:py:func:`assert` mechanism as its means of making assertions.
+in a way that allows them to be used as ``pytest`` fixtures.
 
 This allows these functions to be called from tests running from the
 ``pytest`` framework.
@@ -19,7 +18,7 @@ For example::
         ref.assertCSVFileCorrect(resultfile, 'result.csv')
 
     def test_my_pandas_dataframe_function(ref):
-        resultframe = my_modile.my_dataframe_function()
+        resultframe = my_module.my_dataframe_function()
         ref.assertDataFrameCorrect(resultframe, 'result.csv')
 
     def test_my_table_function(ref):

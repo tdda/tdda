@@ -1,13 +1,11 @@
 # tdda.constraints:
 
 Constraint generation and verification for datasets, including
-Pandas DataFrames.
+CSV files, Pandas DataFrames, and various SQL and noSQL databases.
 
-All examples, tests and code should run under Python2 and Python3.
+All examples, tests and code run under Python2 and Python3.
 
 Run tests with
 
-    python testbase.py
-    python testpdconstraints.py
-
+    python testconstraints.py
 

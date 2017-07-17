@@ -31,6 +31,9 @@ from tdda.constraints.base import (
     EPSILON_DEFAULT,
     fuzzy_greater_than, fuzzy_less_than
 )
+
+from tdda.constraints.extension import BaseConstraintCalculator
+
 DEBUG = False
 
 TYPE_CHECKING_OPTIONS = ('strict', 'sloppy')
@@ -40,138 +43,15 @@ MAX_CATEGORIES = 20     # String fields with up to 20 categories will
                         # generate AllowedValues constraints
 
 
-class BaseConstraintCalculator:
-    """
-    These are all of the methods that need to be overridden in order
-    to implement a constraint discoverer or verifier.
-    """
-    def is_null(self, value):
-        """
-        Determine whether a value is null
-        """
-        return value is None
-
-    def to_datetime(self, value):
-        """
-        Convert a value to a datetime
-        """
-        return value
-
-    def get_column_names(self):
-        """
-        Returns a list containing the names of all the columns
-        """
-        raise NotImplementedError('column_names')
-
-    def get_nrecords(self):
-        """
-        Return total number of records
-        """
-        raise NotImplementedError('nrecords')
-
-    def types_compatible(self, x, y, colname):
-        """
-        Determine whether the types of two values are compatible
-        """
-        raise NotImplementedError('types_compatible')
-
-    def allowed_values_exclusions(self):
-        """
-        Get list of values to ignore when computing allowed values
-        """
-        return [None]
-
-    def calc_tdda_type(self, colname):
-        """
-        Calculates the TDDA type of a column
-        """
-        raise NotImplementedError('type')
-
-    def calc_min(self, colname):
-        """
-        Calculates the minimum (non-null) value in the named column.
-        """
-        raise NotImplementedError('min')
-
-    def calc_max(self, colname):
-        """
-        Calculates the maximum (non-null) value in the named column.
-        """
-        raise NotImplementedError('max')
-
-    def calc_min_length(self, colname):
-        """
-        Calculates the length of the shortest string(s) in the named column.
-        """
-        raise NotImplementedError('min_length')
-
-    def calc_max_length(self, colname):
-        """
-        Calculates the length of the longest string(s) in the named column.
-        """
-        raise NotImplementedError('max_length')
-
-    def calc_null_count(self, colname):
-        """
-        Calculates the number of nulls in a column
-        """
-        raise NotImplementedError('null_count')
-
-    def calc_non_null_count(self, colname):
-        """
-        Calculates the number of nulls in a column
-        """
-        raise NotImplementedError('non_null_count')
-
-    def calc_nunique(self, colname):
-        """
-        Calculates the number of unique non-null values in a column
-        """
-        raise NotImplementedError('nunique')
-
-    def calc_unique_values(self, colname, include_nulls=True):
-        """
-        Calculates the set of unique values (including or excluding nulls)
-        in a column
-        """
-        raise NotImplementedError('unique_values')
-
-    def calc_non_integer_values_count(self, colname):
-        """
-        Calculates the number of unique non-integer values in a column
-
-        This is only required for implementations where a dataset column
-        may contain values of mixed type.
-        """
-        raise NotImplementedError('non_integer_values_count')
-
-    def calc_all_non_nulls_boolean(self, colname):
-        """
-        Checks whether all the non-null values in a column are boolean.
-        Returns True of they are, and False otherwise.
-
-        This is only required for implementations where a dataset column
-        may contain values of mixed type.
-        """
-        raise NotImplementedError('all_non_nulls_boolean')
-
-    def find_rexes(self, colname, values=None):
-        """
-        Generate a list of regular expressions that cover all of
-        the patterns found in the (string) column.
-        """
-        raise NotImplementedError('find_rexes')
-
-    def verify_rex_constraint(self, colname, constraint):
-        """
-        Verify whether a given column satisfies a given regular
-        expression constraint (by matching at least one of the regular
-        expressions given).
-        """
-        raise NotImplementedError('verify_rex')
-
-
 class BaseConstraintVerifier(BaseConstraintCalculator):
+    """
+    The :py:mod:`BaseConstraintVerifier` class provides a generic
+    framework for verifying constraints.
+
+    A concrete implementation of this class is constructed by creating
+    a mix-in subclass which inherits both from :py:mod:`BaseConstraintVerifier`
+    and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
+    """
     def __init__(self, epsilon=None, type_checking=None):
         self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
         self.type_checking = type_checking or DEFAULT_TYPE_CHECKING
@@ -488,11 +368,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
 
 class BaseConstraintDiscoverer(BaseConstraintCalculator):
     """
-    A :py:class:`BaseConstraintDiscoverer` object is used to discover
-    constraints.
+    The :py:mod:`BaseConstraintDiscoverer` class provides a generic
+    framework for discovering constraints.
 
-    It inherits from BaseConstraintCalculator to allow it to compute
-    all the results it needs.
+    A concrete implementation of this class is constructed by creating
+    a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
+    and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
     def __init__(self, inc_rex=False):
         self.inc_rex = inc_rex

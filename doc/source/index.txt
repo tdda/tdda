@@ -12,6 +12,7 @@ Test-Driven Data Analysis (Python TDDA library)
    :maxdepth: 2
 
    overview.txt
+   cmdline.txt
    referencetest.txt
    constraints.txt
    rexpy.txt

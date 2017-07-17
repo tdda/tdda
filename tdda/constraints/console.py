@@ -6,6 +6,9 @@ Command line interface for constraint discovery and verification.
 If pandas is available, constraints can be discovered and verified on
 .csv files and saved .feather dataframe files.
 
+If supported database drivers are available, constraints can be discovered
+and verified on tables in databases.
+
 Constraint discovery and verification may be available for other data
 sources too, via any extensions specified in the `TDDA_EXTENSIONS`
 environment variable, if these are loadable using the normal Python module
@@ -19,14 +22,8 @@ import os
 import sys
 import unittest
 
-try:
-    from tdda.constraints import pddiscover, pdverify
-except ImportError:
-    # no pandas support
-    pddiscover = None
-    pdverify = None
-
 from tdda.examples import copy_examples
+from tdda import __version__
 
 
 HELP="""Use
@@ -38,16 +35,18 @@ HELP="""Use
     tdda test      to run the tdda library's tests."""
 
 
+STANDARD_EXTENSIONS = [
+    'tdda.constraints.pd.extension.TDDAPandasExtension',
+    'tdda.constraints.db.extension.TDDADatabaseExtension',
+]
+
+
 def help(extensions, stream=sys.stdout):
     print(HELP, file=stream)
     print(file=stream)
-    if pddiscover:
-        print('Constraint discovery and verification is available for CSV\n'
-              'files, and for Pandas and R DataFrames saved as .feather\n'
-              'files.', file=stream)
     if extensions:
-        print('Constraint discovery is also available for the following, via\n'
-              'extension modules:\n', file=stream)
+        print('Constraint discovery and verification is available for the '
+              'following:\n', file=stream)
         for ext in extensions:
             ext.help(stream=stream)
             print(file=stream)
@@ -66,20 +65,21 @@ def load_extension(ext):
     return getattr(mod, classname, None)
 
 
-def load_all_extensions(argv):
+def load_all_extensions(argv, verbose=False):
     """
-    Load all extensions specified via the TDDA_EXTENSIONS environment variable.
+    Load all extensions specified via the TDDA_EXTENSIONS environment variable,
+    and then load all the standard extensions.
     """
+    extension_class_names = []
     if 'TDDA_EXTENSIONS' in os.environ:
-        extension_class_names = os.environ['TDDA_EXTENSIONS'].split(':')
-        extension_classes = [load_extension(e) for e in extension_class_names]
-        return [e(argv) for e in extension_classes if e]
-    else:
-        return []
+        extension_class_names.extend(os.environ['TDDA_EXTENSIONS'].split(':'))
+    extension_class_names.extend(STANDARD_EXTENSIONS)
+    extension_classes = [load_extension(e) for e in extension_class_names]
+    return [e(argv, verbose=verbose) for e in extension_classes if e]
 
 
 def main_with_argv(argv, verbose=True):
-    extensions = load_all_extensions(argv[1:])
+    extensions = load_all_extensions(argv[1:], verbose=verbose)
 
     if len(argv) == 1:
         help(extensions, stream=sys.stderr)
@@ -90,24 +90,20 @@ def main_with_argv(argv, verbose=True):
         for ext in extensions:
             if ext.applicable():
                 return ext.discover()
-        if pddiscover:
-            return pddiscover.main(argv[1:], verbose=verbose)
         print('No discovery available', file=sys.stderr)
-    elif name in ('verify',):
+    elif name == 'verify':
         for ext in extensions:
             if ext.applicable():
                 return ext.verify()
-        if pdverify:
-            return pdverify.main(argv[1:], verbose=verbose)
         print('No verification available', file=sys.stderr)
-    elif name in ('examples',):
+    elif name == 'examples':
         dest = argv[2] if len(argv) > 2 else '.'
         copy_examples('referencetest', destination=dest, verbose=verbose)
         copy_examples('constraints', destination=dest, verbose=verbose)
         copy_examples('rexpy', destination=dest, verbose=verbose)
     elif name in ('version', '-v', '--version'):
-        pdverify.main(['tdda', '-v'])
-    elif name in ('test',):
+        print(__version__)
+    elif name == 'test':
         sys.exit(os.system('%s -m tdda.testtdda' % sys.executable) != 0)
     elif name in ('help', '-h', '-?', '--help'):
         help(extensions)
