@@ -815,12 +815,11 @@ def sort_constraint_dict(d):
     constraintkey = ['type', 'min', 'max', 'min_length', 'max_length',
                      'sign', 'max_nulls', 'no_duplicates', 'allowed_values',
                      'rex']
-    def sort_by_key(x, y):
-        XA = constraintkey.index(x[0])
-        YA = constraintkey.index(y[0])
-        return cmp(XA, YA)
     fields = OrderedDict((
-        (f, OrderedDict(((k, kv) for k, kv in sorted(v.items(), sort_by_key))))
+        (f, OrderedDict(((k, kv)
+                         for k, kv in sorted(v.items(),
+                                             key=lambda x:
+                                                  constraintkey.index(x[0])))))
         for f, v in sorted(d['fields'].items())
     ))
     return OrderedDict((('fields', fields),))

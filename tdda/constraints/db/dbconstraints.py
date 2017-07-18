@@ -40,6 +40,9 @@ from tdda.constraints.baseconstraints import (
 from tdda.constraints.db.dbbase import DatabaseHandler
 from tdda import rexpy
 
+if sys.version_info.major >= 3:
+    long = int
+
 
 class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def __init__(self, tablename, testing=False):

@@ -122,13 +122,15 @@ class TestSQLiteDatabaseConstraintDiscoverers(ReferenceTestCase):
         # build constraints for full 118 element dataset
         constraints = discover_db_table('sqlite', self.db, 'elements',
                                         inc_rex=False)
-        self.assertStringCorrect(constraints.to_json(), 'elements118.tdda')
+        self.assertStringCorrect(constraints.to_json(), 'elements118.tdda',
+                                 rstrip=True)
 
     def test_sqlite_discover_elements_rex(self):
         # build constraints for full 118 element dataset
         constraints = discover_db_table('sqlite', self.db, 'elements',
                                         inc_rex=True)
-        self.assertStringCorrect(constraints.to_json(), 'elements118rex.tdda')
+        self.assertStringCorrect(constraints.to_json(), 'elements118rex.tdda',
+                                 rstrip=True)
 
 
 TestSQLiteDatabaseConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
