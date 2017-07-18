@@ -20,15 +20,8 @@ from __future__ import absolute_import
 import sys
 
 from tdda.constraints.base import (
-    verify,
     DatasetConstraints,
-    FieldConstraints,
     Verification,
-    TypeConstraint,
-    MinConstraint, MaxConstraint, SignConstraint,
-    MinLengthConstraint, MaxLengthConstraint,
-    NoDuplicatesConstraint, MaxNullsConstraint,
-    AllowedValuesConstraint, RexConstraint,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -158,98 +151,6 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
         DatabaseHandler.__init__(self, dbtype, db)
         self.tablename = tablename
-
-    def discover_field_constraints_database_specifically(self, fieldname):
-        # TODO: REMOVE THIS, IT'S NOW DONE IN BASE TDDA
-        min_constraint = max_constraint = None
-        min_length_constraint = max_length_constraint = None
-        sign_constraint = no_duplicates_constraint = None
-        max_nulls_constraint = allowed_values_constraint = None
-        rex_constraint = None
-
-        type_ = self.get_database_column_type(self.tablename, fieldname)
-        if type_ == 'other':
-            return None         # Unrecognized or complex
-        else:
-            type_constraint = TypeConstraint(type_)
-        length = self.get_database_nrows(self.tablename)
-
-        if length > 0:  # Things are not very interesting when there is no data
-            nNull = self.get_database_nnull(self.tablename, fieldname)
-            nNonNull = self.get_database_nnonnull(self.tablename, fieldname)
-            assert nNull + nNonNull == length
-            if nNull < 2:
-                max_nulls_constraint = MaxNullsConstraint(nNull)
-
-            # Useful info:
-            uniqs = None
-            n_unique = -1   # won't equal number of non-nulls later on
-            if type_ in ('string', 'int'):
-                n_unique = self.get_database_nunique(self.tablename, fieldname)
-                if type_ == 'string':
-                    if n_unique <= MAX_CATEGORIES:
-                        uniqs = self.get_database_unique_values(self.tablename,
-                                                                fieldname)
-                    if uniqs:
-                        avc = AllowedValuesConstraint(uniqs)
-                        allowed_values_constraint = avc
-
-            if nNonNull > 0:
-                if type_ == 'string':
-                    # We don't generate a min, max or sign constraints for
-                    # strings. But we do generate min and max length
-                    # constraints
-                    m = self.get_database_min_length(self.tablename, fieldname)
-                    M = self.get_database_max_length(self.tablename, fieldname)
-                    min_length_constraint = MinLengthConstraint(m)
-                    max_length_constraint = MaxLengthConstraint(M)
-                else:
-                    # Non-string fields all potentially get min and max values
-                    m = self.get_database_min(self.tablename, fieldname)
-                    M = self.get_database_max(self.tablename, fieldname)
-                    if type_ == 'date':
-                        if not self.db_value_is_null(m):
-                            m = self.to_datetime(m)
-                        if not self.db_value_is_null(M):
-                            m = self.to_datetime(M)
-                    if not self.db_value_is_null(m):
-                        min_constraint = MinConstraint(m)
-                    if not self.db_value_is_null(M):
-                        max_constraint = MaxConstraint(M)
-
-                    # Non-date fields potentially get a sign constraint too.
-                    if min_constraint and max_constraint and type_ != 'date':
-                        if m == M == 0:
-                            sign_constraint = SignConstraint('zero')
-                        elif m >= 0:
-                            sign = 'positive' if m > 0 else 'non-negative'
-                            sign_constraint = SignConstraint(sign)
-                        elif M <= 0:
-                            sign = 'negative' if M < 0 else 'non-positive'
-                            sign_constraint = SignConstraint(sign)
-                        # else:
-                            # mixed
-                    elif self.db_value_is_null(m) and type_ != 'date':
-                        sign_constraint = SignConstraint(None)
-
-            if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
-                no_duplicates_constraint = NoDuplicatesConstraint()
-
-            if type_ == 'string' and self.inc_rex:
-                if not uniqs:
-                    uniqs = self.get_database_unique_values(self.tablename,
-                                                            fieldname)
-                rex_constraint = RexConstraint(rexpy.extract(uniqs))
-
-        constraints = [c for c in [type_constraint,
-                                   min_constraint, max_constraint,
-                                   min_length_constraint, max_length_constraint,
-                                   sign_constraint, max_nulls_constraint,
-                                   no_duplicates_constraint,
-                                   allowed_values_constraint,
-                                   rex_constraint]
-                         if c is not None]
-        return FieldConstraints(fieldname, constraints)
 
 
 def types_compatible(x, y, colname):
@@ -388,8 +289,8 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return verify(constraints, dbv.verifiers(),
-                  VerificationClass=DatabaseVerification, **kwargs)
+    return dbv.verify(constraints, 
+                      VerificationClass=DatabaseVerification, **kwargs)
 
 
 def discover_db_table(dbtype, db, tablename, inc_rex=False):

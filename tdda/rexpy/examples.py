@@ -3,14 +3,9 @@
 The :py:mod:`tdda.rexpy` module includes a set of examples.
 
 To copy these examples to your own *rexpy-examples* subdirectory
-(or to a location of your choice)::
+(or to a location of your choice), run the command::
 
-    python -m tdda.rexpy.examples [mydirectory]
-
-But it is easiest to copy *all* the TDDA examples (for all of its packages)
-with the command::
-
-    tdda examples
+    tdda examples rexpy [mydirectory]
 
 """
 from __future__ import absolute_import

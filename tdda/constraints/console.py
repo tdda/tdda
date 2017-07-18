@@ -60,8 +60,13 @@ def load_extension(ext):
     components = ext.split('.')
     classname = components[-1]
     modulename = '.'.join(components[:-1])
-    mod = importlib.import_module(modulename)
-    return getattr(mod, classname, None)
+    try:
+        mod = importlib.import_module(modulename)
+        return getattr(mod, classname, None)
+    except ImportError:
+        print('Warning: no tdda constraint module %s' % modulename,
+              file=sys.stderr)
+        return None
 
 
 def load_all_extensions(argv, verbose=False):
@@ -116,10 +121,14 @@ def main_with_argv(argv, verbose=True):
                 return ext.verify()
         no_constraints('No verification available', argv[2:], extensions)
     elif name == 'examples':
-        dest = argv[2] if len(argv) > 2 else '.'
-        copy_examples('referencetest', destination=dest, verbose=verbose)
-        copy_examples('constraints', destination=dest, verbose=verbose)
-        copy_examples('rexpy', destination=dest, verbose=verbose)
+        item = argv[2] if len(argv) > 2 else '.'
+        if item in ('referencetest', 'constraints', 'rexpy'):
+            dest = argv[3] if len(argv) > 3 else '.'
+            copy_examples(item, destination=dest, verbose=verbose)
+        else:
+            dest = argv[2] if len(argv) > 2 else '.'
+            for item in ('referencetest', 'constraints', 'rexpy'):
+                copy_examples(item, destination=dest, verbose=verbose)
     elif name in ('version', '-v', '--version'):
         print(__version__)
     elif name == 'test':

@@ -4,7 +4,7 @@ examples.
 
 To run the rexpy tool::
 
-    python -m tdda.rexpy.rexpy [inputfile]
+    tdda rexpy [inputfile]
 
 """
 

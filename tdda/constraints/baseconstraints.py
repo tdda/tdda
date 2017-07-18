@@ -76,6 +76,13 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             'rex': self.verify_rex_constraint,
         }
 
+    def verify(self, constraints, VerificationClass=Verification, **kwargs):
+        """
+        Apply verifiers to a set of constraints
+        """
+        return verify(constraints, self.verifiers(),
+                      VerificationClass=VerificationClass, **kwargs)
+
     def get_cached_value(self, value, colname, f):
         """
         Return cached value of colname, calculating it and caching it

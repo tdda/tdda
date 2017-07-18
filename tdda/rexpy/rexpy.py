@@ -3,11 +3,7 @@
 """
 Usage::
 
-    rexpy [FLAGS] [input file [output file]]
-
-or
-
-    python -m tdda.rexpy.rexpy [FLAGS] [input file [output file]]
+    tdda rexpy [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
 otherwise lines will be read from standard input.

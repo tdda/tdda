@@ -34,16 +34,9 @@ import numpy as np
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
-    verify,
     native_definite,
     DatasetConstraints,
-    FieldConstraints,
     Verification,
-    TypeConstraint,
-    MinConstraint, MaxConstraint, SignConstraint,
-    MinLengthConstraint, MaxLengthConstraint,
-    NoDuplicatesConstraint, MaxNullsConstraint,
-    AllowedValuesConstraint, RexConstraint,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -485,8 +478,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                                    type_checking=type_checking)
     constraints = DatasetConstraints(loadpath=constraints_path)
     pdv.repair_field_types(constraints)
-    return verify(constraints, pdv.verifiers(),
-                  VerificationClass=PandasVerification, **kwargs)
+    return pdv.verify(constraints,
+                      VerificationClass=PandasVerification, **kwargs)
 
 
 def discover_df(df, inc_rex=False):

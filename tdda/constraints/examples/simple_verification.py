@@ -6,9 +6,8 @@ simple_verification.py
 This file shows both a successful verification of a dataframe against
 a constraints (.tdda) file, and an unsuccessful verification (i.e.
 one in which some constraints are not satisfied.)
-
-
 """
+
 from __future__ import division
 from __future__ import print_function
 
@@ -16,7 +15,7 @@ import os
 import sys
 import pandas as pd
 
-from tdda.constraints.pdconstraints import verify_df
+from tdda.constraints.pd.pdconstraints import verify_df
 
 THIS_DIR = os.path.split(os.path.abspath(__file__))[0]
 TDDA_FILE = os.path.join(THIS_DIR, 'example_constraints.tdda')
@@ -63,6 +62,7 @@ def example_failing_verification():
     print(v.to_frame())
     print('\n')
     return n_failures
+
 
 if __name__ == '__main__':
     failures = example_positive_verification()

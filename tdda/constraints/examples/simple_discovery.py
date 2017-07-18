@@ -3,13 +3,13 @@
 """
 simple_discovery.py
 
-This file writes constraints as JSON to /tmp/example_constraints.tdda
-by default.
+This file writes constraints as JSON to example_constraints.tdda in the
+current directory by default.
 
 For reference, the file it writes should be semantically equivalent
-to expected_example_constraints.tdda in this directory
-(tdda/constraints/examples).
+to expected_example_constraints.tdda in this directory.
 """
+
 from __future__ import division
 from __future__ import print_function
 
@@ -17,7 +17,7 @@ import os
 import sys
 import pandas as pd
 
-from tdda.constraints.pdconstraints import discover_constraints
+from tdda.constraints.pd.pdconstraints import discover_df
 
 OUTDIR = '.'
 OUTPATH = os.path.join(OUTDIR, 'example_constraints.tdda')
@@ -25,7 +25,7 @@ OUTPATH = os.path.join(OUTDIR, 'example_constraints.tdda')
 def example_constraint_generation(path=OUTPATH):
 
     df = pd.DataFrame({'a': [1, 2, 9], 'b': ['one', 'two', pd.np.NaN]})
-    constraints = discover_constraints(df)
+    constraints = discover_df(df)
 
     if os.path.exists(path):
         os.unlink(path)
