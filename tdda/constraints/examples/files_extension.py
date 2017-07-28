@@ -15,6 +15,21 @@
 # It doesn't implement any of the option flags for discovery or verification
 # that it ought to.
 #
+# USAGE:
+#
+# To use this, you need to set the environment variable TDDA_EXTENSIONS
+# to include the fully-qualified class defined in here with a command.
+# If you have stored this in /home/ann/bar/files_extension.py, use
+#
+#  export TDDA_EXTENSIONS=bar.files_extension.TDDAFilesExtension
+#
+# and make your PYTHONPATH is such that this is importable (i.e. that the
+# PYTHONPATH includes /home/ann in this case). You can check this by trying
+#
+#     from bar.files_extension import TDDAFilesExtension
+#
+# in a Python REPL.
+#
 
 from __future__ import print_function
 
