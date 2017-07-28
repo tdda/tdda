@@ -15,7 +15,7 @@ import os
 import sys
 import pandas as pd
 
-from tdda.constraints.pd.pdconstraints import verify_df
+from tdda.constraints.pd.constraints import verify_df
 
 THIS_DIR = os.path.split(os.path.abspath(__file__))[0]
 TDDA_FILE = os.path.join(THIS_DIR, 'example_constraints.tdda')

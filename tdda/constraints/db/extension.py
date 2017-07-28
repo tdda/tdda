@@ -10,9 +10,9 @@ import sys
 
 from tdda.constraints.extension import ExtensionBase
 
-from tdda.constraints.db.dbbase import applicable
-from tdda.constraints.db.dbdiscover import DatabaseDiscoverer
-from tdda.constraints.db.dbverify import DatabaseVerifier
+from tdda.constraints.db.drivers import applicable
+from tdda.constraints.db.discover import DatabaseDiscoverer
+from tdda.constraints.db.verify import DatabaseVerifier
 
 
 class TDDADatabaseExtension(ExtensionBase):

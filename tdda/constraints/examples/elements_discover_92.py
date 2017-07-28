@@ -3,7 +3,7 @@
 from __future__ import print_function
 import pandas as pd
 
-from tdda.constraints.pd.pdconstraints import discover_df
+from tdda.constraints.pd.constraints import discover_df
 
 df = pd.read_csv('testdata/elements92.csv')
 constraints = discover_df(df)

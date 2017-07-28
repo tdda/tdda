@@ -161,7 +161,7 @@ See :ref:`tdda_db_table` for details of how database tables are accessed.
 Constraints for CSV Files and Pandas DataFrames
 -----------------------------------------------
 
-.. automodule:: tdda.constraints.pd.pdconstraints
+.. automodule:: tdda.constraints.pd.constraints
     :members: discover_df, verify_df, PandasConstraintCalculator, PandasConstraintVerifier, PandasVerification, PandasConstraintDiscoverer
 
 If a CSV file is used with the ``tdda`` command-line tool, it will be
@@ -254,7 +254,7 @@ override the default settings from the connection file.
 API
 ~~~
 
-.. automodule:: tdda.constraints.db.dbconstraints
+.. automodule:: tdda.constraints.db.constraints
     :members: discover_db_table, verify_db_table, DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
 
 Extension Framework

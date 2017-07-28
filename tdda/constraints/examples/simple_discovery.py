@@ -17,7 +17,7 @@ import os
 import sys
 import pandas as pd
 
-from tdda.constraints.pd.pdconstraints import discover_df
+from tdda.constraints.pd.constraints import discover_df
 
 OUTDIR = '.'
 OUTPATH = os.path.join(OUTDIR, 'example_constraints.tdda')

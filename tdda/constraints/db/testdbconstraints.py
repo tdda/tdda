@@ -14,9 +14,9 @@ import unittest
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase
 
-from tdda.constraints.db.dbbase import database_connection, DatabaseHandler
-from tdda.constraints.db.dbconstraints import (verify_db_table,
-                                               discover_db_table)
+from tdda.constraints.db.drivers import database_connection, DatabaseHandler
+from tdda.constraints.db.constraints import (verify_db_table,
+                                             discover_db_table)
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')

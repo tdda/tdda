@@ -30,7 +30,7 @@ from tdda.constraints.baseconstraints import (
     MAX_CATEGORIES,
 )
 
-from tdda.constraints.db.dbbase import DatabaseHandler
+from tdda.constraints.db.drivers import DatabaseHandler
 from tdda import rexpy
 
 if sys.version_info.major >= 3:

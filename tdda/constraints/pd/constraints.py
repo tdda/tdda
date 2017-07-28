@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :py:mod:`tdda.constraints.pd.pdconstraints` module provides an
+The :py:mod:`tdda.constraints.pd.constraints` module provides an
 implementation of TDDA constraint discovery and verification
 for Pandas Dataframes.
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from tdda.constraints.pd.pdconstraints import verify_df
+from tdda.constraints.pd.constraints import verify_df
 
 df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
                    'b': ['one', 'one', 'two', 'three', pd.np.NaN]})

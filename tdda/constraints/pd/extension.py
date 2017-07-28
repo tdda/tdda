@@ -11,9 +11,9 @@ import sys
 
 from tdda.constraints.extension import ExtensionBase
 
-from tdda.constraints.pd.pdconstraints import applicable
-from tdda.constraints.pd.pddiscover import PandasDiscoverer
-from tdda.constraints.pd.pdverify import PandasVerifier
+from tdda.constraints.pd.constraints import applicable
+from tdda.constraints.pd.discover import PandasDiscoverer
+from tdda.constraints.pd.verify import PandasVerifier
 
 
 class TDDAPandasExtension(ExtensionBase):

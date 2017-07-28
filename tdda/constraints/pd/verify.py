@@ -59,7 +59,7 @@ except ImportError:
         feather = None
 
 from tdda import __version__
-from tdda.constraints.pd.pdconstraints import verify_df, load_df
+from tdda.constraints.pd.constraints import verify_df, load_df
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):

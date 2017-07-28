@@ -2,6 +2,16 @@
 #
 # Example of a very simple constraint extension module.
 #
+# Extension modules are used to extend TDDA Discovery and Verification
+# to other data stores/types etc. --- so there are 'extensions' for
+# Pandas DataFrames and various databases (PostgreSQL, MySQL, SQLite and
+# MongoDB) included with the TDDA library.
+#
+# This file illustrates how to build a simple extension, treating the
+# file system as a data source and metadata about the files (name, size)
+# as the 'fields' to be checked in a directory (which takes the place
+# of a table or dataset).
+#
 # It doesn't implement any of the option flags for discovery or verification
 # that it ought to.
 #

@@ -46,9 +46,9 @@ import os
 import sys
 
 from tdda import __version__
-from tdda.constraints.db.dbconstraints import verify_db_table
-from tdda.constraints.db.dbbase import (database_connection, parse_table_name,
-                                        DATABASE_USAGE)
+from tdda.constraints.db.constraints import verify_db_table
+from tdda.constraints.db.drivers import (database_connection, parse_table_name,
+                                         DATABASE_USAGE)
 
 
 def verify_database_table_from_file(table, constraints_path,

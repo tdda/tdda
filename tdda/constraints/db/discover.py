@@ -38,9 +38,9 @@ import os
 import sys
 
 from tdda import __version__
-from tdda.constraints.db.dbconstraints import discover_db_table
-from tdda.constraints.db.dbbase import (database_connection, parse_table_name,
-                                        DATABASE_USAGE)
+from tdda.constraints.db.constraints import discover_db_table
+from tdda.constraints.db.drivers import (database_connection, parse_table_name,
+                                         DATABASE_USAGE)
 
 
 def discover_constraints_from_database(table, constraints_path=None,
