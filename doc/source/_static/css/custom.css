@@ -1,6 +1,6 @@
 /**
- * Sphinx stylesheet -- default theme
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Sphinx stylesheet -- modified default theme
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
 @import url("basic.css");
@@ -109,7 +109,7 @@ div.sphinxsidebar input {
 
 /* -- body styles ----------------------------------------------------------- */
 
-a {
+a,a:visited {
     color: #700000;
     text-decoration: none;
 }
