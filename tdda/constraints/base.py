@@ -370,11 +370,11 @@ class MaxConstraint(Constraint):
 class SignConstraint(Constraint):
     """
     Constraint specifying allowed sign of values in a field.
-    Used only for numeric fields (real, int, bool), and normally
+    Used only for numeric fields (``real``, ``int``, ``bool``), and normally
     used in addition to Min and Max constraints.
 
-    Possible values are 'positive', 'non-negative', 'zero',
-    'non-positive', 'negative' and 'null'.
+    Possible values are ``positive``, ``non-negative``, ``zero``,
+    ``non-positive``, ``negative`` and ``null``.
     """
     def __init__(self, value):
         assert value is None or value in SIGNS
@@ -386,15 +386,15 @@ class TypeConstraint(Constraint):
     Constraint specifying the allowed (TDDA) type of a field.
     This can be a single value, chosen from:
 
-        - 'bool'
-        - 'int'
-        - 'real'
-        - 'string'
-        - 'date'
+        - ``bool``
+        - ``int``
+        - ``real``
+        - ``string``
+        - ``date``
 
     or a list of such values, most commonly ``['int', 'real']``,
     sometimes used because of Pandas silent and automatic promotion
-    of integer fields to floats if NULLs are present.)
+    of integer fields to floats if nulls are present.)
     """
     def __init__(self, value):
         if type(value) in (list, tuple):
@@ -435,7 +435,7 @@ class AllowedValuesConstraint(Constraint):
     Currently only used for string fields.
 
     When generating constraints, this code will only generate such a
-    constraint if there are no more than MAX_CATEGORIES (= 20 at the
+    constraint if there are no more than ``MAX_CATEGORIES`` (= 20 at the
     time of writing, but check above in case this comment rusts)
     different values in the field.
     """
@@ -447,8 +447,8 @@ class MinLengthConstraint(Constraint):
     """
     Constraint restricting the minimum length of strings in a string field.
 
-    Generated instead of a MinConstraint by this generation code,
-    but can be used in conjunction with a MinConstraint.
+    Generated instead of a ``MinConstraint`` by this generation code,
+    but can be used in conjunction with a ``MinConstraint``.
     """
     def __init__(self, value):
         Constraint.__init__(self, 'min_length', value)
@@ -458,8 +458,8 @@ class MaxLengthConstraint(Constraint):
     """
     Constraint restricting the maximum length of strings in a string field.
 
-    Generated instead of a MaxConstraint by this generation code,
-    but can be used in conjunction with a MinConstraint.
+    Generated instead of a ``MaxConstraint`` by this generation code,
+    but can be used in conjunction with a ``MinConstraint``.
     """
     def __init__(self, value):
         Constraint.__init__(self, 'max_length', value)
@@ -573,9 +573,9 @@ def constraint_class(kind):
 
     So:
 
-        min      --> MinConstraint
-        min_length  --> MinLengthConstraint
-        no_nulls --> NoNullsConstraint
+        ``min``      --> ``MinConstraint``
+        ``min_length``  --> ``MinLengthConstraint``
+        ``no_nulls`` --> ``NoNullsConstraint``
 
     etc.
 

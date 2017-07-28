@@ -348,15 +348,11 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
 
         *min_length*:
                 For string fields, the length of the shortest string(s)
-                in the field. N.B. In Python3, this is of course,
-                a unicode string length; in Python2, it is an encoded
-                string length, which may be less meaningful.
+                in the field.
 
         *max_length*:
                 For string fields, the length of the longest string(s)
-                in the field.  N.B. In Python3, this is of course,
-                a unicode string length; in Python2, it is an encoded
-                string length, which may be less meaningful.
+                in the field.
 
         *sign*:
                 If all the values in a numeric field have consistent sign,

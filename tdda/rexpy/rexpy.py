@@ -222,8 +222,8 @@ class Fragment(namedtuple('Fragment', 're group')):
 
     Attributes:
 
-      * *re:* the regular expression for the fragment
-      * *group:* True if it forms a capture group (i.e. is not constant)
+      * ``re``: the regular expression for the fragment
+      * ``group``: True if it forms a capture group (i.e. is not constant)
     """
 
 class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
@@ -232,11 +232,12 @@ class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
 
     Attributes:
 
-     * *n:* number of matches
-     * *n_unique:* number matches, deduplicating strings
-     * *incr:* number of new (unique) matches for this regex
-     * *incr_uniq:* number of new (unique) deduplicated matches for this regex
-     * *index:* index of this regex in original list returned.
+     * ``n:`` number of matches
+     * ``n_unique:`` number matches, deduplicating strings
+     * ``incr:`` number of new (unique) matches for this regex
+     * ``incr_uniq:`` number of new (unique) deduplicated matches
+       for this regex
+     * ``index:`` index of this regex in original list returned.
     """
 
 
@@ -248,14 +249,14 @@ class Extractor(object):
     regular expression that characterizes them; failing which,
     a list of regular expressions that collectively cover the cases.
 
-    Results are stored in self.results once extraction has occurred,
+    Results are stored in ``self.results`` once extraction has occurred,
     which happens by default on initialization, but can be invoked
     manually.
 
     The examples may be given as a list or as a dictionary:
     if a dictionary, the values are assumed to be string frequencies.
 
-    Verbose is usually 0 or False. It can be to True or 1 for various
+    Verbose is usually 0 or ``False``. It can be to ``True`` or 1 for various
     extra output, and to higher numbers for even more verbose output.
     The highest level currently used is 2.
     """
@@ -723,19 +724,20 @@ class Extractor(object):
             - a run-length encoded sequence of characters
 
         Given inputs:
-                s     a string representing the actual substring of an
+            ``s`` --- a string representing the actual substring of an
                       example that matches a pattern fragment described
                       by pattern
 
-            pattern   a VRLE of coarse classes
+            ``pattern`` --- a VRLE of coarse classes
 
-            rlefc_in  a VRLE of fine classes, or None, or False
+            ``rlefc_in`` --- a VRLE of fine classes, or None, or False
 
-            rlec_in  a VRLE of characters, or None, or False
+            ``rlec_in`` --- a VRLE of characters, or None, or False
 
         Returns new rlefc and rlec, each of which is:
 
-            False, if the string doesn't match the corresponding input VRLE
+            ``False``, if the string doesn't match the corresponding
+            input VRLE
 
             a possibly expanded VRLE, if it does match, or would match
             if expanded (by allowing more of fewer repetitions).
@@ -891,10 +893,10 @@ class Extractor(object):
         Get a list of frequencies for each regular expression,
         i.e the number of the (stripped) input strings it matches.
         The list is in the same order as the regular expressions
-        in self.results.rex.
+        in ``self.results.rex``.
 
-        If dedup is set to True, shows only the number of distinct (stripped)
-        input examples matches
+        If ``dedup`` is set to ``True``, shows only the number of distinct
+        (stripped) input examples matches
         """
         return rex_coverage(self.results.rex, self.example_freqs, dedup)
 
@@ -906,7 +908,7 @@ class Extractor(object):
         The values in the results dictionary are the numbers of (new)
         examples matched.
 
-        If dedup is set to True, frequencies are ignored.
+        If ``dedup`` is set to ``True``, frequencies are ignored.
         """
         return rex_incremental_coverage(self.results.rex,
                                         self.example_freqs,
@@ -920,21 +922,21 @@ class Extractor(object):
         The values in the results dictionary are the numbers of (new)
         examples matched.
 
-        If dedup is set to True, frequencies are ignored.
+        If ``dedup`` is set to ``True``, frequencies are ignored.
 
-        Each result is a Coverage object with the following attributes:
+        Each result is a ``Coverage`` object with the following attributes:
 
-            *n*:
+            ``n``:
                 number of examples matched including duplicates
 
-            *n_uniq*:
+            ``n_uniq``:
                 number of examples matched, excluding duplicates
 
-            *incr*:
+            ``incr``:
                 number of previously unmatched examples matched,
                 including duplicates
 
-            *incr_uniq*:
+            ``incr_uniq``:
                 number of previously unmatched examples matched,
                 excluding duplicates
 
@@ -946,7 +948,7 @@ class Extractor(object):
     def n_examples(self, dedup=False):
         """
         Returns the total number of examples used by rexpy.
-        If dedup is set to True, this the number of different examples,
+        If ``dedup`` is set to ``True``, this the number of different examples,
         otherwise it is the "raw" number of examples.
         In all cases, examples have been stripped.
         """
@@ -965,7 +967,7 @@ def rex_coverage(patterns, example_freqs, dedup=False):
     and their frequencies, this counts the number of times each pattern
     matches a an example.
 
-    If dedup is set to True, the frequencies are ignored, so that only
+    If ``dedup`` is set to ``True``, the frequencies are ignored, so that only
     the number of keys is returned.
    """
     results = []
@@ -992,23 +994,23 @@ def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
     the most first, followed by the one matching the most remaining
     examples etc.
 
-    If dedup is set to True, the ordering ignores duplicate examples;
+    If ``dedup`` is set to ``True``, the ordering ignores duplicate examples;
     otherise, duplicates help determine the sort order.
 
-    Each entry in the dictionary returned is a Coverage object
+    Each entry in the dictionary returned is a ``Coverage`` object
     with the following attributes:
 
-        *n*:
+        ``n``:
             number of examples matched including duplicatesb
 
-        *n_uniq*:
+        ``n_uniq``:
             number of examples matched, excluding duplicates
 
-        *incr*:
+        ``incr``:
             number of previously unmatched examples matched,
             including duplicates
 
-        *incr_uniq*:
+        ``incr_uniq``:
             number of previously unmatched examples matched,
             excluding duplicates
     """
@@ -1042,7 +1044,7 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
     Usefulness is defined as "matching the most previously unmatched patterns".
     The dictionary entries are the number of (new) matches for the pattern.
 
-    If dedup is set to True, the frequencies are ignored when computing
+    If ``dedup`` is set to ``True``, the frequencies are ignored when computing
     match rate; if set to false, patterns get credit for the nmultiplicity
     of examples they match.
 
@@ -1062,7 +1064,7 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
     TOTAL    4       4       8
     ======= ====    ====    ====
 
-    If dedup is False this would produce::
+    If ``dedup`` is ``False`` this would produce::
 
         OrderedDict(
             (p3, 8),
@@ -1076,7 +1078,7 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
      - Of the strings unmatched by p3, p1 accounts for 3 (e1 x 2 and e3 x 1)
        whereas p2 accounts for no new strings.
 
-    With dedup set to True, the matrix transforms to
+    With ``dedup`` set to ``True``, the matrix transforms to
 
     ======= ====    ====    ====
     example p1      p2      p3
@@ -1377,8 +1379,8 @@ def extract(examples, tag=False, encoding=None, as_object=False,
 
 def pdextract(cols):
     """
-    Extract regular expression(s) from the pandas column (Series) object
-    or list of pandas columns given.
+    Extract regular expression(s) from the Pandas column (``Series``) object
+    or list of Pandas columns given.
 
     All columns provided should be string columns (i.e. of type np.dtype('O'),
     possibly including null values, which will be ignored.
@@ -1418,7 +1420,7 @@ def pdextract(cols):
 
 def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
     """
-    Find patterns in fragFreqCounters for which the frequency is n.
+    Find patterns in ``fragFreqCounters`` for which the frequency is ``n``.
 
     fragFreqCounters is a dictionary (usually keyed on 'fragments')
     of whose values are dictionaries mapping positions to frequencies.
@@ -1430,9 +1432,9 @@ def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):
             ('b', 1, 1, 'fixed'): {2: 6, 3: 4},
         }
 
-    This indicates that the pattern ('a', 1, 1, 'fixed') has frequency
+    This indicates that the pattern ``('a', 1, 1, 'fixed')`` has frequency
     7 at positions 1 and -1, and frequency 4 at position 3, while
-    pattern ('b', 1, 1, 'fixed') has frequency 6 at position 2 and
+    pattern ``('b', 1, 1, 'fixed')`` has frequency 6 at position 2 and
     4 at position 3.
 
     With n set to 7, this returns::
@@ -1459,7 +1461,7 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
     Find patterns in fragFreqCounters that, when present, are always
     at the same position.
 
-    fragFreqCounters is a dictionary (usually keyed on 'fragments')
+    ``fragFreqCounters`` is a dictionary (usually keyed on ``fragments``)
     of whose values are dictionaries mapping positions to frequencies.
 
     For example::
@@ -1470,9 +1472,9 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
         }
 
     This indicates that the
-      - pattern ('a', 1, 1, 'fixed'} has frequency 7 at positions 1 and -1,
+      - pattern ``('a', 1, 1, 'fixed')`` has frequency 7 at positions 1 and -1,
         and frequency 4 at position 3;
-      - pattern ('b', 1, 1, 'fixed') has frequency 6 at position 2 (only)
+      - pattern ``('b', 1, 1, 'fixed')`` has frequency 6 at position 2 (only)
 
     So this would return::
 
@@ -1480,8 +1482,7 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
             (('b', 1, 1, 'fixed'), 2)
         ]
 
-    (sorted on pos; each pos really should occur at most once.)
-
+    (sorted on ``pos``; each ``pos`` really should occur at most once.)
     """
     out = []
     print(fragFreqCounters)
@@ -1497,7 +1498,7 @@ def left_parts(patterns, fixed):
     """
     patterns is a list of patterns each consisting of a list of frags.
 
-    fixed is a list of (fragment, position) pairs, sorted on position,
+    fixed is a list of ``(fragment, position)`` pairs, sorted on position,
     specifying points at which to split the patterns.
 
     This function returns a list of lists of pattern fragments,
@@ -1523,9 +1524,9 @@ def right_parts(patterns, fixed):
     """
     patterns is a list of patterns each consisting of a list of frags.
 
-    fixed is a list of (fragment, pos) pairs where position specifies
+    fixed is a list of ``(fragment, pos)`` pairs where position specifies
     the position from the right, i.e a position that can be indexed as
-    -position.
+    ``-position``.
 
     Fixed should be sorted, increasing on position, i.e.
     sorted from the right-most pattern.
@@ -1554,9 +1555,9 @@ def length_stats(patterns):
     """
     Given a list of patterns, returns named tuple containing
 
-        *all_same_length*:
+        ``all_same_length``:
             boolean, True if all patterns are the same length
-        *max_length*:
+        ``max_length``:
             length of the longest pattern in patterns
     """
     lengths = [len(p) for p in patterns]
@@ -1635,9 +1636,9 @@ def get_params(args):
 def expand_or_falsify_vrle(rle, vrle, fixed=False):
     """
     Given a run-length encoded sequence
-        (e.g. [('A', 3), ('B', 4)])
+        (e.g. ``[('A', 3), ('B', 4)]``)
     and (usually) a variable run-length encoded sequence
-        (e.g. [('A', 2, 3), ('B', 1, 2)])
+        (e.g. ``[('A', 2, 3), ('B', 1, 2)]``)
 
     expand the VRLE to include the case of the RLE, if they can be consistent.
 

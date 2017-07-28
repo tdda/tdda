@@ -54,8 +54,9 @@ class ReferenceTest(object):
 
         *print_fn*
             The function to use to display information while running tests,
-            which should have the same signature as Python's *__future__*
-            standard print function.
+            which should have the same signature as Python3's
+            standard print function (the ``__future__`` print function
+            in Python2).
 
         *verbose*
             Boolean verbose flag, to control reporting of errors while running
@@ -82,8 +83,7 @@ class ReferenceTest(object):
 
     @classmethod
     def set_defaults(cls, **kwargs):
-        """
-        Set default parameters, at the class level. These defaults will
+        """Set default parameters, at the class level. These defaults will
         apply to all instances of the class.
 
         The following parameters can be set:
@@ -97,13 +97,13 @@ class ReferenceTest(object):
                 than waiting for the full report at the end. Verbose
                 is set to ``True`` by default.
 
-            *print_fn*:
-                Sets the print function globally, to specify the
-                function to use to display information while running
-                tests.  The function should have the same signature
-                as Python's *__future__* print function. If not
-                specified, a default print function is used which
-                writes unbuffered to sys.stdout.
+            *print_fn*: Sets the print function globally, to specify
+                the function to use to display information while
+                running tests.  The function have the same signature
+                as Python3's standard print function (the
+                ``__future__`` print function in Python2), a default
+                print function is used which writes unbuffered to
+                ``sys.stdout``.
 
             *tmp_dir*:
                 Sets the tmp_dir property globally, to specify the
@@ -138,7 +138,7 @@ class ReferenceTest(object):
         Set the regeneration flag for a particular kind of reference file,
         globally, for all instances of the class.
 
-        If the regenerate flag is set to True, then the framework will
+        If the regenerate flag is set to ``True``, then the framework will
         regenerate reference data of that kind, rather than comparing.
 
         All of the regeneration flags are set to False by default.
@@ -194,7 +194,6 @@ class ReferenceTest(object):
         """
         Helper function, for using with *check_data*, *check_types* and
         *check_order* parameters to assertion functions for Pandas DataFrames.
-
         It returns the names of all of the fields in the DataFrame being
         checked, apart from the ones given.
 
@@ -350,13 +349,13 @@ class ReferenceTest(object):
                 The default CSV loader function is a wrapper around Pandas
                 :py:func:`pd.read_csv()`, with default options as follows:
 
-                    - index_col             is ``None``
-                    - infer_datetime_format is ``True``
-                    - quotechar             is ``"``
-                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is ``\\`` (backslash)
-                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
-                    - keep_default_na       is ``False``
+                    - ``index_col`` is ``None``
+                    - ``infer_datetime_format`` is ``True``
+                    - ``quotechar`` is ``"``
+                    - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
+                    - ``escapechar`` is ``\\`` (backslash)
+                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``keep_default_na`` is ``False``
 
             *check_data*:
                 (Optional) restriction of fields whose values should
@@ -456,13 +455,13 @@ class ReferenceTest(object):
                 The default CSV loader function is a wrapper around Pandas
                 :py:func:`pd.read_csv()`, with default options as follows:
 
-                    - index_col             is ``None``
-                    - infer_datetime_format is ``True``
-                    - quotechar             is ``"``
-                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is ``\\`` (backslash)
-                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
-                    - keep_default_na       is ``False``
+                    - ``index_col`` is ``None``
+                    - ``infer_datetime_format`` is ``True``
+                    - ``quotechar`` is ``"``
+                    - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
+                    - ``escapechar`` is ``\\`` (backslash)
+                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``keep_default_na`` is ``False``
 
             *check_data*:
                 (Optional) restriction of fields whose values should
@@ -565,13 +564,13 @@ class ReferenceTest(object):
                 The default CSV loader function is a wrapper around Pandas
                 :py:func:`pd.read_csv()`, with default options as follows:
 
-                    - index_col             is ``None``
-                    - infer_datetime_format is ``True``
-                    - quotechar             is ``"``
-                    - quoting               is :py:const:`csv.QUOTE_MINIMAL`
-                    - escapechar            is ``\\`` (backslash)
-                    - na_values             are the empty string, ``"NaN"``, and ``"NULL"``
-                    - keep_default_na       is ``False``
+                    - ``index_col`` is ``None``
+                    - ``infer_datetime_format`` is ``True``
+                    - ``quotechar`` is ``"``
+                    - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
+                    - ``escapechar`` is ``\\`` (backslash)
+                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``keep_default_na`` is ``False``
 
             *check_data*:
                 (Optional) restriction of fields whose values should

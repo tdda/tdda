@@ -34,6 +34,13 @@ from tdda.constraints.base import (
 
 from tdda.constraints.extension import BaseConstraintCalculator
 
+if sys.version_info.major >= 3:
+    unicode_string = str
+    byte_string = bytes
+else:
+    unicode_string = unicode
+    byte_string = str
+
 DEBUG = False
 
 TYPE_CHECKING_OPTIONS = ('strict', 'sloppy')
@@ -441,8 +448,12 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         uniqs = self.calc_unique_values(fieldname,
                                                         include_nulls=False)
                     if uniqs:
-                        m = min(len(v) for v in uniqs)
-                        M = max(len(v) for v in uniqs)
+                        if type(uniqs[0]) is unicode_string:
+                            L = [len(v) for v in uniqs]
+                        else:
+                            L = [len(v.decode('UTF-8')) for v in uniqs]
+                        m = min(L)
+                        M = max(L)
                         min_length_constraint = MinLengthConstraint(m)
                         max_length_constraint = MaxLengthConstraint(M)
                 else:

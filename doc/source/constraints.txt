@@ -18,10 +18,10 @@ The module includes:
 
   - CSV files
   - Pandas and R DataFrames saved as ``.feather`` files
-  - PostgreSQL database tables
-  - MySQL database tables
-  - Sqlite database tables
-  - Mongodb document collections
+  - PostgreSQL database tables (``postgres:``)
+  - MySQL database tables (``mysql:``)
+  - SQLite database tables (``sqlite:``)
+  - MongoDB document collections (``mongodb``)
 
 Python Prerequisites
 --------------------
@@ -41,7 +41,7 @@ These can be installed with (some/all of)::
     pip install mysql-python
 
 The :py:mod:`sqlite3` module is provided by default as part of the
-standard Python libraries, so Sqlite database tables can be used without
+standard Python libraries, so SQLite database tables can be used without
 having to explicitly install it.
 
 To install :py:mod:`feather-format` on Windows, you will need to install
@@ -92,18 +92,15 @@ where
     - a CSV file
     - a :py:mod:`feather` file containing a DataFrame, with extension
       ``.feather``
-    - a database table name
-    - a schema-qualified table name of the form *schema*.*table*
-    - a database table name qualified by database type, of the
-      form *dbtype*:*table* or *dbtype*:*schema*.*table*
+    - a database table
 
   * *constraints.tdda*, if provided, specifies the name of a file to
     which the generated constraints will be written.
 
   * supported flags are
 
-    - -r or --rex    to include regular expression generation
-    - -R or --norex  to exclude regular expression generation
+    - ``-r`` or ``--rex``    to include regular expression generation
+    - ``-R`` or ``--norex``  to exclude regular expression generation
 
 See :ref:`tdda_csv_file` for details of how a CSV file is read.
 
@@ -128,10 +125,7 @@ where:
   - a csv file
   - a :py:mod:`feather` file containing a DataFrame, with extension
     ``.feather``
-  - a database table name
-  - a schema-qualified table name of the form *schema*.*table*
-  - a database table name qualified by database type, of the
-    form *dbtype*:*table* or *dbtype*:*schema*.*table*
+  - a database table
 
 * *constraints.tdda*, if provided, is a JSON *.tdda* file
   constaining constraints.
@@ -144,17 +138,17 @@ For database tables, the constraints file parameter is mandatory.
 
 Optional flags are:
 
-* -a, -\-all
+* ``-a``, ``--all``
     Report all fields, even if there are no failures
-* -f, -\-fields
+* ``-f``, ``--fields``
     Report only fields with failures
-* -c, -\-constraints
+* ``-c``, ``--constraints``
       Report only individual constraints that fail.
       Not yet implemented.
-* -1, -\-oneperline
+* ``-1``, ``--oneperline``
       Report each constraint failure on a separate line.
       Not yet implemented.
-* -7, -\-ascii
+* ``-7``, ``--ascii``
     Report in ASCII form, without using special characters.
 
 See :ref:`tdda_csv_file` for details of how a CSV file is read.
@@ -173,13 +167,13 @@ Constraints for CSV Files and Pandas DataFrames
 If a CSV file is used with the ``tdda`` command-line tool, it will be
 processed by the standard Pandas CSV file reader with the following settings:
 
-* index_col             is ``None``
-* infer_datetime_format is ``True``
-* quotechar             is ``"``
-* quoting               is :py:const:`csv.QUOTE_MINIMAL`
-* escapechar            is ``\\`` (backslash)
-* na_values             are the empty string, ``"NaN"``, and ``"NULL"``
-* keep_default_na       is ``False``
+* ``index_col`` is ``None``
+* ``infer_datetime_format`` is ``True``
+* ``quotechar`` is ``"``
+* ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
+* ``escapechar`` is ``\\`` (backslash)
+* ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+* ``keep_default_na`` is ``False``
 
 
 .. _tdda_db_table:
@@ -187,23 +181,33 @@ processed by the standard Pandas CSV file reader with the following settings:
 Constraints for Databases
 -------------------------
 
-If a database table is used with the ``tdda`` command-line tool, it will be
-processed by using the following optional flags to specify the database
-connection details:
+When a database table is used with the ``tdda`` command-line tool, the table
+name (including an optional schema) can be preceded by ``dbtype`` chosen
+from ``postgres``, ``mysql``, ``sqlite`` or ``mongodb``:
+::
 
-* -conn FILE
+    dbtype:schema.tablename
+
+If ``dbtype`` is used, this will cause the file ``.tdda_db_conn_dbtype``
+to be read from your home directory (see :ref:`tdda_db_conn`), which can
+contain all connection parameters.
+
+Parameters can also be provided using the following flags (which override
+the values in the ``.tdda_db_conn_dbtype`` file, if provided):
+
+* ``-conn FILE``
     Database connection file (see :ref:`tdda_db_conn`)
-* -dbtype DBTYPE
+* ``-dbtype DBTYPE``
     Type of database
-* -db DATABASE
+* ``-db DATABASE``
     Name of database to connect to
-* -host HOSTNAME
+* ``-host HOSTNAME``
     Name of server to connect to
-* -port PORTNUMBER
+* ``-port PORTNUMBER``
     IP port number to connect to
-* -user USERNAME
+* ``-user USERNAME``
     Username to connect as
-* -password PASSWORD
+* ``-password PASSWORD``
     Password to authenticate with
 
 If ``-conn`` is provided, then none of the other options are required, and
@@ -277,7 +281,7 @@ Underlying API Classes
 TDDA JSON file format
 ---------------------
 
-A .tdda file is a JSON file containing a single JSON object of the form::
+A ``.tdda`` file is a JSON file containing a single JSON object of the form::
 
     {
         "fields": {
@@ -286,7 +290,7 @@ A .tdda file is a JSON file containing a single JSON object of the form::
         }
     }
 
-Each *field-constraints* item is a JSON object containing a property for
+Each ``field-constraints`` item is a JSON object containing a property for
 each included constraint::
 
     {

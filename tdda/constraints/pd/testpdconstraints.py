@@ -462,9 +462,9 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         df = pd.DataFrame({
             'zero': [''] * 4,
             'zeroOne': ['', 'a', '1', None],
-            'one': ['a', 'b', 'c', None],
+            'one': ['α', 'b', 'c', None],       # Note unicode; min max len 1
             'oneTwo': ['a', 'aa', 'bb', None],
-            'two': ['aa', 'aa', 'bb', 'bb'],
+            'two': ['αα', 'αα', 'ββ', 'ββ'],    # Note unicode; min max len 2
         })
         goods = [
             ('zero', 0, 0),
