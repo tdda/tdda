@@ -125,6 +125,12 @@ class BaseConstraintCalculator:
         """
         return value
 
+    def column_exists(self, colname):
+        """
+        Returns whether this column exists in the dataset
+        """
+        return colname in self.get_column_names()
+
     def get_column_names(self):
         """
         Returns a list containing the names of all the columns

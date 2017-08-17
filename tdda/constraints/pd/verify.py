@@ -2,22 +2,16 @@
 
 """
 Support for Pandas constraint verification from the command-line tool
+
+Verify CSV files, or Pandas or R DataFrames saved as feather files,
+against a constraints from .tdda JSON file.
+constraints file.
 """
 
 from __future__ import division
 from __future__ import print_function
 
 USAGE = '''
-Verify CSV files, or Pandas or R DataFrames saved as feather files,
-against a constraints from .tdda JSON file.
-constraints file.
-
-Usage:
-
-    tdda verify [FLAGS] input-file [constraints.tdda]
-
-where:
-
   * input is one of:
 
       - a csv file
@@ -28,19 +22,6 @@ where:
 
 If no constraints file is provided, a file with the same path as the
 input file, with a .tdda extension will be tried.
-
-Optional flags are:
-
-  * -a, --all
-      Report all fields, even if there are no failures
-  * -f, --fields
-      Report only fields with failures
-  * -c, --constraints
-      Report only individual constraints that fail.  Not yet implemented.
-  * -1, --oneperline
-      Report each constraint failure on a separate line.  Not yet implemented.
-  * -7, --ascii
-      Report in ASCII form, without using special characters.
 '''
 
 import os
@@ -59,6 +40,7 @@ except ImportError:
         feather = None
 
 from tdda import __version__
+from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.pd.constraints import verify_df, load_df
 
 
@@ -71,39 +53,16 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 
 def get_params(args):
-    params = {
-        'df_path': None,
-        'constraints_path': None,
-        'report': 'all',
-        'one_per_line': False,
-        'ascii': False,
-    }
-    for a in args:
-        if a.startswith('-'):
-            if a in ('-a', '--all'):
-                params['report'] = 'all'
-            elif a in ('-f', '--fields'):
-                params['report'] = 'fields'
-            elif a in ('-c', '--constraints'):
-                params['report'] = 'constraints'
-            elif a in ('-1', '--oneperline'):
-                params['one_per_line'] = True
-            elif a in ('-7', '--ascii'):
-                params['ascii'] = True
-            else:
-                usage_error()
-        elif params['df_path'] is None:
-            params['df_path'] = a
-        elif params['constraints_path'] is None:
-            params['constraints_path'] = a
-        else:
-            usage_error()
+    parser = verify_parser(USAGE)
+    parser.add_argument('data', nargs=1, help='CSV or feather file')
+    parser.add_argument('constraints', nargs=1,
+                        help='constraints file to verify against')
+    params = {}
+    flags = verify_flags(parser, args, params)
+    params['df_path'] = flags.data[0] if flags.data else None
+    params['constraints_path'] = (flags.constraints[0] if flags.constraints
+                                  else None)
     return params
-
-
-def usage_error():
-    print(USAGE, file=sys.stderr)
-    sys.exit(1)
 
 
 class PandasVerifier:

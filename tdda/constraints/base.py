@@ -87,6 +87,9 @@ class DatasetConstraints(object):
             k = self.fields.keys()[k]
         return self.fields[k]
 
+    def __contains__(self, k):
+        return k in self.fields
+
     def add_field(self, fc):
         self.fields[fc.name] = fc
 

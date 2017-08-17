@@ -59,7 +59,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintVerifier`
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
-    def __init__(self, epsilon=None, type_checking=None):
+    def __init__(self, epsilon=None, type_checking=None, **kwargs):
         self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
         self.type_checking = type_checking or DEFAULT_TYPE_CHECKING
         assert self.type_checking in TYPE_CHECKING_OPTIONS
@@ -114,6 +114,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given column satisfies the minimum value
         constraint specified.
         """
+        if not self.column_exists(colname):
+            return False
+
         value = constraint.value
         precision = getattr(constraint, 'precision', 'closed') or 'closed'
         assert precision in PRECISIONS
@@ -142,6 +145,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given column satisfies the maximum value
         constraint specified.
         """
+        if not self.column_exists(colname):
+            return False
+
         value = constraint.value
         precision = getattr(constraint, 'precision', 'closed') or 'closed'
         assert precision in ('open', 'closed', 'fuzzy')
@@ -170,8 +176,10 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given (string) column satisfies the minimum length
         constraint specified.
         """
-        value = constraint.value
+        if not self.column_exists(colname):
+            return False
 
+        value = constraint.value
         if self.is_null(value):   # a null minimum length is not considered
             return True           # to be an active constraint, so is always
                                   # satisfied
@@ -187,8 +195,10 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given (string) column satisfies the maximum length
         constraint specified.
         """
-        value = constraint.value
+        if not self.column_exists(colname):
+            return False
 
+        value = constraint.value
         if self.is_null(value):   # a null minimum length is not considered
             return True           # to be an active constraint, so is always
                                   # satisfied
@@ -203,6 +213,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         """
         Verify whether a given column satisfies the supplied type constraint.
         """
+        if not self.column_exists(colname):
+            return False
+
         required_type = constraint.value
         allowed_types = (required_type if type(required_type) in (list, tuple)
                          else [required_type])
@@ -231,6 +244,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         """
         Verify whether a given column satisfies the supplied sign constraint.
         """
+        if not self.column_exists(colname):
+            return False
+
         value = constraint.value
         if self.is_null(value):   # a null value (as opposed to the string
                                   # 'null') is not considered to be an
@@ -259,6 +275,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given column satisfies the supplied constraint
         that it should contain no nulls.
         """
+        if not self.column_exists(colname):
+            return False
+
         value = constraint.value
         if self.is_null(value):   # a null value is not considered to be an
             return True           # active constraint, so is always satisfied
@@ -269,6 +288,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given column satisfies the constraint supplied,
         that it should contain no duplicate (non-null) values.
         """
+        if not self.column_exists(colname):
+            return False
+
         value = constraint.value
         if self.is_null(value):   # a null value is not considered to be an
             return True           # active constraint, so is always satisfied
@@ -283,6 +305,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         Verify whether a given column satisfies the constraint on allowed
         (string) values provided.
         """
+        if not self.column_exists(colname):
+            return False
+
         exclusions = self.allowed_values_exclusions()
         allowed_values = constraint.value
         if allowed_values is None:      # a null value is not considered
@@ -389,7 +414,7 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
-    def __init__(self, inc_rex=False):
+    def __init__(self, inc_rex=False, **kwargs):
         self.inc_rex = inc_rex
 
     def discover(self):

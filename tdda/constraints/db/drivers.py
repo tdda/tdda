@@ -35,6 +35,8 @@ except ImportError:
     pymongo = None
 
 from tdda.constraints.base import UNICODE_TYPE
+from tdda.constraints.flags import (discover_parser, discover_flags,
+                                    verify_parser, verify_flags)
 
 
 DATABASE_USAGE = '''
@@ -87,6 +89,49 @@ def applicable(argv):
             return (i < len(argv) - 1
                     and argv[i+1] in DATABASE_HANDLERS)
     return '-db' in argv
+
+
+def database_arg_parser(create_parser, usage):
+    parser = create_parser(usage + DATABASE_USAGE)
+    parser.add_argument('-conn', '--conn', nargs=1,
+                        help='database connection file')
+    parser.add_argument('-dbtype', '--dbtype', nargs=1, help='database type')
+    parser.add_argument('-db', '--db', nargs=1, help='database name')
+    parser.add_argument('-host', '--host', nargs=1,
+                        help='database server hostname')
+    parser.add_argument('-port', '--port',
+                        nargs=1, help='database server IP port')
+    parser.add_argument('-user', '--user', nargs=1, help='username')
+    parser.add_argument('-password', '--password', nargs=1, help='password')
+    return parser
+
+
+def database_arg_flags(create_flags, parser, args, params):
+    params.update({
+        'conn': None,
+        'dbtype': None,
+        'db': None,
+        'host': None,
+        'port': None,
+        'user': None,
+        'password': None,
+    })
+    flags = create_flags(parser, args, params)
+    if flags.conn:
+        params['conn'] = flags.conn[0]
+    if flags.dbtype:
+        params['dbtype'] = flags.dbtype[0]
+    if flags.db:
+        params['db'] = flags.db[0]
+    if flags.host:
+        params['host'] = flags.host[0]
+    if flags.port:
+        params['port'] = int(flags.port[0])
+    if flags.user:
+        params['user'] = flags.user[0]
+    if flags.password:
+        params['password'] = flags.password[0]
+    return flags
 
 
 def database_connection(table=None, conn=None, dbtype=None, db=None,
@@ -317,7 +362,7 @@ class SQLDatabaseHandler:
         else:
             schema = None
             table = tablename
-        if self.dbtype == 'postgresql':
+        if self.dbtype in ('postgres', 'postgresql'):
             if schema is None:
                 schema = 'public'
             sql = '''SELECT COUNT(*) FROM pg_catalog.pg_class c
@@ -343,7 +388,7 @@ class SQLDatabaseHandler:
         return self.execute_scalar(sql) > 0
 
     def get_database_column_names(self, tablename):
-        if self.dbtype == 'postgresql':
+        if self.dbtype in ('postgres', 'postgresql'):
             sql = '''
                 SELECT a.attname FROM pg_attribute a
                 WHERE a.attrelid = '%s'::regclass AND a.attnum > 0
@@ -390,7 +435,7 @@ class SQLDatabaseHandler:
             'date'       : 'date',
             None         : None,
         }
-        if self.dbtype == 'postgresql':
+        if self.dbtype in ('postgres', 'postgresql'):
             sql = '''
                 SELECT t.typname
                 FROM pg_attribute a inner join pg_type t on a.atttypid = t.oid
@@ -469,7 +514,7 @@ class SQLDatabaseHandler:
         if rexes is None:      # a null value is not considered to be an
             return True        # active constraint, so is always satisfied
         name = self.canon(colname)
-        if self.dbtype == 'postgresql':
+        if self.dbtype in ('postgres', 'postgresql'):
             # postgresql uses ~ syntax
             rexprs = ["(%s ~ '%s')" % (name, r) for r in rexes]
         elif self.dbtype == 'mysql':

@@ -12,9 +12,6 @@
 # as the 'fields' to be checked in a directory (which takes the place
 # of a table or dataset).
 #
-# It doesn't implement any of the option flags for discovery or verification
-# that it ought to.
-#
 # USAGE:
 #
 # To use this, you need to set the environment variable TDDA_EXTENSIONS
@@ -37,6 +34,8 @@ import os
 import re
 import sys
 
+from tdda.constraints.flags import discover_parser, discover_flags
+from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.extension import ExtensionBase
 
 from tdda.constraints.base import (
@@ -64,26 +63,46 @@ class TDDAFilesExtension(ExtensionBase):
         return 'a directory or folder'
 
     def discover(self):
-        inc_rex = True
-        path = self.argv[1]
-        constraints_path = self.argv[2] if len(self.argv) > 2 else None
-        disco = FilesConstraintDiscoverer(path, inc_rex=inc_rex)
-        constraints = disco.discover()
-        if constraints_path:
-            with open(constraints_path, 'w') as f:
-                f.write(constraints.to_json())
+        parser = discover_parser()
+        parser.add_argument('directory', nargs=1, help='directory path')
+        parser.add_argument('constraints', nargs='?',
+                            help='name of constraints file to create')
+        params = {}
+        flags = discover_flags(parser, self.argv[1:], params)
+        params['path'] = flags.directory[0] if flags.directory else None
+        params['constraints_path'] = (flags.constraints if flags.constraints
+                                      else None)
+        constraints = discover_directory(**params)
+        results = constraints.to_json()
+        if params['constraints_path']:
+            with open(params['constraints_path'], 'w') as f:
+                f.write(results)
         else:
-            print(constraints.to_json())
+            print(results)
 
     def verify(self):
-        path = self.argv[1]
-        constraints_path = self.argv[2]
-        epsilon = 0
-        type_checking = 'strict'
-        fv = FilesConstraintVerifier(path, epsilon=epsilon,
-                                     type_checking=type_checking)
-        constraints = DatasetConstraints(loadpath=constraints_path)
-        print(fv.verify(constraints))
+        parser = verify_parser()
+        parser.add_argument('directory', nargs=1, help='directory path')
+        parser.add_argument('constraints', nargs=1,
+                            help='constraints file to verify against')
+        params = {}
+        flags = verify_flags(parser, self.argv[1:], params)
+        params['path'] = flags.directory[0] if flags.directory else None
+        params['constraints_path'] = (flags.constraints[0] if flags.constraints
+                                      else None)
+        params['type_checking'] = 'strict'
+        print(verify_directory_from_file(**params))
+
+
+def discover_directory(path, constraints_path=None, **kwargs):
+    disco = FilesConstraintDiscoverer(path, **kwargs)
+    return disco.discover()
+
+
+def verify_directory_from_file(path, constraints_path, **kwargs):
+    fv = FilesConstraintVerifier(path, **kwargs)
+    constraints = DatasetConstraints(loadpath=constraints_path)
+    return fv.verify(constraints)
 
 
 class FilesConstraintCalculator(BaseConstraintCalculator):
@@ -169,16 +188,16 @@ class FilesConstraintCalculator(BaseConstraintCalculator):
 
 class FilesConstraintDiscoverer(FilesConstraintCalculator,
                                 BaseConstraintDiscoverer):
-    def __init__(self, path, inc_rex=False):
+    def __init__(self, path, **kwargs):
         FilesConstraintCalculator.__init__(self, path)
-        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
+        BaseConstraintDiscoverer.__init__(self, **kwargs)
 
 
 class FilesConstraintVerifier(FilesConstraintCalculator,
                               BaseConstraintVerifier):
-    def __init__(self, path, epsilon=None, type_checking='strict'):
+    def __init__(self, path, type_checking='strict', **kwargs):
         FilesConstraintCalculator.__init__(self, path)
-        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
-                                        type_checking=type_checking)
+        BaseConstraintVerifier.__init__(self, type_checking=type_checking,
+                                        **kwargs)
 
 

@@ -2,21 +2,15 @@
 
 """
 Support for Pandas constraint discovery from the command-line tool
+
+Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
+as feather files, and save the generated constraints as a .tdda JSON file.
 """
 
 from __future__ import division
 from __future__ import print_function
 
 USAGE = '''
-Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
-as feather files, and save the generated constraints as a .tdda JSON file.
-
-Usage:
-
-    tdda discover [FLAGS] input-file [constraints.tdda]
-
-where
-
   * input-file is one of:
 
     - a csv file
@@ -24,11 +18,6 @@ where
 
   * constraints.tdda, if provided, specifies the name of a file to
     which the generated constraints will be written.
-
-  * supported flags are
-
-     -r or --rex    to include regular expression generation
-     -R or --norex  to exclude regular expression generation
 '''
 
 import os
@@ -44,6 +33,7 @@ except ImportError:
         feather = None
 
 from tdda import __version__
+from tdda.constraints.flags import discover_parser, discover_flags
 from tdda.constraints.pd.constraints import discover_df, load_df
 
 
@@ -60,31 +50,16 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 
 def get_params(args):
-    params = {
-        'df_path': None,
-        'constraints_path': None,
-        'inc_rex': False,
-    }
-    for a in args:
-        if a.startswith('-'):
-            if a in ('-r', '--rex'):
-                params['inc_rex'] = True
-            elif a in ('-R', '--norex'):
-                params['inc_rex'] = False
-            else:
-                usage_error()
-        elif params['df_path'] is None:
-            params['df_path'] = a
-        elif params['constraints_path'] is None:
-            params['constraints_path'] = a
-        else:
-            usage_error()
+    parser = discover_parser(USAGE)
+    parser.add_argument('data', nargs=1, help='CSV or feather file')
+    parser.add_argument('constraints', nargs='?',
+                        help='name of constraints file to create')
+    params = {}
+    flags = discover_flags(parser, args, params)
+    params['df_path'] = flags.data[0] if flags.data else None
+    params['constraints_path'] = (flags.constraints if flags.constraints
+                                  else None)
     return params
-
-
-def usage_error():
-    print(USAGE, file=sys.stderr)
-    sys.exit(1)
 
 
 class PandasDiscoverer:

@@ -48,6 +48,9 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def to_datetime(self, value):
         return self.db_value_to_datetime(value)
 
+    def column_exists(self, colname):
+        return self.canon(colname) in self.get_column_names()
+
     def get_column_names(self):
         return self.get_database_column_names(self.tablename)
 

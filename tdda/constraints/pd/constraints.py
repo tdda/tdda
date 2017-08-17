@@ -197,6 +197,8 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
         # We can try to use the constraint information to try to repair this,
         # but it's not always going to be successful.
         for c in self.df.columns.tolist():
+            if c not in constraints:
+                continue
             ser = self.df[c]
             try:
                 ctype = constraints[c]['type'].value
@@ -224,7 +226,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                 elif ctype == 'bool' and dtype == pd.np.dtype('int32'):
                     self.df[c] = ser.astype(bool)
             except Exception as e:
-                print(e)
+                print('%s: %s' % (e.__class__.__name__, str(e)))
                 pass
 
 
