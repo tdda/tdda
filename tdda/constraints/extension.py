@@ -29,6 +29,9 @@ With these in place, the ``tdda`` command will include constraint discovery
 and verification using the ``MySpecialExtension`` implementation class
 provided in the Python file ``/my/python/sources/mytdda.py``.
 
+An  example of a simple extension is included with the set of standard
+examples. See :ref:`examples`.
+
 Extension API
 -------------
 """
