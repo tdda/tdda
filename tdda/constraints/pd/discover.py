@@ -11,13 +11,17 @@ from __future__ import division
 from __future__ import print_function
 
 USAGE = '''
-  * input-file is one of:
+
+Parameters:
+
+  * input is one of:
 
     - a csv file
     - a .feather file containing a saved Pandas or R DataFrame
 
   * constraints.tdda, if provided, specifies the name of a file to
     which the generated constraints will be written.
+
 '''
 
 import os
@@ -51,12 +55,12 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def get_params(args):
     parser = discover_parser(USAGE)
-    parser.add_argument('data', nargs=1, help='CSV or feather file')
+    parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs='?',
                         help='name of constraints file to create')
     params = {}
     flags = discover_flags(parser, args, params)
-    params['df_path'] = flags.data[0] if flags.data else None
+    params['df_path'] = flags.input[0] if flags.input else None
     params['constraints_path'] = (flags.constraints if flags.constraints
                                   else None)
     return params

@@ -11,7 +11,9 @@ constraints as a .tdda JSON file.
 from __future__ import division
 from __future__ import print_function
 
-USAGE = ''''
+USAGE = '''
+
+Parameters:
 
   * table is one of:
 

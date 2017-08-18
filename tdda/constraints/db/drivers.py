@@ -51,12 +51,12 @@ Database connection flags:
   * -user USERNAME          Username to connect as
   * -password PASSWORD      Password to authenticate with
 
-If ``-conn`` is provided, then none of the other options are required, and
+If -conn is provided, then none of the other options are required, and
 the database connection details are read from the specified file.
 
-If the database type is specified (with the ``-dbtype`` option, or by
-prefixing the table name, such as ``postgresql:mytable``), then a default
-connection file ``.tdda_db_conn_dbtype`` (in your home directory) is used,
+If the database type is specified (with the -dbtype option, or by
+prefixing the table name, such as postgresql:mytable), then a default
+connection file .tdda_db_conn_DBTYPE (in your home directory) is used,
 if present.
 
 '''

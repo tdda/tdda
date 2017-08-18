@@ -11,7 +11,9 @@ constraints file.
 from __future__ import division
 from __future__ import print_function
 
-USAGE = ''''
+USAGE = '''
+
+Parameters:
 
   * table is one of:
 
@@ -21,6 +23,7 @@ USAGE = ''''
        form dbtype:table or dbtype:schema.table
 
   * constraints.tdda is a JSON .tdda file constaining constraints.
+
 '''
 
 import argparse

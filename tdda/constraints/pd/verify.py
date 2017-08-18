@@ -12,6 +12,9 @@ from __future__ import division
 from __future__ import print_function
 
 USAGE = '''
+
+Parameters:
+
   * input is one of:
 
       - a csv file
@@ -22,6 +25,7 @@ USAGE = '''
 
 If no constraints file is provided, a file with the same path as the
 input file, with a .tdda extension will be tried.
+
 '''
 
 import os
@@ -54,12 +58,12 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def get_params(args):
     parser = verify_parser(USAGE)
-    parser.add_argument('data', nargs=1, help='CSV or feather file')
+    parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
     params = {}
     flags = verify_flags(parser, args, params)
-    params['df_path'] = flags.data[0] if flags.data else None
+    params['df_path'] = flags.input[0] if flags.input else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)
     return params
