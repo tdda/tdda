@@ -15,6 +15,7 @@
 import sys
 import os
 
+sys.path.append(os.path.join(os.path.abspath(__file__), '../../..'))
 from tdda import __version__ as version
 
 # If extensions (or modules to document with autodoc) are in another directory,
