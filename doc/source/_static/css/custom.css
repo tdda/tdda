@@ -17,7 +17,6 @@ body {
 }
 
 div.document {
-    background-color: #788088;
 }
 
 div.documentwrapper {
@@ -37,6 +36,7 @@ div.body {
 
 div.footer {
     color: #ffffff;
+    background-color: #788088;
     width: 100%;
     padding: 9px 0 9px 0;
     text-align: center;
