@@ -97,7 +97,7 @@ div.sphinxsidebar ul {
     color: #ffffff;
 }
 
-div.sphinxsidebar a {
+div.sphinxsidebar a, div.sphinxsidebar a:visited, div.sphinxsidebar a:hover {
     color: #FFFFFF;
 }
 
