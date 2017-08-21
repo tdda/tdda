@@ -1,8 +1,8 @@
 
 .. _tests:
 
-Tests:
-======
+Tests
+=====
 
 The TDDA package includes a set of unit-tests, for testing that the package
 is correctly installed and configured, and does not include any regressions.
