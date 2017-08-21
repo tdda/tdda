@@ -107,6 +107,10 @@ div.sphinxsidebar input {
     font-size: 1em;
 }
 
+.toctree-l1 a, .toctree-l1 a:visited, .toctree-l1 a:hover {
+    color: #FFFFFF;
+}
+
 /* -- body styles ----------------------------------------------------------- */
 
 a,a:visited {
