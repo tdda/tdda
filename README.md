@@ -8,9 +8,8 @@ The simplest way to install all of the TDDA Python modules is using *pip*:
 
     pip install tdda
 
-But note that it is not particularly easy to run through the examples using
-a PyPi binary installation like that. The full set of sources, including
-all examples, will be downloadable from PyPi with:
+The full set of sources, including all examples, are downloadable from
+PyPi with:
 
     pip download --no-binary :all: tdda
 
@@ -56,13 +55,6 @@ The package includes docstrings, available with:
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `referencetest` subdirectory.
 
-An older implementation of these ideas is available as a `unittest`
-wrapper class, `WritableTestCase`, in `writabletestcase.py`.
-This can be imported directly with
-`from tdda.writabletestcase import WritableTestCase`. Examples of using
-this are currently available in the `deprecated` subdirectory. This older
-version will be fully deprecated and removed soon.
-
 *Level 1:*
 ----------
 
@@ -77,6 +69,14 @@ For usage details:
 
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `constraints` subdirectory.
+
+The `tdda` repository also includes `rexpy`, a tool for automatically
+inferring regular expressions from a single field of data examples.
+
+The package also has doc strings, which you can see with:
+
+    >>> from tdda import rexpy
+    >>> help(rexpy)
 
 *Resources*
 -----------
@@ -95,10 +95,3 @@ Resources on these topics include:
 
 All examples, tests and code should run under Python2 and Python3.
 
-The `tdda` repository also includes `rexpy`, a tool for automatically
-inferring regular expressions from a single field of data examples.
-
-The package also has doc strings, which you can see with:
-
-    >>> from tdda import rexpy
-    >>> help(rexpy)
