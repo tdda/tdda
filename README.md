@@ -18,7 +18,7 @@ The sources are also publicly available from Github:
 
     git clone git@github.com:tdda/tdda.git
 
-Documentation is available at http://pythonhosted.org/tdda/
+Documentation is available at http://tdda.readthedocs.io.
 
 If you clone the Github repo, use
 
@@ -85,7 +85,7 @@ Resources on these topics include:
 
   * TDDA Blog: http//www.tdda.info
   * Quick Reference Guide ("Cheatsheet"): http://www.tdda.info/pdf/tdda-quickref.pdf
-  * Full documentation: http://pythonhosted.org/tdda/
+  * Full documentation: http://tdda.readthedocs.io
   * General Notes on Constraints and Assertions: http://www.tdda.info/constraints-and-assertions
   * Notes on using the Pandas constraints library:
     http://www.tdda.info/constraint-discovery-and-verification-for-pandas-dataframes
