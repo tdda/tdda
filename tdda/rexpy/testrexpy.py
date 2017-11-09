@@ -223,6 +223,7 @@ pd = pandas
 
 #from artists.miro.writabletestcase import WritableTestCase
 from tdda.rexpy import *
+from tdda.rexpy.rexpy import Coverage
 
 
 class TestUtilityFunctions(unittest.TestCase):
@@ -716,8 +717,8 @@ class TestExtraction(unittest.TestCase):
                  '22ecc913-68eb-4cfb-a9cc-18df44137a4c',
                  '634962c3-8bc1-4b51-b36d-3dcbfdc92b63',
                  'aac65b99-92ff-11e6-b97d-b8f6b118f191',
-                 '6fa459ea-ee8a-3ca4-894e-db77e160355e',
-                 '886313e1-3b8a-5372-9b90-0c9aee199e5d']
+                 '6fa459ea-ee8a-3ca4-8f4e-db77e160355e',
+                 '886313e1-3b8a-e372-9b90-0c9aee199e5d']
         rexes = ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
                  '[0-9a-f]{4}\\-[0-9a-f]{12}$']
         x = extract(uuids)
@@ -728,13 +729,13 @@ class TestExtraction(unittest.TestCase):
                   'f69c5651-0b97-4909-b896-8ef0891f81ff',
                   '13f984fe-65db-4646-99d4-a93c06f78472',
                   '50a886d2-78c9-4b7b-81a9-25caf4deb212',
-                  '2d4429df-9a80-4581-9565-27880ce171b0',
+                  '2d4429df-9a80-b581-9565-27880ce171b0',
                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
 
         rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
                  r'[0-9a-f]{4}\-[0-9a-f]{12}$']
 
-        x = extract(uuid4s)       # Not refining down yet
+        x = extract(uuid4s, variableLengthFrags=True)       # Not refining down yet
         self.check_result(x, rexes, uuid4s)
 
     tels1 = [
@@ -1025,12 +1026,20 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls1, verbose=True)
 #        x = Extractor(self.urls1, verbose=True)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls1)),
+        self.assertEqual(set(extract(self.urls1, variableLengthFrags=False)),
                          set([r'^http\:\/\/www\.[a-z]+\.com\/$',
                               r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
                               r'^http\:\/\/[a-z]+\.com\/$',
                               r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
                               r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',]))
+
+        self.assertEqual(set(extract(self.urls1, variableLengthFrags=True)),
+                         set([r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
+                              r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+                              r'^http\:\/\/www\.[a-z]+\.com\/$',
+                              r'^http\:\/\/[a-z]+\.com\/$',
+                              r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$',]))
+
 
         # Sorted by length, these forms are:These are all:
         #
@@ -1078,7 +1087,7 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls2)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls2)), {
+        self.assertEqual(set(extract(self.urls2, variableLengthFrags=False)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
@@ -1086,9 +1095,17 @@ class TestExtraction(unittest.TestCase):
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
         })
+        self.assertEqual(set(extract(self.urls2, variableLengthFrags=True)), {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com\/$',
+            r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+            r'^https?\:\/\/www\.[a-z]+\.com$',
+        })
 
     def test_incremental_coverage_urls2(self):
-        x = Extractor(self.urls2)
+        x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.incremental_coverage()
         expected = OrderedDict((
                       (u'^[a-z]{4,5}\\:\\/\\/www\\.[a-z]+\\.com$', 4),
@@ -1112,7 +1129,7 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(x.n_examples(dedup=True), 15)
 
 
-        x = Extractor(self.urls2 * 2)
+        x = Extractor(self.urls2 * 2, variableLengthFrags=False)
         doubled = OrderedDict([(k, n * 2) for k, n in expected.items()])
         od = x.incremental_coverage()
         self.assertEqual(od, doubled)
@@ -1142,19 +1159,19 @@ class TestExtraction(unittest.TestCase):
 #                  % (k, results[k]))
         expected = OrderedDict((
             (u'^[st].+$',
-             rexpy.Coverage(n=18,      # 2 + 3 + 6 + 7,
+             Coverage(n=18,      # 2 + 3 + 6 + 7,
                             n_uniq=4,  # two, three, six, seven
                             incr=18,
                             incr_uniq=4,
                             index=2)),
             (u'^f.+$',
-             rexpy.Coverage(n=9,        # 4 + 5
+             Coverage(n=9,        # 4 + 5
                             n_uniq=2,   # four, five
                             incr=9,     # four (4), five (5)
                             incr_uniq=2,
                             index=0)),
             (u'^.{3}$',
-             rexpy.Coverage(n=10,      # 1 + 1 + 2 + 6
+             Coverage(n=10,      # 1 + 1 + 2 + 6
                             n_uniq=4,  # One, one, two, six
                             incr=2,    # One (1), one (1)
                             incr_uniq=2,
@@ -1166,19 +1183,19 @@ class TestExtraction(unittest.TestCase):
                                                       dedup=True)
         expected = OrderedDict((
             (u'^.{3}$',
-             rexpy.Coverage(n=10,       # 1 + 1 + 2 + 6
+             Coverage(n=10,       # 1 + 1 + 2 + 6
                             n_uniq=4,   # One, one, two, six
                             incr=10,    # One (1), one (1), two (2), six (6)
                             incr_uniq=4,
                             index=1)),
             (u'^[st].+$',
-             rexpy.Coverage(n=18,       # 2 + 3 + 6 + 7,
+             Coverage(n=18,       # 2 + 3 + 6 + 7,
                             n_uniq=4,   # two, three, six, seven
                             incr=10,    # three (3), seven (7)
                             incr_uniq=2,
                             index=2)),
             (u'^f.+$',
-             rexpy.Coverage(n=9,        # 4 + 5
+             Coverage(n=9,        # 4 + 5
                             n_uniq=2,   # four, five
                             incr=9,     # four (4), five (5)
                             incr_uniq=2,
@@ -1187,58 +1204,58 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(results, expected)
 
     def test_full_incremental_coverage_urls2(self):
-        x = Extractor(self.urls2)
+        x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.full_incremental_coverage()
         expected = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
-             rexpy.Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
         self.assertEqual(od, expected)
         self.assertEqual(x.n_examples(), 16)
         expected_dd = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
-             rexpy.Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
         od = x.full_incremental_coverage(dedup=True)
         self.assertEqual(od, expected_dd)
         self.assertEqual(x.n_examples(dedup=True), 15)
 
-        x = Extractor(self.urls2 * 2)
+        x = Extractor(self.urls2 * 2, variableLengthFrags=False)
         doubled = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
-             rexpy.Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         od = x.full_incremental_coverage()
         self.assertEqual(od, doubled)
@@ -1248,20 +1265,58 @@ class TestExtraction(unittest.TestCase):
 
         expected_doubled_dd = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
-             rexpy.Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             rexpy.Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com\/$',
-             rexpy.Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-             rexpy.Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         self.assertEqual(od, expected_doubled_dd)
         self.assertEqual(x.n_examples(dedup=True), 15)
+
+    def test_full_incremental_coverage_urls2_var(self):
+        x = Extractor(self.urls2, variableLengthFrags=True)
+        od = x.full_incremental_coverage()
+        expected = OrderedDict((
+            (u'^https?\:\/\/www\.[a-z]+\.com$',
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=4)),
+            (u'^[a-z]+\.com\/$',
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=3))
+        ))
+
+        x = Extractor(self.urls2 * 2, variableLengthFrags=True)
+        doubled = OrderedDict((
+            (u'^https?\:\/\/www\.[a-z]+\.com$',
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=4)),
+            (u'^[a-z]+\.com\/$',
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+            (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+            (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+            (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=3)),
+        ))
+        od = x.full_incremental_coverage()
+        self.assertEqual(od, doubled)
+        self.assertEqual(x.n_examples(), 32)
+
 
     def test_urls2_grouped(self):
 
@@ -1269,11 +1324,21 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls2)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls2, tag=True)), {
+        self.assertEqual(set(extract(self.urls2, tag=True,
+                                     variableLengthFrags=False)), {
             r'^([a-z]{4,5})\:\/\/www\.([a-z]+)\.com$',
             r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
             r'^([a-z]{3,4})\.([a-z]{2,4})$',
             r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^([a-z]+)\.com\/$',
+            r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
+        })
+        self.assertEqual(set(extract(self.urls2, tag=True,
+                                     variableLengthFrags=True)), {
+            r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
+            r'^([a-z]{3,4})\.([a-z]{2,4})$',
+            r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^https?\:\/\/www\.([a-z]+)\.com$',
             r'^([a-z]+)\.com\/$',
             r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
         })
@@ -1284,7 +1349,8 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls1 + self.urls2)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls1 + self.urls2)), {
+        self.assertEqual(set(extract(self.urls1 + self.urls2,
+                                     variableLengthFrags=False)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3,4}$',
@@ -1292,6 +1358,17 @@ class TestExtraction(unittest.TestCase):
             r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
             r'^http\:\/\/www\.[a-z]+\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+        })
+
+        self.assertEqual(set(extract(self.urls1 + self.urls2,
+                                     variableLengthFrags=True)), {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com\/$',
+            r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^http\:\/\/[a-z]+\.com\/$',
+            r'^http\:\/\/www\.[a-z]+\.com\/$',
+            r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+            r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$'
         })
 
     def test_agents(self):

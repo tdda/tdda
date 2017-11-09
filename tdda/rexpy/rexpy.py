@@ -79,6 +79,8 @@ MAX_GROUPS = 99   # re library fails with AssertionError:
 MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
                     # x{m,n} when n - m ≤ 2
 
+VARIABLE_LENGTH_FRAGS = False
+
 
 class SIZE(object):
     DO_ALL = 1024               # Use all examples up to this many
@@ -262,7 +264,8 @@ class Extractor(object):
     """
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
                  full_escape=False,
-                 remove_empties=False, strip=False, verbose=0):
+                 remove_empties=False, strip=False,
+                 variableLengthFrags=VARIABLE_LENGTH_FRAGS, verbose=0):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -276,6 +279,7 @@ class Extractor(object):
         self.n_nulls = 0                    # Number of nulls found
         self.remove_empties = remove_empties
         self.strip = strip
+        self.variableLengthFrags = variableLengthFrags
         self.tag = tag                      # Returned tagged (grouped) RE
         self.clean(examples)                # Fill in previous attributes
         self.results = None
@@ -772,8 +776,10 @@ class Extractor(object):
             rlefc.append((last_fc, nfc))
             rlec.append((last_c, nc))
 
-        return (expand_or_falsify_vrle(rlefc, rlefc_in),
-                expand_or_falsify_vrle(rlec, rlec_in, fixed=True))
+        v = self.variableLengthFrags
+        return (expand_or_falsify_vrle(rlefc, rlefc_in, variableLength=v),
+                expand_or_falsify_vrle(rlec, rlec_in, fixed=True,
+                                       variableLength=v))
 
 
     def fine_class(self, c):
@@ -801,10 +807,12 @@ class Extractor(object):
             part = regex + '+'
         elif m == M == 1:
             part = regex
+        elif m == M == 2 and len(regex) == 1:
+            part = regex + regex
         elif m == M:
             part = regex + ('{%d}' % m)
         else:
-            part = regex + ('{%d,%s}' % (m, M))
+            part = regex + ('?' if m == 0 and M == 1 else ('{%d,%s}' % (m, M)))
         return ('(%s)' % part) if (tagged and not fixed) else part
 
     def vrle2re(self, vrles, tagged=False, as_re=True):
@@ -1352,6 +1360,7 @@ class ResultsSummary(object):
 def extract(examples, tag=False, encoding=None, as_object=False,
             extra_letters=None, full_escape=False,
             remove_empties=False, strip=False,
+            variableLengthFrags=VARIABLE_LENGTH_FRAGS,
             verbose=False):
     """
     Extract regular expression(s) from examples and return them.
@@ -1373,7 +1382,8 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
                   full_escape=full_escape, remove_empties=remove_empties,
-                  strip=strip, verbose=verbose)
+                  strip=strip, variableLengthFrags=variableLengthFrags,
+                  verbose=verbose)
     return r if as_object else r.results.rex
 
 
@@ -1633,7 +1643,7 @@ def get_params(args):
     return params
 
 
-def expand_or_falsify_vrle(rle, vrle, fixed=False):
+def expand_or_falsify_vrle(rle, vrle, fixed=False, variableLength=False):
     """
     Given a run-length encoded sequence
         (e.g. ``[('A', 3), ('B', 4)]``)
@@ -1649,6 +1659,10 @@ def expand_or_falsify_vrle(rle, vrle, fixed=False):
 
     If vrle is False, this indicates that a counterexample has already
     been found, so False is returned again.
+
+    If variableLength is set to True, patterns will be merged even if it is
+    a different length from the vrle, as long as the overlapping part is
+    consistent.
     """
     suf = ['fixed'] if fixed else []
     if vrle == False:
@@ -1658,7 +1672,9 @@ def expand_or_falsify_vrle(rle, vrle, fixed=False):
                 for r in rle]  # Just accept the new one
 
     out = []
-    if len(rle) == len(vrle):
+    lr, lv = len(rle), len(vrle)
+    lc = min(lr, lv)  # length of overlapping block
+    if lr == lv:
         for (r, v) in zip(rle, vrle):
             c, m, M = v[:3]
             n = r[1]
@@ -1673,8 +1689,30 @@ def expand_or_falsify_vrle(rle, vrle, fixed=False):
                 return False
         # All consistent
         return out
-    else:
+    elif not variableLength:
         return False
+
+    for (r, v) in zip(rle[:lc], vrle[:lc]):
+        c, m, M = v[:3]
+        n = r[1]
+        if r[0] == c:
+            if n >= m and n <= M:
+                out.append(v)
+            elif n < m:
+                out.append((c, n, M, 'fixed') if fixed else (c, n, M))
+            else:  # n > M
+                out.append((c, m, n, 'fixed') if fixed else (c, m, n))
+        else:
+            return False
+    if lv == lc:  # variable one is shorter
+        for r in rle[lc:]:
+            c, f = r[:2]
+            out.append((c, 0, f, 'fixed') if fixed else (c, 0, f))
+    else:
+        for v in vrle[lc:]:
+            c, m, M = v[:3]
+            out.append((c, 0, M, 'fixed') if fixed else (c, 0, M))
+    return out
 
 
 def escape(s, full=False):
