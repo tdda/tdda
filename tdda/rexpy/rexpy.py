@@ -805,7 +805,7 @@ class Extractor(object):
 
     def fine_class(self, c):
         """
-        Map a string in coarse class 'C' (AlphaNumeric) to a fine class.
+        Map a character in coarse class 'C' (AlphaNumeric) to a fine class.
         """
         cats = self.Cats
         if c.isdigit():
