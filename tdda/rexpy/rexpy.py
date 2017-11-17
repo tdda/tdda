@@ -37,6 +37,14 @@ FLAGS are optional flags. Currently::
 
   -v, --version     Print the version number.
 
+  -V, --verbose     Set verbosity level to 1
+
+  -VV, --Verbose    Set verbosity level to 2
+
+  -vlf, --variable  Use variable length fragments
+
+  -flf, --fixed     Use fixed length fragments
+
 Python API
 ----------
 
@@ -80,6 +88,7 @@ MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
                     # x{m,n} when n - m ≤ 2
 
 VARIABLE_LENGTH_FRAGS = False
+VERBOSITY = 0
 
 
 class SIZE(object):
@@ -265,7 +274,7 @@ class Extractor(object):
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
                  full_escape=False,
                  remove_empties=False, strip=False,
-                 variableLengthFrags=VARIABLE_LENGTH_FRAGS, verbose=0):
+                 variableLengthFrags=VARIABLE_LENGTH_FRAGS, verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -633,10 +642,18 @@ class Extractor(object):
                 print('Example "%s" did not match any pattern' % x)
         return results
 
-    def refine_groups(self, pattern, examples):
+    def analyse_groups(self, pattern, examples):
         """
-        Refine the categories for variable run-length-encoded patterns
-        provided by narrowing the characters in the groups.
+        Analyse the contents of each group (fragment) in pattern across the
+        examples it matches.
+
+        Return zip of
+            - the characters in each group
+            - the strings in each group
+            - the run-length encoded fine classes in each group
+            - the run-length encoded characters in each group
+            - the group itself
+        all indexed on the (zero-based) group number.
         """
         regex = cre(self.vrle2re(pattern, tagged=True))
         n_groups = len(pattern)
@@ -663,18 +680,22 @@ class Extractor(object):
         if self.verbose >= 2:
             print('Fine Class VRLE:', group_rlefcs)
             print('      Char VRLE:', group_rlecs)
+        return zip(group_chars, group_strings,
+                   group_rlefcs, group_rlecs,
+                   pattern)
+
+
+    def refine_groups(self, pattern, examples):
+        """
+        Refine the categories for variable run-length-encoded patterns
+        provided by narrowing the characters in the groups.
+        """
+        ga = self.analyse_groups(pattern, examples)
         out = []
         Cats = self.Cats
+        n_groups = len(pattern)
 
-        for group, (chars,
-                    strings,
-                    rlefc,
-                    rlec,
-                    fragment) in enumerate(zip(group_chars,
-                                               group_strings,
-                                               group_rlefcs,
-                                               group_rlecs,
-                                               pattern)):
+        for group, (chars, strings, rlefc, rlec, fragment) in enumerate(ga):
             (c, m, M) = fragment
             char_str = ''.join(sorted(chars))
             fixed = False
@@ -694,7 +715,7 @@ class Extractor(object):
                     continue
                 elif rlefc:  # Always same sequence of fine classes
                     if self.verbose >= 2:
-                        print('SAME CLASSES: %s' % rlefc)
+                        print('SAME FINE CLASSES: %s' % rlefc)
                     if n_groups + len(rlefc) - 1 <= MAX_GROUPS:
                         out.extend(plusify_vrles(rlefc))
                         n_groups += len(rlefc) - 1
@@ -1361,7 +1382,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             extra_letters=None, full_escape=False,
             remove_empties=False, strip=False,
             variableLengthFrags=VARIABLE_LENGTH_FRAGS,
-            verbose=False):
+            verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1606,6 +1627,8 @@ def get_params(args):
         'skip_header': False,
         'extra_letters': None,
         'tag': None,
+        'verbose': 0,
+        'variableLengthFrags': False,
     }
     for a in args:
         if a.startswith('-'):
@@ -1624,6 +1647,14 @@ def get_params(args):
             elif a in ('-v', '--version'):
                 print(__version__)
                 sys.exit(0)
+            elif a in ('-V', '--verbose'):
+                params['verbose'] = 1
+            elif a in ('-VV', '--Verbose'):
+                params['verbose'] = 2
+            elif a in ('-vlf', '--variable'):
+                params['variableLengthFrags'] = True
+            elif a in ('-flf', '--fixed'):
+                params['variableLengthFrags'] = False
             elif a in ('-?', '--help'):
                 print(USAGE)
                 sys.exit(0)
