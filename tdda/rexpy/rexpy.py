@@ -274,7 +274,8 @@ class Extractor(object):
     def __init__(self, examples, extract=True, tag=False, extra_letters=None,
                  full_escape=False,
                  remove_empties=False, strip=False,
-                 variableLengthFrags=VARIABLE_LENGTH_FRAGS, verbose=VERBOSITY):
+                 variableLengthFrags=VARIABLE_LENGTH_FRAGS,
+                 specialize=False, verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -289,6 +290,7 @@ class Extractor(object):
         self.remove_empties = remove_empties
         self.strip = strip
         self.variableLengthFrags = variableLengthFrags
+        self.specialize = specialize
         self.tag = tag                      # Returned tagged (grouped) RE
         self.clean(examples)                # Fill in previous attributes
         self.results = None
@@ -371,9 +373,8 @@ class Extractor(object):
                     self.example_freqs[stripped] += n
                     if len(stripped) != len(s):
                         self.n_stripped += n
-        for k, n in self.example_freqs.items():
-            if n == 0:
-                del self.example_freqs[k]
+        for k in [k for (k, n) in self.example_freqs.items() if n == 0]:
+            del self.example_freqs[k]
         if self.verbose > 1:
             print('Examples:')
             pprint(self.example_freqs)
@@ -391,18 +392,25 @@ class Extractor(object):
         vrles = to_vrles(rle_freqs.keys())
         vrle_freqs = Counter()
         refined = []
-        rex = []
         for r in vrles:
             vrle_freqs[r] += 1
             grouped = self.refine_groups(r, self.example_freqs)
             refined.append(grouped)
-            rex.append(self.vrle2re(grouped))
         merged = self.merge_patterns(refined)
+        if self.specialize:
+            merged = self.specialize_patterns(merged)
         mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
         mergedfrags = [self.vrle2refrags(m) for m in merged]
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex, mergedfrags,
                               extractor=self)
+
+    def specialize(self, patterns):
+        """
+        Check all the catpure groups in each patterns and simplify any
+        that are sufficiently low frequency.
+        """
+        return patterns
 
     def coarse_classify(self, s):
         """
