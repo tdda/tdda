@@ -32,4 +32,4 @@ For usage details:
     >>> help(rexpy)
 
 """
-__version__ = '0.4.03'
+__version__ = '0.5.00'

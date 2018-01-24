@@ -117,7 +117,7 @@ def cre(rex):
     if c:
         return c
     else:
-        memo[rex] = c = re.compile(rex)
+        memo[rex] = c = re.compile(rex, re.U)
         return c
 
 
@@ -154,23 +154,42 @@ class Category(object):
         self.re_multiple = poss_term_cre(re_string + '+')
 
 
+UNICHRS = True  # controls whether to include a unicode letter class
+UNIC = 'Ḉ'  # K
+COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
+
 class Categories(object):
+    escapableCodes = '.*?'
     def __init__(self, extra_letters=None, full_escape=False):
         if extra_letters:
             assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(r'\%s' % L for L in extra_letters)
+            el_re = ''.join(escape(r'%s') % L for L in extra_letters)
+            el_re_exc = '' if '_' in extra_letters else '_'
         else:
             el_re = ''
+            el_re_exc = '_'
+        el_re_inc = (extra_letters or '').replace('_', '')
         punctuation = self.Punctuation(el_re)
+        self.extra_letters = extra_letters or ''
         self.LETTER = Category('LETTER', 'A', '[A-Z]')
         self.letter = Category('letter', 'a', '[a-z]')
         self.Letter = Category('Letter', 'L', '[A-Za-z]')
+        self.ULetter = Category('ULetter', 'Ḹ', r'[^\W0-9_]')
         if extra_letters:
             self.LETTER_ = Category('LETTER_', 'B', '[A-Z%s]' % el_re)
             self.letter_ = Category('letter_', 'b', '[a-z%s]' % el_re)
             self.Letter_ = Category('Letter_', 'M', '[A-Za-z%s]' % el_re)
-            ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_']
+            if extra_letters == '_':
+                self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
+            else:
+                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False)
+                self.ULetter_ = Category('ULetter_', 'Ṃ', p)
+
+            ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
+                                    ['ULetter_'] if  UNICHRS else []
+                                )
         else:
+            self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9_]')
             ExtraLetterGroups = []
         self.Digit = Category('Digit', 'D', r'\d')
         self.hex = Category('hex', 'h', '[0-9a-f]')
@@ -180,28 +199,36 @@ class Categories(object):
         self.alphanumeric = Category('alphanumeric', 'n', '[a-z0-9%s]' % el_re)
         self.AlphaNumeric = Category('AlphaNumeric', 'C',
                                      '[A-Za-z0-9%s]' % el_re)
+        self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
+                                      u_alpha_numeric_re(el_re_inc, el_re_exc))
         self.Whitespace = Category('Whitespace', ' ', r'\s')
         self.Punctuation = Category('Punctuation', CODE.PUNC,
                                     '[%s]' % escape(''.join(punctuation),
                                                     full=full_escape))
+
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
 
-        self.SpecificCoarseCats = [self.AlphaNumeric,
+        self.SpecificCoarseCats = [self.UAlphaNumeric if UNICHRS
+                                                      else self.AlphaNumeric,
                                    self.Whitespace,
                                    self.Punctuation]
         self.AllCoarseCats = self.SpecificCoarseCats + [self.Other]
         self.IncreasinglyGeneralAlphanumerics = [
             'Digit',
             'LETTER', 'letter', 'Letter',
-        ] + ExtraLetterGroups + [
+        ] + (
+            ['ULetter'] if UNICHRS else []
+        ) + ExtraLetterGroups + [
             'HEX', 'hex', 'Hex',
-            'ALPHANUMERIC', 'alphanumeric'
-        ]
-        self.FineAlphanumerics = ['Digit', 'LETTER', 'letter']
+            'ALPHANUMERIC', 'alphanumeric', 'AlphaNumeric',
+        ] + (
+            ['UAlphaNumeric'] if UNICHRS else []
+
+        )
 
     def Punctuation(self, el_re):
-        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re)
+        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, re.U)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
 
@@ -209,7 +236,7 @@ class Categories(object):
         """
         Lazily builds (on first use) mapping from single-character category
         codes to Category Objects, stores in self.code2cat, which is used
-        by __getitem__. E.g.
+        by __getitem__. e.g.
 
             'N' --> self.ALPHANUMERIC
             'X' --> self.Hex
@@ -225,6 +252,10 @@ class Categories(object):
         if not hasattr(self, 'code2cat'):
             self.build_cat_map()
         return self.code2cat[k]
+
+    @classmethod
+    def escape_code(cls, code):
+        return escape(code) if code in cls.escapableCodes else code
 
 
 class Fragment(namedtuple('Fragment', 're group')):
@@ -629,7 +660,7 @@ class Extractor(object):
                 i = len(failures) - 1
                 while i >= 0:
                     f = failures[i]
-                    if re.match(cr, f):
+                    if re.match(cr, f, re.U):
                         del failures[i]
                     i -= 1
         return failures
@@ -640,7 +671,7 @@ class Extractor(object):
         for x in self.example_freqs.keys():
             for i, r in enumerate(self.results.rex):
                 cr = cre(r)
-                if re.match(cr, x):
+                if re.match(cr, x, re.U):
                     try:
                         results[i].append(x)
                     except:
@@ -675,8 +706,9 @@ class Extractor(object):
         for example in examples:
             m = re.match(regex, example)
             if m:
+                f = group_map_function(m, n_groups)
                 for i in range(n_groups):
-                    g = m.group(i + 1)
+                    g = m.group(f(i + 1))
                     if n_strings[i] <= SIZE.MAX_STRINGS_IN_GROUP:
                         group_strings[i].add(g)
                         n_strings[i] = len(group_strings[i])
@@ -715,7 +747,7 @@ class Extractor(object):
             elif len(chars) == 1:   # Same character, possibly repeated
                 refined = escape(list(chars)[0], full=self.full_escape)
                 fixed = True
-            elif c == 'C':  # Alphanumeric
+            elif c == COARSEST_ALPHANUMERIC_CODE:  # Alphanumeric
                 if rlec:  # Always same sequence of chars
                     if self.verbose >= 2:
                         print('SAME CHARS: %s' % rlec)
@@ -734,7 +766,7 @@ class Extractor(object):
                         print('>>>', cat)  # This cannot happen
                     code = cat.code
                     if re.match(cat.re_multiple, char_str):
-                        refined = escape(code, full=self.full_escape)
+                        refined = Cats.escape_code(code)
                         break  # <-- continue?
                 else:
                     refined = c
@@ -775,7 +807,8 @@ class Extractor(object):
             a possibly expanded VRLE, if it does match, or would match
             if expanded (by allowing more of fewer repetitions).
         """
-        if pattern[0] != 'C' or (rlefc_in == False and rlec_in == False):
+        if (pattern[0] != COARSEST_ALPHANUMERIC_CODE
+                or (rlefc_in == False and rlec_in == False)):
             return (False, False)  # Indicates, neither applies
                                    # Either 'cos not coarse class C
                                    # Or because previously found wanting...
@@ -820,10 +853,12 @@ class Extractor(object):
             return cats.Digit.code
         elif 'a' <= c <= 'z':
             return cats.letter.code
-        elif not c in '_-.':
+        elif 'A' <= c <= 'Z':
             return cats.LETTER.code
-        else:
+        elif c in cats.extra_letters or not UNICHRS:
             return cats.LETTER_.code
+        else:
+            return cats.ULetter_.code
 
     def fragment2re(self, fragment, tagged=False, as_re=True):
         (c, m, M) = fragment[:3]
@@ -842,7 +877,7 @@ class Extractor(object):
             part = regex + ('{%d}' % m)
         else:
             part = regex + ('?' if m == 0 and M == 1 else ('{%d,%s}' % (m, M)))
-        return ('(%s)' % part) if (tagged and not fixed) else part
+        return capture_group(part) if (tagged and not fixed) else part
 
     def vrle2re(self, vrles, tagged=False, as_re=True):
         """
@@ -995,7 +1030,7 @@ class Extractor(object):
             return sum(self.example_freqs.values())
 
     def __str__(self):
-        return str(self.results or 'No results (yet)')
+        return str_type(self.results or 'No results (yet)')
 
 
 def rex_coverage(patterns, example_freqs, dedup=False):
@@ -1012,7 +1047,7 @@ def rex_coverage(patterns, example_freqs, dedup=False):
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
                         p,
                         '' if p.endswith('$') else '$')
-        r = re.compile(p)
+        r = re.compile(p, re.U)
         if dedup:
             results.append(sum(1 if re.match(r, k) else 0
                            for k in example_freqs))
@@ -1154,7 +1189,7 @@ def coverage_matrices(patterns, example_freqs):
 
     matrix = []
     deduped = []  # deduped version of same
-    rexes = [re.compile(p) for p in patterns]
+    rexes = [re.compile(p, re.U) for p in patterns]
     for (x, n) in example_freqs.items():
         row = [n if re.match(r, x) else 0 for r in rexes]
         matrix.append(row)
@@ -1616,6 +1651,8 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
             strings = f.read().splitlines()
     else:
         strings = [s.strip() for s in sys.stdin.readlines()]
+        if strings and type(strings[0]) == bytes_type:
+            strings = [s.decode('UTF-8') for s in strings]
     if skip_header:
         strings = strings[1:]
     patterns = extract(strings, **kwargs)
@@ -1760,6 +1797,42 @@ def escape(s, full=False):
     else:
         unescapes = ' '
         return ''.join((c if c in unescapes else re.escape(c)) for c in s)
+
+
+def u_alpha_numeric_re(inc, exc, digits=True):
+    r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
+    i = '[%s]' % escape(inc) if len(inc) == 2 else escape(inc)
+    return '(%s|%s)' % (r, i) if inc else r
+
+
+def capture_group(s):
+    """
+    Places parentheses around s to form a capure group (a tagged piece of
+    a regular expression), unless it is already a capture group.
+    """
+    return s if (s.startswith('(') and s.endswith(')')) else ('(%s)' % s)
+
+
+def group_map_function(m, n_groups):
+    N = len(m.groups())
+    if N != n_groups:  # This means there are nested capture groups
+        map = {}
+        g = 1
+        for i in range(1, N + 1):
+            if is_outer_group(m, i):
+                map[g] = i
+                g += 1
+        f = lambda n: map[n]
+    else:
+        f = lambda i: i
+    return f
+
+
+def is_outer_group(m, i):
+    N = len(m.groups())
+    return not any(m.start(g) <= m.start(i) and m.end(g) >= m.end(i)
+                   for g in range(1, N) if g != i)
+
 
 
 def usage_error():

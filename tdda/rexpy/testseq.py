@@ -1,6 +1,6 @@
-import re
-from rexpy import extract
-from seq import common_string_sequence
+from tdda.rexpy import extract
+from tdda.rexpy.seq import common_string_sequence
+from tdda.rexpy.relib import re
 
 x = extract(['Roger', 'Coger', 'Doger'], tag=True, as_object=True)
 print(x)

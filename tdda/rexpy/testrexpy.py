@@ -209,7 +209,6 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
-import re
 import sys
 import unittest
 
@@ -222,6 +221,7 @@ except:
 pd = pandas
 
 #from artists.miro.writabletestcase import WritableTestCase
+from tdda.rexpy.relib import re
 from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage
 
@@ -417,11 +417,11 @@ class TestHelperMethods(unittest.TestCase):
     def test_coarse_character_classification(self):
         x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for c in ' \t\r\n\f\v':
             self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[\]^_`{|}~':
@@ -435,11 +435,11 @@ class TestHelperMethods(unittest.TestCase):
     def test_coarse_string_classification(self):
         x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), 'C')
+            self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for c in ' \t\r\n\f\v':
             self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in ' \t\r\n\f\v':
@@ -456,16 +456,16 @@ class TestHelperMethods(unittest.TestCase):
     def test_coarse_classification(self):
         x = self.x
         self.assertEqual(x.coarse_classify('255-SI-32'),
-                                         'CCC.CC.CC')
+                                         CtoUC('CCC.CC.CC'))
         guid = '1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c'
-        sig  = 'CCCCCCCC.CCCC.CCCC.CCCC.CCCCCCCCCCCC'
+        sig  = CtoUC('CCCCCCCC.CCCC.CCCC.CCCC.CCCCCCCCCCCC')
         self.assertEqual(x.coarse_classify(guid), sig)
         self.assertEqual(x.coarse_classify('(0131) 123 4567'),
-                                           '.CCCC. CCC CCCC')
+                                           CtoUC('.CCCC. CCC CCCC'))
         self.assertEqual(x.coarse_classify('2016-01-02T10:11:12 +0300z'),
-                                           'CCCC.CC.CCCCC.CC.CC .CCCCC')
+                                           CtoUC('CCCC.CC.CCCCC.CC.CC .CCCCC'))
         self.assertEqual(x.coarse_classify('2016-01-02T10:11:12\a+0300z'),
-                                           'CCCC.CC.CCCCC.CC.CC*.CCCCC')
+                                           CtoUC('CCCC.CC.CCCCC.CC.CC*.CCCCC'))
 
     def test_run_length_encoding(self):
         self.assertEqual(run_length_encode(''), ())
@@ -540,20 +540,11 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(set(items), set(keys))
 
     def test_batch_rle_extract_single(self):
-        examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
-        x = Extractor(examples, strip=True, remove_empties=True)
-        freqs = x.results.rle_freqs
-        self.assertEqual(len(freqs), 1)
-        key = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
-        self.assertEqual(list(freqs.keys()), [key])
-        self.assertEqual(freqs[key], 2)
-
-    def test_batch_rle_extract_single(self):
         examples = ['123-AB-321', '123-AB-321',  None, '321-BA-123']
         x = Extractor(examples)
         freqs = x.results.rle_freqs
         self.assertEqual(len(freqs), 1)
-        key = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
+        key = ((C, 3), ('.', 1), (C, 2), ('.', 1), (C, 3))
         self.assertEqual(list(freqs.keys()), [key])
         self.assertEqual(freqs[key], 2)
 
@@ -562,8 +553,8 @@ class TestHelperMethods(unittest.TestCase):
         x = Extractor(examples)
         freqs = x.results.rle_freqs
         self.assertEqual(len(freqs), 2)
-        key1 = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
-        key2 = (('C', 2), ('.', 1), ('C', 2), ('.', 1), ('C', 4))
+        key1 = ((C, 3), ('.', 1), (C, 2), ('.', 1), (C, 3))
+        key2 = ((C, 2), ('.', 1), (C, 2), ('.', 1), (C, 4))
         keys = [key1, key2]
         self.assertEqual(set(freqs.keys()), set(keys))
         self.assertEqual(freqs[key1], 2)
@@ -970,11 +961,22 @@ class TestExtraction(unittest.TestCase):
         'Carl Friedrich Gauss',
     ]
 
+    namesAU = names2 + [
+        'Emmy Nöther'
+    ]
+
+    namesUA = names2 + [
+        'Stanisław Mazur'
+    ]
+
+    namesUAU = names3 + [
+        'Émilie du Châtelet'
+    ]
+
     names_dot_initial = [
         'John F. Kennedy',
         'George W. Bush',
     ]
-
 
     def test_names1(self):
         self.assertEqual(extract(self.names1), [r'^[A-Z][a-z]{4,5}$'])
@@ -992,6 +994,21 @@ class TestExtraction(unittest.TestCase):
     def test_names3(self):
         self.assertEqual(extract(self.names3),
                          [r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesAU(self):
+        self.assertEqual(extract(self.namesAU),
+                        [r'^[A-Z][a-z]+ [^\W0-9_]+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesAU(self):
+        self.assertEqual(extract(self.namesUA),
+                         [r'^[^\W0-9_]+ [A-Z][a-z]+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesUAU(self):
+        self.assertEqual(extract(self.namesUAU),
+                         [r'^[^\W0-9_]{4,6} [A-Za-z]+ [^\W0-9_]+$'])
 
     def test_names_dot_initial(self):
         self.assertEqual(extract(self.names_dot_initial),
@@ -1041,7 +1058,7 @@ class TestExtraction(unittest.TestCase):
                               r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$',]))
 
 
-        # Sorted by length, these forms are:These are all:
+        # Sorted by length, these forms are:These are All:
         #
         #    C+.+C+.C+
         #    C+.+C+.C+.
@@ -1081,6 +1098,7 @@ class TestExtraction(unittest.TestCase):
         'gov.uk',
         'http://web.web',
     ]
+
     def test_urls2(self):
 
 #        print()
@@ -1138,7 +1156,6 @@ class TestExtraction(unittest.TestCase):
         od = x.incremental_coverage(dedup=True)
         self.assertEqual(od, expected_dd)
         self.assertEqual(x.n_examples(dedup=True), 15)
-
 
     def test_full_incremental_coverage(self):
         freqs = {
@@ -1416,6 +1433,46 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(r.warnings[0], '1 string assigned to .{m,n} for '
                                         'needing "too many" groups.')
 
+    def testmflag(self):
+        patterns = ('a.1', 'b_2', 'c-3')
+        expected = [r'^([a-z])([A-Z\.\_])(\d)$', '^c\-3$']
+        r = extract(patterns, tag=True, extra_letters='._')
+        self.assertEqual(r, expected)
+
+    def testmflag2(self):
+        patterns = ('a-1', 'c-3')
+        expected = [r'^([a-z])\-(\d)$']
+        r = extract(patterns, tag=True, extra_letters='._')
+        self.assertEqual(r, expected)
+
+    def testFindOuterCaptureGroups(self):
+        r = re.compile('^(([A-Z]+) [1-5])([^\W_]+)$', re.U)
+        m = re.match(r, 'THIS 3aéAB')
+        self.assertEqual(is_outer_group(m, 1), True)
+        self.assertEqual(is_outer_group(m, 2), False)
+        self.assertEqual(is_outer_group(m, 3), True)
+
+        f = group_map_function(m, 2)
+        self.assertEqual(f(1), 1)
+        self.assertEqual(f(2), 3)
+        self.assertRaises(KeyError, f, 3)
+
+        r = re.compile('^aaa([A-Z]+)bb$', re.U)
+        m = re.match(r, 'aaaBBbb')
+        f = group_map_function(m, 2)
+        self.assertEqual(f(1), 1)
+        self.assertRaises(KeyError, f, 2)
+
+        regex = '@ (a(b)c) d (e(f(g)h(i(j)k)l)m) n (o) p (q(r)s) t'
+        r = re.compile(regex, re.U)
+        m = re.match(r, '@ abc d efghijklm n o p qrs t')
+        f = group_map_function(m, 4)
+        self.assertEqual(f(1), 1)
+        self.assertEqual(f(2), 3)
+        self.assertEqual(f(3), 8)
+        self.assertEqual(f(4), 9)
+        self.assertRaises(KeyError, f, 5)
+
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
@@ -1431,7 +1488,7 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(re345, ['^[a-z]{3,5}$'])
 
     @unittest.skipIf(pandas is None, 'No pandas here')
-    def testpdextract(self):
+    def testpdextract2(self):
         df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
@@ -1444,6 +1501,15 @@ def print_ordered_dict(od):
         print("            (u'%s',\n             rexpy.%s),"
               % (k, od[k]))
     print('        ))')
+
+
+C = UNIC if UNICHRS else 'C'
+def CtoUC(s):
+    if UNICHRS:
+        return s.replace('C', UNIC)
+    else:
+        return s
+
 
 
 if sys.version_info.major < 3:

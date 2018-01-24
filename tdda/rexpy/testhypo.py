@@ -7,8 +7,8 @@
 #
 
 import unittest
-import re
 
+from tdda.rexpy.relib import re
 from tdda.rexpy import Extractor
 
 try:
