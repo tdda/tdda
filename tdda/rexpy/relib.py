@@ -12,10 +12,11 @@
 #
 
 
-try:
-    import regex as re
-    relib = 'regex'
-except ImportError:
+# try:
+#     import regex as re
+#     relib = 'regex'
+# except ImportError:
+if 1:
     import re
     relib = 're'
 
