@@ -608,8 +608,14 @@ class Extractor(object):
         return out
 
     def sort_by_length(self, patterns):
-        z = sorted(zip([len(p) for p in patterns], patterns))
-        return [p for (L, p) in z]
+#        z = sorted(zip([len(p) for p in patterns], patterns))
+#        return [p for (L, p) in z]
+        if patterns:
+             M = max(len(p) for p in patterns if p is not None) + 1
+             return list(sorted(patterns,
+                         key=lambda p: len(p) if p is not None else M))
+        else:
+            return []
 
     def pad(self, p, q):
         if self.verbose:

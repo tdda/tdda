@@ -857,20 +857,19 @@ class TestExtraction(unittest.TestCase):
         rexes = [
             r'^\d{3} \d{3} \d{4}$',
             r'^\d{3}\-\d{3}\-\d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
             r'^\(\d{3}\) \d{3} \d{4}$',
+            r'^1 \d{3} \d{3} \d{4}$',
         ]
         self.check_result(x, rexes, self.tels5)
 
     def test_tels_1to5(self):
         tels = self.tels1 + self.tels2 + self.tels3 + self.tels4 + self.tels5
-#        print(Extractor(tels, tag=True))
         x = extract(tels)
         rexes = [
             r'^\d{3} \d{3} \d{4}$',
             r'^\d{3,4}[\-\.]\d{3}[\-\.]\d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
             r'^\(\d{3,4}\) \d{3,4} \d{4}$',
+            r'^1 \d{3} \d{3} \d{4}$',
             r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
         ]
         self.check_result(x, rexes, tels)
@@ -1103,7 +1102,7 @@ class TestExtraction(unittest.TestCase):
 
 #        print()
 #        x = Extractor(self.urls2, verbose=True)
-#        x = Extractor(self.urls2)
+#        x = Extractor(self.urls2, variableLengthFrags=True)
 #        print(str(x))
         self.assertEqual(set(extract(self.urls2, variableLengthFrags=False)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
@@ -1116,8 +1115,8 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(set(extract(self.urls2, variableLengthFrags=True)), {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
-            r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
             r'^https?\:\/\/www\.[a-z]+\.com$',
         })
@@ -1318,11 +1317,11 @@ class TestExtraction(unittest.TestCase):
         x = Extractor(self.urls2 * 2, variableLengthFrags=True)
         doubled = OrderedDict((
             (u'^https?\:\/\/www\.[a-z]+\.com$',
-             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=4)),
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=5)),
             (u'^[a-z]+\.com\/$',
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
             (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
@@ -1435,7 +1434,7 @@ class TestExtraction(unittest.TestCase):
 
     def testmflag(self):
         patterns = ('a.1', 'b_2', 'c-3')
-        expected = [r'^([a-z])([A-Z\.\_])(\d)$', '^c\-3$']
+        expected = ['^c\-3$', r'^([a-z])([A-Z\.\_])(\d)$']
         r = extract(patterns, tag=True, extra_letters='._')
         self.assertEqual(r, expected)
 

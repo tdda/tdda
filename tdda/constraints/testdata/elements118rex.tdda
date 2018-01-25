@@ -85,8 +85,8 @@
                 "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$", 
                 "^State and University of California$", 
                 "^Latin uni\\, uni\\, and [a-z]+$", 
-                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$", 
                 "^Latin uni\\, uni\\, and Greek [a-z]{3,4}$", 
+                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$", 
                 "^Pierre and Marie Curie and the traditional \\-um ending$"
             ]
         }, 
@@ -130,8 +130,8 @@
             "max_length": 83, 
             "rex": [
                 "^[a-z0-9]+$", 
-                "^\\d\\.\\d{1,2}$", 
                 "^[a-z]+ [a-z]{3,5}$", 
+                "^\\d\\.\\d{1,2}$", 
                 "^\\d[\\-\\.]\\d [a-z]{8,9}$", 
                 "^radioactive alkali metal$", 
                 "^1\\.5 soft metal$", 
@@ -147,8 +147,8 @@
                 "^[a-z]+$", 
                 "^[a-z]+ [a-z]+$", 
                 "^silvery\\-white$", 
-                "^silvery lustrous [a-z]{4}$", 
                 "^silvery white\\/gray$", 
+                "^silvery lustrous [a-z]{4}$", 
                 "^[a-z]{4}\\, [a-z]{7,8} [a-z]{5,6}$", 
                 "^silvery white\\, metallic$", 
                 "^[a-z]+ [a-z]{4,5}\\, [a-z]+ tinge$", 
