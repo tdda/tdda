@@ -90,11 +90,15 @@ MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
 VARIABLE_LENGTH_FRAGS = False
 VERBOSITY = 0
 
+USE_SAMPLING = False
+
 
 class SIZE(object):
-    DO_ALL = 1024               # Use all examples up to this many
-    DO_ALL = 100000000          # Use all examples up to this many
-    DO_ALL_EXCEPTIONS = 4096    # Add in all failyres up to this many
+    if USE_SAMPLING:
+        DO_ALL = 100            # Use all examples up to this many
+    else:
+        DO_ALL = 100000000      # Use all examples up to this many
+    DO_ALL_EXCEPTIONS = 4000    # Add in all failyres up to this many
     N_PER_LENGTH = 64           # When sampling, use this many
                                 # of each length
     MAX_SAMPLED_ATTEMPTS = 2    # Give up and use all after this many
@@ -314,7 +318,8 @@ class Extractor(object):
         self.verbose = verbose
         self.example_freqs = Counter()      # Each string stored only once;
                                             # but multiplicity stored
-#        self.by_length = defaultdict(list)  # Examples also stored by length
+        if USE_SAMPLING:
+            self.by_length = defaultdict(list)  # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
         self.n_empties = 0                  # Number of empty string found
         self.n_nulls = 0                    # Number of nulls found
@@ -348,8 +353,8 @@ class Extractor(object):
             attempt = 1
             failures = []
             while attempt <= SIZE.MAX_SAMPLED_ATTEMPTS + 1:
-                print('Attempt %d' % attempt)
                 if self.verbose:
+                    print('Pass %d' % attempt)
                     print('Examples: %s ... %s' % (examples[:5],
                                                    examples[-5:]))
                 self.results = self.batch_extract(examples)
@@ -666,7 +671,7 @@ class Extractor(object):
                 i = len(failures) - 1
                 while i >= 0:
                     f = failures[i]
-                    if re.match(cr, f, re.U):
+                    if re.match(cr, f):
                         del failures[i]
                     i -= 1
         return failures
@@ -677,7 +682,7 @@ class Extractor(object):
         for x in self.example_freqs.keys():
             for i, r in enumerate(self.results.rex):
                 cr = cre(r)
-                if re.match(cr, x, re.U):
+                if re.match(cr, x):
                     try:
                         results[i].append(x)
                     except:
