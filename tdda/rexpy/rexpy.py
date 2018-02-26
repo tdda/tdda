@@ -96,6 +96,9 @@ MIN_STRINGS_PER_PATTERN = 1
 
 USE_SAMPLING = False
 
+USE_SAMPLING = 0
+VERBOSITY = 2
+
 
 class Size(object):
     def __init__(self, **kwargs):
@@ -107,7 +110,7 @@ class Size(object):
             else:
                 do_all = 100000000       # Use all examples up to this many
         self.do_all = do_all
-        self.do_all_exceptions = 4000    # Add in all failyres up to this many
+        self.do_all_exceptions = 4000    # Add in all failures up to this many
         self.n_per_length = 64           # When sampling, use this many
                                          # of each length
         self.max_sampled_attempts = 2    # Give up and use all after this many
@@ -383,7 +386,7 @@ class Extractor(object):
         if self.examples.n_uniqs <= size.do_all:
             self.results = self.batch_extract(self.examples.strings)
         else:
-            examples = self.sample(size.n_per_length)
+            examples = self.sample(size.do_all)
             attempt = 1
             failures = []
             while attempt <= size.max_sampled_attempts + 1:
@@ -678,7 +681,7 @@ class Extractor(object):
     def similarity(self, p, q):
         return 1
 
-    def sample(self, nPerLength):
+    def sample_old(self, nPerLength):
         """
         Sample strings for potentially faster induction.
         """
@@ -692,6 +695,13 @@ class Extractor(object):
             else:
                 examples.extend(random.sample(x, nPerLength))
         return examples
+
+    def sample(self, n):
+        """
+        Sample strings for potentially faster induction.
+        """
+        return random.sample(self.examples.strings, n)
+
 
     def find_non_matches(self):
         """
@@ -1479,7 +1489,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             variableLengthFrags=VARIABLE_LENGTH_FRAGS,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-            min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+            min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
             verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
@@ -1505,7 +1515,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   max_patterns = max_patterns,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
-                  verbose=verbose)
+                  size=size, verbose=verbose)
     return r if as_object else r.results.rex
 
 
