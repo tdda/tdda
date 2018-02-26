@@ -406,6 +406,31 @@ class TestUtilityFunctions(unittest.TestCase):
                               ' c   /   !'])
         self.assertEqual(x.aligned_parts(parts), expected)
 
+    def testIDCounter(self):
+        c = IDCounter()
+        self.assertEqual(c.add('two'), 1)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('two'), 1)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('one'), 3)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('four', 4), 4)
+
+        self.assertEqual(c['zero'], 0)
+        self.assertEqual(c['one'], 1)
+        self.assertEqual(c['two'], 2)
+        self.assertEqual(c['three'], 3)
+        self.assertEqual(c['four'], 4)
+        self.assertEqual(c.getitem('three'), 3)
+
+        self.assertEqual(c.ids.get('zero'), None)
+        self.assertEqual(c.ids.get('two'), 1)         # 'cos added first
+        self.assertEqual(c.ids.get('three'), 2)       # 'cos added second
+        self.assertEqual(c.ids.get('one'), 3)         # 'cos added third
+        self.assertEqual(c.ids.get('four'), 4)        # 'cos added fourth
+
+        self.assertEqual(list(c.keys()), ['two', 'three' ,'one', 'four'])
+
 
 
 class TestHelperMethods(unittest.TestCase):
@@ -576,7 +601,7 @@ class TestHelperMethods(unittest.TestCase):
         key1 = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         key2 = (('C', 2), ('.', 1), ('C', 2), ('.', 1), ('C', 4))
         keys = [key1, key2]
-        range_rles = to_vrles(keys)
+        range_rles, _, _ = to_vrles(keys)
         self.assertEqual(range_rles, [(('C', 2, 3), ('.', 1, 1),
                                        ('C', 2, 2), ('.', 1, 1),
                                        ('C', 3, 4))])
@@ -1492,6 +1517,7 @@ class TestExtraction(unittest.TestCase):
         df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
+
 
 
 def print_ordered_dict(od):

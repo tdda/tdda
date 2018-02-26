@@ -64,6 +64,7 @@ import re
 import string
 import sys
 
+from array import array
 from collections import Counter, defaultdict, namedtuple, OrderedDict
 from pprint import pprint
 
@@ -97,7 +98,7 @@ MIN_STRINGS_PER_PATTERN = 1
 USE_SAMPLING = False
 
 USE_SAMPLING = 0
-VERBOSITY = 2
+VERBOSITY = 0
 
 
 class Size(object):
@@ -450,29 +451,55 @@ class Extractor(object):
                     if len(stripped) != len(s):
                         self.n_stripped += n
 
-        return Examples(list(counter.keys()), list(counter.values()))
 
         if self.verbose > 1:
             print('Examples:')
             pprint([(k, v) for (k, v) in zip(counter.strings, counter.freqs)])
             print()
 
+        return Examples(list(counter.keys()), ilist(counter.values()))
+
     def batch_extract(self, examples):
         """
         Find regular expressions for a batch of examples (as given).
         """
-        rles = [self.run_length_encode_coarse_classes(s) for s in examples]
-        rle_freqs = Counter()
-        for r in rles:
-            rle_freqs[r] += 1
 
-        vrles = to_vrles(rle_freqs.keys())
-        vrle_freqs = Counter()
+        # First, run-length encode each (distinct) example
+        rles = [self.run_length_encode_coarse_classes(s) for s in examples]
+        rle_freqs = IDCounter()
+        example2r_id = ilist([1]) * len(examples)  # same length as rles
+        r_id2v_id = {}
+        for i, rle in enumerate(rles):
+            r_id = rle_freqs.add(rle)
+            example2r_id[i] = r_id    # r_ids are the ids of rles
+
+        # Then convert these RLEs to VRLEs (variable-run-length-encoded seqs)
+        example2v_id = ilist([1]) * len(examples)  # same length as rles
+        vrles, sig2rle, sig2vrle = to_vrles(rle_freqs.keys())
+        vrle_freqs = IDCounter()
         refined = []
-        for r in vrles:
-            vrle_freqs[r] += 1
-            grouped = self.refine_groups(r, self.examples)
+        for vrle in vrles:
+            v_id = vrle_freqs.add(vrle)  # v_ids are the ids of vles
+            sig = signature(vrle)
+            for rle in sig2rle[sig]:
+                r_id = rle_freqs.ids[rle]
+                r_id2v_id[r_id] = v_id
+
+        # For each example, record the id of the VRLE to which it belongs
+        # and stash that away inside the Examples object.
+        for i, r_id in enumerate(example2r_id):
+            example2v_id[i] = r_id2v_id[r_id]
+        self.examples.example2v_id = example2v_id
+#        self.examples.example2r_id = example2r_id  # probably don't need
+
+        # Refine the fragments in the VRLEs
+        for vrle in vrles:
+            grouped = self.refine_fragments(vrle, self.examples)
             refined.append(grouped)
+
+#        self.examples.rle_freqs = rle_freqs  # probably don't need
+        self.examples.vrle_freqs = vrle_freqs
+
         merged = self.merge_patterns(refined)
         if self.specialize:
             merged = self.specialize_patterns(merged)
@@ -736,62 +763,62 @@ class Extractor(object):
                 print('Example "%s" did not match any pattern' % x)
         return results
 
-    def analyse_groups(self, pattern, examples):
+    def analyse_fragments(self, vrle, examples):
         """
-        Analyse the contents of each group (fragment) in pattern across the
+        Analyse the contents of each fragment in vrle across the
         examples it matches.
 
         Return zip of
-            - the characters in each group
-            - the strings in each group
-            - the run-length encoded fine classes in each group
-            - the run-length encoded characters in each group
-            - the group itself
+            - the characters in each fragment
+            - the strings in each fragment
+            - the run-length encoded fine classes in each fragment
+            - the run-length encoded characters in each fragment
+            - the fragment itself
         all indexed on the (zero-based) group number.
         """
-        regex = cre(self.vrle2re(pattern, tagged=True))
-        n_groups = len(pattern)
-        group_chars = [set([]) for i in range(n_groups)]
-        group_strings = [set([]) for i in range(n_groups)]
+        regex = cre(self.vrle2re(vrle, tagged=True))
+        n_frags = len(vrle)
+        frag_chars = [set([]) for i in range(n_frags)]
+        frag_strings = [set([]) for i in range(n_frags)]
 
-        group_rlefcs = [None] * n_groups  # Start as None; end as False or VRLE
-        group_rlecs = [None] * n_groups   # Start as None; end as False or VRLE
+        frag_rlefcs = [None] * n_frags  # Start as None; end as False or VRLE
+        frag_rlecs = [None] * n_frags   # Start as None; end as False or VRLE
 
-        n_strings = [0] * n_groups
+        n_strings = [0] * n_frags
         strings = examples.strings
         size = self.size
         for example in strings:
             m = re.match(regex, example)
             if m:
-                f = group_map_function(m, n_groups)
-                for i in range(n_groups):
+                f = group_map_function(m, n_frags)
+#                for i in range(n_frags):
+                for i, frag in enumerate(vrle):
                     g = m.group(f(i + 1))
                     if n_strings[i] <= size.max_strings_in_group:
-                        group_strings[i].add(g)
-                        n_strings[i] = len(group_strings[i])
-                    group_chars[i] = group_chars[i].union(set(list(g)))
-                    (group_rlefcs[i],
-                     group_rlecs[i]) = self.rle_fc_c(g, pattern[i],
-                                                     group_rlefcs[i],
-                                                     group_rlecs[i])
+                        frag_strings[i].add(g)
+                        n_strings[i] = len(frag_strings[i])
+                    frag_chars[i] = frag_chars[i].union(set(list(g)))
+                    (frag_rlefcs[i],
+                     frag_rlecs[i]) = self.rle_fc_c(g, frag,
+                                                     frag_rlefcs[i],
+                                                     frag_rlecs[i])
         if self.verbose >= 2:
-            print('Fine Class VRLE:', group_rlefcs)
-            print('      Char VRLE:', group_rlecs)
-        return zip(group_chars, group_strings,
-                   group_rlefcs, group_rlecs,
-                   pattern)
+            print('Fine Class VRLE:', frag_rlefcs)
+            print('      Char VRLE:', frag_rlecs)
+        return zip(frag_chars, frag_strings,
+                   frag_rlefcs, frag_rlecs,
+                   vrle)
 
-
-    def refine_groups(self, pattern, examples):
+    def refine_fragments(self, vrle, examples):
         """
-        Refine the categories for variable run-length-encoded patterns
-        provided by narrowing the characters in the groups.
+        Refine the categories for variable-run-length-encoded pattern (vrle)
+        provided by narrowing the characters in each fragment.
         """
-        ga = self.analyse_groups(pattern, examples)
+        ga = self.analyse_fragments(vrle, examples)  # vrle is a vrl
         out = []
         Cats = self.Cats
         size = self.size
-        n_groups = len(pattern)
+        n_groups = len(vrle)
 
         for group, (chars, strings, rlefc, rlec, fragment) in enumerate(ga):
             (c, m, M) = fragment
@@ -1350,26 +1377,27 @@ def to_vrles(rles):
         and (('C', 2, 2), ('.', 1, 1))
 
     """
-    by_sig = defaultdict(list)
-    outs = []
+    rle_by_sig = defaultdict(list)
+    vrles = []
     for rle in rles:
-        by_sig[signature(rle)].append(rle)
-    for sig, rles in by_sig.items():
+        rle_by_sig[signature(rle)].append(rle)
+    for sig, rles in rle_by_sig.items():
         nCats = len(sig)
         cats = list(sig)
         mins = [min(r[i][1] for r in rles) for i in range(nCats)]
         maxes = [max(r[i][1] for r in rles) for i in range(nCats)]
-        outs.append(tuple([(cat, m, M)
-                           for (cat, m, M) in zip(cats, mins, maxes)]))
+        vrles.append(tuple([(cat, m, M)
+                            for (cat, m, M) in zip(cats, mins, maxes)]))
 
     if MAX_VRLE_RANGE is not None:
-        outs2 = [tuple(((cat, m, M) if (M - m) <= MAX_VRLE_RANGE
+        vrles2 = [tuple(((cat, m, M) if (M - m) <= MAX_VRLE_RANGE
                                     else (cat, 1, None))
                        for (cat, m, M) in pattern)
-                 for pattern in outs]
-        outs = list(set(outs2))
-        outs.sort(key=none_to_m1)
-    return outs
+                 for pattern in vrles]
+        vrles = list(set(vrles2))
+        vrles.sort(key=none_to_m1)
+    vrle_by_sig = {signature(vrle): vrle for vrle in vrles}
+    return vrles, rle_by_sig, vrle_by_sig
 
 
 def none_to_m1(vrle):
@@ -1397,6 +1425,53 @@ def plusify_vrle(vrle):
 
 def plusify_vrles(vrles):
     return [plusify_vrle(v) for v in vrles]
+
+
+class IDCounter(object):
+    """
+    Rather Like a counter, but also assigns a numeric ID (from 1) to each key
+    and actually builds the counter on that.
+
+    Use add to increment an existing key's count, or to initialize it to
+    (by default) 1.
+    """
+    def __init__(self):
+        self.counter = Counter()
+        self.ids = OrderedDict()
+        self.n = 0
+
+    def __getitem__(self, key):
+        """Gets the count for the key"""
+        id_ = self.ids.get(key)
+        return self.counter[id_] if id_ else 0
+    getitem = __getitem__
+
+    def add(self, key, freq=1):
+        """
+        Adds the given key, counting it and ensuring it has an id.
+
+        Returns the id.
+        """
+        id_ = self.ids.get(key, 0)
+        if id_ == 0:
+            self.n += 1
+            id_ = self.n
+            self.ids[key] = id_
+        self.counter[id_] += freq
+        return id_
+
+    def keys(self):
+        return self.ids.keys()
+
+    def __iter__(self):
+        return self.ids.__iter__()
+
+    def __iterkeys__(self):
+        return self.ids.__iterkeys__()
+
+    def __len__(self):
+        return self.ids.__len__()
+
 
 
 class ResultsSummary(object):
@@ -1901,6 +1976,9 @@ def is_outer_group(m, i):
     return not any(m.start(g) <= m.start(i) and m.end(g) >= m.end(i)
                    for g in range(1, N) if g != i)
 
+
+def ilist(L=None):
+    return array('i', L or [])
 
 
 def usage_error():
