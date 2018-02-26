@@ -97,19 +97,34 @@ MIN_STRINGS_PER_PATTERN = 1
 USE_SAMPLING = False
 
 
-class SIZE(object):
-    if USE_SAMPLING:
-        DO_ALL = 100            # Use all examples up to this many
-    else:
-        DO_ALL = 100000000      # Use all examples up to this many
-    DO_ALL_EXCEPTIONS = 4000    # Add in all failyres up to this many
-    N_PER_LENGTH = 64           # When sampling, use this many
-                                # of each length
-    MAX_SAMPLED_ATTEMPTS = 2    # Give up and use all after this many
-                                # sampled attempts
+class Size(object):
+    def __init__(self, **kwargs):
+        self.use_sampling = kwargs.get('use_sampling', USE_SAMPLING)
+        do_all = kwargs.get('do_all')
+        if do_all is None:
+            if self.use_sampling:
+                do_all = 100             # Use all examples up to this many
+            else:
+                do_all = 100000000       # Use all examples up to this many
+        self.do_all = do_all
+        self.do_all_exceptions = 4000    # Add in all failyres up to this many
+        self.n_per_length = 64           # When sampling, use this many
+                                         # of each length
+        self.max_sampled_attempts = 2    # Give up and use all after this many
+                                         # sampled attempts
 
-    MAX_PUNC_IN_GROUP = 5
-    MAX_STRINGS_IN_GROUP = 10
+        self.max_punc_in_group = 5
+        self.max_strings_in_group = 10
+        for (k, v) in kwargs.items():
+            if k in self.__dict__():
+                if v is None:
+                    raise Exception('Bad null value for parameter %s to Size.'
+                                    % k)
+                else:
+                    self.__dict__[k] = v
+            else:
+                raise Exception('Unknown parameter to Size: "%s" % k')
+
 
 
 nCalls = 0
@@ -324,14 +339,15 @@ class Extractor(object):
                  specialize=False,
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
                  verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
         self.verbose = verbose
-        if USE_SAMPLING:
+        self.size = size or Size()
+        if self.size.use_sampling:
             self.by_length = defaultdict(list)  # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
         self.n_empties = 0                  # Number of empty string found
@@ -363,13 +379,14 @@ class Extractor(object):
         if self.examples.n_uniqs == 0:
             self.results = None
 
-        if self.examples.n_uniqs <= SIZE.DO_ALL:
+        size = self.size
+        if self.examples.n_uniqs <= size.do_all:
             self.results = self.batch_extract(self.examples.strings)
         else:  # Future poss optimization; not really used for now.
-            examples = self.sample(SIZE.N_PER_LENGTH)
+            examples = self.sample(size.n_per_length)
             attempt = 1
             failures = []
-            while attempt <= SIZE.MAX_SAMPLED_ATTEMPTS + 1:
+            while attempt <= size.max_sampled_attempts + 1:
                 if self.verbose:
                     print('Pass %d' % attempt)
                     print('Examples: %s ... %s' % (examples[:5],
@@ -382,12 +399,12 @@ class Extractor(object):
                                                  failures[:5]))
                 if len(failures) == 0:
                     break
-                elif (len(failures) <= SIZE.DO_ALL_EXCEPTIONS
-                      or attempt > SIZE.MAX_SAMPLED_ATTEMPTS):
+                elif (len(failures) <= size.do_all_exceptions
+                      or attempt > size.max_sampled_attempts):
                     examples.extend(failures)
                 else:
                     examples.extend(random.sample(failures,
-                                                  SIZE.DO_ALL_EXCEPTIONS))
+                                                  size.do_all_exceptions))
                 attempt += 1
         self.add_warnings()
 
@@ -736,13 +753,14 @@ class Extractor(object):
 
         n_strings = [0] * n_groups
         strings = examples.strings
+        size = self.size
         for example in strings:
             m = re.match(regex, example)
             if m:
                 f = group_map_function(m, n_groups)
                 for i in range(n_groups):
                     g = m.group(f(i + 1))
-                    if n_strings[i] <= SIZE.MAX_STRINGS_IN_GROUP:
+                    if n_strings[i] <= size.max_strings_in_group:
                         group_strings[i].add(g)
                         n_strings[i] = len(group_strings[i])
                     group_chars[i] = group_chars[i].union(set(list(g)))
@@ -766,6 +784,7 @@ class Extractor(object):
         ga = self.analyse_groups(pattern, examples)
         out = []
         Cats = self.Cats
+        size = self.size
         n_groups = len(pattern)
 
         for group, (chars, strings, rlefc, rlec, fragment) in enumerate(ga):
@@ -804,7 +823,7 @@ class Extractor(object):
                 else:
                     refined = c
             elif (c == CODE.PUNC
-                  and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
+                  and len(chars) <= size.max_punc_in_group):  # Punctuation
                 refined = '[%s]' % escape(char_str, full=self.full_escape)
                 fixed = True
             else:
