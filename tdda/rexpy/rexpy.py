@@ -290,6 +290,13 @@ class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
      * ``index:`` index of this regex in original list returned.
     """
 
+class Examples(object):
+    def __init__(self, strings, freqs):
+        self.strings = strings
+        self.freqs = freqs
+        self.n_uniqs = len(strings)
+        self.n_strings = sum(freqs)
+
 
 class Extractor(object):
     """
@@ -324,8 +331,6 @@ class Extractor(object):
         Also performs exraction unless extract=False.
         """
         self.verbose = verbose
-        self.example_freqs = Counter()      # Each string stored only once;
-                                            # but multiplicity stored
         if USE_SAMPLING:
             self.by_length = defaultdict(list)  # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
@@ -336,7 +341,7 @@ class Extractor(object):
         self.variableLengthFrags = variableLengthFrags
         self.specialize = specialize
         self.tag = tag                      # Returned tagged (grouped) RE
-        self.clean(examples)                # Fill in previous attributes
+        self.examples = self.clean(examples)
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
@@ -355,11 +360,11 @@ class Extractor(object):
         """
         Actually perform the regular expression 'extraction'.
         """
-        if len(self.example_freqs) == 0:
+        if self.examples.n_uniqs == 0:
             self.results = None
 
-        if len(self.example_freqs) <= SIZE.DO_ALL:
-            self.results = self.batch_extract(self.example_freqs.keys())
+        if self.examples.n_uniqs <= SIZE.DO_ALL:
+            self.results = self.batch_extract(self.examples.strings)
         else:  # Future poss optimization; not really used for now.
             examples = self.sample(SIZE.N_PER_LENGTH)
             attempt = 1
@@ -398,7 +403,7 @@ class Extractor(object):
             return extra_letters
         keep = []
         for L in extra_letters:
-            if any(L in example for example in self.example_freqs):
+            if any(L in example for example in self.examples.strings):
                 keep.append(L)
         return ''.join(keep) if keep else None
 
@@ -408,24 +413,28 @@ class Extractor(object):
         of each length.
         """
         isdict = isinstance(examples, dict)
+        counter = Counter()
         for s in examples:
             n = examples[s] if isdict else 1
             if s is None:
                 self.n_nulls += 1
+            elif n == 0:
+                continue  # dictionary entry with count 0
             else:
                 stripped = s.strip() if self.strip else s
                 L = len(stripped)
                 if self.remove_empties and L == 0:
                     self.n_empties += n
                 else:
-                    self.example_freqs[stripped] += n
+                    counter[stripped] += n
                     if len(stripped) != len(s):
                         self.n_stripped += n
-        for k in [k for (k, n) in self.example_freqs.items() if n == 0]:
-            del self.example_freqs[k]
+
+        return Examples(list(counter.keys()), list(counter.values()))
+
         if self.verbose > 1:
             print('Examples:')
-            pprint(self.example_freqs)
+            pprint([(k, v) for (k, v) in zip(counter.strings, counter.freqs)])
             print()
 
     def batch_extract(self, examples):
@@ -442,7 +451,7 @@ class Extractor(object):
         refined = []
         for r in vrles:
             vrle_freqs[r] += 1
-            grouped = self.refine_groups(r, self.example_freqs)
+            grouped = self.refine_groups(r, self.examples)
             refined.append(grouped)
         merged = self.merge_patterns(refined)
         if self.specialize:
@@ -676,7 +685,7 @@ class Extractor(object):
         Returns all example strings that do not match any of the regular
         expressions in results.
         """
-        failures = self.example_freqs.keys()
+        failures = self.examples.strings
         if self.results:
             for r in self.results.rex:
                 cr = cre(r)
@@ -691,7 +700,7 @@ class Extractor(object):
     def pattern_matches(self):
         compiled = [cre(r) for r in self.results.rex]
         results = OrderedDict()
-        for x in self.example_freqs.keys():
+        for x in self.examples.strings:
             for i, r in enumerate(self.results.rex):
                 cr = cre(r)
                 if re.match(cr, x):
@@ -726,7 +735,8 @@ class Extractor(object):
         group_rlecs = [None] * n_groups   # Start as None; end as False or VRLE
 
         n_strings = [0] * n_groups
-        for example in examples:
+        strings = examples.strings
+        for example in strings:
             m = re.match(regex, example)
             if m:
                 f = group_map_function(m, n_groups)
@@ -993,7 +1003,7 @@ class Extractor(object):
         If ``dedup`` is set to ``True``, shows only the number of distinct
         (stripped) input examples matches
         """
-        return rex_coverage(self.results.rex, self.example_freqs, dedup)
+        return rex_coverage(self.results.rex, self.examples, dedup)
 
     def incremental_coverage(self, dedup=False, debug=False):
         """
@@ -1005,8 +1015,7 @@ class Extractor(object):
 
         If ``dedup`` is set to ``True``, frequencies are ignored.
         """
-        return rex_incremental_coverage(self.results.rex,
-                                        self.example_freqs,
+        return rex_incremental_coverage(self.results.rex, self.examples,
                                         dedup, debug=debug)
 
     def full_incremental_coverage(self, dedup=False, debug=False):
@@ -1036,8 +1045,7 @@ class Extractor(object):
                 excluding duplicates
 
         """
-        return rex_full_incremental_coverage(self.results.rex,
-                                             self.example_freqs,
+        return rex_full_incremental_coverage(self.results.rex, self.examples,
                                              dedup, debug=debug)
 
     def n_examples(self, dedup=False):
@@ -1048,15 +1056,15 @@ class Extractor(object):
         In all cases, examples have been stripped.
         """
         if dedup:
-            return len(self.example_freqs)
+            return self.examples.n_uniqs
         else:
-            return sum(self.example_freqs.values())
+            return self.examples.n_strings
 
     def __str__(self):
         return str_type(self.results or 'No results (yet)')
 
 
-def rex_coverage(patterns, example_freqs, dedup=False):
+def rex_coverage(patterns, examples, dedup=False):
     """
     Given a list of regular expressions and a dictionary of examples
     and their frequencies, this counts the number of times each pattern
@@ -1072,15 +1080,18 @@ def rex_coverage(patterns, example_freqs, dedup=False):
                         '' if p.endswith('$') else '$')
         r = re.compile(p, re.U)
         if dedup:
+            strings = examples.strings
             results.append(sum(1 if re.match(r, k) else 0
-                           for k in example_freqs))
+                               for k in strings))
         else:
+            strings = examples.strings
+            freqs = examples.freqs
             results.append(sum(n if re.match(r, k) else 0
-                           for (k, n) in example_freqs.items()))
+                           for (k, n) in zip(strings, freqs)))
     return results
 
 
-def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
+def rex_full_incremental_coverage(patterns, examples, dedup=False,
                                   debug=False):
     """
     Returns an ordered dictionary containing, keyed on terminated
@@ -1110,9 +1121,9 @@ def rex_full_incremental_coverage(patterns, example_freqs, dedup=False,
             excluding duplicates
     """
     patterns, indexes = terminate_patterns_and_sort(patterns)
-    matrix, deduped = coverage_matrices(patterns, example_freqs)
+    matrix, deduped = coverage_matrices(patterns, examples)
     return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                         example_freqs, dedup=dedup,)
+                                         examples, dedup=dedup,)
 
 
 def terminate_patterns_and_sort(patterns):
@@ -1130,7 +1141,7 @@ def terminate_patterns_and_sort(patterns):
     return [r[0] for r in z], [r[1] for r in z]
 
 
-def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
+def rex_incremental_coverage(patterns, examples, dedup=False, debug=False):
     """
     Given a list of regular expressions and a dictionary of examples
     and their frequencies, this computes their incremental coverage,
@@ -1197,7 +1208,7 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
         )
 
     """
-    results = rex_full_incremental_coverage(patterns, example_freqs,
+    results = rex_full_incremental_coverage(patterns, examples,
                                             dedup=dedup, debug=False)
     if dedup:
         return OrderedDict((k, v.incr_uniq) for (k, v) in results.items())
@@ -1205,7 +1216,7 @@ def rex_incremental_coverage(patterns, example_freqs, dedup=False, debug=False):
         return OrderedDict((k, v.incr) for (k, v) in results.items())
 
 
-def coverage_matrices(patterns, example_freqs):
+def coverage_matrices(patterns, examples):
     # Compute the 2 coverage matrices:
     #   matrix:  1 row per example, with a count of number of matches
     #   deduped: 1 row per example, with a boolean where it matches
@@ -1213,7 +1224,9 @@ def coverage_matrices(patterns, example_freqs):
     matrix = []
     deduped = []  # deduped version of same
     rexes = [re.compile(p, re.U) for p in patterns]
-    for (x, n) in example_freqs.items():
+    strings = examples.strings
+    freqs = examples.freqs
+    for (x, n) in zip(strings, freqs):
         row = [n if re.match(r, x) else 0 for r in rexes]
         matrix.append(row)
         deduped.append([1 if r else 0 for r in row])
@@ -1221,7 +1234,7 @@ def coverage_matrices(patterns, example_freqs):
 
 
 def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                  example_freqs, dedup=False):
+                                  examples, dedup=False):
     """
     Find patterns, in order of # of matches, and pull out freqs.
     Then set overlapping matches to zero and repeat.
@@ -1232,9 +1245,10 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
     sort_matrix = deduped if dedup else matrix
     np = len(patterns)
     zeros = [0] * np
-    pattern_freqs = [sum(matrix[i][r] for i, x in enumerate(example_freqs))
+    strings = examples.strings
+    pattern_freqs = [sum(matrix[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
-    pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(example_freqs))
+    pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
     while len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
@@ -1255,7 +1269,7 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                                 incr=totals[p],
                                 incr_uniq=uniq_totals[p],
                                 index=indexes[p])
-        for i, x in enumerate(example_freqs):
+        for i in range(examples.n_uniqs):
             if matrix[i][p]:
                 matrix[i] = zeros
                 deduped[i] = zeros

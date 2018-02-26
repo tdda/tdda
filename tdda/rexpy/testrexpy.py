@@ -223,7 +223,7 @@ pd = pandas
 #from artists.miro.writabletestcase import WritableTestCase
 from tdda.rexpy.relib import re
 from tdda.rexpy import *
-from tdda.rexpy.rexpy import Coverage
+from tdda.rexpy.rexpy import Coverage, Examples
 
 
 class TestUtilityFunctions(unittest.TestCase):
@@ -510,33 +510,33 @@ class TestHelperMethods(unittest.TestCase):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123']
         x = Extractor(examples, remove_empties=True, strip=True)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 1)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123'})
 
     def test_cleaning_keep_empties(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123', '']
         x = Extractor(examples, remove_empties=False, strip=True)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 0)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123', ''})
 
     def test_cleaning_no_strip_no_empties(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '', ' 123-AB-321', '321-BA-123 ']
         x = Extractor(examples, remove_empties=False, strip=False)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 0)
         self.assertEqual(x.n_empties, 0)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), set(keys))
 
     def test_batch_rle_extract_single(self):
@@ -1157,7 +1157,7 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(x.n_examples(dedup=True), 15)
 
     def test_full_incremental_coverage(self):
-        freqs = {
+        freq_hash = {
             'One': 1,
             'one': 1,
             'two': 2,
@@ -1167,6 +1167,7 @@ class TestExtraction(unittest.TestCase):
             'six': 6,
             'seven': 7,
         }
+        freqs = Examples(list(freq_hash.keys()), list(freq_hash.values()))
         patterns = ['^f.+$', '^.{3}$', '^[st].+$']
         results = rexpy.rex_full_incremental_coverage(patterns, freqs)
 
