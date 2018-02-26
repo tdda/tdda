@@ -494,7 +494,7 @@ class Extractor(object):
 
         # Refine the fragments in the VRLEs
         for vrle in vrles:
-            grouped = self.refine_fragments(vrle, self.examples)
+            grouped = self.refine_fragments(vrle, vrle_freqs.ids[vrle])
             refined.append(grouped)
 
 #        self.examples.rle_freqs = rle_freqs  # probably don't need
@@ -763,7 +763,7 @@ class Extractor(object):
                 print('Example "%s" did not match any pattern' % x)
         return results
 
-    def analyse_fragments(self, vrle, examples):
+    def analyse_fragments(self, vrle, v_id):
         """
         Analyse the contents of each fragment in vrle across the
         examples it matches.
@@ -776,6 +776,7 @@ class Extractor(object):
             - the fragment itself
         all indexed on the (zero-based) group number.
         """
+        examples = self.examples
         regex = cre(self.vrle2re(vrle, tagged=True))
         n_frags = len(vrle)
         frag_chars = [set([]) for i in range(n_frags)]
@@ -786,12 +787,13 @@ class Extractor(object):
 
         n_strings = [0] * n_frags
         strings = examples.strings
+        v_ids = examples.example2v_id
         size = self.size
-        for example in strings:
-            m = re.match(regex, example)
-            if m:
+        for i, example in enumerate(strings):
+            if v_ids[i] == v_id:  # Only need to use examples for this VRLE
+                m = re.match(regex, example)
+                assert m is not None
                 f = group_map_function(m, n_frags)
-#                for i in range(n_frags):
                 for i, frag in enumerate(vrle):
                     g = m.group(f(i + 1))
                     if n_strings[i] <= size.max_strings_in_group:
@@ -805,16 +807,15 @@ class Extractor(object):
         if self.verbose >= 2:
             print('Fine Class VRLE:', frag_rlefcs)
             print('      Char VRLE:', frag_rlecs)
-        return zip(frag_chars, frag_strings,
-                   frag_rlefcs, frag_rlecs,
-                   vrle)
+        return zip(frag_chars, frag_strings, frag_rlefcs, frag_rlecs, vrle)
 
-    def refine_fragments(self, vrle, examples):
+    def refine_fragments(self, vrle, v_id):
         """
         Refine the categories for variable-run-length-encoded pattern (vrle)
         provided by narrowing the characters in each fragment.
         """
-        ga = self.analyse_fragments(vrle, examples)  # vrle is a vrl
+        examples = self.examples
+        ga = self.analyse_fragments(vrle, v_id)
         out = []
         Cats = self.Cats
         size = self.size
