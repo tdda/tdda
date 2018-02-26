@@ -382,7 +382,7 @@ class Extractor(object):
         size = self.size
         if self.examples.n_uniqs <= size.do_all:
             self.results = self.batch_extract(self.examples.strings)
-        else:  # Future poss optimization; not really used for now.
+        else:
             examples = self.sample(size.n_per_length)
             attempt = 1
             failures = []
@@ -651,12 +651,10 @@ class Extractor(object):
         return out
 
     def sort_by_length(self, patterns):
-#        z = sorted(zip([len(p) for p in patterns], patterns))
-#        return [p for (L, p) in z]
         if patterns:
              M = max(len(p) for p in patterns if p is not None) + 1
-             return list(sorted(patterns,
-                         key=lambda p: len(p) if p is not None else M))
+             f = lambda p: len(p) if p is not None else M
+             return list(sorted(patterns, key=f))
         else:
             return []
 
@@ -683,8 +681,6 @@ class Extractor(object):
     def sample(self, nPerLength):
         """
         Sample strings for potentially faster induction.
-        Only used if over a hundred million distinct strings are given.
-        For now.
         """
         lengths = self.by_length.keys()
         lengths.sort()
