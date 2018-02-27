@@ -1509,6 +1509,38 @@ class TestExtraction(unittest.TestCase):
         actual = tuple(f(i) for i in range(1, 7))
         self.assertEqual(actual, (1, 2, 4, 5, 7, 8))
 
+    def test_vrle_consolidation(self):
+        examples = [
+            'AA',
+            'BBBBBBBBBBBB',
+            'CC-DD',
+            'EE-FF',
+            'GG-HH-II',
+            'JJ-KK-LL',
+
+            'AA',
+            'BBBBBBBBBBBB',
+            'CC- DD',
+            'EE- FF',
+            'GG- HH-II',
+            'JJ- KK-LL',
+        ]
+        r = extract(examples, as_object=True)
+        self.assertEqual(r.warnings, [])
+        for R in r.results.rex:
+            print(R)
+        expected = [
+            '^[A-Z]+$',
+            '^[A-Z]{2}\\-[A-Z]{2}$',
+            '^[A-Z]{2}\\- [A-Z]{2}$',
+            '^[A-Z]{2}\\-[A-Z]{2}\\-[A-Z]{2}$',
+            '^[A-Z]{2}\\- [A-Z]{2}\\-[A-Z]{2}$',
+        ]
+        self.check_result(r.results.rex, expected, examples)
+        from pprint import pprint as pp
+        pp(r.build_tree(r.results.vrles))
+
+
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
         df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],

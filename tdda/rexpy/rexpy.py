@@ -310,12 +310,18 @@ class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
      * ``index:`` index of this regex in original list returned.
     """
 
+
+def Tree():
+    return defaultdict(list)
+
+
 class Examples(object):
     def __init__(self, strings, freqs):
         self.strings = strings
         self.freqs = freqs
         self.n_uniqs = len(strings)
         self.n_strings = sum(freqs)
+
 
 
 class Extractor(object):
@@ -353,7 +359,7 @@ class Extractor(object):
         self.verbose = verbose
         self.size = size or Size()
         if self.size.use_sampling:
-            self.by_length = defaultdict(list)  # Also store examples by length
+            self.by_length = Tree()         # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
         self.n_empties = 0                  # Number of empty string found
         self.n_nulls = 0                    # Number of nulls found
@@ -1120,6 +1126,36 @@ class Extractor(object):
     def __str__(self):
         return str_type(self.results or 'No results (yet)')
 
+    def build_tree(self, vrles):
+        """
+        Turn the VRLEs into a tree based on the different initial fragments.
+        """
+        by_firsts = Tree()
+        for v in vrles:
+            if v is not None and len(v) > 0:
+                key, entry = self.vrle_entry(v)
+                by_firsts[key].append(entry)
+        for key, entries in by_firsts.items():
+            if len(entries) > 0:
+                v = self.build_tree(e for e in entries if e)
+                by_firsts[key] = [v]
+                if None in entries and v is not None:
+                    by_firsts[key] = [None] + [v]
+            else:
+                by_firsts[key] = None
+        return by_firsts if len(by_firsts) > 0 else None
+
+    def vrle_entry(self, vrle):
+        return self.vrle_key(vrle[0]), vrle[1:] if len(vrle) > 1 else None
+
+    def vrle_key(self, vrle):
+        (c, m, M) = vrle[:3]
+        fixed = len(vrle) == 4
+        if fixed:
+            return vrle
+        else:
+            return c
+
 
 def rex_coverage(patterns, examples, dedup=False):
     """
@@ -1382,7 +1418,7 @@ def to_vrles(rles):
         and (('C', 2, 2), ('.', 1, 1))
 
     """
-    rle_by_sig = defaultdict(list)
+    rle_by_sig = Tree()
     vrles = []
     for rle in rles:
         rle_by_sig[signature(rle)].append(rle)
