@@ -96,6 +96,7 @@ MIN_DIFF_STRINGS_PER_PATTERN = 1
 MIN_STRINGS_PER_PATTERN = 1
 
 USE_SAMPLING = False
+USE_SAMPLING = True
 
 USE_SAMPLING = 0
 VERBOSITY = 0
@@ -522,7 +523,6 @@ class Extractor(object):
         """
         return ''.join(self.coarse_classify_char(c) for c in s)
 
-
     def coarse_classify_char(self, c):
         """
         Classify character into one of the coarse categories
@@ -534,7 +534,6 @@ class Extractor(object):
         assert re.match(Cats.Other.re_single, c)
         return Cats.Other.code
 
-
     def run_length_encode_coarse_classes(self, s):
         """
         Returns run-length encoded coarse classification
@@ -545,7 +544,6 @@ class Extractor(object):
         else:
             self.n_too_many_groups += 1
             return run_length_encode(CODE.ANY * len(s))
-
 
     def merge_patterns(self, patterns):
         if len(patterns) == 1:
@@ -795,7 +793,13 @@ class Extractor(object):
                 assert m is not None
                 f = group_map_function(m, n_frags)
                 for i, frag in enumerate(vrle):
-                    g = m.group(f(i + 1))
+                    try:
+                        g = m.group(f(i + 1))
+                    except:
+                        print('>>>', regex.pattern)
+                        print(n_frags, i)
+                        raise
+
                     if n_strings[i] <= size.max_strings_in_group:
                         frag_strings[i].add(g)
                         n_strings[i] = len(frag_strings[i])
@@ -1975,7 +1979,7 @@ def group_map_function(m, n_groups):
 def is_outer_group(m, i):
     N = len(m.groups())
     return not any(m.start(g) <= m.start(i) and m.end(g) >= m.end(i)
-                   for g in range(1, N) if g != i)
+                   for g in range(1, i))
 
 
 def ilist(L=None):

@@ -1498,6 +1498,16 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(f(4), 9)
         self.assertRaises(KeyError, f, 5)
 
+    def testFindHarderOuterCaptureGroups(self):
+        regex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
+        r = re.compile(regex, re.U)
+        m = re.match(r, '!a b c')
+        f = group_map_function(m, 2)
+        self.assertIsNotNone(m)
+        groups = ('!', 'a', 'a', ' ', 'b', 'b', ' ', 'c', 'c')
+        self.assertEqual(m.groups(), groups)
+        actual = tuple(f(i) for i in range(1, 7))
+        self.assertEqual(actual, (1, 2, 4, 5, 7, 8))
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
