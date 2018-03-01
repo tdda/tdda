@@ -1147,26 +1147,46 @@ class Extractor(object):
         return str_type(self.results or 'No results (yet)')
 
     def build_tree(self, vrles):
+        fulls = vrles[:]
+        tree = self.build_tree_inner(vrles, fulls)
+        self.simplify_tree(tree)
+        return tree
+
+    def simplify_tree(self, tree):
+        for key, values in tree.items():
+            for i, v in enumerate(values):
+                if type(v) is tuple:
+                    assert v[0] is None
+                    values[i] = v[1]
+                else:
+                    self.simplify_tree(v)
+
+
+
+    def build_tree_inner(self, vrles, fulls=None):
         """
         Turn the VRLEs into a tree based on the different initial fragments.
         """
-        by_firsts = Tree()
-        for v in vrles:
-            if v is not None and len(v) > 0:
-                key, entry = self.vrle_entry(v)
-                by_firsts[key].append(entry)
-        for key, entries in by_firsts.items():
-            if len(entries) > 0:
-                v = self.build_tree(e for e in entries if e)
-                by_firsts[key] = [v]
-                if None in entries and v is not None:
-                    by_firsts[key] = [None] + [v]
+        tree = Tree()
+        for partial, full in zip(vrles, fulls):
+            if partial:
+                key, entry = self.vrle_entry(partial, full)
+                tree[key].append(entry)
+        for key, entries in tree.items():
+            v = self.build_tree_inner([e[0] for e in entries if e[0]],
+                                      [e[1] for e in entries if e[0]])
+            if v is not None:
+                tree[key] = [v]
+                for e in entries:
+                    if e[0] is None:
+                        tree[key] = [e] + [v]
             else:
-                by_firsts[key] = None
-        return by_firsts if len(by_firsts) > 0 else None
+                tree[key] = entries
+        return tree if len(tree) > 0 else None
 
-    def vrle_entry(self, vrle):
-        return self.vrle_key(vrle[0]), vrle[1:] if len(vrle) > 1 else None
+    def vrle_entry(self, partial, full):
+        return (self.vrle_key(partial[0]),
+                (partial[1:] if len(partial) > 1 else None, full))
 
     def vrle_key(self, vrle):
         (c, m, M) = vrle[:3]
