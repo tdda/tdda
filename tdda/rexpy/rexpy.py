@@ -392,9 +392,10 @@ class Extractor(object):
 
         size = self.size
         if self.examples.n_uniqs <= size.do_all:
-            self.results = self.batch_extract(self.examples.strings)
+            self.results = self.batch_extract(self.examples.strings,
+                                              self.examples.freqs)
         else:
-            examples = self.sample(size.do_all)
+            examples, freqs = self.sample(size.do_all)
             attempt = 1
             failures = []
             while attempt <= size.max_sampled_attempts + 1:
@@ -402,8 +403,8 @@ class Extractor(object):
                     print('Pass %d' % attempt)
                     print('Examples: %s ... %s' % (examples[:5],
                                                    examples[-5:]))
-                self.results = self.batch_extract(examples)
-                failures = self.find_non_matches()
+                self.results = self.batch_extract(examples, freqs)
+                failures, fail_freqs = self.find_non_matches()
                 if self.verbose:
                     print('REs:', self.results.rex)
                     print('Failures (%d): %s' % (len(failures),
@@ -413,9 +414,12 @@ class Extractor(object):
                 elif (len(failures) <= size.do_all_exceptions
                       or attempt > size.max_sampled_attempts):
                     examples.extend(failures)
+                    freqs.extend(fail_freqs)
                 else:
-                    examples.extend(random.sample(failures,
-                                                  size.do_all_exceptions))
+                    z = list(zip(failures, freqs))
+                    sampled = random.sample(z, size.do_all_exceptions)
+                    examples.extend(s[0] for s in sampled)
+                    freqs.extend(s[1] for s in sampled)
                 attempt += 1
         self.add_warnings()
 
@@ -466,7 +470,7 @@ class Extractor(object):
 
         return Examples(list(counter.keys()), ilist(counter.values()))
 
-    def batch_extract(self, examples):
+    def batch_extract(self, examples, freqs):
         """
         Find regular expressions for a batch of examples (as given).
         """
@@ -477,7 +481,7 @@ class Extractor(object):
         example2r_id = ilist([1]) * len(examples)  # same length as rles
         r_id2v_id = {}
         for i, rle in enumerate(rles):
-            r_id = rle_freqs.add(rle)
+            r_id = rle_freqs.add(rle, freqs[i])
             example2r_id[i] = r_id    # r_ids are the ids of rles
 
         # Then convert these RLEs to VRLEs (variable-run-length-encoded seqs)
@@ -491,6 +495,11 @@ class Extractor(object):
             for rle in sig2rle[sig]:
                 r_id = rle_freqs.ids[rle]
                 r_id2v_id[r_id] = v_id
+                vrle_freqs.counter[v_id] += rle_freqs.counter[r_id]
+                # This adds in the freq for each rle in the vrle
+            vrle_freqs.counter[v_id] -= 1  # Take off the "extra" one we
+                                           # initially added
+            # Note, these totals include repeats.
 
         # For each example, record the id of the VRLE to which it belongs
         # and stash that away inside the Examples object.
@@ -731,25 +740,36 @@ class Extractor(object):
         """
         Sample strings for potentially faster induction.
         """
-        return random.sample(self.examples.strings, n)
+        indices = list(range(len(self.examples.strings)))
+        sample_indices = random.sample(indices, n)
+        return ([self.examples.strings[i] for i in indices],
+                [self.examples.freqs[i] for i in indices])
+#        return random.sample(self.examples.strings, n)
 
 
     def find_non_matches(self):
         """
         Returns all example strings that do not match any of the regular
-        expressions in results.
+        expressions in results, together with their frequencies.
         """
-        failures = self.examples.strings
+        strings = self.examples.strings
+        N = len(strings)
+        matched = [False] * N
+        nRemaining = N
         if self.results:
             for r in self.results.rex:
                 cr = cre(r)
-                i = len(failures) - 1
-                while i >= 0:
-                    f = failures[i]
-                    if re.match(cr, f):
-                        del failures[i]
-                    i -= 1
-        return failures
+                for i in range(N):
+                    if not matched[i]:
+                        if re.match(cr, strings[i]):
+                            matched[i] += 1
+                            nRemaining -= 1
+                            if nRemaining == 0:
+                                return [], []
+        indices = [i for i in range(N) if not matched[i]]
+        failures = [strings[i] for i in indices]
+        freqs = [self.examples.freqs[i] for i in indices]
+        return failures, freqs
 
     def pattern_matches(self):
         compiled = [cre(r) for r in self.results.rex]
@@ -1473,8 +1493,10 @@ class IDCounter(object):
     Rather Like a counter, but also assigns a numeric ID (from 1) to each key
     and actually builds the counter on that.
 
-    Use add to increment an existing key's count, or to initialize it to
+    Use .add to increment an existing key's count, or to initialize it to
     (by default) 1.
+
+    Get the key's ID with .ids[key] or .keys.get(key).
     """
     def __init__(self):
         self.counter = Counter()

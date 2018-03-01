@@ -571,7 +571,7 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(len(freqs), 1)
         key = ((C, 3), ('.', 1), (C, 2), ('.', 1), (C, 3))
         self.assertEqual(list(freqs.keys()), [key])
-        self.assertEqual(freqs[key], 2)
+        self.assertEqual(freqs[key], 3)
 
     def test_batch_rle_extract_pair(self):
         examples = ['123-AB-321', '12-AB-4321', None, '321-BA-123']
@@ -1512,23 +1512,23 @@ class TestExtraction(unittest.TestCase):
     def test_vrle_consolidation(self):
         examples = [
             'AA',
+            'CC',
             'BBBBBBBBBBBB',
             'CC-DD',
             'EE-FF',
             'GG-HH-II',
             'JJ-KK-LL',
+            'AA-KK-LL',
+            'BB-KK-LL',
 
             'AA',
-            'BBBBBBBBBBBB',
+            'BBBBBBBBBBBC',
             'CC- DD',
             'EE- FF',
             'GG- HH-II',
             'JJ- KK-LL',
         ]
         r = extract(examples, as_object=True)
-        self.assertEqual(r.warnings, [])
-        for R in r.results.rex:
-            print(R)
         expected = [
             '^[A-Z]+$',
             '^[A-Z]{2}\\-[A-Z]{2}$',
@@ -1538,6 +1538,9 @@ class TestExtraction(unittest.TestCase):
         ]
         self.check_result(r.results.rex, expected, examples)
         from pprint import pprint as pp
+        freqs = r.examples.vrle_freqs
+        pp({k: freqs[k] for k in freqs})
+        print()
         pp(r.build_tree(r.results.vrles))
 
 
