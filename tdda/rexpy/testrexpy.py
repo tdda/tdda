@@ -1527,8 +1527,6 @@ class TestExtraction(unittest.TestCase):
         ]
         r = extract(examples, as_object=True)
         self.assertEqual(r.warnings, [])
-        for R in r.results.rex:
-            print(R)
         expected = [
             '^[A-Z]+$',
             '^[A-Z]{2}\\-[A-Z]{2}$',
@@ -1537,9 +1535,9 @@ class TestExtraction(unittest.TestCase):
             '^[A-Z]{2}\\- [A-Z]{2}\\-[A-Z]{2}$',
         ]
         self.check_result(r.results.rex, expected, examples)
-        from pprint import pprint as pp
-        pp(r.build_tree(r.results.vrles))
-
+        tree = r.build_tree(r.results.vrles)
+        self.assertEqual(r.find_frag_sep_frag_repeated(tree),
+                         [['Ḉ', '.', 'Ḉ']])
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):

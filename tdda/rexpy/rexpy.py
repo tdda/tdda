@@ -1156,6 +1156,52 @@ class Extractor(object):
         else:
             return c
 
+    def find_frag_sep_frag_repeated(self, tree, existing=None, results=None):
+        """
+        This specifically looks for patterns in the tree constructed
+        by self.build_tree of the general form
+
+            A
+            ABA
+            ABABA
+        etc., where A and B are both fragments.
+        A common example is that A is recognizably a pattern and B is
+        recognizably a separator. So, for example:
+
+        HM
+        MH-RT
+        QY-TR-BF
+        QK-YT-IU-QP
+
+        all fit
+
+        [A-Z]{2}(\-[A-Z])*
+
+        which, as fragments, would be A = (C, 2, 2) and B = ('.', 1, 1).
+
+        The tree is currently not recording or taking account of
+        frequency in the fragments. We might want to do that.
+        Or we might leave that as a job for whatever is going to
+        consolidate the different branches of the tree that match
+        the repeating patterns returned.
+        """
+        results = results or []
+        existing = existing or []
+        for k, v in tree.items():
+            for item in v:
+                if item is None:  # leaf
+                    L = len(existing)
+                    if L >= 3 and L % 2 == 1:
+                        if all(existing[i] == existing[i % 2]
+                                   for i in range(3, L)):
+                            results.append([existing[0], existing[1],
+                                            existing[0]])
+                else:
+                    results = self.find_frag_sep_frag_repeated(item,
+                                                               existing + [k],
+                                                               results)
+        return results
+
 
 def rex_coverage(patterns, examples, dedup=False):
     """
