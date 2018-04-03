@@ -1536,8 +1536,10 @@ class TestExtraction(unittest.TestCase):
         ]
         self.check_result(r.results.rex, expected, examples)
         tree = r.build_tree(r.results.vrles)
-        self.assertEqual(r.find_frag_sep_frag_repeated(tree),
-                         [['Ḉ', '.', 'Ḉ']])
+        tree, results = r.find_frag_sep_frag_repeated(tree),
+        self.assertEqual(results, [['Ḉ', '.', 'Ḉ']])
+        from pprint import pprint
+        pprint(tree)
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):

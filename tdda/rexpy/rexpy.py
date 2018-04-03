@@ -1188,7 +1188,7 @@ class Extractor(object):
         results = results or []
         existing = existing or []
         for k, v in tree.items():
-            for item in v:
+            for j, item in enumerate(v):
                 if item is None:  # leaf
                     L = len(existing)
                     if L >= 3 and L % 2 == 1:
@@ -1196,11 +1196,13 @@ class Extractor(object):
                                    for i in range(3, L)):
                             results.append([existing[0], existing[1],
                                             existing[0]])
+                            v[j] = results
                 else:
-                    results = self.find_frag_sep_frag_repeated(item,
-                                                               existing + [k],
-                                                               results)
-        return results
+                    newpat = existing + [k]
+                    results, _ = self.find_frag_sep_frag_repeated(item,
+                                                                  newpat,
+                                                                  results)
+        return results, tree
 
 
 def rex_coverage(patterns, examples, dedup=False):
