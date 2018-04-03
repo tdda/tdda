@@ -184,7 +184,8 @@ class FilesComparison(BaseComparison):
             self.add_failures(msgs, actual_path, expected_path,
                               ignore_substrings=ignore_substrings,
                               ignore_patterns=ignore_patterns,
-                              preprocess=preprocess, actual=actual)
+                              preprocess=preprocess, actual=actual,
+                              expected=expected)
         return (1 if ndiffs > 0 else 0, msgs)
 
     def check_string_against_file(self, actual, expected_path,
@@ -372,7 +373,7 @@ class FilesComparison(BaseComparison):
 
     def add_failures(self, msgs, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
-                     preprocess=None, actual=None):
+                     preprocess=None, actual=None, expected=None):
         """
         Build a list of messages describing the way in which two files are
         different.
@@ -405,8 +406,8 @@ class FilesComparison(BaseComparison):
                         else '\n'.join(actual))
             with open(modifiedRef, 'w') as f:
                 f.write('\n'.join(expected))
-            self.info(msgs, compare_with(modifiedActual, modifiedRef,
-                                         qualifier='preprocessed'))
+            self.info(msgs, self.compare_with(modifiedActual, modifiedRef,
+                                              qualifier='preprocessed'))
         elif expected_path and not actual_path:
             expectedFilename = os.path.split(expected_path)[1]
             tmpActualFilename = os.path.join(self.tmp_dir,

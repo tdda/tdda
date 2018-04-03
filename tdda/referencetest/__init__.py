@@ -160,3 +160,4 @@ produced in the data output location, to check that they are as expected.
 """
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase
+from tdda.referencetest.captureoutput import CaptureOutput
