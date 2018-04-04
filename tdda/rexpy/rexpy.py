@@ -90,6 +90,10 @@ MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
 VARIABLE_LENGTH_FRAGS = False
 VERBOSITY = 0
 
+MAX_PATTERNS = None
+MIN_DIFF_STRINGS_PER_PATTERN = 1
+MIN_STRINGS_PER_PATTERN = 1
+
 USE_SAMPLING = False
 
 
@@ -310,7 +314,11 @@ class Extractor(object):
                  full_escape=False,
                  remove_empties=False, strip=False,
                  variableLengthFrags=VARIABLE_LENGTH_FRAGS,
-                 specialize=False, verbose=VERBOSITY):
+                 specialize=False,
+                 max_patterns=MAX_PATTERNS,
+                 min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
+                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+                 verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -335,6 +343,10 @@ class Extractor(object):
         self.Cats = Categories(self.thin_extras(extra_letters),
                                full_escape=full_escape)
         self.full_escape = full_escape
+        self.max_patterns = max_patterns
+        self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
+        self.min_strings_per_pattern = min_strings_per_pattern
+
         if extract:
             self.extract()                  # Stores results
 
@@ -1436,6 +1448,9 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             extra_letters=None, full_escape=False,
             remove_empties=False, strip=False,
             variableLengthFrags=VARIABLE_LENGTH_FRAGS,
+            max_patterns=MAX_PATTERNS,
+            min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
+            min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
             verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
@@ -1458,6 +1473,9 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
                   full_escape=full_escape, remove_empties=remove_empties,
                   strip=strip, variableLengthFrags=variableLengthFrags,
+                  max_patterns = max_patterns,
+                  min_diff_strings_per_pattern = min_diff_strings_per_pattern,
+                  min_strings_per_pattern = min_strings_per_pattern,
                   verbose=verbose)
     return r if as_object else r.results.rex
 
