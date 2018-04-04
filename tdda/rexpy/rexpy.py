@@ -1149,17 +1149,17 @@ class Extractor(object):
     def build_tree(self, vrles):
         fulls = vrles[:]
         tree = self.build_tree_inner(vrles, fulls)
-        self.simplify_tree(tree)
+        self.add_freqs_to_tree(tree)
         return tree
 
-    def simplify_tree(self, tree):
+    def add_freqs_to_tree(self, tree):
+        freqs = self.examples.vrle_freqs
         for key, values in tree.items():
             for i, v in enumerate(values):
                 if type(v) is tuple:
-                    assert v[0] is None
-                    values[i] = v[1]
+                    values[i] = (v[1], freqs[v[1]])
                 else:
-                    self.simplify_tree(v)
+                    self.add_freqs_to_tree(v)
 
 
 
