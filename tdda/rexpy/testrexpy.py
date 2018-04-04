@@ -1509,7 +1509,7 @@ class TestExtraction(unittest.TestCase):
         actual = tuple(f(i) for i in range(1, 7))
         self.assertEqual(actual, (1, 2, 4, 5, 7, 8))
 
-    def test_vrle_consolidation(self):
+    def atest_vrle_consolidation(self):
         examples = [
             'AA',
             'CC',
@@ -1550,7 +1550,6 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(results, [['Ḉ', '.', 'Ḉ']])
         from pprint import pprint
         pprint(tree)
->>>>>>> 084149a0e19410db0002cb9571f561ab8882bd17
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
