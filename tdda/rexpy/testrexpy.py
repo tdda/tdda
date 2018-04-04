@@ -1529,6 +1529,7 @@ class TestExtraction(unittest.TestCase):
             'JJ- KK-LL',
         ]
         r = extract(examples, as_object=True)
+        self.assertEqual(r.warnings, [])
         expected = [
             '^[A-Z]+$',
             '^[A-Z]{2}\\-[A-Z]{2}$',
@@ -1537,12 +1538,19 @@ class TestExtraction(unittest.TestCase):
             '^[A-Z]{2}\\- [A-Z]{2}\\-[A-Z]{2}$',
         ]
         self.check_result(r.results.rex, expected, examples)
+
         from pprint import pprint as pp
         freqs = r.examples.vrle_freqs
         pp({k: freqs[k] for k in freqs})
         print()
         pp(r.build_tree(r.results.vrles))
 
+        tree = r.build_tree(r.results.vrles)
+        tree, results = r.find_frag_sep_frag_repeated(tree),
+        self.assertEqual(results, [['Ḉ', '.', 'Ḉ']])
+        from pprint import pprint
+        pprint(tree)
+>>>>>>> 084149a0e19410db0002cb9571f561ab8882bd17
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
