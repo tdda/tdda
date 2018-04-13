@@ -67,6 +67,7 @@ class TestSQLiteDatabaseHandlers(unittest.TestCase):
                           'Nonmetal', 'Poor metal', 'Transition metal'])
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
     def test_sqlite_connection_from_file(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
@@ -76,6 +77,7 @@ class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
         self.assertFalse(dbh.check_table_exists('does_not_exist'))
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -119,6 +121,7 @@ class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
                 self.assertEqual(type(value), bool)
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConstraintDiscoverers(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
