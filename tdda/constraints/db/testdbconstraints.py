@@ -12,6 +12,12 @@ import json
 import os
 import unittest
 
+try:
+    import sqlite3
+except ImportError:
+    sqlite3 = None
+
+
 from tdda.referencetest.referencetestcase import ReferenceTestCase
 
 from tdda.constraints.db.drivers import database_connection, DatabaseHandler
@@ -22,6 +28,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseHandlers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -33,7 +33,7 @@ RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
                   r'(\d{1,2}):(\d{2}):(\d{2})'
                   r'\.(\d+)$')
 
-UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
+UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 
 EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
                         # real (i.e. floating point) fields.
@@ -699,7 +699,7 @@ def plural(n, s, pl=None):
 
 
 def native_definite(o):
-    return (UnicodeDefinite(o) if sys.version_info.major >= 3
+    return (UnicodeDefinite(o) if sys.version_info[0] >= 3
                                else UTF8DefiniteObject(o))
 
 

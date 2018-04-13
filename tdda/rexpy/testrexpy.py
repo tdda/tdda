@@ -1511,7 +1511,7 @@ def CtoUC(s):
 
 
 
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     # Quieten down Python3's vexatious complaining
     TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
 

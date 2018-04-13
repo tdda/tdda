@@ -69,8 +69,8 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info.major < 3 else str
-bytes_type = str if sys.version_info.major < 3 else bytes
+str_type = unicode if sys.version_info[0] < 3 else str
+bytes_type = str if sys.version_info[0] < 3 else bytes
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 

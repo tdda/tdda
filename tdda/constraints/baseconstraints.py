@@ -34,7 +34,7 @@ from tdda.constraints.base import (
 
 from tdda.constraints.extension import BaseConstraintCalculator
 
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     unicode_string = str
     byte_string = bytes
 else:

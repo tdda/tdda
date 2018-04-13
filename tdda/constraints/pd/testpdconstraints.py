@@ -52,7 +52,7 @@ from tdda.constraints.pd.constraints import verify_df, discover_df
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 
-isPython2 = sys.version_info.major < 3
+isPython2 = sys.version_info[0] < 3
 
 SMALL = 2.48e-324
 MILLION = 1000 * 1000

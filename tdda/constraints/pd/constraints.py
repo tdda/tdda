@@ -54,7 +54,7 @@ if hasattr(pd, 'Timestamp'):
 else:
     pandas_Timestamp = pd.tslib.Timestamp
 
-isPy3 = sys.version_info.major >= 3
+isPy3 = sys.version_info[0] >= 3
 if isPy3:
     long = int
 
@@ -342,25 +342,29 @@ def pandas_coarse_type(x):
 
 
 def pandas_tdda_type(x):
-     dt = getattr(x, 'dtype', None)
-     if type(x) == str or dt == np.dtype('O'):
-         return 'string'
-     dts = str(dt)
-     if type(x) == bool or 'bool' in dts:
-         return 'bool'
-     if type(x) in (int, long) or 'int' in dts:
-         return 'int'
-     if type(x) == float or 'float' in dts:
-         return 'real'
-     if (type(x) == datetime.datetime or 'datetime' in dts
-                 or type(x) == pandas_Timestamp):
-         return 'date'
-     if x is None or (not isinstance(x, pd.core.series.Series)
-                      and pd.isnull(x)):
-         return 'null'
-     # Everything else is other, for now, including compound types,
-     # unicode in Python2, bytes in Python3 etc.
-     return 'other'
+    dt = getattr(x, 'dtype', None)
+    if type(x) == str or dt == np.dtype('O'):
+        return 'string'
+    dts = str(dt)
+    if type(x) == bool or 'bool' in dts:
+        return 'bool'
+    if type(x) in (int, long) or 'int' in dts:
+        return 'int'
+    if type(x) == float or 'float' in dts:
+        return 'real'
+    if (type(x) == datetime.datetime or 'datetime' in dts
+                or type(x) == pandas_Timestamp):
+        return 'date'
+    if x is None:
+        return 'null'
+    null = pd.isnull(x)
+    if hasattr(null, 'size'):
+        null = False  # pd.isnull returned an array
+    if (not isinstance(x, pd.core.series.Series) and null):
+        return 'null'
+    # Everything else is other, for now, including compound types,
+    # unicode in Python2, bytes in Python3 etc.
+    return 'other'
 
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,

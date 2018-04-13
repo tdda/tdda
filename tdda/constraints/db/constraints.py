@@ -33,7 +33,7 @@ from tdda.constraints.baseconstraints import (
 from tdda.constraints.db.drivers import DatabaseHandler
 from tdda import rexpy
 
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     long = int
 
 
