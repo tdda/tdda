@@ -715,6 +715,7 @@ class Extractor(object):
             - the run-length encoded fine classes in each group
             - the run-length encoded characters in each group
             - the group itself
+
         all indexed on the (zero-based) group number.
         """
         regex = cre(self.vrle2re(pattern, tagged=True))

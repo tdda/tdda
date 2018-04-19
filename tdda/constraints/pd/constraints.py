@@ -31,6 +31,14 @@ from collections import OrderedDict
 import pandas as pd
 import numpy as np
 
+try:
+    from pmmif import featherpmm
+except ImportError:
+    featherpmm = None
+    try:
+        import feather as feather
+    except ImportError:
+        feather = None
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
