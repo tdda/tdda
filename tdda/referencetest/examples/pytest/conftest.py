@@ -6,7 +6,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
 from __future__ import division
@@ -24,9 +24,9 @@ def ref(request):
     """
     Declare a fixture called 'ref' which will inject a ReferenceTest
     instance into a test. It's automatically configured to regenerate
-    results if the --W options is used on the command line, and in this
-    example is automatically configured to locate all reference data
-    files in the 'reference' directory above.
+    results if the ``--write-all`` or ``--write``  options are used on
+    the command line, and in this example is automatically configured
+    to locate all reference data files in the 'reference' directory above.
     """
     r = referencepytest.ref(request)
     this_dir = os.path.abspath(os.path.dirname(__file__))
