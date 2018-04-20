@@ -99,7 +99,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
             values = self.get_database_unique_values(self.tablename, colname)
         return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
+    def verify_rex_constraint(self, colname, constraint, detect=False):
         return self.get_database_rex_match(self.tablename, colname,
                                            constraint.value)
 

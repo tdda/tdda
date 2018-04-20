@@ -167,7 +167,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         else:
             return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
+    def verify_rex_constraint(self, colname, constraint, detect=False):
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
             return True        # to be an active constraint,
@@ -197,6 +197,53 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
         PandasConstraintCalculator.__init__(self, df)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
+        self.out_df = pd.DataFrame()
+
+    def create_min_constraint_sat_field(self, col, constraint):
+        value = constraint.value
+        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        c = self.df[col]
+
+        name = col + '_min_ok'
+        if precision == 'closed':
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c >= value)
+        elif precision == 'open':
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c > value)
+        else:
+            # TODO: CHANGE TO FUZZ DOWN
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c >= value)
+        return False
+
+    def create_max_constraint_sat_field(self, col, constraint):
+        value = constraint.value
+        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        c = self.df[col]
+
+        name = col + '_max_ok'
+        if precision == 'closed':
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c <= value)
+        elif precision == 'open':
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c < value)
+        else:
+            # TODO: CHANGE TO FUZZ UP
+            self.out_df[name] = np.where(pd.isnull(c), np.nan, c <= value)
+        return False
+
+    def write_detected_records(self, detect_outpath, detect_write_all=False,
+                               detect_per_constraint=False,
+                               detect_output_fields=None, **kwargs):
+        add_index = False
+        if detect_output_fields == ['0']:
+            detect_output_fields = []
+            add_index = True
+        out_df = self.out_df
+        nf = len(list(out_df))
+        out_df['n_failures'] = (nf - out_df.sum(axis=1).astype(int)
+                                   - out_df.isnull().sum(axis=1).astype(int))
+        if not detect_write_all:
+            out_df = out_df[out_df.n_failures > 0]
+        # add some source fields
+        save_df(out_df, detect_outpath)
 
     def repair_field_types(self, constraints):
         # We sometimes haven't inferred the field types correctly for
@@ -631,6 +678,20 @@ def load_df(path):
         return ds.df
     elif feather:
         return feather.read_dataframe(path)
+    else:
+        raise Exception('The Python feather module is not installed.\n'
+                        'Use:\n    pip install feather-format\n'
+                        'to add capability.\n', file=sys.stderr)
+
+
+def save_df(df, path):
+    if os.path.splitext(path)[1] != '.feather':
+        default_csv_writer(path)
+    elif featherpmm:
+        featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
+                                   path)
+    elif feather:
+        feather.write_dataframe(df, path)
     else:
         raise Exception('The Python feather module is not installed.\n'
                         'Use:\n    pip install feather-format\n'

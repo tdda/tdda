@@ -34,8 +34,19 @@ Optional flags are:
       Report each constraint failure on a separate line.  Not yet implemented.
   * -7, --ascii
       Report in ASCII form, without using special characters.
-  * -epsilon E
+  * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values
+  * --detect OUTPATH
+      Write failing records (by default) to OUTPATH
+  * --detect-write-all
+      Include passing records when detecting
+  * --detect-per-constraint
+      Write one column per failing constraint when detecting
+  * --detect-output-fields FIELD1,FIELD2
+      Specify original columns to write out (all by default) when detecting.
+      If 1 is used, a row-number will be written instead, with the
+      first (non-header) record from the CSV file, or first row in the
+      DataFrame, being numbered 1.
 '''
 
 def discover_parser(usage=''):
@@ -82,7 +93,23 @@ def verify_parser(usage=''):
                         help='report without using special characters')
     parser.add_argument('-type_checking', action='store_true',
                         help='strict or sloppy')
-    parser.add_argument('-epsilon', nargs=1, help='epsilon fuzziness')
+    parser.add_argument('-epsilon', '--epsilon', nargs=1,
+                        help='epsilon fuzziness')
+    parser.add_argument('--detect', nargs=1,
+                        help='Write failing records (by default) to OUTPATH')
+    parser.add_argument('--detect-write-all', action='store_true',
+                        help='Include passing records when detecting')
+    parser.add_argument('--detect-per-constraint', action='store_true',
+                        help='Write one column per failing constraint '
+                             'when detecting')
+    parser.add_argument('--detect-output-fields', nargs='+',
+                        help='Specify original columns to write out '
+                             '(all by default) when detecting.\n'
+                             'If 1 is used, a row-number will be written '
+                             'instead, with the first (non-header) record '
+                             'from the CSV file, or first row in the '
+                             'DataFrame, being numbered 1.')
+
     return parser
 
 
@@ -110,5 +137,14 @@ def verify_flags(parser, args, params):
         params['type_checking'] = True
     if flags.epsilon:
         params['epsilon'] = flags.epsilon[0]
+    if flags.detect:
+        params['detect_outpath'] = flags.detect[0]
+    if flags.detect_write_all:
+        params['detect_write_all'] = True
+    if flags.detect_per_constraint:
+        params['detect_per_constraint'] = True
+    if flags.detect_output_fields:
+        params['detect_output_fields'] = flags.detect_output_fields
+    params['detect_in_place'] = False  # Only applicable in API case
     return flags
 
