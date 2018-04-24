@@ -111,9 +111,9 @@ class ExtensionBase:
 class BaseConstraintCalculator:
     """
     The :py:mod:`BaseConstraintCalculator` class defines a default or dummy
-    implementation o fall of the methods that are required in order
-    to implement a constraint discoverer or verifier using the
-    :py:mod:`BaseConstraintDiscoverer` and :py:mod:`BaseConstraintVerifier`
+    implementation of all of the methods that are required in order
+    to implement a constraint discoverer or verifier via subclasses of the
+    base :py:mod:`BaseConstraintDiscoverer` and :py:mod:`BaseConstraintVerifier`
     classes.
     """
     def is_null(self, value):
@@ -239,12 +239,99 @@ class BaseConstraintCalculator:
         """
         raise NotImplementedError('find_rexes')
 
-    def verify_rex_constraint(self, colname, constraint):
+    def calc_rex_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies a given regular
         expression constraint (by matching at least one of the regular
         expressions given).
+
+        Returns a 'truthy' value (typically the set of the strings that do
+        not match any of the regular expressions) on failure, and a 'falsy'
+        value (typically False or None or an empty set) if there are no
+        failures. Any contents of the returned value are used in the case
+        where detect is set, by the corresponding extension method for
+        recording detection results.
         """
         raise NotImplementedError('verify_rex')
 
+
+class BaseConstraintDetector:
+    """
+    The :py:mod:`BaseConstraintCalculator` class defines a default or dummy
+    implementation of all of the methods that are required in order
+    to implement constraint detection via the a subclass of the base
+    :py:mod:`BaseConstraintVerifier` class.
+    """
+    def detect_min_constraint(self, col, constraint):
+        """
+        Detect failures for a min constraint.
+        """
+        pass
+
+    def detect_max_constraint(self, col, constraint):
+        """
+        Detect failures for a max constraint.
+        """
+        pass
+
+    def detect_min_length_constraint(self, col, constraint):
+        """
+        Detect failures for a min_length constraint.
+        """
+        pass
+
+    def detect_max_length_constraint(self, col, constraint):
+        """
+        Detect failures for a max_length constraint.
+        """
+        pass
+
+    def detect_tdda_type_constraint(self, col, constraint):
+        """
+        Detect failures for a type constraint.
+        """
+        pass
+
+    def detect_sign_constraint(self, col, constraint):
+        """
+        Detect failures for a sign constraint.
+        """
+        pass
+
+    def detect_max_nulls_constraint(self, col, constraint):
+        """
+        Detect failures for a max_nulls constraint.
+        """
+        pass
+
+    def detect_no_duplicates_constraint(self, col, constraint):
+        """
+        Detect failures for a no_duplicates constraint.
+        """
+        pass
+
+    def detect_allowed_values_constraint(self, col, constraint, violations):
+        """
+        Detect failures for an allowed_values constraint.
+        """
+        pass
+
+    def detect_rex_constraint(self, col, constraint, violations):
+        """
+        Detect failures for a rex constraint.
+        """
+        pass
+
+    def write_detected_records(self,
+                               detect_outpath=None,
+                               detect_write_all=False,
+                               detect_per_constraint=False,
+                               detect_output_fields=None,
+                               detect_rownumber=False,
+                               detect_in_place=False,
+                               **kwargs):
+        """
+        Write out a detection dataset.
+        """
+        pass
 

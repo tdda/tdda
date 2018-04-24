@@ -175,7 +175,7 @@ class FilesConstraintCalculator(BaseConstraintCalculator):
             values = calc_unique_values(colname)
         return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
+    def calc_rex_constraint(self, colname, constraint, detect=False):
         names = os.listdir(self.path)
         for f in names:
             for r in constraint.value:

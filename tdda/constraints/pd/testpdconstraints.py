@@ -52,7 +52,13 @@ from tdda.constraints.pd.constraints import verify_df, discover_df
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 
+from tdda.referencetest import ReferenceTestCase
+
 isPython2 = sys.version_info[0] < 3
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
+
 
 SMALL = 2.48e-324
 MILLION = 1000 * 1000
@@ -135,7 +141,7 @@ class Asserter:
 
 
 
-class TestPandasConstraintVerifiers(unittest.TestCase):
+class TestPandasConstraintVerifiers(ReferenceTestCase):
 
     @classmethod
     def tearDownClass(cls):
@@ -810,12 +816,12 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         dfc1 = [ic1]
         dsc1 = DatasetConstraints(dfc1)
         pdcv1 = pdc.PandasConstraintVerifier(df1)
-        results1 = verify(dsc1, pdcv1.verifiers())
+        results1 = verify(dsc1, list(df1), pdcv1.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  6 passes  '
                     'type ✓  min ✓  max ✓  sign ✓  '
                     'max_nulls ✓  no_duplicates ✓\n\n'
-                    'SUMMARY:\n\nPasses: 6\nFailures: 0')
+                    'SUMMARY:\n\nConstraints passing: 6\nConstraints failing: 0')
         self.assertEqual(str(results1), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -835,13 +841,13 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         dfc2 = [ic2]
         dsc2 = DatasetConstraints(dfc2)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
-        results2 = verify(dsc2, pdcv2.verifiers())
+        results2 = verify(dsc2, list(df2), pdcv2.verifiers())
         # expect the boolean->real type constraint to pass with sloppy types
         expected = ('FIELDS:\n\n'
                     'i: 5 failures  1 pass  '
                     'type ✓  min ✗  max ✗  sign ✗  '
                     'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\nPasses: 1\nFailures: 5')
+                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 5')
         self.assertEqual(str(results2), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -858,13 +864,13 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
-        results2strict = verify(dsc2, pdcv2strict.verifiers())
+        results2strict = verify(dsc2, list(df2), pdcv2strict.verifiers())
         # expect the boolean->real type constraint to fail with strict types
         expected = ('FIELDS:\n\n'
                     'i: 6 failures  0 passes  '
                     'type ✗  min ✗  max ✗  sign ✗  '
                     'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\nPasses: 0\nFailures: 6')
+                    'SUMMARY:\n\nConstraints passing: 0\nConstraints failing: 6')
         self.assertEqual(str(results2strict), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -885,10 +891,10 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         dfc3 = [ic3]
         dsc3 = DatasetConstraints(dfc3)
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = verify(dsc3, pdcv3.verifiers())
+        results3 = verify(dsc3, list(df3), pdcv3.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type ✓\n\n'
-                    'SUMMARY:\n\nPasses: 1\nFailures: 0')
+                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 0')
         self.assertEqual(str(results3), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -900,10 +906,10 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = verify(dsc3, pdcv3.verifiers(), ascii=True)
+        results3 = verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
-                    'SUMMARY:\n\nPasses: 1\nFailures: 0')
+                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 0')
         self.assertEqual(str(results3), expected)
 
     def testElements92(self):
@@ -943,6 +949,20 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
         vdf = v.to_dataframe()
         vdf.sort_values('field', inplace=True)
         # Check dataframe!
+
+    def testDetectElements118rexToFile(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect.csv')
+        v = verify_df(df, constraints_path, report='fields',
+                      detect_outpath=detectfile, detect_output_fields=['Z'])
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 17)
+        self.assertFileCorrect(detectfile, 'elements118rex_detect.csv')
+        vdf = v.to_dataframe()
+        vdf.sort_values('field', inplace=True)
+        # Check dataframe, and also the detection dataframe
 
     def constraintsGenerationTest(self, inc_rex=False):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
@@ -1065,18 +1085,21 @@ class TestPandasConstraintVerifiers(unittest.TestCase):
             else:
                 result = str(main_with_argv(argv, verbose=False))
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Passes: 72\n'
-                                                    'Failures: 0'))
+                                                    'Constraints passing: 72\n'
+                                                    'Constraints failing: 0'))
             argv = ['tdda', 'verify', e118csv, e92tdda]
             if wrapper:
                 result = check_shell_output(argv)
             else:
                 result = str(main_with_argv(argv, verbose=False))
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Passes: 57\n'
-                                                    'Failures: 15'))
+                                                    'Constraints passing: 57\n'
+                                                    'Constraints failing: 15'))
         finally:
             rmdirs(tmpdir, dirs)
+
+
+TestPandasConstraintVerifiers.set_default_data_location(TESTDATA_DIR)
 
 
 def rmdirs(parent, dirs):
@@ -1090,4 +1113,5 @@ def check_shell_output(args):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    ReferenceTestCase.main()
+

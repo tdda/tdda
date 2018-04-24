@@ -532,8 +532,9 @@ class Verification(object):
     in the context of a given set of constraints.
     """
     def __init__(self, constraints, report='all', one_per_line=False,
-                 ascii=False, detect_outpath=None, detect_write_all=False,
-                 detect_per_constraint=False, detect_output_fields=None,
+                 ascii=False, detect=False, detect_outpath=None,
+                 detect_write_all=False, detect_per_constraint=False,
+                 detect_output_fields=None, detect_rownumber=False,
                  detect_in_place=False):
         self.fields = TDDAObject()
         self.failures = 0
@@ -541,17 +542,19 @@ class Verification(object):
         self.report = report
         self.one_per_line = one_per_line
         self.ascii = ascii
+        self.detect = detect
         self.detect_outpath = detect_outpath
         self.detect_write_all = detect_write_all
         self.detect_per_constraint = detect_per_constraint
         self.detect_output_fields = detect_output_fields
+        self.detect_rownumber = detect_rownumber
         self.detect_in_place = detect_in_place
         if report not in ('all', 'fields', 'constraints'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "constraints", not "%s".' % report)
-        if not detect_outpath:
+        if not detect_outpath and not detect and not detect_in_place:
             if any((detect_write_all, detect_per_constraint,
-                    detect_output_fields)):
+                    detect_output_fields, detect_rownumber)):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 
@@ -577,7 +580,13 @@ class Verification(object):
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
-        return ('%sSUMMARY:\n\nPasses: %d\nFailures: %d'
+
+        #TODO: could easily report number of passing/failing fields too.
+        #TODO: could (with more difficulty) report number of p/f records too.
+
+        return ('%sSUMMARY:\n\n'
+                'Constraints passing: %d\n'
+                'Constraints failing: %d'
                 % (fields_part, self.passes, self.failures))
 
 
@@ -614,7 +623,7 @@ def strip_lines(s, side='r'):
     return '\n'.join([strip(line) for line in s.splitlines()]) + end
 
 
-def verify(constraints, verifiers, VerificationClass=None,
+def verify(constraints, fieldnames, verifiers, VerificationClass=None,
            detected_records_writer=None, **kwargs):
     """
     Perform a verification of a set of constraints.
@@ -648,11 +657,19 @@ def verify(constraints, verifiers, VerificationClass=None,
 
                             report, one_per_line and ascii can all be set
                             this way.
+
+    Returns a Verification object.
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
-    detect = kwargs.get('detect_outpath') is not None
-    for name in constraints.fields:
+    detect = (kwargs.get('detect_outpath') is not None
+              or kwargs.get('detect') is not None
+              or kwargs.get('detect_in_place') is not None)
+    allfields = sorted(constraints.fields.keys(),
+                       key=lambda f: fieldnames.index(f) if f in fieldnames
+                                                         else -1)
+
+    for name in allfields:
         field_results = TDDAObject()
         failures = passes = 0
         for c in constraints.fields[name]:
@@ -671,9 +688,10 @@ def verify(constraints, verifiers, VerificationClass=None,
         field_results.passes = passes
         results.passes += passes
         results.fields[name] = field_results
+
     if detect and detected_records_writer and results.failures > 0:
         # TODO: check writability first and remove file if exists
-        detected_records_writer(**kwargs)
+        results.detected = detected_records_writer(**kwargs)
     return results
 
 

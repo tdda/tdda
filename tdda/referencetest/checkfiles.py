@@ -20,7 +20,7 @@ import re
 import sys
 import tempfile
 
-from tdda.referencetest.basecomparison import BaseComparison
+from tdda.referencetest.basecomparison import BaseComparison, copycmd
 
 
 class FilesComparison(BaseComparison):
@@ -272,6 +272,9 @@ class FilesComparison(BaseComparison):
                 expected = content.splitlines()
         except IOError:
             self.info(msgs, 'Reference file %s not found.' % expected_path)
+            self.info(msgs,
+                      'Initialize from actual content with:\n    %s %s %s'
+                      % (copycmd(), actual_path, expected_path))
             return (1, msgs)
         try:
             with open(actual_path) as f:

@@ -41,12 +41,16 @@ Optional flags are:
   * --detect-write-all
       Include passing records when detecting
   * --detect-per-constraint
-      Write one column per failing constraint when detecting
+      Write one column per failing constraint when detecting, as well as
+      the n_failures total column for each row.
   * --detect-output-fields FIELD1,FIELD2
-      Specify original columns to write out (all by default) when detecting.
-      If 1 is used, a row-number will be written instead, with the
-      first (non-header) record from the CSV file, or first row in the
-      DataFrame, being numbered 1.
+      Specify original columns to write out when detecting.
+      If used with no field names, all original columns will be included.
+  * --detect-rownumber
+      Include a row-number in the output file when detecting.
+      The row number is automatically included if no output fields are
+      specified. Rows are numbered from 0.
+
 '''
 
 def discover_parser(usage=''):
@@ -101,14 +105,14 @@ def verify_parser(usage=''):
                         help='Include passing records when detecting')
     parser.add_argument('--detect-per-constraint', action='store_true',
                         help='Write one column per failing constraint '
-                             'when detecting')
-    parser.add_argument('--detect-output-fields', nargs='+',
-                        help='Specify original columns to write out '
-                             '(all by default) when detecting.\n'
-                             'If 1 is used, a row-number will be written '
-                             'instead, with the first (non-header) record '
-                             'from the CSV file, or first row in the '
-                             'DataFrame, being numbered 1.')
+                             'when detectin\n, in addition to n_failures.')
+    parser.add_argument('--detect-output-fields', nargs='*',
+                        help='Specify original columns to write out when '
+                             'detecting. If used with no field names, then '
+                             'all original columns will be included.')
+    parser.add_argument('--detect-rownumber', action='store_true',
+                        help='Include a row-number in the output file when '
+                             'detecting. Rows are numbered from 0.')
 
     return parser
 
@@ -143,7 +147,9 @@ def verify_flags(parser, args, params):
         params['detect_write_all'] = True
     if flags.detect_per_constraint:
         params['detect_per_constraint'] = True
-    if flags.detect_output_fields:
+    if flags.detect_rownumber:
+        params['detect_rownumber'] = True
+    if flags.detect_output_fields is not None:
         params['detect_output_fields'] = flags.detect_output_fields
     params['detect_in_place'] = False  # Only applicable in API case
     return flags

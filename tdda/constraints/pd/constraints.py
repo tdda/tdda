@@ -48,12 +48,14 @@ from tdda.constraints.base import (
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
+    BaseConstraintDetector,
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
 )
 
-from tdda.referencetest.checkpandas import default_csv_loader
+from tdda.referencetest.checkpandas import (default_csv_loader,
+                                            default_csv_writer)
 from tdda import rexpy
 
 # pd.tslib is deprecated in newer versions of Pandas
@@ -167,15 +169,17 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         else:
             return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint, detect=False):
+    def calc_rex_constraint(self, colname, constraint, detect=False):
+        # note that this should return a set of violations, not True/False.
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
-            return True        # to be an active constraint,
+            return None        # to be an active constraint,
                                # so is always satisfied
         rexes = [re.compile(r) for r in rexes]
         strings = [native_definite(s)
                    for s in self.df[colname].dropna().unique()]
 
+        failures = set()
         for s in strings:
             for r in rexes:
                 if re.match(r, s):
@@ -183,11 +187,155 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             else:
                 if DEBUG:
                     print('*** Unmatched string: "%s"' % s)
-                return False  # At least one string didn't match
-        return True
+                if detect:
+                    failures.add(s)
+                else:
+                    return True  # At least one string didn't match
+        if detect:
+            return failures
+        else:
+            return None
+
+
+
+class PandasConstraintDetector(BaseConstraintDetector):
+    """
+    Implementation of the Constraint Detector methods for
+    Pandas dataframes.
+    """
+    def __init__(self, df):
+        self.out_df = (pd.DataFrame(index=df.index.copy()) if df is not None
+                       else None)
+
+    def detect_min_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_min_ok')
+        value = constraint.value
+        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        c = self.df[col]
+        if precision == 'closed':
+            self.out_df[name] = detection_field(c, c >= value)
+        elif precision == 'open':
+            self.out_df[name] = detection_field(c, c > value)
+        else:
+            # TODO: CHANGE TO FUZZ DOWN
+            self.out_df[name] = detection_field(c, c >= value)
+
+    def detect_max_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_max_ok')
+        value = constraint.value
+        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        c = self.df[col]
+        if precision == 'closed':
+            self.out_df[name] = detection_field(c, c <= value)
+        elif precision == 'open':
+            self.out_df[name] = detection_field(c, c < value)
+        else:
+            # TODO: CHANGE TO FUZZ UP
+            self.out_df[name] = detection_field(c, c <= value)
+
+    def detect_min_length_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_min_length_ok')
+        value = constraint.value
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, c.str.len() >= value)
+
+    def detect_max_length_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_max_length_ok')
+        value = constraint.value
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, c.str.len() <= value)
+
+    def detect_tdda_type_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_type_ok')
+        self.out_df[name] = detection_field(None, False)
+
+    def detect_sign_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_sign_ok')
+        value = constraint.value
+        c = self.df[col]
+
+        if value == 'null':
+            self.out_df[name] = detection_field(None, False)
+        elif value == 'positive':
+            self.out_df[name] = detection_field(c, c > 0)
+        elif value == 'non-negative':
+            self.out_df[name] = detection_field(c, c >= 0)
+        elif value == 'zero':
+            self.out_df[name] = detection_field(c, c == 0)
+        elif value == 'non-positive':
+            self.out_df[name] = detection_field(c, c <= 0)
+        elif value == 'negative':
+            self.out_df[name] = detection_field(c, c < 0)
+
+    def detect_max_nulls_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_nonnull_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, False, null_only=True)
+
+    def detect_no_duplicates_constraint(self, col, constraint):
+        name = unique_column_name(self.out_df, col + '_nodups_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, False, null_only=True)
+
+    def detect_allowed_values_constraint(self, col, constraint, violations):
+        name = unique_column_name(self.out_df, col + '_values_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+
+    def detect_rex_constraint(self, col, constraint, violations):
+        name = unique_column_name(self.out_df, col + '_rex_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+
+    def write_detected_records(self,
+                               detect_outpath=None,
+                               detect_write_all=False,
+                               detect_per_constraint=False,
+                               detect_output_fields=None,
+                               detect_rownumber=False,
+                               detect_in_place=False,
+                               **kwargs):
+        if self.out_df is None:
+            return None
+
+        out_df = self.out_df
+        add_index = detect_rownumber or detect_output_fields is None
+        if detect_output_fields is None:
+            detect_output_fields = []
+        elif len(detect_output_fields) == 0:
+            detect_output_fields = list(self.df)
+
+        nfailname = unique_column_name(out_df, 'n_failures')
+        nf = len(list(out_df))
+        out_df[nfailname] = (nf - out_df.sum(axis=1).astype(int)
+                                - out_df.isnull().sum(axis=1).astype(int))
+
+        if detect_in_place:
+            for fname in list(out_df):
+                self.df[unique_column_name(out_df, fname)] = out_df[fname]
+        if not detect_write_all:
+            out_df = out_df[out_df.n_failures > 0]
+        if not detect_per_constraint:
+            fnames = [name for name in list(out_df) if name != nfailname]
+            out_df.drop(fnames, axis=1)
+        if detect_output_fields:
+            for fname in reversed(detect_output_fields):
+                if fname in list(self.df):
+                    out_df.insert(0, fname, self.df[fname])
+                else:
+                    raise Exception('Dataframe has no column %s' % fname)
+
+        if detect_outpath:
+            if add_index:
+                rownumbername = unique_column_name(df, 'RowNumber')
+                out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
+            save_df(out_df, detect_outpath)
+
+        return self.out_df
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
+                               PandasConstraintDetector,
                                BaseConstraintVerifier):
     """
     A :py:class:`PandasConstraintVerifier` object provides methods
@@ -195,55 +343,9 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
     """
     def __init__(self, df, epsilon=None, type_checking=None):
         PandasConstraintCalculator.__init__(self, df)
+        PandasConstraintDetector.__init__(self, df)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
-        self.out_df = pd.DataFrame()
-
-    def create_min_constraint_sat_field(self, col, constraint):
-        value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        c = self.df[col]
-
-        name = col + '_min_ok'
-        if precision == 'closed':
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c >= value)
-        elif precision == 'open':
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c > value)
-        else:
-            # TODO: CHANGE TO FUZZ DOWN
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c >= value)
-        return False
-
-    def create_max_constraint_sat_field(self, col, constraint):
-        value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        c = self.df[col]
-
-        name = col + '_max_ok'
-        if precision == 'closed':
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c <= value)
-        elif precision == 'open':
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c < value)
-        else:
-            # TODO: CHANGE TO FUZZ UP
-            self.out_df[name] = np.where(pd.isnull(c), np.nan, c <= value)
-        return False
-
-    def write_detected_records(self, detect_outpath, detect_write_all=False,
-                               detect_per_constraint=False,
-                               detect_output_fields=None, **kwargs):
-        add_index = False
-        if detect_output_fields == ['0']:
-            detect_output_fields = []
-            add_index = True
-        out_df = self.out_df
-        nf = len(list(out_df))
-        out_df['n_failures'] = (nf - out_df.sum(axis=1).astype(int)
-                                   - out_df.isnull().sum(axis=1).astype(int))
-        if not detect_write_all:
-            out_df = out_df[out_df.n_failures > 0]
-        # add some source fields
-        save_df(out_df, detect_outpath)
 
     def repair_field_types(self, constraints):
         # We sometimes haven't inferred the field types correctly for
@@ -307,6 +409,13 @@ class PandasVerification(Verification):
         Converts object to a Pandas DataFrame.
         """
         return self.verification_to_dataframe(self)
+
+    def detected(self):
+        """
+        Returns the Pandas DataFrame containing the detection column,
+        if the verification process has been run with in ``detect`` mode.
+        """
+        return getattr(self, 'detected', None)
 
     @staticmethod
     def verification_to_dataframe(ver):
@@ -509,6 +618,61 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             ``one_per_line`` will indicate that each constraint
                             failure should be reported on a separate line.
 
+        *detect*:
+                            This specifies that the verification process should
+                            detect records that violate any constraints, and
+                            make them available as a Pandas Dataframe via the
+                            ``detected()`` method on the returned
+                            ``PandasVerification`` object.
+
+        *detect_outpath*:
+                            This specifies that the verification process
+                            should detect records that violate any constraints,
+                            and write them out to this CSV (or feather) file.
+
+                            By default, only failing records are written out
+                            to file, but this can be overridden with the
+                            ``detect_write_all`` parameter.
+
+                            By default, the columns in the detection output
+                            file will be a boolean ``ok`` field for each
+                            constraint on each field, an and ``n_failures``
+                            field containing the total number of constraints
+                            that failed for each row.  This behavious can be
+                            overridden with the ``detect_per_constraint``,
+                            ``detect-output_fields`` and ``detect_rownumber``
+                            parameters.
+
+        *detect_write_all*:
+                            Include passing records in the detection output
+                            file when detecting.
+
+        *detect_per_constraint*:
+                            Write one column per failing constraint, as well
+                            as the ``n_failures`` total.
+
+        *detect_output_fields*:
+                            Specify original columns to write out when detecting.
+
+                            If passed in as an empty list (rather than None),
+                            all original columns will be included.
+
+        *detect_rownumber*:
+                            Include a row-number in the output file when
+                            detecting.
+
+                            This is automatically enabled if no output field
+                            names are specified.
+
+                            Rows are numbered from 0.
+
+        *detect_in_place*:
+                            Detect failing constraints by adding columns to
+                            the input DataFrame.
+
+                            If ``detect_outpath`` is also specified, then
+                            failing constraints will also be written to file.
+
     Returns:
 
         :py:class:`~PandasVerification` object.
@@ -686,7 +850,7 @@ def load_df(path):
 
 def save_df(df, path):
     if os.path.splitext(path)[1] != '.feather':
-        default_csv_writer(path)
+        default_csv_writer(df, path)
     elif featherpmm:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)
@@ -696,6 +860,30 @@ def save_df(df, path):
         raise Exception('The Python feather module is not installed.\n'
                         'Use:\n    pip install feather-format\n'
                         'to add capability.\n', file=sys.stderr)
+
+
+def unique_column_name(df, name):
+    """
+    Generate a column name that is not already present in the dataframe.
+    """
+    i = 1
+    newname = name
+    while newname in list(df):
+        i += 1
+        newname = '%s_%d' % (name, i)
+    return newname
+
+
+def detection_field(column, expr, null_only=False):
+    """
+    Construct a field for a detection result
+    """
+    if not hasattr(expr, 'dtype'):
+        expr = np.ones(column.size) * expr
+    if null_only:
+        return np.where(pd.notnull(column), np.nan, expr.astype(int))
+    else:
+        return np.where(pd.isnull(column), np.nan, expr.astype(int))
 
 
 def discover_constraints(df, inc_rex=False):

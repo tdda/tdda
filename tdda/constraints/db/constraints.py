@@ -25,6 +25,7 @@ from tdda.constraints.base import (
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
+    BaseConstraintDetector,
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
@@ -99,13 +100,24 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
             values = self.get_database_unique_values(self.tablename, colname)
         return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint, detect=False):
-        return self.get_database_rex_match(self.tablename, colname,
-                                           constraint.value)
+    def calc_rex_constraint(self, colname, constraint, detect=False):
+        return not self.get_database_rex_match(self.tablename, colname,
+                                               constraint.value)
+
+
+class DatabaseConstraintDetector(BaseConstraintDetector):
+    """
+    No-op implementation of the Constraint Detector methods for
+    databases.
+    """
+    def __init__(self, tablename):
+        pass
 
 
 class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
-                                 BaseConstraintVerifier, DatabaseHandler):
+                                 DatabaseConstraintDetector,
+                                 BaseConstraintVerifier,
+                                 DatabaseHandler):
     """
     A :py:class:`DatabaseConstraintVerifier` object provides methods
     for verifying every type of constraint against a single database table.
@@ -127,6 +139,7 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
                     name, or a schema-qualified name of the form `schema.name`.
         """
         DatabaseConstraintCalculator.__init__(self, tablename, testing)
+        DatabaseConstraintDetector.__init__(self, tablename)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
         DatabaseHandler.__init__(self, dbtype, db)
@@ -292,7 +305,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return dbv.verify(constraints, 
+    return dbv.verify(constraints,
                       VerificationClass=DatabaseVerification, **kwargs)
 
 

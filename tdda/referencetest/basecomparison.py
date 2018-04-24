@@ -54,3 +54,8 @@ class BaseComparison(object):
 
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'
+
+
+def copycmd():
+    return 'copy' if os.name and os.name != 'posix' else 'cp'
+
