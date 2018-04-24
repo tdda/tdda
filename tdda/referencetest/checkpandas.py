@@ -438,9 +438,16 @@ def default_csv_loader(csvfile, **kwargs):
 def default_csv_writer(df, csvfile, **kwargs):
     """
     Default function for writing a csv file.
+
+    Wrapper around the standard pandas pd.to_csv() function, but with
+    slightly different defaults:
+
+        - index                 is ``False``
+        - encoding              is ``utf-8``
     """
     options = {
-        'index': False
+        'index': False,
+        'encoding': 'utf-8',
     }
     options.update(kwargs)
     df.to_csv(csvfile, **options)
