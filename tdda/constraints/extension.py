@@ -262,13 +262,13 @@ class BaseConstraintDetector:
     to implement constraint detection via the a subclass of the base
     :py:mod:`BaseConstraintVerifier` class.
     """
-    def detect_min_constraint(self, col, constraint):
+    def detect_min_constraint(self, col, constraint, precision, epsilon):
         """
         Detect failures for a min constraint.
         """
         pass
 
-    def detect_max_constraint(self, col, constraint):
+    def detect_max_constraint(self, col, constraint, precision, epsilon):
         """
         Detect failures for a max constraint.
         """

@@ -140,7 +140,7 @@ def verify_flags(parser, args, params):
     if flags.type_checking:
         params['type_checking'] = True
     if flags.epsilon:
-        params['epsilon'] = flags.epsilon[0]
+        params['epsilon'] = float(flags.epsilon[0])
     if flags.detect:
         params['detect_outpath'] = flags.detect[0]
     if flags.detect_write_all:

@@ -45,6 +45,7 @@ from tdda.constraints.base import (
     native_definite,
     DatasetConstraints,
     Verification,
+    fuzz_up, fuzz_down,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -197,60 +198,59 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             return None
 
 
-
 class PandasConstraintDetector(BaseConstraintDetector):
     """
     Implementation of the Constraint Detector methods for
     Pandas dataframes.
     """
     def __init__(self, df):
+        self.df = df
         self.out_df = (pd.DataFrame(index=df.index.copy()) if df is not None
                        else None)
 
-    def detect_min_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_min_ok')
+    def detect_min_constraint(self, col, constraint, precision, epsilon):
+        name = unique_column_name(self.df, col + '_min_ok')
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
         c = self.df[col]
         if precision == 'closed':
             self.out_df[name] = detection_field(c, c >= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c > value)
         else:
-            # TODO: CHANGE TO FUZZ DOWN
-            self.out_df[name] = detection_field(c, c >= value)
+            self.out_df[name] = detection_field(c, df_fuzzy_gt(c, value,
+                                                               epsilon))
+            print(self.out_df[name].dtype)
 
-    def detect_max_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_max_ok')
+    def detect_max_constraint(self, col, constraint, precision, epsilon):
+        name = unique_column_name(self.df, col + '_max_ok')
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
         c = self.df[col]
         if precision == 'closed':
             self.out_df[name] = detection_field(c, c <= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c < value)
         else:
-            # TODO: CHANGE TO FUZZ UP
-            self.out_df[name] = detection_field(c, c <= value)
+            self.out_df[name] = detection_field(c, df_fuzzy_lt(c, value,
+                                                               epsilon))
 
     def detect_min_length_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_min_length_ok')
+        name = unique_column_name(self.df, col + '_min_length_ok')
         value = constraint.value
         c = self.df[col]
         self.out_df[name] = detection_field(c, c.str.len() >= value)
 
     def detect_max_length_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_max_length_ok')
+        name = unique_column_name(self.df, col + '_max_length_ok')
         value = constraint.value
         c = self.df[col]
         self.out_df[name] = detection_field(c, c.str.len() <= value)
 
     def detect_tdda_type_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_type_ok')
+        name = unique_column_name(self.df, col + '_type_ok')
         self.out_df[name] = detection_field(None, False)
 
     def detect_sign_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_sign_ok')
+        name = unique_column_name(self.df, col + '_sign_ok')
         value = constraint.value
         c = self.df[col]
 
@@ -268,22 +268,24 @@ class PandasConstraintDetector(BaseConstraintDetector):
             self.out_df[name] = detection_field(c, c < 0)
 
     def detect_max_nulls_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_nonnull_ok')
+        # found more nulls than are allowed, so mark all null values as bad
+        name = unique_column_name(self.df, col + '_nonnull_ok')
         c = self.df[col]
-        self.out_df[name] = detection_field(c, False, null_only=True)
+        self.out_df[name] = pd.notnull(c)
 
     def detect_no_duplicates_constraint(self, col, constraint):
-        name = unique_column_name(self.out_df, col + '_nodups_ok')
+        # found duplicates, so mark all non-null values as bad
+        name = unique_column_name(self.df, col + '_nodups_ok')
         c = self.df[col]
-        self.out_df[name] = detection_field(c, False, null_only=True)
+        self.out_df[name] = pd.isnull(c)
 
     def detect_allowed_values_constraint(self, col, constraint, violations):
-        name = unique_column_name(self.out_df, col + '_values_ok')
+        name = unique_column_name(self.df, col + '_values_ok')
         c = self.df[col]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def detect_rex_constraint(self, col, constraint, violations):
-        name = unique_column_name(self.out_df, col + '_rex_ok')
+        name = unique_column_name(self.df, col + '_rex_ok')
         c = self.df[col]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
@@ -305,14 +307,15 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif len(detect_output_fields) == 0:
             detect_output_fields = list(self.df)
 
-        nfailname = unique_column_name(out_df, 'n_failures')
+        nfailname = unique_column_name(self.df, 'n_failures')
         nf = len(list(out_df))
-        out_df[nfailname] = (nf - out_df.sum(axis=1).astype(int)
-                                - out_df.isnull().sum(axis=1).astype(int))
+        fails = (nf - out_df.sum(axis=1).astype(float)
+                    - out_df.isnull().sum(axis=1).astype(float))
+        out_df[nfailname] = fails.astype(int)
 
         if detect_in_place:
             for fname in list(out_df):
-                self.df[unique_column_name(out_df, fname)] = out_df[fname]
+                self.df[unique_column_name(self.df, fname)] = out_df[fname]
         if not detect_write_all:
             out_df = out_df[out_df.n_failures > 0]
         if not detect_per_constraint:
@@ -557,8 +560,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             of the constraint value by which the
                             constraint can be exceeded without causing
                             a constraint violation to be issued.
-                            With the default value of epsilon
-                            (:py:const:`EPSILON_DEFAULT` = 0.01, i.e. 1%),
+
+                            For example, with epsilon set to 0.01 (i.e. 1%),
                             values can be up to 1% larger than a max constraint
                             without generating constraint failure,
                             and minimum values can be up to 1% smaller
@@ -566,6 +569,10 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             generating a constraint failure. (These
                             are modified, as appropriate, for negative
                             values.)
+
+                            If not specified, an *epsilon* of 0 is used,
+                            so there is no tolerance.
+
 
                             NOTE: A consequence of the fact that these
                             are proportionate is that min/max values
@@ -696,8 +703,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                            'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
         v = verify_df(df, 'example_constraints.tdda')
 
-        print('Passes:', v.passes)
-        print('Failures: %d\\n' % v.failures)
+        print('Constraints passing: %d\\n' % v.passes)
+        print('Constraints failing: %d\\n' % v.failures)
         print(str(v))
         print(v.to_frame())
 
@@ -874,16 +881,31 @@ def unique_column_name(df, name):
     return newname
 
 
-def detection_field(column, expr, null_only=False):
+def detection_field(column, expr):
     """
     Construct a field for a detection result
     """
-    if not hasattr(expr, 'dtype'):
-        expr = np.ones(column.size) * expr
-    if null_only:
-        return np.where(pd.notnull(column), np.nan, expr.astype(int))
-    else:
-        return np.where(pd.isnull(column), np.nan, expr.astype(int))
+    return np.where(pd.isnull(column), np.nan, expr.astype('O'))
+
+
+def df_fuzzy_gt(a, b, epsilon):
+    """
+    Returns a >~ b (a is greater than or approximately equal to b)
+
+    At the moment, this simply reduces b by 1% if it is positive,
+    and makes it 1% more negative if it is negative.
+    """
+    return (a >= b) | (a >= fuzz_down(b, epsilon))
+
+
+def df_fuzzy_lt(a, b, epsilon):
+    """
+    Returns a <~ b (a is less than or approximately equal to b)
+
+    At the moment, this increases b by 1% if it is positive,
+    and makes it 1% less negative if it is negative.
+    """
+    return (a <= b) | (a <= fuzz_up(b, epsilon))
 
 
 def discover_constraints(df, inc_rex=False):

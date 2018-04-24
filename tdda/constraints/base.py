@@ -36,9 +36,8 @@ RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
 
 UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 
-EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
+EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
                         # real (i.e. floating point) fields.
-
 
 
 class Marks:
@@ -809,21 +808,17 @@ def fuzzy_greater_than(a, b, epsilon):
     At the moment, this simply reduces b by 1% if it is positive,
     and makes it 1% more negative if it is negative.
     """
-    if a >= b:
-        return True
-    return (a >= fuzz_down(b, epsilon))
+    return (a >= b) or (a >= fuzz_down(b, epsilon))
 
 
 def fuzzy_less_than(a, b, epsilon):
     """
-    Returns a <~ b (a is greater than or approximately equal to b)
+    Returns a <~ b (a is less than or approximately equal to b)
 
     At the moment, this increases b by 1% if it is positive,
     and makes it 1% less negative if it is negative.
     """
-    if a <= b:
-        return True
-    return (a <= fuzz_up(b, epsilon))
+    return (a <= b) or (a <= fuzz_up(b, epsilon))
 
 
 def fuzz_down(v, epsilon):
@@ -839,6 +834,7 @@ def fuzz_down(v, epsilon):
     constraint.
     """
     return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
+
 
 def fuzz_up(v, epsilon):
     """

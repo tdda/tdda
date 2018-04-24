@@ -221,15 +221,18 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             of the constraint value by which the
                             constraint can be exceeded without causing
                             a constraint violation to be issued.
-                            With the default value of epsilon
-                            (:py:const:`EPSILON_DEFAULT` = 0.01, i.e. 1%),
+
+                            For example, with epsilon set to 0.01 (i.e. 1%),
                             values can be up to 1% larger than a max constraint
                             without generating constraint failure,
                             and minimum values can be up to 1% smaller
                             that the minimum constraint value without
                             generating a constraint failure. (These
-                            are modified, as appropraite, for negative
+                            are modified, as appropriate, for negative
                             values.)
+
+                            If not specified, an *epsilon* of 0 is used,
+                            so there is no tolerance.
 
                             NOTE: A consequence of the fact that these
                             are proportionate is that min/max values
@@ -292,11 +295,9 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         db = pgdb.connect(dbspec)
         v = verify_db_table('postgres' db, tablename, 'myconstraints.tdda')
 
-        print('Passes:', v.passes)
-        print('Failures: %d\\n' % v.failures)
+        print('Constraints passing:', v.passes)
+        print('Constraints failing: %d\\n' % v.failures)
         print(str(v))
-        print(v.to_frame())
-
     """
     dbv = DatabaseConstraintVerifier(dbtype, db, tablename, epsilon=epsilon,
                                      type_checking=type_checking,

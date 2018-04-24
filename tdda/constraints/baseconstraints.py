@@ -122,7 +122,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return False
 
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
         assert precision in PRECISIONS
 
         if self.is_null(value):   # a null minimum is not considered to be an
@@ -145,7 +145,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = fuzzy_greater_than(m, value, self.epsilon)
 
         if detect and result is False:
-            self.detect_min_constraint(colname, constraint)
+            self.detect_min_constraint(colname, constraint, precision,
+                                       self.epsilon)
         return result
 
     def verify_max_constraint(self, colname, constraint, detect=False):
@@ -157,8 +158,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return False
 
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        assert precision in ('open', 'closed', 'fuzzy')
+        precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
+        assert precision in PRECISIONS
 
         if self.is_null(value):   # a null maximum is not considered to be an
             return True           # active constraint, so is always satisfied
@@ -181,7 +182,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = fuzzy_less_than(M, value, self.epsilon)
 
         if detect and result is False:
-            self.detect_max_constraint(colname, constraint)
+            self.detect_max_constraint(colname, constraint, precision,
+                                       self.epsilon)
         return result
 
     def verify_min_length_constraint(self, colname, constraint, detect=False):
