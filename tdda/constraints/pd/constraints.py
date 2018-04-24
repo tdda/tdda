@@ -327,7 +327,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
         if detect_outpath:
             if add_index:
-                rownumbername = unique_column_name(df, 'RowNumber')
+                rownumbername = unique_column_name(out_df, 'RowNumber')
                 out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
             save_df(out_df, detect_outpath)
 

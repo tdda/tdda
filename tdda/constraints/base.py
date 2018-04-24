@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import datetime
 import json
+import os
 import re
 import sys
 
@@ -662,7 +663,8 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
-    detect = (kwargs.get('detect_outpath') is not None
+    detect_outpath = kwargs.get('detect_outpath')
+    detect = (detect_outpath is not None
               or kwargs.get('detect') is not None
               or kwargs.get('detect_in_place') is not None)
     allfields = sorted(constraints.fields.keys(),
@@ -690,7 +692,14 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
         results.fields[name] = field_results
 
     if detect and detected_records_writer and results.failures > 0:
-        # TODO: check writability first and remove file if exists
+        if detect_outpath:
+            # empty (and then remove) the detection output file first,
+            # so that we can get an early error if the file isn't writeable,
+            # and so that we don't leave a bogus wrong file in place if
+            # we turn out not to detect anything.
+            with open(detect_outpath, 'w') as f:
+                pass
+            os.remove(detect_outpath)
         results.detection = detected_records_writer(**kwargs)
     return results
 
