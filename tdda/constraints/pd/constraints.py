@@ -317,7 +317,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             out_df = out_df[out_df.n_failures > 0]
         if not detect_per_constraint:
             fnames = [name for name in list(out_df) if name != nfailname]
-            out_df.drop(fnames, axis=1)
+            out_df = out_df.drop(fnames, axis=1)
         if detect_output_fields:
             for fname in reversed(detect_output_fields):
                 if fname in list(self.df):
@@ -331,7 +331,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
             save_df(out_df, detect_outpath)
 
-        return self.out_df
+        return out_df
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
@@ -415,7 +415,7 @@ class PandasVerification(Verification):
         Returns the Pandas DataFrame containing the detection column,
         if the verification process has been run with in ``detect`` mode.
         """
-        return getattr(self, 'detected', None)
+        return getattr(self, 'detection', None)
 
     @staticmethod
     def verification_to_dataframe(ver):

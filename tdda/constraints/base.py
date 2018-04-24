@@ -691,7 +691,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect and detected_records_writer and results.failures > 0:
         # TODO: check writability first and remove file if exists
-        results.detected = detected_records_writer(**kwargs)
+        results.detection = detected_records_writer(**kwargs)
     return results
 
 

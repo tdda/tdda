@@ -937,7 +937,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         self.assertEqual(v.failures, 15)
         vdf = v.to_dataframe()
         vdf.sort_values('field', inplace=True)
-        # Check dataframe!
+        self.assertStringCorrect(vdf.to_string(), 'elements118.df')
 
     def testElements118rex(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
@@ -948,7 +948,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         self.assertEqual(v.failures, 17)
         vdf = v.to_dataframe()
         vdf.sort_values('field', inplace=True)
-        # Check dataframe!
+        self.assertStringCorrect(vdf.to_string(), 'elements118rex.df')
 
     def testDetectElements118rexToFile(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
@@ -960,9 +960,29 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         self.assertFileCorrect(detectfile, 'elements118rex_detect.csv')
-        vdf = v.to_dataframe()
-        vdf.sort_values('field', inplace=True)
-        # Check dataframe, and also the detection dataframe
+
+    def testDetectElements118rexToFilePerConstraint(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect_perc.csv')
+        v = verify_df(df, constraints_path, report='fields',
+                      detect_outpath=detectfile, detect_output_fields=['Z'],
+                      detect_per_constraint=True)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 17)
+        self.assertFileCorrect(detectfile, 'elements118rex_detect_perc.csv')
+
+    def testDetectElements118rexToDataFrame(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        v = verify_df(df, constraints_path, report='fields', detect=True,
+                      detect_output_fields=['Z'])
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 17)
+        ddf = v.detected()
+        self.assertStringCorrect(ddf.to_string(), 'elements118rex_detect.df')
 
     def constraintsGenerationTest(self, inc_rex=False):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')

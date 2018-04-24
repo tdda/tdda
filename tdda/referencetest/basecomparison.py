@@ -48,8 +48,13 @@ class BaseComparison(object):
     @staticmethod
     def compare_with(actual, expected, qualifier=None):
         qualifier = '' if not qualifier else (qualifier + ' ')
-        return 'Compare %swith:\n    %s %s %s\n' % (qualifier, diffcmd(),
-                                                    actual, expected)
+        if os.path.exists(expected):
+            msg = 'Compare %swith:\n    %s %s %s\n'
+            cmd = diffcmd()
+        else:
+            msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
+            cmd = copycmd()
+        return msg % (qualifier, cmd, actual, expected)
 
 
 def diffcmd():
