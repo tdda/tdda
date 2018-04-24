@@ -274,10 +274,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
         self.out_df[name] = pd.notnull(c)
 
     def detect_no_duplicates_constraint(self, col, constraint):
-        # found duplicates, so mark all non-null values as bad
+        # found duplicates, so mark anything duplicated as bad
         name = unique_column_name(self.df, col + '_nodups_ok')
         c = self.df[col]
-        self.out_df[name] = pd.isnull(c)
+        unique = ~ self.df.duplicated(col, keep=False)
+        self.out_df[name] = detection_field(c, unique, default=True)
 
     def detect_allowed_values_constraint(self, col, constraint, violations):
         name = unique_column_name(self.df, col + '_values_ok')
@@ -881,11 +882,13 @@ def unique_column_name(df, name):
     return newname
 
 
-def detection_field(column, expr):
+def detection_field(column, expr, default=None):
     """
     Construct a field for a detection result
     """
-    return np.where(pd.isnull(column), np.nan, expr.astype('O'))
+    default_value = (np.nan if default is None
+                            else (np.ones(len(column)) * default))
+    return np.where(pd.isnull(column), default_value, expr.astype('O'))
 
 
 def df_fuzzy_gt(a, b, epsilon):

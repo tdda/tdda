@@ -176,14 +176,15 @@ class FilesConstraintCalculator(BaseConstraintCalculator):
         return rexpy.extract(values)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
+        # note that this should return violations, so None means success
         names = os.listdir(self.path)
         for f in names:
             for r in constraint.value:
                 if re.match(r, f) is not None:
                     break
             else:
-                return False
-        return True
+                return True
+        return None
 
 
 class FilesConstraintDiscoverer(FilesConstraintCalculator,
@@ -194,6 +195,7 @@ class FilesConstraintDiscoverer(FilesConstraintCalculator,
 
 
 class FilesConstraintVerifier(FilesConstraintCalculator,
+                              BaseConstraintDetector):
                               BaseConstraintVerifier):
     def __init__(self, path, type_checking='strict', **kwargs):
         FilesConstraintCalculator.__init__(self, path)

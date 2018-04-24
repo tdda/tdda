@@ -911,6 +911,35 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
                     'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 0')
         self.assertEqual(str(results3), expected)
 
+    def testDetectDuplicates(self):
+        iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
+        sconstraints = FieldConstraints('s', [NoDuplicatesConstraint()])
+        constraints = DatasetConstraints([iconstraints, sconstraints])
+
+        df1 = pd.DataFrame({'i': [1, 2, 3, 4, np.nan],
+                            's': ['one', 'two', 'three', 'four', np.nan]})
+        verifier1 = pdc.PandasConstraintVerifier(df1)
+        v1 = verifier1.verify(constraints,
+                              VerificationClass=pdc.PandasVerification,
+                              detect=True)
+        self.assertEqual(v1.passes, 2)
+        self.assertEqual(v1.failures, 0)
+        ddf1 = v1.detected()
+        self.assertIsNone(ddf1)
+
+        df2 = pd.DataFrame({'i': [1, 2, 3, 2, np.nan],
+                            's': ['one', 'two', 'three', 'two', np.nan]})
+        verifier2 = pdc.PandasConstraintVerifier(df2)
+        v2 = verifier2.verify(constraints,
+                              VerificationClass=pdc.PandasVerification,
+                              detect=True,
+                              detect_per_constraint=True,
+                              detect_output_fields=['i', 's'])
+        self.assertEqual(v2.passes, 0)
+        self.assertEqual(v2.failures, 2)
+        ddf2 = v2.detected()
+        self.assertStringCorrect(ddf2.to_string(), 'detect_dups.df')
+
     def testElements92(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
