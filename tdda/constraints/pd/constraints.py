@@ -653,7 +653,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
     Returns:
 
-        py:class:`~PandasVerification` object.
+        :py:class:`~PandasVerification` object.
 
         This object has attributes:
 
