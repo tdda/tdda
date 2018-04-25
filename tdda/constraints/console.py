@@ -29,6 +29,7 @@ from tdda import __version__
 HELP="""Use
     tdda discover  to perform constraint discovery
     tdda verify    to verify data against constraints
+    tdda detect    to detect failed constraints on data
     tdda examples  to copy the example data and code
     tdda version   to print the TDDA version number
     tdda help      to print this help
@@ -120,6 +121,11 @@ def main_with_argv(argv, verbose=True):
             if ext.applicable():
                 return ext.verify()
         no_constraints('No verification available', argv[2:], extensions)
+    elif name == 'detect':
+        for ext in extensions:
+            if ext.applicable():
+                return ext.detect()
+        no_constraints('No detection available', argv[2:], extensions)
     elif name == 'examples':
         item = argv[2] if len(argv) > 2 else '.'
         if item in ('referencetest', 'constraints', 'rexpy'):

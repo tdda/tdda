@@ -1,0 +1,17 @@
+                 field  failures  passes  type   min min_length    max max_length  sign max_nulls no_duplicates allowed_values    rex
+6         AtomicWeight         2       3  True  True        NaN  False        NaN  True     False           NaN            NaN    NaN
+11       BoilingPointC         1       3  True  True        NaN   True        NaN   NaN     False           NaN            NaN    NaN
+12       BoilingPointF         1       3  True  True        NaN   True        NaN   NaN     False           NaN            NaN    NaN
+5       ChemicalSeries         0       6  True   NaN       True    NaN       True   NaN      True           NaN           True   True
+15              Colour         0       4  True   NaN       True    NaN       True   NaN       NaN           NaN            NaN   True
+13             Density         2       3  True  True        NaN  False        NaN  True     False           NaN            NaN    NaN
+14         Description         0       4  True   NaN       True    NaN       True   NaN       NaN           NaN            NaN   True
+7            Etymology         3       2  True   NaN       True    NaN      False   NaN     False           NaN            NaN  False
+4                Group         0       4  True  True        NaN   True        NaN  True       NaN           NaN            NaN    NaN
+9        MeltingPointC         1       3  True  True        NaN   True        NaN   NaN     False           NaN            NaN    NaN
+10  MeltingPointKelvin         1       4  True  True        NaN   True        NaN  True     False           NaN            NaN    NaN
+1                 Name         1       5  True   NaN       True    NaN      False   NaN      True          True            NaN   True
+3               Period         0       5  True  True        NaN   True        NaN  True      True           NaN            NaN    NaN
+8   RelativeAtomicMass         2       3  True  True        NaN  False        NaN  True     False           NaN            NaN    NaN
+2               Symbol         2       4  True   NaN       True    NaN      False   NaN      True          True            NaN  False
+0                    Z         1       5  True  True        NaN  False        NaN  True      True          True            NaN    NaN

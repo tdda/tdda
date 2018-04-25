@@ -36,6 +36,7 @@ import sys
 
 from tdda.constraints.flags import discover_parser, discover_flags
 from tdda.constraints.flags import verify_parser, verify_flags
+from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.extension import ExtensionBase
 
 from tdda.constraints.base import (
@@ -79,19 +80,31 @@ class TDDAFilesExtension(ExtensionBase):
                 f.write(results)
         else:
             print(results)
+        return results
 
     def verify(self):
         parser = verify_parser()
         parser.add_argument('directory', nargs=1, help='directory path')
         parser.add_argument('constraints', nargs=1,
                             help='constraints file to verify against')
+        return self.verify_or_detect(parser)
+
+    def detect(self):
+        parser = detect_parser()
+        parser.add_argument('directory', nargs=1, help='directory path')
+        parser.add_argument('constraints', nargs=1,
+                            help='constraints file to verify against')
+        return self.verify_or_detect(parser)
+
+    def verify_or_detect(self, parser):
         params = {}
         flags = verify_flags(parser, self.argv[1:], params)
         params['path'] = flags.directory[0] if flags.directory else None
         params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                       else None)
         params['type_checking'] = 'strict'
-        print(verify_directory_from_file(**params))
+        results = verify_directory_from_file(**params)
+        return results
 
 
 def discover_directory(path, constraints_path=None, **kwargs):
@@ -175,15 +188,16 @@ class FilesConstraintCalculator(BaseConstraintCalculator):
             values = calc_unique_values(colname)
         return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
+    def calc_rex_constraint(self, colname, constraint, detect=False):
+        # note that this should return violations, so None means success
         names = os.listdir(self.path)
         for f in names:
             for r in constraint.value:
                 if re.match(r, f) is not None:
                     break
             else:
-                return False
-        return True
+                return True
+        return None
 
 
 class FilesConstraintDiscoverer(FilesConstraintCalculator,
@@ -194,6 +208,7 @@ class FilesConstraintDiscoverer(FilesConstraintCalculator,
 
 
 class FilesConstraintVerifier(FilesConstraintCalculator,
+                              BaseConstraintDetector):
                               BaseConstraintVerifier):
     def __init__(self, path, type_checking='strict', **kwargs):
         FilesConstraintCalculator.__init__(self, path)

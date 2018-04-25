@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Support for database constraint verification from the command-line tool
+Support for database constraint detection from the command-line tool
 """
 
 from __future__ import division
@@ -20,6 +20,8 @@ Parameters:
 
   * constraints.tdda is a JSON .tdda file constaining constraints.
 
+  * detection output file is not implemented yet.
+
 '''
 
 import argparse
@@ -27,59 +29,63 @@ import os
 import sys
 
 from tdda import __version__
-from tdda.constraints.flags import verify_parser, verify_flags
-from tdda.constraints.db.constraints import verify_db_table
+from tdda.constraints.flags import detect_parser, detect_flags
+from tdda.constraints.db.constraints import detect_db_table
 from tdda.constraints.db.drivers import (database_connection, parse_table_name,
                                          database_arg_parser,
                                          database_arg_flags)
 
 
-def verify_database_table_from_file(table, constraints_path,
+def detect_database_table_from_file(table, constraints_path,
                                     conn=None, dbtype=None, db=None,
                                     host=None, port=None, user=None,
                                     password=None, **kwargs):
     """
-    Verify the given database table, against constraints in the .tdda
+    detect using the given database table, against constraints in the .tdda
     file specified.
 
-    Prints results to stdout.
+    Not implemented
     """
     (table, dbtype) = parse_table_name(table, dbtype)
     db = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
                              host=host, port=port,
                              user=user, password=password)
-    print(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
+    print(detect_db_table(dbtype, db, table, constraints_path, **kwargs))
 
 
-def get_verify_params(args):
+def get_detect_params(args):
     parser = database_arg_parser(verify_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
+    parser.add_argument('detect_outpath', nargs=1,
+                        help='file to write detection results to')
     params = {}
     flags = database_arg_flags(verify_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)
+    params['detect_outpath'] = (flags.detect_outpath[0] if flags.detect_outpath
+                                else None)
     return params
 
 
-class DatabaseVerifier:
+class DatabaseDetector:
     def __init__(self, argv, verbose=False):
         self.argv = argv
         self.verbose = verbose
 
-    def verify(self):
-        params = get_verify_params(self.argv[1:])
-        verify_database_table_from_file(**params)
+    def detect(self):
+        params = get_detect_params(self.argv[1:])
+        detect_database_table_from_file(**params)
 
 
 def main(argv):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
-    v = DatabaseVerifier(argv)
-    v.verify()
+    v = DatabaseDetector(argv)
+    v.detect()
 
 
 if __name__ == '__main__':

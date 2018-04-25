@@ -31,7 +31,7 @@ from tdda.constraints.base import (
     sort_constraint_dict,
 )
 
-isPython2 = sys.version_info.major < 3
+isPython2 = sys.version_info[0] < 3
 
 TESTDATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                             'testdata')

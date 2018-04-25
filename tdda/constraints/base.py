@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import datetime
 import json
+import os
 import re
 import sys
 
@@ -33,11 +34,10 @@ RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
                   r'(\d{1,2}):(\d{2}):(\d{2})'
                   r'\.(\d+)$')
 
-UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
+UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 
-EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
+EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
                         # real (i.e. floating point) fields.
-
 
 
 class Marks:
@@ -532,14 +532,31 @@ class Verification(object):
     in the context of a given set of constraints.
     """
     def __init__(self, constraints, report='all', one_per_line=False,
-                 ascii=False):
+                 ascii=False, detect=False, detect_outpath=None,
+                 detect_write_all=False, detect_per_constraint=False,
+                 detect_output_fields=None, detect_rownumber=False,
+                 detect_in_place=False):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
         self.report = report
         self.one_per_line = one_per_line
         self.ascii = ascii
-        assert report in ('all', 'fields', 'constraints')
+        self.detect = detect
+        self.detect_outpath = detect_outpath
+        self.detect_write_all = detect_write_all
+        self.detect_per_constraint = detect_per_constraint
+        self.detect_output_fields = detect_output_fields
+        self.detect_rownumber = detect_rownumber
+        self.detect_in_place = detect_in_place
+        if report not in ('all', 'fields', 'constraints'):
+            raise Exception('Value for report must be one of "all", "fields"'
+                            ' or "constraints", not "%s".' % report)
+        if not detect_outpath and not detect and not detect_in_place:
+            if any((detect_write_all, detect_per_constraint,
+                    detect_output_fields, detect_rownumber)):
+                raise Exception('You have specified detection parameters '
+                                'without specifying\na detection output path.')
 
     def __str__(self):
         """
@@ -563,7 +580,13 @@ class Verification(object):
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
-        return ('%sSUMMARY:\n\nPasses: %d\nFailures: %d'
+
+        #TODO: could easily report number of passing/failing fields too.
+        #TODO: could (with more difficulty) report number of p/f records too.
+
+        return ('%sSUMMARY:\n\n'
+                'Constraints passing: %d\n'
+                'Constraints failing: %d'
                 % (fields_part, self.passes, self.failures))
 
 
@@ -600,7 +623,8 @@ def strip_lines(s, side='r'):
     return '\n'.join([strip(line) for line in s.splitlines()]) + end
 
 
-def verify(constraints, verifiers, VerificationClass=None, **kwargs):
+def verify(constraints, fieldnames, verifiers, VerificationClass=None,
+           detected_records_writer=None, **kwargs):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
@@ -633,16 +657,35 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
 
                             report, one_per_line and ascii can all be set
                             this way.
+
+    Returns a Verification object.
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
-    for name in constraints.fields:
-        field_results = TDDAObject()  # results.fields[name]
+    detect_outpath = kwargs.get('detect_outpath')
+    detect = (detect_outpath is not None
+              or kwargs.get('detect') is not None
+              or kwargs.get('detect_in_place') is not None)
+    allfields = sorted(constraints.fields.keys(),
+                       key=lambda f: fieldnames.index(f) if f in fieldnames
+                                                         else -1)
+
+    if detect_outpath:
+        # empty (and then remove) the detection output file first,
+        # so that we can get an early error if the file isn't writeable,
+        # and so that we don't leave a bogus wrong file in place if
+        # we turn out not to detect anything.
+        with open(detect_outpath, 'w') as f:
+            pass
+        os.remove(detect_outpath)
+
+    for name in allfields:
+        field_results = TDDAObject()
         failures = passes = 0
         for c in constraints.fields[name]:
             verify = verifiers.get(c.kind)
             if verify:
-                satisfied = verify(name, c)
+                satisfied = verify(name, c, detect)
                 if satisfied:
                     passes += 1
                 else:
@@ -655,6 +698,9 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
         field_results.passes = passes
         results.passes += passes
         results.fields[name] = field_results
+
+    if detect and detected_records_writer and results.failures > 0:
+        results.detection = detected_records_writer(**kwargs)
     return results
 
 
@@ -699,7 +745,7 @@ def plural(n, s, pl=None):
 
 
 def native_definite(o):
-    return (UnicodeDefinite(o) if sys.version_info.major >= 3
+    return (UnicodeDefinite(o) if sys.version_info[0] >= 3
                                else UTF8DefiniteObject(o))
 
 
@@ -762,21 +808,17 @@ def fuzzy_greater_than(a, b, epsilon):
     At the moment, this simply reduces b by 1% if it is positive,
     and makes it 1% more negative if it is negative.
     """
-    if a >= b:
-        return True
-    return (a >= fuzz_down(b, epsilon))
+    return (a >= b) or (a >= fuzz_down(b, epsilon))
 
 
 def fuzzy_less_than(a, b, epsilon):
     """
-    Returns a <~ b (a is greater than or approximately equal to b)
+    Returns a <~ b (a is less than or approximately equal to b)
 
     At the moment, this increases b by 1% if it is positive,
     and makes it 1% less negative if it is negative.
     """
-    if a <= b:
-        return True
-    return (a <= fuzz_up(b, epsilon))
+    return (a <= b) or (a <= fuzz_up(b, epsilon))
 
 
 def fuzz_down(v, epsilon):
@@ -792,6 +834,7 @@ def fuzz_down(v, epsilon):
     constraint.
     """
     return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
+
 
 def fuzz_up(v, epsilon):
     """

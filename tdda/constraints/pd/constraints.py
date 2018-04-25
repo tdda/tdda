@@ -16,6 +16,11 @@ The top-level functions are:
         Verify (check) a Pandas DataFrame, against a set of previously
         discovered constraints.
 
+    :py:func:`detect_df`:
+        Verify (check) a Pandas DataFrame, against a set of previously
+        discovered constraints, and generate an output dataset containing
+        information about input rows which failed any of the constraints.
+
 """
 from __future__ import division
 from __future__ import print_function
@@ -31,21 +36,32 @@ from collections import OrderedDict
 import pandas as pd
 import numpy as np
 
+try:
+    from pmmif import featherpmm
+except ImportError:
+    featherpmm = None
+    try:
+        import feather as feather
+    except ImportError:
+        feather = None
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
     native_definite,
     DatasetConstraints,
     Verification,
+    fuzz_up, fuzz_down,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
+    BaseConstraintDetector,
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
 )
 
-from tdda.referencetest.checkpandas import default_csv_loader
+from tdda.referencetest.checkpandas import (default_csv_loader,
+                                            default_csv_writer)
 from tdda import rexpy
 
 # pd.tslib is deprecated in newer versions of Pandas
@@ -54,7 +70,7 @@ if hasattr(pd, 'Timestamp'):
 else:
     pandas_Timestamp = pd.tslib.Timestamp
 
-isPy3 = sys.version_info.major >= 3
+isPy3 = sys.version_info[0] >= 3
 if isPy3:
     long = int
 
@@ -159,15 +175,17 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         else:
             return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
+    def calc_rex_constraint(self, colname, constraint, detect=False):
+        # note that this should return a set of violations, not True/False.
         rexes = constraint.value
         if rexes is None:      # a null value is not considered
-            return True        # to be an active constraint,
+            return None        # to be an active constraint,
                                # so is always satisfied
         rexes = [re.compile(r) for r in rexes]
         strings = [native_definite(s)
                    for s in self.df[colname].dropna().unique()]
 
+        failures = set()
         for s in strings:
             for r in rexes:
                 if re.match(r, s):
@@ -175,11 +193,158 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             else:
                 if DEBUG:
                     print('*** Unmatched string: "%s"' % s)
-                return False  # At least one string didn't match
-        return True
+                if detect:
+                    failures.add(s)
+                else:
+                    return True  # At least one string didn't match
+        if detect:
+            return failures
+        else:
+            return None
+
+
+class PandasConstraintDetector(BaseConstraintDetector):
+    """
+    Implementation of the Constraint Detector methods for
+    Pandas dataframes.
+    """
+    def __init__(self, df):
+        self.df = df
+        self.out_df = (pd.DataFrame(index=df.index.copy()) if df is not None
+                       else None)
+
+    def detect_min_constraint(self, col, constraint, precision, epsilon):
+        name = unique_column_name(self.df, col + '_min_ok')
+        value = constraint.value
+        c = self.df[col]
+        if precision == 'closed':
+            self.out_df[name] = detection_field(c, c >= value)
+        elif precision == 'open':
+            self.out_df[name] = detection_field(c, c > value)
+        else:
+            self.out_df[name] = detection_field(c, df_fuzzy_gt(c, value,
+                                                               epsilon))
+            print(self.out_df[name].dtype)
+
+    def detect_max_constraint(self, col, constraint, precision, epsilon):
+        name = unique_column_name(self.df, col + '_max_ok')
+        value = constraint.value
+        c = self.df[col]
+        if precision == 'closed':
+            self.out_df[name] = detection_field(c, c <= value)
+        elif precision == 'open':
+            self.out_df[name] = detection_field(c, c < value)
+        else:
+            self.out_df[name] = detection_field(c, df_fuzzy_lt(c, value,
+                                                               epsilon))
+
+    def detect_min_length_constraint(self, col, constraint):
+        name = unique_column_name(self.df, col + '_min_length_ok')
+        value = constraint.value
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, c.str.len() >= value)
+
+    def detect_max_length_constraint(self, col, constraint):
+        name = unique_column_name(self.df, col + '_max_length_ok')
+        value = constraint.value
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, c.str.len() <= value)
+
+    def detect_tdda_type_constraint(self, col, constraint):
+        name = unique_column_name(self.df, col + '_type_ok')
+        self.out_df[name] = detection_field(None, False)
+
+    def detect_sign_constraint(self, col, constraint):
+        name = unique_column_name(self.df, col + '_sign_ok')
+        value = constraint.value
+        c = self.df[col]
+
+        if value == 'null':
+            self.out_df[name] = detection_field(None, False)
+        elif value == 'positive':
+            self.out_df[name] = detection_field(c, c > 0)
+        elif value == 'non-negative':
+            self.out_df[name] = detection_field(c, c >= 0)
+        elif value == 'zero':
+            self.out_df[name] = detection_field(c, c == 0)
+        elif value == 'non-positive':
+            self.out_df[name] = detection_field(c, c <= 0)
+        elif value == 'negative':
+            self.out_df[name] = detection_field(c, c < 0)
+
+    def detect_max_nulls_constraint(self, col, constraint):
+        # found more nulls than are allowed, so mark all null values as bad
+        name = unique_column_name(self.df, col + '_nonnull_ok')
+        c = self.df[col]
+        self.out_df[name] = pd.notnull(c)
+
+    def detect_no_duplicates_constraint(self, col, constraint):
+        # found duplicates, so mark anything duplicated as bad
+        name = unique_column_name(self.df, col + '_nodups_ok')
+        c = self.df[col]
+        unique = ~ self.df.duplicated(col, keep=False)
+        self.out_df[name] = detection_field(c, unique, default=True)
+
+    def detect_allowed_values_constraint(self, col, constraint, violations):
+        name = unique_column_name(self.df, col + '_values_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+
+    def detect_rex_constraint(self, col, constraint, violations):
+        name = unique_column_name(self.df, col + '_rex_ok')
+        c = self.df[col]
+        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+
+    def write_detected_records(self,
+                               detect_outpath=None,
+                               detect_write_all=False,
+                               detect_per_constraint=False,
+                               detect_output_fields=None,
+                               detect_rownumber=False,
+                               detect_in_place=False,
+                               **kwargs):
+        if self.out_df is None:
+            return None
+
+        out_df = self.out_df
+        add_index = detect_rownumber or detect_output_fields is None
+        if detect_output_fields is None:
+            detect_output_fields = []
+        elif len(detect_output_fields) == 0:
+            detect_output_fields = list(self.df)
+
+        nfailname = unique_column_name(self.df, 'n_failures')
+        nf = len(list(out_df))
+        fails = (nf - out_df.sum(axis=1).astype(float)
+                    - out_df.isnull().sum(axis=1).astype(float))
+        out_df[nfailname] = fails.astype(int)
+
+        if detect_in_place:
+            for fname in list(out_df):
+                self.df[unique_column_name(self.df, fname)] = out_df[fname]
+        if not detect_write_all:
+            out_df = out_df[out_df.n_failures > 0]
+        if not detect_per_constraint:
+            fnames = [name for name in list(out_df) if name != nfailname]
+            out_df = out_df.drop(fnames, axis=1)
+        if detect_output_fields:
+            for fname in reversed(detect_output_fields):
+                if fname in list(self.df):
+                    out_df.insert(0, fname, self.df[fname])
+                else:
+                    raise Exception('Dataframe has no column %s' % fname)
+
+        if detect_outpath:
+            if add_index:
+                rownumbername = unique_column_name(out_df, 'RowNumber')
+                out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
+            save_df(out_df, detect_outpath)
+
+        return out_df
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
+                               PandasConstraintDetector,
                                BaseConstraintVerifier):
     """
     A :py:class:`PandasConstraintVerifier` object provides methods
@@ -187,6 +352,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
     """
     def __init__(self, df, epsilon=None, type_checking=None):
         PandasConstraintCalculator.__init__(self, df)
+        PandasConstraintDetector.__init__(self, df)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
 
@@ -243,6 +409,12 @@ class PandasVerification(Verification):
     - ``True``       --- if the constraint was satified for the column
     - ``False``      --- if column failed to satisfy the constraint
     - ``pd.np.NaN``  --- if there was no constraint of this kind
+
+    This Pandas-specific implementation of constraint verification also
+    provides methods :py:meth:`to_frame` to get the overall verification
+    result as as a Pandas DataFrame, and :py:meth:`detected` to get any
+    detection results as a a Pandas DataFrame (if the verification has been
+    run with in ``detect`` mode).
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
@@ -252,6 +424,13 @@ class PandasVerification(Verification):
         Converts object to a Pandas DataFrame.
         """
         return self.verification_to_dataframe(self)
+
+    def detected(self):
+        """
+        Returns the Pandas DataFrame containing the detection column,
+        if the verification process has been run with in ``detect`` mode.
+        """
+        return getattr(self, 'detection', None)
 
     @staticmethod
     def verification_to_dataframe(ver):
@@ -271,6 +450,17 @@ class PandasVerification(Verification):
         return df
 
     to_dataframe = to_frame
+
+
+class PandasDetection(Verification):
+    """
+    A :py:class:`PandasDetection` object adds a :py:meth:`detected()`
+    method to a :py:class:`PandasVerification` object.
+
+    This allows the Pandas DataFrame resulting from constraint detection
+    to be made available.
+    """
+    pass
 
 
 class PandasConstraintDiscoverer(PandasConstraintCalculator,
@@ -342,29 +532,33 @@ def pandas_coarse_type(x):
 
 
 def pandas_tdda_type(x):
-     dt = getattr(x, 'dtype', None)
-     if type(x) == str or dt == np.dtype('O'):
-         return 'string'
-     dts = str(dt)
-     if type(x) == bool or 'bool' in dts:
-         return 'bool'
-     if type(x) in (int, long) or 'int' in dts:
-         return 'int'
-     if type(x) == float or 'float' in dts:
-         return 'real'
-     if (type(x) == datetime.datetime or 'datetime' in dts
-                 or type(x) == pandas_Timestamp):
-         return 'date'
-     if x is None or (not isinstance(x, pd.core.series.Series)
-                      and pd.isnull(x)):
-         return 'null'
-     # Everything else is other, for now, including compound types,
-     # unicode in Python2, bytes in Python3 etc.
-     return 'other'
+    dt = getattr(x, 'dtype', None)
+    if type(x) == str or dt == np.dtype('O'):
+        return 'string'
+    dts = str(dt)
+    if type(x) == bool or 'bool' in dts:
+        return 'bool'
+    if type(x) in (int, long) or 'int' in dts:
+        return 'int'
+    if type(x) == float or 'float' in dts:
+        return 'real'
+    if (type(x) == datetime.datetime or 'datetime' in dts
+                or type(x) == pandas_Timestamp):
+        return 'date'
+    if x is None:
+        return 'null'
+    null = pd.isnull(x)
+    if hasattr(null, 'size'):
+        null = False  # pd.isnull returned an array
+    if (not isinstance(x, pd.core.series.Series) and null):
+        return 'null'
+    # Everything else is other, for now, including compound types,
+    # unicode in Python2, bytes in Python3 etc.
+    return 'other'
 
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,
-              **kwargs):
+              report='all', **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -376,9 +570,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
         *constraints_path*:
                             The path to a JSON ``.tdda`` file (possibly
-                            generated by the discover_constraints
-                            function, below) containing constraints
-                            to be checked.
+                            generated by the discover_df function, below)
+                            containing constraints to be checked.
 
     Optional Inputs:
 
@@ -389,8 +582,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             of the constraint value by which the
                             constraint can be exceeded without causing
                             a constraint violation to be issued.
-                            With the default value of epsilon
-                            (:py:const:`EPSILON_DEFAULT` = 0.01, i.e. 1%),
+
+                            For example, with epsilon set to 0.01 (i.e. 1%),
                             values can be up to 1% larger than a max constraint
                             without generating constraint failure,
                             and minimum values can be up to 1% smaller
@@ -398,6 +591,10 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             generating a constraint failure. (These
                             are modified, as appropriate, for negative
                             values.)
+
+                            If not specified, an *epsilon* of 0 is used,
+                            so there is no tolerance.
+
 
                             NOTE: A consequence of the fact that these
                             are proportionate is that min/max values
@@ -450,6 +647,10 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             ``one_per_line`` will indicate that each constraint
                             failure should be reported on a separate line.
 
+    The various *detect* parameters from :py:meth:`detect_df` can also be
+    used, in which case the verification process will also generate
+    detection results.
+
     Returns:
 
         :py:class:`~PandasVerification` object.
@@ -467,14 +668,14 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     Example usage::
 
         import pandas as pd
-        from tdda.constraints.pdconstraints import verify_df
+        from tdda.constraints import verify_df
 
         df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
                            'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
         v = verify_df(df, 'example_constraints.tdda')
 
-        print('Passes:', v.passes)
-        print('Failures: %d\\n' % v.failures)
+        print('Constraints passing: %d\\n' % v.passes)
+        print('Constraints failing: %d\\n' % v.failures)
         print(str(v))
         print(v.to_frame())
 
@@ -488,6 +689,164 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     pdv.repair_field_types(constraints)
     return pdv.verify(constraints,
                       VerificationClass=PandasVerification, **kwargs)
+
+
+def detect_df(df, constraints_path, epsilon=None, type_checking=None,
+              detect_outpath=None, detect_write_all=False,
+              detect_per_constraint=False, detect_output_fields=None,
+              detect_rownumber=False, detect_in_place=False, **kwargs):
+    """
+    Verify that (i.e. check whether) the Pandas DataFrame provided
+    satisfies the constraints in the JSON ``.tdda`` file provided.
+
+    Mandatory Inputs:
+
+        *df*:
+                            A Pandas DataFrame, to be checked.
+
+        *constraints_path*:
+                            The path to a JSON ``.tdda`` file (possibly
+                            generated by the discover_df function, below)
+                            containing constraints to be checked.
+
+    Optional Inputs:
+
+        *epsilon*:
+                            When checking minimum and maximum values
+                            for numeric fields, this provides a
+                            tolerance. The tolerance is a proportion
+                            of the constraint value by which the
+                            constraint can be exceeded without causing
+                            a constraint violation to be issued.
+
+                            For example, with epsilon set to 0.01 (i.e. 1%),
+                            values can be up to 1% larger than a max constraint
+                            without generating constraint failure,
+                            and minimum values can be up to 1% smaller
+                            that the minimum constraint value without
+                            generating a constraint failure. (These
+                            are modified, as appropriate, for negative
+                            values.)
+
+                            If not specified, an *epsilon* of 0 is used,
+                            so there is no tolerance.
+
+
+                            NOTE: A consequence of the fact that these
+                            are proportionate is that min/max values
+                            of zero do not have any tolerance, i.e.
+                            the wrong sign always generates a failure.
+
+        *type_checking*:
+                            ``strict`` or ``sloppy``.
+                            Because Pandas silently, routinely and
+                            automatically "promotes" integer and boolean
+                            columns to reals and objects respectively
+                            if they contain nulls, strict type checking
+                            can be problematical in Pandas. For this reason,
+                            ``type_checking`` defaults to ``sloppy``, meaning
+                            that type changes that could plausibly be
+                            attributed to Pandas type promotion will not
+                            generate constraint values.
+
+                            If this is set to strict, a Pandas ``float``
+                            column ``c`` will only be allowed to satisfy a
+                            an ``int`` type constraint if::
+
+                                c.dropnulls().astype(int) == c.dropnulls()
+
+                            Similarly, Object fields will satisfy a
+                            ``bool`` constraint only if::
+
+                                c.dropnulls().astype(bool) == c.dropnulls()
+
+        *detect*:
+                            This specifies that the verification process should
+                            detect records that violate any constraints, and
+                            make them available as a Pandas Dataframe via the
+                            ``detected()`` method on the returned
+                            ``PandasVerification`` object.
+
+        *detect_outpath*:
+                            This specifies that the verification process
+                            should detect records that violate any constraints,
+                            and write them out to this CSV (or feather) file.
+
+                            By default, only failing records are written out
+                            to file, but this can be overridden with the
+                            ``detect_write_all`` parameter.
+
+                            By default, the columns in the detection output
+                            file will be a boolean ``ok`` field for each
+                            constraint on each field, an and ``n_failures``
+                            field containing the total number of constraints
+                            that failed for each row.  This behavious can be
+                            overridden with the ``detect_per_constraint``,
+                            ``detect-output_fields`` and ``detect_rownumber``
+                            parameters.
+
+        *detect_write_all*:
+                            Include passing records in the detection output
+                            file when detecting.
+
+        *detect_per_constraint*:
+                            Write one column per failing constraint, as well
+                            as the ``n_failures`` total.
+
+        *detect_output_fields*:
+                            Specify original columns to write out when detecting.
+
+                            If passed in as an empty list (rather than None),
+                            all original columns will be included.
+
+        *detect_rownumber*:
+                            Include a row-number in the output file when
+                            detecting.
+
+                            This is automatically enabled if no output field
+                            names are specified.
+
+                            Rows are numbered from 0.
+
+        *detect_in_place*:
+                            Detect failing constraints by adding columns to
+                            the input DataFrame.
+
+                            If ``detect_outpath`` is also specified, then
+                            failing constraints will also be written to file.
+
+    The *report* parameter from :py:meth:`verify_df` can also be
+    used, in which case a verification report will also be produced in
+    addition to the detection results.
+
+    Returns:
+
+        :py:class:`~PandasDetection` object.
+
+        This object has a :py:meth:`~PandasDetection.detected()` method
+        for obtaining the Pandas Dataframe containing the detection
+        results.
+
+    Example usage::
+
+        import pandas as pd
+        from tdda.constraints import detect_df
+
+        df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
+                           'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
+        v = detect_df(df, 'example_constraints.tdda')
+        detection_df = v.detected()
+        print(detection_df.to_string())
+
+    """
+    return verify_df(df, constraints_path, epsilon=epsilon,
+                     type_checking=type_checking, detect=True,
+                     detect_outpath=detect_outpath,
+                     detect_write_all=detect_write_all,
+                     detect_per_constraint=detect_per_constraint,
+                     detect_output_fields=detect_output_fields,
+                     detect_rownumber=detect_rownumber,
+                     detect_in_place=detect_in_place, **kwargs)
 
 
 def discover_df(df, inc_rex=False):
@@ -596,10 +955,10 @@ def discover_df(df, inc_rex=False):
     Example usage::
 
         import pandas as pd
-        from tdda.constraints.pdconstraints import discover_constraints
+        from tdda.constraints import discover_df
 
         df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', pd.np.NaN]})
-        constraints = discover_constraints(df)
+        constraints = discover_df(df)
         with open('example_constraints.tdda', 'w') as f:
             f.write(constraints.to_json())
 
@@ -625,12 +984,63 @@ def load_df(path):
                         'to add capability.\n', file=sys.stderr)
 
 
-def discover_constraints(df, inc_rex=False):
+def save_df(df, path):
+    if os.path.splitext(path)[1] != '.feather':
+        default_csv_writer(df, path)
+    elif featherpmm:
+        featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
+                                   path)
+    elif feather:
+        feather.write_dataframe(df, path)
+    else:
+        raise Exception('The Python feather module is not installed.\n'
+                        'Use:\n    pip install feather-format\n'
+                        'to add capability.\n', file=sys.stderr)
+
+
+def unique_column_name(df, name):
     """
-    Wrapper function to expose :py:func:`discover_df` under an older
-    legacy name.
+    Generate a column name that is not already present in the dataframe.
     """
-    return discover_df(df, inc_rex=inc_rex)
+    i = 1
+    newname = name
+    while newname in list(df):
+        i += 1
+        newname = '%s_%d' % (name, i)
+    return newname
+
+
+def detection_field(column, expr, default=None):
+    """
+    Construct a field for a detection result
+    """
+    default_value = (np.nan if default is None
+                            else (np.ones(len(column)) * default))
+    return np.where(pd.isnull(column), default_value, expr.astype('O'))
+
+
+def df_fuzzy_gt(a, b, epsilon):
+    """
+    Returns a >~ b (a is greater than or approximately equal to b)
+
+    At the moment, this simply reduces b by 1% if it is positive,
+    and makes it 1% more negative if it is negative.
+    """
+    return (a >= b) | (a >= fuzz_down(b, epsilon))
+
+
+def df_fuzzy_lt(a, b, epsilon):
+    """
+    Returns a <~ b (a is less than or approximately equal to b)
+
+    At the moment, this increases b by 1% if it is positive,
+    and makes it 1% less negative if it is negative.
+    """
+    return (a <= b) | (a <= fuzz_up(b, epsilon))
+
+
+# for backwards compatibility (old name for function)
+discover_constraints = discover_df
 
 
 def applicable(argv):

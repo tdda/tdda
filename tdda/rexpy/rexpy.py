@@ -69,8 +69,8 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info.major < 3 else str
-bytes_type = str if sys.version_info.major < 3 else bytes
+str_type = unicode if sys.version_info[0] < 3 else str
+bytes_type = str if sys.version_info[0] < 3 else bytes
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -715,6 +715,7 @@ class Extractor(object):
             - the run-length encoded fine classes in each group
             - the run-length encoded characters in each group
             - the group itself
+
         all indexed on the (zero-based) group number.
         """
         regex = cre(self.vrle2re(pattern, tagged=True))

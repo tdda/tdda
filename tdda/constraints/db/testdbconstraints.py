@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Test Suite
+Test Suite for database constraints.
+
+The tests only use SqlLite, since that can be used in a contained way, without
+depending on having set up any database server.
 """
 
 from __future__ import division
@@ -11,6 +14,12 @@ from __future__ import absolute_import
 import json
 import os
 import unittest
+
+try:
+    import sqlite3
+except ImportError:
+    sqlite3 = None
+
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase
 
@@ -22,6 +31,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseHandlers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -60,6 +70,7 @@ class TestSQLiteDatabaseHandlers(unittest.TestCase):
                           'Nonmetal', 'Poor metal', 'Transition metal'])
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
     def test_sqlite_connection_from_file(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
@@ -69,6 +80,7 @@ class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
         self.assertFalse(dbh.check_table_exists('does_not_exist'))
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -112,6 +124,7 @@ class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
                 self.assertEqual(type(value), bool)
 
 
+@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConstraintDiscoverers(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
@@ -134,18 +147,6 @@ class TestSQLiteDatabaseConstraintDiscoverers(ReferenceTestCase):
 
 
 TestSQLiteDatabaseConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
-
-
-@unittest.skip('test environment not set up for PostgreSQL yet')
-class TestPostgreSQLDatabaseConstraintVerifiers(unittest.TestCase):
-    def test_postgresql(self):
-        pass
-
-
-@unittest.skip('test environment not set up for MySQL yet')
-class TestMySQLDatabaseConstraintVerifiers(unittest.TestCase):
-    def test_mysql(self):
-        pass
 
 
 if __name__ == '__main__':
