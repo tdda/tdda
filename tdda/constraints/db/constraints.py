@@ -292,7 +292,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
     Example usage::
 
         import pgdb
-        from tdda.constraints.dbconstraints import verify_db_table
+        from tdda.constraints import verify_db_table
 
         dbspec = 'localhost:databasename:username:password'
         tablename = 'schemaname.tablename'
@@ -319,8 +319,8 @@ def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
     """
     Detect failures from verification of constraints
     """
-    raise NotImplementedException('Detection is not implemented (yet) '
-                                  'for databases.')
+    raise NotImplementedError('Detection is not implemented (yet) '
+                              'for databases.')
 
 
 def discover_db_table(dbtype, db, tablename, inc_rex=False):
@@ -423,12 +423,12 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
     Example usage::
 
         import pgdb
-        from tdda.constraints.dbconstraints import discover_db_table_constraints
+        from tdda.constraints import discover_db_table
 
         dbspec = 'localhost:databasename:username:password'
         tablename = 'schemaname.tablename'
         db = pgdb.connect(dbspec)
-        constraints = discover_db_table_constraints('postgres', db, tablename)
+        constraints = discover_db_table('postgres', db, tablename)
 
         with open('myconstraints.tdda', 'w') as f:
             f.write(constraints.to_json())
