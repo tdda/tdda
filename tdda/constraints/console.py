@@ -23,6 +23,9 @@ import sys
 import unittest
 
 from tdda.examples import copy_examples
+from tdda.constraints.flags import (discover_parser,
+                                    verify_parser,
+                                    detect_parser)
 from tdda import __version__
 
 
@@ -42,14 +45,50 @@ STANDARD_EXTENSIONS = [
 ]
 
 
-def help(extensions, stream=sys.stdout):
-    print(HELP, file=stream)
-    print(file=stream)
-    print('Constraint discovery and verification is available for:\n',
-          file=stream)
-    for ext in extensions:
-        ext.help(stream=stream)
+def help(extensions, cmd=None, stream=sys.stdout):
+    if cmd:
+        if cmd in ('discover', 'verify', 'detect'):
+            print(file=stream)
+            if cmd == 'discover':
+                discover_parser().print_help(stream)
+            elif cmd == 'verify':
+                verify_parser().print_help(stream)
+            elif cmd == 'detect':
+                detect_parser().print_help(stream)
+            print('\n%s is available for the following:'
+                  % cmd.title(), file=stream)
+            for ext in extensions:
+                ext.help(stream)
+            print(file=stream)
+        elif cmd == 'examples':
+            print('\ntdda examples [module] [directory]\n\n'
+                  'Write out example code and data for a particular module '
+                  '(referencetest,\nconstraints or rexpy), to the specified '
+                  'directory.\n'
+                  '\nIf no module is specified, examples for all three are '
+                  'written out.\n'
+                  '\nIf no output directory is specified, the examples are '
+                  'written to a subdirectory\nof the current directory.\n'
+                  '\nTo write out all of the examples for all three modules to '
+                  'subdirectories\nwithin the current directory, just use:\n'
+                  '    tdda examples\n', file=stream)
+        else:
+            print('\nNo help available for %s. Try one of the following:\n'
+                  '    tdda help discover\n'
+                  '    tdda help verify\n'
+                  '    tdda help detect\n'
+                  '    tdda help examples\n')
+    else:
+        print(HELP, file=stream)
         print(file=stream)
+        print('Constraint discovery and verification is available for:\n',
+            file=stream)
+        for ext in extensions:
+            ext.help(stream=stream)
+            print(file=stream)
+        print('\nUse "tdda help COMMAND" to get more detailed help about'
+              'a particular command.\nE.g. "tdda help verify"\n',
+              file=stream)
 
 
 def load_extension(ext):
@@ -140,7 +179,8 @@ def main_with_argv(argv, verbose=True):
     elif name == 'test':
         sys.exit(os.system('%s -m tdda.testtdda' % sys.executable) != 0)
     elif name in ('help', '-h', '-?', '--help'):
-        help(extensions)
+        cmd = sys.argv[2] if len(sys.argv) > 2 else None
+        help(extensions, cmd, stream=sys.stderr)
     else:
         help(extensions, stream=sys.stderr)
         sys.exit(1)

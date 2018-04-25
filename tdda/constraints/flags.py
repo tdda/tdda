@@ -36,17 +36,22 @@ Optional flags are:
       Report in ASCII form, without using special characters.
   * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values
-  * --detect OUTPATH
-      Write failing records (by default) to OUTPATH
-  * --detect-write-all
+'''
+
+DETECT_HELP = '''
+Optional flags are:
+
+  * --epsilon E
+      Use this value of epsilon for fuzziness in comparing numeric values
+  * --write-all
       Include passing records when detecting
-  * --detect-per-constraint
+  * --per-constraint
       Write one column per failing constraint when detecting, as well as
       the n_failures total column for each row.
-  * --detect-output-fields FIELD1,FIELD2
+  * --output-fields FIELD1,FIELD2
       Specify original columns to write out when detecting.
       If used with no field names, all original columns will be included.
-  * --detect-rownumber
+  * --rownumber
       Include a row-number in the output file when detecting.
       The row number is automatically included if no output fields are
       specified. Rows are numbered from 0.
@@ -99,26 +104,33 @@ def verify_parser(usage=''):
                         help='strict or sloppy')
     parser.add_argument('-epsilon', '--epsilon', nargs=1,
                         help='epsilon fuzziness')
-    parser.add_argument('--detect', nargs=1,
-                        help='Write failing records (by default) to OUTPATH')
-    parser.add_argument('--detect-write-all', action='store_true',
-                        help='Include passing records when detecting')
-    parser.add_argument('--detect-per-constraint', action='store_true',
-                        help='Write one column per failing constraint '
-                             'when detectin\n, in addition to n_failures.')
-    parser.add_argument('--detect-output-fields', nargs='*',
-                        help='Specify original columns to write out when '
-                             'detecting. If used with no field names, then '
-                             'all original columns will be included.')
-    parser.add_argument('--detect-rownumber', action='store_true',
-                        help='Include a row-number in the output file when '
-                             'detecting. Rows are numbered from 0.')
-
     return parser
 
 
 def detect_parser(usage=''):
-    return verify_parser(usage=usage)
+    formatter = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(prog='tdda detect',
+                                     epilog=usage + DETECT_HELP,
+                                     formatter_class=formatter)
+    parser.add_argument('-?', '--?', action='help',
+                        help='same as -h or --help')
+    parser.add_argument('-type_checking', action='store_true',
+                        help='strict or sloppy')
+    parser.add_argument('-epsilon', '--epsilon', nargs=1,
+                        help='epsilon fuzziness')
+    parser.add_argument('--write-all', action='store_true',
+                        help='Include passing records')
+    parser.add_argument('--per-constraint', action='store_true',
+                        help='Write one column per failing constraint '
+                             'in addition to n_failures')
+    parser.add_argument('--output-fields', nargs='*',
+                        help='Specify original columns to write out. '
+                             'If used with no field names, then '
+                             'all original columns will be included')
+    parser.add_argument('--rownumber', action='store_true',
+                        help='Include a row-number in the output file when '
+                             'detecting. Rows are numbered from 0')
+    return parser
 
 
 def verify_flags(parser, args, params):
@@ -145,20 +157,26 @@ def verify_flags(parser, args, params):
         params['type_checking'] = True
     if flags.epsilon:
         params['epsilon'] = float(flags.epsilon[0])
-    if flags.detect:
-        params['detect_outpath'] = flags.detect[0]
-    if flags.detect_write_all:
-        params['detect_write_all'] = True
-    if flags.detect_per_constraint:
-        params['detect_per_constraint'] = True
-    if flags.detect_rownumber:
-        params['detect_rownumber'] = True
-    if flags.detect_output_fields is not None:
-        params['detect_output_fields'] = flags.detect_output_fields
-    params['detect_in_place'] = False  # Only applicable in API case
     return flags
 
 
 def detect_flags(parser, args, params):
-    return verify_flags(parser, args, params)
+    flags, more = parser.parse_known_args(args)
+    if len(more) > 0:
+        print(parser.epilog, file=sys.stderr)
+        sys.exit(1)
+    if flags.type_checking:
+        params['type_checking'] = True
+    if flags.epsilon:
+        params['epsilon'] = float(flags.epsilon[0])
+    if flags.write_all:
+        params['write_all'] = True
+    if flags.per_constraint:
+        params['constraint'] = True
+    if flags.rownumber:
+        params['rownumber'] = True
+    if flags.output_fields is not None:
+        params['output_fields'] = flags.output_fields
+    params['in_place'] = False  # Only applicable in API case
+    return flags
 

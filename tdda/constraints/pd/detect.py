@@ -60,15 +60,14 @@ def get_detect_params(args):
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
-    parser.add_argument('detect_outpath', nargs=1,
+    parser.add_argument('outpath', nargs=1,
                         help='file to write detection results to')
     params = {}
     flags = detect_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)
-    params['detect_outpath'] = (flags.detect_outpath[0] if flags.detect_outpath
-                                else None)
+    params['outpath'] = flags.outpath[0] if flags.outpath else None
     return params
 
 

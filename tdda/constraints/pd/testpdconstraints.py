@@ -47,7 +47,7 @@ from tdda.constraints.base import (
 from tdda.constraints.console import main_with_argv
 
 from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import verify_df, discover_df
+from tdda.constraints.pd.constraints import verify_df, discover_df, detect_df
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 
@@ -963,7 +963,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
-        detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect_perc.csv')
+        detectfile = os.path.join(self.tmp_dir,
+                                  'elements118rex_detect_perc.csv')
         v = verify_df(df, constraints_path, report='fields',
                       detect_outpath=detectfile, detect_output_fields=['Z'],
                       detect_per_constraint=True)
@@ -975,8 +976,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
-        v = verify_df(df, constraints_path, report='fields', detect=True,
-                      detect_output_fields=['Z'])
+        v = detect_df(df, constraints_path, output_fields=['Z'])
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         ddf = v.detected()
@@ -990,9 +990,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         df1 = pd.DataFrame({'i': [1, 2, 3, 4, np.nan],
                             's': ['one', 'two', 'three', 'four', np.nan]})
         verifier1 = pdc.PandasConstraintVerifier(df1)
-        v1 = verifier1.verify(constraints,
-                              VerificationClass=pdc.PandasVerification,
-                              detect=True)
+        v1 = verifier1.detect(constraints,
+                              VerificationClass=pdc.PandasDetection)
         self.assertEqual(v1.passes, 2)
         self.assertEqual(v1.failures, 0)
         ddf1 = v1.detected()
@@ -1001,11 +1000,9 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         df2 = pd.DataFrame({'i': [1, 2, 3, 2, np.nan],
                             's': ['one', 'two', 'three', 'two', np.nan]})
         verifier2 = pdc.PandasConstraintVerifier(df2)
-        v2 = verifier2.verify(constraints,
-                              VerificationClass=pdc.PandasVerification,
-                              detect=True,
-                              detect_per_constraint=True,
-                              detect_output_fields=['i', 's'])
+        v2 = verifier2.detect(constraints,
+                              VerificationClass=pdc.PandasDetection,
+                              per_constraint=True, output_fields=['i', 's'])
         self.assertEqual(v2.passes, 0)
         self.assertEqual(v2.failures, 2)
         ddf2 = v2.detected()
