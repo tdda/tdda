@@ -32,6 +32,78 @@ provided in the Python file ``/my/python/sources/mytdda.py``.
 An  example of a simple extension is included with the set of standard
 examples. See :ref:`examples`.
 
+Extension Overview
+------------------
+
+An extension should provide:
+
+ - an implementation (subclass) of :py:class:`ExtensionBase`, to
+   provide a command-line interface, extending the ``tdda`` command
+   to support a particular type of input data.
+
+ - an implementation (subclass) of :py:class:`BaseConstraintCalculator`,
+   to provide methods for computing individual constraint results.
+
+ - an implementation (subclass) of :py:class:`BaseConstraintDetector`,
+   to provide methods for generating detection results.
+
+
+A typical implementation looks like::
+
+    from tdda.constraints.flags import discover_parser, discover_flags
+    from tdda.constraints.flags import verify_parser, verify_flags
+    from tdda.constraints.flags import detect_parser, detect_flags
+    from tdda.constraints.extension import ExtensionBase
+    from tdda.constraints.base import DatasetConstraints
+    from tdda.constraints.baseconstraints import (BaseConstraintCalculator,
+                                                  BaseConstraintVerifier,
+                                                  BaseConstraintDiscoverer)
+    from tdda.rexpy import rexpy
+
+    class MyExtension(ExtensionBase):
+        def applicable(self):
+            ...
+
+        def help(self, stream=sys.stdout):
+            print('...', file=stream)
+
+        def spec(self):
+            return '...'
+
+        def discover(self):
+            parser = discover_parser()
+            parser.add_argument(...)
+            params = {}
+            flags = discover_flags(parser, self.argv[1:], params)
+            data = ... get data source from flags ...
+            discoverer = MyConstraintDiscoverer(data, **params)
+            constraints = discoverer.discover()
+            results = constraints.to_json()
+            ... write constraints JSON to output file
+            return results
+
+        def verify(self):
+            parser = verify_parser()
+            parser.add_argument(...)
+            params = {}
+            flags = verify_flags(parser, self.argv[1:], params)
+            data = ... get data source from flags ...
+            verifier = MyConstraintVerifier(data, **params)
+            constraints = DatasetConstraints(loadpath=...)
+            results = verifier.verify(constraints)
+            return results
+
+        def detect(self):
+            parser = detect_parser()
+            parser.add_argument(...)
+            params = {}
+            flags = detect_flags(parser, self.argv[1:], params)
+            data = ... get data source from flags ...
+            detector = MyConstraintDetector(data, **params)
+            constraints = DatasetConstraints(loadpath=...)
+            results = detector.detect(constraints)
+            return results
+
 Extension API
 -------------
 """
@@ -47,6 +119,11 @@ class ExtensionBase:
     :py:meth:`verify` methods.
     """
     def __init__(self, argv, verbose=False):
+        """
+        A subclass of :py:class:`ExtensionBase` should call its superclass
+        :py:meth:`__init__` initialisation method with a list of argument
+        strings (such as ``sys.path``).
+        """
         self.argv = argv
         self.verbose = verbose
 
@@ -85,10 +162,10 @@ class ExtensionBase:
         The :py:meth:`discover` method should implement constraint
         discovery.
 
-        It should allow whatever other optional or mandatory flags or
-        parameters are required to specify the data from which constraints
-        are to be discovered, and the name of the file to which the
-        constraints are to be written.
+        It should use the ``self.argv`` variable to get whatever other
+        optional or mandatory flags or parameters are required to specify
+        the data from which constraints are to be discovered, and the name
+        of the file to which the constraints are to be written.
         """
         pass
 
@@ -101,9 +178,26 @@ class ExtensionBase:
         the command line, and verify these constraints on the data
         specified.
 
-        It should allow whatever other optional or mandatory flags or
-        parameters are required to specify the data on which the constraints
-        are to be verified.
+        It should use the ``self.argv`` variable to get whatever other
+        optional or mandatory flags or parameters are required to specify
+        the data on which the constraints are to be verified.
+        """
+        pass
+
+    def detect(self):
+        """
+        The :py:meth:`detect` method should implement constraint
+        detection.
+
+        It should read constraints from a ``.tdda`` file specified on
+        the command line, and verify these constraints on the data
+        specified, and produce detection output.
+
+        It should use the ``self.argv`` variable to get whatever other
+        optional or mandatory flags or parameters are required to specify
+        the data on which the constraints are to be verified, where the
+        output detection data should be written, and detection-specific
+        flags.
         """
         pass
 
@@ -257,7 +351,7 @@ class BaseConstraintCalculator:
 
 class BaseConstraintDetector:
     """
-    The :py:mod:`BaseConstraintCalculator` class defines a default or dummy
+    The :py:mod:`BaseConstraintDetector` class defines a default or dummy
     implementation of all of the methods that are required in order
     to implement constraint detection via the a subclass of the base
     :py:mod:`BaseConstraintVerifier` class.

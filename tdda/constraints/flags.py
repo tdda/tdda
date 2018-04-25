@@ -117,6 +117,10 @@ def verify_parser(usage=''):
     return parser
 
 
+def detect_parser(usage=''):
+    return verify_parser(usage=usage)
+
+
 def verify_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
@@ -153,4 +157,8 @@ def verify_flags(parser, args, params):
         params['detect_output_fields'] = flags.detect_output_fields
     params['detect_in_place'] = False  # Only applicable in API case
     return flags
+
+
+def detect_flags(parser, args, params):
+    return verify_flags(parser, args, params)
 

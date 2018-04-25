@@ -464,7 +464,7 @@ def find_bytes_cols(df):
     bytes_cols = []
     for c in list(df):
         if df[c].dtype == 'O':
-            nonnulls = df[df[c].notnull()][c]
+            nonnulls = df[df[c].notnull()].reset_index()[c]
             if len(nonnulls) > 0 and type(nonnulls[0]) is bytes:
                 bytes_cols.append(c)
     return bytes_cols

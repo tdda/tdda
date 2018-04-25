@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Test Suite
+Test Suite for database constraints.
+
+The tests only use SqlLite, since that can be used in a contained way, without
+depending on having set up any database server.
 """
 
 from __future__ import division
@@ -144,18 +147,6 @@ class TestSQLiteDatabaseConstraintDiscoverers(ReferenceTestCase):
 
 
 TestSQLiteDatabaseConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
-
-
-@unittest.skip('test environment not set up for PostgreSQL yet')
-class TestPostgreSQLDatabaseConstraintVerifiers(unittest.TestCase):
-    def test_postgresql(self):
-        pass
-
-
-@unittest.skip('test environment not set up for MySQL yet')
-class TestMySQLDatabaseConstraintVerifiers(unittest.TestCase):
-    def test_mysql(self):
-        pass
 
 
 if __name__ == '__main__':

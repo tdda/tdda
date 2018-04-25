@@ -14,6 +14,7 @@ from tdda.constraints.extension import ExtensionBase
 from tdda.constraints.pd.constraints import applicable
 from tdda.constraints.pd.discover import PandasDiscoverer
 from tdda.constraints.pd.verify import PandasVerifier
+from tdda.constraints.pd.detect import PandasDetector
 
 
 class TDDAPandasExtension(ExtensionBase):
@@ -35,4 +36,7 @@ class TDDAPandasExtension(ExtensionBase):
 
     def verify(self):
         return PandasVerifier(self.argv, verbose=self.verbose).verify()
+
+    def detect(self):
+        return PandasDetector(self.argv, verbose=self.verbose).detect()
 

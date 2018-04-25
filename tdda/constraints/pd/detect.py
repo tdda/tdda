@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Support for Pandas constraint verification from the command-line tool
+Support for Pandas constraint detection from the command-line tool
 
-Verify constraints using CSV files, or Pandas or R DataFrames saved as
+Detect constraints using CSV files, or Pandas or R DataFrames saved as
 feather files, against a constraints from .tdda JSON constraints file.
 """
 
@@ -22,8 +22,8 @@ Parameters:
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
 
-If no constraints file is provided, a file with the same path as the
-input file, with a .tdda extension will be tried.
+  * name of output file (.csv or .feather) where detection results
+    are to be written.
 
 '''
 
@@ -43,52 +43,56 @@ except ImportError:
         feather = None
 
 from tdda import __version__
-from tdda.constraints.flags import verify_parser, verify_flags
-from tdda.constraints.pd.constraints import verify_df, load_df
+from tdda.constraints.flags import detect_parser, detect_flags
+from tdda.constraints.pd.constraints import detect_df, load_df
 
 
-def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+def detect_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     df = load_df(df_path)
-    v = verify_df(df, constraints_path, **kwargs)
+    v = detect_df(df, constraints_path, **kwargs)
     if verbose:
         print(v)
     return v
 
 
-def get_verify_params(args):
-    parser = verify_parser(USAGE)
+def get_detect_params(args):
+    parser = detect_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
+    parser.add_argument('detect_outpath', nargs=1,
+                        help='file to write detection results to')
     params = {}
-    flags = verify_flags(parser, args, params)
+    flags = detect_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)
+    params['detect_outpath'] = (flags.detect_outpath[0] if flags.detect_outpath
+                                else None)
     return params
 
 
-class PandasVerifier:
+class PandasDetector:
     def __init__(self, argv, verbose=False):
         self.argv = argv
         self.verbose = verbose
 
-    def verify(self):
-        params = get_verify_params(self.argv[1:])
+    def detect(self):
+        params = get_detect_params(self.argv[1:])
         if not(params['df_path']):
             print(USAGE, file=sys.stderr)
             sys.exit(1)
         elif not os.path.isfile(params['df_path']):
             print('%s does not exist' % params['df_path'])
             sys.exit(1)
-        return verify_df_from_file(verbose=self.verbose, **params)
+        return detect_df_from_file(verbose=self.verbose, **params)
 
 
 def main(argv, verbose=True):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
-    v = PandasVerifier(argv)
+    v = PandasDetector(argv)
     v.verify()
 
 

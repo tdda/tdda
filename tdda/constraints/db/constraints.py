@@ -12,6 +12,10 @@ The top-level functions are:
     :py:func:`verify_db_table`:
         Verify (check) a single database table, against a set of previously
         discovered constraints.
+
+    :py:func:`detect_db_table`:
+        Verify (check) a single database table, against a set of previously
+        discovered constraints.
 """
 from __future__ import division
 from __future__ import print_function
@@ -308,6 +312,15 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
     constraints = DatasetConstraints(loadpath=constraints_path)
     return dbv.verify(constraints,
                       VerificationClass=DatabaseVerification, **kwargs)
+
+
+def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
+                    type_checking='strict', testing=False, **kwargs):
+    """
+    Detect failures from verification of constraints
+    """
+    raise NotImplementedException('Detection is not implemented (yet) '
+                                  'for databases.')
 
 
 def discover_db_table(dbtype, db, tablename, inc_rex=False):

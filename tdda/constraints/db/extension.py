@@ -13,6 +13,7 @@ from tdda.constraints.extension import ExtensionBase
 from tdda.constraints.db.drivers import applicable
 from tdda.constraints.db.discover import DatabaseDiscoverer
 from tdda.constraints.db.verify import DatabaseVerifier
+from tdda.constraints.db.detect import DatabaseDetector
 
 
 class TDDADatabaseExtension(ExtensionBase):
@@ -40,4 +41,7 @@ class TDDADatabaseExtension(ExtensionBase):
 
     def verify(self):
         return DatabaseVerifier(self.argv, verbose=self.verbose).verify()
+
+    def detect(self):
+        return DatabaseDetector(self.argv, verbose=self.verbose).detect()
 
