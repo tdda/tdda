@@ -55,13 +55,18 @@ def detect_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     return v
 
 
-def get_detect_params(args):
+def get_detect_parser():
     parser = detect_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
     parser.add_argument('outpath', nargs=1,
                         help='file to write detection results to')
+    return parser
+
+
+def get_detect_params(args):
+    parser = get_detect_parser()
     params = {}
     flags = detect_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None

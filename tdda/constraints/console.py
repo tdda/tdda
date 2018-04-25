@@ -23,20 +23,22 @@ import sys
 import unittest
 
 from tdda.examples import copy_examples
-from tdda.constraints.flags import (discover_parser,
-                                    verify_parser,
-                                    detect_parser)
+from tdda.constraints.pd.discover import get_discover_parser
+from tdda.constraints.pd.verify import get_verify_parser
+from tdda.constraints.pd.detect import get_detect_parser
+
 from tdda import __version__
 
 
 HELP="""Use
-    tdda discover  to perform constraint discovery
-    tdda verify    to verify data against constraints
-    tdda detect    to detect failed constraints on data
-    tdda examples  to copy the example data and code
-    tdda version   to print the TDDA version number
-    tdda help      to print this help
-    tdda test      to run the tdda library's tests."""
+    tdda discover      to perform constraint discovery
+    tdda verify        to verify data against constraints
+    tdda detect        to detect failed constraints on data
+    tdda examples      to copy the example data and code
+    tdda version       to print the TDDA version number
+    tdda help          to print this help
+    tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
+    tdda test          to run the tdda library's tests."""
 
 
 STANDARD_EXTENSIONS = [
@@ -50,11 +52,11 @@ def help(extensions, cmd=None, stream=sys.stdout):
         if cmd in ('discover', 'verify', 'detect'):
             print(file=stream)
             if cmd == 'discover':
-                discover_parser().print_help(stream)
+                get_discover_parser().print_help(stream)
             elif cmd == 'verify':
-                verify_parser().print_help(stream)
+                get_verify_parser().print_help(stream)
             elif cmd == 'detect':
-                detect_parser().print_help(stream)
+                get_detect_parser().print_help(stream)
             print('\n%s is available for the following:'
                   % cmd.title(), file=stream)
             for ext in extensions:
@@ -122,7 +124,7 @@ def load_all_extensions(argv, verbose=False):
     return [e(argv, verbose=verbose) for e in extension_classes if e]
 
 
-def no_constraints(msg, argv, extensions):
+def no_constraints(name, msg, argv, extensions):
     """
     When no constraint discovery or verification could be done, show
     some help about it.
@@ -132,10 +134,7 @@ def no_constraints(msg, argv, extensions):
     if inputs:
         print('%s for %s' % (msg, ' '.join(inputs)), file=sys.stderr)
     else:
-        print('No data specified\n', file=sys.stderr)
-        print('Input data should be specifed as one of:\n', file=sys.stderr)
-        for ext in extensions:
-            print('  * ' + ext.spec(), file=sys.stderr)
+        help(extensions, name, stream=sys.stderr)
     print(file=sys.stderr)
     print('For more detailed help on how to specify a data source, pass in\n'
           'appropriate parameters for one of the above, and add --help.',
@@ -154,17 +153,17 @@ def main_with_argv(argv, verbose=True):
         for ext in extensions:
             if ext.applicable():
                 return ext.discover()
-        no_constraints('No discovery available', argv[2:], extensions)
+        no_constraints(name, 'No discovery available', argv[2:], extensions)
     elif name == 'verify':
         for ext in extensions:
             if ext.applicable():
                 return ext.verify()
-        no_constraints('No verification available', argv[2:], extensions)
+        no_constraints(name, 'No verification available', argv[2:], extensions)
     elif name == 'detect':
         for ext in extensions:
             if ext.applicable():
                 return ext.detect()
-        no_constraints('No detection available', argv[2:], extensions)
+        no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
         item = argv[2] if len(argv) > 2 else '.'
         if item in ('referencetest', 'constraints', 'rexpy'):

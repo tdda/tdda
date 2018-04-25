@@ -54,14 +54,14 @@ def detect_database_table_from_file(table, constraints_path,
 
 
 def get_detect_params(args):
-    parser = database_arg_parser(verify_parser, USAGE)
+    parser = database_arg_parser(detect_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
     parser.add_argument('constraints', nargs=1,
                         help='constraints file to verify against')
     parser.add_argument('detect_outpath', nargs=1,
                         help='file to write detection results to')
     params = {}
-    flags = database_arg_flags(verify_flags, parser, args, params)
+    flags = database_arg_flags(detect_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)

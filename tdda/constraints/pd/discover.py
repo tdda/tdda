@@ -53,11 +53,16 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     return output
 
 
-def get_params(args):
+def get_discover_parser():
     parser = discover_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs='?',
                         help='name of constraints file to create')
+    return parser
+
+
+def get_params(args):
+    parser = get_discover_parser()
     params = {}
     flags = discover_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
