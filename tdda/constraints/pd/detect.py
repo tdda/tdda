@@ -55,7 +55,7 @@ def detect_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     return v
 
 
-def get_detect_parser():
+def pd_detect_parser():
     parser = detect_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
@@ -65,8 +65,8 @@ def get_detect_parser():
     return parser
 
 
-def get_detect_params(args):
-    parser = get_detect_parser()
+def pd_detect_params(args):
+    parser = pd_detect_parser()
     params = {}
     flags = detect_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
@@ -82,7 +82,7 @@ class PandasDetector:
         self.verbose = verbose
 
     def detect(self):
-        params = get_detect_params(self.argv[1:])
+        params = pd_detect_params(self.argv[1:])
         if not(params['df_path']):
             print(USAGE, file=sys.stderr)
             sys.exit(1)

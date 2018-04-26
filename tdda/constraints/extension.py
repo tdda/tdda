@@ -426,6 +426,9 @@ class BaseConstraintDetector:
                                **kwargs):
         """
         Write out a detection dataset.
+
+        Returns a :py:class:``~tdda.constraints.base.Detection`` object
+        (or ``None``).
         """
         pass
 

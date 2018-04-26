@@ -178,5 +178,6 @@ def detect_flags(parser, args, params):
     if flags.output_fields is not None:
         params['output_fields'] = flags.output_fields
     params['in_place'] = False  # Only applicable in API case
+    params['report'] = 'records'
     return flags
 

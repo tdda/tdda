@@ -23,9 +23,9 @@ import sys
 import unittest
 
 from tdda.examples import copy_examples
-from tdda.constraints.pd.discover import get_discover_parser
-from tdda.constraints.pd.verify import get_verify_parser
-from tdda.constraints.pd.detect import get_detect_parser
+from tdda.constraints.pd.discover import pd_discover_parser
+from tdda.constraints.pd.verify import pd_verify_parser
+from tdda.constraints.pd.detect import pd_detect_parser
 
 from tdda import __version__
 
@@ -52,11 +52,11 @@ def help(extensions, cmd=None, stream=sys.stdout):
         if cmd in ('discover', 'verify', 'detect'):
             print(file=stream)
             if cmd == 'discover':
-                get_discover_parser().print_help(stream)
+                pd_discover_parser().print_help(stream)
             elif cmd == 'verify':
-                get_verify_parser().print_help(stream)
+                pd_verify_parser().print_help(stream)
             elif cmd == 'detect':
-                get_detect_parser().print_help(stream)
+                pd_detect_parser().print_help(stream)
             print('\n%s is available for the following:'
                   % cmd.title(), file=stream)
             for ext in extensions:
@@ -105,9 +105,9 @@ def load_extension(ext):
     try:
         mod = importlib.import_module(modulename)
         return getattr(mod, classname, None)
-    except ImportError:
-        print('Warning: no tdda constraint module %s' % modulename,
-              file=sys.stderr)
+    except ImportError as e:
+        print('Warning: no tdda constraint module %s (%s)'
+              % (modulename, str(e)), file=sys.stderr)
         return None
 
 
@@ -133,12 +133,7 @@ def no_constraints(name, msg, argv, extensions):
                 if not a.startswith('-') and not a.endswith('.tdda')]
     if inputs:
         print('%s for %s' % (msg, ' '.join(inputs)), file=sys.stderr)
-    else:
-        help(extensions, name, stream=sys.stderr)
-    print(file=sys.stderr)
-    print('For more detailed help on how to specify a data source, pass in\n'
-          'appropriate parameters for one of the above, and add --help.',
-          file=sys.stderr)
+    help(extensions, name, stream=sys.stderr)
 
 
 def main_with_argv(argv, verbose=True):

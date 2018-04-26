@@ -539,6 +539,7 @@ class Verification(object):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
+        self.detection = None
         self.report = report
         self.one_per_line = one_per_line
         self.ascii = ascii
@@ -549,7 +550,7 @@ class Verification(object):
         self.detect_output_fields = detect_output_fields
         self.detect_rownumber = detect_rownumber
         self.detect_in_place = detect_in_place
-        if report not in ('all', 'fields', 'constraints'):
+        if report not in ('all', 'fields', 'constraints', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "constraints", not "%s".' % report)
         if not detect_outpath and not detect and not detect_in_place:
@@ -566,7 +567,8 @@ class Verification(object):
         object's :py:attr:`report` property. If this is set to 'fields',
         then it reports only those fields that have failures.
         """
-        if self.report == 'fields':  # Report only fields with failures
+        if self.report in ('fields', 'records'):
+            # Report only fields with failures
             field_items = list((field, ver)
                                for (field, ver) in self.fields.items()
                                if ver.failures > 0)
@@ -581,13 +583,39 @@ class Verification(object):
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
 
-        #TODO: could easily report number of passing/failing fields too.
-        #TODO: could (with more difficulty) report number of p/f records too.
+        if self.report == 'records' and self.detection:
+            return ('%sSUMMARY:\n\n'
+                    'Records passing: %d\n'
+                    'Records failing: %d'
+                    % (fields_part,
+                       self.detection.n_passing_records,
+                       self.detection.n_failing_records))
+        else:
+            return ('%sSUMMARY:\n\n'
+                    'Constraints passing: %d\n'
+                    'Constraints failing: %d'
+                    % (fields_part, self.passes, self.failures))
 
-        return ('%sSUMMARY:\n\n'
-                'Constraints passing: %d\n'
-                'Constraints failing: %d'
-                % (fields_part, self.passes, self.failures))
+
+class Detection(object):
+    """
+    Object to represent the result of running detect.
+    """
+    def __init__(self, obj, n_passing_records, n_failing_records):
+        """
+        *obj*:
+                            Object containing information about the detection,
+                            of a type specific to the data source.
+
+        *n_passing_records:
+                            Number of passing records.
+
+        *n_failing_records:
+                            Number of failing records.
+        """
+        self.obj = obj
+        self.n_passing_records = n_passing_records
+        self.n_failing_records = n_failing_records
 
 
 def constraint_class(kind):
@@ -655,9 +683,6 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.
 
-                            report, one_per_line and ascii can all be set
-                            this way.
-
     Returns a Verification object.
     """
     VerificationClass = VerificationClass or Verification
@@ -702,6 +727,17 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     if detect and detected_records_writer and results.failures > 0:
         results.detection = detected_records_writer(**kwargs)
     return results
+
+
+def detect(constraints, fieldnames, verifiers, VerificationClass=None,
+           detected_records_writer=None, **kwargs):
+    """
+    Variation of verify which does detection too.
+    """
+    return verify(constraints, fieldnames, verifiers,
+                  VerificationClass=VerificationClass,
+                  detect=True, detected_records_writer=detected_records_writer,
+                  **kwargs)
 
 
 def tcn(sat, ascii=False):

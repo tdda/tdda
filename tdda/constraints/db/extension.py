@@ -24,14 +24,14 @@ class TDDADatabaseExtension(ExtensionBase):
         return applicable(self.argv)
 
     def help(self, stream=sys.stdout):
-        print('  - Tables from PostgreSQL databases ("postgres:table-name")',
+        print('  - Tables from PostgreSQL databases (postgres:tablename)',
               file=stream)
-        print('  - Tables from MySQL databases ("mysql:table-name")',
+        print('  - Tables from MySQL databases (mysql:tablename)',
               file=stream)
-        print('  - Tables from SQLite databases ("sqlite:table-name")',
+        print('  - Tables from SQLite databases (sqlite:tablename)',
               file=stream)
         print('  - Collections from MongoDB NoSQL databases '
-              '("mongodb:collection-name")', file=stream)
+              '(mongodb:collection)', file=stream)
 
     def spec(self):
         return 'DBTYPE:tablename, or -dbtype DBTYPE and a database table'

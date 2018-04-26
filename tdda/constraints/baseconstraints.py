@@ -18,7 +18,7 @@ from tdda.constraints.base import (
     PRECISIONS,
     SIGNS,
     STANDARD_FIELD_CONSTRAINTS,
-    verify,
+    verify, detect,
     native_definite,
     DatasetConstraints,
     FieldConstraints,
@@ -100,8 +100,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         """
         Apply verifiers to a set of constraints, for detection
         """
-        return verify(constraints, self.get_column_names(), self.verifiers(),
-                      VerificationClass=VerificationClass, detect=True,
+        return detect(constraints, self.get_column_names(), self.verifiers(),
+                      VerificationClass=VerificationClass,
                       detect_outpath=outpath, detect_write_all=write_all,
                       detect_per_constraint=per_constraint,
                       detect_output_fields=output_fields,

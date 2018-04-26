@@ -196,7 +196,8 @@ def types_compatible(x, y, colname):
 
 
 def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
-                    type_checking='strict', testing=False, **kwargs):
+                    type_checking='strict', testing=False, report='all',
+                    **kwargs):
     """
     Verify that (i.e. check whether) the database table provided
     satisfies the constraints in the JSON .tdda file provided.
@@ -244,7 +245,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             the wrong sign always generates a failure.
 
         *type_checking*:
-                            'strict' or 'sloppy'. For databases (unlike
+                            ``strict`` or ``sloppy``. For databases (unlike
                             Pandas DataFrames), this defaults to 'strict'.
 
                             If this is set to sloppy, a database "real"
@@ -252,19 +253,19 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             an "int" type constraint.
 
         *report*:
-                            'all' or 'fields'.
+                            ``all`` or ``fields``.
                             This controls the behaviour of the
                             :py:meth:`~DatabaseVerification.__str__`
                             method on the resulting
                             :py:class:`~DatabaseVerification`
                             object (but not its content).
 
-                            The default is 'all', which means that
+                            The default is ``all``, which means that
                             all fields are shown, together with the
                             verification status of each constraint
                             for that field.
 
-                            If report is set to 'fields', only fields for
+                            If report is set to ``fields``, only fields for
                             which at least one constraint failed are shown.
 
                             NOTE: The method also accepts two further

@@ -55,7 +55,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     return v
 
 
-def get_verify_parser():
+def pd_verify_parser():
     parser = verify_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs=1,
@@ -63,8 +63,8 @@ def get_verify_parser():
     return parser
 
 
-def get_verify_params(args):
-    parser = get_verify_parser()
+def pd_verify_params(args):
+    parser = pd_verify_parser()
     params = {}
     flags = verify_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
@@ -79,7 +79,7 @@ class PandasVerifier:
         self.verbose = verbose
 
     def verify(self):
-        params = get_verify_params(self.argv[1:])
+        params = pd_verify_params(self.argv[1:])
         if not(params['df_path']):
             print(USAGE, file=sys.stderr)
             sys.exit(1)

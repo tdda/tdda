@@ -50,6 +50,7 @@ from tdda.constraints.base import (
     native_definite,
     DatasetConstraints,
     Verification,
+    Detection,
     fuzz_up, fuzz_down,
 )
 from tdda.constraints.baseconstraints import (
@@ -214,7 +215,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                        else None)
 
     def detect_min_constraint(self, col, constraint, precision, epsilon):
-        name = unique_column_name(self.df, col + '_min_ok')
+        name = col + '_min_ok'
         value = constraint.value
         c = self.df[col]
         if precision == 'closed':
@@ -227,7 +228,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             print(self.out_df[name].dtype)
 
     def detect_max_constraint(self, col, constraint, precision, epsilon):
-        name = unique_column_name(self.df, col + '_max_ok')
+        name = col + '_max_ok'
         value = constraint.value
         c = self.df[col]
         if precision == 'closed':
@@ -239,23 +240,23 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
 
     def detect_min_length_constraint(self, col, constraint):
-        name = unique_column_name(self.df, col + '_min_length_ok')
+        name = col + '_min_length_ok'
         value = constraint.value
         c = self.df[col]
         self.out_df[name] = detection_field(c, c.str.len() >= value)
 
     def detect_max_length_constraint(self, col, constraint):
-        name = unique_column_name(self.df, col + '_max_length_ok')
+        name = col + '_max_length_ok'
         value = constraint.value
         c = self.df[col]
         self.out_df[name] = detection_field(c, c.str.len() <= value)
 
     def detect_tdda_type_constraint(self, col, constraint):
-        name = unique_column_name(self.df, col + '_type_ok')
+        name = col + '_type_ok'
         self.out_df[name] = detection_field(None, False)
 
     def detect_sign_constraint(self, col, constraint):
-        name = unique_column_name(self.df, col + '_sign_ok')
+        name = col + '_sign_ok'
         value = constraint.value
         c = self.df[col]
 
@@ -274,24 +275,24 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def detect_max_nulls_constraint(self, col, constraint):
         # found more nulls than are allowed, so mark all null values as bad
-        name = unique_column_name(self.df, col + '_nonnull_ok')
+        name = col + '_nonnull_ok'
         c = self.df[col]
         self.out_df[name] = pd.notnull(c)
 
     def detect_no_duplicates_constraint(self, col, constraint):
         # found duplicates, so mark anything duplicated as bad
-        name = unique_column_name(self.df, col + '_nodups_ok')
+        name = col + '_nodups_ok'
         c = self.df[col]
         unique = ~ self.df.duplicated(col, keep=False)
         self.out_df[name] = detection_field(c, unique, default=True)
 
     def detect_allowed_values_constraint(self, col, constraint, violations):
-        name = unique_column_name(self.df, col + '_values_ok')
+        name = col + '_values_ok'
         c = self.df[col]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def detect_rex_constraint(self, col, constraint, violations):
-        name = unique_column_name(self.df, col + '_rex_ok')
+        name = col + '_rex_ok'
         c = self.df[col]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
@@ -313,17 +314,17 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif len(detect_output_fields) == 0:
             detect_output_fields = list(self.df)
 
-        nfailname = unique_column_name(self.df, 'n_failures')
+        nfailname = 'n_failures'
         nf = len(list(out_df))
         fails = (nf - out_df.sum(axis=1).astype(float)
                     - out_df.isnull().sum(axis=1).astype(float))
         out_df[nfailname] = fails.astype(int)
+        n_failing_records = (fails > 0).astype(int).sum()
+        n_passing_records = len(out_df) - n_failing_records
 
         if detect_in_place:
             for fname in list(out_df):
                 self.df[unique_column_name(self.df, fname)] = out_df[fname]
-        if not detect_write_all:
-            out_df = out_df[out_df.n_failures > 0]
         if not detect_per_constraint:
             fnames = [name for name in list(out_df) if name != nfailname]
             out_df = out_df.drop(fnames, axis=1)
@@ -333,6 +334,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     out_df.insert(0, fname, self.df[fname])
                 else:
                     raise Exception('Dataframe has no column %s' % fname)
+        if not detect_write_all:
+            out_df = out_df[out_df[nfailname] > 0]
 
         if detect_outpath:
             if add_index:
@@ -340,7 +343,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
             save_df(out_df, detect_outpath)
 
-        return out_df
+        return Detection(out_df, n_passing_records, n_failing_records)
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
@@ -453,12 +456,15 @@ class PandasDetection(PandasVerification):
     This allows the Pandas DataFrame resulting from constraint detection
     to be made available.
     """
+    def __init__(self, *args, **kwargs):
+        PandasVerification.__init__(self, *args, **kwargs)
+
     def detected(self):
         """
         Returns the Pandas DataFrame containing the detection column,
         if the verification process has been run with in ``detect`` mode.
         """
-        return getattr(self, 'detection', None)
+        return self.detection.obj if self.detection else None
 
 
 class PandasConstraintDiscoverer(PandasConstraintCalculator,
@@ -691,7 +697,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all=False, per_constraint=False,
-              output_fields=None, rownumber=False, in_place=False, **kwargs):
+              output_fields=None, rownumber=False, in_place=False,
+              report='records', **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -836,7 +843,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       outpath=outpath, write_all=write_all,
                       per_constraint=per_constraint,
                       output_fields=output_fields, rownumber=rownumber,
-                      in_place=in_place, **kwargs)
+                      in_place=in_place, report=report, **kwargs)
 
 
 def discover_df(df, inc_rex=False):
@@ -1031,16 +1038,4 @@ def df_fuzzy_lt(a, b, epsilon):
 
 # for backwards compatibility (old name for function)
 discover_constraints = discover_df
-
-
-def applicable(argv):
-    """
-    Does a command line include parameters that are applicable for TDDA
-    constraints for Pandas DataFrames or CSV files?
-    """
-    for i, a in enumerate(argv):
-        if a.endswith('.csv') or a.endswith('.feather'):
-            return True
-    return False
-
 
