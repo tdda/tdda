@@ -1106,6 +1106,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         e92csv = os.path.join(testDataDir, 'elements92.csv')
         e118csv = os.path.join(testDataDir, 'elements118.csv')
         e92tdda = os.path.join(tmpdir, 'elements92.tdda')
+        e92bads = os.path.join(tmpdir, 'elements92bads.csv')
         rmdirs(tmpdir, dirs)
         try:
             start = 'Copied example files for tdda.referencetest to'
@@ -1139,6 +1140,17 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Constraints passing: 57\n'
                                                     'Constraints failing: 15'))
+            argv = ['tdda', 'detect', e118csv, e92tdda, e92bads,
+                    '--per-constraint', '--output-fields']
+            if wrapper:
+                result = check_shell_output(argv)
+            else:
+                result = str(main_with_argv(argv, verbose=False))
+            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                    'Constraints passing: 57\n'
+                                                    'Constraints failing: 15'))
+            self.assertTrue(os.path.exists(e92bads))
+            self.assertFileCorrect(e92bads, 'detect-els-cmdline.csv')
         finally:
             rmdirs(tmpdir, dirs)
 
