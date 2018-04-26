@@ -87,10 +87,26 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
     def verify(self, constraints, VerificationClass=Verification, **kwargs):
         """
-        Apply verifiers to a set of constraints
+        Apply verifiers to a set of constraints, for reporting
         """
         return verify(constraints, self.get_column_names(), self.verifiers(),
                       VerificationClass=VerificationClass,
+                      detected_records_writer=self.write_detected_records,
+                      **kwargs)
+
+    def detect(self, constraints, VerificationClass=Verification,
+               outpath=None, write_all=False, per_constraint=False,
+               output_fields=None, rownumber=False, in_place=False, **kwargs):
+        """
+        Apply verifiers to a set of constraints, for detection
+        """
+        return verify(constraints, self.get_column_names(), self.verifiers(),
+                      VerificationClass=VerificationClass, detect=True,
+                      detect_outpath=outpath, detect_write_all=write_all,
+                      detect_per_constraint=per_constraint,
+                      detect_output_fields=output_fields,
+                      detect_rownumber=rownumber,
+                      detect_in_place=in_place,
                       detected_records_writer=self.write_detected_records,
                       **kwargs)
 

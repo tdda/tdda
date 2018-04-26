@@ -425,13 +425,6 @@ class PandasVerification(Verification):
         """
         return self.verification_to_dataframe(self)
 
-    def detected(self):
-        """
-        Returns the Pandas DataFrame containing the detection column,
-        if the verification process has been run with in ``detect`` mode.
-        """
-        return getattr(self, 'detection', None)
-
     @staticmethod
     def verification_to_dataframe(ver):
         fields = ver.fields
@@ -452,7 +445,7 @@ class PandasVerification(Verification):
     to_dataframe = to_frame
 
 
-class PandasDetection(Verification):
+class PandasDetection(PandasVerification):
     """
     A :py:class:`PandasDetection` object adds a :py:meth:`detected()`
     method to a :py:class:`PandasVerification` object.
@@ -460,7 +453,12 @@ class PandasDetection(Verification):
     This allows the Pandas DataFrame resulting from constraint detection
     to be made available.
     """
-    pass
+    def detected(self):
+        """
+        Returns the Pandas DataFrame containing the detection column,
+        if the verification process has been run with in ``detect`` mode.
+        """
+        return getattr(self, 'detection', None)
 
 
 class PandasConstraintDiscoverer(PandasConstraintCalculator,
@@ -692,9 +690,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
-              detect_outpath=None, detect_write_all=False,
-              detect_per_constraint=False, detect_output_fields=None,
-              detect_rownumber=False, detect_in_place=False, **kwargs):
+              outpath=None, write_all=False, per_constraint=False,
+              output_fields=None, rownumber=False, in_place=False, **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -760,46 +757,38 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
                                 c.dropnulls().astype(bool) == c.dropnulls()
 
-        *detect*:
-                            This specifies that the verification process should
-                            detect records that violate any constraints, and
-                            make them available as a Pandas Dataframe via the
-                            ``detected()`` method on the returned
-                            ``PandasVerification`` object.
-
-        *detect_outpath*:
+        *outpath*:
                             This specifies that the verification process
                             should detect records that violate any constraints,
                             and write them out to this CSV (or feather) file.
 
                             By default, only failing records are written out
                             to file, but this can be overridden with the
-                            ``detect_write_all`` parameter.
+                            ``write_all`` parameter.
 
                             By default, the columns in the detection output
                             file will be a boolean ``ok`` field for each
                             constraint on each field, an and ``n_failures``
                             field containing the total number of constraints
                             that failed for each row.  This behavious can be
-                            overridden with the ``detect_per_constraint``,
-                            ``detect-output_fields`` and ``detect_rownumber``
-                            parameters.
+                            overridden with the ``per_constraint``,
+                            ``output_fields`` and ``rownumber`` parameters.
 
-        *detect_write_all*:
+        *write_all*:
                             Include passing records in the detection output
                             file when detecting.
 
-        *detect_per_constraint*:
+        *per_constraint*:
                             Write one column per failing constraint, as well
                             as the ``n_failures`` total.
 
-        *detect_output_fields*:
+        *output_fields*:
                             Specify original columns to write out when detecting.
 
                             If passed in as an empty list (rather than None),
                             all original columns will be included.
 
-        *detect_rownumber*:
+        *rownumber*:
                             Include a row-number in the output file when
                             detecting.
 
@@ -808,11 +797,11 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
                             Rows are numbered from 0.
 
-        *detect_in_place*:
+        *in_place*:
                             Detect failing constraints by adding columns to
                             the input DataFrame.
 
-                            If ``detect_outpath`` is also specified, then
+                            If ``outpath`` is also specified, then
                             failing constraints will also be written to file.
 
     The *report* parameter from :py:meth:`verify_df` can also be
@@ -839,14 +828,15 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         print(detection_df.to_string())
 
     """
-    return verify_df(df, constraints_path, epsilon=epsilon,
-                     type_checking=type_checking, detect=True,
-                     detect_outpath=detect_outpath,
-                     detect_write_all=detect_write_all,
-                     detect_per_constraint=detect_per_constraint,
-                     detect_output_fields=detect_output_fields,
-                     detect_rownumber=detect_rownumber,
-                     detect_in_place=detect_in_place, **kwargs)
+    pdv = PandasConstraintVerifier(df, epsilon=epsilon,
+                                   type_checking=type_checking)
+    constraints = DatasetConstraints(loadpath=constraints_path)
+    pdv.repair_field_types(constraints)
+    return pdv.detect(constraints, VerificationClass=PandasDetection,
+                      outpath=outpath, write_all=write_all,
+                      per_constraint=per_constraint,
+                      output_fields=output_fields, rownumber=rownumber,
+                      in_place=in_place, **kwargs)
 
 
 def discover_df(df, inc_rex=False):
