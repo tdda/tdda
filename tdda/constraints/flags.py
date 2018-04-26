@@ -172,7 +172,7 @@ def detect_flags(parser, args, params):
     if flags.write_all:
         params['write_all'] = True
     if flags.per_constraint:
-        params['constraint'] = True
+        params['per_constraint'] = True
     if flags.rownumber:
         params['rownumber'] = True
     if flags.output_fields is not None:
