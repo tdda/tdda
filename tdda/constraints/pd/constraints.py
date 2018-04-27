@@ -319,14 +319,14 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     - out_df.isnull().sum(axis=1).astype(float))
         out_df[nfailname] = fails.astype(int)
 
-        if detect_in_place:
-            for fname in list(out_df):
-                self.df[unique_column_name(self.df, fname)] = out_df[fname]
-        if not detect_write_all:
-            out_df = out_df[out_df.n_failures > 0]
         if not detect_per_constraint:
             fnames = [name for name in list(out_df) if name != nfailname]
             out_df = out_df.drop(fnames, axis=1)
+
+        if detect_in_place:
+            for fname in list(out_df):
+                self.df[unique_column_name(self.df, fname)] = out_df[fname]
+
         if detect_output_fields:
             for fname in reversed(detect_output_fields):
                 if fname in list(self.df):
@@ -334,10 +334,14 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 else:
                     raise Exception('Dataframe has no column %s' % fname)
 
+        if add_index:
+            rownumbername = unique_column_name(out_df, 'RowNumber')
+            out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
+
+        if not detect_write_all:
+            out_df = out_df[out_df.n_failures > 0]
+
         if detect_outpath:
-            if add_index:
-                rownumbername = unique_column_name(out_df, 'RowNumber')
-                out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
             save_df(out_df, detect_outpath)
 
         return out_df

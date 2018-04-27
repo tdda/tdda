@@ -1141,7 +1141,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
                                                     'Constraints passing: 57\n'
                                                     'Constraints failing: 15'))
             argv = ['tdda', 'detect', e118csv, e92tdda, e92bads,
-                    '--per-constraint', '--output-fields']
+                    '--per-constraint', '--output-fields', '--rownumber']
             if wrapper:
                 result = check_shell_output(argv)
             else:
