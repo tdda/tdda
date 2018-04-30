@@ -93,13 +93,17 @@ a CSV file::
     if __name__ == '__main__':
         ReferenceTestCase.main()
 
-To run the test::
+To run the test
+
+.. code-block:: bash
 
     python mytest.py
 
 The first time you run the test, it will produce an error unless you
 have already created the expected ("reference") results. You can
-create the reference results automatically::
+create the reference results automatically
+
+.. code-block:: bash
 
     python mytest.py --write-all
 
@@ -144,13 +148,17 @@ You also need a ``conftest.py`` file, to define the fixtures and defaults::
 
     referencepytest.set_default_data_location('testdata')
 
-To run the test::
+To run the test
+
+.. code-block:: bash
 
     pytest
 
 The first time you run the test, it will produce an error unless you
 have already created the expected ("reference") results. You can
-create the reference results automatically::
+create the reference results automatically
+
+.. code-block:: bash
 
     pytest --write-all -s
 
