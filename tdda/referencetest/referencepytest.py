@@ -56,16 +56,22 @@ If the **-s** option is also provided (to disable ``pytest``
 output capturing), it will report the names of all the files it has
 regenerated.
 
-To regenerate all reference results (or generate them for the first time)::
+To regenerate all reference results (or generate them for the first time)
 
-    pytest -s --write-all
+.. code-block:: bash
 
-To regenerate just a particular kind of reference (e.g. table results)::
+   pytest -s --write-all
+    
+To regenerate just a particular kind of reference (e.g. table results)
+
+.. code-block:: bash
 
     pytest -s --write table
 
 To regenerate a number of different kinds of reference (e.g. both table
-and graph results)::
+and graph results)
+
+.. code-block:: bash
 
     pytest -s --write table graph
 
