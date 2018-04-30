@@ -87,16 +87,22 @@ passing in a comma-separated list of *kind* names immediately after
 the ``--write`` option. If no list of *kind* names is provided, then all
 test results will be regenerated.
 
-To regenerate all reference results (or generate them for the first time)::
+To regenerate all reference results (or generate them for the first time)
 
-    python my_tests.py --write-all
+.. code-block:: bash
 
-To regenerate just a particular kind of reference (e.g. table results)::
+   pytest -s --write-all
+
+To regenerate just a particular kind of reference (e.g. table results)
+
+.. code-block:: bash
 
     python my_tests.py --write table
 
 To regenerate a number of different kinds of reference (e.g. both table
-and graph results)::
+and graph results)
+
+.. code-block:: bash
 
     python my_tests.py --write table graph
 

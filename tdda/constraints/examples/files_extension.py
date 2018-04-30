@@ -208,7 +208,6 @@ class FilesConstraintDiscoverer(FilesConstraintCalculator,
 
 
 class FilesConstraintVerifier(FilesConstraintCalculator,
-                              BaseConstraintDetector):
                               BaseConstraintVerifier):
     def __init__(self, path, type_checking='strict', **kwargs):
         FilesConstraintCalculator.__init__(self, path)
