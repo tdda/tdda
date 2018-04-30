@@ -50,6 +50,11 @@ STANDARD_EXTENSIONS = [
 def help(extensions, cmd=None, stream=sys.stdout):
     if cmd:
         if cmd in ('discover', 'verify', 'detect'):
+            # display detailed help for discover, verify or detect.
+            # note that we use the Pandas variant to show the details, but
+            # we also list the various input sources for all of the other
+            # extensions (like databases), as providing the full detail
+            # for everything would probably not be very helpful,
             print(file=stream)
             if cmd == 'discover':
                 pd_discover_parser().print_help(stream)
