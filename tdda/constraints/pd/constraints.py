@@ -214,10 +214,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         self.out_df = (pd.DataFrame(index=df.index.copy()) if df is not None
                        else None)
 
-    def detect_min_constraint(self, col, constraint, precision, epsilon):
-        name = col + '_min_ok'
-        value = constraint.value
-        c = self.df[col]
+    def detect_min_constraint(self, colname, value, precision, epsilon):
+        name = colname + '_min_ok'
+        c = self.df[colname]
         if precision == 'closed':
             self.out_df[name] = detection_field(c, c >= value)
         elif precision == 'open':
@@ -227,10 +226,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
             print(self.out_df[name].dtype)
 
-    def detect_max_constraint(self, col, constraint, precision, epsilon):
-        name = col + '_max_ok'
-        value = constraint.value
-        c = self.df[col]
+    def detect_max_constraint(self, colname, value, precision, epsilon):
+        name = colname + '_max_ok'
+        c = self.df[colname]
         if precision == 'closed':
             self.out_df[name] = detection_field(c, c <= value)
         elif precision == 'open':
@@ -239,26 +237,23 @@ class PandasConstraintDetector(BaseConstraintDetector):
             self.out_df[name] = detection_field(c, df_fuzzy_lt(c, value,
                                                                epsilon))
 
-    def detect_min_length_constraint(self, col, constraint):
-        name = col + '_min_length_ok'
-        value = constraint.value
-        c = self.df[col]
+    def detect_min_length_constraint(self, colname, value):
+        name = colname + '_min_length_ok'
+        c = self.df[colname]
         self.out_df[name] = detection_field(c, c.str.len() >= value)
 
-    def detect_max_length_constraint(self, col, constraint):
-        name = col + '_max_length_ok'
-        value = constraint.value
-        c = self.df[col]
+    def detect_max_length_constraint(self, colname, value):
+        name = colname + '_max_length_ok'
+        c = self.df[colname]
         self.out_df[name] = detection_field(c, c.str.len() <= value)
 
-    def detect_tdda_type_constraint(self, col, constraint):
-        name = col + '_type_ok'
+    def detect_tdda_type_constraint(self, colname, value):
+        name = colname + '_type_ok'
         self.out_df[name] = detection_field(None, False)
 
-    def detect_sign_constraint(self, col, constraint):
-        name = col + '_sign_ok'
-        value = constraint.value
-        c = self.df[col]
+    def detect_sign_constraint(self, colname, value):
+        name = colname + '_sign_ok'
+        c = self.df[colname]
 
         if value == 'null':
             self.out_df[name] = detection_field(None, False)
@@ -273,27 +268,28 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif value == 'negative':
             self.out_df[name] = detection_field(c, c < 0)
 
-    def detect_max_nulls_constraint(self, col, constraint):
+    def detect_max_nulls_constraint(self, colname, value):
         # found more nulls than are allowed, so mark all null values as bad
-        name = col + '_nonnull_ok'
-        c = self.df[col]
+        name = colname + '_nonnull_ok'
+        c = self.df[colname]
         self.out_df[name] = pd.notnull(c)
 
-    def detect_no_duplicates_constraint(self, col, constraint):
+    def detect_no_duplicates_constraint(self, colname, value):
         # found duplicates, so mark anything duplicated as bad
-        name = col + '_nodups_ok'
-        c = self.df[col]
-        unique = ~ self.df.duplicated(col, keep=False)
+        name = colname + '_nodups_ok'
+        c = self.df[colname]
+        unique = ~ self.df.duplicated(colname, keep=False)
         self.out_df[name] = detection_field(c, unique, default=True)
 
-    def detect_allowed_values_constraint(self, col, constraint, violations):
-        name = col + '_values_ok'
-        c = self.df[col]
+    def detect_allowed_values_constraint(self, colname, allowed_values,
+                                         violations):
+        name = colname + '_values_ok'
+        c = self.df[colname]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
-    def detect_rex_constraint(self, col, constraint, violations):
-        name = col + '_rex_ok'
-        c = self.df[col]
+    def detect_rex_constraint(self, colname, violations):
+        name = colname + '_rex_ok'
+        c = self.df[colname]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def write_detected_records(self,
@@ -336,15 +332,13 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     out_df.insert(0, fname, self.df[fname])
                 else:
                     raise Exception('Dataframe has no column %s' % fname)
-        if not detect_write_all:
-            out_df = out_df[out_df[nfailname] > 0]
 
         if add_index:
             rownumbername = unique_column_name(out_df, 'RowNumber')
             out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
 
         if not detect_write_all:
-            out_df = out_df[out_df.n_failures > 0]
+            out_df = out_df[out_df[nfailname] > 0]
 
         if detect_outpath:
             save_df(out_df, detect_outpath)
@@ -648,14 +642,6 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
                             If report is set to ``fields``, only fields for
                             which at least one constraint failed are shown.
-
-                            NOTE: The method also accepts two further
-                            parameters to control (not yet implemented)
-                            behaviour. ``constraints``, will be used to
-                            indicate that only failing constraints for
-                            failing fields should be shown.
-                            ``one_per_line`` will indicate that each constraint
-                            failure should be reported on a separate line.
 
     The various *detect* parameters from :py:meth:`detect_df` can also be
     used, in which case the verification process will also generate

@@ -161,8 +161,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = fuzzy_greater_than(m, value, self.epsilon)
 
         if detect and result is False:
-            self.detect_min_constraint(colname, constraint, precision,
-                                       self.epsilon)
+            self.detect_min_constraint(colname, value, precision, self.epsilon)
         return result
 
     def verify_max_constraint(self, colname, constraint, detect=False):
@@ -198,8 +197,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = fuzzy_less_than(M, value, self.epsilon)
 
         if detect and result is False:
-            self.detect_max_constraint(colname, constraint, precision,
-                                       self.epsilon)
+            self.detect_max_constraint(colname, value, precision, self.epsilon)
         return result
 
     def verify_min_length_constraint(self, colname, constraint, detect=False):
@@ -222,7 +220,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         result = m >= value
 
         if detect and result is False:
-            self.detect_min_length_constraint(colname, constraint)
+            self.detect_min_length_constraint(colname, value)
         return result
 
     def verify_max_length_constraint(self, colname, constraint, detect=False):
@@ -245,7 +243,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         result = M <= value
 
         if detect and result is False:
-            self.detect_max_length_constraint(colname, constraint)
+            self.detect_max_length_constraint(colname, value)
         return result
 
     def verify_tdda_type_constraint(self, colname, constraint, detect=False):
@@ -280,7 +278,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                 result = False
 
         if detect and result is False:
-            self.detect_tdda_type_constraint(colname, constraint)
+            self.detect_tdda_type_constraint(colname, required_type)
         return result
 
     def verify_sign_constraint(self, colname, constraint, detect=False):
@@ -315,7 +313,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         assert value in SIGNS
 
         if detect and result is False:
-            self.detect_sign_constraint(colname, constraint)
+            self.detect_sign_constraint(colname, value)
         return result
 
     def verify_max_nulls_constraint(self, colname, constraint, detect=False):
@@ -333,7 +331,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
         if result is True or not detect:
             return result
-        self.detect_max_nulls_constraint(colname, constraint)
+        self.detect_max_nulls_constraint(colname, value)
         return False
 
     def verify_no_duplicates_constraint(self, colname, constraint,
@@ -355,7 +353,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         result = self.get_nunique(colname) == non_nulls
 
         if detect and result is False:
-            self.detect_no_duplicates_constraint(colname, constraint)
+            self.detect_no_duplicates_constraint(colname, value)
         return result
 
     def verify_allowed_values_constraint(self, colname, constraint,
@@ -388,7 +386,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = len(violations) == 0
 
         if detect and result is False:
-            self.detect_allowed_values_constraint(colname, constraint,
+            self.detect_allowed_values_constraint(colname, allowed_values,
                                                   violations)
         return result
 
@@ -398,11 +396,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         expression constraint (by matching at least one of the regular
         expressions given).
         """
-        violations = self.calc_rex_constraint(colname, constraint, detect=detect)
+        violations = self.calc_rex_constraint(colname, constraint,
+                                              detect=detect)
         if bool(violations):
-            # a truthy result means there were values that failed the constraint
+            # a truthy result means some values failed the constraint
             if detect:
-                self.detect_rex_constraint(colname, constraint, violations)
+                self.detect_rex_constraint(colname, violations)
             return False
         else:
             return True

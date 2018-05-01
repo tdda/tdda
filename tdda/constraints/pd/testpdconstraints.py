@@ -1100,9 +1100,9 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         tmpdir = tempfile.gettempdir()
         constraintsdir = os.path.abspath(os.path.dirname(__file__))
         tddaTopDir = os.path.dirname(os.path.dirname(constraintsdir))
-        dirs = ['referencetest-examples', 'constraints-examples',
-                'rexpy-examples']
-        testDataDir = os.path.join(tmpdir, 'constraints-examples', 'testdata')
+        dirs = ['referencetest_examples', 'constraints_examples',
+                'rexpy_examples']
+        testDataDir = os.path.join(tmpdir, 'constraints_examples', 'testdata')
         e92csv = os.path.join(testDataDir, 'elements92.csv')
         e118csv = os.path.join(testDataDir, 'elements118.csv')
         e92tdda = os.path.join(tmpdir, 'elements92.tdda')
@@ -1147,8 +1147,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             else:
                 result = str(main_with_argv(argv, verbose=False))
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Constraints passing: 57\n'
-                                                    'Constraints failing: 15'))
+                                                    'Records passing: 91\n'
+                                                    'Records failing: 27'))
             self.assertTrue(os.path.exists(e92bads))
             self.assertFileCorrect(e92bads, 'detect-els-cmdline.csv')
         finally:

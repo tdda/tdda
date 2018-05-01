@@ -29,7 +29,7 @@ def copy_examples(name, destination='.', verbose=True):
         print('copyexamples: output directory %s does not exist' % destination,
               file=sys.stderr)
         sys.exit(1)
-    outdir = os.path.join(destination, '%s-examples' % name)
+    outdir = os.path.join(destination, '%s_examples' % name)
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
     copy(srcdir, outdir)

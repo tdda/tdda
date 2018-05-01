@@ -54,9 +54,10 @@ A typical implementation looks like::
     from tdda.constraints.flags import verify_parser, verify_flags
     from tdda.constraints.flags import detect_parser, detect_flags
     from tdda.constraints.extension import ExtensionBase
-    from tdda.constraints.base import DatasetConstraints
+    from tdda.constraints.base import DatasetConstraints, Detection
     from tdda.constraints.baseconstraints import (BaseConstraintCalculator,
                                                   BaseConstraintVerifier,
+                                                  BaseConstraintDetector,
                                                   BaseConstraintDiscoverer)
     from tdda.rexpy import rexpy
 
@@ -356,61 +357,61 @@ class BaseConstraintDetector:
     to implement constraint detection via the a subclass of the base
     :py:mod:`BaseConstraintVerifier` class.
     """
-    def detect_min_constraint(self, col, constraint, precision, epsilon):
+    def detect_min_constraint(self, colname, value, precision, epsilon):
         """
         Detect failures for a min constraint.
         """
         pass
 
-    def detect_max_constraint(self, col, constraint, precision, epsilon):
+    def detect_max_constraint(self, colname, value, precision, epsilon):
         """
         Detect failures for a max constraint.
         """
         pass
 
-    def detect_min_length_constraint(self, col, constraint):
+    def detect_min_length_constraint(self, colname, value):
         """
         Detect failures for a min_length constraint.
         """
         pass
 
-    def detect_max_length_constraint(self, col, constraint):
+    def detect_max_length_constraint(self, colname, value):
         """
         Detect failures for a max_length constraint.
         """
         pass
 
-    def detect_tdda_type_constraint(self, col, constraint):
+    def detect_tdda_type_constraint(self, colname, value):
         """
         Detect failures for a type constraint.
         """
         pass
 
-    def detect_sign_constraint(self, col, constraint):
+    def detect_sign_constraint(self, colname, value):
         """
         Detect failures for a sign constraint.
         """
         pass
 
-    def detect_max_nulls_constraint(self, col, constraint):
+    def detect_max_nulls_constraint(self, colname, value):
         """
         Detect failures for a max_nulls constraint.
         """
         pass
 
-    def detect_no_duplicates_constraint(self, col, constraint):
+    def detect_no_duplicates_constraint(self, colname, value):
         """
         Detect failures for a no_duplicates constraint.
         """
         pass
 
-    def detect_allowed_values_constraint(self, col, constraint, violations):
+    def detect_allowed_values_constraint(self, colname, value, violations):
         """
         Detect failures for an allowed_values constraint.
         """
         pass
 
-    def detect_rex_constraint(self, col, constraint, violations):
+    def detect_rex_constraint(self, colname, value, violations):
         """
         Detect failures for a rex constraint.
         """

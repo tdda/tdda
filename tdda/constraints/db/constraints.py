@@ -268,14 +268,6 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             If report is set to ``fields``, only fields for
                             which at least one constraint failed are shown.
 
-                            NOTE: The method also accepts two further
-                            parameters to control (not yet implemented)
-                            behaviour. 'constraints', will be used to
-                            indicate that only failing constraints for
-                            failing fields should be shown.
-                            'one_per_line' will indicate that each constraint
-                            failure should be reported on a separate line.
-
         *testing*:
                             Boolean flag. Should only be set to ``True``
                             when being run as part of an automated test.

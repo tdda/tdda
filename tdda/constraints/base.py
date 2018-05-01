@@ -531,7 +531,7 @@ class Verification(object):
     Container for the result of a constraint verification for a dataset
     in the context of a given set of constraints.
     """
-    def __init__(self, constraints, report='all', one_per_line=False,
+    def __init__(self, constraints, report='all',
                  ascii=False, detect=False, detect_outpath=None,
                  detect_write_all=False, detect_per_constraint=False,
                  detect_output_fields=None, detect_rownumber=False,
@@ -541,7 +541,6 @@ class Verification(object):
         self.passes = 0
         self.detection = None
         self.report = report
-        self.one_per_line = one_per_line
         self.ascii = ascii
         self.detect = detect
         self.detect_outpath = detect_outpath
@@ -550,9 +549,9 @@ class Verification(object):
         self.detect_output_fields = detect_output_fields
         self.detect_rownumber = detect_rownumber
         self.detect_in_place = detect_in_place
-        if report not in ('all', 'fields', 'constraints', 'records'):
+        if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
-                            ' or "constraints", not "%s".' % report)
+                            ' or "records", not "%s".' % report)
         if not detect_outpath and not detect and not detect_in_place:
             if any((detect_write_all, detect_per_constraint,
                     detect_output_fields, detect_rownumber)):
