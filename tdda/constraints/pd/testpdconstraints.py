@@ -47,7 +47,8 @@ from tdda.constraints.base import (
 from tdda.constraints.console import main_with_argv
 
 from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import verify_df, discover_df, detect_df
+from tdda.constraints.pd.constraints import (load_df, verify_df,
+                                             discover_df, detect_df)
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 
@@ -953,8 +954,9 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect.csv')
-        v = verify_df(df, constraints_path, report='fields',
-                      detect_outpath=detectfile, detect_output_fields=['Z'])
+        v = detect_df(df, constraints_path, report='fields',
+                      outpath=detectfile, output_fields=['Z'],
+                      rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         self.assertFileCorrect(detectfile, 'elements118rex_detect.csv')
@@ -965,9 +967,9 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir,
                                   'elements118rex_detect_perc.csv')
-        v = verify_df(df, constraints_path, report='fields',
-                      detect_outpath=detectfile, detect_output_fields=['Z'],
-                      detect_per_constraint=True)
+        v = detect_df(df, constraints_path, report='fields',
+                      outpath=detectfile, output_fields=['Z'],
+                      per_constraint=True, rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         self.assertFileCorrect(detectfile, 'elements118rex_detect_perc.csv')
@@ -976,11 +978,42 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
-        v = detect_df(df, constraints_path, output_fields=['Z'])
+        v = detect_df(df, constraints_path, output_fields=['Z'],
+                      rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         ddf = v.detected()
         self.assertStringCorrect(ddf.to_string(), 'elements118rex_detect.df')
+
+    def testDetectElements118_csv_to_csv(self):
+        self.detectElements('csv', 'csv')
+
+    def testDetectElements118_csv_to_feather(self):
+        self.detectElements('csv', 'feather')
+
+    def testDetectElements118_feather_to_csv(self):
+        self.detectElements('feather', 'csv')
+
+    def testDetectElements118_feather_to_feather(self):
+        self.detectElements('feather', 'feather')
+
+    def detectElements(self, input, output):
+        csv_path = os.path.join(TESTDATA_DIR, 'elements118.%s' % input)
+        df = load_df(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        detect_name = 'elements118_detect_from_%s.%s' % (input, output)
+        detectfile = os.path.join(self.tmp_dir, detect_name)
+        v = detect_df(df, constraints_path, report='fields',
+                      outpath=detectfile, output_fields=['Z'],
+                      per_constraint=True, rownumber=True,
+                      rownumber_is_index=(input == 'feather'))
+        self.assertEqual(v.detection.n_passing_records, 91)
+        self.assertEqual(v.detection.n_failing_records, 27)
+        if output == 'feather':
+            # TODO: compare binary feather files and check they're the same
+            pass
+        else:
+            self.assertFileCorrect(detectfile, detect_name)
 
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])

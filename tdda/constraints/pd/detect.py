@@ -44,12 +44,14 @@ except ImportError:
 
 from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
-from tdda.constraints.pd.constraints import detect_df, load_df
+from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
 
 def detect_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     df = load_df(df_path)
-    v = detect_df(df, constraints_path, **kwargs)
+    from_feather = file_format(df_path) == 'feather'
+    v = detect_df(df, constraints_path, rownumber_is_index=from_feather,
+                  **kwargs)
     if verbose:
         print(v)
     return v

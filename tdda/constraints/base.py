@@ -535,7 +535,7 @@ class Verification(object):
                  ascii=False, detect=False, detect_outpath=None,
                  detect_write_all=False, detect_per_constraint=False,
                  detect_output_fields=None, detect_rownumber=False,
-                 detect_in_place=False):
+                 detect_in_place=False, **kwargs):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0

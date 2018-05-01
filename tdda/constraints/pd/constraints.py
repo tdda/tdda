@@ -211,8 +211,13 @@ class PandasConstraintDetector(BaseConstraintDetector):
     """
     def __init__(self, df):
         self.df = df
-        self.out_df = (pd.DataFrame(index=df.index.copy()) if df is not None
-                       else None)
+        if df is not None:
+            index = df.index.copy()
+            if not index.name:
+                index.name = 'Index'
+            self.out_df = pd.DataFrame(index=index)
+        else:
+            self.out_df = None
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = colname + '_min_ok'
@@ -299,9 +304,13 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_output_fields=None,
                                detect_rownumber=False,
                                detect_in_place=False,
+                               rownumber_is_index=True,
                                **kwargs):
         if self.out_df is None:
             return None
+
+        output_is_feather = (detect_outpath
+                             and file_format(detect_outpath) == 'feather')
 
         out_df = self.out_df
         add_index = detect_rownumber or detect_output_fields is None
@@ -333,7 +342,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 else:
                     raise Exception('Dataframe has no column %s' % fname)
 
-        if add_index:
+        if add_index and not output_is_feather and not rownumber_is_index:
             rownumbername = unique_column_name(out_df, 'RowNumber')
             out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
 
@@ -341,7 +350,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             out_df = out_df[out_df[nfailname] > 0]
 
         if detect_outpath:
-            save_df(out_df, detect_outpath)
+            save_df(out_df, detect_outpath, add_index and rownumber_is_index)
 
         return Detection(out_df, n_passing_records, n_failing_records)
 
@@ -690,7 +699,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all=False, per_constraint=False,
               output_fields=None, rownumber=False, in_place=False,
-              report='records', **kwargs):
+              rownumber_is_index=True, report='records', **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -803,6 +812,12 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             If ``outpath`` is also specified, then
                             failing constraints will also be written to file.
 
+        *rownumber_is_index*:
+                            ``False`` if the DataFrame originated from a CSV
+                            file (and therefore any detection output file
+                            should refer to row numbers from the file, rather
+                            than items from the DataFrame index).
+
     The *report* parameter from :py:meth:`verify_df` can also be
     used, in which case a verification report will also be produced in
     addition to the detection results.
@@ -835,7 +850,9 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       outpath=outpath, write_all=write_all,
                       per_constraint=per_constraint,
                       output_fields=output_fields, rownumber=rownumber,
-                      in_place=in_place, report=report, **kwargs)
+                      in_place=in_place,
+                      rownumber_is_index=rownumber_is_index,
+                      report=report, **kwargs)
 
 
 def discover_df(df, inc_rex=False):
@@ -959,8 +976,13 @@ def discover_df(df, inc_rex=False):
     return disco.discover()
 
 
+def file_format(path):
+    parts = os.path.splitext(path)
+    return 'feather' if len(parts) > 1 and parts[1] == '.feather' else 'csv'
+
+
 def load_df(path):
-    if os.path.splitext(path)[1] != '.feather':
+    if file_format(path) != 'feather':
         return default_csv_loader(path)
     elif featherpmm:
         ds = featherpmm.read_dataframe(path)
@@ -973,9 +995,9 @@ def load_df(path):
                         'to add capability.\n', file=sys.stderr)
 
 
-def save_df(df, path):
-    if os.path.splitext(path)[1] != '.feather':
-        default_csv_writer(df, path)
+def save_df(df, path, index=False):
+    if file_format(path) != 'feather':
+        default_csv_writer(df, path, index=index)
     elif featherpmm:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)
@@ -993,7 +1015,7 @@ def unique_column_name(df, name):
     """
     i = 1
     newname = name
-    while newname in list(df):
+    while newname in list(df) or newname == df.index.name:
         i += 1
         newname = '%s_%d' % (name, i)
     return newname
