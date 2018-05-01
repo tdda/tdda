@@ -36,8 +36,16 @@ def ref(request):
 
 def pytest_addoption(parser):
     """
-    Extend pytest to include the --write and --write-all regeneration
-    command-line options.
+    Extend pytest to include the --write, --write-all regeneration
+    command-line options, and the --tagged and --istagged tagging options.
     """
     referencepytest.addoption(parser)
+
+
+def pytest_collection_modifyitems(session, config, items):
+    """
+    Extend pytest to only run tagged tests if run with --tagged,
+    and to report tagged tests if run with --istagged (and -s).
+    """
+    referencepytest.tagged(config, items)
 

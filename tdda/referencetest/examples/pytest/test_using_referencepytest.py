@@ -20,6 +20,8 @@ import tempfile
 
 import pytest
 
+from tdda.referencetest import tag
+
 # ensure we can import the generators module in the directory above
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -118,6 +120,7 @@ def testExampleStringGeneration(ref):
                             ignore_substrings=['Copyright', 'Version'])
 
 
+@tag
 def testExampleFileGeneration(ref):
     """
     This test uses generate_file() from generators.py to generate some
@@ -142,6 +145,8 @@ def testExampleFileGeneration(ref):
 
     and it should re-write the reference output to match your
     modified results.
+
+    This test is tagged, so it will run if called with ``--tagged`` or ``-1``.
     """
     outdir = ref.tmp_dir
     outpath = os.path.join(outdir, 'file_result.html')
@@ -149,4 +154,19 @@ def testExampleFileGeneration(ref):
     ref.assertFileCorrect(outpath, 'file_result.html',
                           ignore_patterns=['Copyright', 'Version'])
 
+
+@tag
+class TestExampleInClass:
+    """
+    A test in a separate class
+
+    This class is tagged, so all tests in it will run if called with
+    ``--tagged`` or ``-1``.
+    """
+
+    def testExample(self, ref):
+        """
+        A very simple example of a test within a tagged class.
+        """
+        assert 3 < 4
 

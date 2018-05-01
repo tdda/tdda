@@ -15,7 +15,7 @@ For example::
     from tdda.referencetest.referencetestcase import ReferenceTestCase
     import my_module
 
-    class MyTest(ReferenceTestCase):
+    class TestMyClass(ReferenceTestCase):
         def test_my_csv_function(self):
             result = my_module.my_csv_function(self.tmp_dir)
             self.assertCSVFileCorrect(result, 'result.csv')
@@ -32,7 +32,7 @@ For example::
             result = my_module.my_graph_function()
             self.assertStringCorrect(result, 'graph.txt', kind='graph')
 
-    MyTest.set_default_data_location('testdata')
+    TestMyClass.set_default_data_location('testdata')
 
     if __name__ == '__main__':
         ReferenceTestCase.main()
@@ -42,7 +42,7 @@ Tagged Tests
 
 If the tests are run with the ``--tagged`` or ``-1`` (the digit one)
 command-line option, then only tests that have been decorated with
-``referencetestcase.tag``, are run. This is a mechanism for allowing
+``referencetest.tag``, are run. This is a mechanism for allowing
 only a chosen subset of tests to be run, which is useful during
 development. The ``@tag`` decorator can be applied to either test
 classes or test methods.
@@ -58,7 +58,7 @@ For example::
     from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
     import my_module
 
-    class MyTest1(ReferenceTestCase):
+    class TestMyClass1(ReferenceTestCase):
         @tag
         def test_a(self):
             ...
@@ -67,7 +67,7 @@ For example::
             ...
 
     @tag
-    class MyTest2(ReferenceTestCase):
+    class TestMyClass2(ReferenceTestCase):
         def test_x(self):
             ...
 
@@ -75,7 +75,8 @@ For example::
             ...
 
 If run with ``python mytests.py --tagged``, only the tagged tests are
-run (``MyTest1.test_a``, ``MyTest2.test_x`` and ``MyTest2.test_y``).
+run (``TestMyClass1.test_a``, ``TestMyClass2.test_x`` and
+``TestMyClass2.test_y``).
 
 Regeneration of Results
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,16 +119,7 @@ from __future__ import division
 import sys
 import unittest
 
-from tdda.referencetest.referencetest import ReferenceTest
-
-
-def tag(test):
-    """
-    Decorator for tests, so that you can specify you only want to
-    run a tagged subset of tests, with the -1 or --tagged option.
-    """
-    test._tagged = True
-    return test
+from tdda.referencetest.referencetest import ReferenceTest, tag
 
 
 class ReferenceTestCase(unittest.TestCase, ReferenceTest):

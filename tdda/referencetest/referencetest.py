@@ -21,6 +21,15 @@ from tdda.referencetest.checkfiles import FilesComparison
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
 
+def tag(test):
+    """
+    Decorator for tests, so that you can specify you only want to
+    run a tagged subset of tests, with the -1 or --tagged option.
+    """
+    test._tagged = True
+    return test
+
+
 class ReferenceTest(object):
     """
     The :py:class:`~tdda.referencetest.referencetest.ReferenceTest` class

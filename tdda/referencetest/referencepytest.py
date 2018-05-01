@@ -29,6 +29,11 @@ For example::
         result = my_module.my_graph_function()
         ref.assertStringCorrect(result, 'graph.txt', kind='graph')
 
+    class TestMyClass:
+        def test_my_other_table_function(ref):
+            result = my_module.my_other_table_function()
+            ref.assertStringCorrect(result, 'table.txt', kind='table')
+
 with a ``conftest.py`` containing::
 
     import pytest
@@ -37,11 +42,53 @@ with a ``conftest.py`` containing::
     def pytest_addoption(parser):
         referencepytest.addoption(parser)
 
+    def pytest_collection_modifyitems(session, config, items):
+        referencepytest.tagged(config, items)
+
     @pytest.fixture(scope='module')
     def ref(request):
         r = referencepytest.ref(request)
         r.set_data_location('testdata')
         return r
+
+Tagged Tests
+~~~~~~~~~~~~
+
+If the tests are run with the ``--tagged``
+command-line option, then only tests that have been decorated with
+``referencetest.tag``, are run. This is a mechanism for allowing
+only a chosen subset of tests to be run, which is useful during
+development. The ``@tag`` decorator can be applied to either test
+classes or test methods.
+
+If the tests are run with the ``--istagged`` command-line option,
+then no tests are run; instead, the
+framework reports the full module names of any test classes or functions
+that have been decorated with ``@tag``, or classes which contain any
+tests that have been decorated with ``@tag``.
+
+For example::
+
+    from tdda.referencetest import referencepytest, tag
+    import my_module
+
+    @tag
+    def test_a(ref):
+        ...
+
+    def test_b(ref):
+        ...
+
+    @tag
+    class TestMyClass:
+        def test_x(self):
+            ...
+
+        def test_y(self):
+            ...
+
+If run with ``pytest --tagged``, only the tagged tests are
+run (``test_a``, ``TestMyClass.test_x`` and ``TestMyClass.test_y``).
 
 Regeneration of Results
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,7 +139,7 @@ import sys
 
 import pytest
 
-from tdda.referencetest.referencetest import ReferenceTest
+from tdda.referencetest.referencetest import ReferenceTest, tag
 
 
 def pytest_assert(x, msg):
@@ -111,7 +158,7 @@ def ref(request):
     This allows tests to get access to a private instance of that class.
     """
     if request.config.getoption('--wquiet'):
-        ReferenceTest.set_default(verbose=False)
+        ReferenceTest.set_defaults(verbose=False)
     if request.config.getoption('--write-all'):
         ReferenceTest.set_regeneration()
     else:
@@ -167,7 +214,6 @@ def addoption(parser):
 
     It extends pytest to include **--write** and **--write-all** option
     flags which can be used to control regeneration of reference results.
-
     """
     try:
         parser.addoption('--write', action='store', nargs='+', default=None,
@@ -175,8 +221,50 @@ def addoption(parser):
         parser.addoption('--write-all', action='store_true',
                          help='--write-all: rewrite all reference results')
         parser.addoption('--wquiet', action='store_true',
-                         help='--wquiet: when rewriting results, do so quietly')
+                         help='--wquiet: when rewriting results, '
+                              'do so quietly')
+        parser.addoption('--tagged', action='store_true',
+                         help='--tagged: only run tagged tests')
+        parser.addoption('--istagged', action='store_true',
+                         help='--istagged: report tagged tests, '
+                              'without running')
     except ValueError:
         # ignore attempts to add parser options multiple times
         pass
+
+
+def tagged(config, items):
+    """
+    Support for @tag to mark tests to be run with --tagged or reported
+    with --istagged.
+
+    A test's ``conftest.py`` file should declare tags by defining a
+    ``pytest_collection_modifyitems`` function which should just call this.
+
+    It extends pytest to recognize the ``--tagged`` and ``--istagged``
+    command-line flags, to restrict testing to tagged tests only.
+    """
+    runtagged = config.getoption('--tagged')
+    showtagged = config.getoption('--istagged')
+    shownclasses = set()
+    if runtagged or showtagged:
+        if showtagged:
+            print()
+        for f in list(items):
+            tagged = False
+            cls = None
+            if hasattr(f.obj, '__self__'):
+                cls = f.obj.__self__.__class__
+                tagged = getattr(cls, '_tagged', None)
+            if not tagged:
+                tagged = getattr(f.obj, '_tagged', None)
+            if showtagged or not tagged:
+                items.remove(f)
+            if tagged and showtagged:
+                if cls:
+                    if cls not in shownclasses:
+                        print('%s.%s' % (f.obj.__module__, cls.__name__))
+                    shownclasses.add(cls)
+                else:
+                    print('%s.%s' % (f.obj.__module__, f.name))
 

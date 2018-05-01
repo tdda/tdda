@@ -19,7 +19,7 @@ import os
 import tempfile
 import unittest
 
-from tdda.referencetest import ReferenceTestCase
+from tdda.referencetest import ReferenceTestCase, tag
 
 # ensure we can import the generators module in the directory above
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -68,6 +68,7 @@ class TestStructuredDataExample(ReferenceTestCase):
         self.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
                                   check_data=columns, check_types=columns)
 
+    @tag
     def testExampleMultipleCSVGeneration(self):
         """
         This test uses generate_dataframe() from dataframes.py to
@@ -77,6 +78,9 @@ class TestStructuredDataExample(ReferenceTestCase):
         The test checks the generated CSV files are as expected, in terms of
         both data content (the values) and metadata (the types, order, etc)
         of the columns.
+
+        This test is tagged, so it will run if called with ``--tagged`` or
+        ``-1``.
         """
         df1 = generate_dataframe(nrows=10)
         df2 = generate_dataframe(nrows=20)
@@ -91,7 +95,15 @@ class TestStructuredDataExample(ReferenceTestCase):
                                   check_data=columns)
 
 
+@tag
 class TestUnstructuredDataExample(ReferenceTestCase):
+    """
+    Test class for handling unstructured data.
+
+    This class is tagged, so all tests in it will run if called with
+    ``--tagged`` or ``-1``.
+    """
+
     def testExampleStringGeneration(self):
         """
         This test uses generate_string() from generators.py to generate
