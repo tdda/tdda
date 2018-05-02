@@ -72,8 +72,8 @@ These are like other tests except:
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `referencetest` subdirectory.
 
-*Constrains*
-------------
+*Constraints*
+-------------
 
 The `tdda.constraints` library is used to 'discover' constraints
 from a (Pandas) DataFrame, write them out as JSON, and to verify that
