@@ -358,6 +358,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
             save_df(df_to_save, detect_outpath,
                     add_index and rownumber_is_index)
 
+        if not detect_write_all:
+            out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
 
 
@@ -1061,7 +1063,6 @@ def convert_output_types(df, boolean_ints):
                            else v) for v in c]
         else:
             newdf[col] = c
-        print('ADDED COL', col)
     return newdf
 
 
