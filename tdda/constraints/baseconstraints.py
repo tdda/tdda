@@ -97,7 +97,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
     def detect(self, constraints, VerificationClass=Verification,
                outpath=None, write_all=False, per_constraint=False,
                output_fields=None, rownumber=False, in_place=False,
-               rownumber_is_index=True, **kwargs):
+               rownumber_is_index=True, boolean_ints=False, **kwargs):
         """
         Apply verifiers to a set of constraints, for detection
         """
@@ -110,6 +110,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                       detect_in_place=in_place,
                       detected_records_writer=self.write_detected_records,
                       rownumber_is_index=rownumber_is_index,
+                      boolean_ints=boolean_ints,
                       **kwargs)
 
     def get_cached_value(self, value, colname, f):

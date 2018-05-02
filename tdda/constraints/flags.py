@@ -37,6 +37,12 @@ Optional flags are:
 DETECT_HELP = '''
 Optional flags are:
 
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
   * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values
   * --write-all
@@ -50,7 +56,8 @@ Optional flags are:
   * --rownumber
       Include a row-number in the output file when detecting.
       The row number is automatically included if no output fields are
-      specified. Rows are numbered from 0.
+      specified. Rows are usually numbered from 1, unless the input file
+      has a special index.
 
 '''
 
@@ -127,7 +134,11 @@ def detect_parser(usage=''):
                              'all original columns will be included')
     parser.add_argument('--rownumber', action='store_true',
                         help='Include a row-number in the output file when '
-                             'detecting. Rows are numbered from 0')
+                             'detecting. Rows are usually numbered from 1, '
+                             'unless the input file has a special index.')
+    parser.add_argument('--int', dest='boolean_ints', action='store_true',
+                        help='Write out boolean fields as integers, with '
+                             '1 for true and 0 for false.')
     return parser
 
 
@@ -178,6 +189,8 @@ def detect_flags(parser, args, params):
         params['per_constraint'] = True
     if flags.rownumber:
         params['rownumber'] = True
+    if flags.boolean_ints:
+        params['boolean_ints'] = True
     if flags.output_fields is not None:
         params['output_fields'] = flags.output_fields
     params['in_place'] = False  # Only applicable in API case

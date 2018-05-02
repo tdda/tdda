@@ -2,7 +2,7 @@
 """
 The :py:mod:`tdda.constraints.pd.constraints` module provides an
 implementation of TDDA constraint discovery and verification
-for Pandas Dataframes.
+for Pandas DataFrames.
 
 This allows it to be used for data in CSV files, or for Pandas or R
 DataFrames saved as Feather files.
@@ -305,6 +305,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_rownumber=False,
                                detect_in_place=False,
                                rownumber_is_index=True,
+                               boolean_ints=False,
                                **kwargs):
         if self.out_df is None:
             return None
@@ -333,24 +334,29 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
         if detect_in_place:
             for fname in list(out_df):
-                self.df[unique_column_name(self.df, fname)] = out_df[fname]
+                newfield = out_df[fname]
+                self.df[unique_column_name(self.df, fname)] = newfield
 
         if detect_output_fields:
             for fname in reversed(detect_output_fields):
                 if fname in list(self.df):
                     out_df.insert(0, fname, self.df[fname])
                 else:
-                    raise Exception('Dataframe has no column %s' % fname)
+                    raise Exception('DataFrame has no column %s' % fname)
 
         if add_index and not output_is_feather and not rownumber_is_index:
             rownumbername = unique_column_name(out_df, 'RowNumber')
             out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
 
-        if not detect_write_all:
-            out_df = out_df[out_df[nfailname] > 0]
-
         if detect_outpath:
-            save_df(out_df, detect_outpath, add_index and rownumber_is_index)
+            if output_is_feather:
+                df_to_save = out_df
+            else:
+                df_to_save = convert_output_types(out_df, boolean_ints)
+            if not detect_write_all:
+                df_to_save = df_to_save[df_to_save[nfailname] > 0]
+            save_df(df_to_save, detect_outpath,
+                    add_index and rownumber_is_index)
 
         return Detection(out_df, n_passing_records, n_failing_records)
 
@@ -699,7 +705,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all=False, per_constraint=False,
               output_fields=None, rownumber=False, in_place=False,
-              rownumber_is_index=True, report='records', **kwargs):
+              rownumber_is_index=True, boolean_ints=False, report='records',
+              **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -818,6 +825,12 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             should refer to row numbers from the file, rather
                             than items from the DataFrame index).
 
+        *boolean_ints*:
+                            If ``True``, write out all boolean values to
+                            CSV file as integers (1 for true, and 0 for
+                            false), rather than as ``true`` and ``false``
+                            values.
+
     The *report* parameter from :py:meth:`verify_df` can also be
     used, in which case a verification report will also be produced in
     addition to the detection results.
@@ -827,7 +840,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         :py:class:`~PandasDetection` object.
 
         This object has a :py:meth:`~PandasDetection.detected()` method
-        for obtaining the Pandas Dataframe containing the detection
+        for obtaining the Pandas DataFrame containing the detection
         results.
 
     Example usage::
@@ -852,6 +865,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       output_fields=output_fields, rownumber=rownumber,
                       in_place=in_place,
                       rownumber_is_index=rownumber_is_index,
+                      boolean_ints=boolean_ints,
                       report=report, **kwargs)
 
 
@@ -1028,6 +1042,27 @@ def detection_field(column, expr, default=None):
     default_value = (np.nan if default is None
                             else (np.ones(len(column)) * default))
     return np.where(pd.isnull(column), default_value, expr.astype('O'))
+
+
+def convert_output_types(df, boolean_ints):
+    """
+    Construct a new DataFrame with boolean values mapped to appropriate
+    string equivalents (usually "true" and "false", but optionally "1" and
+    "0")
+    """
+    newdf = pd.DataFrame(index=df.index)
+    trueval = '1' if boolean_ints else 'true'
+    falseval = '0' if boolean_ints else 'false'
+    for col in list(df):
+        c = df[col]
+        if c.dtype in (pd.np.dtype('O'), pd.np.dtype(bool)):
+            newdf[col] = [(trueval if v is True
+                           else falseval if v is False
+                           else v) for v in c]
+        else:
+            newdf[col] = c
+        print('ADDED COL', col)
+    return newdf
 
 
 def df_fuzzy_gt(a, b, epsilon):
