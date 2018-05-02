@@ -1,6 +1,28 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
+What is it?
+-----------
+
+The TDDA Python module provides command-line and Python API support for
+the overall process of data analysis, through the following tools:
+
+ - **Reference Testing**: extensions to `unittest` and `pytest` for
+   managing testing of data analysis pipelines, where the results are
+   typically much larger, and more complex, than single numerical
+   values.
+
+ - **Constraints**: tools (and API) for discovery of constraints from data,
+   for validation of constraints on new data, and for anomaly detection.
+
+ - **Finding Regular Expressions**: tools (and API) for automatically
+   inferring regular expressions from text data.
+
+Documentation
+-------------
+
+http://tdda.readthedocs.io
+
 Installation
 ------------
 
@@ -26,8 +48,8 @@ If you clone the Github repo, use
 afterwards to install the command-line tools (`tdda` and `rexpy`).
 
 
-*Level 0:*
-----------
+*Reference Tests*
+-----------------
 
 The `tdda.referencetest` library is used to support
 the creation of *reference tests*, based on either unittest or pytest.
@@ -47,36 +69,24 @@ These are like other tests except:
   6. It supports flags (-w and -W)  to rewrite the reference (expected)
      results once you have confirmed that the new actuals are correct.
 
-The package includes docstrings, available with:
-
-    >>> from tdda import referencetest
-    >>> help(referencetest)
-
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `referencetest` subdirectory.
 
-*Level 1:*
-----------
+*Constrains*
+------------
 
 The `tdda.constraints` library is used to 'discover' constraints
 from a (Pandas) DataFrame, write them out as JSON, and to verify that
 datasets meet the constraints in the constraints file.
 
-For usage details:
-
-    >>> from tdda import constraints
-    >>> help(constraints)
-
 For more details from a source distribution or checkout, see the `README.md`
 file and examples in the `constraints` subdirectory.
 
+*Finding Regular Expressions*
+-----------------------------
+
 The `tdda` repository also includes `rexpy`, a tool for automatically
 inferring regular expressions from a single field of data examples.
-
-The package also has doc strings, which you can see with:
-
-    >>> from tdda import rexpy
-    >>> help(rexpy)
 
 *Resources*
 -----------
