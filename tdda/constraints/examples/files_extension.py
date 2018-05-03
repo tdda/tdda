@@ -292,7 +292,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
                                detect_write_all=False,
                                detect_per_constraint=False,
                                detect_output_fields=None,
-                               detect_rownumber=False,
+                               detect_index=False,
                                detect_in_place=False,
                                **kwargs):
         input_fields = ['name', 'size']

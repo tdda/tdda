@@ -302,7 +302,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_write_all=False,
                                detect_per_constraint=False,
                                detect_output_fields=None,
-                               detect_rownumber=False,
+                               detect_index=False,
                                detect_in_place=False,
                                rownumber_is_index=True,
                                boolean_ints=False,
@@ -314,7 +314,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                              and file_format(detect_outpath) == 'feather')
 
         out_df = self.out_df
-        add_index = detect_rownumber or detect_output_fields is None
+        add_index = detect_index or detect_output_fields is None
         if detect_output_fields is None:
             detect_output_fields = []
         elif len(detect_output_fields) == 0:
@@ -344,19 +344,46 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 else:
                     raise Exception('DataFrame has no column %s' % fname)
 
-        if add_index and not output_is_feather and not rownumber_is_index:
-            rownumbername = unique_column_name(out_df, 'RowNumber')
-            out_df.insert(0, rownumbername, pd.RangeIndex(1, len(out_df)+1))
-
         if detect_outpath:
+            index_is_trivial = is_pd_index_trivial(out_df)
             if output_is_feather:
                 df_to_save = out_df
             else:
                 df_to_save = convert_output_types(out_df, boolean_ints)
+            if add_index:
+                # Add Index or RowNumber columns to output CSV file (or
+                # add appropriate columns to output feather file and reset
+                # its index, because feather doesn't support MultiIndexes
+                # and doesn't retain single indexes).
+                #
+                # TODO: If the feather file is going to be saved using
+                #       pmmif's featherpmm, and if featherpmm were able to
+                #       transparently retain indexes, then we wouldn't need
+                #       to do that in this case (when featherpmm is set, and
+                #       output_is_feather).
+                indexes = []
+                if output_is_feather or rownumber_is_index:
+                    stem = 'Index' if rownumber_is_index else 'RowNumber'
+                    if isinstance(df_to_save.index, pd.MultiIndex):
+                        for i, level in enumerate(df_to_save.index.levels):
+                            name = (df.index.names[i] if df.index.names
+                                    else '%s_%d' % (stem, (i+1)))
+                            pair = (unique_column_name(df_to_save, name),
+                                    df_to_save.index.get_level_values(i))
+                            indexes.append(pair)
+                    else:
+                        indexes.append((unique_column_name(df_to_save, stem),
+                                        df_to_save.index))
+                    df_to_save.reset_index(inplace=True, drop=True)
+                else:
+                    pair = (unique_column_name(df_to_save, 'RowNumber'),
+                            pd.RangeIndex(1, len(df_to_save)+1))
+                    indexes.append(pair)
+                for name, index in reversed(indexes):
+                    df_to_save.insert(0, name, index)
             if not detect_write_all:
                 df_to_save = df_to_save[df_to_save[nfailname] > 0]
-            save_df(df_to_save, detect_outpath,
-                    add_index and rownumber_is_index)
+            save_df(df_to_save, detect_outpath, index=False)
 
         if not detect_write_all:
             out_df = out_df[out_df[nfailname] > 0]
@@ -706,7 +733,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all=False, per_constraint=False,
-              output_fields=None, rownumber=False, in_place=False,
+              output_fields=None, index=False, in_place=False,
               rownumber_is_index=True, boolean_ints=False, report='records',
               **kwargs):
     """
@@ -789,7 +816,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             field containing the total number of constraints
                             that failed for each row.  This behavious can be
                             overridden with the ``per_constraint``,
-                            ``output_fields`` and ``rownumber`` parameters.
+                            ``output_fields`` and ``index`` parameters.
 
         *write_all*:
                             Include passing records in the detection output
@@ -805,9 +832,9 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             If passed in as an empty list (rather than None),
                             all original columns will be included.
 
-        *rownumber*:
-                            Include a row-number in the output file when
-                            detecting.
+        *index*:
+                            Boolean to specify whether to include a row-number
+                            index in the output file when detecting.
 
                             This is automatically enabled if no output field
                             names are specified.
@@ -864,7 +891,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
     return pdv.detect(constraints, VerificationClass=PandasDetection,
                       outpath=outpath, write_all=write_all,
                       per_constraint=per_constraint,
-                      output_fields=output_fields, rownumber=rownumber,
+                      output_fields=output_fields, index=index,
                       in_place=in_place,
                       rownumber_is_index=rownumber_is_index,
                       boolean_ints=boolean_ints,
@@ -1031,7 +1058,7 @@ def unique_column_name(df, name):
     """
     i = 1
     newname = name
-    while newname in list(df) or newname == df.index.name:
+    while newname in list(df):
         i += 1
         newname = '%s_%d' % (name, i)
     return newname
@@ -1066,6 +1093,21 @@ def convert_output_types(df, boolean_ints):
         else:
             newdf[col] = c
     return newdf
+
+
+def is_pd_index_trivial(df):
+    """
+    Is this a trivial Pandas index (starting at 0, monotonic with no dups)?
+    """
+    if not isinstance(df.index, pd.RangeIndex):
+        return False
+    if not df.index.is_monotonic_increasing:
+        return False
+    if df.index.has_duplicates:
+        return False
+    if df.index._start != 0:
+        return False
+    return True
 
 
 def df_fuzzy_gt(a, b, epsilon):

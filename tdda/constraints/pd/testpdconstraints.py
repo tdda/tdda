@@ -1005,7 +1005,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         detectfile = os.path.join(self.tmp_dir, detect_name)
         v = detect_df(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
-                      per_constraint=True, rownumber=True,
+                      per_constraint=True, index=True,
                       rownumber_is_index=(input == 'feather'))
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
@@ -1139,7 +1139,9 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         e92csv = os.path.join(testDataDir, 'elements92.csv')
         e118csv = os.path.join(testDataDir, 'elements118.csv')
         e92tdda = os.path.join(tmpdir, 'elements92.tdda')
-        e92bads = os.path.join(tmpdir, 'elements92bads.csv')
+        e118feather = os.path.join(testDataDir, 'elements118.feather')
+        e92bads1 = os.path.join(tmpdir, 'elements92bads1.csv')
+        e92bads2 = os.path.join(tmpdir, 'elements92bads2.csv')
         rmdirs(tmpdir, dirs)
         try:
             start = 'Copied example files for tdda.referencetest to'
@@ -1173,8 +1175,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Constraints passing: 57\n'
                                                     'Constraints failing: 15'))
-            argv = ['tdda', 'detect', e118csv, e92tdda, e92bads,
-                    '--per-constraint', '--output-fields', '--rownumber']
+            argv = ['tdda', 'detect', e118csv, e92tdda, e92bads1,
+                    '--per-constraint', '--output-fields', '--index']
             if wrapper:
                 result = check_shell_output(argv)
             else:
@@ -1182,8 +1184,19 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                     'Records passing: 91\n'
                                                     'Records failing: 27'))
-            self.assertTrue(os.path.exists(e92bads))
-            self.assertFileCorrect(e92bads, 'detect-els-cmdline.csv')
+            self.assertTrue(os.path.exists(e92bads1))
+            self.assertFileCorrect(e92bads1, 'detect-els-cmdline.csv')
+            argv = ['tdda', 'detect', e118feather, e92tdda, e92bads2,
+                    '--per-constraint', '--output-fields', '--index']
+            if wrapper:
+                result = check_shell_output(argv)
+            else:
+                result = str(main_with_argv(argv, verbose=False))
+            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                    'Records passing: 91\n'
+                                                    'Records failing: 27'))
+            self.assertTrue(os.path.exists(e92bads2))
+            self.assertFileCorrect(e92bads2, 'detect-els-cmdline2.csv')
         finally:
             rmdirs(tmpdir, dirs)
 

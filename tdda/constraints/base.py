@@ -534,7 +534,7 @@ class Verification(object):
     def __init__(self, constraints, report='all',
                  ascii=False, detect=False, detect_outpath=None,
                  detect_write_all=False, detect_per_constraint=False,
-                 detect_output_fields=None, detect_rownumber=False,
+                 detect_output_fields=None, detect_index=False,
                  detect_in_place=False, **kwargs):
         self.fields = TDDAObject()
         self.failures = 0
@@ -547,14 +547,14 @@ class Verification(object):
         self.detect_write_all = detect_write_all
         self.detect_per_constraint = detect_per_constraint
         self.detect_output_fields = detect_output_fields
-        self.detect_rownumber = detect_rownumber
+        self.detect_index = detect_index
         self.detect_in_place = detect_in_place
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
         if not detect_outpath and not detect and not detect_in_place:
             if any((detect_write_all, detect_per_constraint,
-                    detect_output_fields, detect_rownumber)):
+                    detect_output_fields, detect_index)):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 

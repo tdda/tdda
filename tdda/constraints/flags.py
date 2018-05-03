@@ -53,11 +53,11 @@ Optional flags are:
   * --output-fields FIELD1,FIELD2
       Specify original columns to write out when detecting.
       If used with no field names, all original columns will be included.
-  * --rownumber
-      Include a row-number in the output file when detecting.
+  * --index
+      Include a row-number index in the output file when detecting.
       The row number is automatically included if no output fields are
       specified. Rows are usually numbered from 1, unless the input file
-      has a special index.
+      already has an index.
 
 '''
 
@@ -132,10 +132,10 @@ def detect_parser(usage=''):
                         help='Specify original columns to write out. '
                              'If used with no field names, then '
                              'all original columns will be included')
-    parser.add_argument('--rownumber', action='store_true',
-                        help='Include a row-number in the output file when '
-                             'detecting. Rows are usually numbered from 1, '
-                             'unless the input file has a special index.')
+    parser.add_argument('--index', action='store_true',
+                        help='Include a row-number index in the output file '
+                             'when detecting. Rows are usually numbered from '
+                             '1, unless the input file already has an index.')
     parser.add_argument('--int', dest='boolean_ints', action='store_true',
                         help='Write out boolean fields as integers, with '
                              '1 for true and 0 for false.')
@@ -187,8 +187,8 @@ def detect_flags(parser, args, params):
         params['write_all'] = True
     if flags.per_constraint:
         params['per_constraint'] = True
-    if flags.rownumber:
-        params['rownumber'] = True
+    if flags.index:
+        params['index'] = True
     if flags.boolean_ints:
         params['boolean_ints'] = True
     if flags.output_fields is not None:

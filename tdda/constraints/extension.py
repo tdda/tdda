@@ -422,8 +422,10 @@ class BaseConstraintDetector:
                                detect_write_all=False,
                                detect_per_constraint=False,
                                detect_output_fields=None,
-                               detect_rownumber=False,
+                               detect_index=False,
                                detect_in_place=False,
+                               rownumber_is_index=True,
+                               boolean_ints=False,
                                **kwargs):
         """
         Write out a detection dataset.
