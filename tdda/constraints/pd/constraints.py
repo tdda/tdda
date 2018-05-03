@@ -1055,11 +1055,13 @@ def convert_output_types(df, boolean_ints):
     newdf = pd.DataFrame(index=df.index)
     trueval = '1' if boolean_ints else 'true'
     falseval = '0' if boolean_ints else 'false'
+    pandas_true_values = (True, pd.np.bool(True), pd.np.bool_(True))
+    pandas_false_values = (True, pd.np.bool(False), pd.np.bool_(False))
     for col in list(df):
         c = df[col]
         if c.dtype in (pd.np.dtype('O'), pd.np.dtype(bool)):
-            newdf[col] = [(trueval if v is True
-                           else falseval if v is False
+            newdf[col] = [(trueval if v in pandas_true_values
+                           else falseval if v in pandas_false_values
                            else v) for v in c]
         else:
             newdf[col] = c
