@@ -499,14 +499,20 @@ class PandasDetection(PandasVerification):
 
     This allows the Pandas DataFrame resulting from constraint detection
     to be made available.
+
+    The object also provides properties `n_passing_records` and
+    `n_failing_records`, recording how many records passed and failed
+    the detection process.
     """
     def __init__(self, *args, **kwargs):
         PandasVerification.__init__(self, *args, **kwargs)
 
     def detected(self):
         """
-        Returns the Pandas DataFrame containing the detection column,
-        if the verification process has been run with in ``detect`` mode.
+        Returns a Pandas DataFrame containing the detection results.
+
+        If there are no failing records, and the detection was not run
+        with the `write_all` flag set, then ``None`` is returned.
         """
         return self.detection.obj if self.detection else None
 
@@ -687,10 +693,6 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             If report is set to ``fields``, only fields for
                             which at least one constraint failed are shown.
 
-    The various *detect* parameters from :py:meth:`detect_df` can also be
-    used, in which case the verification process will also generate
-    detection results.
-
     Returns:
 
         :py:class:`~PandasVerification` object.
@@ -737,8 +739,9 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               rownumber_is_index=True, boolean_ints=False, report='records',
               **kwargs):
     """
-    Verify that (i.e. check whether) the Pandas DataFrame provided
-    satisfies the constraints in the JSON ``.tdda`` file provided.
+    Check the records from the Pandas DataFrame provided, to detect
+    records that fail any of the constraints in the JSON ``.tdda`` file
+    provided. This is anomaly detection.
 
     Mandatory Inputs:
 
@@ -846,7 +849,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             the input DataFrame.
 
                             If ``outpath`` is also specified, then
-                            failing constraints will also be written to file.
+                            failing records will also be written to file.
 
         *rownumber_is_index*:
                             ``False`` if the DataFrame originated from a CSV
@@ -860,7 +863,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             false), rather than as ``true`` and ``false``
                             values.
 
-    The *report* parameter from :py:meth:`verify_df` can also be
+    The *report* parameter from :py:func:`verify_df` can also be
     used, in which case a verification report will also be produced in
     addition to the detection results.
 

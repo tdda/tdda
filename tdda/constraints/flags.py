@@ -31,7 +31,7 @@ Optional flags are:
   * -7, --ascii
       Report in ASCII form, without using special characters.
   * --epsilon E
-      Use this value of epsilon for fuzziness in comparing numeric values
+      Use this value of epsilon for fuzziness in comparing numeric values.
 '''
 
 DETECT_HELP = '''
@@ -44,20 +44,20 @@ Optional flags are:
   * -7, --ascii
       Report in ASCII form, without using special characters.
   * --epsilon E
-      Use this value of epsilon for fuzziness in comparing numeric values
+      Use this value of epsilon for fuzziness in comparing numeric values.
   * --write-all
-      Include passing records when detecting
+      Include passing records in the output.
   * --per-constraint
-      Write one column per failing constraint when detecting, as well as
-      the n_failures total column for each row.
-  * --output-fields FIELD1,FIELD2
-      Specify original columns to write out when detecting.
+      Write one column per failing constraint, as well as the n_failures
+      total column for each row.
+  * --output-fields FIELD1 FIELD2 ...
+      Specify original columns to write out.
       If used with no field names, all original columns will be included.
   * --index
-      Include a row-number index in the output file when detecting.
+      Include a row-number index in the output file.
       The row number is automatically included if no output fields are
-      specified. Rows are usually numbered from 1, unless the input file
-      already has an index.
+      specified. Rows are usually numbered from 1, unless the (feather)
+      input file already has an index.
 
 '''
 
