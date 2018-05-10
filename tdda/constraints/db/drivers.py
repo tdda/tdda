@@ -30,6 +30,11 @@ except ImportError:
     sqlite3 = None
 
 try:
+    import jaydebeapi
+except ImportError:
+    jaydebeapi = None
+
+try:
     import pymongo
 except ImportError:
     pymongo = None
@@ -306,10 +311,6 @@ class DatabaseHandler:
         return getattr(self.instance, name)
 
 
-# TODO: this is too specific to Miro stuff
-RESERVED_WORDS = ('group')
-
-
 class SQLDatabaseHandler:
     """
     Common database SQL support
@@ -319,12 +320,14 @@ class SQLDatabaseHandler:
         self.db = db
         self.cursor = db.cursor()
 
-    def canon(self, name):
-        # 'canonicalise' a database table name
-        name = name.lower()
-        if name in RESERVED_WORDS:
-            name = name + '_'
-        return name
+    def quoted(self, name):
+        # quote a columnname
+        if self.dbtype == 'sqlserver':
+            return '[%s]' % name
+        elif self.dbtype == 'mysql':
+            return '`%s`' % name
+        else:
+            return '"%s"' % name
 
     def execute_scalar(self, sql):
         # execute a SQL statement, returning a single scalar result
@@ -345,26 +348,34 @@ class SQLDatabaseHandler:
     def db_value_to_datetime(self, value):
         return value
 
+    def default_schema(self):
+        if self.dbtype == 'mysql':
+            return ''   # TODO: this makes no sense, there must be a schema
+        elif self.dbtype in ('postgres', 'postgresql'):
+            return 'public'
+        elif self.dbtype == 'sqlite':
+            return None
+        else:
+            raise Exception('Unrecognised database type %s' % self.dbtype)
+        
+    def split_name(self, name):
+        parts = name.split('.')
+        if len(parts) == 1:
+            schema = self.default_schema()
+            table = name
+        elif len(parts) == 2:
+            schema = parts[0]
+            table = parts[1]
+        else:
+            raise Exception('Bad table format %s' % tablename)
+        return (schema, table)
+
     def check_table_exists(self, tablename):
         """
         Check that a table (or a schema.table) exists.
         """
-        if '.' in tablename:
-            parts = tablename.split('.')
-            if len(parts) == 1:
-                schema = None
-                table = tablename
-            elif len(parts) == 2:
-                schema = parts[0]
-                table = parts[1]
-            else:
-                raise Exception('Bad table format %s' % tablename)
-        else:
-            schema = None
-            table = tablename
+        (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql'):
-            if schema is None:
-                schema = 'public'
             sql = '''SELECT COUNT(*) FROM pg_catalog.pg_class c
                      LEFT JOIN pg_catalog.pg_namespace n
                      ON n.oid = c.relnamespace
@@ -377,6 +388,7 @@ class SQLDatabaseHandler:
                          WHERE table_schema = '%s'
                          AND table_name = '%s';''' % (schema, table)
             else:
+                #TODO: we need to pick a default schema in this case!
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_name = '%s';''' % table
         elif self.dbtype == 'sqlite':
@@ -388,19 +400,13 @@ class SQLDatabaseHandler:
         return self.execute_scalar(sql) > 0
 
     def get_database_column_names(self, tablename):
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''
-                SELECT a.attname FROM pg_attribute a
-                WHERE a.attrelid = '%s'::regclass AND a.attnum > 0
-                ORDER BY a.attnum;
-                ''' % tablename
-            rows = self.execute_all(sql)
-            return [r[0] for r in rows]
-        elif self.dbtype == 'mysql':
+        (schema, table) = self.split_name(tablename)
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             sql = '''
                 SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE table_name = '%s';
-                ''' % tablename
+                WHERE TABLE_NAME = '%s'
+                AND TABLE_SCHEMA = '%s';
+                ''' % (table, schema)
             rows = self.execute_all(sql)
             return [r[0] for r in rows]
         elif self.dbtype == 'sqlite':
@@ -412,49 +418,53 @@ class SQLDatabaseHandler:
 
     def get_database_column_type(self, tablename, colname):
         typeMap = {
-            'int'        : 'int',
-            'int4'       : 'int',
-            'int8'       : 'int',
-            'smallint'   : 'int',
-            'bigint'     : 'int',
-            'integer'    : 'int',
-            'float'      : 'real',
-            'float4'     : 'real',
-            'float8'     : 'real',
-            'float16'    : 'real',
-            'double'     : 'real',
-            'numeric'    : 'real',
-            'real'       : 'real',
-            'bool'       : 'bool',
-            'text'       : 'string',
-            'varchar'    : 'string',
-            'char'       : 'string',
-            'name'       : 'string',
-            'oidvector'  : 'string',
-            'timestamp'  : 'date',
-            'date'       : 'date',
-            None         : None,
+            'int'             : 'int',
+            'int4'            : 'int',
+            'int8'            : 'int',
+            'smallint'        : 'int',
+            'bigint'          : 'int',
+            'integer'         : 'int',
+            'float'           : 'real',
+            'float4'          : 'real',
+            'float8'          : 'real',
+            'float16'         : 'real',
+            'double'          : 'real',
+            'numeric'         : 'real',
+            'real'            : 'real',
+            'double precision': 'real',
+            'bool'            : 'bool',
+            'boolean'         : 'bool',
+            'text'            : 'string',
+            'varchar'         : 'string',
+            'char'            : 'string',
+            'name'            : 'string',
+            'oidvector'       : 'string',
+            'timestamp'       : 'date',
+            'timestamp without time zone': 'date',
+            'date'            : 'date',
+            None              : None,
         }
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''
-                SELECT t.typname
-                FROM pg_attribute a inner join pg_type t on a.atttypid = t.oid
-                WHERE a.attrelid = '%s'::regclass AND a.attnum > 0
-                                                  AND a.attname = '%s'
-                ORDER BY a.attnum;
-                ''' % (tablename, self.canon(colname))
-            typeresult = self.execute_scalar(sql)
-        elif self.dbtype == 'mysql':
-            sql = '''
-                SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE table_name = '%s' AND COLUMN_NAME = '%s';
-                ''' % (tablename, self.canon(colname))
+        (schema, table) = self.split_name(tablename)
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
+            if schema:
+                sql = '''
+                    SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '%s' 
+                     AND TABLE_SCHEMA = '%s'
+                     AND COLUMN_NAME = '%s';
+                    ''' % (table, schema, colname)
+            else:
+                sql = '''
+                    SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '%s' 
+                     AND COLUMN_NAME = '%s';
+                    ''' % (tablename, colname)
             typeresult = self.execute_scalar(sql)
         elif self.dbtype == 'sqlite':
             result = self.execute_all('PRAGMA table_info(%s)' % tablename)
             typeresult = None
             for row in result:
-                if self.canon(row[1]) == self.canon(colname):
+                if row[1].lower() == colname.lower():
                     typeresult = row[2]
                     break
         else:
@@ -467,41 +477,53 @@ class SQLDatabaseHandler:
 
     def get_database_nnull(self, tablename, colname):
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NULL'
-               % (tablename, self.canon(colname)))
+               % (tablename, self.quoted(colname)))
         return self.execute_scalar(sql)
 
     def get_database_nnonnull(self, tablename, colname):
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL'
-               % (tablename, self.canon(colname)))
+               % (tablename, self.quoted(colname)))
         return self.execute_scalar(sql)
 
     def get_database_min(self, tablename, colname):
-        sql = 'SELECT MIN(%s) FROM %s' % (self.canon(colname), tablename)
+        ctype = self.get_database_column_type(tablename, colname)
+        if ctype == 'bool':
+            asint = self.cast_bool_to_int(self.quoted(colname))
+            expr = self.cast_int_to_bool('MIN(%s)' % asint)
+            sql = 'SELECT %s FROM %s' % (expr, tablename)
+        else:
+            sql = 'SELECT MIN(%s) FROM %s' % (self.quoted(colname), tablename)
         return self.execute_scalar(sql)
 
     def get_database_max(self, tablename, colname):
-        sql = 'SELECT MAX(%s) FROM %s' % (self.canon(colname), tablename)
+        ctype = self.get_database_column_type(tablename, colname)
+        if ctype == 'bool':
+            asint = self.cast_bool_to_int(self.quoted(colname))
+            expr = self.cast_int_to_bool('MAX(%s)' % asint)
+            sql = 'SELECT %s FROM %s' % (expr, tablename)
+        else:
+            sql = 'SELECT MAX(%s) FROM %s' % (self.quoted(colname), tablename)
         return self.execute_scalar(sql)
 
     def get_database_min_length(self, tablename, colname):
-        sql = 'SELECT MIN(LENGTH(%s)) FROM %s' % (self.canon(colname),
+        sql = 'SELECT MIN(LENGTH(%s)) FROM %s' % (self.quoted(colname),
                                                   tablename)
         return self.execute_scalar(sql)
 
     def get_database_max_length(self, tablename, colname):
-        sql = 'SELECT MAX(LENGTH(%s)) FROM %s' % (self.canon(colname),
+        sql = 'SELECT MAX(LENGTH(%s)) FROM %s' % (self.quoted(colname),
                                                   tablename)
         return self.execute_scalar(sql)
 
     def get_database_nunique(self, tablename, colname):
-        colname = self.canon(colname)
+        colname = self.quoted(colname)
         sql = ('SELECT COUNT(DISTINCT %s) FROM %s WHERE %s IS NOT NULL'
-               % (colname, tablename, self.canon(colname)))
+               % (colname, tablename, colname))
         return self.execute_scalar(sql)
 
     def get_database_unique_values(self, tablename, colname,
                                    sorted_values=True, include_nulls=False):
-        colname = self.canon(colname)
+        colname = self.quoted(colname)
         whereclause = ('' if include_nulls
                        else 'WHERE %s IS NOT NULL' % colname)
         orderby = ('ORDER BY %s ASC' % colname) if sorted_values else ''
@@ -513,7 +535,7 @@ class SQLDatabaseHandler:
     def get_database_rex_match(self, tablename, colname, rexes):
         if rexes is None:      # a null value is not considered to be an
             return True        # active constraint, so is always satisfied
-        name = self.canon(colname)
+        name = self.quoted(colname)
         if self.dbtype in ('postgres', 'postgresql'):
             # postgresql uses ~ syntax
             rexprs = ["(%s ~ '%s')" % (name, r) for r in rexes]
@@ -532,6 +554,24 @@ class SQLDatabaseHandler:
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL AND NOT(%s)'
                % (tablename, name, ' OR '.join(rexprs)))
         return self.execute_scalar(sql) == 0
+
+    def cast_bool_to_int(self, s):
+        if self.dbtype == 'mysql':
+            return s
+        else:
+            sql = 'CAST (%s AS INT)' % s
+        return sql
+
+    def cast_int_to_bool(self, s):
+        if self.dbtype == 'mysql':
+            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
+                   'ELSE (%s <> 0) END' % (s, s))
+        elif self.dbtype == 'sqlserver':
+            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
+                   'WHEN (%s <> 0) THEN 1 ELSE 0 END' % (s, s))
+        else:
+            sql = '(%s <> 0)' % s
+        return sql
 
 
 class MongoDBDatabaseHandler:

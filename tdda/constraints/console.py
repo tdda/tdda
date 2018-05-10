@@ -84,7 +84,7 @@ def help(extensions, cmd=None, stream=sys.stdout):
                   '    tdda help discover\n'
                   '    tdda help verify\n'
                   '    tdda help detect\n'
-                  '    tdda help examples\n')
+                  '    tdda help examples\n' % cmd)
     else:
         print(HELP, file=stream)
         print(file=stream)
@@ -93,7 +93,7 @@ def help(extensions, cmd=None, stream=sys.stdout):
         for ext in extensions:
             ext.help(stream=stream)
             print(file=stream)
-        print('\nUse "tdda help COMMAND" to get more detailed help about'
+        print('\nUse "tdda help COMMAND" to get more detailed help about '
               'a particular command.\nE.g. "tdda help verify"\n',
               file=stream)
 

@@ -52,7 +52,10 @@ def discover_constraints_from_database(table, constraints_path=None,
                              host=host, port=port,
                              user=user, password=password)
     constraints = discover_db_table(dbtype, db, table, **kwargs)
-    if constraints_path:
+    if constraints is None:
+        # should never happen
+        pass
+    elif constraints_path:
         with open(constraints_path, 'w') as f:
             f.write(constraints.to_json())
     else:
