@@ -30,11 +30,6 @@ except ImportError:
     sqlite3 = None
 
 try:
-    import jaydebeapi
-except ImportError:
-    jaydebeapi = None
-
-try:
     import pymongo
 except ImportError:
     pymongo = None
@@ -350,7 +345,7 @@ class SQLDatabaseHandler:
 
     def default_schema(self):
         if self.dbtype == 'mysql':
-            return ''   # TODO: this makes no sense, there must be a schema
+            return ''   # TODO: this makes no sense, there must be a schema!
         elif self.dbtype in ('postgres', 'postgresql'):
             return 'public'
         elif self.dbtype == 'sqlite':
