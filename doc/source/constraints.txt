@@ -243,18 +243,18 @@ Constraints for Databases
 -------------------------
 
 When a database table is used with the ``tdda`` command-line tool, the table
-name (including an optional schema) can be preceded by ``dbtype`` chosen
+name (including an optional schema) can be preceded by ``DBTYPE`` chosen
 from ``postgres``, ``mysql``, ``sqlite`` or ``mongodb``:
 ::
 
-    dbtype:schema.tablename
+    DBTYPE:schema.tablename
 
-If ``dbtype`` is used, this will cause the file ``.tdda_db_conn_dbtype``
+If ``DBTYPE`` is used, this will cause the file ``.tdda_db_conn_DBTYPE``
 to be read from your home directory (see :ref:`tdda_db_conn`), which can
 contain all connection parameters.
 
 Parameters can also be provided using the following flags (which override
-the values in the ``.tdda_db_conn_dbtype`` file, if provided):
+the values in the ``.tdda_db_conn_DBTYPE`` file, if provided):
 
 * ``-conn FILE``
     Database connection file (see :ref:`tdda_db_conn`)
@@ -275,7 +275,7 @@ If ``-conn`` is provided, then none of the other options are required, and
 the database connection details are read from the specified file.
 
 If the database type is specified (with the ``-dbtype`` option, or by
-prefixing the table name, such as ``postgresql:mytable``), then a default
+prefixing the table name, such as ``postgres:mytable``), then a default
 connection file ``.tdda_db_conn_DBTYPE`` (in your home directory) is used,
 if present.
 
@@ -285,7 +285,17 @@ if present.
 Database Connection Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ``tdda_db_conn`` file is a JSON file of the form::
+To use a database source, you can either specify the database type
+using the ``--dbtype DBTYPE`` option, or you can prefix the table name
+with ``DBTYPE:``.
+
+You can provide default values for all of the other database options in
+a database connection file ``.tdda_db_conn_DBTYPE``, in your home directory.
+
+Any database-related options passed in on the command line will
+override the default settings from the connection file.
+
+A ``tdda_db_conn_DBTYPE`` file is a JSON file of the form::
 
     {
         "dbtype": DBTYPE,
@@ -302,14 +312,6 @@ If a ``password`` is provided, then care should be taken to ensure that the
 file has appropriate filesystem permissions so that it cannot be read by
 other users.
 
-A database connection file ``.tdda_db_conn``, in your home directory, is used,
-if it exists.  If you have specified a database type on the command line
-as a parameter to the ``tdda verify`` or ``tdda discover`` commands, but no
-other details, then a database connection file ``.tdda_db_conn_DBTYPE`` is
-used (where ``DBTYPE`` is the database type, in lower case).
-
-Any other database-related options passed in on the command line will
-override the default settings from the connection file.
 
 
 API
