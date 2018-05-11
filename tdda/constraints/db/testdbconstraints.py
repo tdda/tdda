@@ -21,7 +21,7 @@ except ImportError:
     sqlite3 = None
 
 
-from tdda.referencetest.referencetestcase import ReferenceTestCase
+from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 
 from tdda.constraints.db.drivers import database_connection, DatabaseHandler
 from tdda.constraints.db.constraints import (verify_db_table,
@@ -32,7 +32,7 @@ TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
 
 @unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
-class TestSQLiteDatabaseHandlers(unittest.TestCase):
+class TestSQLiteDatabaseHandlers(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
         dbfile = os.path.join(TESTDATA_DIR, 'example.db')
@@ -45,26 +45,26 @@ class TestSQLiteDatabaseHandlers(unittest.TestCase):
 
     def test_sqlite_handler_simple_ops(self):
         self.assertEqual(self.dbh.get_database_column_names('elements'),
-                         ['z', 'name', 'symbol', 'period', 'group_',
-                          'chemicalseries', 'atomicweight', 'etymology',
-                          'relativeatomicmass', 'meltingpointc',
-                          'meltingpointkelvin', 'boilingpointc',
-                          'boilingpointf', 'density', 'description', 'colour'])
-        self.assertEqual(self.dbh.get_database_column_type('elements', 'z'),
+                         ['Z', 'Name', 'Symbol', 'Period', 'Group',
+                          'ChemicalSeries', 'AtomicWeight', 'Etymology',
+                          'RelativeAtomicMass', 'MeltingPointC',
+                          'MeltingPointKelvin', 'BoilingPointC',
+                          'BoilingPointF', 'Density', 'Description', 'Colour'])
+        self.assertEqual(self.dbh.get_database_column_type('elements', 'Z'),
                          'int')
-        self.assertEqual(self.dbh.get_database_column_type('elements', 'name'),
+        self.assertEqual(self.dbh.get_database_column_type('elements', 'Name'),
                          'string')
         self.assertEqual(self.dbh.get_database_column_type('elements',
-                                                           'density'),
+                                                           'Density'),
                          'real')
         self.assertEqual(self.dbh.get_database_nrows('elements'), 118)
-        self.assertEqual(self.dbh.get_database_nnull('elements', 'colour'), 85)
-        self.assertEqual(self.dbh.get_database_nnonnull('elements', 'colour'),
+        self.assertEqual(self.dbh.get_database_nnull('elements', 'Colour'), 85)
+        self.assertEqual(self.dbh.get_database_nnonnull('elements', 'Colour'),
                          33)
 
     def test_sqlite_handler_unique_values(self):
         self.assertEqual(self.dbh.get_database_unique_values('elements',
-                                                             'chemicalseries'),
+                                                             'ChemicalSeries'),
                          ['Actinoid', 'Alkali metal', 'Alkaline earth metal',
                           'Halogen', 'Lanthanoid', 'Metalloid', 'Noble gas',
                           'Nonmetal', 'Poor metal', 'Transition metal'])
@@ -87,7 +87,6 @@ class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
         dbfile = os.path.join(TESTDATA_DIR, 'example.db')
         cls.db = database_connection(dbtype='sqlite', db=dbfile)
 
-    @unittest.skip('temporarily disabled')
     def test_sqlite_verify_elements(self):
         # check the full 118 using constraints built on just 92
         constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
@@ -96,7 +95,6 @@ class TestSQLiteDatabaseConstraintVerifiers(unittest.TestCase):
         self.assertEqual(result.passes, 57)
         self.assertEqual(result.failures, 15)
 
-    @unittest.skip('temporarily disabled')
     def test_sqlite_verify_elements_rex(self):
         # check the full 118 using constraints built on just 92, but
         # also including regex constraints - and using constraints that

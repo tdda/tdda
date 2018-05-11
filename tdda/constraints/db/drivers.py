@@ -35,6 +35,7 @@ except ImportError:
     pymongo = None
 
 from tdda.constraints.base import UNICODE_TYPE
+from tdda.constraints.baseconstraints import unicode_string
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
@@ -187,7 +188,10 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
         connector = DATABASE_CONNECTORS[dbtypelower]
-        return connector(host, port, db, user, password)
+        conn = connector(host, port, db, user, password)
+        if conn is None:
+            sys.exit(1)   # error message already reported
+        return conn
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -400,7 +404,8 @@ class SQLDatabaseHandler:
             sql = '''
                 SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = '%s'
-                AND TABLE_SCHEMA = '%s';
+                AND TABLE_SCHEMA = '%s'
+                ORDER BY ORDINAL_POSITION;
                 ''' % (table, schema)
             rows = self.execute_all(sql)
             return [r[0] for r in rows]
@@ -413,31 +418,42 @@ class SQLDatabaseHandler:
 
     def get_database_column_type(self, tablename, colname):
         typeMap = {
-            'int'             : 'int',
-            'int4'            : 'int',
-            'int8'            : 'int',
-            'smallint'        : 'int',
-            'bigint'          : 'int',
-            'integer'         : 'int',
-            'float'           : 'real',
-            'float4'          : 'real',
-            'float8'          : 'real',
-            'float16'         : 'real',
-            'double'          : 'real',
-            'numeric'         : 'real',
-            'real'            : 'real',
-            'double precision': 'real',
-            'bool'            : 'bool',
-            'boolean'         : 'bool',
-            'text'            : 'string',
-            'varchar'         : 'string',
-            'char'            : 'string',
-            'name'            : 'string',
-            'oidvector'       : 'string',
-            'timestamp'       : 'date',
+            'int'                        : 'int',
+            'int4'                       : 'int',
+            'int8'                       : 'int',
+            'long'                       : 'int',
+            'tinyint'                    : 'int',
+            'smallint'                   : 'int',
+            'bigint'                     : 'int',
+            'integer'                    : 'int',
+            'float'                      : 'real',
+            'float4'                     : 'real',
+            'float8'                     : 'real',
+            'float16'                    : 'real',
+            'double'                     : 'real',
+            'numeric'                    : 'real',
+            'number'                     : 'real',
+            'real'                       : 'real',
+            'double precision'           : 'real',
+            'bool'                       : 'bool',
+            'boolean'                    : 'bool',
+            'text'                       : 'string',
+            'text character set utf8'    : 'string',
+            'varchar'                    : 'string',
+            'varchar(max)'               : 'string',
+            'varchar2'                   : 'string',
+            'nvarchar'                   : 'string',
+            'nvarchar(max)'              : 'string',
+            'nvarchar2'                  : 'string',
+            'char'                       : 'string',
+            'nchar'                      : 'string',
+            'name'                       : 'string',
+            'oidvector'                  : 'string',
+            'timestamp'                  : 'date',
             'timestamp without time zone': 'date',
-            'date'            : 'date',
-            None              : None,
+            'date'                       : 'date',
+            'datetime'                   : 'date',
+            None                         : None,
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
@@ -464,7 +480,8 @@ class SQLDatabaseHandler:
                     break
         else:
             raise Exception('Unsupported database type')
-        return typeMap[typeresult.lower()]
+        dtype = typeMap[typeresult.lower()]
+        return dtype
 
     def get_database_nrows(self, tablename):
         sql = 'SELECT COUNT(*) FROM %s' % tablename
@@ -488,7 +505,10 @@ class SQLDatabaseHandler:
             sql = 'SELECT %s FROM %s' % (expr, tablename)
         else:
             sql = 'SELECT MIN(%s) FROM %s' % (self.quoted(colname), tablename)
-        return self.execute_scalar(sql)
+        result = self.execute_scalar(sql)
+        if ctype == 'date' and type(result) is str:
+            result = datetime.datetime.strptime(result, '%Y-%m-%d %H:%M:%S')
+        return result
 
     def get_database_max(self, tablename, colname):
         ctype = self.get_database_column_type(tablename, colname)
@@ -498,17 +518,33 @@ class SQLDatabaseHandler:
             sql = 'SELECT %s FROM %s' % (expr, tablename)
         else:
             sql = 'SELECT MAX(%s) FROM %s' % (self.quoted(colname), tablename)
-        return self.execute_scalar(sql)
+        result = self.execute_scalar(sql)
+        if ctype == 'date' and type(result) is str:
+            result = datetime.datetime.strptime(result, '%Y-%m-%d %H:%M:%S')
+        return result
 
     def get_database_min_length(self, tablename, colname):
-        sql = 'SELECT MIN(LENGTH(%s)) FROM %s' % (self.quoted(colname),
-                                                  tablename)
-        return self.execute_scalar(sql)
+        return self.extreme_length(tablename, colname, min, 'MIN')
 
     def get_database_max_length(self, tablename, colname):
-        sql = 'SELECT MAX(LENGTH(%s)) FROM %s' % (self.quoted(colname),
-                                                  tablename)
-        return self.execute_scalar(sql)
+        return self.extreme_length(tablename, colname, max, 'MAX')
+
+    def extreme_length(self, tablename, colname, agg, sqlagg):
+        if self.dbtype == 'mysql':
+            uniqs = self.get_database_unique_values(tablename, colname)
+            if uniqs:
+                if type(uniqs[0]) is unicode_string:
+                    L = [len(v) for v in uniqs]
+                else:
+                    L = [len(v.decode('UTF-8')) for v in uniqs]
+                x = agg([len(s) for s in uniqs])
+            else:
+                return None
+        else:
+            sql = 'SELECT %s(LENGTH(%s)) FROM %s' % (sqlagg,
+                                                     self.quoted(colname),
+                                                     tablename)
+            return self.execute_scalar(sql)
 
     def get_database_nunique(self, tablename, colname):
         colname = self.quoted(colname)

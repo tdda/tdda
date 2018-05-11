@@ -1,6 +1,6 @@
 {
     "fields": {
-        "z": {
+        "Z": {
             "type": "int", 
             "min": 1, 
             "max": 118, 
@@ -8,34 +8,34 @@
             "max_nulls": 0, 
             "no_duplicates": true
         }, 
-        "name": {
+        "Name": {
             "type": "string", 
             "min_length": 3, 
             "max_length": 13, 
             "max_nulls": 0, 
             "no_duplicates": true
         }, 
-        "symbol": {
+        "Symbol": {
             "type": "string", 
             "min_length": 1, 
             "max_length": 3, 
             "max_nulls": 0, 
             "no_duplicates": true
         }, 
-        "period": {
+        "Period": {
             "type": "int", 
             "min": 1, 
             "max": 7, 
             "sign": "positive", 
             "max_nulls": 0
         }, 
-        "group_": {
+        "Group": {
             "type": "int", 
             "min": 1, 
             "max": 18, 
             "sign": "positive"
         }, 
-        "chemicalseries": {
+        "ChemicalSeries": {
             "type": "string", 
             "min_length": 7, 
             "max_length": 20, 
@@ -53,59 +53,59 @@
                 "Transition metal"
             ]
         }, 
-        "atomicweight": {
+        "AtomicWeight": {
             "type": "real", 
             "min": 1.007947, 
             "max": 294.0, 
             "sign": "positive", 
             "max_nulls": 1
         }, 
-        "etymology": {
+        "Etymology": {
             "type": "string", 
             "min_length": 4, 
             "max_length": 53, 
             "max_nulls": 1
         }, 
-        "relativeatomicmass": {
+        "RelativeAtomicMass": {
             "type": "real", 
             "min": 1.007947, 
             "max": 294.0, 
             "sign": "positive", 
             "max_nulls": 1
         }, 
-        "meltingpointc": {
+        "MeltingPointC": {
             "type": "real", 
             "min": -258.975, 
             "max": 3675.0
         }, 
-        "meltingpointkelvin": {
+        "MeltingPointKelvin": {
             "type": "real", 
             "min": 14.2, 
             "max": 3948.0, 
             "sign": "positive"
         }, 
-        "boilingpointc": {
+        "BoilingPointC": {
             "type": "real", 
             "min": -268.93, 
             "max": 5596.0
         }, 
-        "boilingpointf": {
+        "BoilingPointF": {
             "type": "real", 
             "min": -452.07, 
             "max": 10105.0
         }, 
-        "density": {
+        "Density": {
             "type": "real", 
             "min": 8.988e-05, 
             "max": 41.0, 
             "sign": "positive"
         }, 
-        "description": {
+        "Description": {
             "type": "string", 
             "min_length": 1, 
             "max_length": 83
         }, 
-        "colour": {
+        "Colour": {
             "type": "string", 
             "min_length": 4, 
             "max_length": 80

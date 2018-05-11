@@ -1,46 +1,53 @@
 -- script for creating the example.db sqlite file
 --
--- usage:
+-- take a copy of elements118.csv, and remove the header line, replace
+-- all the null values with \N (that's everything between adjacent commas,
+-- and after any trailing comma at the end of a line), and then save it
+-- as example.csv.
+--
+-- then run:
+--
 --    sqlite3 example.db
---    (then paste in all of this file)
+--
+-- (and paste in all of this file)
 
 
 CREATE TABLE elements(
-  "z" INTEGER,
-  "name" TEXT,
-  "symbol" TEXT,
-  "period" INTEGER,
-  "group_" INTEGER,
-  "chemicalseries" TEXT,
-  "atomicweight" REAL,
-  "etymology" TEXT,
-  "relativeatomicmass" REAL,
-  "meltingpointc" REAL,
-  "meltingpointkelvin" REAL,
-  "boilingpointc" REAL,
-  "boilingpointf" REAL,
-  "density" REAL,
-  "description" TEXT,
-  "colour" TEXT
+  "Z" INTEGER,
+  "Name" TEXT,
+  "Symbol" TEXT,
+  "Period" INTEGER,
+  "Group" INTEGER,
+  "ChemicalSeries" TEXT,
+  "AtomicWeight" REAL,
+  "Etymology" TEXT,
+  "RelativeAtomicMass" REAL,
+  "MeltingPointC" REAL,
+  "MeltingPointKelvin" REAL,
+  "BoilingPointC" REAL,
+  "BoilingPointF" REAL,
+  "Density" REAL,
+  "Description" TEXT,
+  "Colour" TEXT
 );
 
 .mode csv elements
-.import /tmp/elements_data2.csv elements
+.import example.csv elements
 
-update elements set z = NULL where z = '\N';
-update elements set name = NULL where name = '\N';
-update elements set symbol = NULL where symbol = '\N';
-update elements set period = NULL where period = '\N';
-update elements set group_ = NULL where group_ = '\N';
-update elements set chemicalseries = NULL where chemicalseries = '\N';
-update elements set atomicweight = NULL where atomicweight = '\N';
-update elements set etymology = NULL where etymology = '\N';
-update elements set relativeatomicmass = NULL where relativeatomicmass = '\N';
-update elements set meltingpointc = NULL where meltingpointc = '\N';
-update elements set meltingpointkelvin = NULL where meltingpointkelvin = '\N';
-update elements set boilingpointc = NULL where boilingpointc = '\N';
-update elements set boilingpointf = NULL where boilingpointf = '\N';
-update elements set density = NULL where density = '\N';
-update elements set description = NULL where description = '\N';
-update elements set colour = NULL where colour = '\N';
+update elements set Z = NULL where Z = '\N';
+update elements set Name = NULL where Name = '\N';
+update elements set Symbol = NULL where Symbol = '\N';
+update elements set Period = NULL where Period = '\N';
+update elements set "Group" = NULL where "Group" = '\N';
+update elements set ChemicalSeries = NULL where ChemicalSeries = '\N';
+update elements set AtomicWeight = NULL where AtomicWeight = '\N';
+update elements set Etymology = NULL where Etymology = '\N';
+update elements set RelativeAtomicMass = NULL where RelativeAtomicMass = '\N';
+update elements set MeltingPointc = NULL where MeltingPointC = '\N';
+update elements set MeltingPointKelvin = NULL where MeltingPointKelvin = '\N';
+update elements set BoilingPointC = NULL where BoilingPointC = '\N';
+update elements set BoilingPointF = NULL where BoilingPointF = '\N';
+update elements set Density = NULL where Density = '\N';
+update elements set Description = NULL where Description = '\N';
+update elements set Colour = NULL where Colour = '\N';
 

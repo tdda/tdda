@@ -656,8 +656,10 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
     specific verifiers for various types of data.
-    (Specifically, at the moment, the Pandas verifier verify_df
-    uses this function.)
+
+    (Specifically, at the moment, the Pandas verifier verify_df, and
+    the daatabase verifier, verify_db_table, both use this function, as
+    does any other extension.)
 
     Inputs:
 
@@ -690,6 +692,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     detect = (detect_outpath is not None
               or kwargs.get('detect') is not None
               or kwargs.get('detect_in_place') is not None)
+
     allfields = sorted(constraints.fields.keys(),
                        key=lambda f: fieldnames.index(f) if f in fieldnames
                                                          else -1)
