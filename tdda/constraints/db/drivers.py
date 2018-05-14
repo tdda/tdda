@@ -35,7 +35,7 @@ except ImportError:
     pymongo = None
 
 from tdda.constraints.base import UNICODE_TYPE
-from tdda.constraints.baseconstraints import unicode_string
+from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
@@ -620,6 +620,8 @@ class MongoDBDatabaseHandler:
         parts = tablename.split('.')
         collection = self.db
         for p in parts:
+            if p not in collection.collection_names():
+                raise Exception('collection %s does not exist' % tablename)
             collection = collection[p]
         return collection
 
@@ -627,36 +629,49 @@ class MongoDBDatabaseHandler:
         try:
             self.find_collection(tablename)
             return True
-        except pymongo.errors.InvalidName:
+        except:
             return False
 
     def get_database_column_names(self, tablename):
         collection = self.find_collection(tablename)
-        mapfn = '''function() {
-                        var keys = [];
-                        for (var k in this) {
-                            keys.push(k);
-                        }
-                        emit(null, keys);
-                   }'''
-        redfn = '''function(key, values) {
-                       var keyset = {};
-                       for (var i = 0; i < values.length; i++) {
-                           for (var j = 0; j < values[i].length; j++) {
-                               keyset[values[i][j]] = true;
+        try:
+            keys = collection.aggregate([
+                {'$project': {'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}}},
+                {'$unwind': '$arrayofkeyvalue'},
+                {'$group': {'_id': None,
+                            'allkeys': {'$addToSet': '$arrayofkeyvalue.k'}}}
+            ]).next()['allkeys'];
+            return keys
+        except:
+            # sometimes the aggregate approach above doesn't work (for
+            # reasons that aren't completely clear), so here's an alternative
+            # approach, which is slower.
+            mapfn = '''function() {
+                            var keys = [];
+                            for (var k in this) {
+                                keys.push(k);
+                            }
+                            emit(null, keys);
+                       }'''
+            redfn = '''function(key, values) {
+                           var keyset = {};
+                           for (var i = 0; i < values.length; i++) {
+                               for (var j = 0; j < values[i].length; j++) {
+                                   keyset[values[i][j]] = true;
+                               }
                            }
-                       }
-                       var keys = [];
-                       for (var k in keyset) {
-                           if (k != '_id') {
-                               keys.push(k);
+                           var keys = [];
+                          for (var k in keyset) {
+                               if (k != '_id') {
+                                   keys.push(k);
+                               }
                            }
-                       }
-                       return JSON.stringify(keys);
-                   }'''
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        # this mongodb map/reduce op returns a json repr of the list of keys
-        return json.loads(v)
+                           return JSON.stringify(keys);
+                       }'''
+            mr = collection.map_reduce(mapfn, redfn, 'inline')
+            v = mr.find_one()['value']
+            # the map/reduce op returns a json repr of the list of keys
+            return json.loads(v)
 
     def get_database_column_type(self, tablename, colname):
         collection = self.find_collection(tablename)
@@ -666,7 +681,7 @@ class MongoDBDatabaseHandler:
             valtype = type(val)
             if valtype == bool:
                 return 'bool'
-            elif valtype in (int, long):
+            elif valtype in (int, long_type):
                 return 'int'
             elif valtype == float:
                 return 'real'
@@ -693,47 +708,69 @@ class MongoDBDatabaseHandler:
 
     def get_database_nunique(self, tablename, colname):
         collection = self.find_collection(tablename)
-        #return len(collection.distinct(colname))
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$match': {colname: {'$ne': None}}},
             {'$group': {'_id': '$' + colname}},
             {'$group': {'_id': None, 'nunique': {'$sum': 1}}},
-        ]).next()['nunique']
+        ], allowDiskUse=True)
+        return agg.next()['nunique']
 
     def get_database_unique_values(self, tablename, colname,
-                                   sorted_values=True):
+                                   sorted_values=True, include_nulls=False):
         collection = self.find_collection(tablename)
-        values = collection.distinct(colname)
-        return sorted(values) if sorted_values else values
+        try:
+            values = collection.distinct(colname, allowDiskUse=True)
+        except:
+            # pymongo.errors.OperationFailure: distinct too big, 16mb cap
+            # (there appears to be no workaround, so just don't include
+            # this constraint, by returning an empty list)
+            return []
+        non_null_values = [v for v in values if v is not None]
+        if sorted_values:
+            non_null_values = sorted(non_null_values)
+        if include_nulls and (None in values):
+            return [None] + non_null_values
+        else:
+            return non_null_values
 
     def get_database_min_length(self, tablename, colname):
-        collection = self.find_collection(tablename)
-        mapfn = 'function() { emit(null, this.name ? this.name.length : null);}'
-        redfn = 'function(key, values) { return Math.min.apply(Math, values);}'
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        return int(v)
+        return self.extreme_length(tablename, colname, min, 'min')
 
     def get_database_max_length(self, tablename, colname):
+        return self.extreme_length(tablename, colname, max, 'max')
+
+    def extreme_length(self, tablename, colname, agg, aggstr):
         collection = self.find_collection(tablename)
-        mapfn = 'function() { emit(null, this.name ? this.name.length: null);}'
-        redfn = 'function(key, values) { return Math.max.apply(Math, values);}'
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        return int(v)
+        if self.get_database_column_type(tablename, colname) == 'string':
+            values = self.get_database_unique_values(tablename, colname)
+            v = agg([len(v) for v in values]) if values else None
+        else:
+            mapfn = '''function() {
+                           emit(null, this.name ? this.name.length : null);
+                       }'''
+            redfn = '''function(key, values) {
+                           return Math.%s.apply(Math, values);
+                       }''' % aggstr
+            mr = collection.map_reduce(mapfn, redfn, 'inline')
+            v = mr.find_one()['value']
+        return int(v) if v is not None else None
 
     def get_database_min(self, tablename, colname):
         collection = self.find_collection(tablename)
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$group': {'_id': None, 'min': {'$min': '$' + colname}}},
-        ]).next()['min']
+        ], allowDiskUse=True)
+        return agg.next()['min']
 
     def get_database_max(self, tablename, colname):
         collection = self.find_collection(tablename)
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$group': {'_id': None, 'max': {'$max': '$' + colname}}},
-        ]).next()['max']
+        ])
+        return agg.next()['max']
 
     def db_value_is_null(self, value):
         return value is None

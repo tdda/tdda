@@ -38,9 +38,11 @@ from tdda.constraints.extension import (BaseConstraintCalculator,
 if sys.version_info[0] >= 3:
     unicode_string = str
     byte_string = bytes
+    long_type = int
 else:
     unicode_string = unicode
     byte_string = str
+    long_type = long
 
 DEBUG = False
 
