@@ -1019,7 +1019,10 @@ def discover_df(df, inc_rex=False):
 
     """
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
-    return disco.discover()
+    constraints = disco.discover()
+    if constraints:
+        constraints.set_stats(n_records=len(df), n_selected=len(df))
+    return constraints
 
 
 def file_format(path):

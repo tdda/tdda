@@ -371,18 +371,12 @@ class SQLDatabaseHandler:
 
     def check_table_exists(self, tablename):
         """
-        Check that a table (or a schema.table) exists.
+        Check that a table (or a schema.table) exists and is accessible.
         """
         (schema, table) = self.split_name(tablename)
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''SELECT COUNT(*) FROM pg_catalog.pg_class c
-                     LEFT JOIN pg_catalog.pg_namespace n
-                     ON n.oid = c.relnamespace
-                     WHERE c.relkind IN ('r', '', 'v')
-                     AND c.relname = '%s'
-                     AND n.nspname = '%s';''' % (table, schema)
-        elif self.dbtype == 'mysql':
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
+                allsql = 'SELECT COUNT(*) FROM information_schema.tables'
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_schema = '%s'
                          AND table_name = '%s';''' % (schema, table)
@@ -391,12 +385,22 @@ class SQLDatabaseHandler:
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_name = '%s';''' % table
         elif self.dbtype == 'sqlite':
+            # no schemas
+            allsql = 'SELECT COUNT(*) FROM sqlite_master'
             sql = '''SELECT COUNT(*) FROM sqlite_master
                             WHERE (type = 'table' OR type='view')
                             AND name = '%s';''' % tablename
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
+
+        if self.execute_scalar(allsql) == 0:
+            # no permission to see any tables, so wrong credentials
+            raise Exception('Permission denied')
         return self.execute_scalar(sql) > 0
+
+    def get_nrows(self, tablename):
+        sql = 'SELECT COUNT(*) FROM %s' % tablename
+        return self.execute_scalar(sql)
 
     def get_database_column_names(self, tablename):
         (schema, table) = self.split_name(tablename)

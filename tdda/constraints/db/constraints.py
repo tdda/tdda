@@ -432,6 +432,9 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
     if not disco.check_table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
-    return disco.discover()
-
+    constraints = disco.discover()
+    if constraints:
+        nrows = disco.get_nrows(tablename)
+        constraints.set_stats(n_records=nrows, n_selected=nrows)
+    return constraints
 

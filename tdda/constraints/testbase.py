@@ -13,6 +13,8 @@ import unittest
 
 from collections import OrderedDict
 
+from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
+
 from tdda.constraints.base import (
     DatasetConstraints,
     Fields,
@@ -37,7 +39,7 @@ TESTDATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                             'testdata')
 
 
-class TestConstraints(unittest.TestCase):
+class TestConstraints(ReferenceTestCase):
 
     def test_constraint_repr(self):
         self.assertEqual(repr(MinConstraint(7)),
@@ -152,12 +154,23 @@ class TestConstraints(unittest.TestCase):
     def testload(self):
         path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
         constraints = DatasetConstraints(loadpath=path)
-        constraints.sort_fields()
-        actual = constraints.to_json()
-        with open(path) as f:
-            expected = json.dumps(sort_constraint_dict(json.loads(f.read())),
-                                  indent=4) + '\n'
-            self.assertEqual(actual, expected)
+        fields = ['index', 'evennulls', 'oddnulls', 'evens', 'odds',
+                  'evenreals', 'oddreals', 'evenstr', 'oddstr',
+                  'elevens', 'greek', 'binnedindex', 'binnedodds',
+                  'basedate', 'evendates']
+        constraints.sort_fields(fields)
+        self.assertStringCorrect(constraints.to_json(), 'ddd.tdda',
+                                 rstrip=True,
+                                 ignore_substrings=['"as_at":',
+                                                    '"local_time":',
+                                                    '"utc_time":',
+                                                    '"creator":',
+                                                    '"host":',
+                                                    '"user":',
+                                                    '"tddafile":'])
+
+
+TestConstraints.set_default_data_location(TESTDATA_DIR)
 
 
 if __name__ == '__main__':
