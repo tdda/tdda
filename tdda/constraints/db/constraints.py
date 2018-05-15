@@ -142,11 +142,13 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
                     database and is accessible. It can either be a simple
                     name, or a schema-qualified name of the form `schema.name`.
         """
+        DatabaseHandler.__init__(self, dbtype, db)
+        tablename = self.resolve_table(tablename)
+
         DatabaseConstraintCalculator.__init__(self, tablename, testing)
         DatabaseConstraintDetector.__init__(self, tablename)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
-        DatabaseHandler.__init__(self, dbtype, db)
 
 
 class DatabaseVerification(Verification):
@@ -167,9 +169,11 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     constraints on a single database table.
     """
     def __init__(self, dbtype, db, tablename, inc_rex=False):
+        DatabaseHandler.__init__(self, dbtype, db)
+        tablename = self.resolve_table(tablename)
+
         DatabaseConstraintCalculator.__init__(self, tablename)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
-        DatabaseHandler.__init__(self, dbtype, db)
         self.tablename = tablename
 
 
