@@ -52,11 +52,17 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
         df_path = StringIO(sys.stdin.read())
     df = load_df(df_path)
     constraints = discover_df(df, **kwargs)
+    if constraints is None:
+        # should never happen
+        return
+
+    constraints.set_source(df_path)
+    constraints.set_tdda_file(constraints_path)
     output = constraints.to_json()
     if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
             f.write(output)
-    elif verbose:
+    elif verbose or constraints_path == '-':
         print(output)
     return output
 

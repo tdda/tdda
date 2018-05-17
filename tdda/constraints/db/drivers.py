@@ -34,6 +34,7 @@ try:
 except ImportError:
     pymongo = None
 
+
 from tdda.constraints.base import UNICODE_TYPE
 from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
@@ -136,13 +137,14 @@ def database_arg_flags(create_flags, parser, args, params):
 
 
 def database_connection(table=None, conn=None, dbtype=None, db=None,
-                        host=None, port=None, user=None, password=None):
+                        host=None, port=None, user=None, password=None,
+                        schema=None):
     """
     Connect to a database, using an appropriate driver for the type
     of database specified.
     """
     if conn:
-        defaults = Connection(conn)
+        defaults = ConnectionSpec(conn)
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
@@ -154,7 +156,7 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
         else:
             connfile = os.path.join(os.path.expanduser('~'), '.tdda_db_conn')
         if os.path.exists(connfile):
-            defaults = Connection(connfile)
+            defaults = ConnectionSpec(connfile)
         else:
             defaults = None
     if defaults:
@@ -170,6 +172,8 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
             user = defaults.user
         if password is None:
             password = defaults.password
+        if schema is None:
+            schema = defaults.schema
 
     if host and (':' in host) and port is None:
         parts = host.split(':')
@@ -191,7 +195,7 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
         conn = connector(host, port, db, user, password)
         if conn is None:
             sys.exit(1)   # error message already reported
-        return conn
+        return Connection(conn, schema)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -267,7 +271,7 @@ def regex_matcher(expr, item):
         return re.match(expr, item) is not None
 
 
-class Connection:
+class ConnectionSpec:
     """
     Class for reading a connection specification file.
     """
@@ -280,6 +284,7 @@ class Connection:
         self.port = d.get('port')
         self.user = d.get('user')
         self.password = d.get('password')
+        self.schema = d.get('schema')
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
                     and self.db is not None
@@ -287,6 +292,15 @@ class Connection:
             # if a .conn file for a sqlite connection specifies a .db file,
             # then resolve that relative to the location of the .conn file.
             self.db = os.path.join(os.path.dirname(filename), self.db)
+
+
+class Connection:
+    """
+    A database connection object (also holder for additional attributes)
+    """
+    def __init__(self, connection, schema):
+        self.connection = connection
+        self.schema = schema
 
 
 class DatabaseHandler:
@@ -316,8 +330,9 @@ class SQLDatabaseHandler:
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
-        self.db = db
-        self.cursor = db.cursor()
+        self.db = db.connection
+        self.schema = db.schema
+        self.cursor = db.connection.cursor()
 
     def quoted(self, name):
         # quote a columnname
@@ -349,9 +364,11 @@ class SQLDatabaseHandler:
 
     def default_schema(self):
         if self.dbtype == 'mysql':
-            return ''   # TODO: this makes no sense, there must be a schema!
+            if not self.schema:
+                raise Exception('No schema specified')
+            return self.schema
         elif self.dbtype in ('postgres', 'postgresql'):
-            return 'public'
+            return self.schema or 'public'
         elif self.dbtype == 'sqlite':
             return None
         else:
@@ -369,20 +386,21 @@ class SQLDatabaseHandler:
             raise Exception('Bad table format %s' % tablename)
         return (schema, table)
 
+    def resolve_table(self, name):
+        (schema, table) = self.split_name(name)
+        if schema:
+            return '%s.%s' % (schema, table)
+        else:
+            return table
+
     def check_table_exists(self, tablename):
         """
-        Check that a table (or a schema.table) exists.
+        Check that a table (or a schema.table) exists and is accessible.
         """
         (schema, table) = self.split_name(tablename)
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''SELECT COUNT(*) FROM pg_catalog.pg_class c
-                     LEFT JOIN pg_catalog.pg_namespace n
-                     ON n.oid = c.relnamespace
-                     WHERE c.relkind IN ('r', '', 'v')
-                     AND c.relname = '%s'
-                     AND n.nspname = '%s';''' % (table, schema)
-        elif self.dbtype == 'mysql':
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
+                allsql = 'SELECT COUNT(*) FROM information_schema.tables'
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_schema = '%s'
                          AND table_name = '%s';''' % (schema, table)
@@ -391,12 +409,26 @@ class SQLDatabaseHandler:
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_name = '%s';''' % table
         elif self.dbtype == 'sqlite':
+            # no schemas
+            allsql = 'SELECT COUNT(*) FROM sqlite_master'
             sql = '''SELECT COUNT(*) FROM sqlite_master
                             WHERE (type = 'table' OR type='view')
                             AND name = '%s';''' % tablename
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
+
+        if self.execute_scalar(allsql) == 0:
+            # no permission to see any tables, so wrong credentials
+            raise Exception('Permission denied')
         return self.execute_scalar(sql) > 0
+
+    def get_nrows(self, tablename):
+        (schema, table) = self.split_name(tablename)
+        if schema:
+            sql = 'SELECT COUNT(*) FROM %s.%s' % (schema, table)
+        else:
+            sql = 'SELECT COUNT(*) FROM %s' % table
+        return self.execute_scalar(sql)
 
     def get_database_column_names(self, tablename):
         (schema, table) = self.split_name(tablename)

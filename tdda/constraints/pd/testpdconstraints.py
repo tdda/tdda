@@ -1233,12 +1233,16 @@ class CommandLineHelper:
     def tearDownHelper(cls):
         rmdirs(cls.test_tmpdir, cls.test_dirs)
 
-    @tag
     def testDiscoverCmd(self):
         argv = ['tdda', 'discover', self.e92csv, self.e92tdda]
         self.execute_command(argv)
         self.assertFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
-                               rstrip=True)
+                               rstrip=True,
+                               ignore_substrings=[
+                                   '"as_at":', '"local_time":', '"utc_time":',
+                                   '"source":', '"host":', '"user":',
+                                   '"tddafile":',
+                               ])
         os.remove(self.e92tdda)
 
     def testVerifyE92Cmd(self):

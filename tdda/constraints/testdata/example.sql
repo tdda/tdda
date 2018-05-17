@@ -1,18 +1,22 @@
 -- script for creating the example.db sqlite file
 --
--- take a copy of elements118.csv, and remove the header line, replace
--- all the null values with \N (that's everything between adjacent commas,
--- and after any trailing comma at the end of a line), and then save it
--- as example.csv.
+-- take a copy of elements118.csv, and then:
+--    a) remove the header line
+--    b) replace all the null values with \N (that's everything between
+--       adjacent commas, and after any trailing comma at the end of a line)
+--    c) insert a _rowindex column at the start (numbers starting at 0)
+--    d)and then save it as example.csv.
 --
 -- then run:
 --
+--    rm example.db
 --    sqlite3 example.db
 --
 -- (and paste in all of this file)
 
 
 CREATE TABLE elements(
+  "_rowindex" INTEGER,
   "Z" INTEGER,
   "Name" TEXT,
   "Symbol" TEXT,

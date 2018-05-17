@@ -8,12 +8,16 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import datetime
+import getpass
 import json
 import os
 import re
+import socket
 import sys
 
 from collections import OrderedDict
+
+from tdda.version import version
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
 STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
@@ -76,11 +80,32 @@ class DatasetConstraints(object):
     Currently only supports per-field constraints.
     """
     def __init__(self, per_field_constraints=None, loadpath=None):
+        self.creator = 'TDDA %s' % version
+        self.loadpath = loadpath
+        self.source = None
+        self.dataset = None
+        self.n_records = None
+        self.n_selected = None
         if loadpath:
             self.fields = Fields()
             self.load(loadpath)
         else:
             self.fields = Fields(per_field_constraints)
+
+    def set_creator(self, creator):
+        self.creator = creator
+
+    def set_source(self, source, dataset=None):
+        self.source = source
+        self.dataset = (dataset
+                        or (os.path.basename(source) if source else None))
+
+    def set_stats(self, n_records, n_selected=None):
+        self.n_records = n_records
+        self.n_selected = n_selected
+
+    def set_tdda_file(self, tddafile):
+        self.loadpath = tddafile
 
     def __getitem__(self, k):
         if type(k) == int:
@@ -92,6 +117,10 @@ class DatasetConstraints(object):
 
     def add_field(self, fc):
         self.fields[fc.name] = fc
+
+    def remove_field(self, name):
+        if name in self.fields:
+            del self.fields[name]
 
     def __str__(self):
         return 'FIELDS:\n\n%s' % str(self.fields)
@@ -141,10 +170,26 @@ class DatasetConstraints(object):
         """
         Converts the constraints in this object to a dictionary.
         """
+        now = datetime.datetime.now()
+        utcnow = datetime.datetime.utcnow()
+        metadata = OrderedDict((
+            ('as_at', now.strftime('%Y-%m-%d %H:%H:%S')),
+            ('local_time', now.strftime('%Y-%m-%d %H:%H:%S')),
+            ('utc_time', utcnow.strftime('%Y-%m-%d %H:%H:%S')),
+            ('creator', self.creator),
+            ('source', self.source),
+            ('host', socket.gethostname()),
+            ('user', getpass.getuser()),
+            ('dataset', self.dataset),
+            ('n_records', self.n_records),
+            ('n_selected', self.n_selected),
+            ('tddafile', self.loadpath)
+        ))
         constraints = OrderedDict((
             (f, v.to_dict_value()) for f, v in self.fields.items()
         ))
-        return OrderedDict((('fields', constraints),))
+        return OrderedDict((('creation_metadata', metadata),
+                            ('fields', constraints),))
 
     def to_json(self):
         """

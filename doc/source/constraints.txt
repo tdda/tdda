@@ -315,7 +315,8 @@ A ``tdda_db_conn_DBTYPE`` file is a JSON file of the form::
         "host": HOSTNAME,
         "port": PORTNUMBER,
         "user": USERNAME,
-        "password": PASSWORD
+        "password": PASSWORD,
+        "schema": SCHEMA,
     }
 
 All the entries are optional.
@@ -324,6 +325,9 @@ If a ``password`` is provided, then care should be taken to ensure that the
 file has appropriate filesystem permissions so that it cannot be read by
 other users.
 
+If a ``schema`` is provided, then it will be used as the default schema,
+when constraints are discovered or verified on a table name with no
+schema specified.
 
 
 API
