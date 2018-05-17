@@ -158,11 +158,16 @@ class ReferenceTest(object):
     def set_default_data_location(cls, location, kind=None):
         """
         Declare the default filesystem location for reference files of a
-        particular kind. This sets the location globally, and will apply
-        to all instances of the class.
+        particular kind. This sets the location for all instances of the class
+        it is called on. Subclasses will inherit this default (unless they
+        explicitly override it).
+
+        To set the location globally for all tests in all classes
+        within an application, call this method on the
+        :py:class:`ReferenceTest` class.
 
         The instance method :py:meth:`set_data_location()` can be used to set
-        the per-kind data locations for an individual instance of the class.
+        the per-kind data locations for an individual instance of a class.
 
         If calls to :py:meth:`assertFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
@@ -176,7 +181,27 @@ class ReferenceTest(object):
         raise an exception.
 
         """
-        cls.default_data_locations[kind] = os.path.normpath(location)
+        clsid = id(cls)
+        if clsid not in cls.default_data_locations:
+            cls.default_data_locations[clsid] = {}
+        cls.default_data_locations[clsid][kind] = os.path.normpath(location)
+
+    @staticmethod
+    def _cls_dataloc(cls, d=None):
+        """
+        Internal function for obtaining the default data location settings
+        for the given class, inheriting from all parent classes all the
+        way up to the :py:class:`ReferenceTest` class root.
+        """
+        if d is None:
+            d = {}
+        for parentcls in cls.__bases__:
+            if issubclass(parentcls, ReferenceTest):
+                parentcls._cls_dataloc(parentcls, d)
+        clsid = id(cls)
+        if clsid in cls.default_data_locations:
+            d.update(cls.default_data_locations[clsid])
+        return d
 
     def __init__(self, assert_fn):
         """
@@ -192,7 +217,7 @@ class ReferenceTest(object):
                       failed, if the value does not evaluate as ``True``).
         """
         self.assert_fn = assert_fn
-        self.reference_data_locations = dict(self.default_data_locations)
+        self.reference_data_locations = self._cls_dataloc(self.__class__)
         self.pandas = PandasComparison(print_fn=self.print_fn,
                                        verbose=self.verbose)
         self.files = FilesComparison(print_fn=self.print_fn,
@@ -225,7 +250,7 @@ class ReferenceTest(object):
         the ``None`` *kind* and this default **must** be specified.
 
         This method overrides any global defaults set from calls to the
-        set_default_data_location class-method.
+        :py:meth:`ReferenceeTest.set_default_data_location()` class-method.
 
         If you haven't even defined the ``None`` default, and you make calls
         to :py:meth:`assertFileCorrect()` (etc) using relative pathnames for

@@ -457,7 +457,7 @@ def default_csv_writer(df, csvfile, **kwargs):
         bytes_cols = find_bytes_cols(df)
         if bytes_cols:
             df = bytes_to_unicode(df, bytes_cols)
-    df.to_csv(csvfile, **options)
+    return df.to_csv(csvfile, **options)
 
 
 def find_bytes_cols(df):
