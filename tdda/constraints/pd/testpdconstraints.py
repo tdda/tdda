@@ -52,7 +52,7 @@ from tdda.constraints.pd.constraints import (load_df, verify_df,
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 
-from tdda.referencetest import ReferenceTestCase
+from tdda.referencetest import ReferenceTestCase, tag
 
 isPython2 = sys.version_info[0] < 3
 
@@ -141,8 +141,7 @@ class Asserter:
 
 
 
-class TestPandasConstraintVerifiers(ReferenceTestCase):
-
+class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
     @classmethod
     def tearDownClass(cls):
         assert ConstraintVerificationTester.outstandingAssertions == 0
@@ -534,7 +533,7 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             ('s', 'string', 'strict'),
             ('d', 'date', 'strict'),
 
-            ('bn', 'bool', 'sloppy'), # Fails strict because promoted to object
+            ('bn', 'bool', 'strict'),
             ('in', 'int', 'sloppy'),  # Fails strict because promoted to real
             ('rn', 'real', 'strict'),
             ('sn', 'string', 'strict'),
@@ -545,7 +544,6 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             ('rn', ['int', 'real'], 'strict'),      # just a looser constraint
         ]
         bads = [
-            ('bn', 'bool', 'strict'),
             ('in', 'int', 'strict'),
             ('b', 'date', 'sloppy'),
             ('i', 'bool', 'sloppy'),
@@ -788,6 +786,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
             else:
                 cvt.verify_allowed_values_constraint(col, c_nothing).isFalse()
 
+
+class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
     def testFieldVerification(self):
         df1 = pd.DataFrame({
                 'b': [True, False] * 2,
@@ -949,6 +949,133 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         vdf.sort_values('field', inplace=True)
         self.assertStringCorrect(vdf.to_string(), 'elements118rex.df')
 
+
+class TestPandasDataFrameConstraints(ReferenceTestCase):
+    def testDDD_df(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df(df, constraints_path)
+        # expect 3 failures:
+        #   - the pandas CSV reader will have read 'elevens' as an int
+        #   - the pandas CSV reader will have read the date columns as strings
+        self.assertEqual(v.passes, 58)
+        self.assertEqual(v.failures, 3)
+
+    def testDDD_csv(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        # expect 1 failure:
+        #   - the enhanced CSV reader will have initially read 'elevens' as
+        #     an int field and then (correctly) converted it to string, but
+        #     it doesn't know that it would need to pad with initial zeros,
+        #     so that means it will have computed its minimum as being '0'
+        #     not '00', so the minimum string length won't be the same as
+        #     Miro would compute (since Miro has the advantage of having
+        #     additional metadata available when it read the CSV file, to
+        #     tell it that 'elevens' is a string field.
+        self.assertEqual(v.passes, 60)
+        self.assertEqual(v.failures, 1)
+
+    def testDDD_discover_and_verify(self):
+        # both discovery and verification done using Pandas
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        c = discover_df_from_file(csv_path, constraints_path=None,
+                                  verbose=False)
+        tmpdir = tempfile.gettempdir()
+        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
+        with open(tmpfile, 'w') as f:
+            f.write(c)
+        v = verify_df_from_file(csv_path, tmpfile, report='fields',
+                                verbose=False)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 0)
+
+    def testDDD_df(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df(df, constraints_path)
+        # expect 3 failures:
+        #   - the pandas CSV reader will have read 'elevens' as an int
+        #   - the pandas CSV reader will have read the date columns as strings
+        self.assertEqual(v.passes, 58)
+        self.assertEqual(v.failures, 3)
+
+    def testDDD_csv(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        # expect 1 failure:
+        #   - the enhanced CSV reader will have initially read 'elevens' as
+        #     an int field and then (correctly) converted it to string, but
+        #     it doesn't know that it would need to pad with initial zeros,
+        #     so that means it will have computed its minimum as being '0'
+        #     not '00', so the minimum string length won't be the same as
+        #     Miro would compute (since Miro has the advantage of having
+        #     additional metadata available when it read the CSV file, to
+        #     tell it that 'elevens' is a string field.
+        self.assertEqual(v.passes, 60)
+        self.assertEqual(v.failures, 1)
+
+    def testDDD_discover_and_verify(self):
+        # both discovery and verification done using Pandas
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        c = discover_df_from_file(csv_path, constraints_path=None,
+                                  verbose=False)
+        tmpdir = tempfile.gettempdir()
+        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
+        with open(tmpfile, 'w') as f:
+            f.write(c)
+        v = verify_df_from_file(csv_path, tmpfile, report='fields',
+                                verbose=False)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 0)
+
+    def testDDD_df(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df(df, constraints_path)
+        # expect 3 failures:
+        #   - the pandas CSV reader will have read 'elevens' as an int
+        #   - the pandas CSV reader will have read the date columns as strings
+        self.assertEqual(v.passes, 58)
+        self.assertEqual(v.failures, 3)
+
+    def testDDD_csv(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        # expect 1 failure:
+        #   - the enhanced CSV reader will have initially read 'elevens' as
+        #     an int field and then (correctly) converted it to string, but
+        #     it doesn't know that it would need to pad with initial zeros,
+        #     so that means it will have computed its minimum as being '0'
+        #     not '00', so the minimum string length won't be the same as
+        #     Miro would compute (since Miro has the advantage of having
+        #     additional metadata available when it read the CSV file, to
+        #     tell it that 'elevens' is a string field.
+        self.assertEqual(v.passes, 60)
+        self.assertEqual(v.failures, 1)
+
+    def testDDD_discover_and_verify(self):
+        # both discovery and verification done using Pandas
+        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        c = discover_df_from_file(csv_path, constraints_path=None,
+                                  verbose=False)
+        tmpdir = tempfile.gettempdir()
+        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
+        with open(tmpfile, 'w') as f:
+            f.write(c)
+        v = verify_df_from_file(csv_path, tmpfile, report='fields',
+                                verbose=False)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 0)
+
+
+class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118rexToFile(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -1041,6 +1168,8 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
         ddf2 = v2.detected()
         self.assertStringCorrect(ddf2.to_string(), 'detect_dups.df')
 
+
+class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
@@ -1078,130 +1207,112 @@ class TestPandasConstraintVerifiers(ReferenceTestCase):
                 else:
                     self.assertEqual(actual, expected)
 
-    @unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
-    def testTDDACommand(self):
-        # similar test to testTDDACLI, but using the command-line wrapper
-        self.command_line(wrapper=True)
 
-    def testTDDACLI(self):
-        # similar test to testTDDACommand, but using the console API
-        self.command_line(wrapper=False)
+class CommandLineHelper:
+    @classmethod
+    def setUpHelper(cls):
+        cls.test_tmpdir = tempfile.gettempdir()
+        cls.test_dirs = ['referencetest_examples', 'constraints_examples',
+                         'rexpy_examples']
+        cls.constraintsdir = os.path.abspath(os.path.dirname(__file__))
+        cls.tddaTopDir = os.path.dirname(os.path.dirname(cls.constraintsdir))
+        cls.testDataDir = os.path.join(cls.test_tmpdir,
+                                       'constraints_examples', 'testdata')
+        cls.e92csv = os.path.join(cls.testDataDir, 'elements92.csv')
+        cls.e118csv = os.path.join(cls.testDataDir, 'elements118.csv')
+        cls.e118feather = os.path.join(cls.testDataDir, 'elements118.feather')
+        cls.e92tdda_correct = os.path.join(cls.testDataDir, 'elements92.tdda')
+        cls.e92tdda = os.path.join(cls.test_tmpdir, 'elements92.tdda')
+        cls.e92bads1 = os.path.join(cls.test_tmpdir, 'elements92bads1.csv')
+        cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
 
-    def testDDD_df(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
-        v = verify_df(df, constraints_path)
-        # expect 3 failures:
-        #   - the pandas CSV reader will have read 'elevens' as an int
-        #   - the pandas CSV reader will have read the date columns as strings
-        self.assertEqual(v.passes, 58)
-        self.assertEqual(v.failures, 3)
+        argv = ['tdda', 'examples', cls.test_tmpdir]
+        cls.execute_command(argv)
 
-    def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
-        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
-        # expect 1 failure:
-        #   - the enhanced CSV reader will have initially read 'elevens' as
-        #     an int field and then (correctly) converted it to string, but
-        #     it doesn't know that it would need to pad with initial zeros,
-        #     so that means it will have computed its minimum as being '0'
-        #     not '00', so the minimum string length won't be the same as
-        #     Miro would compute (since Miro has the advantage of having
-        #     additional metadata available when it read the CSV file, to
-        #     tell it that 'elevens' is a string field.
-        self.assertEqual(v.passes, 60)
-        self.assertEqual(v.failures, 1)
+    @classmethod
+    def tearDownHelper(cls):
+        rmdirs(cls.test_tmpdir, cls.test_dirs)
 
-    def testDDD_discover_and_verify(self):
-        # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        c = discover_df_from_file(csv_path, constraints_path=None,
-                                  verbose=False)
-        tmpdir = tempfile.gettempdir()
-        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
-        with open(tmpfile, 'w') as f:
-            f.write(c)
-        v = verify_df_from_file(csv_path, tmpfile, report='fields',
-                                verbose=False)
-        self.assertEqual(v.passes, 61)
-        self.assertEqual(v.failures, 0)
+    @tag
+    def testDiscoverCmd(self):
+        argv = ['tdda', 'discover', self.e92csv, self.e92tdda]
+        self.execute_command(argv)
+        self.assertFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
+                               rstrip=True)
+        os.remove(self.e92tdda)
 
-    def command_line(self, wrapper):
-        # common code for testTDDACommand and testTDDACLI
-        tmpdir = tempfile.gettempdir()
-        constraintsdir = os.path.abspath(os.path.dirname(__file__))
-        tddaTopDir = os.path.dirname(os.path.dirname(constraintsdir))
-        dirs = ['referencetest_examples', 'constraints_examples',
-                'rexpy_examples']
-        testDataDir = os.path.join(tmpdir, 'constraints_examples', 'testdata')
-        e92csv = os.path.join(testDataDir, 'elements92.csv')
-        e118csv = os.path.join(testDataDir, 'elements118.csv')
-        e92tdda = os.path.join(tmpdir, 'elements92.tdda')
-        e118feather = os.path.join(testDataDir, 'elements118.feather')
-        e92bads1 = os.path.join(tmpdir, 'elements92bads1.csv')
-        e92bads2 = os.path.join(tmpdir, 'elements92bads2.csv')
-        rmdirs(tmpdir, dirs)
-        try:
-            start = 'Copied example files for tdda.referencetest to'
-            argv = ['tdda', 'examples', tmpdir]
-            if wrapper:
-                result = check_shell_output(argv)
-                self.assertTrue(result.startswith(start))
-                self.assertEqual(len(result.splitlines()), 3)
-            else:
-                main_with_argv(argv, verbose=False)
-            argv = ['tdda', 'discover', e92csv, e92tdda]
-            if wrapper:
-                result = check_shell_output(argv)
-                self.assertEqual(result, '')
-            else:
-                main_with_argv(argv, verbose=False)
-            argv = ['tdda', 'verify', e92csv, e92tdda]
-            self.assertTrue(os.path.exists(e92tdda))
-            if wrapper:
-                result = check_shell_output(argv)
-            else:
-                result = str(main_with_argv(argv, verbose=False))
-            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Constraints passing: 72\n'
-                                                    'Constraints failing: 0'))
-            argv = ['tdda', 'verify', e118csv, e92tdda]
-            if wrapper:
-                result = check_shell_output(argv)
-            else:
-                result = str(main_with_argv(argv, verbose=False))
-            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Constraints passing: 57\n'
-                                                    'Constraints failing: 15'))
-            argv = ['tdda', 'detect', e118csv, e92tdda, e92bads1,
-                    '--per-constraint', '--output-fields', '--index']
-            if wrapper:
-                result = check_shell_output(argv)
-            else:
-                result = str(main_with_argv(argv, verbose=False))
-            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Records passing: 91\n'
-                                                    'Records failing: 27'))
-            self.assertTrue(os.path.exists(e92bads1))
-            self.assertFileCorrect(e92bads1, 'detect-els-cmdline.csv')
-            argv = ['tdda', 'detect', e118feather, e92tdda, e92bads2,
-                    '--per-constraint', '--output-fields', '--index']
-            if wrapper:
-                result = check_shell_output(argv)
-            else:
-                result = str(main_with_argv(argv, verbose=False))
-            self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                    'Records passing: 91\n'
-                                                    'Records failing: 27'))
-            self.assertTrue(os.path.exists(e92bads2))
-            self.assertFileCorrect(e92bads2, 'detect-els-cmdline2.csv')
-        finally:
-            rmdirs(tmpdir, dirs)
+    def testVerifyE92Cmd(self):
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct]
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 72\n'
+                                                'Constraints failing: 0'))
+
+    def testVerifyE118Cmd(self):
+        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct]
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 57\n'
+                                                'Constraints failing: 15'))
+
+    def testDetectE118Cmd(self):
+        argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
+                self.e92bads1, '--per-constraint', '--output-fields',
+                '--index']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Records passing: 91\n'
+                                                'Records failing: 27'))
+        self.assertTrue(os.path.exists(self.e92bads1))
+        self.assertFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
+        os.remove(self.e92bads1)
+
+    def testDetectE118FeatherCmd(self):
+        argv = ['tdda', 'detect', self.e118feather, self.e92tdda_correct,
+                self.e92bads2, '--per-constraint', '--output-fields',
+                '--index']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Records passing: 91\n'
+                                                'Records failing: 27'))
+        self.assertTrue(os.path.exists(self.e92bads2))
+        self.assertFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
+        os.remove(self.e92bads2)
 
 
-TestPandasConstraintVerifiers.set_default_data_location(TESTDATA_DIR)
+class TestPandasCommandAPI(ReferenceTestCase, CommandLineHelper):
+    @classmethod
+    def setUpClass(cls):
+        cls.setUpHelper()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tearDownHelper()
+
+    @classmethod
+    def execute_command(self, argv):
+        return str(main_with_argv(argv, verbose=False))
+
+
+@unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
+class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
+    @classmethod
+    def setUpClass(cls):
+        cls.setUpHelper()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tearDownHelper()
+
+    @classmethod
+    def execute_command(self, argv):
+        return check_shell_output(argv)
+
+
+TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATA_DIR)
+TestPandasMultipleConstraintDetector.set_default_data_location(TESTDATA_DIR)
+TestPandasCommandLine.set_default_data_location(TESTDATA_DIR)
+TestPandasCommandAPI.set_default_data_location(TESTDATA_DIR)
 
 
 def rmdirs(parent, dirs):

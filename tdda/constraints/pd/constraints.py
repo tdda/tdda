@@ -33,6 +33,11 @@ import sys
 
 from collections import OrderedDict
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 import pandas as pd
 import numpy as np
 
@@ -59,6 +64,7 @@ from tdda.constraints.baseconstraints import (
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
+    unicode_string, byte_string, long_type
 )
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
@@ -72,8 +78,6 @@ else:
     pandas_Timestamp = pd.tslib.Timestamp
 
 isPy3 = sys.version_info[0] >= 3
-if isPy3:
-    long = int
 
 DEBUG = False
 
@@ -136,7 +140,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             return self.df[colname].str.decode('UTF-8').str.len().max()
 
     def calc_tdda_type(self, colname):
-        return pandas_tdda_column_type(self.df[colname])
+        return pandas_tdda_type(self.df[colname])
 
     def calc_null_count(self, colname):
         return int(len(self.df) - self.df[colname].count())
@@ -422,7 +426,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                     for limit in ('min', 'max'):
                         if limit in constraints[c]:
                             limitval = constraints[c][limit].value
-                            if type(limitval) in (int, long, float):
+                            if type(limitval) in (int, long_type, float):
                                 if type(limitval) == float:
                                     is_real = True
                             else:
@@ -528,35 +532,6 @@ class PandasConstraintDiscoverer(PandasConstraintCalculator,
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
 
 
-def pandas_tdda_column_type(x):
-    """
-    Returns the TDDA type of a column.
-
-    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
-
-    If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
-
-    If *x* is not recognized as one of these, 'other' is returned.
-    """
-    dt = getattr(x, 'dtype', None)
-    if dt == np.dtype('O'):
-        return 'string'
-    dts = str(dt)
-    if 'bool' in dts:
-        return 'bool'
-    if 'int' in dts:
-        return 'int'
-    if 'float' in dts:
-        return 'real'
-    if 'datetime' in dts:
-        return 'date'
-    if not isinstance(x, pd.core.series.Series) and pd.isnull(x):
-        return 'null'
-    # Everything else is other, for now, including compound types,
-    # unicode in Python2, bytes in Python3 etc.
-    return 'other'
-
-
 def pandas_types_compatible(x, y, colname=None):
     """
     Returns boolean indicating whether the coarse_type of *x* and *y* are
@@ -586,13 +561,31 @@ def pandas_coarse_type(x):
 
 
 def pandas_tdda_type(x):
+    """
+    Returns the TDDA type of a column.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+
+    If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
+
+    If *x* is not recognized as one of these, 'other' is returned.
+    """
+    if type(x) == str:
+        return 'string'
     dt = getattr(x, 'dtype', None)
-    if type(x) == str or dt == np.dtype('O'):
+    if dt == np.dtype('O'):
+        # objects could be either strings or booleans-with-nulls
+        for v in x:
+            if type(v) in (bool, np.bool, np.bool_):
+                return 'bool'
+            elif type(v) in (unicode_string, byte_string):
+                return 'string'
+        # if it was all null, there's no way to tell its type, so say string
         return 'string'
     dts = str(dt)
     if type(x) == bool or 'bool' in dts:
         return 'bool'
-    if type(x) in (int, long) or 'int' in dts:
+    if type(x) in (int, long_type) or 'int' in dts:
         return 'int'
     if type(x) == float or 'float' in dts:
         return 'real'
@@ -607,7 +600,6 @@ def pandas_tdda_type(x):
     if (not isinstance(x, pd.core.series.Series) and null):
         return 'null'
     # Everything else is other, for now, including compound types,
-    # unicode in Python2, bytes in Python3 etc.
     return 'other'
 
 
@@ -1023,8 +1015,12 @@ def discover_df(df, inc_rex=False):
 
 
 def file_format(path):
-    parts = os.path.splitext(path)
-    return 'feather' if len(parts) > 1 and parts[1] == '.feather' else 'csv'
+    if isinstance(path, StringIO):
+        return 'csv'
+    else:
+        parts = os.path.splitext(path)
+        return ('feather' if len(parts) > 1 and parts[1] == '.feather'
+                          else 'csv')
 
 
 def load_df(path):
@@ -1042,7 +1038,9 @@ def load_df(path):
 
 
 def save_df(df, path, index=False):
-    if file_format(path) != 'feather':
+    if path == '-' or path is None:
+        print(default_csv_writer(df, None, index=index))
+    elif file_format(path) != 'feather':
         default_csv_writer(df, path, index=index)
     elif featherpmm:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),

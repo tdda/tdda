@@ -54,13 +54,12 @@ def verify_database_table_from_file(table, constraints_path,
 def get_verify_params(args):
     parser = database_arg_parser(verify_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
-    parser.add_argument('constraints', nargs=1,
+    parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     params = {}
     flags = database_arg_flags(verify_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (flags.constraints[0] if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 

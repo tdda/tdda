@@ -70,8 +70,7 @@ def get_params(args):
     params = {}
     flags = database_arg_flags(discover_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (flags.constraints if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 

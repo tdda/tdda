@@ -93,6 +93,7 @@ where
   * *input* is one of:
 
     - a CSV file
+    - a ``-``, meaning it will read a csv file from standard input
     - a :py:mod:`feather` file containing a DataFrame, with extension
       ``.feather``
     - a database table
@@ -100,7 +101,10 @@ where
   * *constraints.tdda*, if provided, specifies the name of a file to
     which the generated constraints will be written.
 
-  * supported flags are
+If no constraints output file is provided, or is ``-``, the generated constraints
+are written to standard output.
+
+Optional flags are:
 
     - ``-r`` or ``--rex``    to include regular expression generation
     - ``-R`` or ``--norex``  to exclude regular expression generation
@@ -127,6 +131,7 @@ where:
 * *input* is one of:
 
   - a csv file
+  - a ``-``, meaning it will read a csv file from standard input
   - a :py:mod:`feather` file containing a DataFrame, with extension
     ``.feather``
   - a database table
@@ -172,7 +177,8 @@ where:
 
 * *input* is one of:
 
-  - a csv file
+  - a csv file name
+  - a ``-``, meaning it will read a csv file from standard input
   - a :py:mod:`feather` file containing a DataFrame, with extension
     ``.feather``
   - a database table
@@ -181,9 +187,15 @@ where:
 
 * *output* is one of:
 
-  - a csv file to be created
+  - a csv file to be created containing failing records
+  - a ``-``, meaning it will write the  csv file containing
+    failing records to standard output
   - a :py:mod:`feather` file with extension ``.feather``, to be created
-    containing a DataFrame
+    containing a DataFrame of failing records
+
+If no constraints file is provided and the input is a CSV or feather file,
+a constraints file with the same path as the input file, but with a *.tdda*
+extension, will be used.
 
 Optional flags are:
 

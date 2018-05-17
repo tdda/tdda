@@ -94,8 +94,7 @@ class TDDAFilesExtension(ExtensionBase):
         params = {}
         flags = discover_flags(parser, self.argv[1:], params)
         params['path'] = flags.directory[0] if flags.directory else None
-        params['constraints_path'] = (flags.constraints if flags.constraints
-                                      else None)
+        params['constraints_path'] = flags.constraints
         constraints = discover_directory(**params)
         results = constraints.to_json()
         if params['constraints_path']:
@@ -117,7 +116,7 @@ class TDDAFilesExtension(ExtensionBase):
         parser.add_argument('directory', nargs=1, help='directory path')
         parser.add_argument('constraints', nargs=1,
                             help='constraints file to verify against')
-        parser.add_argument('outpath', nargs=1,
+        parser.add_argument('outpath', nargs='?',
                             help='file to write detected records to')
         return self.verify_or_detect(parser, detect=True)
 
@@ -131,10 +130,11 @@ class TDDAFilesExtension(ExtensionBase):
         params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                       else None)
         if detect:
-            params['outpath'] = flags.outpath[0] if flags.outpath else None
+            params['outpath'] = flags.outpath
             results = detect_directory_from_file(**params)
         else:
             results = verify_directory_from_file(**params)
+
         if self.verbose:
             print(results)
         return results

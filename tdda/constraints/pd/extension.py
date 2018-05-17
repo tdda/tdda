@@ -22,7 +22,7 @@ class TDDAPandasExtension(ExtensionBase):
 
     def applicable(self):
         for a in self.argv:
-            if a.endswith('.csv') or a.endswith('.feather'):
+            if a.endswith('.csv') or a.endswith('.feather') or a == '-':
                 return True
         return False
 
