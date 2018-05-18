@@ -1218,10 +1218,14 @@ class CommandLineHelper:
         cls.tddaTopDir = os.path.dirname(os.path.dirname(cls.constraintsdir))
         cls.testDataDir = os.path.join(cls.test_tmpdir,
                                        'constraints_examples', 'testdata')
+
         cls.e92csv = os.path.join(cls.testDataDir, 'elements92.csv')
         cls.e118csv = os.path.join(cls.testDataDir, 'elements118.csv')
         cls.e118feather = os.path.join(cls.testDataDir, 'elements118.feather')
         cls.e92tdda_correct = os.path.join(cls.testDataDir, 'elements92.tdda')
+        cls.dddcsv = os.path.join(cls.testDataDir, 'ddd.csv')
+        cls.dddtdda_correct = os.path.join(cls.testDataDir, 'ddd.tdda')
+
         cls.e92tdda = os.path.join(cls.test_tmpdir, 'elements92.tdda')
         cls.e92bads1 = os.path.join(cls.test_tmpdir, 'elements92bads1.csv')
         cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
@@ -1258,6 +1262,69 @@ class CommandLineHelper:
         self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                 'Constraints passing: 57\n'
                                                 'Constraints failing: 15'))
+
+    def testVerifyOptionFlags(self):
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct]
+        result = self.execute_command(argv)
+        self.assertEqual(len(result.splitlines()), 38)
+        self.assertTrue('✓' in result)
+        self.assertFalse('OK' in result)
+
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
+                '--ascii']
+        result = self.execute_command(argv)
+        self.assertEqual(len(result.splitlines()), 38)
+        self.assertTrue('OK' in result)
+
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
+                '--fields']
+        result = self.execute_command(argv)
+        self.assertEqual(len(result.splitlines()), 4)
+
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
+                '--all']
+        result = self.execute_command(argv)
+        self.assertEqual(len(result.splitlines()), 38)
+
+        argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
+                '--fields', '--type_checking', 'strict']
+        result = self.execute_command(argv)
+        # 5 type-failures (plus min_length on elevens, considered as an int)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 55\n'
+                                                'Constraints failing: 6'))
+
+        argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
+                '--fields', '--type_checking', 'sloppy']
+        result = self.execute_command(argv)
+        # 1 failure, because elevens is treated as an int, so min_length fails
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 60\n'
+                                                'Constraints failing: 1'))
+
+    def testVerifyEpsilon(self):
+        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
+                '--fields']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 57\n'
+                                                'Constraints failing: 15'))
+
+        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
+                '--fields', '--epsilon', '0.5']
+        result = self.execute_command(argv)
+        # a few fewer failures, because of epsilon
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 60\n'
+                                                'Constraints failing: 12'))
+
+        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
+                '--fields', '--epsilon', '10']
+        result = self.execute_command(argv)
+        # even fewer failures, because of massive epsilon
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Constraints passing: 61\n'
+                                                'Constraints failing: 11'))
 
     def testDetectE118Cmd(self):
         argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,

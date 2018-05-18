@@ -155,6 +155,10 @@ Optional flags are:
     Report in ASCII form, without using special characters.
 * ``--epsilon E``
     Use this value of epsilon for fuzziness in comparing numeric values.
+* ``--type_checking strict|sloppy``
+    By default, type-checking is sloppy, meaning that when checking type
+    constraints, all numeric types are considered to be equivalent. With
+    strict typing, ``int`` is considered different from ``real``.
 
 See :ref:`tdda_csv_file` for details of how a CSV file is read.
 
@@ -207,6 +211,10 @@ Optional flags are:
     Report in ASCII form, without using special characters.
 * ``--epsilon E``
     Use this value of epsilon for fuzziness in comparing numeric values.
+* ``--type_checking strict|sloppy``
+    By default, type-checking is sloppy, meaning that when checking type
+    constraints, all numeric types are considered to be equivalent. With
+    strict typing, ``int`` is considered different from ``real``.
 * ``--write-all``
     Include passing records in the output.
 * ``--per-constraint``

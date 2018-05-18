@@ -22,7 +22,10 @@ import pytest
 
 from tdda.referencetest import tag
 
-# ensure we can import the generators module in the directory above
+# ensure we can import the "generators" module in the directory above
+# (required here only because we want this example source code to be able
+# to be copied to other locations, and still work there without needing
+# any alterations to PYTHONPATH).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generators import generate_string, generate_file

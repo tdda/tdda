@@ -308,7 +308,8 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         sys.exit(1)
     constraints = DatasetConstraints(loadpath=constraints_path)
     return dbv.verify(constraints,
-                      VerificationClass=DatabaseVerification, **kwargs)
+                      VerificationClass=DatabaseVerification,
+                      report=report, **kwargs)
 
 
 def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,

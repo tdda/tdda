@@ -12,7 +12,7 @@ Alternatively, you can copy all examples using the following command::
     
     tdda examples
 
-which will create 3 separate sub-directories.
+which will create three separate sub-directories.
 """
 from __future__ import absolute_import
 

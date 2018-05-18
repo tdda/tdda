@@ -258,14 +258,14 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def detect_tdda_type_constraint(self, colname, value):
         name = colname + '_type_ok'
-        self.out_df[name] = detection_field(None, False)
+        self.out_df[name] = False
 
     def detect_sign_constraint(self, colname, value):
         name = colname + '_sign_ok'
         c = self.df[colname]
 
         if value == 'null':
-            self.out_df[name] = detection_field(None, False)
+            self.out_df[name] = False
         elif value == 'positive':
             self.out_df[name] = detection_field(c, c > 0)
         elif value == 'non-negative':
@@ -722,7 +722,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     constraints = DatasetConstraints(loadpath=constraints_path)
     pdv.repair_field_types(constraints)
     return pdv.verify(constraints,
-                      VerificationClass=PandasVerification, **kwargs)
+                      VerificationClass=PandasVerification,
+                      report=report, **kwargs)
 
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,

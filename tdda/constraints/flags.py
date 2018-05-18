@@ -98,9 +98,10 @@ def verify_parser(usage=''):
                         help='report only fields with failures')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
-    parser.add_argument('-type_checking', action='store_true',
-                        help='strict or sloppy')
-    parser.add_argument('-epsilon', '--epsilon', nargs=1,
+    parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
+                        help='"sloppy" means consider all numeric types '
+                             'equivalent')
+    parser.add_argument('-epsilon', '--epsilon', type=float,
                         help='epsilon fuzziness')
     return parser
 
@@ -119,9 +120,10 @@ def detect_parser(usage=''):
                         help='report only fields with failures')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
-    parser.add_argument('-type_checking', action='store_true',
-                        help='strict or sloppy')
-    parser.add_argument('-epsilon', '--epsilon', nargs=1,
+    parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
+                        help='"sloppy" means consider all numeric types '
+                             'equivalent')
+    parser.add_argument('-epsilon', '--epsilon', type=float,
                         help='epsilon fuzziness')
     parser.add_argument('--write-all', action='store_true',
                         help='Include passing records')
@@ -145,7 +147,8 @@ def detect_parser(usage=''):
 def verify_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
-        print(parser.epilog, file=sys.stderr)
+        print('Unexpected arguments %s\n' % ' '.join(more),
+              parser.epilog, file=sys.stderr)
         sys.exit(1)
     params.update({
         'report': 'all',
@@ -157,10 +160,10 @@ def verify_flags(parser, args, params):
         params['report'] = 'fields'
     if flags.ascii:
         params['ascii'] = True
-    if flags.type_checking:
-        params['type_checking'] = True
-    if flags.epsilon:
-        params['epsilon'] = float(flags.epsilon[0])
+    if flags.type_checking is not None:
+        params['type_checking'] = flags.type_checking
+    if flags.epsilon is not None:
+        params['epsilon'] = float(flags.epsilon)
     return flags
 
 
@@ -179,10 +182,10 @@ def detect_flags(parser, args, params):
         params['report'] = 'records'
     if flags.ascii:
         params['ascii'] = True
-    if flags.type_checking:
-        params['type_checking'] = True
-    if flags.epsilon:
-        params['epsilon'] = float(flags.epsilon[0])
+    if flags.type_checking is not None:
+        params['type_checking'] = flags.type_checking
+    if flags.epsilon is not None:
+        params['epsilon'] = float(flags.epsilon)
     if flags.write_all:
         params['write_all'] = True
     if flags.per_constraint:

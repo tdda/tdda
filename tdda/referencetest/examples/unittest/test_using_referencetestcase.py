@@ -22,9 +22,15 @@ import unittest
 from tdda.referencetest import ReferenceTestCase, tag
 
 # ensure we can import the generators module in the directory above
+# (required here only because we want this example source code to be able
+# to be copied to other locations, and still work there without needing
+# any alterations to PYTHONPATH).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # directory where reference results are kept
+# (in real use, you would probably define this more directly; it is
+# done like this here so that the example source code can be copied to
+# any location, and still work, without needing any additional configuration).
 reference_data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                   '..', 'reference')
 

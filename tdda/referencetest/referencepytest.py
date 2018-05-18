@@ -10,7 +10,6 @@ This allows these functions to be called from tests running from the
 
 For example::
 
-    from tdda.referencetest import referencepytest
     import my_module
 
     def test_my_csv_function(ref):
@@ -36,20 +35,46 @@ For example::
 
 with a ``conftest.py`` containing::
 
-    import pytest
-    from tdda.referencetest import referencepytest
+    from tdda.referencetest.pytestconfig import *
 
-    def pytest_addoption(parser):
-        referencepytest.addoption(parser)
+    set_default_data_location('testdata')
 
-    def pytest_collection_modifyitems(session, config, items):
-        referencepytest.tagged(config, items)
+
+This configuration enables the additional command-line options,
+and also provides a ``ref`` fixture, as an instance of the
+:py:class:`ReferenceTest` class.
+
+This example also sets a default data location which will apply to
+all reference fixtures. This means that any tests that use ``ref`` will
+automatically be able to locate their "expected results" reference data
+files.
+
+
+Reference Fixtures
+~~~~~~~~~~~~~~~~~~
+
+The default configuration provides a single fixture, ``ref``.
+
+To configure a large suite of tests so that tests do not all have to
+share a single common reference-data location, you can set up additional
+reference fixtures, configured differently. For example, to set up a fixure
+``ref_special``, whose reference data is stored in ``../specialdata``, you
+could include::
 
     @pytest.fixture(scope='module')
-    def ref(request):
+    def ref_special(request):
         r = referencepytest.ref(request)
-        r.set_data_location('testdata')
+        r.set_data_location('../specialdata')
         return r
+
+Tests can use this additional fixture::
+
+    import my_special_module
+
+    def test_something(ref_special):
+        result = my_special_module.something()
+        ref_special.assertStringCorrect(resultfile, 'something.csv')
+
 
 Tagged Tests
 ~~~~~~~~~~~~
@@ -69,7 +94,7 @@ test methods that have been decorated with ``@tag``.
 
 For example::
 
-    from tdda.referencetest import referencepytest, tag
+    from tdda.referencetest import tag
     import my_module
 
     @tag
@@ -108,7 +133,7 @@ To regenerate all reference results (or generate them for the first time)
 .. code-block:: bash
 
    pytest -s --write-all
-    
+
 To regenerate just a particular kind of reference (e.g. table results)
 
 .. code-block:: bash
@@ -129,6 +154,13 @@ In addition to all of the methods from
 :py:class:`~tdda.referencetest.referencetest.ReferenceTest`,
 the following functions are provided, to allow easier integration
 with the ``pytest`` framework.
+
+Typically your test code would not need to call any of these methods
+directly (apart from :py:meth:`set_default_data_location()`),  as they are
+all enabled automatically if you import the default ``ReferenceTest``
+configuration into your ``conftest.py`` file::
+
+    from tdda.referencetest.pytestconfig import *
 """
 
 from __future__ import absolute_import
@@ -237,9 +269,6 @@ def tagged(config, items):
     """
     Support for @tag to mark tests to be run with --tagged or reported
     with --istagged.
-
-    A test's ``conftest.py`` file should declare tags by defining a
-    ``pytest_collection_modifyitems`` function which should just call this.
 
     It extends pytest to recognize the ``--tagged`` and ``--istagged``
     command-line flags, to restrict testing to tagged tests only.
