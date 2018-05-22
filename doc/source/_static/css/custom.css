@@ -58,8 +58,10 @@ div.related a {
     color: #ffffff;
 }
 
-div.sphinxsidebar {
+div.sphinxsidebar, div.sphinxsidebarwrapper, div.bodywrapper, div.documentwrapper  {
+    background-color: #606060;
 }
+
 
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;

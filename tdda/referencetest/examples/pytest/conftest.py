@@ -13,7 +13,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from tdda.referencetest.pytestconfig import *
+from tdda.referencetest.pytestconfig import (pytest_addoption,
+                                             pytest_collection_modifyitems,
+                                             set_default_data_location,
+                                             ref)
+
 
 set_default_data_location('../reference')
 
