@@ -13,7 +13,7 @@ with references, or the `blog <http://tdda.info>`_)
   from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
   datasets meet the constraints in the constraints file.
   There is also a command-line utility for discovering and verifying
-  constriants.
+  constraints.
 
 * The :py:mod:`tdda.rexpy` library is a tool for automatically
   inferring regular expressions from a column in a Pandas DataFrame
