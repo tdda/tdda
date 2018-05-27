@@ -17,6 +17,6 @@ with references, or the `blog <http://tdda.info>`_)
 
 * The :py:mod:`tdda.rexpy` library is a tool for automatically
   inferring regular expressions from a column in a Pandas DataFrame
-  or from a (Python) list examples.
+  or from a (Python) list of examples.
   There is also a command-line utility for Rexpy.
 
