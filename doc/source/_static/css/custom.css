@@ -233,3 +233,7 @@ tt {
     font-size: 0.95em;
     color: #300000;
 }
+
+current {
+    background-color: #808080;
+}
