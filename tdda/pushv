@@ -7,6 +7,8 @@ function runTests(){
 
 MIRODIR=`miro -c config basedir`
 . $MIRODIR/pushv-common.sh tdda
+echo `Go to readthedocs.io, build the doc and set this as the default`.
+
 
 
 
