@@ -11,6 +11,6 @@ Also bumped version number.
 Also planning to tag this with a version to see whether that encourages
 readthedocs to add the version properly.
 
-###
+29.05.2018 1.0.03
 Add pushv (for maintainer use only) and this CHANGES.py file.
 """
