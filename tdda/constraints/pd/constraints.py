@@ -1038,7 +1038,7 @@ def load_df(path):
     else:
         raise Exception('The Python feather module is not installed.\n'
                         'Use:\n    pip install feather-format\n'
-                        'to add capability.\n', file=sys.stderr)
+                        'to add capability.\n')
 
 
 def save_df(df, path, index=False):
@@ -1054,7 +1054,7 @@ def save_df(df, path, index=False):
     else:
         raise Exception('The Python feather module is not installed.\n'
                         'Use:\n    pip install feather-format\n'
-                        'to add capability.\n', file=sys.stderr)
+                        'to add capability.\n')
 
 
 def unique_column_name(df, name):
