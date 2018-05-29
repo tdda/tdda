@@ -13,4 +13,7 @@ readthedocs to add the version properly.
 
 29.05.2018 1.0.03
 Add pushv (for maintainer use only) and this CHANGES.py file.
+
+###
+Correctly cast strings to native strings in check_shell_output.
 """

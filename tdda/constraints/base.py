@@ -859,8 +859,33 @@ def UTF8DefiniteObject(s):
         return [UTF8DefiniteObject(v) for v in s]
     elif type(s) == tuple:
         return tuple([UTF8DefiniteObject(v) for v in s])
+    elif isinstance(s, OrderedDict):
+        return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
+                           for (k, v) in s.items())
     elif type(s) == dict:
         return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
+                for (k, v) in s.items()}
+    return s
+
+
+def NativeDefiniteObject(s):
+    """
+    Converts all non-native strings within scalar or object, recursively,
+    to native strings.
+    Handles lists, tuples and dictionaries, as well as scalars.
+    """
+    NON_NATIVE_STR = bytes if sys.version_info[0] >= 3 else unicode
+    if type(s) is NON_NATIVE_STR:
+        return native_definite(s)
+    elif type(s) is list:
+        return [NativeDefiniteObject(v) for v in s]
+    elif type(s) is tuple:
+        return tuple([NativeDefiniteObject(v) for v in s])
+    elif isinstance(s, OrderedDict):
+        return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
+                           for (k, v) in s.items()))
+    elif type(s) is dict:
+        return {NativeDefiniteObject(k): NativeDefiniteObject(v)
                 for (k, v) in s.items()}
     return s
 

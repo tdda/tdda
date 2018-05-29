@@ -40,7 +40,7 @@ from tdda.constraints.base import (
     FieldConstraints,
     verify,
     native_definite,
-    UTF8DefiniteObject,
+    NativeDefiniteObject,
     fuzzy_less_than,
     fuzzy_greater_than,
 )
@@ -1393,10 +1393,9 @@ def rmdirs(parent, dirs):
 
 
 def check_shell_output(args):
-    result = subprocess.check_output(UTF8DefiniteObject(args))
+    result = subprocess.check_output(NativeDefiniteObject(args))
     return native_definite(result).replace('\r', '')
 
 
 if __name__ == '__main__':
     ReferenceTestCase.main()
-
