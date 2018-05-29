@@ -19,6 +19,6 @@ Correctly cast strings to native strings in check_shell_output.
 29.05.2018 1.0.05
 Tests for feather are now ignored if pmmif/feather are not installed.
 
-###
+29.05.2018 1.0.06
 Windows fixes.
 """
