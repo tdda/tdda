@@ -100,7 +100,7 @@ div.sphinxsidebar ul {
 }
 
 div.sphinxsidebar a, div.sphinxsidebar a:visited, div.sphinxsidebar a:hover {
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 div.sphinxsidebar input {
@@ -234,6 +234,6 @@ tt {
     color: #300000;
 }
 
-current {
-    background-color: #808080;
+div.sphinxsidebar.current {
+    background-color: #404040;
 }
