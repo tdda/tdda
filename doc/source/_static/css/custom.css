@@ -234,6 +234,6 @@ tt {
     color: #300000;
 }
 
-div.sphinxsidebar.current {
+div.sphinxsidebar.current.toctree-l1.current.current {
     background-color: #404040;
 }
