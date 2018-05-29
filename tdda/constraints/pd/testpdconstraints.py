@@ -30,6 +30,11 @@ try:
 except ImportError:
     pmmif = None
 
+try:
+    import feather
+except ImportError:
+    feather = None
+
 from tdda.constraints.base import (
     MinConstraint,
     MaxConstraint,
@@ -1120,15 +1125,18 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118_csv_to_csv(self):
         self.detectElements('csv', 'csv')
 
-    @unittest.skipIf(pmmif is None, 'pmmif/feather not installed')
+    @unittest.skipIf(pmmif is None or feather is None,
+                     'pmmif/feather not installed')
     def testDetectElements118_csv_to_feather(self):
         self.detectElements('csv', 'feather')
 
-    @unittest.skipIf(pmmif is None, 'pmmif/feather not installed')
+    @unittest.skipIf(pmmif is None or feather is None,
+                     'pmmif/feather not installed')
     def testDetectElements118_feather_to_csv(self):
         self.detectElements('feather', 'csv')
 
-    @unittest.skipIf(pmmif is None, 'pmmif/feather not installed')
+    @unittest.skipIf(pmmif is None or feather is None,
+                     'pmmif/feather not installed')
     def testDetectElements118_feather_to_feather(self):
         self.detectElements('feather', 'feather')
 
@@ -1346,7 +1354,8 @@ class CommandLineHelper:
         self.assertFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
         os.remove(self.e92bads1)
 
-    @unittest.skipIf(pmmif is None, 'pmmif/feather not installed')
+    @unittest.skipIf(pmmif is None or feather is None,
+                     'pmmif/feather not installed')
     def testDetectE118FeatherCmd(self):
         argv = ['tdda', 'detect', self.e118feather, self.e92tdda_correct,
                 self.e92bads2, '--per-constraint', '--output-fields',
