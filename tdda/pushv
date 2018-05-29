@@ -1,0 +1,12 @@
+#!/bin/sh
+
+function runTests(){
+    python testtdda.py
+    python3 testtdda.py
+}
+
+MIRODIR=`miro -c config basedir`
+. $MIRODIR/pushv-common.sh tdda
+
+
+
