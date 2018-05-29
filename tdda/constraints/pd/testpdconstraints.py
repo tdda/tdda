@@ -1115,6 +1115,7 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118_csv_to_csv(self):
         self.detectElements('csv', 'csv')
 
+    @tag
     def testDetectElements118_csv_to_feather(self):
         self.detectElements('csv', 'feather')
 
@@ -1245,7 +1246,7 @@ class CommandLineHelper:
                                ignore_substrings=[
                                    '"as_at":', '"local_time":', '"utc_time":',
                                    '"source":', '"host":', '"user":',
-                                   '"tddafile":',
+                                   '"tddafile":', '"creator":',
                                ])
         os.remove(self.e92tdda)
 

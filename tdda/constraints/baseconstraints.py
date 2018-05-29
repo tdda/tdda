@@ -599,7 +599,8 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
 
         constraints = [c for c in [type_constraint,
                                    min_constraint, max_constraint,
-                                   min_length_constraint, max_length_constraint,
+                                   min_length_constraint,
+                                   max_length_constraint,
                                    sign_constraint, max_nulls_constraint,
                                    no_duplicates_constraint,
                                    allowed_values_constraint,
