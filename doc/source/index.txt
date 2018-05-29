@@ -6,6 +6,8 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
+Version |version|
+
 **CONTENTS**
 
 .. toctree::

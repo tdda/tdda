@@ -100,7 +100,7 @@ div.sphinxsidebar ul {
 }
 
 div.sphinxsidebar a, div.sphinxsidebar a:visited, div.sphinxsidebar a:hover {
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 div.sphinxsidebar input {
@@ -232,4 +232,8 @@ tt {
     padding: 0 1px 0 1px;
     font-size: 0.95em;
     color: #300000;
+}
+
+div.sphinxsidebar.current.toctree-l1.current.current {
+    background-color: #404040;
 }
