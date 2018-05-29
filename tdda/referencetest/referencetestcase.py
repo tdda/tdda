@@ -12,7 +12,7 @@ of ReferenceTestCase.
 
 For example::
 
-    from tdda.referencetest.referencetestcase import ReferenceTestCase
+    from tdda.referencetest import ReferenceTestCase
     import my_module
 
     class TestMyClass(ReferenceTestCase):
@@ -55,7 +55,7 @@ decorated with ``@tag``.
 
 For example::
 
-    from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
+    from tdda.referencetest import ReferenceTestCase, tag
     import my_module
 
     class TestMyClass1(ReferenceTestCase):

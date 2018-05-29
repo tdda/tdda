@@ -80,7 +80,7 @@ class, so that the ``ReferenceTest`` methods can be called directly from
 This example shows how to write a test for a function that generates
 a CSV file::
 
-    from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
+    from tdda.referencetest import ReferenceTestCase, tag
     import my_module
 
     class MyTest(ReferenceTestCase):
