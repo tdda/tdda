@@ -22,7 +22,7 @@ Tests for feather are now ignored if pmmif/feather are not installed.
 29.05.2018 1.0.06
 Windows fixes.
 
-###
+31.05.2018 1.0.07
 Fix for UTF-8 encoding in subprocesses on Windows.
 
 Also added documentation on setting up fonts on Windows to display
