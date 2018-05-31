@@ -23,6 +23,7 @@ import sys
 import unittest
 
 from tdda.examples import copy_examples
+from tdda.constraints.base import Marks
 from tdda.constraints.pd.discover import pd_discover_parser
 from tdda.constraints.pd.verify import pd_verify_parser
 from tdda.constraints.pd.detect import pd_detect_parser
@@ -96,9 +97,11 @@ def help(extensions, cmd=None, stream=sys.stdout):
         print('Use "tdda help COMMAND" to get more detailed help about '
               'a particular command.\nE.g. "tdda help verify"\n',
               file=stream)
-    if os.name == 'nt':
-        print('If ticks and crosses are not being displayed correctly, '
-              'you probably need\nto use a different font.\n')
+    if os.name == 'nt' or True:
+        print('If this tick (%s) and cross (%s) are not being displayed '
+              'correctly, you probably\nneed to use a different font, '
+              'or use --ascii.\n'
+              % (Marks.tick, Marks.cross))
 
 
 def load_extension(ext):

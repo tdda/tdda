@@ -72,6 +72,8 @@ def discover_parser(usage=''):
                         help='include regular expression generation')
     parser.add_argument('-R', '--norex', action='store_true',
                         help='exclude regular expression generation')
+    parser.add_argument('-7', '--ascii', action='store_true',
+                        help='report without using special characters')
     return parser
 
 
