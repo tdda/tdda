@@ -1387,11 +1387,17 @@ class TestPandasCommandAPI(ReferenceTestCase, CommandLineHelper):
 class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
     @classmethod
     def setUpClass(cls):
+        cls.pythonioencoding = os.environ.get('PYTHONIOENCODING', None)
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
         cls.setUpHelper()
 
     @classmethod
     def tearDownClass(cls):
         cls.tearDownHelper()
+        if cls.pythonioencoding is None:
+            del os.environ['PYTHONIOENCODING']
+        else:
+            os.environ['PYTHONIOENCODING'] = cls.pythonioencoding
 
     @classmethod
     def execute_command(self, argv):
