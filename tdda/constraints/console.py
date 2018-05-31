@@ -93,9 +93,12 @@ def help(extensions, cmd=None, stream=sys.stdout):
         for ext in extensions:
             ext.help(stream=stream)
             print(file=stream)
-        print('\nUse "tdda help COMMAND" to get more detailed help about '
+        print('Use "tdda help COMMAND" to get more detailed help about '
               'a particular command.\nE.g. "tdda help verify"\n',
               file=stream)
+    if os.name == 'nt':
+        print('If ticks and crosses are not being displayed correctly, '
+              'you probably need\nto use a different font.\n')
 
 
 def load_extension(ext):

@@ -14,6 +14,7 @@ Version |version|
    :maxdepth: 2
 
    overview.txt
+   windows.txt
    cmdline.txt
    referencetest.txt
    constraints.txt

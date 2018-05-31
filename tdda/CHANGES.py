@@ -24,4 +24,7 @@ Windows fixes.
 
 ###
 Fix for UTF-8 encoding in subprocesses on Windows.
+
+Also added documentation on setting up fonts on Windows to display
+ticks and crosses correctly.
 """

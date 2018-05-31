@@ -1,0 +1,27 @@
+Microsoft Windows Configuration
+===============================
+
+The TDDA library makes use of some non-ASCII characters in its output.
+In order for these to be displayed correctly on Windows systems, a suitable
+font must be used.
+
+Fonts that are known to support these characters on Windows include:
+
+ * ``NSimSun``
+ * ``MS Gothic``
+ * ``SimSun-ExtB``
+
+
+Fonts that are known not to support these characters on Windows include:
+
+ * ``Consolas``
+ * ``Courier New``
+ * ``Lucida Console``
+ * ``Lucida Sans Typewriter``
+
+The font for a Command Prompt window can be set through the window's
+``Properties``.
+
+Alternatively, the ``--ascii`` flag can be used when using verify or
+detect functionality.
+
