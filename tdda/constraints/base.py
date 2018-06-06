@@ -22,7 +22,7 @@ from tdda.version import version
 PRECISIONS = ('open', 'closed', 'fuzzy')
 STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
                               'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values', 'rex')
+                              'allowed_values', 'rex', 'transform')
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
          'zero', 'null')
@@ -143,6 +143,7 @@ class DatasetConstraints(object):
             text = f.read()
         self.initialize_from_dict(native_definite(json.loads(text)))
 
+
     def initialize_from_dict(self, in_constraints):
         """
         Initializes this object from a dictionary in_constraints.
@@ -181,6 +182,9 @@ class DatasetConstraints(object):
                 self.__dict__[k] = v
                 if k == 'tddafile':
                     self.loadpath = v  # I think...
+
+        if hasattr(self, 'postloadhook'):
+            self.postloadhook(in_constraints)
 
     def set_dates_user_host_creator(self, as_at=None):
         now = datetime.datetime.now()
@@ -598,6 +602,15 @@ class GteConstraint(Constraint):
         Constraint.__init__(self, 'gte', value)
 
 
+class TransformConstraint(Constraint):
+    """
+    Not really a constraint, but a tranform to be applied to a field,
+    allowing constraints to be applied to that transformed field.
+    """
+    def __init__(self, value):
+        Constraint.__init__(self, 'transform', value)
+
+
 class Verification(object):
     """
     Container for the result of a constraint verification for a dataset
@@ -1004,4 +1017,3 @@ def sort_constraint_dict(d):
         for f, v in sorted(d['fields'].items())
     ))
     return OrderedDict((('fields', fields),))
-
