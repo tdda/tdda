@@ -28,6 +28,6 @@ Fix for UTF-8 encoding in subprocesses on Windows.
 Also added documentation on setting up fonts on Windows to display
 ticks and crosses correctly.
 
-###
+6.06.2018 1.0.08
 Improved metadata in TDDA files.
 """
