@@ -441,5 +441,9 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
     if constraints:
         nrows = disco.get_nrows(tablename)
         constraints.set_stats(n_records=nrows, n_selected=nrows)
+        constraints.set_dates_user_host_creator()
+        constraints.set_rdbms('%s:%s:%s:%s' % (dbtype or '', db.host or '',
+                                               db.user, db.database))
+        constraints.set_source(tablename, tablename)
     return constraints
 

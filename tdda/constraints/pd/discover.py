@@ -48,17 +48,17 @@ from tdda.constraints.pd.constraints import discover_df, load_df
 
 
 def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+    md_df_path = df_path
     if df_path == '-':
         df_path = StringIO(sys.stdin.read())
+        md_df_path = None
     df = load_df(df_path)
-    constraints = discover_df(df, **kwargs)
+    constraints = discover_df(df, df_path=md_df_path, **kwargs)
     if constraints is None:
         # should never happen
         return
 
-    constraints.set_source(df_path)
-    constraints.set_tdda_file(constraints_path)
-    output = constraints.to_json()
+    output = constraints.to_json(tddafile=constraints_path)
     if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
             f.write(output)

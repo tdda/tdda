@@ -43,6 +43,11 @@ UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
                         # real (i.e. floating point) fields.
 
+METADATA_KEYS = ('as_at', 'local_time', 'utc_time', 'creator',
+                 'rdbms', 'source', 'host','user', 'dataset',
+                 'n_records', 'n_selected', 'tddafile')
+
+
 
 class Marks:
     tick = '✓'     # This is a tick mark; whether or not it displays in editors
@@ -80,8 +85,13 @@ class DatasetConstraints(object):
     Currently only supports per-field constraints.
     """
     def __init__(self, per_field_constraints=None, loadpath=None):
-        self.creator = 'TDDA %s' % version
-        self.loadpath = loadpath
+        self.as_at = None
+        self.local_time = None
+        self.utc_time = None
+        self.host = None
+        self.user = None
+        self.creator = None
+        self.loadpath = self.tddafile = loadpath
         self.source = None
         self.dataset = None
         self.n_records = None
@@ -92,8 +102,11 @@ class DatasetConstraints(object):
         else:
             self.fields = Fields(per_field_constraints)
 
-    def set_creator(self, creator):
-        self.creator = creator
+    def set_creator(self, creator=None):
+        self.creator = creator or 'TDDA %s' % version
+
+    def set_rdbms(self, rdbms):
+        self.rdbms = rdbms
 
     def set_source(self, source, dataset=None):
         self.source = source
@@ -103,9 +116,6 @@ class DatasetConstraints(object):
     def set_stats(self, n_records, n_selected=None):
         self.n_records = n_records
         self.n_selected = n_selected
-
-    def set_tdda_file(self, tddafile):
-        self.loadpath = tddafile
 
     def __getitem__(self, k):
         if type(k) == int:
@@ -165,38 +175,55 @@ class DatasetConstraints(object):
                          % (kind, fieldname))
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
+        metadata = in_constraints.get('creation_metadata', {})
+        for (k, v) in metadata.items():
+            if k in METADATA_KEYS and v is not None:
+                self.__dict__[k] = v
+                if k == 'tddafile':
+                    self.loadpath = v  # I think...
 
-    def to_dict(self):
+    def set_dates_user_host_creator(self, as_at=None):
+        now = datetime.datetime.now()
+        utcnow = datetime.datetime.utcnow()
+        self.as_at = as_at
+        self.local_time = now.strftime('%Y-%m-%d %H:%H:%S')
+        self.utc_time = utcnow.strftime('%Y-%m-%d %H:%H:%S')
+        self.host = socket.gethostname()
+        self.user = getpass.getuser()
+        self.set_creator()
+
+    def get_metadata(self, tddafile=None):
+        d = OrderedDict(
+            (k, getattr(self, k, None))
+            for k in METADATA_KEYS if getattr(self, k, None) is not None
+        )
+        if tddafile:
+            d['tddafile'] = tddafile
+        return d
+
+    def clear_metadata(self):
+        self.metadata = None
+
+    def to_dict(self, tddafile=None):
         """
         Converts the constraints in this object to a dictionary.
         """
-        now = datetime.datetime.now()
-        utcnow = datetime.datetime.utcnow()
-        metadata = OrderedDict((
-            ('as_at', now.strftime('%Y-%m-%d %H:%H:%S')),
-            ('local_time', now.strftime('%Y-%m-%d %H:%H:%S')),
-            ('utc_time', utcnow.strftime('%Y-%m-%d %H:%H:%S')),
-            ('creator', self.creator),
-            ('source', self.source),
-            ('host', socket.gethostname()),
-            ('user', getpass.getuser()),
-            ('dataset', self.dataset),
-            ('n_records', self.n_records),
-            ('n_selected', self.n_selected),
-            ('tddafile', self.loadpath)
-        ))
         constraints = OrderedDict((
             (f, v.to_dict_value()) for f, v in self.fields.items()
         ))
-        return OrderedDict((('creation_metadata', metadata),
-                            ('fields', constraints),))
+        metadata = self.get_metadata(tddafile=tddafile)
+        d = OrderedDict()
+        if metadata:
+            d['creation_metadata'] = metadata
+        d['fields'] = constraints
+        return d
 
-    def to_json(self):
+    def to_json(self, tddafile=None):
         """
         Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps(self.to_dict(), indent=4) + '\n'
+        return json.dumps(self.to_dict(tddafile=tddafile), indent=4) + '\n'
 
     def sort_fields(self, fields=None):
         """
@@ -306,7 +333,7 @@ class MultiFieldConstraints(FieldConstraints):
               specifying the constraint.
 
         For simple constraints, the value is a
-        base type; for more complex constraints with several components,
+        base type; for more complex Constraints with several components,
         the value will itself be an (ordered) dictionary.
 
         The ordering is all to make the JSON file get written in a sensible

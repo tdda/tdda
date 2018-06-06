@@ -1259,7 +1259,7 @@ class CommandLineHelper:
         self.assertFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
                                rstrip=True,
                                ignore_substrings=[
-                                   '"as_at":', '"local_time":', '"utc_time":',
+                                   '"local_time":', '"utc_time":',
                                    '"source":', '"host":', '"user":',
                                    '"tddafile":', '"creator":',
                                ])

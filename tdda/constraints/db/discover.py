@@ -56,12 +56,9 @@ def discover_constraints_from_database(table, constraints_path=None,
         # should never happen
         return
 
-    constraints.set_source('%s:%s' % (dbtype, table), table)
-    constraints.set_tdda_file(constraints_path)
-    output = constraints.to_json()
+    output = constraints.to_json(tddafile=constraints_path)
 
     if constraints_path:
-        constraints.set_source('%s:%s' % (dbtype, table))
         with open(constraints_path, 'w') as f:
             f.write(output);
     else:

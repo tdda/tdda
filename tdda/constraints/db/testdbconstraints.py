@@ -72,7 +72,6 @@ class TestDatabaseHandlers:
         self.assertTrue(self.dbh.check_table_exists(elements))
         self.assertFalse(self.dbh.check_table_exists('does_not_exist'))
 
-    @tag
     def test_handler_simple_ops(self):
         elements = self.dbh.resolve_table('elements')
         names = self.dbh.get_database_column_names(elements)
@@ -215,6 +214,9 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"creator":',
                                                     '"host":',
                                                     '"user":',
+                                                    '"source":',
+                                                    '"rdbms":',
+                                                    '"dataset":',
                                                     '"tddafile":'])
 
     def test_discover_elements_rex(self):
@@ -232,6 +234,9 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"creator":',
                                                     '"host":',
                                                     '"user":',
+                                                    '"source":',
+                                                    '"rdbms":',
+                                                    '"dataset":',
                                                     '"tddafile":'])
 
 

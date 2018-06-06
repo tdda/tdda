@@ -195,7 +195,8 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
         conn = connector(host, port, db, user, password)
         if conn is None:
             sys.exit(1)   # error message already reported
-        return Connection(conn, schema)
+        return Connection(conn, schema, host=host, port=port, database=db,
+                          user=user)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -298,9 +299,14 @@ class Connection:
     """
     A database connection object (also holder for additional attributes)
     """
-    def __init__(self, connection, schema):
+    def __init__(self, connection, schema, host=None, port=None,
+                 database=None, user=None):
         self.connection = connection
         self.schema = schema
+        self.host = host
+        self.port = port
+        self.database = database
+        self.user = user
 
 
 class DatabaseHandler:

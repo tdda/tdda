@@ -1,16 +1,15 @@
 {
     "creation_metadata": {
-        "as_at": "2018-05-15 16:16:49", 
-        "local_time": "2018-05-15 16:16:49", 
-        "utc_time": "2018-05-15 15:15:49", 
-        "creator": "TDDA 1.0.00", 
-        "source": null, 
-        "host": "mymachine", 
-        "user": "me", 
-        "dataset": null, 
+        "local_time": "2018-06-06 11:11:07", 
+        "utc_time": "2018-06-06 10:10:07", 
+        "creator": "TDDA 1.0.07", 
+        "rdbms": "postgres:localhost:mirouser:miro", 
+        "source": "public.elements", 
+        "host": "bartok.local", 
+        "user": "njr", 
+        "dataset": "public.elements", 
         "n_records": 118, 
-        "n_selected": 118, 
-        "tddafile": null
+        "n_selected": 118
     }, 
     "fields": {
         "Z": {

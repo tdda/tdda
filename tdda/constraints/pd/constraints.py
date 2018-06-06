@@ -894,7 +894,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       report=report, **kwargs)
 
 
-def discover_df(df, inc_rex=False):
+def discover_df(df, inc_rex=False, df_path=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -907,6 +907,9 @@ def discover_df(df, inc_rex=False):
         *inc_rex*:
             If ``True``, include discovery of regular expressions
             for string fields, using rexpy (default: ``False``).
+
+        *df_path*:
+            The path from which the dataframe was loaded, if any.
 
     Possible return values:
 
@@ -1014,6 +1017,8 @@ def discover_df(df, inc_rex=False):
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
     constraints = disco.discover()
     if constraints:
+        constraints.set_dates_user_host_creator()
+        constraints.set_source(df_path)
         constraints.set_stats(n_records=len(df), n_selected=len(df))
     return constraints
 
