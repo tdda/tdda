@@ -30,4 +30,7 @@ ticks and crosses correctly.
 
 6.06.2018 1.0.08
 Improved metadata in TDDA files.
+
+###
+Add support for postloadhook and postdicthook.
 """

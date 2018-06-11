@@ -183,8 +183,10 @@ class DatasetConstraints(object):
                 if k == 'tddafile':
                     self.loadpath = v  # I think...
 
-        if hasattr(self, 'postloadhook'):
+        try:
             self.postloadhook(in_constraints)
+        except:
+            pass
 
     def set_dates_user_host_creator(self, as_at=None):
         now = datetime.datetime.now()
@@ -220,6 +222,11 @@ class DatasetConstraints(object):
         if metadata:
             d['creation_metadata'] = metadata
         d['fields'] = constraints
+        try:
+            self.postdicthook(d)
+        except:
+            pass
+
         return d
 
     def to_json(self, tddafile=None):
