@@ -401,6 +401,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         expression constraint (by matching at least one of the regular
         expressions given).
         """
+        if not self.column_exists(colname):
+            return False
+
         violations = self.calc_rex_constraint(colname, constraint,
                                               detect=detect)
         if bool(violations):

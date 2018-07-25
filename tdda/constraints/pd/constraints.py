@@ -233,7 +233,6 @@ class PandasConstraintDetector(BaseConstraintDetector):
         else:
             self.out_df[name] = detection_field(c, df_fuzzy_gt(c, value,
                                                                epsilon))
-            print(self.out_df[name].dtype)
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = colname + '_max_ok'
@@ -691,7 +690,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
         This object has attributes:
 
-        - *passed*      --- Number of passing constriants
+        - *passes*      --- Number of passing constriants
         - *failures*    --- Number of failing constraints
 
         It also has a :py:meth:`~PandasVerification.to_frame()` method for
