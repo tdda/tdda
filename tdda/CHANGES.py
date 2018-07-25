@@ -34,7 +34,7 @@ Improved metadata in TDDA files.
 11.06.2018 1.0.09
 Add support for postloadhook and postdicthook.
 
-###
+25.07.2018 1.0.10
 Minor bug fixes.
 
  - Fuzzy verification of 'min' constraint was printing out the type of the col.
