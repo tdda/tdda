@@ -47,4 +47,7 @@ Fixed bug in pandas detect; it wasn't detecting min/max length constraints.
 Also fixed issue with pandas CSV file reader; it has problems reading files
 that have stuttered quotes and which also have escaped content. It now
 notices if that has gone wrong, and has another try.
+
+###
+minor refactoring and comments
 """
