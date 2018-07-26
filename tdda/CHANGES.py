@@ -41,7 +41,7 @@ Minor bug fixes.
  - Typo in documentation of the properties available in a Verification result.
  - Verification of 'rex' constraint was not checking that the field exists.
 
-###
+26.07.2018 1.0.11
 Fixed bug in pandas detect; it wasn't detecting min/max length constraints.
 
 Also fixed issue with pandas CSV file reader; it has problems reading files
