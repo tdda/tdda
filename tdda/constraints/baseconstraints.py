@@ -101,7 +101,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                output_fields=None, index=False, in_place=False,
                rownumber_is_index=True, boolean_ints=False, **kwargs):
         """
-        Apply verifiers to a set of constraints, for detection
+        Apply verifiers to a set of constraints, for detection.
+
+        Note that if there is a constraint for a field that does not exist,
+        then it fails verification, but there are no records to detect
+        against. Similarly if the field exists but the dataset has no
+        records.
         """
         return detect(constraints, self.get_column_names(), self.verifiers(),
                       VerificationClass=VerificationClass,
@@ -165,7 +170,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         else:
             result = fuzzy_greater_than(m, value, self.epsilon)
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_min_constraint(colname, value, precision, self.epsilon)
         return result
 
@@ -201,7 +206,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         else:
             result = fuzzy_less_than(M, value, self.epsilon)
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_max_constraint(colname, value, precision, self.epsilon)
         return result
 
@@ -224,7 +229,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
         result = m >= value
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_min_length_constraint(colname, value)
         return result
 
@@ -247,7 +252,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
         result = M <= value
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_max_length_constraint(colname, value)
         return result
 
@@ -282,7 +287,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             else:
                 result = False
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_tdda_type_constraint(colname, required_type)
         return result
 
@@ -317,7 +322,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = M < 0
         assert value in SIGNS
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_sign_constraint(colname, value)
         return result
 
@@ -334,7 +339,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return True           # active constraint, so is always satisfied
         result = self.get_null_count(colname) <= value
 
-        if result is True or not detect:
+        if bool(result) or not detect:
             return result
         self.detect_max_nulls_constraint(colname, value)
         return False
@@ -357,7 +362,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         non_nulls = self.get_non_null_count(colname)
         result = self.get_nunique(colname) == non_nulls
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_no_duplicates_constraint(colname, value)
         return result
 
@@ -390,7 +395,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                                              - set(exclusions))
             result = len(violations) == 0
 
-        if detect and bool(result) is False:
+        if detect and not bool(result):
             self.detect_allowed_values_constraint(colname, allowed_values,
                                                   violations)
         return result
