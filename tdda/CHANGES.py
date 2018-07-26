@@ -40,4 +40,11 @@ Minor bug fixes.
  - Fuzzy verification of 'min' constraint was printing out the type of the col.
  - Typo in documentation of the properties available in a Verification result.
  - Verification of 'rex' constraint was not checking that the field exists.
+
+###
+Fixed bug in pandas detect; it wasn't detecting min/max length constraints.
+
+Also fixed issue with pandas CSV file reader; it has problems reading files
+that have stuttered quotes and which also have escaped content. It now
+notices if that has gone wrong, and has another try.
 """
