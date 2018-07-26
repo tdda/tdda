@@ -48,6 +48,6 @@ Also fixed issue with pandas CSV file reader; it has problems reading files
 that have stuttered quotes and which also have escaped content. It now
 notices if that has gone wrong, and has another try.
 
-###
+26.07.2018 1.0.12
 minor refactoring and comments
 """
