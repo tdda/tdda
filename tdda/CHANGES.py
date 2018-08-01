@@ -51,7 +51,7 @@ notices if that has gone wrong, and has another try.
 26.07.2018 1.0.12
 minor refactoring and comments
 
-###
+1.08.2018 1.0.13
 Now accepts 'false' as a valid specification value for no-duplicates.
 
 Also improved the error message you get if you provide invalid specifications.
