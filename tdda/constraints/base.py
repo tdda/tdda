@@ -1023,7 +1023,10 @@ def fuzz_up(v, epsilon):
     slightly less negative values can still pass a fuzzy maximum
     constraint.
     """
-    return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
+    if type(v) is datetime.datetime or type(v) is datetime.date:
+        return v
+    else:
+        return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
 
 
 def sort_constraint_dict(d):

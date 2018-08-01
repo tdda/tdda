@@ -56,4 +56,10 @@ Now accepts 'false' as a valid specification value for no-duplicates.
 
 Also improved the error message you get if you provide invalid specifications.
 Also suppressed pandas warning about nanoseconds on conversion.
+
+###
+Ignore epsilon for date min/max (rather than crashing).
+
+This probably isn't ideal, but to make it better we'd need to decide
+on what epsilon should mean for dates, which is not obvious.
 """

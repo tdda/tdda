@@ -63,7 +63,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
         if constraints_path is None:
             print('No constraints file specified.', file=sys.stderr)
             sys.exit(1)
-    
+
     df = load_df(df_path)
     v = verify_df(df, constraints_path, **kwargs)
     if verbose:
