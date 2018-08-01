@@ -31,6 +31,7 @@ from tdda.constraints.base import (
     constraint_class,
     strip_lines,
     sort_constraint_dict,
+    InvalidConstraintSpecification
 )
 
 isPython2 = sys.version_info[0] < 3
@@ -93,24 +94,24 @@ class TestConstraints(ReferenceTestCase):
         else:
             self.assertRaisesRegex(TypeError, 'unexpected keyword',
                                    SignConstraint, precision='closed')
-        self.assertRaises(AssertionError,
+        self.assertRaises(InvalidConstraintSpecification,
                           MinConstraint, 3, precision='unknown')
-        self.assertRaises(AssertionError,
+        self.assertRaises(InvalidConstraintSpecification,
                           SignConstraint, 'not too positive')
-        self.assertRaises(AssertionError,
+        self.assertRaises(InvalidConstraintSpecification,
                           TypeConstraint, 'float')
-        self.assertRaises(AssertionError,
+        self.assertRaises(InvalidConstraintSpecification,
                           TypeConstraint, ['int', 'float'])
-        self.assertRaises(AssertionError,
+        self.assertRaises(InvalidConstraintSpecification,
                           TypeConstraint, ['int', None])
 
     def testFieldConstraintsDict(self):
         c = FieldConstraints('one', [TypeConstraint('int'),
-                                           MinConstraint(3),
-                                           MaxConstraint(7),
-                                           SignConstraint('positive'),
-                                           MaxNullsConstraint(0),
-                                           NoDuplicatesConstraint()])
+                                     MinConstraint(3),
+                                     MaxConstraint(7),
+                                     SignConstraint('positive'),
+                                     MaxNullsConstraint(0),
+                                     NoDuplicatesConstraint()])
         dfc = Fields([c])
         self.assertEqual(strip_lines(json.dumps(dfc.to_dict_value(),
                                                 indent=4)),

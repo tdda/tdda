@@ -354,8 +354,10 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return False
 
         value = constraint.value
-        if self.is_null(value):   # a null value is not considered to be an
-            return True           # active constraint, so is always satisfied
+        if value is False or self.is_null(value):
+            # a null value is not considered to be an active constraint,
+            # so is always satisfied
+            return True
 
         assert value == True      # value not really used; but should be True
 

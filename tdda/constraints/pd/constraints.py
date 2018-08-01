@@ -111,7 +111,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         else:
             m = self.df[colname].min()
         if pandas_tdda_type(m) == 'date':
-            m = m.to_pydatetime()
+            m = m.to_pydatetime(warn=False)
         elif hasattr(m, 'item'):
             m = m.item()
         return m
@@ -122,7 +122,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         else:
             M = self.df[colname].max()
         if pandas_tdda_type(M) == 'date':
-            M = M.to_pydatetime()
+            M = M.to_pydatetime(warn=False)
         elif hasattr(M, 'item'):
             M = M.item()
         return M

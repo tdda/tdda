@@ -25,7 +25,7 @@ STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
                               'allowed_values', 'rex', 'transform')
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
-         'zero', 'null')
+         'null')
 TYPES = ('bool', 'int', 'real', 'date', 'string')
 DATE_VALUED_CONSTRAINTS = ('min', 'max')
 UTF8 = 'UTF-8'
@@ -59,6 +59,10 @@ class SafeMarks:
     tick = 'OK'
     cross = 'X'
     nothing = '-'
+
+
+class InvalidConstraintSpecification(Exception):
+    pass
 
 
 class TDDAObject(OrderedDict):
@@ -412,6 +416,21 @@ class Constraint(object):
                                    repr(self.value),
                                    (', ' + kws) if kws else '')
 
+    def check_validity(self, name, value, *valids):
+        """
+        Check that the value of a constraint is allowed. If it isn't,
+        then the TDDA file is not valid.
+        """
+        allowed = []
+        for vs in valids:
+            allowed.extend(vs)
+            if value in vs:
+                return
+        errmsg = ('must be one of: %s'
+                  % (', '.join([json.dumps(v) for v in allowed])))
+        raise InvalidConstraintSpecification('Invalid %s constraint value %s '
+                                             '(%s)' % (name, value, errmsg))
+
     def to_dict_value(self):
         return (self.value if type(self.value) != datetime.datetime
                 else str(self.value))
@@ -426,7 +445,7 @@ class MinConstraint(Constraint):
     Constraint specifying the minimum allowed value in a field.
     """
     def __init__(self, value, precision=None):
-        assert precision is None or precision in PRECISIONS
+        self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
 
     def to_dict_value(self):
@@ -442,7 +461,7 @@ class MaxConstraint(Constraint):
     Constraint specifying the maximum allowed value in a field.
     """
     def __init__(self, value, precision=None):
-        assert precision is None or precision in PRECISIONS
+        self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
 
     def to_dict_value(self):
@@ -463,7 +482,7 @@ class SignConstraint(Constraint):
     ``non-positive``, ``negative`` and ``null``.
     """
     def __init__(self, value):
-        assert value is None or value in SIGNS
+        self.check_validity('sign', value, [None], SIGNS)
         Constraint.__init__(self, 'sign', value)
 
 
@@ -484,9 +503,10 @@ class TypeConstraint(Constraint):
     """
     def __init__(self, value):
         if type(value) in (list, tuple):
-            assert all(t in TYPES for t in value)
+            for t in value:
+                self.check_validity('type', t, TYPES)
         else:
-            assert value is None or value in TYPES
+            self.check_validity('type', value, [None], TYPES)
         Constraint.__init__(self, 'type', value)
 
 
@@ -510,7 +530,7 @@ class NoDuplicatesConstraint(Constraint):
     more broadly.
     """
     def __init__(self, value=True):
-        assert value is None or value == True
+        self.check_validity('no_duplicates', value, [None, True, False])
         Constraint.__init__(self, 'no_duplicates', value)
 
 
