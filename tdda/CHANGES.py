@@ -62,4 +62,12 @@ Ignore epsilon for date min/max (rather than crashing).
 
 This probably isn't ideal, but to make it better we'd need to decide
 on what epsilon should mean for dates, which is not obvious.
+
+###
+Change use of re.U (UNICODE) to re.UNICODE | re.DOTALL.
+
+This means that dot actually matches any character.
+The Python documentation claims that without this any character except
+newline is matched, but it appears that some other characters are
+also not matched without re.DOTALL, including a non-breaking space (0x80).
 """

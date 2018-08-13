@@ -259,8 +259,8 @@ class Fields(TDDAObject):
         for c in constraints or []:
             self[c.name] = c
 
-    def to_dict_value(self):
-        return OrderedDict((name, c.to_dict_value())
+    def to_dict_value(self, raw=False):
+        return OrderedDict((name, c.to_dict_value(raw=raw))
                              for (name, c) in self.items())
 
     def __str__(self):
@@ -286,7 +286,7 @@ class FieldConstraints(object):
             self.constraints[c.kind] = c
 
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         """
         Returns a pair consisting of the name supplied, or the stored name,
         and an ordered dictionary keyed on constraint kind with the value
@@ -301,7 +301,7 @@ class FieldConstraints(object):
         keys = to_preferred_order(self.constraints.keys(),
                                   STANDARD_FIELD_CONSTRAINTS)
         for k in keys:
-            d[k] = self.constraints[k].to_dict_value()
+            d[k] = self.constraints[k].to_dict_value(raw=raw)
         return d
 
     def __getitem__(self, k):
@@ -431,8 +431,8 @@ class Constraint(object):
         raise InvalidConstraintSpecification('Invalid %s constraint value %s '
                                              '(%s)' % (name, value, errmsg))
 
-    def to_dict_value(self):
-        return (self.value if type(self.value) != datetime.datetime
+    def to_dict_value(self, raw=False):
+        return (self.value if type(self.value) != datetime.datetime or raw
                 else str(self.value))
 
 
@@ -448,9 +448,9 @@ class MinConstraint(Constraint):
         self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         if self.precision is None:
-            return Constraint.to_dict_value(self)
+            return Constraint.to_dict_value(self, raw=raw)
         else:
             return OrderedDict((('value', self.value),
                                 ('precision', self.precision)))
@@ -464,9 +464,9 @@ class MaxConstraint(Constraint):
         self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         if self.precision is None:
-            return Constraint.to_dict_value(self)
+            return Constraint.to_dict_value(self, raw=raw)
         else:
             return OrderedDict((('value', self.value),
                                 ('precision', self.precision)))

@@ -96,6 +96,8 @@ MIN_STRINGS_PER_PATTERN = 1
 
 USE_SAMPLING = False
 
+RE_FLAGS = re.UNICODE | re.DOTALL
+
 
 class SIZE(object):
     if USE_SAMPLING:
@@ -125,7 +127,7 @@ def cre(rex):
     if c:
         return c
     else:
-        memo[rex] = c = re.compile(rex, re.U)
+        memo[rex] = c = re.compile(rex, RE_FLAGS)
         return c
 
 
@@ -236,7 +238,7 @@ class Categories(object):
         )
 
     def Punctuation(self, el_re):
-        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, re.U)
+        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
 
@@ -1071,7 +1073,7 @@ def rex_coverage(patterns, example_freqs, dedup=False):
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
                         p,
                         '' if p.endswith('$') else '$')
-        r = re.compile(p, re.U)
+        r = re.compile(p, RE_FLAGS)
         if dedup:
             results.append(sum(1 if re.match(r, k) else 0
                            for k in example_freqs))
@@ -1213,7 +1215,7 @@ def coverage_matrices(patterns, example_freqs):
 
     matrix = []
     deduped = []  # deduped version of same
-    rexes = [re.compile(p, re.U) for p in patterns]
+    rexes = [re.compile(p, RE_FLAGS) for p in patterns]
     for (x, n) in example_freqs.items():
         row = [n if re.match(r, x) else 0 for r in rexes]
         matrix.append(row)
