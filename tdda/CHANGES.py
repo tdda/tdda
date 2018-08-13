@@ -63,7 +63,7 @@ Ignore epsilon for date min/max (rather than crashing).
 This probably isn't ideal, but to make it better we'd need to decide
 on what epsilon should mean for dates, which is not obvious.
 
-###
+13.08.2018 1.0.15
 Change use of re.U (UNICODE) to re.UNICODE | re.DOTALL.
 
 This means that dot actually matches any character.
