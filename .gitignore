@@ -67,3 +67,4 @@ target/
 # vim temporary files
 *.swp
 
+*~

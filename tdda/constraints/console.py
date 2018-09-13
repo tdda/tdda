@@ -27,6 +27,7 @@ from tdda.constraints.base import Marks
 from tdda.constraints.pd.discover import pd_discover_parser
 from tdda.constraints.pd.verify import pd_verify_parser
 from tdda.constraints.pd.detect import pd_detect_parser
+from tdda.referencetest.gentest import gentest
 
 from tdda import __version__
 
@@ -36,6 +37,7 @@ HELP="""Use
     tdda verify        to verify data against constraints
     tdda detect        to detect failed constraints on data
     tdda examples      to copy the example data and code
+    tdda gentest       to generate a reference test "automagically"
     tdda version       to print the TDDA version number
     tdda help          to print this help
     tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
@@ -80,6 +82,10 @@ def help(extensions, cmd=None, stream=sys.stdout):
                   '\nTo write out all of the examples for all three modules to '
                   'subdirectories\nwithin the current directory, just use:\n'
                   '    tdda examples\n', file=stream)
+        elif cmd == 'gentest':
+            print('\ntdda gentest  -- to run the wizard\n'
+                  'tdda gentest \'quoted shell command\' test_outputfile.py '
+                  '[reference files]\n', file=stream)
         else:
             print('\nNo help available for %s. Try one of the following:\n'
                   '    tdda help discover\n'
@@ -179,6 +185,8 @@ def main_with_argv(argv, verbose=True):
             dest = argv[2] if len(argv) > 2 else '.'
             for item in ('referencetest', 'constraints', 'rexpy'):
                 copy_examples(item, destination=dest, verbose=verbose)
+    elif name == 'gentest':
+        gentest(*argv[2:])
     elif name in ('version', '-v', '--version'):
         print(__version__)
     elif name == 'test':
