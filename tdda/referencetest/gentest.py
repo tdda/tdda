@@ -80,27 +80,37 @@ class TestGenerator:
         self.test_names = set()
         self.test_qualifier = 1
 
-        print('\nRunning command %s to generate output' % repr(self.command))
+        print('\nRunning command %s to generate output.\n'
+              % repr(self.command))
         out, err, exc = exec_command(self.command, self.cwd)
-        if exc is not None:
-            print('Exception occurred running command.\n%s.' % str(exc),
-                  sys.stderr)
-            sys.exit(1)
-        if err:
-            print('\n*** WARNING: There was output on stderr as follows:\n%s'
-                  % err)
-            if self.check_stderr:
-                print('\n*** This will be used as the reference output '
-                      'for stderr in %s.' % self.stderr_path())
-            else:
-                print('\nThis is not being checked, '
-                      'so output on stderr will not cause a test failure.')
-        print()
         self.create_ref_dir()
         if self.check_stdout:
             self.write_expected_output(out, self.stdout_path())
         if self.check_stderr:
             self.write_expected_output(err, self.stderr_path())
+        if exc is not None:
+            print('***ERROR: Exception occurred running command.\n%s.'
+                  % str(exc), sys.stderr)
+            sys.exit(1)
+        if err:
+            print('*** WARNING: There was output on stderr as follows:\n%s'
+                  % err)
+            if self.check_stderr:
+                print('\n*** This will be used as the reference output '
+                      'for stderr in %s.\n'
+                      % as_join_repr(self.stderr_path(), self.cwd, True))
+            else:
+                print('\n*** WARNING: This is not being checked.\n'
+                      '  Output on stderr will not cause a test failure.\n')
+        elif self.check_stderr:
+            print('Generated %s.\n'
+                  '  It is EMPTY, as no output was produced on stderr.\n'
+                  % as_join_repr(self.stderr_path(), self.cwd, True))
+        if self.check_stdout:
+            print('Generated %s.\n'
+                  '  It is %s.'
+                  % (self.stdout_path(), 'non-empty' if out else 'empty'))
+        print()
         self.copy_reference_files()
         self.write_script()
 
@@ -170,7 +180,7 @@ class TestGenerator:
                 f.write(REFTEST % (testname, as_join_repr(path, self.cwd),
                                    as_join_repr(self.ref_path(path), self.cwd)))
             f.write(TAIL)
-        print('Test script written as %s' % self.script)
+        print('\nTest script written as %s' % self.script)
 
 
     def test_name(self, path):
