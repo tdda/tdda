@@ -1,7 +1,7 @@
 HEADER = '''# -*- coding: utf-8 -*-
 
 """
-%s: Automatically generated test code from tdda gentest.
+%(SCRIPT)s: Automatically generated test code from tdda gentest.
 """
 
 from __future__ import absolute_import
@@ -14,10 +14,9 @@ import sys
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
-COMMAND = %s
-CWD = os.environ.get('TDDA_CWD', %s)
-REFDIR = os.path.join(CWD, 'ref', %s)
-EXPECTED_EXIT_CODE = %d
+COMMAND = %(COMMAND)s
+CWD = os.environ.get('TDDA_CWD', %(CWD)s)
+REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
 
 
 class TestAnalysis(ReferenceTestCase):
@@ -33,7 +32,7 @@ class TestAnalysis(ReferenceTestCase):
         self.assertEqual((str(self.exc), msg), ('None', msg))
 
     def test_exit_code(self):
-        self.assertEqual(self.exit_code, EXPECTED_EXIT_CODE)
+        self.assertEqual(self.exit_code, %(EXIT_CODE)d)
 '''
 
 

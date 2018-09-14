@@ -164,19 +164,19 @@ class TestGenerator:
         """
         Copy files specified to ref subdirectory.
         """
-        ref_paths = set()
+        ref_paths = {'stdout', 'stderr'}
         failures = False
         for path in self.reference_files:
             ref_path = self.ref_path(path)
             suffix = 0
-            while ref_path in ref_paths:
+            while ref_path.lower() in ref_paths:
                 if suffix:
                     ref_path = ref_path[:-len(str(suffix))]
                 suffix += 1
                 ref_path = ref_path + str(suffix)
             if suffix:
                 self.ref_map[path] = ref_path
-            ref_paths.add(ref_path)
+            ref_paths.add(ref_path.lower())
             try:
                 shutil.copyfile(path, ref_path)
                 print('Copied %s to %s' % (as_pwd_repr(path, self.cwd),
@@ -222,9 +222,13 @@ class TestGenerator:
         Generate the test script.
         """
         with open(self.script, 'w') as f:
-            f.write(HEADER % (os.path.basename(self.script),
-                              repr(self.command), repr(self.cwd),
-                              repr(self.name()), self.exit_code) )
+            f.write(HEADER % {
+                'SCRIPT': os.path.basename(self.script),
+                'COMMAND': repr(self.command),
+                'CWD': repr(self.cwd),
+                'NAME': repr(self.name()),
+                'EXIT_CODE': self.exit_code
+            })
             if self.check_stdout:
                 f.write(STDOUT % as_join_repr(self.stdout_path(), self.cwd,
                                               self.name()))
