@@ -140,7 +140,7 @@ class TestGenerator:
             if ref_path in ref_paths:
                 print('Multiple files with same (base) name %s.\n'
                       'Cannot yet handle this case.'
-                      % os.path.basename(ref_name), file=sys.stderr)
+                      % os.path.basename(ref_path), file=sys.stderr)
                 sys.exit(1)
             ref_paths.add(ref_path)
             shutil.copyfile(path, ref_path)
