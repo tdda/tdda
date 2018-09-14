@@ -104,5 +104,8 @@ Clearer reporting after generating test script.
 
 Also test script now includes (equivalent) command used to generate it.
 
+Added shell script that generates the first test for gentest.
+(The shell script uses tdda gentest to generate itself.)
+
 ---------------------end of branch gentest -------------------------------
 """

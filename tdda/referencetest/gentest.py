@@ -146,7 +146,8 @@ class TestGenerator:
         """
         Copy files specified to ref subdirectory.
         """
-        ref_paths = {'stdout', 'stderr'}
+        ref_paths = {os.path.abspath(self.ref_path('stdout')).lower(),
+                     os.path.abspath(self.ref_path('stdout')).lower()}
         failures = False
         for path in self.reference_files:
             ref_path = self.ref_path(path)
