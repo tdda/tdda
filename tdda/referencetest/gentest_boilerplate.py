@@ -2,6 +2,10 @@ HEADER = '''# -*- coding: utf-8 -*-
 
 """
 %(SCRIPT)s: Automatically generated test code from tdda gentest.
+
+Generation command:
+
+  %(GEN_COMMAND)s
 """
 
 from __future__ import absolute_import

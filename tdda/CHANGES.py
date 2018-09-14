@@ -96,5 +96,13 @@ still generated the test script.
 Remove existing reference files and script before generating, if they exist.
 
 Handle multiple reference files with the same name.
+
+Disambiguate reference files that differ only in case so that things
+are more likely to work on case-insensitive filesystems.
+
+Clearer reporting after generating test script.
+
+Also test script now includes (equivalent) command used to generate it.
+
 ---------------------end of branch gentest -------------------------------
 """
