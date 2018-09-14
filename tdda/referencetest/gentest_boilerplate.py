@@ -17,16 +17,23 @@ from tdda.referencetest.gentest import exec_command
 COMMAND = %s
 CWD = os.environ.get('TDDA_CWD', %s)
 REFDIR = os.path.join(CWD, 'ref', %s)
+EXPECTED_EXIT_CODE = %d
 
 
 class TestAnalysis(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
-        cls.output, cls.error, cls.exc = exec_command(COMMAND, CWD)
+        (cls.output,
+         cls.error,
+         cls.exc,
+         cls.exit_code) = exec_command(COMMAND, CWD)
 
     def test_no_exception(self):
         msg = 'No exception should be generated'
         self.assertEqual((str(self.exc), msg), ('None', msg))
+
+    def test_exit_code(self):
+        self.assertEqual(self.exit_code, EXPECTED_EXIT_CODE)
 '''
 
 

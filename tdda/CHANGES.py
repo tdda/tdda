@@ -84,5 +84,15 @@ Also changed the command-line syntax to use STDOUT and STDERR (in any case)
 for those streams, and to default not to use them. This means that any
 behaviour specifiable from the wizard can now also be specified on the
 command line, and reduces the complexity of the logic.
+
+Check exit status, and require to be zero by default.
+
+Allow NONZEROEXIT to specify that a non-zero exit status is OK on command line,
+and add question to wizard for this.
+
+Warn if any of the files specified are not available for copying, but
+still generated the test script.
+
+Remove existing reference files and script before generating, if they exist.
 ---------------------end of branch gentest -------------------------------
 """
