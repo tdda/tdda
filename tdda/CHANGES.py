@@ -94,5 +94,7 @@ Warn if any of the files specified are not available for copying, but
 still generated the test script.
 
 Remove existing reference files and script before generating, if they exist.
+
+Handle multiple reference files with the same name.
 ---------------------end of branch gentest -------------------------------
 """

@@ -89,6 +89,7 @@ class TestGenerator:
         self.require_zero_exit_code = require_zero_exit_code
 
         self.refdir = os.path.join(self.cwd, 'ref', self.name())
+        self.ref_map = {}  # mapping for conflicting reference files
 
         self.test_names = set()
         self.test_qualifier = 1
@@ -167,11 +168,14 @@ class TestGenerator:
         failures = False
         for path in self.reference_files:
             ref_path = self.ref_path(path)
-            if ref_path in ref_paths:
-                print('Multiple files with same (base) name %s.\n'
-                      'Cannot yet handle this case.'
-                      % os.path.basename(ref_path), file=sys.stderr)
-                sys.exit(1)
+            suffix = 0
+            while ref_path in ref_paths:
+                if suffix:
+                    ref_path = ref_path[:-len(str(suffix))]
+                suffix += 1
+                ref_path = ref_path + str(suffix)
+            if suffix:
+                self.ref_map[path] = ref_path
             ref_paths.add(ref_path)
             try:
                 shutil.copyfile(path, ref_path)
@@ -229,9 +233,10 @@ class TestGenerator:
                                               self.name()))
             for path in self.reference_files:
                 testname = self.test_name(path)
+                ref_path = self.ref_map.get(path, self.ref_path(path))
                 f.write(REFTEST % (testname,
                                    as_join_repr(path, self.cwd, self.name()),
-                                   as_join_repr(self.ref_path(path), self.cwd,
+                                   as_join_repr(ref_path, self.cwd,
                                                 self.name())))
             f.write(TAIL)
         print('\nTest script written as %s' % self.script)
@@ -245,7 +250,7 @@ class TestGenerator:
         testname = ''.join(c if c.isalnum() else '_' for c in name)
         if testname in self.test_names:
             self.test_qualifier += 1
-            testname += str(len(self.test_qualifier))
+            testname += str(self.test_qualifier)
         self.test_names.add(testname)
         return testname
 
