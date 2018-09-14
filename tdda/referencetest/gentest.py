@@ -21,14 +21,18 @@ actual_input = input if is_python3 else raw_input
 from tdda.referencetest.gentest_boilerplate import (HEADER, TAIL, STDOUT,
                                                     STDERR, REFTEST)
 
-USAGE = '''python gentest.py 'quoted shell command' test_outputfile.py [reference files]'''
+USAGE = '''python gentest.py 'quoted shell command' test_outputfile.py [reference files]
+
+You can use STDOUT and STDERR (in any case) to those streams, which will
+by default not be checked.
+'''
 
 
 def gentest(shellcommand=None, output_script=None, *reference_files):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
-    provided (optionally including stdout as '-').
+    provided.
 
     If no reference files are provided, check stdout.
 
@@ -41,8 +45,8 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
          check_stdout,
          check_stderr) = wizard()
     else:
-        check_stdout = None
-        check_stderr = True
+        check_stdout = False
+        check_stderr = False
     cwd = os.getcwd()
     if shellcommand is None or output_script is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
@@ -52,11 +56,15 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
     output_test_script = force_start(canonicalize(output_script, '.py'),
                                      'test', 'test_')
     print('Output file: %s' % repr(output_test_script))
-    files = [canonicalize(f) for f in reference_files if f != '-']
+    files = [canonicalize(f) for f in reference_files
+             if f.lower() not in ('stdout', 'stderr')]
     print('References files to be checked: %s'
-          % ''.join('\n  %s' % as_join_repr(f, cwd, True) for f in files))
-    if check_stdout is None:
-        check_stdout = len(reference_files) == 0 or '-' in reference_files
+          % ''.join('\n  %s' % as_pwd_repr(f, cwd) for f in files))
+    lcrefs = [f.lower() for f in reference_files]
+    if 'stdout' in lcrefs:
+        check_stdout = True
+    if 'stderr' in lcrefs:
+        check_stderr = True
     print('Output to stdout %s be checked.'
           % ('WILL' if check_stdout else 'will NOT'))
     print('Output to stderr %s be checked.'
@@ -75,7 +83,7 @@ class TestGenerator:
         self.check_stdout = check_stdout
         self.check_stderr = check_stderr
 
-        self.refdir = os.path.join(self.cwd, 'ref')
+        self.refdir = os.path.join(self.cwd, 'ref', self.name())
 
         self.test_names = set()
         self.test_qualifier = 1
@@ -98,14 +106,14 @@ class TestGenerator:
             if self.check_stderr:
                 print('\n*** This will be used as the reference output '
                       'for stderr in %s.\n'
-                      % as_join_repr(self.stderr_path(), self.cwd, True))
+                      % as_pwd_repr(self.stderr_path(), self.cwd))
             else:
                 print('\n*** WARNING: This is not being checked.\n'
                       '  Output on stderr will not cause a test failure.\n')
         elif self.check_stderr:
             print('Generated %s.\n'
                   '  It is EMPTY, as no output was produced on stderr.\n'
-                  % as_join_repr(self.stderr_path(), self.cwd, True))
+                  % as_pwd_repr(self.stderr_path(), self.cwd))
         if self.check_stdout:
             print('Generated %s.\n'
                   '  It is %s.'
@@ -116,7 +124,11 @@ class TestGenerator:
 
     def create_ref_dir(self):
         if not os.path.exists(self.refdir):
-            os.mkdir(self.refdir)
+            os.makedirs(self.refdir)
+
+    def name(self):
+        name = os.path.basename(self.script)[4:-3]  # knock of test and .py
+        return name[1:] if name.startswith('_') else name
 
     def copy_reference_files(self):
         """
@@ -132,8 +144,8 @@ class TestGenerator:
                 sys.exit(1)
             ref_paths.add(ref_path)
             shutil.copyfile(path, ref_path)
-            print('Copied %s to %s' % (as_join_repr(path, self.cwd, True),
-                                       as_join_repr(ref_path, self.cwd, True)))
+            print('Copied %s to %s' % (as_pwd_repr(path, self.cwd),
+                                       as_pwd_repr(ref_path, self.cwd)))
 
     def write_expected_output(self, out, path):
         """
@@ -147,15 +159,13 @@ class TestGenerator:
         """
         Path to write stdout to, if it is being checked.
         """
-        name = os.path.splitext(os.path.basename(self.script))[0]
-        return self.ref_path('stdout_for_%s' % name)
+        return self.ref_path('STDOUT')
 
     def stderr_path(self):
         """
         Path to write stderr to, if it is being checked.
         """
-        name = os.path.splitext(os.path.basename(self.script))[0]
-        return self.ref_path('stderr_for_%s' % name)
+        return self.ref_path('STDERR')
 
     def ref_path(self, path):
         """
@@ -170,15 +180,20 @@ class TestGenerator:
         """
         with open(self.script, 'w') as f:
             f.write(HEADER % (os.path.basename(self.script),
-                              repr(self.command), repr(self.cwd)))
+                              repr(self.command), repr(self.cwd),
+                              repr(self.name())))
             if self.check_stdout:
-                f.write(STDOUT % as_join_repr(self.stdout_path(), self.cwd))
+                f.write(STDOUT % as_join_repr(self.stdout_path(), self.cwd,
+                                              self.name()))
             if self.check_stderr:
-                f.write(STDERR % as_join_repr(self.stderr_path(), self.cwd))
+                f.write(STDERR % as_join_repr(self.stderr_path(), self.cwd,
+                                              self.name()))
             for path in self.reference_files:
                 testname = self.test_name(path)
-                f.write(REFTEST % (testname, as_join_repr(path, self.cwd),
-                                   as_join_repr(self.ref_path(path), self.cwd)))
+                f.write(REFTEST % (testname,
+                                   as_join_repr(path, self.cwd, self.name()),
+                                   as_join_repr(self.ref_path(path), self.cwd,
+                                                self.name())))
             f.write(TAIL)
         print('\nTest script written as %s' % self.script)
 
@@ -218,7 +233,46 @@ def canonicalize(path, default_ext=None, reject_other_exts=True):
         return os.path.abspath(os.path.expanduser(path))
 
 
-def as_join_repr(path, cwd, as_pwd=False):
+def as_pwd_repr(path, cwd):
+    """
+    Convenience function for as_join_repr with as_pwd=True
+    """
+    return as_join_repr(path, cwd, as_pwd=True)
+
+
+def as_join_repr(path, cwd, name=None, as_pwd=False):
+    """
+    This function aims to produce more comprehensible representations
+    of paths under cwd (the assumed current working directory, as would
+    be returned by $(pwd) in the shell).
+
+    If the path given is not in cwd, the quoted string literal of the path
+    is returned.
+
+    If it is in cwd, the behaviour depends on the value of as_pwd.
+
+    If as_pwd is True, it will be returned as
+
+        '$(pwd)/tail'
+
+    where tail is the path after the directory cwd.
+
+    If as_pwd is False, the default, then we first check if the path
+    point to a file in the subdirectory os.path.join(cwd, 'ref', name)
+    (the location for reference files for this script).
+
+    If it is, the path is returned as
+
+        os.path.join(REFDIR, reftail)
+
+    where reftail is the path provided with REFDIR knocked off the front.
+
+    Otherwise, it is returned as
+
+        os.path.join(CWD, tail)
+
+    with tail being the path with cwd removed from the front.
+    """
     if cwd.endswith(os.path.sep):
         cwd = cwd[:-len(os.path.sep)]
     if path.startswith(cwd + os.path.sep):
@@ -229,9 +283,11 @@ def as_join_repr(path, cwd, as_pwd=False):
             if as_pwd:
                 return '$(pwd)/%s' % tail
             else:
-                if tail.startswith('ref' + os.path.sep):
-                    tail = tail[3 + len(os.path.sep):]
-                    return "os.path.join(CWD, 'ref', %s)" % repr(tail)
+                ref = os.path.join('ref', name)
+                L = len(ref) + len(os.path.sep)
+                if tail.startswith(ref + os.path.sep):
+                    tail = tail[L:]
+                    return 'os.path.join(REFDIR, %s)' % repr(tail)
                 else:
                     return 'os.path.join(CWD, %s)' % repr(tail)
     return repr(path)

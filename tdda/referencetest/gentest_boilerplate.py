@@ -16,6 +16,7 @@ from tdda.referencetest.gentest import exec_command
 
 COMMAND = %s
 CWD = os.environ.get('TDDA_CWD', %s)
+REFDIR = os.path.join(CWD, 'ref', %s)
 
 
 class TestAnalysis(ReferenceTestCase):

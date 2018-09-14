@@ -73,7 +73,16 @@ also not matched without re.DOTALL, including a non-breaking space (0x80).
 
 --------------------------- branch gentest -------------------------------
 Add initial code for automatically generating reference tests.
+
+Change location of reference files from $(pwd)/ref to $(pwd)/ref/NAME
+where NAME is the base name of the test script (without 'test_' and '.py').
+This is to allow multiple tests to co-exist in the same directory
+without conflict, and also means that the reference files can be
+named STDOUT and STDERR rather than more convoluted names.
+
+Also changed the command-line syntax to use STDOUT and STDERR (in any case)
+for those streams, and to default not to use them. This means that any
+behaviour specifiable from the wizard can now also be specified on the
+command line, and reduces the complexity of the logic.
 ---------------------end of branch gentest -------------------------------
-
-
 """
