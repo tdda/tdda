@@ -377,6 +377,13 @@ def as_join_repr(path, cwd, name=None, as_pwd=False):
     return repr(path)
 
 
+def sanitize_string(string):
+    """
+    Replaces all non-alphas in string with '_'
+    """
+    return ''.join(c if c.isalnum() else '_' for c in string)
+
+
 def force_start(path, checked_prefix, default_prefix):
     """
     Changes the filename in the path provided by adding the default_prefix
@@ -415,7 +422,7 @@ def exec_command(command, cwd):
     return out, err, exc, exit_code
 
 
-def getline(prompt='', empty_ok=True):
+def getline(prompt='', empty_ok=True, default=None):
     """
     Get a line from the user.
 
@@ -427,28 +434,33 @@ def getline(prompt='', empty_ok=True):
     done = False
     while not done:
         if prompt:
-            print(prompt, end=' ')
+            print(prompt + ((' [%s]:' % default) if default else ':'), end=' ')
         line = actual_input().strip()
+        if line == '' and default:
+            line = default
         done = empty_ok or line
     return line
 
 
-def yes_no(msg):
+def yes_no(msg, default='y'):
     check = None
     while check is None:
-        reply = getline('%s?: [y/n]' % msg).lower()
+        reply = getline('%s?: [%s]' % (msg, default)).lower().strip()
         if reply in ('y', 'yes'):
             check = True
         elif reply in ('n', 'no'):
             check = False
+        elif reply == '':
+            check = default == 'y'
     return check
 
 
 def wizard():
-    shellcommand = getline('Enter shell command to be tested:', empty_ok=False)
-    output_script = getline('Enter name for test script:', empty_ok=False)
+    shellcommand = getline('Enter shell command to be tested', empty_ok=False)
+    output_script = getline('Enter name for test script', empty_ok=False,
+                            default='test_' + sanitize_string(shellcommand))
     reference_files = []
-    print('Enter files to be checked, one per line, then blank line')
+    print('Enter files to be checked, one per line, then blank line:')
     ref = getline()
     while ref:
         reference_files.append(ref)
