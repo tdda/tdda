@@ -5,7 +5,7 @@ test_meta_2files_fail.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-  tdda gentest 'tdda gentest "python 2files.py" 2files . stdout stderr' 'test_meta_2files_fail.py' 'ref/2files' STDOUT STDERR NONZEROEXIT
+  tdda gentest 'tdda gentest -r "python 2files.py" 2files . stdout stderr' 'test_meta_2files_fail.py' 'ref/2files' STDOUT STDERR NONZEROEXIT
 """
 
 from __future__ import absolute_import
@@ -18,7 +18,7 @@ import sys
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
-COMMAND = 'tdda gentest "python 2files.py" 2files . stdout stderr'
+COMMAND = 'tdda gentest -r "python 2files.py" 2files . stdout stderr'
 CWD = os.environ.get('TDDA_CWD', '/Users/njr/python/tdda/tdda/referencetest/gentesttests')
 REFDIR = os.path.join(CWD, 'ref', 'meta_2files_fail')
 

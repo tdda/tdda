@@ -27,7 +27,7 @@ from tdda.constraints.base import Marks
 from tdda.constraints.pd.discover import pd_discover_parser
 from tdda.constraints.pd.verify import pd_verify_parser
 from tdda.constraints.pd.detect import pd_detect_parser
-from tdda.referencetest.gentest import gentest
+from tdda.referencetest.gentest import gentest_wrapper
 
 from tdda import __version__
 
@@ -186,7 +186,7 @@ def main_with_argv(argv, verbose=True):
             for item in ('referencetest', 'constraints', 'rexpy'):
                 copy_examples(item, destination=dest, verbose=verbose)
     elif name == 'gentest':
-        gentest(*argv[2:])
+        gentest_wrapper(argv[2:])
     elif name in ('version', '-v', '--version'):
         print(__version__)
     elif name == 'test':

@@ -5,7 +5,7 @@
 # command timings, because it is not generated automatically.
 #
 
-CMD='tdda gentest < gentest1w.input'
+CMD='tdda gentest -r < gentest1w.input'
 tdda gentest "$CMD" meta_2files_wizard.py \
                     ref/2files_wizard \
                     STDOUT \

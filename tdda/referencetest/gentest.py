@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import division
 
 
+import argparse
 import glob
 import os
 import shutil
@@ -31,8 +32,13 @@ by default not be checked.
 
 MAX_SNAPSHOT_FILES = 10000
 
+GENTEST_HELP = '''
+'''
 
-def gentest(shellcommand=None, output_script=None, *reference_files):
+
+
+def gentest(shellcommand=None, output_script=None, *reference_files,
+            max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -69,7 +75,9 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
     if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
         reference_files = reference_files + ('.',)
     TestGenerator(cwd, shellcommand, output_script, reference_files,
-                  check_stdout, check_stderr, require_zero_exit_code)
+                  check_stdout, check_stderr, require_zero_exit_code,
+                  max_snapshot_files=max_snapshot_files,
+                  relative_paths=relative_paths)
 
 
 class TestGenerator:
@@ -615,5 +623,40 @@ def wizard():
             check_stdout, check_stderr, require_zero_exit_code)
 
 
+def gentest_parser(usage=''):
+    formatter = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(prog='tdda gentest',
+                                     epilog=usage + GENTEST_HELP,
+                                     formatter_class=formatter)
+    parser.add_argument('-?', '--?', action='help',
+                        help='same as -h or --help')
+    parser.add_argument('-m', '--max-files', type=int,
+                        help='max files to track')
+    parser.add_argument('-r', '--relative-paths', action='store_true',
+                        help='show relative paths wherever possible')
+    return parser
+
+
+def gentest_flags(parser, args, params):
+    flags, more = parser.parse_known_args(args)
+    if flags.max_files:
+        params['max_files'] = flags.max_files
+    if flags.relative_paths:
+        params['relative_paths'] = True
+    return flags, more
+
+
+def gentest_params(args):
+    parser = gentest_parser()
+    kw = {}
+    _, positional_args = gentest_flags(parser, args, kw)
+    return positional_args, kw
+
+
+def gentest_wrapper(args):
+    positional_args, kw = gentest_params(args)
+    gentest(*positional_args, **kw)
+
 if __name__ == '__main__':
-    gentest(*sys.argv[1:])
+    gentest_wrapper(sys.argv[1:])
+

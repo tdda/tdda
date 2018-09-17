@@ -5,7 +5,7 @@
 # command timings, because it is not generated automatically.
 #
 
-CMD='tdda gentest "python 2files.py" 2files . stdout stderr nonzeroexit'
+CMD='tdda gentest -r "python 2files.py" 2files . stdout stderr nonzeroexit'
 tdda gentest "$CMD" meta_2files.py \
                     ref/2files \
                     STDOUT \

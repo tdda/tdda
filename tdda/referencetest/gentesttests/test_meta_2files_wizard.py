@@ -5,7 +5,7 @@ test_meta_2files_wizard.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-  tdda gentest 'tdda gentest < gentest1w.input' 'test_meta_2files_wizard.py' 'ref/2files_wizard' STDOUT STDERR
+  tdda gentest 'tdda gentest -r < gentest1w.input' 'test_meta_2files_wizard.py' 'ref/2files_wizard' STDOUT STDERR
 """
 
 from __future__ import absolute_import
@@ -18,7 +18,7 @@ import sys
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
-COMMAND = 'tdda gentest < gentest1w.input'
+COMMAND = 'tdda gentest -r < gentest1w.input'
 CWD = os.environ.get('TDDA_CWD', '/Users/njr/python/tdda/tdda/referencetest/gentesttests')
 REFDIR = os.path.join(CWD, 'ref', 'meta_2files_wizard')
 
