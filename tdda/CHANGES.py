@@ -112,7 +112,9 @@ Add default values to gentest wizard.
 Allow directories as files to check and default to checking new files
 created under $(pwd).
 
-Allow glob patterns in reference file specifications
+Allow glob patterns in reference file specifications.
+
+Add timing information to output from gentest.
 
 ---------------------end of branch gentest -------------------------------
 """

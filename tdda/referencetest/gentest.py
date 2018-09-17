@@ -15,6 +15,7 @@ import shutil
 import sys
 import subprocess
 import tempfile
+import timeit
 
 is_python3 = sys.version_info.major >= 3
 actual_input = input if is_python3 else raw_input
@@ -22,7 +23,7 @@ actual_input = input if is_python3 else raw_input
 from tdda.referencetest.gentest_boilerplate import (HEADER, TAIL, STDOUT,
                                                     STDERR, REFTEST)
 
-USAGE = '''python gentest.py 'quoted shell command' test_outputfile.py [reference files]
+USAGE = '''python gentest.py 'quoted shell command' [test_outputfile.py] [reference files]
 
 You can use STDOUT and STDERR (in any case) to those streams, which will
 by default not be checked.
@@ -53,9 +54,11 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
         check_stderr = False
         require_zero_exit_code = True
     cwd = os.getcwd()
-    if shellcommand is None or output_script is None:
+    if shellcommand is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
         sys.exit(1)
+    if not output_script:
+        output_script = 'test_' + sanitize_string(shellcommand)
     lcrefs = [f.lower() for f in reference_files]
     if 'stdout' in lcrefs:
         check_stdout = True
@@ -63,6 +66,8 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
         check_stderr = True
     if 'nonzeroexit' in lcrefs:
         require_zero_exit_code = False
+    if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
+        reference_files = reference_files + ('.',)
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code)
 
@@ -101,7 +106,8 @@ class TestGenerator:
         (self.out,
          self.err,
          exc,
-         self.exit_code) = exec_command(self.command, self.cwd)
+         self.exit_code,
+         self.duration) = exec_command(self.command, self.cwd)
 
         self.fail_if_exception(exc)
         self.fail_if_bad_exit_code()
@@ -201,19 +207,19 @@ class TestGenerator:
 
     def update_reference_files(self):
         dirs = [d for d in self.reference_files if os.path.isdir(d)]
-        for d in dirs:
-            self.reference_files.remove(d)
-            if not self.ignore(d):
-                self.add_modified_files_from_dir(d)
-        if dirs:
-            self.update_reference_files()
+        while dirs:
+            for d in dirs:
+                self.reference_files.remove(d)
+                if not self.ignore(d):
+                    self.add_modified_files_from_dir(d)
+            dirs = [d for d in self.reference_files if os.path.isdir(d)]
         self.add_globs()
 
     def add_globs(self):
         extras = set()
         globbed = set()
         for path in self.reference_files:
-            if '?' in path or '*':
+            if '?' in path or '*' in path:
                 globbed.add(path)
                 matches = glob.glob(path)
                 if not matches:
@@ -221,7 +227,13 @@ class TestGenerator:
                           "ignoring." % path)
                 else:
                     extras = extras.union(set(matches))
+        print('BEFORE')
+        for k in self.reference_files:
+            print(k)
         self.reference_files = self.reference_files.union(extras) - globbed
+        print('AFTER')
+        for k in self.reference_files:
+            print(k)
 
     def add_modified_files_from_dir(self, dirpath):
         files = os.listdir(dirpath)
@@ -347,8 +359,6 @@ class TestGenerator:
         return testname
 
     def cli_command(self, zec=None):
-        """
-        """
         files = ' '
         files += ' '.join(repr(f) for f in self.raw_files)
         if self.check_stdout:
@@ -364,8 +374,15 @@ class TestGenerator:
                    repr(os.path.basename(self.script)))
                 + (files if files.strip() else ''))
 
-    def summary(self):
-        lines = [
+    def summary(self, inc_timings=True):
+        lines = ['']
+        if inc_timings:
+            lines = [
+                '',
+                '',
+                'Command execution took: %s' % format_time(self.duration)
+            ]
+        lines += [
             '',
             '',
             'SUMMARY:',
@@ -509,6 +526,7 @@ def exec_command(command, cwd):
 
     Returns a 2-tuple consisting of the output to stdout and to stderr.
     """
+    t = timeit.default_timer()
     out = err = exc = None
     try:
         sp = subprocess.Popen(command, stdin=None,
@@ -522,7 +540,8 @@ def exec_command(command, cwd):
             err = err.decode('UTF-8')
     except Exception as exc:
         pass
-    return out, err, exc, exit_code
+    duration = timeit.default_timer() - t
+    return out, err, exc, exit_code, duration
 
 
 def getline(prompt='', empty_ok=True, default=None):
@@ -558,7 +577,20 @@ def yes_no(msg, default='y'):
     return check
 
 
+def format_time(duration):
+    """
+    Format time in seconds, with at least two significant figures
+    """
+    dps = 2
+    while dps < 10 and duration < pow(10, -dps + 1):
+        dps += 1
+    return ('%%.%dfs' % dps) % duration
+
+
 def wizard():
+    """
+    Gather test specification from users with Q-and-A interface
+    """
     shellcommand = getline('Enter shell command to be tested', empty_ok=False)
     output_script = getline('Enter name for test script', empty_ok=False,
                             default='test_' + sanitize_string(shellcommand))

@@ -29,7 +29,8 @@ class TestAnalysis(ReferenceTestCase):
         (cls.output,
          cls.error,
          cls.exc,
-         cls.exit_code) = exec_command(COMMAND, CWD)
+         cls.exit_code,
+         cls.duration) = exec_command(COMMAND, CWD)
 
     def test_no_exception(self):
         msg = 'No exception should be generated'
