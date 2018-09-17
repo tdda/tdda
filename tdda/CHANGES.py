@@ -109,5 +109,8 @@ Added shell script that generates the first test for gentest.
 
 Add default values to gentest wizard.
 
+Allow directories as files to check and default to checking new files
+created under $(pwd).
+
 ---------------------end of branch gentest -------------------------------
 """
