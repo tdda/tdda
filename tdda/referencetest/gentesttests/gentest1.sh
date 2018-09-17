@@ -1,8 +1,13 @@
-CMD='tdda gentest "python 2files.py" 2files one.txt subdir/one.txt stdout stderr nonzeroexit'
+#
+# Generates 2files test successfully, specifying non-zero exit code is allowed
+#
+# Currently requires STDOUT test to get exclusions added for
+# command timings, because it is not generated automatically.
+#
+
+CMD='tdda gentest "python 2files.py" 2files . stdout stderr nonzeroexit'
 tdda gentest "$CMD" meta_2files.py \
-                    ref/2files/STDERR \
-                    ref/2files/STDOUT \
-                    ref/2files/one.txt ref/2files/one.txt1 \
+                    ref/2files \
                     STDOUT \
                     STDERR
 

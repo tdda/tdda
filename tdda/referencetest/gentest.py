@@ -75,7 +75,8 @@ def gentest(shellcommand=None, output_script=None, *reference_files):
 class TestGenerator:
     def __init__(self, cwd, command, script, reference_files,
                  check_stdout, check_stderr=True, require_zero_exit_code=True,
-                 max_snapshot_files=MAX_SNAPSHOT_FILES):
+                 max_snapshot_files=MAX_SNAPSHOT_FILES,
+                 relative_paths=False):
         self.cwd = cwd
         self.command = command
         self.raw_script = script  # as specified by user
@@ -90,6 +91,7 @@ class TestGenerator:
         self.check_stderr = check_stderr
         self.require_zero_exit_code = require_zero_exit_code
         self.max_snapshot_files = max_snapshot_files
+        self.relative_paths = relative_paths
 
         self.refdir = os.path.join(self.cwd, 'ref', self.name())
         self.ref_map = {}  # mapping for conflicting reference files
@@ -157,12 +159,14 @@ class TestGenerator:
         if self.check_stdout:
             self.write_expected_output(self.out, self.stdout_path())
             print('Saved (%sempty) output to stdout to %s.\n'
-                  % (('non-' if self.out else ''), self.stdout_path()))
+                  % (('non-' if self.out else ''),
+                     self.abs_or_rel(self.stdout_path())))
 
         if self.check_stderr:
             self.write_expected_output(self.err, self.stderr_path())
             print('Saved (%sempty) output to stderr to %s.\n'
-                  % (('non-' if self.err else ''), self.stderr_path()))
+                  % (('non-' if self.err else ''),
+                     self.abs_or_rel(self.stderr_path())))
 
     def create_or_empty_ref_dir(self):
         """
@@ -227,13 +231,7 @@ class TestGenerator:
                           "ignoring." % path)
                 else:
                     extras = extras.union(set(matches))
-        print('BEFORE')
-        for k in self.reference_files:
-            print(k)
         self.reference_files = self.reference_files.union(extras) - globbed
-        print('AFTER')
-        for k in self.reference_files:
-            print(k)
 
     def add_modified_files_from_dir(self, dirpath):
         files = os.listdir(dirpath)
@@ -343,8 +341,7 @@ class TestGenerator:
                                    as_join_repr(ref_path, self.cwd,
                                                 self.name())))
             f.write(TAIL)
-        print('\nTest script written as %s' % self.script)
-
+        print('\nTest script written as %s' % self.abs_or_rel(self.script))
 
     def test_name(self, path):
         """
@@ -387,7 +384,8 @@ class TestGenerator:
             '',
             'SUMMARY:',
             '',
-            'Directory to run in:   %s' % self.cwd,
+            'Directory to run in:   %s' % ('.' if self.relative_paths
+                                               else self.cwd),
             'Shell command:         %s' % self.command,
             'Test script generated: %s' % self.raw_script,
             'Reference files:       %s' % ('' if self.reference_files
@@ -404,6 +402,13 @@ class TestGenerator:
             '',
         ]
         return '\n'.join(lines)
+
+    def abs_or_rel(self, path):
+        """
+        Convenience function for as_join_repr with as_pwd=.
+        """
+        return (as_join_repr(path, self.cwd, as_pwd='.') if self.relative_paths
+                                                         else path)
 
 
 def stream_desc(check, expected):
@@ -439,12 +444,12 @@ def canonicalize(path, default_ext=None, reject_other_exts=True):
 
 def as_pwd_repr(path, cwd):
     """
-    Convenience function for as_join_repr with as_pwd=True
+    Convenience function for as_join_repr with as_pwd=$(pwd)
     """
-    return as_join_repr(path, cwd, as_pwd=True)
+    return as_join_repr(path, cwd, as_pwd='$(pwd)')
 
 
-def as_join_repr(path, cwd, name=None, as_pwd=False):
+def as_join_repr(path, cwd, name=None, as_pwd=None):
     """
     This function aims to produce more comprehensible representations
     of paths under cwd (the assumed current working directory, as would
@@ -485,7 +490,7 @@ def as_join_repr(path, cwd, name=None, as_pwd=False):
             if os.path.isabs(tail):
                 tail = tail[1:]
             if as_pwd:
-                return '$(pwd)/%s' % tail
+                return '%s/%s' % (as_pwd, tail)
             else:
                 ref = os.path.join('ref', name)
                 L = len(ref) + len(os.path.sep)

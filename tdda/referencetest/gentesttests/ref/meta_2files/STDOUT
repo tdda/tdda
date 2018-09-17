@@ -1,0 +1,28 @@
+
+Running command 'python 2files.py' to generate output.
+
+Saved (non-empty) output to stdout to /Users/njr/python/tdda/tdda/referencetest/gentesttests/ref/2files/STDOUT.
+
+Saved (empty) output to stderr to /Users/njr/python/tdda/tdda/referencetest/gentesttests/ref/2files/STDERR.
+
+Copied $(pwd)/one.txt to $(pwd)/ref/2files/one.txt
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files/one.txt1
+
+Test script written as /Users/njr/python/tdda/tdda/referencetest/gentesttests/test_2files.py
+
+
+Command execution took: 0.038s
+
+
+SUMMARY:
+
+Directory to run in:   /Users/njr/python/tdda/tdda/referencetest/gentesttests
+Shell command:         python 2files.py
+Test script generated: 2files
+Reference files:       
+    $(pwd)/one.txt
+    $(pwd)/subdir/one.txt
+Check stdout:          yes (was 1 line)
+Check stderr:          yes (was empty)
+Expected exit code:    99
+
