@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import division
 
 
+import glob
 import os
 import shutil
 import sys
@@ -206,6 +207,21 @@ class TestGenerator:
                 self.add_modified_files_from_dir(d)
         if dirs:
             self.update_reference_files()
+        self.add_globs()
+
+    def add_globs(self):
+        extras = set()
+        globbed = set()
+        for path in self.reference_files:
+            if '?' in path or '*':
+                globbed.add(path)
+                matches = glob.glob(path)
+                if not matches:
+                    print("*** Warning: Pattern '%s' matched no files; "
+                          "ignoring." % path)
+                else:
+                    extras = extras.union(set(matches))
+        self.reference_files = self.reference_files.union(extras) - globbed
 
     def add_modified_files_from_dir(self, dirpath):
         files = os.listdir(dirpath)
