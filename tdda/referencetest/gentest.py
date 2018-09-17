@@ -150,6 +150,9 @@ class TestGenerator:
                      os.path.abspath(self.ref_path('stdout')).lower()}
         failures = False
         for path in self.reference_files:
+            if os.path.isdir(path):
+                print('DIR!!!')
+                continue
             ref_path = self.ref_path(path)
             suffix = 0
             while ref_path.lower() in ref_paths:
@@ -269,13 +272,12 @@ class TestGenerator:
             'Directory to run in:   %s' % self.cwd,
             'Shell command:         %s' % self.command,
             'Test script generated: %s' % self.raw_script,
-        ] + ([] if len(self.reference_files) == 0
-                else (
-                    ['Reference files:']
-                    + ['    %s' % as_pwd_repr(f, self.cwd)
-                       for f in self.reference_files]
-                )
-        ) + [
+            'Reference files:       %s' % ('' if self.reference_files
+                                              else '[None]'),
+        ] + [
+            '    %s' % as_pwd_repr(f, self.cwd) for f in self.reference_files
+
+        ] + [
             'Check stdout:          %s' % stream_desc(self.check_stdout,
                                                       self.out),
             'Check stderr:          %s' % stream_desc(self.check_stderr,
