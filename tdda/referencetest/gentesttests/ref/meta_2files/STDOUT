@@ -11,7 +11,7 @@ Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files/one.txt1
 Test script written as ./test_2files.py
 
 
-Command execution took: 0.042s
+Command execution took: 0.040s
 
 
 SUMMARY:
