@@ -70,4 +70,7 @@ This means that dot actually matches any character.
 The Python documentation claims that without this any character except
 newline is matched, but it appears that some other characters are
 also not matched without re.DOTALL, including a non-breaking space (0x80).
+
+###
+referencetest class now exports TaggedTestLoader for convenience.
 """
