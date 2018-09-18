@@ -73,4 +73,7 @@ also not matched without re.DOTALL, including a non-breaking space (0x80).
 
 18.09.2018 1.0.16
 referencetest class now exports TaggedTestLoader for convenience.
+
+###
+TestLoader now takes an optional 'printer' parameter to control how -0 works.
 """
