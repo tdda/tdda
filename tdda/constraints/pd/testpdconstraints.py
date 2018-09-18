@@ -1096,7 +1096,7 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
                       rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
-        self.assertFileCorrect(detectfile, 'elements118rex_detect.csv')
+        self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
 
     def testDetectElements118rexToFilePerConstraint(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
@@ -1109,7 +1109,8 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
                       per_constraint=True, rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
-        self.assertFileCorrect(detectfile, 'elements118rex_detect_perc.csv')
+        self.assertTextFileCorrect(detectfile,
+                                   'elements118rex_detect_perc.csv')
 
     def testDetectElements118rexToDataFrame(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
@@ -1156,7 +1157,7 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
             # TODO: compare binary feather files and check they're the same
             pass
         else:
-            self.assertFileCorrect(detectfile, detect_name)
+            self.assertTextFileCorrect(detectfile, detect_name)
 
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
@@ -1256,13 +1257,13 @@ class CommandLineHelper:
     def testDiscoverCmd(self):
         argv = ['tdda', 'discover', self.e92csv, self.e92tdda]
         self.execute_command(argv)
-        self.assertFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
-                               rstrip=True,
-                               ignore_substrings=[
-                                   '"local_time":', '"utc_time":',
-                                   '"source":', '"host":', '"user":',
-                                   '"tddafile":', '"creator":',
-                               ])
+        self.assertTextFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
+                                   rstrip=True,
+                                   ignore_substrings=[
+                                       '"local_time":', '"utc_time":',
+                                       '"source":', '"host":', '"user":',
+                                       '"tddafile":', '"creator":',
+                                   ])
         os.remove(self.e92tdda)
 
     def testVerifyE92Cmd(self):
@@ -1351,7 +1352,7 @@ class CommandLineHelper:
                                                 'Records passing: 91\n'
                                                 'Records failing: 27'))
         self.assertTrue(os.path.exists(self.e92bads1))
-        self.assertFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
+        self.assertTextFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
         os.remove(self.e92bads1)
 
     @unittest.skipIf(pmmif is None or feather is None,
@@ -1365,7 +1366,7 @@ class CommandLineHelper:
                                                 'Records passing: 91\n'
                                                 'Records failing: 27'))
         self.assertTrue(os.path.exists(self.e92bads2))
-        self.assertFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
+        self.assertTextFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
         os.remove(self.e92bads2)
 
 

@@ -168,8 +168,8 @@ class TestUnstructuredDataExample(ReferenceTestCase):
         outdir = tempfile.gettempdir()
         outpath = os.path.join(outdir, 'file_result.html')
         generate_file(outpath)
-        self.assertFileCorrect(outpath, 'file_result.html',
-                               ignore_patterns=['Copyright', 'Version'])
+        self.assertTextFileCorrect(outpath, 'file_result.html',
+                                   ignore_patterns=['Copyright', 'Version'])
 
 
 TestStructuredDataExample.set_default_data_location(reference_data_dir)
