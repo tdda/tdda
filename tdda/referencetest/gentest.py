@@ -539,7 +539,7 @@ def exec_command(command, cwd):
     Returns a 2-tuple consisting of the output to stdout and to stderr.
     """
     t = timeit.default_timer()
-    out = err = exc = None
+    out = err = exc = exit_code = None
     try:
         sp = subprocess.Popen(command, stdin=None,
                               stdout=subprocess.PIPE,
