@@ -77,7 +77,7 @@ referencetest class now exports TaggedTestLoader for convenience.
 18.09.2018 1.0.17
 TestLoader now takes an optional 'printer' parameter to control how -0 works.
 
-###
+18.09.2018 1.0.18
 Renamed tdda.referencetest method assertFileCorrect -> assertTextFileCorrect.
 
 The original name is still available for backwards compatibility, but
