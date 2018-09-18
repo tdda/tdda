@@ -37,7 +37,7 @@ GENTEST_HELP = '''
 
 
 
-def gentest(shellcommand=None, output_script=None, *reference_files,
+def gentest(shellcommand, output_script, *reference_files,
             max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False):
     """
     Generate code python in output_script for running the
@@ -655,6 +655,8 @@ def gentest_params(args):
 
 def gentest_wrapper(args):
     positional_args, kw = gentest_params(args)
+    while len(positional_args) < 2:
+        positional_args = [None] + positional_args
     gentest(*positional_args, **kw)
 
 if __name__ == '__main__':
