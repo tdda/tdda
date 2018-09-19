@@ -1,0 +1,29 @@
+Enter shell command to be tested: Enter name for test script [test_python_2files_py]: Check all files written under $(pwd)?: [y]: Enter other files to be checked, one per line, then blank line:
+Check stdout?: [y]: Check stderr?: [y]: Exit code should be zero?: [y]: 
+Running command 'python 2files.py' to generate output.
+
+Saved (non-empty) output to stdout to ./ref/2files_wizard/STDOUT.
+
+Saved (empty) output to stderr to ./ref/2files_wizard/STDERR.
+
+Copied $(pwd)/one.txt to $(pwd)/ref/2files_wizard/one.txt
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files_wizard/one.txt1
+
+Test script written as ./test_2files_wizard.py
+
+
+Command execution took: 0.039s
+
+
+SUMMARY:
+
+Directory to run in:   .
+Shell command:         python 2files.py
+Test script generated: 2files_wizard
+Reference files:       
+    $(pwd)/one.txt
+    $(pwd)/subdir/one.txt
+Check stdout:          yes (was 1 line)
+Check stderr:          yes (was empty)
+Expected exit code:    99
+
