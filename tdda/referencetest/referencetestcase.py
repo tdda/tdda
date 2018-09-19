@@ -235,9 +235,10 @@ class TaggedTestLoader(unittest.TestLoader):
     """
     Subclass of TestLoader, which strips out any non-tagged tests.
     """
-    def __init__(self, check):
+    def __init__(self, check, printer=None):
         unittest.TestLoader.__init__(self)
         self.check = check
+        self.print = printer or print
 
     def loadTestsFromTestCase(self, *args, **kwargs):
         suite = unittest.TestLoader.loadTestsFromTestCase(self, *args,
@@ -269,7 +270,7 @@ class TaggedTestLoader(unittest.TestLoader):
                 newsuite.addTest(test)
         if self.check:
             for module in cases:
-                print(module)
+                self.print(module)
         return newsuite
 
     def getTestCaseNames(self, testCaseClass):

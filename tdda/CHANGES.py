@@ -71,6 +71,18 @@ The Python documentation claims that without this any character except
 newline is matched, but it appears that some other characters are
 also not matched without re.DOTALL, including a non-breaking space (0x80).
 
+18.09.2018 1.0.16
+referencetest class now exports TaggedTestLoader for convenience.
+
+18.09.2018 1.0.17
+TestLoader now takes an optional 'printer' parameter to control how -0 works.
+
+18.09.2018 1.0.18
+Renamed tdda.referencetest method assertFileCorrect -> assertTextFileCorrect.
+
+The original name is still available for backwards compatibility, but
+is deprecated.
+
 --------------------------- branch gentest -------------------------------
 Add initial code for automatically generating reference tests.
 
@@ -123,6 +135,5 @@ output, but we should be able to fix this soon.)
 Add flag handling and use new -r option in tests.
 
 This means tests should work for other people.
-
----------------------end of branch gentest -------------------------------
+--------------------- end of branch gentest ------------------------------
 """

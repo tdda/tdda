@@ -16,7 +16,7 @@ from tdda.referencetest.checkfiles import FilesComparison
 
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
-# if assertStringCorrect or assertFileCorrect fail with 'preprocessing'
+# if assertStringCorrect or assertTextFileCorrect fail with 'preprocessing'
 # in place. This can be overridden using the set_defaults() class method.
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
@@ -169,16 +169,16 @@ class ReferenceTest(object):
         The instance method :py:meth:`set_data_location()` can be used to set
         the per-kind data locations for an individual instance of a class.
 
-        If calls to :py:meth:`assertFileCorrect()` (etc) are made for
+        If calls to :py:meth:`assertTextFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
         explicitly, then the
         default location is used. This is the location declared for
         the ``None`` *kind* and this default **must** be specified.
 
         If you haven't even defined the ``None`` default, and you make calls
-        to :py:meth:`assertFileCorrect()` (etc) using relative pathnames for
-        the reference data files, then it can't check correctness, so it will
-        raise an exception.
+        to :py:meth:`assertTextFileCorrect()` (etc) using relative pathnames
+        for the reference data files, then it can't check correctness, so it
+        will raise an exception.
 
         """
         clsid = id(cls)
@@ -243,7 +243,7 @@ class ReferenceTest(object):
         __init__ method when constructing an instance of
         ReferenceTestCase as a superclass.
 
-        If calls to :py:meth:`assertFileCorrect()` (etc) are made for
+        If calls to :py:meth:`assertTextFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
         explicitly, then the
         default location is used. This is the location declared for
@@ -253,9 +253,9 @@ class ReferenceTest(object):
         :py:meth:`ReferenceeTest.set_default_data_location()` class-method.
 
         If you haven't even defined the ``None`` default, and you make calls
-        to :py:meth:`assertFileCorrect()` (etc) using relative pathnames for
-        the reference data files, then it can't check correctness, so it will
-        raise an exception.
+        to :py:meth:`assertTextFileCorrect()` (etc) using relative pathnames
+        for the reference data files, then it can't check correctness, so it
+        will raise an exception.
 
         """
         self.reference_data_locations[kind] = os.path.normpath(location)
@@ -765,13 +765,13 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertFileCorrect(self, actual_path, ref_path, kind=None,
-                          lstrip=False, rstrip=False,
-                          ignore_substrings=None,
-                          ignore_patterns=None, ignore_lines=None,
-                          preprocess=None, max_permutation_cases=0):
+    def assertTextFileCorrect(self, actual_path, ref_path, kind=None,
+                              lstrip=False, rstrip=False,
+                              ignore_substrings=None,
+                              ignore_patterns=None, ignore_lines=None,
+                              preprocess=None, max_permutation_cases=0):
         """
-        Check that a file matches the contents from a reference text file.
+        Check that a text file matches the contents from a reference text file.
 
             *actual_path*:
                 A path for a text file.
@@ -846,13 +846,13 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertFilesCorrect(self, actual_paths, ref_paths, kind=None,
-                           lstrip=False, rstrip=False,
-                           ignore_substrings=None,
-                           ignore_patterns=None, ignore_lines=None,
-                           preprocess=None, max_permutation_cases=0):
+    def assertTextFilesCorrect(self, actual_paths, ref_paths, kind=None,
+                               lstrip=False, rstrip=False,
+                               ignore_substrings=None,
+                               ignore_patterns=None, ignore_lines=None,
+                               preprocess=None, max_permutation_cases=0):
         """
-        Check that a collection of files matche the contents from
+        Check that a collection of text files matche the contents from
         matching collection of reference text files.
 
             *actual_paths*:
@@ -930,6 +930,10 @@ class ReferenceTest(object):
                                        max_permutation_cases=mpc)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
+
+    # DEPRECATED
+    assertFileCorrect = assertTextFileCorrect
+    assertFilesCorrect = assertTextFilesCorrect
 
     def _resolve_reference_path(self, path, kind=None):
         """
