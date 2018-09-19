@@ -87,6 +87,6 @@ is deprecated.
 Added tdda.referencetest method assertBinaryFileCorrect.
 Also fixed some issues with tdda.referencetest ignore_patterns method.
 
-###
+19.09.2018 1.0.20
 Added test files so that all the new tests will pass.
 """
