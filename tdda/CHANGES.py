@@ -135,5 +135,7 @@ output, but we should be able to fix this soon.)
 Add flag handling and use new -r option in tests.
 
 This means tests should work for other people.
+
+Get rid of TDDA_CWD and use os.dirname(__file__).
 --------------------- end of branch gentest ------------------------------
 """

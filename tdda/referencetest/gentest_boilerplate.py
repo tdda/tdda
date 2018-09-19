@@ -19,7 +19,7 @@ from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
 COMMAND = %(COMMAND)s
-CWD = os.environ.get('TDDA_CWD', %(CWD)s)
+CWD = os.path.abspath(os.path.dirname(__file__))
 REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
 
 

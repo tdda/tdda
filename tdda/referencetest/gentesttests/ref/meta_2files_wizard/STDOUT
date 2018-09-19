@@ -12,7 +12,7 @@ Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files_wizard/one.txt1
 Test script written as ./test_2files_wizard.py
 
 
-Command execution took: 0.041s
+Command execution took: 0.039s
 
 
 SUMMARY:

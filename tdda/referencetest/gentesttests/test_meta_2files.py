@@ -19,7 +19,7 @@ from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
 COMMAND = 'tdda gentest -r "python 2files.py" 2files . stdout stderr nonzeroexit'
-CWD = os.environ.get('TDDA_CWD', '/Users/njr/python/tdda/tdda/referencetest/gentesttests')
+CWD = os.path.abspath(os.path.dirname(__file__))
 REFDIR = os.path.join(CWD, 'ref', 'meta_2files')
 
 
