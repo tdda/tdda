@@ -41,16 +41,20 @@ class BaseComparison(object):
         Add an item to the list of messages, and also display it immediately
         if verbose is set.
         """
-        msgs.append(s)
-        if self.verbose and self.print_fn:
-            self.print_fn(s)
+        if s is not None:
+            msgs.append(s)
+            if self.verbose and self.print_fn:
+                self.print_fn(s)
 
     @staticmethod
-    def compare_with(actual, expected, qualifier=None):
+    def compare_with(actual, expected, qualifier=None, binary=False):
         qualifier = '' if not qualifier else (qualifier + ' ')
         if os.path.exists(expected):
-            msg = 'Compare %swith:\n    %s %s %s\n'
-            cmd = diffcmd()
+            if binary:
+                return None
+            else:
+                msg = 'Compare %swith:\n    %s %s %s\n'
+                cmd = diffcmd()
         else:
             msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
             cmd = copycmd()

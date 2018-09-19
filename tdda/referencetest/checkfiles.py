@@ -19,8 +19,13 @@ import os
 import re
 import sys
 import tempfile
+from collections import namedtuple
 
 from tdda.referencetest.basecomparison import BaseComparison, copycmd
+
+
+BinaryInfo = namedtuple('BinaryInfo',
+                        ('byteoffset', 'actualLen', 'expectedLen'))
 
 
 class FilesComparison(BaseComparison):
@@ -29,7 +34,7 @@ class FilesComparison(BaseComparison):
                       actual_path=None, expected_path=None,
                       lstrip=False, rstrip=False,
                       ignore_substrings=None, ignore_patterns=None,
-                      ignore_lines=None,
+                      remove_lines=None,
                       preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
@@ -65,7 +70,7 @@ class FilesComparison(BaseComparison):
                                 must not contain parenthesised groups, and
                                 should only include explicit anchors if they
                                 need refer to the whole line.
-            *ignore_lines*
+            *remove_lines*
                                 is an optional list of substrings; lines
                                 containing any of these substrings will be
                                 completely removed before carrying out the
@@ -108,11 +113,11 @@ class FilesComparison(BaseComparison):
         if expected and len(expected[-1]) == 0:
             expected = expected[:-1]
 
-        if ignore_lines:
+        if remove_lines:
             actual = [a for a in actual
-                      if not any(i in a for i in ignore_lines)]
+                      if not any(i in a for i in remove_lines)]
             expected = [a for a in expected
-                        if not any(i in a for i in ignore_lines)]
+                        if not any(i in a for i in remove_lines)]
 
         if len(actual) == len(expected):
             normalize = self.normalize_function(lstrip, rstrip)
@@ -145,8 +150,7 @@ class FilesComparison(BaseComparison):
                                     # matched an anchored expression
                                     break
                                 lhs = mActual.group(1) + mActual.group(3)
-                                rhs = (mExpected.group(1)
-                                       + mExpected.group(3))
+                                rhs = mExpected.group(1) + mExpected.group(3)
                                 if lhs == rhs:
                                     actual[i] = (mActual.group(1) + '...'
                                                  + mActual.group(3))
@@ -193,7 +197,7 @@ class FilesComparison(BaseComparison):
                                   lstrip=False, rstrip=False,
                                   ignore_substrings=None,
                                   ignore_patterns=None,
-                                  ignore_lines=None,
+                                  remove_lines=None,
                                   preprocess=None, max_permutation_cases=0,
                                   msgs=None):
         """
@@ -233,7 +237,7 @@ class FilesComparison(BaseComparison):
                                           lstrip=lstrip, rstrip=rstrip,
                                           ignore_substrings=ignore_substrings,
                                           ignore_patterns=ignore_patterns,
-                                          ignore_lines=ignore_lines,
+                                          remove_lines=remove_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=
                                               max_permutation_cases,
@@ -249,7 +253,7 @@ class FilesComparison(BaseComparison):
     def check_file(self, actual_path, expected_path,
                    lstrip=False, rstrip=False,
                    ignore_substrings=None, ignore_patterns=None,
-                   ignore_lines=None,
+                   remove_lines=None,
                    preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Check a pair of files, line by line, with optional
@@ -292,7 +296,7 @@ class FilesComparison(BaseComparison):
                                           lstrip=lstrip, rstrip=rstrip,
                                           ignore_substrings=ignore_substrings,
                                           ignore_patterns=ignore_patterns,
-                                          ignore_lines=ignore_lines,
+                                          remove_lines=remove_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=
                                               max_permutation_cases,
@@ -308,7 +312,7 @@ class FilesComparison(BaseComparison):
     def check_files(self, actual_paths, expected_paths,
                     lstrip=False, rstrip=False,
                     ignore_substrings=None, ignore_patterns=None,
-                    ignore_lines=None,
+                    remove_lines=None,
                     preprocess=None, max_permutation_cases=0, msgs=None):
         """
         Compare a list of files against a list of reference files.
@@ -329,7 +333,7 @@ class FilesComparison(BaseComparison):
                 r = self.check_file(actual_path, expected_path,
                                     ignore_substrings=ignore_substrings,
                                     ignore_patterns=ignore_patterns,
-                                    ignore_lines=ignore_lines,
+                                    remove_lines=remove_lines,
                                     preprocess=preprocess,
                                     lstrip=lstrip, rstrip=rstrip,
                                     max_permutation_cases=max_permutation_cases,
@@ -343,6 +347,48 @@ class FilesComparison(BaseComparison):
                                    e.__class__.__name__, str(e)))
                 failures += 1
         return (failures, msgs)
+
+    def check_binary_file(self, actual_path, expected_path, msgs=None):
+        """
+        Check a pair of binary files.
+        """
+        if msgs is None:
+            msgs = []
+        try:
+            with open(expected_path, 'rb') as f:
+                expected = f.read()
+        except IOError:
+            self.info(msgs, 'Reference file %s not found.' % expected_path)
+            self.info(msgs,
+                      'Initialize from actual content with:\n    %s %s %s'
+                      % (copycmd(), actual_path, expected_path))
+            return (1, msgs)
+        try:
+            with open(actual_path, 'rb') as f:
+                actual = f.read()
+        except IOError:
+            self.info(msgs, 'Actual file %s not found.'
+                            % os.path.normpath(actual_path))
+            self.add_failures(msgs, actual_path, expected_path)
+            return (1, msgs)
+
+        if expected == actual:
+            return (0, msgs)
+        minlen = min(len(expected), len(actual))
+        if expected[:minlen] == actual[:minlen]:
+            boff = minlen
+        else:
+            boff = 0
+            while boff < minlen:
+                if expected[boff] != actual[boff]:
+                    break
+                boff += 1
+        self.add_failures(msgs, actual_path, expected_path,
+                          actual=actual, expected=expected,
+                          binaryinfo=BinaryInfo(boff,
+                                                actualLen=len(actual),
+                                                expectedLen=len(expected)))
+        return (1, msgs)
 
     def check_for_permutation_failures(self, failure_cases):
         """
@@ -376,14 +422,16 @@ class FilesComparison(BaseComparison):
 
     def add_failures(self, msgs, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
-                     preprocess=None, actual=None, expected=None):
+                     preprocess=None, actual=None, expected=None,
+                     binaryinfo=None):
         """
         Build a list of messages describing the way in which two files are
         different.
         """
+        binary = binaryinfo is not None
         if actual_path and expected_path:
             self.info(msgs, self.compare_with(os.path.normpath(actual_path),
-                                              expected_path))
+                                              expected_path, binary=binary))
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
@@ -399,6 +447,8 @@ class FilesComparison(BaseComparison):
             for pattern in ignore_patterns:
                 self.info(msgs, '    ' + pattern)
         if preprocess and actual_path:
+            if binary:
+                raise Exception('preprocess cannot be used with binary files')
             actualFilename = os.path.split(actual_path)[1]
             modifiedActual = os.path.join(self.tmp_dir,
                                           'actual-' + actualFilename)
@@ -420,4 +470,12 @@ class FilesComparison(BaseComparison):
                         else '\n'.join(actual))
             self.info(msgs,
                       self.compare_with(tmpActualFilename, expected_path))
+        if binaryinfo is not None:
+            if binaryinfo.actualLen == binaryinfo.expectedLen:
+                lengthinfo = 'both files have length %d' % binaryinfo.actualLen
+            else:
+                lengthinfo = ('actual length %d, expected length %d'
+                              % (binaryinfo.actualLen, binaryinfo.expectedLen))
+            self.info(msgs, 'First difference at byte offset %d, %s.'
+                      % (binaryinfo.byteoffset, lengthinfo))
 

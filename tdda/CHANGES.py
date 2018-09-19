@@ -82,4 +82,7 @@ Renamed tdda.referencetest method assertFileCorrect -> assertTextFileCorrect.
 
 The original name is still available for backwards compatibility, but
 is deprecated.
+
+###
+Added tdda.referencetest method assertBinaryFileCorrect.
 """
