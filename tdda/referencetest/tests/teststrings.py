@@ -70,20 +70,36 @@ class TestStrings(unittest.TestCase):
 
     def test_ignore_patterns(self):
         compare = FilesComparison()
+
+        # red != blue, banana != grapefruit => 2 failures
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit']),
                          (1, ['2 lines are different, starting at line 2',
                               'No files']))
+
+        # red != blue, banana !~ gr.*t => 2 failures
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit'],
                                                ignore_patterns=['gr.*t']),
                          (1, ['2 lines are different, starting at line 2',
                               'No files',
                               'Note exclusions:', '    gr.*t']))
+
+        # red != blue, but great DOES ~ gr.*t => 1 failure
+        self.assertEqual(compare.check_strings(['abc','red', 'great'],
+                                               ['abc','blue', 'grapefruit'],
+                                               ignore_patterns=['gr.*t']),
+                         (1, ['1 line is different, starting at line 2',
+                              'No files',
+                              'Note exclusions:', '    gr.*t']))
+
+        # spangle DOES ~ sp......, and breadfruit DOES ~ .*fruit => success
         self.assertEqual(compare.check_strings(['abc','spangle', 'breadfruit'],
                                                ['abc','spanner', 'grapefruit'],
-                                               ignore_patterns=['sp.....',
-                                                                '.*fruit']),
+                                               ignore_patterns=[
+                                                   'sp.....',
+                                                   '[bg].*fruit'
+                                               ]),
                          (0, []))
 
     def test_preprocess(self):

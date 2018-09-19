@@ -134,7 +134,7 @@ class TestFiles(unittest.TestCase):
                                   'actual length 14, expected length 28.']))
         self.assertEqual(r3, (1, ['First difference at byte offset 14, '
                                   'actual length 28, expected length 14.']))
-        self.assertEqual(r4, (0, ['First difference at byte offset 2, '
+        self.assertEqual(r4, (1, ['First difference at byte offset 2, '
                                   'both files have length 14.']))
 
 

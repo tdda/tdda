@@ -102,6 +102,7 @@ class FilesComparison(BaseComparison):
         if msgs is None:
             msgs = []
         first_error = None
+        first_error_line = None
         failure_cases = []
 
         if preprocess:
@@ -128,7 +129,7 @@ class FilesComparison(BaseComparison):
                 ignore_substrings = ignore_substrings or []
                 ignore_patterns = ignore_patterns or []
                 anchored_patterns = [('' if p.startswith('^') else '^(.*)')
-                                      + p
+                                      + ('(%s)' % p)
                                       + ('' if p.endswith('$') else '(.*)$')
                                      for p in ignore_patterns]
                 cPatterns = [re.compile(p) for p in anchored_patterns]
@@ -137,44 +138,26 @@ class FilesComparison(BaseComparison):
                 for i in diffs:
                     for pattern in ignore_substrings:
                         if pattern in actual[i] or pattern in expected[i]:
+                            # ignored a line, so there is one fewer to report
+                            ndiffs -= 1
                             break
                     else:
                         # not an ignorable substring line, so try patterns
-                        for pattern in cPatterns:
-                            mExpected = re.match(pattern, expected[i])
-                            if mExpected:
-                                mActual = re.match(pattern, actual[i])
-                                if not mActual:
-                                    continue
-                                if pattern.groups < 3:
-                                    # matched an anchored expression
-                                    break
-                                lhs = mActual.group(1) + mActual.group(3)
-                                rhs = mExpected.group(1) + mExpected.group(3)
-                                if lhs == rhs:
-                                    actual[i] = (mActual.group(1) + '...'
-                                                 + mActual.group(3))
-                                    expected[i] = (mExpected.group(1)
-                                                   + '...'
-                                                   + mExpected.group(3))
-                                    break
+                        if self.check_patterns(cPatterns, actual, expected, i):
+                            # ignored a line, so there is one fewer to report
+                            ndiffs -= 1
                         else:
                             # difference can't be ignored
-                            if first_error is None:
-                                first_error = (
-                                    '%d line%s different, starting at line'
-                                    ' %d'
-                                    % (ndiffs,
-                                       's are' if ndiffs != 1
-                                               else ' is', i+1))
+                            if first_error_line is None:
+                                first_error_line = i + 1
                             if len(failure_cases) < max_permutation_cases:
-                                failure_cases.append((i,
-                                                      actual[i],
+                                failure_cases.append((i, actual[i],
                                                       expected[i]))
-                            else:
-                                break
-                    # ignored a line, so there is one fewer to report
-                    ndiffs -= 1
+                if first_error_line is not None:
+                    first_error = ('%d line%s different, starting at line %d'
+                                    % (ndiffs,
+                                       's are' if ndiffs != 1 else ' is',
+                                       first_error_line))
         else:
             ndiffs = max_permutation_cases + 1
             first_error = ('%s have different numbers of lines'
@@ -191,6 +174,27 @@ class FilesComparison(BaseComparison):
                               preprocess=preprocess, actual=actual,
                               expected=expected)
         return (1 if ndiffs > 0 else 0, msgs)
+
+    def check_patterns(self, cPatterns, actual, expected, i):
+        for pattern in cPatterns:
+            mExpected = re.match(pattern, expected[i])
+            if mExpected:
+                mActual = re.match(pattern, actual[i])
+                if not mActual:
+                    continue
+                if pattern.groups < 3:
+                    # matched an anchored expression
+                    return True
+                else:
+                    lhs = mActual.group(1) + mActual.group(3)
+                    rhs = mExpected.group(1) + mExpected.group(3)
+                    if lhs == rhs:
+                        actual[i] = mActual.group(1) + '...' + mActual.group(3)
+                        expected[i] = (mExpected.group(1)
+                                       + '...'
+                                       + mExpected.group(3))
+                        return True
+        return False
 
     def check_string_against_file(self, actual, expected_path,
                                   actual_path=None,
