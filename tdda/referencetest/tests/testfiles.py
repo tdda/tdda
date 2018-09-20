@@ -118,6 +118,25 @@ class TestFiles(unittest.TestCase):
                                  'Files have different numbers of lines',
                                  'Compare with:\n    %s\n' % diff2]))
 
+    def test_binary_files(self):
+        compare = FilesComparison()
+        r1 = compare.check_binary_file(refloc('single.txt'),
+                                       refloc('single.txt'))
+        r2 = compare.check_binary_file(refloc('single.txt'),
+                                       refloc('double.txt'))
+        r3 = compare.check_binary_file(refloc('double.txt'),
+                                       refloc('single.txt'))
+        r4 = compare.check_binary_file(refloc('single.txt'),
+                                       refloc('single2.txt'))
+        # single2.txt is deliberately not readable in text mode in python3
+        self.assertEqual(r1, (0, []))
+        self.assertEqual(r2, (1, ['First difference at byte offset 14, '
+                                  'actual length 14, expected length 28.']))
+        self.assertEqual(r3, (1, ['First difference at byte offset 14, '
+                                  'actual length 28, expected length 14.']))
+        self.assertEqual(r4, (1, ['First difference at byte offset 2, '
+                                  'both files have length 14.']))
+
 
 if __name__ == '__main__':
     unittest.main()
