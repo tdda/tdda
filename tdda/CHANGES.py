@@ -138,6 +138,9 @@ This means tests should work for other people.
 
 Get rid of TDDA_CWD and use os.dirname(__file__).
 
+Added support for multiple runs (default 2). This will be used to look
+for variation in output between runs, to generate exclusions etc.
+
 ----------------------- end of branch gentest ---------------------------
 
 19.09.2018 1.0.19

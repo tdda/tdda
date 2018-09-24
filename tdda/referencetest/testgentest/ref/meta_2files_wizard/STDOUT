@@ -1,6 +1,6 @@
 Enter shell command to be tested: Enter name for test script [test_python_2files_py]: Check all files written under $(pwd)?: [y]: Enter other files to be checked, one per line, then blank line:
 Check stdout?: [y]: Check stderr?: [y]: Exit code should be zero?: [y]: 
-Running command 'python 2files.py' to generate output.
+Running command 'python 2files.py' to generate output (run 1 of 2).
 
 Saved (non-empty) output to stdout to ./ref/2files_wizard/STDOUT.
 
@@ -8,6 +8,19 @@ Saved (empty) output to stderr to ./ref/2files_wizard/STDERR.
 
 Copied $(pwd)/one.txt to $(pwd)/ref/2files_wizard/one.txt
 Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files_wizard/one.txt1
+
+Running command 'python 2files.py' to generate output (run 2 of 2).
+
+Saved (non-empty) output to stdout to ./ref/2files_wizard/2/STDOUT.
+
+Saved (empty) output to stderr to ./ref/2files_wizard/2/STDERR.
+
+Copied $(pwd)/one.txt to $(pwd)/ref/2files_wizard/2/one.txt
+Copied $(pwd)/ref/2files_wizard/STDERR to $(pwd)/ref/2files_wizard/2/STDERR
+Copied $(pwd)/ref/2files_wizard/STDOUT to $(pwd)/ref/2files_wizard/2/STDOUT
+Copied $(pwd)/ref/2files_wizard/one.txt to $(pwd)/ref/2files_wizard/2/one.txt
+Copied $(pwd)/ref/2files_wizard/one.txt1 to $(pwd)/ref/2files_wizard/2/one.txt1
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files_wizard/2/one.txt
 
 Test script written as ./test_2files_wizard.py
 
@@ -26,4 +39,3 @@ Reference files:
 Check stdout:          yes (was 1 line)
 Check stderr:          yes (was empty)
 Expected exit code:    99
-

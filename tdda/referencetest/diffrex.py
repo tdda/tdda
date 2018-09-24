@@ -97,5 +97,6 @@ def add_pairs(pairs, L, R, left_num, right_num):
                           (left_num + i) if i < len(L) else 0,
                           (right_num + i) if i < len(R) else 0))
 
+
 if __name__ == '__main__':
     diffrex(sys.argv[1], sys.argv[2])
