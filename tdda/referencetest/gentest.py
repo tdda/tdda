@@ -10,9 +10,12 @@ from __future__ import division
 
 
 import argparse
+import datetime
+import getpass
 import glob
 import os
 import shutil
+import socket
 import sys
 import subprocess
 import tempfile
@@ -64,6 +67,12 @@ class TestGenerator:
         self.with_timelog = with_time_log
         self.iterations = iterations
 
+        self.host = socket.gethostname()
+        self.ip_address = socket.gethostbyname(self.host)
+        self.user = getpass.getuser()
+        self.homedir = home_dir()
+
+
         self.refdir = os.path.join(self.cwd, 'ref', self.name())
         self.ref_map = {}  # mapping for conflicting reference files
         self.snapshot = {}   # holds timestamps of file in ref dirs
@@ -88,7 +97,11 @@ class TestGenerator:
             iteration = (' (run %d of %d)' % (run, N)) if N > 1 else ''
             print('\nRunning command %s to generate output%s.\n'
                   % (repr(self.command), iteration))
+            if run == 1:
+                self.start_time = datetime.datetime.now()
             r = ExecuteCommand(self.command, self.cwd)
+            if run == 1:
+                self.stop_time = datetime.datetime.now()
             self.results[run] = r
 
             self.fail_if_exception(r.exc)
@@ -108,8 +121,10 @@ class TestGenerator:
         for name in ref_files:
             common = []
             removals = []
+            first = self.ref_path(name)
+#            if not os.path.isdir(first):
+#                specifics = self.check_for_specific_references(first)
             for run in range(2, N + 1):
-                first = self.ref_path(name)
                 later = self.ref_path(name, run)
                 if os.path.isdir(first):
                     continue
@@ -121,12 +136,24 @@ class TestGenerator:
                     if p.left_line_num and p.right_line_num:  # present in both
                         common.append(p.left_content)
                         common.append(p.right_content)
-                    elif p[0]:  # left only
+                    elif p.left_line_num:     # left only
                         removals.append(p.left_content)
-                    elif p[1]:  # right only
+                    elif p.right_line_num:    # right only
                         removals.append(p.right_content)
+
 #            self.exclusions[name] = (extract(common), extract(removals))
             self.exclusions[name] = (extract(common), removals)
+
+    def check_for_specific_references(self, path):
+        with open(path) as f:
+            lines = f.readlines()
+            for i, line in enumerate(lines, 1):
+                host = self.host in line
+                ip = self.ip_address in line
+                cwd = self.cwd in line
+                homedir = self.homedir in line
+                if host or ip or cwd or homedir:
+                    print('SPECIFIC LINE %d: %s' % (i, line.rstrip()))
 
     def snapshot_fail(self):
         """
@@ -676,6 +703,25 @@ def yes_no(msg, default='y'):
         elif reply == '':
             check = default == 'y'
     return check
+
+
+def home_dir():
+    """Returns user's home directory."""
+    if 'HOME' in os.environ:
+        return os.environ['HOME']
+    elif is_unix():
+        return os.path.expanduser('~')
+    elif is_windows():
+        from win32com.shell import shellcon, shell  # type: ignore
+        return shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+
+
+def is_unix():
+    return os.name == 'posix'
+
+
+def is_windows():
+    return os.name == 'nt'
 
 
 def format_time(duration):

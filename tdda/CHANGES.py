@@ -145,6 +145,7 @@ Started to generate exclusions automatically based on the difference
 between two runs. Removed some of the boilerplate as a result and instead
 use a function to generate all the variable tests.
 
+Started adding code for over-specific lines (paths, timestamps etc.)
 
 ----------------------- end of branch gentest ---------------------------
 
