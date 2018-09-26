@@ -20,7 +20,7 @@ import sys
 
 from collections import OrderedDict
 
-from tdda.referencetest.basecomparison import BaseComparison
+from tdda.referencetest.basecomparison import BaseComparison, Diffs
 
 try:
     import pandas as pd
@@ -91,10 +91,10 @@ class PandasComparison(BaseComparison):
             *precision*
                             Number of decimal places to compare float values.
             *msgs*
-                            List of strings
+                            Optional Diffs object.
 
         Returns a tuple (failures, msgs), containing the number of failures,
-        and a list of error messages.
+        and a Diffs object containing error messages.
 
         the comparison 'Option' flags can be of any of the following:
 
@@ -107,7 +107,7 @@ class PandasComparison(BaseComparison):
 
         same = True
         if msgs is None:
-            msgs = []
+            msgs = Diffs()
 
         if precision is None:
             precision = 6
@@ -275,7 +275,7 @@ class PandasComparison(BaseComparison):
         The other parameters are the same as those used by
         :py:mod:`check_dataframe`.
         Returns a tuple (failures, msgs), containing the number of failures,
-        and a list of error messages.
+        and a Diffs object containing error messages.
         """
         ref_df = self.load_csv(expected_path, loader=loader, **kwargs)
         df = self.load_csv(actual_path, loader=loader, **kwargs)
@@ -315,7 +315,7 @@ class PandasComparison(BaseComparison):
         and a list of error messages.
 
         Returns a tuple (failures, msgs), containing the number of failures,
-        and a list of error messages.
+        and a Diffs object containing error messages.
 
         Note that this function compares ALL of the pairs of actual/expected
         files, and if there are any differences, then the number of failures
@@ -326,7 +326,7 @@ class PandasComparison(BaseComparison):
         right to the end.
         """
         if msgs is None:
-            msgs = []
+            msgs = Diffs()
         failures = 0
         for (actual_path, expected_path) in zip(actual_paths, expected_paths):
             try:

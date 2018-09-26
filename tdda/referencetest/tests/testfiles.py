@@ -91,6 +91,13 @@ class TestFiles(unittest.TestCase):
         self.assertEqual(r3, (1, ['Files have different numbers of lines',
                                   'Compare with:\n    %s\n' % diff3]))
 
+    def test_file_removals(self):
+        compare = FilesComparison()
+        r = compare.check_file(refloc('removals.txt'),
+                               refloc('ref.txt'),
+                               remove_lines=['I am optional'])
+        self.assertEqual(r, (0, []))
+
     def test_multiple_files_ok(self):
         compare = FilesComparison()
         r = compare.check_files([refloc('empty.txt'),
@@ -137,6 +144,128 @@ class TestFiles(unittest.TestCase):
         self.assertEqual(r4, (1, ['First difference at byte offset 2, '
                                   'both files have length 14.']))
 
+    def test_removal_diffs(self):
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(refloc('removals.txt'),
+                                          refloc('ref.txt'),
+                                          remove_lines=['I am optional'])
+        self.assertEqual(code, 0)
+        self.assertEqual(msgs.lines, [])
+        return
+        self.assertEqual(msgs.outputs[0],
+                         ['This is a file containing some optional lines.',
+                          "*** Here's one: I am optional"
+                              "(|; but it's the only one; "
+                              "the rest have been removed.)",
+                          'And:',
+                          "Here's another one: "
+                              "I am optional and I have some trailing stuff",
+                          "And here's a line on its own:",
+                          'I am optional',
+                          "That's all"])
+        self.assertEqual(msgs.outputs[1],
+                         ['This is a file containing some optional lines.',
+                          "*** Here's one: I am optional"
+                              "(|; but it's the only one; "
+                              "the rest have been removed.)",
+                          'And:',
+                          "And here's a line on its own:",
+                          "That's all"])
+
+    def test_ignore_substrings_diffs(self):
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(refloc('left.txt'),
+                                          refloc('ref.txt'),
+                                          ignore_substrings=['Here\'s one',
+                                                             'And'])
+        difflines = [
+            'This is a file containing some optional lines.',
+            "*** Here's one: "
+                '('
+                'And it will get ignored even if not optionally'
+                '|'
+                'I am optional; but it\'s the only one; '
+                'the rest have been'
+                ')'
+                ' removed.',
+            '*** And:'
+                '('
+                ' this line is different, unless you ignore '
+                'the first word'
+                '|'
+                ')',
+            "And here's a line on its own:",
+            "That's all"
+        ]
+        self.assertEqual(code, 0)
+        self.assertEqual(msgs.lines, [])
+        self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
+        self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)
+
+    def test_ignore_pattern_diffs(self):
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(refloc('left.txt'),
+                                          refloc('ref.txt'),
+                                          ignore_patterns=[
+                                              '^.*opt...al.*$',
+                                              '^.*[Aa][Nn][Dd].*$'
+                                          ])
+        difflines = [
+            'This is a file containing some optional lines.',
+            "*** Here's one: "
+                '('
+                'And it will get ignored even if not optionally'
+                '|'
+                "I am optional; but it's the only one; the rest have been"
+                ')'
+                ' removed.',
+            '*** And:'
+                '('
+                ' this line is different, unless you ignore the first word'
+                '|'
+                ')',
+            "And here's a line on its own:",
+            "That's all"
+        ]
+        self.assertEqual(code, 0)
+        self.assertEqual(msgs.lines, [])
+        self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
+        self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)
+
+    def test_ignore_pattern_diffs_fail(self):
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(refloc('left.txt'),
+                                          refloc('ref.txt'),
+                                          ignore_patterns=['^.*opt...al.*$'])
+        difflines = [
+            'This is a file containing some optional lines.',
+            "*** Here's one: "
+                '('
+                'And it will get ignored even if not optionally'
+                '|'
+                "I am optional; but it's the only one; the rest have been"
+                ')'
+                ' removed.',
+            '... placeholder ...',
+            "And here's a line on its own:",
+            "That's all"
+        ]
+
+        self.assertEqual(code, 1)
+        self.assertEqual(len(msgs.lines), 4)
+        self.assertEqual(msgs.lines[0],
+                         '1 line is different, starting at line 3')
+        self.assertEqual(msgs.lines[1][:13], 'Compare with:')
+        self.assertEqual(msgs.lines[2], 'Note exclusions:')
+        self.assertEqual(msgs.lines[3], '    ^.*opt...al.*$')
+
+        difflines[2] = ('And: this line is different, '
+                        'unless you ignore the first word')
+        self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
+        difflines[2] = 'And:'
+        self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)
+
 
 if __name__ == '__main__':
     unittest.main()
+

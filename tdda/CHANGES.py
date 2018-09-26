@@ -89,4 +89,14 @@ Also fixed some issues with tdda.referencetest ignore_patterns method.
 
 19.09.2018 1.0.20
 Added test files so that all the new tests will pass.
+
+------------------------- dev branch -------------------------
+Refactored reporting of differences for files and strings, to take
+better account of 'ignore' and 'remove' parameters. It now builds a 'diff'
+that will only appear 'different' for lines that are REALLY different, after
+any removals and ignores have been collapsed. That diff can also include an
+embedded 'raw' diff, which will show ALL the differences, but the main focus
+is on showing 'what is different that should not be'.
+
+------------------------- end of dev branch -------------------------
 """
