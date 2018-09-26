@@ -171,15 +171,15 @@ class FilesComparison(BaseComparison):
                         if substr in actual[i] or substr in expected[i]:
                             # ignored a line, so there is one fewer to report
                             #
-                            # TODO: This ignores a line even if it only
-                            #       matches on ONE side and NOT on the other!
-                            #       That doesn't seem right at all, but to
-                            #       change 'or' to 'and' would change the
-                            #       semantics in a way that will break some
-                            #       tests in other software that is depending
-                            #       on this behaviour. We should deprecate
-                            #       this, and publish a timetable for changing
-                            #       it.
+                            # Note that this ignores a line even if it only
+                            # matches on ONE side and NOT on the other. This
+                            # is deliberate, to cover the case where the
+                            # expected reference file contains concrete
+                            # representations of things that need to be
+                            # ignored (like usernames, machine names etc),
+                            # where you can't express that more generally
+                            # as any kind of pattern.
+                            #
                             ndiffs -= 1
                             actual_ignored.add(actual_map[i])
                             expected_ignored.add(expected_map[i])
