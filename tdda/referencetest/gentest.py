@@ -21,8 +21,10 @@ import timeit
 is_python3 = sys.version_info.major >= 3
 actual_input = input if is_python3 else raw_input
 
-from tdda.referencetest.gentest_boilerplate import (HEADER, TAIL, STDOUT,
-                                                    STDERR, REFTEST)
+from tdda.referencetest.gentest_boilerplate import HEADER, TAIL
+
+from tdda.referencetest.diffrex import find_diff_lines
+from tdda.rexpy import extract
 
 USAGE = '''python gentest.py 'quoted shell command' [test_outputfile.py] [reference files]
 
@@ -72,14 +74,16 @@ class TestGenerator:
         self.create_or_empty_ref_dir()
         self.snapshot_filesystem()
 
-        self.run_command(2)
+        self.run_command()
+        self.generate_exclusions()
 
         self.write_script()
         print(self.summary())
 
 
-    def run_command(self, N=1):
+    def run_command(self):
         self.results = {}
+        N = self.iterations
         for run in range(1, N + 1):
             iteration = (' (run %d of %d)' % (run, N)) if N > 1 else ''
             print('\nRunning command %s to generate output%s.\n'
@@ -94,6 +98,35 @@ class TestGenerator:
             self.sort_reference_files(run)
             self.copy_reference_stream_output(run)
             self.copy_reference_files(run)
+
+    def generate_exclusions(self):
+        self.exclusions = {}
+        N = self.iterations
+        if N < 2:
+            self.exclusions = 0
+        ref_files = os.listdir(self.refdir)
+        for name in ref_files:
+            common = []
+            removals = []
+            for run in range(2, N + 1):
+                first = self.ref_path(name)
+                later = self.ref_path(name, run)
+                if os.path.isdir(first):
+                    continue
+                if not os.path.exists(later):
+                    print('%s does not exist' % later)
+                    continue
+                pairs = find_diff_lines(first, later)
+                for p in pairs:
+                    if p.left_line_num and p.right_line_num:  # present in both
+                        common.append(p.left_content)
+                        common.append(p.right_content)
+                    elif p[0]:  # left only
+                        removals.append(p.left_content)
+                    elif p[1]:  # right only
+                        removals.append(p.right_content)
+#            self.exclusions[name] = (extract(common), extract(removals))
+            self.exclusions[name] = (extract(common), removals)
 
     def snapshot_fail(self):
         """
@@ -235,6 +268,8 @@ class TestGenerator:
         return name[1:] if name.startswith('_') else name
 
     def ignore(self, name):
+        if os.path.isdir(name) and name.startswith(self.refdir):
+            return True
         return (name == '__pycache__'
                 or name.endswith('.pyc')
                 or name == '.DSStore')
@@ -261,10 +296,7 @@ class TestGenerator:
                 ref_path = ref_path + str(suffix)
             if suffix:
                 self.ref_map[path] = ref_path
-            if run == 1:  # for now, only update list of ref files on first run
-                          # eventually, will have to handle case where
-                          # different runs write to different files.
-                ref_paths.add(ref_path.lower())
+            ref_paths.add(ref_path.lower())
             try:
                 shutil.copyfile(path, ref_path)
                 print('Copied %s to %s' % (as_pwd_repr(path, self.cwd),
@@ -327,18 +359,28 @@ class TestGenerator:
                 'EXIT_CODE': r.exit_code
             })
             if self.check_stdout:
-                f.write(STDOUT % as_join_repr(self.stdout_path(), self.cwd,
-                                              self.name()))
+                path = as_join_repr(self.stdout_path(), self.cwd, self.name())
+                exc = self.exclusions.get('STDOUT')
+                (patterns, removals) = exc if exc else (None, None)
+                f.write(test_def('stdout', 'self.output', 'String', path,
+                                 patterns, removals))
             if self.check_stderr:
-                f.write(STDERR % as_join_repr(self.stderr_path(), self.cwd,
-                                              self.name()))
+                path = as_join_repr(self.stderr_path(), self.cwd, self.name())
+                exc = self.exclusions.get('STDERR')
+                (patterns, removals) = exc if exc else (None, None)
+                f.write(test_def('stderr', 'self.error', 'String', path,
+                                 patterns, removals))
+
             for path in reference_files:
                 testname = self.test_name(path)
                 ref_path = self.ref_map.get(path, self.ref_path(path))
-                f.write(REFTEST % (testname,
-                                   as_join_repr(path, self.cwd, self.name()),
-                                   as_join_repr(ref_path, self.cwd,
-                                                self.name())))
+                ref_path = as_join_repr(ref_path, self.cwd, self.name())
+                actual_path = as_join_repr(path, self.cwd, self.name())
+                exc = self.exclusions.get(path)
+                (patterns, removals) = exc if exc else (None, None)
+                f.write(test_def(testname, actual_path, 'File', ref_path,
+                                 patterns, removals))
+
             f.write(TAIL)
         print('\nTest script written as %s' % self.abs_or_rel(self.script))
 
@@ -536,6 +578,50 @@ def as_join_repr(path, cwd, name=None, as_pwd=None):
     return repr(path)
 
 
+def test_def(name, actual, kind, ref_file_path, patterns, removals):
+    lines = ['', 'def test_%s(self):' % name]
+    extras = []
+    assert kind in ('File', 'String')
+    assert_fn = 'self.assert%sCorrect' % kind
+    spc = ' ' * (len(assert_fn) + 5)
+    if patterns:
+        lines.append('    patterns = [')
+        for p in patterns:
+            lines.append('        %s,' % quote_raw(p))
+        lines.append('    ]')
+        extras.append(spc + 'ignore_patterns=patterns')
+    if removals:
+        lines.append('    removals = [')
+        for p in removals:
+            lines.append('        %s,' % repr(p))
+        lines.append('    ]')
+        rspc = '' if extras else spc
+        extras.append(rspc + 'remove_lines=removals')
+    ref_file_line = spc + ref_file_path + (',' if extras else ')')
+    lines.extend(['    %s(%s,' % (assert_fn, actual), ref_file_line])
+    if extras:
+        joint = ',\n' + spc + (' ' * 4)
+        lines.append(joint.join(extras) + ')')
+    return '\n    '.join(lines) + '\n'
+
+
+def quote_raw(s):
+    """
+    Attempt to return a representation of s as a raw string,
+    falling back to repr if that's just too damn hard.
+    """
+    if "'" not in s:
+        return "r'%s'" % s
+    elif '"' not in s:
+        return 'r"%s"' % s
+    elif "'''" not in s:
+        return "r'''%s'''" % s
+    elif '"""' not in s:
+        return 'r"""%s"""' % s
+    else:
+        return repr(s)
+
+
 def sanitize_string(string):
     """
     Replaces all non-alphas in string with '_'
@@ -699,7 +785,7 @@ def gentest(shellcommand, output_script, reference_files,
     if 'nonzeroexit' in lcrefs:
         require_zero_exit_code = False
     if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
-        reference_files = reference_files + ('.',)
+        reference_files = reference_files + ['.',]
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code,
                   max_snapshot_files=max_snapshot_files,

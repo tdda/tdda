@@ -45,22 +45,3 @@ TAIL = '''
 if __name__ == '__main__':
     ReferenceTestCase.main()
 '''
-
-
-STDOUT = '''
-    def test_stdout(self):
-        self.assertStringCorrect(self.output,
-                                 %s)
-'''
-
-STDERR = '''
-    def test_stderr(self):
-        self.assertStringCorrect(self.error,
-                                 %s)
-'''
-
-REFTEST = '''
-    def test_file_%s(self):
-        self.assertFileCorrect(%s,
-                               %s)
-'''

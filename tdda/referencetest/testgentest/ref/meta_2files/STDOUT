@@ -15,16 +15,12 @@ Saved (non-empty) output to stdout to ./ref/2files/2/STDOUT.
 Saved (empty) output to stderr to ./ref/2files/2/STDERR.
 
 Copied $(pwd)/one.txt to $(pwd)/ref/2files/2/one.txt
-Copied $(pwd)/ref/2files/STDERR to $(pwd)/ref/2files/2/STDERR
-Copied $(pwd)/ref/2files/STDOUT to $(pwd)/ref/2files/2/STDOUT
-Copied $(pwd)/ref/2files/one.txt to $(pwd)/ref/2files/2/one.txt
-Copied $(pwd)/ref/2files/one.txt1 to $(pwd)/ref/2files/2/one.txt1
-Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files/2/one.txt
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/2files/2/one.txt1
 
 Test script written as ./test_2files.py
 
 
-Command execution took: 0.038s
+Command execution took: 0.039s
 
 
 SUMMARY:
