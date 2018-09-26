@@ -98,5 +98,9 @@ any removals and ignores have been collapsed. That diff can also include an
 embedded 'raw' diff, which will show ALL the differences, but the main focus
 is on showing 'what is different that should not be'.
 
+Also improved reporting of differences when there are different numbers
+of lines. It now says what line the (effective) differences start at (taking
+into account removals and ignores).
+
 ------------------------- end of dev branch -------------------------
 """

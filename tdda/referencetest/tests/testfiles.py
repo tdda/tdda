@@ -49,12 +49,12 @@ class TestFiles(unittest.TestCase):
         r4 = check(compare, ['the wrong text\n'], 'single.txt')
         r5 = check(compare, ['the wrong text\n'], 'single.txt', diff=True,
                    actual_path='wrong.txt')
-        self.assertEqual(r1, (1, ['Strings have different numbers of lines',
-                                  'Expected file %s' % refloc('empty.txt')]))
-        self.assertEqual(r2, (1, ['Strings have different numbers of lines',
-                                  'Expected file %s' % refloc('empty.txt')]))
-        self.assertEqual(r3, (1, ['Strings have different numbers of lines',
-                                  'Expected file %s' % refloc('empty.txt')]))
+        errs = ['Strings have different numbers of lines, '
+                    'differences start at end of reference file',
+                'Expected file %s' % refloc('empty.txt')]
+        self.assertEqual(r1, (1, errs))
+        self.assertEqual(r2, (1, errs))
+        self.assertEqual(r3, (1, errs))
         self.assertEqual(r4, (1,
                               ['1 line is different, starting at line 1',
                                'Expected file %s' % refloc('single.txt')]))
@@ -84,12 +84,15 @@ class TestFiles(unittest.TestCase):
                               refloc('single.txt'), refloc('empty.txt'))
         diff3 = '%s %s %s' % (diffcmd(),
                               refloc('single.txt'), refloc('colours.txt'))
-        self.assertEqual(r1, (1, ['Files have different numbers of lines',
-                                  'Compare with:\n    %s\n' % diff1]))
-        self.assertEqual(r2, (1, ['Files have different numbers of lines',
-                                  'Compare with:\n    %s\n' % diff2]))
-        self.assertEqual(r3, (1, ['Files have different numbers of lines',
-                                  'Compare with:\n    %s\n' % diff3]))
+        err1 = ('Files have different numbers of lines, '
+               'differences start at end of actual file')
+        err2 = ('Files have different numbers of lines, '
+               'differences start at end of reference file')
+        err3 = ('Files have different numbers of lines, '
+               'differences start at line 1')
+        self.assertEqual(r1, (1, [err1, 'Compare with:\n    %s\n' % diff1]))
+        self.assertEqual(r2, (1, [err2, 'Compare with:\n    %s\n' % diff2]))
+        self.assertEqual(r3, (1, [err3, 'Compare with:\n    %s\n' % diff3]))
 
     def test_file_removals(self):
         compare = FilesComparison()
@@ -120,10 +123,12 @@ class TestFiles(unittest.TestCase):
                               refloc('empty.txt'), refloc('single.txt'))
         diff2 = '%s %s %s' % (diffcmd(),
                               refloc('single.txt'), refloc('colours.txt'))
-        self.assertEqual(r, (2, ['Files have different numbers of lines',
-                                 'Compare with:\n    %s\n' % diff1,
-                                 'Files have different numbers of lines',
-                                 'Compare with:\n    %s\n' % diff2]))
+        err1 = ('Files have different numbers of lines, '
+               'differences start at end of actual file')
+        err2 = ('Files have different numbers of lines, '
+               'differences start at line 1')
+        self.assertEqual(r, (2, [err1, 'Compare with:\n    %s\n' % diff1,
+                                 err2, 'Compare with:\n    %s\n' % diff2]))
 
     def test_binary_files(self):
         compare = FilesComparison()

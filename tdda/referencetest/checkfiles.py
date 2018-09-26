@@ -104,7 +104,6 @@ class FilesComparison(BaseComparison):
         if msgs is None:
             msgs = Diffs()
         first_error = None
-        first_error_line = None
         failure_cases = []
         reconstruction = None
 
@@ -156,48 +155,24 @@ class FilesComparison(BaseComparison):
             ndiffs = len(diffs)
 
             if ndiffs > 0:
-                ignore_substrings = ignore_substrings or []
-                ignore_patterns = ignore_patterns or []
-                anchored_patterns = [('' if p.startswith('^') else '^(.*)')
-                                      + ('(%s)' % p)
-                                      + ('' if p.endswith('$') else '(.*)$')
-                                     for p in ignore_patterns]
-                cPatterns = [re.compile(p) for p in anchored_patterns]
-                if any(cp.groups > 3 for cp in cPatterns):
-                    raise Exception('Invalid patterns: %s' % ignore_patterns)
+                first_error_line = None
+                compiled_patterns = self.compile_patterns(ignore_patterns)
+
                 for i in diffs:
                     # 'i' is a line-number in the after-removals datasets
-                    for substr in ignore_substrings:
-                        if substr in actual[i] or substr in expected[i]:
-                            # ignored a line, so there is one fewer to report
-                            #
-                            # Note that this ignores a line even if it only
-                            # matches on ONE side and NOT on the other. This
-                            # is deliberate, to cover the case where the
-                            # expected reference file contains concrete
-                            # representations of things that need to be
-                            # ignored (like usernames, machine names etc),
-                            # where you can't express that more generally
-                            # as any kind of pattern.
-                            #
-                            ndiffs -= 1
-                            actual_ignored.add(actual_map[i])
-                            expected_ignored.add(expected_map[i])
-                            break
+                    if self.can_ignore(actual[i], expected[i],
+                                       ignore_substrings=ignore_substrings,
+                                       compiled_patterns=compiled_patterns):
+                        # a difference that can be ignored
+                        ndiffs -= 1
+                        actual_ignored.add(actual_map[i])
+                        expected_ignored.add(expected_map[i])
                     else:
-                        # not an ignorable substring line, so try patterns
-                        if self.check_patterns(cPatterns, actual, expected, i):
-                            # ignored a line, so there is one fewer to report
-                            ndiffs -= 1
-                            actual_ignored.add(actual_map[i])
-                            expected_ignored.add(expected_map[i])
-                        else:
-                            # difference can't be ignored
-                            if first_error_line is None:
-                                first_error_line = i + 1
-                            if len(failure_cases) < max_permutation_cases:
-                                failure_cases.append((i, actual[i],
-                                                      expected[i]))
+                        # a difference that cannot be ignored
+                        if first_error_line is None:
+                            first_error_line = i + 1
+                        if len(failure_cases) < max_permutation_cases:
+                            failure_cases.append((i, actual[i], expected[i]))
 
                 if first_error_line is not None:
                     first_error = ('%d line%s different, starting at line %d'
@@ -205,10 +180,6 @@ class FilesComparison(BaseComparison):
                                        's are' if ndiffs != 1 else ' is',
                                        first_error_line))
 
-            # reconstruct variants of the actual and expected to generate
-            # two outputs that are different where we found differences, but
-            # are the same where we did not find differences (taking into
-            # account all of the various 'ignore' and 'remove' parameters)
             if (actual_ignored or expected_ignored
                                or actual_removals
                                or expected_removals):
@@ -220,9 +191,42 @@ class FilesComparison(BaseComparison):
                                                   expected_ignored)
                 msgs.add_reconstruction(reconstruction)
         else:
+            # Actual and expected have different numbers of lines, after
+            # removal of optional lines. So we know they are *different*,
+            # and just need to report that. To make it more useful, we also
+            # report the line number where they became different after
+            # 'ignores' are applied (if there is one). It doesn't matter if
+            # there isn't - they're still different, because of the line-
+            # number mismatch.
+            compiled_patterns = self.compile_patterns(ignore_patterns)
+            desc = 'file' if actual_path else 'string'
+            iactual = 0
+            iexpected = 0
+            for i in range(min(len(original_actual), len(original_expected))):
+                removed = False
+                if iactual in actual_removals:
+                    iactual += 1
+                    removed = True
+                if iexpected in expected_removals:
+                    iexpected += 1
+                    removed = True
+                if removed:
+                    continue
+                if not self.can_ignore(original_actual[iactual],
+                                       original_expected[iexpected],
+                                       ignore_substrings=ignore_substrings,
+                                       compiled_patterns=compiled_patterns):
+                    first_error_line = 'line %d' % (iactual + 1)
+                    break
+            else:
+                if len(actual) > len(expected):
+                    first_error_line = 'end of reference file'
+                else:
+                    first_error_line = 'end of actual %s' % desc
+            first_error = ('%ss have different numbers of lines, '
+                           'differences start at %s'
+                           % (desc.title(), first_error_line))
             ndiffs = max_permutation_cases + 1
-            first_error = ('%s have different numbers of lines'
-                           % ('Files' if actual_path else 'Strings'))
 
         if ndiffs > 0 and ndiffs <= max_permutation_cases:
             ndiffs = self.check_for_permutation_failures(failure_cases)
@@ -237,31 +241,43 @@ class FilesComparison(BaseComparison):
                               expected=expected)
         return (1 if ndiffs > 0 else 0, msgs)
 
-    def diff_marker(self, left, right):
-        prefixend = -1
-        for i, (cl, cr) in enumerate(zip(list(left), list(right))):
-            prefixend = i
-            if cl != cr:
-                break
-        postfixend = -1
-        for i, (cl, cr) in enumerate(zip(reversed(list(left[prefixend+1:])),
-                                         reversed(list(right[prefixend+1:])))):
-            postfixend = i
-            if cl != cr:
-                break
-        if postfixend > 0:
-            middle = '(%s|%s)' % (left[prefixend:-postfixend],
-                                  right[prefixend:-postfixend])
-            return '*** ' + left[:prefixend] + middle + left[-postfixend:]
-        else:
-            middle = '(%s|%s)' % (left[prefixend+1:], right[prefixend+1:])
-            return '*** ' + left[:prefixend+1] + middle
+    def compile_patterns(self, ignore_patterns):
+        anchored_patterns = [('' if p.startswith('^') else '^(.*)')
+                              + ('(%s)' % p)
+                              + ('' if p.endswith('$') else '(.*)$')
+                             for p in ignore_patterns or []]
+        compiled_patterns = [re.compile(p) for p in anchored_patterns]
+        if any(cp.groups > 3 for cp in compiled_patterns):
+            raise Exception('Invalid patterns: %s' % ignore_patterns)
+        return compiled_patterns
 
-    def check_patterns(self, cPatterns, actual, expected, i):
-        for pattern in cPatterns:
-            mExpected = re.match(pattern, expected[i])
+    def can_ignore(self, actual_line, expected_line,
+                   ignore_substrings=None, compiled_patterns=None):
+        """
+        Can differences between this actual-line and this expected-line be
+        ignored?
+        """
+        for substr in ignore_substrings or []:
+            if substr in actual_line or substr in expected_line:
+                # Note that this ignores a line even if it only matches on
+                # ONE side and NOT on the other. This is deliberate, to cover
+                # the case where the expected reference file contains concrete
+                # representations of things that need to be ignored (like
+                # usernames, machine names etc), where you can't express that
+                # more generally as any kind of pattern.
+                return True
+        # not an ignorable substring line, so try patterns
+        return self.check_patterns(compiled_patterns,
+                                   actual_line, expected_line)
+
+    def check_patterns(self, compiled_patterns, actual_line, expected_line):
+        """
+        Check a single pair of lines, taking regular-expressions into account.
+        """
+        for pattern in compiled_patterns or []:
+            mExpected = re.match(pattern, expected_line)
             if mExpected:
-                mActual = re.match(pattern, actual[i])
+                mActual = re.match(pattern, actual_line)
                 if not mActual:
                     continue
                 if pattern.groups < 3:
@@ -271,16 +287,18 @@ class FilesComparison(BaseComparison):
                     lhs = mActual.group(1) + mActual.group(3)
                     rhs = mExpected.group(1) + mExpected.group(3)
                     if lhs == rhs:
-                        actual[i] = mActual.group(1) + '...' + mActual.group(3)
-                        expected[i] = (mExpected.group(1)
-                                       + '...'
-                                       + mExpected.group(3))
                         return True
         return False
 
     def reconstruct(self, original_actual, original_expected,
                     actual_removals, expected_removals,
                     actual_ignored, expected_ignored):
+        """
+        Reconstruct variants of the actual and expected to generate
+        two outputs that are different where we found differences, but
+        are the same where we did not find differences (taking into
+        account all of the various 'ignore' and 'remove' parameters)
+        """
         rebuilt_actual = []
         rebuilt_expected = []
         iactual = iexpected = 0
@@ -337,6 +355,31 @@ class FilesComparison(BaseComparison):
                 iactual += 1
                 iexpected += 1
         return Reconstruction(rebuilt_actual, rebuilt_expected)
+
+    def diff_marker(self, left, right):
+        """
+        Generate a line to insert into the generated set of 'differences'
+        which marks lines as:
+                COMMON-PREFIX ( ONLY-IN-LEFT | ONLY-IN-RIGHT ) COMMON-SUFFIX
+        """
+        prefixend = -1
+        for i, (cl, cr) in enumerate(zip(list(left), list(right))):
+            prefixend = i
+            if cl != cr:
+                break
+        postfixend = -1
+        for i, (cl, cr) in enumerate(zip(reversed(list(left[prefixend+1:])),
+                                         reversed(list(right[prefixend+1:])))):
+            postfixend = i
+            if cl != cr:
+                break
+        if postfixend > 0:
+            middle = '(%s|%s)' % (left[prefixend:-postfixend],
+                                  right[prefixend:-postfixend])
+            return '*** ' + left[:prefixend] + middle + left[-postfixend:]
+        else:
+            middle = '(%s|%s)' % (left[prefixend+1:], right[prefixend+1:])
+            return '*** ' + left[:prefixend+1] + middle
 
     def check_string_against_file(self, actual, expected_path,
                                   actual_path=None,
