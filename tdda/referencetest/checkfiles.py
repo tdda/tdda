@@ -103,7 +103,9 @@ class FilesComparison(BaseComparison):
 
         if msgs is None:
             msgs = Diffs()
-        first_error = None
+
+        normalize = self.normalize_function(lstrip, rstrip)
+        permutable = True
         failure_cases = []
         reconstruction = None
 
@@ -146,90 +148,53 @@ class FilesComparison(BaseComparison):
                     actual_map[iexpected] = i
                     iexpected += 1
 
+        actual_ignored = set()
+        expected_ignored = set()
+
         if len(actual) == len(expected):
-            actual_ignored = set()
-            expected_ignored = set()
-            normalize = self.normalize_function(lstrip, rstrip)
+            # Actual and expected now have same number of lines - so we just
+            # need to check they are equivalent, line-by-line.
             diffs = [i for i in range(len(actual))
                      if normalize(actual[i]) != normalize(expected[i])]
-            ndiffs = len(diffs)
-
-            if ndiffs > 0:
-                first_error_line = None
-                compiled_patterns = self.compile_patterns(ignore_patterns)
-
-                for i in diffs:
-                    # 'i' is a line-number in the after-removals datasets
-                    if self.can_ignore(actual[i], expected[i],
-                                       ignore_substrings=ignore_substrings,
-                                       compiled_patterns=compiled_patterns):
-                        # a difference that can be ignored
-                        ndiffs -= 1
-                        actual_ignored.add(actual_map[i])
-                        expected_ignored.add(expected_map[i])
-                    else:
-                        # a difference that cannot be ignored
-                        if first_error_line is None:
-                            first_error_line = i + 1
-                        if len(failure_cases) < max_permutation_cases:
-                            failure_cases.append((i, actual[i], expected[i]))
-
-                if first_error_line is not None:
-                    first_error = ('%d line%s different, starting at line %d'
-                                    % (ndiffs,
-                                       's are' if ndiffs != 1 else ' is',
-                                       first_error_line))
-
-            if (actual_ignored or expected_ignored
-                               or actual_removals
-                               or expected_removals):
-                reconstruction = self.reconstruct(original_actual,
-                                                  original_expected,
-                                                  actual_removals,
-                                                  expected_removals,
-                                                  actual_ignored,
-                                                  expected_ignored)
-                msgs.add_reconstruction(reconstruction)
+            if diffs:
+                wrong = self.wrong_content(diffs, actual, expected,
+                                           actual_ignored, expected_ignored,
+                                           actual_map, expected_map,
+                                           failure_cases,
+                                           max_permutation_cases,
+                                           ignore_substrings=ignore_substrings,
+                                           ignore_patterns=ignore_patterns)
+                (first_error, ndiffs) = wrong
+            else:
+                first_error = None
+                ndiffs = 0
         else:
             # Actual and expected have different numbers of lines, after
-            # removal of optional lines. So we know they are *different*,
-            # and just need to report that. To make it more useful, we also
-            # report the line number where they became different after
-            # 'ignores' are applied (if there is one). It doesn't matter if
-            # there isn't - they're still different, because of the line-
-            # number mismatch.
-            compiled_patterns = self.compile_patterns(ignore_patterns)
-            desc = 'file' if actual_path else 'string'
-            iactual = 0
-            iexpected = 0
-            for i in range(min(len(original_actual), len(original_expected))):
-                removed = False
-                if iactual in actual_removals:
-                    iactual += 1
-                    removed = True
-                if iexpected in expected_removals:
-                    iexpected += 1
-                    removed = True
-                if removed:
-                    continue
-                if not self.can_ignore(original_actual[iactual],
-                                       original_expected[iexpected],
-                                       ignore_substrings=ignore_substrings,
-                                       compiled_patterns=compiled_patterns):
-                    first_error_line = 'line %d' % (iactual + 1)
-                    break
-            else:
-                if len(actual) > len(expected):
-                    first_error_line = 'end of reference file'
-                else:
-                    first_error_line = 'end of actual %s' % desc
-            first_error = ('%ss have different numbers of lines, '
-                           'differences start at %s'
-                           % (desc.title(), first_error_line))
-            ndiffs = max_permutation_cases + 1
+            # removal of optional lines.
+            wrong = self.wrong_number(original_actual, original_expected,
+                                      actual_ignored, expected_ignored,
+                                      actual_removals, expected_removals,
+                                      actual_map, expected_map,
+                                      actual_path=actual_path,
+                                      normalize=normalize,
+                                      ignore_substrings=ignore_substrings,
+                                      ignore_patterns=ignore_patterns)
+            (first_error, ndiffs) = wrong
+            permutable = False
 
-        if ndiffs > 0 and ndiffs <= max_permutation_cases:
+        if (preprocess or actual_ignored or expected_ignored
+                       or actual_removals or expected_removals):
+            reconstruction = self.reconstruct(original_actual,
+                                              original_expected,
+                                              actual_removals,
+                                              expected_removals,
+                                              actual_ignored,
+                                              expected_ignored)
+            msgs.add_reconstruction(reconstruction)
+
+        if permutable and ndiffs > 0 and ndiffs <= max_permutation_cases:
             ndiffs = self.check_for_permutation_failures(failure_cases)
+
         if ndiffs > 0:
             if first_error:
                 self.info(msgs, first_error)
@@ -240,6 +205,97 @@ class FilesComparison(BaseComparison):
                               preprocess=preprocess, actual=actual,
                               expected=expected)
         return (1 if ndiffs > 0 else 0, msgs)
+
+    def wrong_content(self, diffs, actual, expected,
+                      actual_ignored, expected_ignored,
+                      actual_map, expected_map,
+                      failure_cases, max_permutation_cases,
+                      ignore_substrings=None, ignore_patterns=None):
+        """
+        Deal with the case where the actual and expected have the same
+        number of lines (after removing 'removals'), so we need to examine
+        those pairs of lines one-by-one to see what 'significant' differences
+        there are.
+        """
+        ndiffs = len(diffs)
+        first_error_line = None
+        first_error = None
+        if ndiffs > 0:
+            compiled_patterns = self.compile_patterns(ignore_patterns)
+            for i in diffs:
+                # 'i' is a line-number in the after-removals datasets
+                if self.can_ignore(actual[i], expected[i],
+                                   ignore_substrings=ignore_substrings,
+                                   compiled_patterns=compiled_patterns):
+                    # a difference that can be ignored
+                    ndiffs -= 1
+                    actual_ignored.add(actual_map[i])
+                    expected_ignored.add(expected_map[i])
+                else:
+                    # a difference that cannot be ignored
+                    if first_error_line is None:
+                        first_error_line = i + 1
+                    if len(failure_cases) < max_permutation_cases:
+                        failure_cases.append((i, actual[i], expected[i]))
+
+            if first_error_line is not None:
+                first_error = ('%d line%s different, starting at line %d'
+                                % (ndiffs, 's are' if ndiffs != 1 else ' is',
+                                   first_error_line))
+        return (first_error, ndiffs)
+
+    def wrong_number(self, original_actual, original_expected,
+                     actual_ignored, expected_ignored,
+                     actual_removals, expected_removals,
+                     actual_map, expected_map, actual_path, normalize,
+                     ignore_substrings=None, ignore_patterns=None):
+        """
+        Deal with the case where the actual and expected have different
+        numbers of lines (after removing 'removal' lines).
+        """
+        compiled_patterns = self.compile_patterns(ignore_patterns)
+        desc = 'file' if actual_path else 'string'
+        iactual = 0
+        iexpected = 0
+        first_error_line = None
+        ndiffs = 0
+        nactual = len(original_actual)
+        nexpected = len(original_expected)
+
+        for i in range(min(nactual, nexpected)):
+            removed = False
+            if iactual in actual_removals:
+                iactual += 1
+                removed = True
+            if iexpected in expected_removals:
+                iexpected += 1
+                removed = True
+            if removed:
+                continue
+            actual_line = original_actual[iactual]
+            expected_line = original_expected[iexpected]
+            if normalize(actual_line) == normalize(expected_line):
+                continue
+            if self.can_ignore(actual_line, expected_line,
+                               ignore_substrings=ignore_substrings,
+                               compiled_patterns=compiled_patterns):
+                actual_ignored.add(actual_map[i])
+                expected_ignored.add(expected_map[i])
+                continue
+            first_error_line = 'line %d' % (iactual + 1)
+            ndiffs += 1
+
+        if first_error_line is None:
+            if nactual > nexpected:
+                first_error_line = 'end of reference file'
+            else:
+                first_error_line = 'end of actual %s' % desc
+
+        first_error = ('%ss have different numbers of lines, '
+                       'differences start at %s'
+                       % (desc.title(), first_error_line))
+        ndiffs = max(len(original_actual), len(original_expected))
+        return (first_error, ndiffs)
 
     def compile_patterns(self, ignore_patterns):
         anchored_patterns = [('' if p.startswith('^') else '^(.*)')
