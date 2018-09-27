@@ -21,8 +21,7 @@ import sys
 import tempfile
 from collections import namedtuple
 
-from tdda.referencetest.basecomparison import (BaseComparison, Diffs,
-                                               Reconstruction, copycmd)
+from tdda.referencetest.basecomparison import BaseComparison, Diffs, copycmd
 
 
 BinaryInfo = namedtuple('BinaryInfo',
@@ -358,10 +357,9 @@ class FilesComparison(BaseComparison):
         rebuilt_actual = []
         rebuilt_expected = []
         iactual = iexpected = 0
-        for iout in range(max(len(original_actual),
-                              len(original_expected))):
-            if (iactual in actual_removals
-                    and iexpected in expected_removals):
+        while (iactual < len(original_actual)
+                   or iexpected < len(original_expected)):
+            if iactual in actual_removals and iexpected in expected_removals:
                 # lines which were removed from both sides
                 marker = self.diff_marker(original_actual[iactual],
                                           original_expected[iexpected])
@@ -383,16 +381,15 @@ class FilesComparison(BaseComparison):
                 iexpected += 1
             elif iactual >= len(original_actual):
                 # fallen off the end of the left
-                rebuilt_actual.append('LEFT EOF')
                 rebuilt_expected.append(original_expected[iexpected])
                 iexpected += 1
             elif iexpected >= len(original_expected):
                 # fallen off the end of the right
                 rebuilt_actual.append(original_actual[iactual])
-                rebuilt_expected.append('RIGHT EOF')
+                iactual += 1
             elif (original_actual[iactual] == original_expected[iexpected]):
                 # lines are the same, no differences
-                rebuilt_actual.append(original_actual[iactual])
+                rebuilt_actual.append( original_actual[iactual])
                 rebuilt_expected.append(original_expected[iexpected])
                 iactual += 1
                 iexpected += 1
@@ -418,24 +415,29 @@ class FilesComparison(BaseComparison):
         which marks lines as:
                 COMMON-PREFIX ( ONLY-IN-LEFT | ONLY-IN-RIGHT ) COMMON-SUFFIX
         """
-        prefixend = -1
+        if left == right:
+            return left    # nothing to do
         for i, (cl, cr) in enumerate(zip(list(left), list(right))):
             prefixend = i
             if cl != cr:
                 break
-        postfixend = -1
-        for i, (cl, cr) in enumerate(zip(reversed(list(left[prefixend+1:])),
-                                         reversed(list(right[prefixend+1:])))):
+        else:
+            prefixend = min(len(left), len(right))
+        for i, (cl, cr) in enumerate(zip(reversed(list(left[prefixend:])),
+                                         reversed(list(right[prefixend:])))):
             postfixend = i
             if cl != cr:
                 break
+        else:
+            postfixend = min(len(left[prefixend:]), len(right[prefixend:]))
         if postfixend > 0:
             middle = '(%s|%s)' % (left[prefixend:-postfixend],
                                   right[prefixend:-postfixend])
-            return '*** ' + left[:prefixend] + middle + left[-postfixend:]
+            marker = left[:prefixend] + middle + left[-postfixend:]
         else:
-            middle = '(%s|%s)' % (left[prefixend+1:], right[prefixend+1:])
-            return '*** ' + left[:prefixend+1] + middle
+            middle = '(%s|%s)' % (left[prefixend:], right[prefixend:])
+            marker = left[:prefixend] + middle
+        return '*** ' + marker
 
     def check_string_against_file(self, actual, expected_path,
                                   actual_path=None,
@@ -761,4 +763,24 @@ class FilesComparison(BaseComparison):
                         lastline = line
                     if lastline and lastline.endswith('\n'):
                         f.write('\n')
+
+
+class Reconstruction(object):
+    """
+    Class for representing 'reconstructions' of the differences between
+    a pair of files, in the form of lists of lines from each, where
+    ignored and removed items have been 'collapsed' so that the remaining
+    differences are just the ones that the comparison considers to be
+    actually 'different'.
+    """
+    def __init__(self, diff_actual, diff_expected):
+        self.diff_actual = diff_actual
+        self.diff_expected = diff_expected
+
+    def actual_lines(self):
+        return '\n'.join(self.diff_actual)
+
+    def expected_lines(self):
+        return '\n'.join(self.diff_expected)
+
 

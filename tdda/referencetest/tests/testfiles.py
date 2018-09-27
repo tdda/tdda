@@ -27,8 +27,18 @@ def check(compare, values, filename, diff=False, actual_path=None):
     return (code, errs)
 
 
-class TestFiles(unittest.TestCase):
+class TestFilesInternals(unittest.TestCase):
+    def test_diff_marker(self):
+        compare = FilesComparison()
+        self.assertEqual(compare.diff_marker('ABC', 'XYZ'), '*** (ABC|XYZ)')
+        self.assertEqual(compare.diff_marker('ABC:', 'ABC: yes'),
+                         '*** ABC:(| yes)')
+        self.assertEqual(compare.diff_marker('', 'AAA'), '*** (|AAA)')
+        self.assertEqual(compare.diff_marker('AAA', ''), '*** (AAA|)')
+        self.assertEqual(compare.diff_marker('ABC', 'AXC'), '*** A(B|X)C')
 
+
+class TestFiles(unittest.TestCase):
     def test_strings_against_files_ok(self):
         compare = FilesComparison()
         r1 = compare.check_string_against_file([], refloc('empty.txt'))
@@ -156,26 +166,63 @@ class TestFiles(unittest.TestCase):
                                           remove_lines=['I am optional'])
         self.assertEqual(code, 0)
         self.assertEqual(msgs.lines, [])
-        return
-        self.assertEqual(msgs.outputs[0],
+        self.assertEqual(msgs.reconstructions[0].diff_actual,
                          ['This is a file containing some optional lines.',
                           "*** Here's one: I am optional"
                               "(|; but it's the only one; "
                               "the rest have been removed.)",
                           'And:',
+                          "*** (Here's another one: "
+                              "I am optional and I have some trailing stuff|)",
+                          "And here's a line on its own:",
+                          '*** (I am optional|)',
+                          "That's all"])
+        self.assertEqual(msgs.reconstructions[0].diff_expected,
+                         ['This is a file containing some optional lines.',
+                          "*** Here's one: I am optional"
+                              "(|; but it's the only one; "
+                              "the rest have been removed.)",
+                          'And:',
+                          "*** (Here's another one: "
+                              "I am optional and I have some trailing stuff|)",
+                          "And here's a line on its own:",
+                          '*** (I am optional|)',
+                          "That's all"])
+
+    def test_removal_diffs_fail(self):
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(refloc('removals.txt'),
+                                          refloc('ref.txt'),
+                                          remove_lines=['line', 'And'])
+        self.assertEqual(code, 1)
+        self.assertEqual(len(msgs.lines), 2)
+        self.assertEqual(msgs.lines[0],
+                         'Files have different numbers of lines, '
+                         'differences start at line 2')
+        self.assertTrue(msgs.lines[1].startswith('Compare with:\n'))
+        self.assertEqual(msgs.reconstructions[0].diff_actual,
+                         ['This is a file containing some optional lines.',
+                           # NEXT LINE IS A REAL DIFFERENCE
+                          "Here's one: I am optional",
+                          'And:',  # THIS IS REMOVED ON BOTH SIDES
+                          "*** (|And here's a line on its own:)",
+                           # NEXT LINE IS A REAL DIFFERENCE
                           "Here's another one: "
                               "I am optional and I have some trailing stuff",
-                          "And here's a line on its own:",
+                          "*** (And here's a line on its own:|)",
+                           # NEXT TWO LINES ARE REAL DIFFERENCES
                           'I am optional',
                           "That's all"])
-        self.assertEqual(msgs.outputs[1],
+        self.assertEqual(msgs.reconstructions[0].diff_expected,
                          ['This is a file containing some optional lines.',
-                          "*** Here's one: I am optional"
-                              "(|; but it's the only one; "
-                              "the rest have been removed.)",
-                          'And:',
-                          "And here's a line on its own:",
-                          "That's all"])
+                           # NEXT LINE IS A REAL DIFFERENCE
+                          "Here's one: I am optional; but it's the only one; "
+                              "the rest have been removed.",
+                          'And:',  # THIS IS REMOVED ON BOTH SIDES
+                          "*** (|And here's a line on its own:)",
+                           # NEXT LINE IS A REAL DIFFERENCE
+                          "That's all",
+                          "*** (And here's a line on its own:|)"])
 
     def test_ignore_substrings_diffs(self):
         compare = FilesComparison()

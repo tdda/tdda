@@ -108,25 +108,6 @@ class Diffs(object):
         return iter(self.lines)
 
 
-class Reconstruction(object):
-    """
-    Class for representing 'reconstructions' of the differences between
-    a pair of files, in the form of lists of lines from each, where
-    ignored and removed items have been 'collapsed' so that the remaining
-    differences are just the ones that the comparison considers to be
-    actually 'different'.
-    """
-    def __init__(self, diff_actual, diff_expected):
-        self.diff_actual = diff_actual
-        self.diff_expected = diff_expected
-
-    def actual_lines(self):
-        return '\n'.join(self.diff_actual)
-
-    def expected_lines(self):
-        return '\n'.join(self.diff_expected)
-
-
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'
 
