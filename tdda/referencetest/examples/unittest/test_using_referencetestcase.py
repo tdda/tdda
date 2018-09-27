@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
 from __future__ import division
@@ -19,12 +19,18 @@ import os
 import tempfile
 import unittest
 
-from tdda.referencetest import ReferenceTestCase
+from tdda.referencetest import ReferenceTestCase, tag
 
 # ensure we can import the generators module in the directory above
+# (required here only because we want this example source code to be able
+# to be copied to other locations, and still work there without needing
+# any alterations to PYTHONPATH).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # directory where reference results are kept
+# (in real use, you would probably define this more directly; it is
+# done like this here so that the example source code can be copied to
+# any location, and still work, without needing any additional configuration).
 reference_data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                   '..', 'reference')
 
@@ -68,6 +74,7 @@ class TestStructuredDataExample(ReferenceTestCase):
         self.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
                                   check_data=columns, check_types=columns)
 
+    @tag
     def testExampleMultipleCSVGeneration(self):
         """
         This test uses generate_dataframe() from dataframes.py to
@@ -77,6 +84,9 @@ class TestStructuredDataExample(ReferenceTestCase):
         The test checks the generated CSV files are as expected, in terms of
         both data content (the values) and metadata (the types, order, etc)
         of the columns.
+
+        This test is tagged, so it will run if called with ``--tagged`` or
+        ``-1``.
         """
         df1 = generate_dataframe(nrows=10)
         df2 = generate_dataframe(nrows=20)
@@ -91,7 +101,15 @@ class TestStructuredDataExample(ReferenceTestCase):
                                   check_data=columns)
 
 
+@tag
 class TestUnstructuredDataExample(ReferenceTestCase):
+    """
+    Test class for handling unstructured data.
+
+    This class is tagged, so all tests in it will run if called with
+    ``--tagged`` or ``-1``.
+    """
+
     def testExampleStringGeneration(self):
         """
         This test uses generate_string() from generators.py to generate
@@ -150,8 +168,8 @@ class TestUnstructuredDataExample(ReferenceTestCase):
         outdir = tempfile.gettempdir()
         outpath = os.path.join(outdir, 'file_result.html')
         generate_file(outpath)
-        self.assertFileCorrect(outpath, 'file_result.html',
-                               ignore_patterns=['Copyright', 'Version'])
+        self.assertTextFileCorrect(outpath, 'file_result.html',
+                                   ignore_patterns=['Copyright', 'Version'])
 
 
 TestStructuredDataExample.set_default_data_location(reference_data_dir)

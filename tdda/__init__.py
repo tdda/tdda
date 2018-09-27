@@ -32,4 +32,4 @@ For usage details:
     >>> help(rexpy)
 
 """
-__version__ = '0.5.03'
+from tdda.version import version as __version__

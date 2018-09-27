@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
 from __future__ import division
@@ -20,7 +20,12 @@ import tempfile
 
 import pytest
 
-# ensure we can import the generators module in the directory above
+from tdda.referencetest import tag
+
+# ensure we can import the "generators" module in the directory above
+# (required here only because we want this example source code to be able
+# to be copied to other locations, and still work there without needing
+# any alterations to PYTHONPATH).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generators import generate_string, generate_file
@@ -118,6 +123,7 @@ def testExampleStringGeneration(ref):
                             ignore_substrings=['Copyright', 'Version'])
 
 
+@tag
 def testExampleFileGeneration(ref):
     """
     This test uses generate_file() from generators.py to generate some
@@ -142,11 +148,28 @@ def testExampleFileGeneration(ref):
 
     and it should re-write the reference output to match your
     modified results.
+
+    This test is tagged, so it will run if called with ``--tagged`` or ``-1``.
     """
     outdir = ref.tmp_dir
     outpath = os.path.join(outdir, 'file_result.html')
     generate_file(outpath)
-    ref.assertFileCorrect(outpath, 'file_result.html',
-                          ignore_patterns=['Copyright', 'Version'])
+    ref.assertTextFileCorrect(outpath, 'file_result.html',
+                              ignore_patterns=['Copyright', 'Version'])
 
+
+@tag
+class TestExampleInClass:
+    """
+    A test in a separate class
+
+    This class is tagged, so all tests in it will run if called with
+    ``--tagged`` or ``-1``.
+    """
+
+    def testExample(self, ref):
+        """
+        A very simple example of a test within a tagged class.
+        """
+        assert 3 < 4
 

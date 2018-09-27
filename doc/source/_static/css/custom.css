@@ -58,8 +58,10 @@ div.related a {
     color: #ffffff;
 }
 
-div.sphinxsidebar {
+div.sphinxsidebar, div.sphinxsidebarwrapper, div.bodywrapper, div.documentwrapper  {
+    background-color: #606060;
 }
+
 
 div.sphinxsidebar h3 {
     font-family: 'Trebuchet MS', sans-serif;
@@ -98,7 +100,7 @@ div.sphinxsidebar ul {
 }
 
 div.sphinxsidebar a, div.sphinxsidebar a:visited, div.sphinxsidebar a:hover {
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 div.sphinxsidebar input {
@@ -230,4 +232,8 @@ tt {
     padding: 0 1px 0 1px;
     font-size: 0.95em;
     color: #300000;
+}
+
+div.sphinxsidebar.current.toctree-l1.current.current {
+    background-color: #404040;
 }

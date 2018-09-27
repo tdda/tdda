@@ -1,6 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
+# version import is from tdda subdirectory here, not from some other install.
 from tdda.version import version as __version__
 
 def read(fname):

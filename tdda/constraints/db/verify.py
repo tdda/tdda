@@ -2,10 +2,6 @@
 
 """
 Support for database constraint verification from the command-line tool
-
-Verify CSV files, or Pandas or R DataFrames saved as feather files,
-against a constraints from .tdda JSON file.
-constraints file.
 """
 
 from __future__ import division
@@ -55,16 +51,15 @@ def verify_database_table_from_file(table, constraints_path,
     print(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
 
 
-def get_params(args):
+def get_verify_params(args):
     parser = database_arg_parser(verify_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
-    parser.add_argument('constraints', nargs=1,
+    parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     params = {}
     flags = database_arg_flags(verify_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (flags.constraints[0] if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 
@@ -74,7 +69,7 @@ class DatabaseVerifier:
         self.verbose = verbose
 
     def verify(self):
-        params = get_params(self.argv[1:])
+        params = get_verify_params(self.argv[1:])
         verify_database_table_from_file(**params)
 
 

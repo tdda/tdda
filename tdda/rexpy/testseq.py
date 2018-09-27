@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from tdda.rexpy import extract
 from tdda.rexpy.seq import common_string_sequence
 from tdda.rexpy.relib import re
@@ -24,5 +26,5 @@ for j, (pattern, examples) in enumerate(patternToExamples.items()):
                 n += 1
 
             sequences.append(s)
-print sequences
+print(sequences)
 

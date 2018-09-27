@@ -3,7 +3,7 @@
 """
 Usage::
 
-    tdda rexpy [FLAGS] [input file [output file]]
+    rexpy [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
@@ -70,8 +70,8 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info.major < 3 else str
-bytes_type = str if sys.version_info.major < 3 else bytes
+str_type = unicode if sys.version_info[0] < 3 else str
+bytes_type = str if sys.version_info[0] < 3 else bytes
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -100,6 +100,7 @@ USE_SAMPLING = True
 
 USE_SAMPLING = 0
 VERBOSITY = 0
+RE_FLAGS = re.UNICODE | re.DOTALL
 
 
 class Size(object):
@@ -145,7 +146,7 @@ def cre(rex):
     if c:
         return c
     else:
-        memo[rex] = c = re.compile(rex, re.U)
+        memo[rex] = c = re.compile(rex, RE_FLAGS)
         return c
 
 
@@ -256,7 +257,7 @@ class Categories(object):
         )
 
     def Punctuation(self, el_re):
-        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, re.U)
+        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
 
@@ -1259,7 +1260,7 @@ def rex_coverage(patterns, examples, dedup=False):
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
                         p,
                         '' if p.endswith('$') else '$')
-        r = re.compile(p, re.U)
+        r = re.compile(p, RE_FLAGS)
         if dedup:
             strings = examples.strings
             results.append(sum(1 if re.match(r, k) else 0
@@ -1404,7 +1405,7 @@ def coverage_matrices(patterns, examples):
 
     matrix = []
     deduped = []  # deduped version of same
-    rexes = [re.compile(p, re.U) for p in patterns]
+    rexes = [re.compile(p, RE_FLAGS) for p in patterns]
     strings = examples.strings
     freqs = examples.freqs
     for (x, n) in zip(strings, freqs):
@@ -1680,7 +1681,7 @@ class ResultsSummary(object):
         return '\n'.join(out)
 
     def to_re(self, patterns, grouped=False, as_re=True):
-        f = (self.extractor.rle2re if len(patterns[0]) == 2
+        f = (self.extractor.rle2re if not patterns or len(patterns[0]) == 2
                                    else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 

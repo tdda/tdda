@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2017
+Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
 from __future__ import absolute_import
@@ -16,6 +16,9 @@ from __future__ import division
 
 import csv
 import os
+import sys
+
+from collections import OrderedDict
 
 from tdda.referencetest.basecomparison import BaseComparison
 
@@ -414,36 +417,80 @@ def default_csv_loader(csvfile, **kwargs):
         'keep_default_na': False,
     }
     options.update(kwargs)
-    df = pd.read_csv(csvfile, **options)
+
+    try:
+        df = pd.read_csv(csvfile, **options)
+    except pd.errors.ParserError:
+        # Pandas CSV reader gets confused by stutter-quoted text that
+        # also includes escapechars. So try again, with no escapechar.
+        del options['escapechar']
+        df = pd.read_csv(csvfile, **options)
 
     # the reader won't have inferred any datetime columns (even though we
     # told it to), because we didn't explicitly tell it the column names
     # in advance. so.... we'll do it by hand (looking at string columns, and
     # seeing if we can convert them safely to datetimes).
-    colnames = df.columns.tolist()
-    for c in colnames:
-        if df[c].dtype == pd.np.dtype('O'):
-            try:
-                datecol = pd.to_datetime(df[c])
-                if datecol.dtype == pd.np.dtype('datetime64[ns]'):
-                    df[c] = datecol
-            except Exception as e:
-                pass
-    ndf = pd.DataFrame()
-    for c in colnames:
-        ndf[c] = df[c]
+    if options.get('infer_datetime_format'):
+        colnames = df.columns.tolist()
+        for c in colnames:
+            if df[c].dtype == pd.np.dtype('O'):
+                try:
+                    datecol = pd.to_datetime(df[c])
+                    if datecol.dtype == pd.np.dtype('datetime64[ns]'):
+                        df[c] = datecol
+                except Exception as e:
+                    pass
+        ndf = pd.DataFrame()
+        for c in colnames:
+            ndf[c] = df[c]
+
     return ndf
 
 
 def default_csv_writer(df, csvfile, **kwargs):
     """
     Default function for writing a csv file.
+
+    Wrapper around the standard pandas pd.to_csv() function, but with
+    slightly different defaults:
+
+        - index                 is ``False``
+        - encoding              is ``utf-8``
     """
     options = {
-        'index': False
+        'index': False,
+        'encoding': 'utf-8',
     }
     options.update(kwargs)
-    df.to_csv(csvfile, **options)
+    if sys.version_info[0] > 2 and len(df) > 0:
+        bytes_cols = find_bytes_cols(df)
+        if bytes_cols:
+            df = bytes_to_unicode(df, bytes_cols)
+    return df.to_csv(csvfile, **options)
+
+
+def find_bytes_cols(df):
+    bytes_cols = []
+    for c in list(df):
+        if df[c].dtype == 'O':
+            nonnulls = df[df[c].notnull()].reset_index()[c]
+            if len(nonnulls) > 0 and type(nonnulls[0]) is bytes:
+                bytes_cols.append(c)
+    return bytes_cols
+
+
+def bytes_to_unicode(df, bytes_cols):
+    cols = OrderedDict()
+    for c in list(df):
+        if c in bytes_cols:
+            cols[unicode_definite(c)] = df[c].str.decode('UTF-8')
+        else:
+            cols[unicode_definite(c)] = df[c]
+    return pd.DataFrame(cols, index=df.index.copy())
+
+
+def unicode_definite(s):
+    return s if type(s) == str else s.decode('UTF-8')
 
 
 def resolve_option_flag(flag, df):

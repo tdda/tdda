@@ -1,0 +1,28 @@
+Index,Z,Name,Symbol,Period,Group,ChemicalSeries,AtomicWeight,Etymology,RelativeAtomicMass,MeltingPointC,MeltingPointKelvin,BoilingPointC,BoilingPointF,Density,Description,Colour,Z_max_ok,Name_max_length_ok,Symbol_max_length_ok,AtomicWeight_max_ok,AtomicWeight_nonnull_ok,Etymology_max_length_ok,Etymology_nonnull_ok,RelativeAtomicMass_max_ok,RelativeAtomicMass_nonnull_ok,MeltingPointC_nonnull_ok,MeltingPointKelvin_nonnull_ok,BoilingPointC_nonnull_ok,BoilingPointF_nonnull_ok,Density_max_ok,Density_nonnull_ok,n_failures
+1,2,Helium,He,1,18.0,Noble gas,4.0026022,Greek helios,4.0026022,,,-268.93,-452.07,0.0001785,noble gas,,true,true,true,true,true,true,true,true,true,false,false,true,true,true,true,2
+92,93,Neptunium,Np,7,,Actinoid,237.0,Neptune,237.0,640.0,913.0,4000.0,7232.0,20.45,,,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,1
+93,94,Plutonium,Pu,7,,Actinoid,244.0,Pluto,244.0,640.0,913.0,3228.0,5842.0,19.84,,,false,true,true,false,true,true,true,false,true,true,true,true,true,true,true,3
+94,95,Americium,Am,7,,Actinoid,243.0,the Americas,243.0,994.0,1267.0,2607.0,4725.0,13.69,,,false,true,true,false,true,true,true,false,true,true,true,true,true,true,true,3
+95,96,Curium,Cm,7,,Actinoid,247.0,Pierre and Marie Curie and the traditional -um ending,247.0,1067.0,1340.0,3110.0,5630.0,13.51,,,false,true,true,false,true,false,true,false,true,true,true,true,true,true,true,4
+96,97,Berkelium,Bk,7,,Actinoid,247.0,"Berkeley, California",247.0,986.0,1259.0,710.0,1310.0,14.79,,,false,true,true,false,true,true,true,false,true,true,true,true,true,true,true,3
+97,98,Californium,Cf,7,,Actinoid,251.0,State and University of California,251.0,1652.0,1925.0,900.0,1652.0,15.1,,,false,true,true,false,true,true,true,false,true,true,true,true,true,true,true,3
+98,99,Einsteinium,Es,7,,Actinoid,252.0,Albert Einstein,252.0,860.0,1130.0,,,13.5,,,false,true,true,false,true,true,true,false,true,true,true,false,false,true,true,5
+99,100,Fermium,Fm,7,,Actinoid,257.0,Enrico Fermi,257.0,,,,,,,,false,true,true,false,true,true,true,false,true,false,false,false,false,,false,8
+100,101,Mendelevium,Md,7,,Actinoid,258.0,Dmitri Mendeleyev,258.0,,,,,,,,false,true,true,false,true,true,true,false,true,false,false,false,false,,false,8
+101,102,Nobelium,No,7,,Actinoid,259.0,Alfred Nobel,259.0,,,,,,,,false,true,true,false,true,true,true,false,true,false,false,false,false,,false,8
+102,103,Lawrencium,Lr,7,3.0,Actinoid,262.0,Ernest O. Lawrence,262.0,,,,,9.84,,,false,true,true,false,true,true,true,false,true,false,false,false,false,true,true,7
+103,104,Rutherfordium,Rf,7,4.0,Transition metal,261.0,Ernest Rutherford,261.0,,,,,18.1,,,false,false,true,false,true,true,true,false,true,false,false,false,false,true,true,8
+104,105,Dubnium,Db,7,5.0,Transition metal,262.0,"Dubna, Russia",262.0,,,,,39.0,,,false,true,true,false,true,true,true,false,true,false,false,false,false,false,true,8
+105,106,Seaborgium,Sg,7,6.0,Transition metal,266.0,Glenn T. Seaborg,266.0,,,,,35.0,,,false,true,true,false,true,true,true,false,true,false,false,false,false,false,true,8
+106,107,Bohrium,Bh,7,7.0,Transition metal,264.0,Niels Bohr,264.0,,,,,37.0,,,false,true,true,false,true,true,true,false,true,false,false,false,false,false,true,8
+107,108,Hassium,Hs,7,8.0,Transition metal,267.0,"Hesse, Germany",277.0,,,,,41.0,,,false,true,true,false,true,true,true,false,true,false,false,false,false,false,true,8
+108,109,Meitnerium,Mt,7,9.0,Transition metal,268.0,Lise Meitner,268.0,,,,,35.0,,,false,true,true,false,true,true,true,false,true,false,false,false,false,false,true,8
+109,110,Darmstadtium,Ds,7,10.0,Transition metal,271.0,"Darmstadt, Germany",271.0,,,,,21.46,,,false,true,true,false,true,true,true,false,true,false,false,false,false,true,true,7
+110,111,Roentgenium,Rg,7,11.0,Transition metal,272.0,Wilhelm Conrad Roentgen,272.0,,,,,19.282,,,false,true,true,false,true,true,true,false,true,false,false,false,false,true,true,7
+111,112,Ununbium,Uub,7,12.0,Transition metal,285.0,"Latin uni, uni, and bi",285.0,,,,,13.5336,,,false,true,false,false,true,true,true,false,true,false,false,false,false,true,true,8
+112,113,Ununtrium,Uut,7,13.0,Poor metal,284.0,"Latin uni, uni, and Greek tri",284.0,,,,,11.85,,,false,true,false,false,true,true,true,false,true,false,false,false,false,true,true,8
+113,114,Ununquadium,Uuq,7,14.0,Poor metal,289.0,"Latin uni, uni, and quadr",289.0,,,,,11.342,,,false,true,false,false,true,true,true,false,true,false,false,false,false,true,true,8
+114,115,Ununpentium,Uup,7,15.0,Poor metal,288.0,"Latin uni, uni, and Greek pent",288.0,,,,,9.807,,,false,true,false,false,true,true,true,false,true,false,false,false,false,true,true,8
+115,116,Ununhexium,Uuh,7,16.0,Poor metal,292.0,"Latin uni, uni, and Greek hex",292.0,,,,,9.32,,,false,true,false,false,true,true,true,false,true,false,false,false,false,true,true,8
+116,117,Ununseptium,Uus,7,17.0,Halogen,,,,,,,,,,,false,true,false,,false,,false,,false,false,false,false,false,,false,10
+117,118,Ununoctium,Uuo,7,18.0,Noble gas,294.0,"Latin uni, uni, and oct",294.0,,,,,,,,false,true,false,false,true,true,true,false,true,false,false,false,false,,false,9

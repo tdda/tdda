@@ -781,6 +781,7 @@ class TestExtraction(unittest.TestCase):
         '+1 202 555 0181',
         '(0141) 496 0324',
     ]
+
     def test_tels2(self):
         x = set(extract(self.tels2))
         rexes = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
@@ -1590,7 +1591,7 @@ def CtoUC(s):
 
 
 
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     # Quieten down Python3's vexatious complaining
     TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
 
@@ -1604,4 +1605,3 @@ if sys.version_info.major < 3:
 
 if __name__ == '__main__':
     unittest.main()
-

@@ -3,9 +3,8 @@
 """
 Support for Pandas constraint verification from the command-line tool
 
-Verify CSV files, or Pandas or R DataFrames saved as feather files,
-against a constraints from .tdda JSON file.
-constraints file.
+Verify constraints using CSV files, or Pandas or R DataFrames saved as
+feather files, against a constraints from .tdda JSON constraints file.
 """
 
 from __future__ import division
@@ -17,8 +16,8 @@ Parameters:
 
   * input is one of:
 
-      - a csv file
-      - a feather file containing a Pandas or R DataFrame
+      - a csv file. Can be - to read from standard input.
+      - a feather file containing a Pandas or R DataFrame.
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
@@ -30,6 +29,11 @@ input file, with a .tdda extension will be tried.
 
 import os
 import sys
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import pandas as pd
 import numpy as np
@@ -49,6 +53,17 @@ from tdda.constraints.pd.constraints import verify_df, load_df
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+    if df_path == '-' or df_path is None:
+        df_path = StringIO(sys.stdin.read())
+    if constraints_path is None:
+        if not isinstance(df_path, StringIO):
+            split = os.path.splitext(df_path)
+            if split[1] in ('.csv', '.feather'):
+                constraints_path = split[0] + '.tdda'
+        if constraints_path is None:
+            print('No constraints file specified.', file=sys.stderr)
+            sys.exit(1)
+
     df = load_df(df_path)
     v = verify_df(df, constraints_path, **kwargs)
     if verbose:
@@ -56,16 +71,20 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     return v
 
 
-def get_params(args):
+def pd_verify_parser():
     parser = verify_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
-    parser.add_argument('constraints', nargs=1,
+    parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
+    return parser
+
+
+def pd_verify_params(args):
+    parser = pd_verify_parser()
     params = {}
     flags = verify_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
-    params['constraints_path'] = (flags.constraints[0] if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 
@@ -75,12 +94,10 @@ class PandasVerifier:
         self.verbose = verbose
 
     def verify(self):
-        params = get_params(self.argv[1:])
-        if not(params['df_path']):
-            print(USAGE, file=sys.stderr)
-            sys.exit(1)
-        elif not os.path.isfile(params['df_path']):
-            print('%s does not exist' % params['df_path'])
+        params = pd_verify_params(self.argv[1:])
+        path = params['df_path']
+        if path is not None and path != '-' and not os.path.isfile(path):
+            print('%s does not exist' % path)
             sys.exit(1)
         return verify_df_from_file(verbose=self.verbose, **params)
 

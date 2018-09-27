@@ -20,7 +20,8 @@ Parameters:
     - a .feather file containing a saved Pandas or R DataFrame
 
   * constraints.tdda, if provided, specifies the name of a file to
-    which the generated constraints will be written.
+    which the generated constraints will be written.  Can be - (or missing)
+    to write to standard output.
 
 '''
 
@@ -36,33 +37,50 @@ except ImportError:
     except ImportError:
         feather = None
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 from tdda import __version__
 from tdda.constraints.flags import discover_parser, discover_flags
 from tdda.constraints.pd.constraints import discover_df, load_df
 
 
 def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+    md_df_path = df_path
+    if df_path == '-':
+        df_path = StringIO(sys.stdin.read())
+        md_df_path = None
     df = load_df(df_path)
-    constraints = discover_df(df, **kwargs)
-    output = constraints.to_json()
-    if constraints_path:
+    constraints = discover_df(df, df_path=md_df_path, **kwargs)
+    if constraints is None:
+        # should never happen
+        return
+
+    output = constraints.to_json(tddafile=constraints_path)
+    if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
             f.write(output)
-    elif verbose:
+    elif verbose or constraints_path == '-':
         print(output)
     return output
 
 
-def get_params(args):
+def pd_discover_parser():
     parser = discover_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or feather file')
     parser.add_argument('constraints', nargs='?',
                         help='name of constraints file to create')
+    return parser
+
+
+def pd_discover_params(args):
+    parser = pd_discover_parser()
     params = {}
     flags = discover_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
-    params['constraints_path'] = (flags.constraints if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 
@@ -72,12 +90,10 @@ class PandasDiscoverer:
         self.verbose = verbose
 
     def discover(self):
-        params = get_params(self.argv[1:])
-        if not(params['df_path']):
-            print(USAGE, file=sys.stderr)
-            sys.exit(1)
-        elif not os.path.isfile(params['df_path']):
-            print('%s does not exist' % params['df_path'])
+        params = pd_discover_params(self.argv[1:])
+        path = params['df_path']
+        if path is not None and path != '-' and not os.path.isfile(path):
+            print('%s does not exist' % path)
             sys.exit(1)
         return discover_df_from_file(verbose=self.verbose, **params)
 

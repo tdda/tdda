@@ -29,7 +29,7 @@ def copy_examples(name, destination='.', verbose=True):
         print('copyexamples: output directory %s does not exist' % destination,
               file=sys.stderr)
         sys.exit(1)
-    outdir = os.path.join(destination, '%s-examples' % name)
+    outdir = os.path.join(destination, '%s_examples' % name)
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
     copy(srcdir, outdir)
@@ -53,8 +53,10 @@ def copy(srcdir, destination):
         elif name.endswith('.pyc'):
             continue
         else:
-            with open(fullname) as fin:
-                with open(os.path.join(destination, name), 'w') as fout:
+            binary = 'b' if fullname.endswith('.feather') else ''
+            with open(fullname, 'r%s' % binary) as fin:
+                with open(os.path.join(destination, name),
+                                       'w%s' % binary) as fout:
                     fout.write(fin.read())
 
 

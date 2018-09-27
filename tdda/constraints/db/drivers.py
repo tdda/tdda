@@ -34,7 +34,9 @@ try:
 except ImportError:
     pymongo = None
 
+
 from tdda.constraints.base import UNICODE_TYPE
+from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
@@ -135,13 +137,14 @@ def database_arg_flags(create_flags, parser, args, params):
 
 
 def database_connection(table=None, conn=None, dbtype=None, db=None,
-                        host=None, port=None, user=None, password=None):
+                        host=None, port=None, user=None, password=None,
+                        schema=None):
     """
     Connect to a database, using an appropriate driver for the type
     of database specified.
     """
     if conn:
-        defaults = Connection(conn)
+        defaults = ConnectionSpec(conn)
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
@@ -153,7 +156,7 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
         else:
             connfile = os.path.join(os.path.expanduser('~'), '.tdda_db_conn')
         if os.path.exists(connfile):
-            defaults = Connection(connfile)
+            defaults = ConnectionSpec(connfile)
         else:
             defaults = None
     if defaults:
@@ -169,6 +172,8 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
             user = defaults.user
         if password is None:
             password = defaults.password
+        if schema is None:
+            schema = defaults.schema
 
     if host and (':' in host) and port is None:
         parts = host.split(':')
@@ -187,7 +192,11 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
         connector = DATABASE_CONNECTORS[dbtypelower]
-        return connector(host, port, db, user, password)
+        conn = connector(host, port, db, user, password)
+        if conn is None:
+            sys.exit(1)   # error message already reported
+        return Connection(conn, schema, host=host, port=port, database=db,
+                          user=user)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -263,7 +272,7 @@ def regex_matcher(expr, item):
         return re.match(expr, item) is not None
 
 
-class Connection:
+class ConnectionSpec:
     """
     Class for reading a connection specification file.
     """
@@ -276,6 +285,7 @@ class Connection:
         self.port = d.get('port')
         self.user = d.get('user')
         self.password = d.get('password')
+        self.schema = d.get('schema')
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
                     and self.db is not None
@@ -283,6 +293,20 @@ class Connection:
             # if a .conn file for a sqlite connection specifies a .db file,
             # then resolve that relative to the location of the .conn file.
             self.db = os.path.join(os.path.dirname(filename), self.db)
+
+
+class Connection:
+    """
+    A database connection object (also holder for additional attributes)
+    """
+    def __init__(self, connection, schema, host=None, port=None,
+                 database=None, user=None):
+        self.connection = connection
+        self.schema = schema
+        self.host = host
+        self.port = port
+        self.database = database
+        self.user = user
 
 
 class DatabaseHandler:
@@ -306,25 +330,24 @@ class DatabaseHandler:
         return getattr(self.instance, name)
 
 
-# TODO: this is too specific to Miro stuff
-RESERVED_WORDS = ('group')
-
-
 class SQLDatabaseHandler:
     """
     Common database SQL support
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
-        self.db = db
-        self.cursor = db.cursor()
+        self.db = db.connection
+        self.schema = db.schema
+        self.cursor = db.connection.cursor()
 
-    def canon(self, name):
-        # 'canonicalise' a database table name
-        name = name.lower()
-        if name in RESERVED_WORDS:
-            name = name + '_'
-        return name
+    def quoted(self, name):
+        # quote a columnname
+        if self.dbtype == 'sqlserver':
+            return '[%s]' % name
+        elif self.dbtype == 'mysql':
+            return '`%s`' % name
+        else:
+            return '"%s"' % name
 
     def execute_scalar(self, sql):
         # execute a SQL statement, returning a single scalar result
@@ -345,62 +368,83 @@ class SQLDatabaseHandler:
     def db_value_to_datetime(self, value):
         return value
 
+    def default_schema(self):
+        if self.dbtype == 'mysql':
+            if not self.schema:
+                raise Exception('No schema specified')
+            return self.schema
+        elif self.dbtype in ('postgres', 'postgresql'):
+            return self.schema or 'public'
+        elif self.dbtype == 'sqlite':
+            return None
+        else:
+            raise Exception('Unrecognised database type %s' % self.dbtype)
+        
+    def split_name(self, name):
+        parts = name.split('.')
+        if len(parts) == 1:
+            schema = self.default_schema()
+            table = name
+        elif len(parts) == 2:
+            schema = parts[0]
+            table = parts[1]
+        else:
+            raise Exception('Bad table format %s' % tablename)
+        return (schema, table)
+
+    def resolve_table(self, name):
+        (schema, table) = self.split_name(name)
+        if schema:
+            return '%s.%s' % (schema, table)
+        else:
+            return table
+
     def check_table_exists(self, tablename):
         """
-        Check that a table (or a schema.table) exists.
+        Check that a table (or a schema.table) exists and is accessible.
         """
-        if '.' in tablename:
-            parts = tablename.split('.')
-            if len(parts) == 1:
-                schema = None
-                table = tablename
-            elif len(parts) == 2:
-                schema = parts[0]
-                table = parts[1]
-            else:
-                raise Exception('Bad table format %s' % tablename)
-        else:
-            schema = None
-            table = tablename
-        if self.dbtype in ('postgres', 'postgresql'):
-            if schema is None:
-                schema = 'public'
-            sql = '''SELECT COUNT(*) FROM pg_catalog.pg_class c
-                     LEFT JOIN pg_catalog.pg_namespace n
-                     ON n.oid = c.relnamespace
-                     WHERE c.relkind IN ('r', '', 'v')
-                     AND c.relname = '%s'
-                     AND n.nspname = '%s';''' % (table, schema)
-        elif self.dbtype == 'mysql':
+        (schema, table) = self.split_name(tablename)
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
+                allsql = 'SELECT COUNT(*) FROM information_schema.tables'
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_schema = '%s'
                          AND table_name = '%s';''' % (schema, table)
             else:
+                #TODO: we need to pick a default schema in this case!
                 sql = '''SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_name = '%s';''' % table
         elif self.dbtype == 'sqlite':
+            # no schemas
+            allsql = 'SELECT COUNT(*) FROM sqlite_master'
             sql = '''SELECT COUNT(*) FROM sqlite_master
                             WHERE (type = 'table' OR type='view')
                             AND name = '%s';''' % tablename
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
+
+        if self.execute_scalar(allsql) == 0:
+            # no permission to see any tables, so wrong credentials
+            raise Exception('Permission denied')
         return self.execute_scalar(sql) > 0
 
+    def get_nrows(self, tablename):
+        (schema, table) = self.split_name(tablename)
+        if schema:
+            sql = 'SELECT COUNT(*) FROM %s.%s' % (schema, table)
+        else:
+            sql = 'SELECT COUNT(*) FROM %s' % table
+        return self.execute_scalar(sql)
+
     def get_database_column_names(self, tablename):
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''
-                SELECT a.attname FROM pg_attribute a
-                WHERE a.attrelid = '%s'::regclass AND a.attnum > 0
-                ORDER BY a.attnum;
-                ''' % tablename
-            rows = self.execute_all(sql)
-            return [r[0] for r in rows]
-        elif self.dbtype == 'mysql':
+        (schema, table) = self.split_name(tablename)
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             sql = '''
                 SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE table_name = '%s';
-                ''' % tablename
+                WHERE TABLE_NAME = '%s'
+                AND TABLE_SCHEMA = '%s'
+                ORDER BY ORDINAL_POSITION;
+                ''' % (table, schema)
             rows = self.execute_all(sql)
             return [r[0] for r in rows]
         elif self.dbtype == 'sqlite':
@@ -412,54 +456,70 @@ class SQLDatabaseHandler:
 
     def get_database_column_type(self, tablename, colname):
         typeMap = {
-            'int'        : 'int',
-            'int4'       : 'int',
-            'int8'       : 'int',
-            'smallint'   : 'int',
-            'bigint'     : 'int',
-            'integer'    : 'int',
-            'float'      : 'real',
-            'float4'     : 'real',
-            'float8'     : 'real',
-            'float16'    : 'real',
-            'double'     : 'real',
-            'numeric'    : 'real',
-            'real'       : 'real',
-            'bool'       : 'bool',
-            'text'       : 'string',
-            'varchar'    : 'string',
-            'char'       : 'string',
-            'name'       : 'string',
-            'oidvector'  : 'string',
-            'timestamp'  : 'date',
-            'date'       : 'date',
-            None         : None,
+            'int'                        : 'int',
+            'int4'                       : 'int',
+            'int8'                       : 'int',
+            'long'                       : 'int',
+            'tinyint'                    : 'int',
+            'smallint'                   : 'int',
+            'bigint'                     : 'int',
+            'integer'                    : 'int',
+            'float'                      : 'real',
+            'float4'                     : 'real',
+            'float8'                     : 'real',
+            'float16'                    : 'real',
+            'double'                     : 'real',
+            'numeric'                    : 'real',
+            'number'                     : 'real',
+            'real'                       : 'real',
+            'double precision'           : 'real',
+            'bool'                       : 'bool',
+            'boolean'                    : 'bool',
+            'text'                       : 'string',
+            'text character set utf8'    : 'string',
+            'varchar'                    : 'string',
+            'varchar(max)'               : 'string',
+            'varchar2'                   : 'string',
+            'nvarchar'                   : 'string',
+            'nvarchar(max)'              : 'string',
+            'nvarchar2'                  : 'string',
+            'char'                       : 'string',
+            'nchar'                      : 'string',
+            'name'                       : 'string',
+            'oidvector'                  : 'string',
+            'timestamp'                  : 'date',
+            'timestamp without time zone': 'date',
+            'date'                       : 'date',
+            'datetime'                   : 'date',
+            None                         : None,
         }
-        if self.dbtype in ('postgres', 'postgresql'):
-            sql = '''
-                SELECT t.typname
-                FROM pg_attribute a inner join pg_type t on a.atttypid = t.oid
-                WHERE a.attrelid = '%s'::regclass AND a.attnum > 0
-                                                  AND a.attname = '%s'
-                ORDER BY a.attnum;
-                ''' % (tablename, self.canon(colname))
-            typeresult = self.execute_scalar(sql)
-        elif self.dbtype == 'mysql':
-            sql = '''
-                SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE table_name = '%s' AND COLUMN_NAME = '%s';
-                ''' % (tablename, self.canon(colname))
+        (schema, table) = self.split_name(tablename)
+        if self.dbtype in ('postgres', 'postgresql', 'mysql'):
+            if schema:
+                sql = '''
+                    SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '%s' 
+                     AND TABLE_SCHEMA = '%s'
+                     AND COLUMN_NAME = '%s';
+                    ''' % (table, schema, colname)
+            else:
+                sql = '''
+                    SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '%s' 
+                     AND COLUMN_NAME = '%s';
+                    ''' % (tablename, colname)
             typeresult = self.execute_scalar(sql)
         elif self.dbtype == 'sqlite':
             result = self.execute_all('PRAGMA table_info(%s)' % tablename)
             typeresult = None
             for row in result:
-                if self.canon(row[1]) == self.canon(colname):
+                if row[1].lower() == colname.lower():
                     typeresult = row[2]
                     break
         else:
             raise Exception('Unsupported database type')
-        return typeMap[typeresult.lower()]
+        dtype = typeMap[typeresult.lower()]
+        return dtype
 
     def get_database_nrows(self, tablename):
         sql = 'SELECT COUNT(*) FROM %s' % tablename
@@ -467,41 +527,72 @@ class SQLDatabaseHandler:
 
     def get_database_nnull(self, tablename, colname):
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NULL'
-               % (tablename, self.canon(colname)))
+               % (tablename, self.quoted(colname)))
         return self.execute_scalar(sql)
 
     def get_database_nnonnull(self, tablename, colname):
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL'
-               % (tablename, self.canon(colname)))
+               % (tablename, self.quoted(colname)))
         return self.execute_scalar(sql)
 
     def get_database_min(self, tablename, colname):
-        sql = 'SELECT MIN(%s) FROM %s' % (self.canon(colname), tablename)
-        return self.execute_scalar(sql)
+        ctype = self.get_database_column_type(tablename, colname)
+        if ctype == 'bool':
+            asint = self.cast_bool_to_int(self.quoted(colname))
+            expr = self.cast_int_to_bool('MIN(%s)' % asint)
+            sql = 'SELECT %s FROM %s' % (expr, tablename)
+        else:
+            sql = 'SELECT MIN(%s) FROM %s' % (self.quoted(colname), tablename)
+        result = self.execute_scalar(sql)
+        if ctype == 'date' and type(result) is str:
+            result = datetime.datetime.strptime(result, '%Y-%m-%d %H:%M:%S')
+        return result
 
     def get_database_max(self, tablename, colname):
-        sql = 'SELECT MAX(%s) FROM %s' % (self.canon(colname), tablename)
-        return self.execute_scalar(sql)
+        ctype = self.get_database_column_type(tablename, colname)
+        if ctype == 'bool':
+            asint = self.cast_bool_to_int(self.quoted(colname))
+            expr = self.cast_int_to_bool('MAX(%s)' % asint)
+            sql = 'SELECT %s FROM %s' % (expr, tablename)
+        else:
+            sql = 'SELECT MAX(%s) FROM %s' % (self.quoted(colname), tablename)
+        result = self.execute_scalar(sql)
+        if ctype == 'date' and type(result) is str:
+            result = datetime.datetime.strptime(result, '%Y-%m-%d %H:%M:%S')
+        return result
 
     def get_database_min_length(self, tablename, colname):
-        sql = 'SELECT MIN(LENGTH(%s)) FROM %s' % (self.canon(colname),
-                                                  tablename)
-        return self.execute_scalar(sql)
+        return self.extreme_length(tablename, colname, min, 'MIN')
 
     def get_database_max_length(self, tablename, colname):
-        sql = 'SELECT MAX(LENGTH(%s)) FROM %s' % (self.canon(colname),
-                                                  tablename)
-        return self.execute_scalar(sql)
+        return self.extreme_length(tablename, colname, max, 'MAX')
+
+    def extreme_length(self, tablename, colname, agg, sqlagg):
+        if self.dbtype == 'mysql':
+            uniqs = self.get_database_unique_values(tablename, colname)
+            if uniqs:
+                if type(uniqs[0]) is unicode_string:
+                    L = [len(v) for v in uniqs]
+                else:
+                    L = [len(v.decode('UTF-8')) for v in uniqs]
+                x = agg([len(s) for s in uniqs])
+            else:
+                return None
+        else:
+            sql = 'SELECT %s(LENGTH(%s)) FROM %s' % (sqlagg,
+                                                     self.quoted(colname),
+                                                     tablename)
+            return self.execute_scalar(sql)
 
     def get_database_nunique(self, tablename, colname):
-        colname = self.canon(colname)
+        colname = self.quoted(colname)
         sql = ('SELECT COUNT(DISTINCT %s) FROM %s WHERE %s IS NOT NULL'
-               % (colname, tablename, self.canon(colname)))
+               % (colname, tablename, colname))
         return self.execute_scalar(sql)
 
     def get_database_unique_values(self, tablename, colname,
                                    sorted_values=True, include_nulls=False):
-        colname = self.canon(colname)
+        colname = self.quoted(colname)
         whereclause = ('' if include_nulls
                        else 'WHERE %s IS NOT NULL' % colname)
         orderby = ('ORDER BY %s ASC' % colname) if sorted_values else ''
@@ -513,7 +604,7 @@ class SQLDatabaseHandler:
     def get_database_rex_match(self, tablename, colname, rexes):
         if rexes is None:      # a null value is not considered to be an
             return True        # active constraint, so is always satisfied
-        name = self.canon(colname)
+        name = self.quoted(colname)
         if self.dbtype in ('postgres', 'postgresql'):
             # postgresql uses ~ syntax
             rexprs = ["(%s ~ '%s')" % (name, r) for r in rexes]
@@ -533,6 +624,24 @@ class SQLDatabaseHandler:
                % (tablename, name, ' OR '.join(rexprs)))
         return self.execute_scalar(sql) == 0
 
+    def cast_bool_to_int(self, s):
+        if self.dbtype == 'mysql':
+            return s
+        else:
+            sql = 'CAST (%s AS INT)' % s
+        return sql
+
+    def cast_int_to_bool(self, s):
+        if self.dbtype == 'mysql':
+            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
+                   'ELSE (%s <> 0) END' % (s, s))
+        elif self.dbtype == 'sqlserver':
+            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
+                   'WHEN (%s <> 0) THEN 1 ELSE 0 END' % (s, s))
+        else:
+            sql = '(%s <> 0)' % s
+        return sql
+
 
 class MongoDBDatabaseHandler:
     """
@@ -549,6 +658,8 @@ class MongoDBDatabaseHandler:
         parts = tablename.split('.')
         collection = self.db
         for p in parts:
+            if p not in collection.collection_names():
+                raise Exception('collection %s does not exist' % tablename)
             collection = collection[p]
         return collection
 
@@ -556,36 +667,49 @@ class MongoDBDatabaseHandler:
         try:
             self.find_collection(tablename)
             return True
-        except pymongo.errors.InvalidName:
+        except:
             return False
 
     def get_database_column_names(self, tablename):
         collection = self.find_collection(tablename)
-        mapfn = '''function() {
-                        var keys = [];
-                        for (var k in this) {
-                            keys.push(k);
-                        }
-                        emit(null, keys);
-                   }'''
-        redfn = '''function(key, values) {
-                       var keyset = {};
-                       for (var i = 0; i < values.length; i++) {
-                           for (var j = 0; j < values[i].length; j++) {
-                               keyset[values[i][j]] = true;
+        try:
+            keys = collection.aggregate([
+                {'$project': {'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}}},
+                {'$unwind': '$arrayofkeyvalue'},
+                {'$group': {'_id': None,
+                            'allkeys': {'$addToSet': '$arrayofkeyvalue.k'}}}
+            ]).next()['allkeys'];
+            return keys
+        except:
+            # sometimes the aggregate approach above doesn't work (for
+            # reasons that aren't completely clear), so here's an alternative
+            # approach, which is slower.
+            mapfn = '''function() {
+                            var keys = [];
+                            for (var k in this) {
+                                keys.push(k);
+                            }
+                            emit(null, keys);
+                       }'''
+            redfn = '''function(key, values) {
+                           var keyset = {};
+                           for (var i = 0; i < values.length; i++) {
+                               for (var j = 0; j < values[i].length; j++) {
+                                   keyset[values[i][j]] = true;
+                               }
                            }
-                       }
-                       var keys = [];
-                       for (var k in keyset) {
-                           if (k != '_id') {
-                               keys.push(k);
+                           var keys = [];
+                          for (var k in keyset) {
+                               if (k != '_id') {
+                                   keys.push(k);
+                               }
                            }
-                       }
-                       return JSON.stringify(keys);
-                   }'''
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        # this mongodb map/reduce op returns a json repr of the list of keys
-        return json.loads(v)
+                           return JSON.stringify(keys);
+                       }'''
+            mr = collection.map_reduce(mapfn, redfn, 'inline')
+            v = mr.find_one()['value']
+            # the map/reduce op returns a json repr of the list of keys
+            return json.loads(v)
 
     def get_database_column_type(self, tablename, colname):
         collection = self.find_collection(tablename)
@@ -595,7 +719,7 @@ class MongoDBDatabaseHandler:
             valtype = type(val)
             if valtype == bool:
                 return 'bool'
-            elif valtype in (int, long):
+            elif valtype in (int, long_type):
                 return 'int'
             elif valtype == float:
                 return 'real'
@@ -622,47 +746,69 @@ class MongoDBDatabaseHandler:
 
     def get_database_nunique(self, tablename, colname):
         collection = self.find_collection(tablename)
-        #return len(collection.distinct(colname))
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$match': {colname: {'$ne': None}}},
             {'$group': {'_id': '$' + colname}},
             {'$group': {'_id': None, 'nunique': {'$sum': 1}}},
-        ]).next()['nunique']
+        ], allowDiskUse=True)
+        return agg.next()['nunique']
 
     def get_database_unique_values(self, tablename, colname,
-                                   sorted_values=True):
+                                   sorted_values=True, include_nulls=False):
         collection = self.find_collection(tablename)
-        values = collection.distinct(colname)
-        return sorted(values) if sorted_values else values
+        try:
+            values = collection.distinct(colname, allowDiskUse=True)
+        except:
+            # pymongo.errors.OperationFailure: distinct too big, 16mb cap
+            # (there appears to be no workaround, so just don't include
+            # this constraint, by returning an empty list)
+            return []
+        non_null_values = [v for v in values if v is not None]
+        if sorted_values:
+            non_null_values = sorted(non_null_values)
+        if include_nulls and (None in values):
+            return [None] + non_null_values
+        else:
+            return non_null_values
 
     def get_database_min_length(self, tablename, colname):
-        collection = self.find_collection(tablename)
-        mapfn = 'function() { emit(null, this.name ? this.name.length : null);}'
-        redfn = 'function(key, values) { return Math.min.apply(Math, values);}'
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        return int(v)
+        return self.extreme_length(tablename, colname, min, 'min')
 
     def get_database_max_length(self, tablename, colname):
+        return self.extreme_length(tablename, colname, max, 'max')
+
+    def extreme_length(self, tablename, colname, agg, aggstr):
         collection = self.find_collection(tablename)
-        mapfn = 'function() { emit(null, this.name ? this.name.length: null);}'
-        redfn = 'function(key, values) { return Math.max.apply(Math, values);}'
-        v = collection.map_reduce(mapfn, redfn, 'inline').find_one()['value']
-        return int(v)
+        if self.get_database_column_type(tablename, colname) == 'string':
+            values = self.get_database_unique_values(tablename, colname)
+            v = agg([len(v) for v in values]) if values else None
+        else:
+            mapfn = '''function() {
+                           emit(null, this.name ? this.name.length : null);
+                       }'''
+            redfn = '''function(key, values) {
+                           return Math.%s.apply(Math, values);
+                       }''' % aggstr
+            mr = collection.map_reduce(mapfn, redfn, 'inline')
+            v = mr.find_one()['value']
+        return int(v) if v is not None else None
 
     def get_database_min(self, tablename, colname):
         collection = self.find_collection(tablename)
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$group': {'_id': None, 'min': {'$min': '$' + colname}}},
-        ]).next()['min']
+        ], allowDiskUse=True)
+        return agg.next()['min']
 
     def get_database_max(self, tablename, colname):
         collection = self.find_collection(tablename)
-        return collection.aggregate([
+        agg = collection.aggregate([
             {'$match': {colname: {'$exists': True}}},
             {'$group': {'_id': None, 'max': {'$max': '$' + colname}}},
-        ]).next()['max']
+        ])
+        return agg.next()['max']
 
     def db_value_is_null(self, value):
         return value is None

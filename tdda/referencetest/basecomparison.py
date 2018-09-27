@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
 from __future__ import absolute_import
@@ -41,16 +41,30 @@ class BaseComparison(object):
         Add an item to the list of messages, and also display it immediately
         if verbose is set.
         """
-        msgs.append(s)
-        if self.verbose and self.print_fn:
-            self.print_fn(s)
+        if s is not None:
+            msgs.append(s)
+            if self.verbose and self.print_fn:
+                self.print_fn(s)
 
     @staticmethod
-    def compare_with(actual, expected, qualifier=None):
+    def compare_with(actual, expected, qualifier=None, binary=False):
         qualifier = '' if not qualifier else (qualifier + ' ')
-        return 'Compare %swith:\n    %s %s %s\n' % (qualifier, diffcmd(),
-                                                    actual, expected)
+        if os.path.exists(expected):
+            if binary:
+                return None
+            else:
+                msg = 'Compare %swith:\n    %s %s %s\n'
+                cmd = diffcmd()
+        else:
+            msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
+            cmd = copycmd()
+        return msg % (qualifier, cmd, actual, expected)
 
 
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'
+
+
+def copycmd():
+    return 'copy' if os.name and os.name != 'posix' else 'cp'
+

@@ -6,12 +6,15 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
+Version |version|
+
 **CONTENTS**
 
 .. toctree::
    :maxdepth: 2
 
    overview.txt
+   windows.txt
    cmdline.txt
    referencetest.txt
    constraints.txt
