@@ -13,8 +13,61 @@ import unittest
 from tdda.referencetest.checkfiles import FilesComparison
 
 
-class TestStrings(unittest.TestCase):
+class TestInternals(unittest.TestCase):
+    def test_diff_marker(self):
+        compare = FilesComparison()
+        self.assertEqual(compare.diff_marker('ABC', 'XYZ'), '*** (ABC|XYZ)')
+        self.assertEqual(compare.diff_marker('ABC:', 'ABC: yes'),
+                         '*** ABC:(| yes)')
+        self.assertEqual(compare.diff_marker('', 'AAA'), '*** (|AAA)')
+        self.assertEqual(compare.diff_marker('AAA', ''), '*** (AAA|)')
+        self.assertEqual(compare.diff_marker('ABC', 'AXC'), '*** A(B|X)C')
 
+    def test_single_pattern(self):
+        compare = FilesComparison()
+        cpatterns = compare.compile_patterns(['gr.*t'])
+        self.assertTrue(compare.check_patterns(cpatterns,
+                                               'great', 'grapefruit'))
+
+    def test_unanchored_patterns(self):
+        compare = FilesComparison()
+        cpatterns = compare.compile_patterns(['A\d{2}B', 'X[a-z]+Y'])
+        for actual, expected in [('A22BC', 'A99BC'),
+                                 ('XappleY', 'XtrafficY'),
+                                 ('A22BXappleY', 'A99BXtrafficY'),
+                                 ('froggyA22BXappleY', 'froggyA99BXtrafficY'),
+                                 ('frA22BXappleYoggy', 'frA99BXtrafficYoggy'),
+                                 ('A22BA99B', 'A99BA22B')]:
+            self.assertTrue(compare.check_patterns(cpatterns,
+                                                   actual, expected),
+                            '%s <--> %s' % (actual, expected))
+        for actual, expected in [('A222BC', 'A99BC'),
+                                 ('222BC', 'A99BC'),
+                                 ('XappleYXappleY', 'XappleY')]:
+            self.assertFalse(compare.check_patterns(cpatterns,
+                                                    actual, expected),
+                             '%s <--> %s' % (actual, expected))
+
+    def test_anchored_patterns(self):
+        compare = FilesComparison()
+        cpatterns = compare.compile_patterns([r'^\d+$'])
+        for actual, expected in [('2', '222222222222'),
+                                 ('2', '2'),
+                                 ('02', '2'),
+                                 ('2', '23'),
+                                 ('123', '564')]:
+            self.assertTrue(compare.check_patterns(cpatterns,
+                                                   actual, expected),
+                            '%s <--> %s' % (actual, expected))
+        for actual, expected in [('2', '222222222222a22'),
+                                 ('', '23'),
+                                 ('123', '')]:
+            self.assertFalse(compare.check_patterns(cpatterns,
+                                                    actual, expected),
+                             '%s <--> %s' % (actual, expected))
+
+
+class TestStrings(unittest.TestCase):
     def test_strings_ok(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings([], []), (0, []))
@@ -25,24 +78,25 @@ class TestStrings(unittest.TestCase):
     def test_strings_fail(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings([], ['x']),
-                         (1, ['Strings have different numbers of lines',
-                              'No files']))
+                         (1, ['Strings have different numbers of lines, '
+                              'differences start at end of actual string',
+                              'No files available for comparison']))
         self.assertEqual(compare.check_strings(['y'], ['x']),
                          (1, ['1 line is different, starting at line 1',
-                              'No files']))
+                              'No files available for comparison']))
 
     def test_print(self):
         msgs = []
         compare = FilesComparison(print_fn=lambda x: msgs.append(x))
         compare.check_strings(['a'], ['b'])
         self.assertEqual(msgs, ['1 line is different, starting at line 1',
-                                'No files'])
+                                'No files available for comparison'])
 
     def test_strip(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings(['   abc'], ['abc']),
                          (1, ['1 line is different, starting at line 1',
-                              'No files']))
+                              'No files available for comparison']))
         self.assertEqual(compare.check_strings(['   abc'], ['abc'],
                                                lstrip=True), (0, []))
         self.assertEqual(compare.check_strings(['abc   '], ['abc'],
@@ -56,12 +110,12 @@ class TestStrings(unittest.TestCase):
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit']),
                          (1, ['2 lines are different, starting at line 2',
-                              'No files']))
-        self.assertEqual(compare.check_strings(['abc','red', 'banana'],
-                                               ['abc','blue', 'grapefruit'],
+                              'No files available for comparison']))
+        self.assertEqual(compare.check_strings(['abc','blue', 'banana'],
+                                               ['abc','red', 'grapefruit'],
                                                ignore_substrings=['re']),
                          (1, ['1 line is different, starting at line 3',
-                              'No files',
+                              'No files available for comparison',
                               'Note exclusions:', '    re']))
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit'],
@@ -75,14 +129,14 @@ class TestStrings(unittest.TestCase):
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit']),
                          (1, ['2 lines are different, starting at line 2',
-                              'No files']))
+                              'No files available for comparison']))
 
         # red != blue, banana !~ gr.*t => 2 failures
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit'],
                                                ignore_patterns=['gr.*t']),
                          (1, ['2 lines are different, starting at line 2',
-                              'No files',
+                              'No files available for comparison',
                               'Note exclusions:', '    gr.*t']))
 
         # red != blue, but great DOES ~ gr.*t => 1 failure
@@ -90,7 +144,7 @@ class TestStrings(unittest.TestCase):
                                                ['abc','blue', 'grapefruit'],
                                                ignore_patterns=['gr.*t']),
                          (1, ['1 line is different, starting at line 2',
-                              'No files',
+                              'No files available for comparison',
                               'Note exclusions:', '    gr.*t']))
 
         # spangle DOES ~ sp......, and breadfruit DOES ~ .*fruit => success
@@ -112,7 +166,7 @@ class TestStrings(unittest.TestCase):
                                                ['abc','spanner', 'grapefruit'],
                                                preprocess=strip_first_five),
                          (1, ['1 line is different, starting at line 2',
-                              'No files']))
+                              'No raw files available for comparison']))
         self.assertEqual(compare.check_strings(['abc','spangle', 'breadfruit'],
                                                ['abc','spanner', 'grapefruit'],
                                                preprocess=strip_first_seven),
@@ -124,7 +178,7 @@ class TestStrings(unittest.TestCase):
                                                ['spangle','spanner', 'abc'],
                                                max_permutation_cases=1),
                          (1, ['3 lines are different, starting at line 1',
-                              'No files']))
+                              'No files available for comparison']))
         self.assertEqual(compare.check_strings(['abc','spangle', 'spanner'],
                                                ['abc','spanner', 'spangle'],
                                                max_permutation_cases=2),

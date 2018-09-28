@@ -27,17 +27,6 @@ def check(compare, values, filename, diff=False, actual_path=None):
     return (code, errs)
 
 
-class TestFilesInternals(unittest.TestCase):
-    def test_diff_marker(self):
-        compare = FilesComparison()
-        self.assertEqual(compare.diff_marker('ABC', 'XYZ'), '*** (ABC|XYZ)')
-        self.assertEqual(compare.diff_marker('ABC:', 'ABC: yes'),
-                         '*** ABC:(| yes)')
-        self.assertEqual(compare.diff_marker('', 'AAA'), '*** (|AAA)')
-        self.assertEqual(compare.diff_marker('AAA', ''), '*** (AAA|)')
-        self.assertEqual(compare.diff_marker('ABC', 'AXC'), '*** A(B|X)C')
-
-
 class TestFiles(unittest.TestCase):
     def test_strings_against_files_ok(self):
         compare = FilesComparison()

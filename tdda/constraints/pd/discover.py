@@ -18,6 +18,7 @@ Parameters:
 
     - a csv file
     - a .feather file containing a saved Pandas or R DataFrame
+    - any of the other supported data sources
 
   * constraints.tdda, if provided, specifies the name of a file to
     which the generated constraints will be written.  Can be - (or missing)

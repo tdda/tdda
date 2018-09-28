@@ -313,13 +313,13 @@ class FilesComparison(BaseComparison):
         ignored?
         """
         for substr in ignore_substrings or []:
-            if substr in actual_line or substr in expected_line:
-                # Note that this ignores a line even if it only matches on
-                # ONE side and NOT on the other. This is deliberate, to cover
-                # the case where the expected reference file contains concrete
-                # representations of things that need to be ignored (like
-                # usernames, machine names etc), where you can't express that
-                # more generally as any kind of pattern.
+            if substr in expected_line:
+                # Note that this only looks in the 'expected' side.
+                # This is deliberate, to cover the case where the expected
+                # reference file contains concrete representations of things
+                # that need to be ignored (like usernames, machine names etc),
+                # where you can't express that more generally as any kind of
+                # pattern.
                 return True
         # not an ignorable substring line, so try patterns
         return self.check_patterns(compiled_patterns,
@@ -328,20 +328,49 @@ class FilesComparison(BaseComparison):
     def check_patterns(self, compiled_patterns, actual_line, expected_line):
         """
         Check a single pair of lines, taking regular-expressions into account.
+
+        It expects the patterns to be in one of the following anchored forms:
+            - a one-group pattern like ^(xxx)$
+            - a two-group pattern like ^(.*)(xxx)$ or ^(xxx)(.*)$
+            - a three-group pattern like ^(.*)(xxx)(.*)$
+
+        For a one-group pattern, it just needs to fully match both lines.
+
+        For a two-group or three-group pattern, the (xxx) central part of
+        the pattern needs to match for both lines, and the remaining (.*)
+        parts both need to also match; they don't need to be identical, but
+        they need to be 'equivalent' (i.e. by calling check_patterns() on
+        these sub-parts, recursively).
+
+        A fixed-string pattern (without any regular-expression components)
+        needs to exactly match, on both actual and expected. So this is a
+        STRONGER requirement than we have for ignore_substrings, since here
+        we are requiring a match for BOTH the actual AND the expected.
+
+        There might be an argument for having a mode where it's just the
+        expected that contributes, but that's not currently provided.
         """
+        if actual_line == expected_line:
+            return True
         for pattern in compiled_patterns or []:
             mExpected = re.match(pattern, expected_line)
             if mExpected:
                 mActual = re.match(pattern, actual_line)
                 if not mActual:
                     continue
-                if pattern.groups < 3:
-                    # matched an anchored expression
+                if pattern.groups == 1:
+                    # matched a full-line expression
                     return True
                 else:
-                    lhs = mActual.group(1) + mActual.group(3)
-                    rhs = mExpected.group(1) + mExpected.group(3)
-                    if lhs == rhs:
+                    actual_left = mActual.group(1)
+                    expected_left = mExpected.group(1)
+                    actual_right = mActual.group(3)
+                    expected_right = mExpected.group(3)
+                    if not self.check_patterns(compiled_patterns,
+                                               actual_left, expected_left):
+                        continue
+                    if self.check_patterns(compiled_patterns,
+                                           actual_right, expected_right):
                         return True
         return False
 
@@ -695,8 +724,9 @@ class FilesComparison(BaseComparison):
                                              'actual-raw-' + commonname)
                 raw_expected_path = tmpActualPath
 
+        raw = 'raw' if preprocess or (reconstruction and commonname) else None
+
         if raw_actual_path and raw_expected_path:
-            raw = 'raw' if preprocess or reconstruction else None
             differ = self.compare_with(raw_actual_path, raw_expected_path,
                                        qualifier=raw, binary=binary)
         else:
@@ -708,8 +738,10 @@ class FilesComparison(BaseComparison):
             elif actual_path:
                 self.info(msgs,
                           'Actual file %s' % os.path.normpath(actual_path))
-            else:
+            elif raw:
                 self.info(msgs, 'No raw files available for comparison')
+            else:
+                self.info(msgs, 'No files available for comparison')
 
         if reconstruction and commonname:
             # show diffs after ignores and removals have been collapsed

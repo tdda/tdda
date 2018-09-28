@@ -99,8 +99,25 @@ embedded 'raw' diff, which will show ALL the differences, but the main focus
 is on showing 'what is different that should not be'.
 
 Also improved reporting of differences when there are different numbers
-of lines. It now says what line the (effective) differences start at (taking
-into account removals and ignores).
+of lines. It now says what line at which the (effective) differences start
+(taking into account removals and ignores).
+
+The ignore_patterns parameter is now treated slightly more strictly than
+before, and has had its documentation improved. If you provide an unanchored
+regular expression pattern, it now requires that both sides match that
+pattern, but it ALSO now requires that the remaining parts, to the left and
+right of where the pattern matched, be 'equivalent' if the line is to be
+ignored. The two 'left parts' must be equivalent, and the two 'right parts'
+must also be equivalent. This 'equivalence' is checked by (recursively)
+applying the same logic to these sub-parts.
+
+The ignore_substrings parameter is now treated slightly more strictly than
+before. Previously, a line was ignored if it contained any of the ignorable
+substrings, in either the actual or the expected. That meant that lines in
+the actual data might be being unexpectedly ignored if they start to include
+such strings, which probably was not the intent of the test at all. Now,
+ignorable substrings only refer to the *expected* data (which is fixed for
+the test, and you know exactly what is in it and what is not).
 
 ------------------------- end of dev branch -------------------------
 """
