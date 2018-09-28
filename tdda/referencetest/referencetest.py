@@ -1037,7 +1037,7 @@ class ReferenceTest(object):
         """
         Internal method for check for failures and reporting them.
         """
-        self.assert_fn(failures == 0, '\n'.join(msgs))
+        self.assert_fn(failures == 0, msgs.message())
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):

@@ -24,7 +24,7 @@ def refloc(filename):
 
 
 @unittest.skipIf(pd is None, 'no pandas')
-class TestStrings(unittest.TestCase):
+class TestPandasDataFrames(unittest.TestCase):
 
     def test_frames_ok(self):
         compare = PandasComparison()

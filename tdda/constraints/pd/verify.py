@@ -18,6 +18,7 @@ Parameters:
 
       - a csv file. Can be - to read from standard input.
       - a feather file containing a Pandas or R DataFrame.
+      - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
