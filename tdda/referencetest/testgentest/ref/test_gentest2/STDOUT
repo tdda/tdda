@@ -1,0 +1,7 @@
+Plausible date 2020-07-01 12:00:00 and the hostname ahost  # diff
+2020-07-01 12:00:13  # same
+2020-07-01 13:00:13  # same
+2018-09-02  # same
+2018-09-02 03:00:00 # same
+auser  # same
+ENDS  # same
