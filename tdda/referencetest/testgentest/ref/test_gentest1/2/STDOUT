@@ -1,0 +1,35 @@
+This is Miro, version 2.14.92.
+Copyright © Stochastic Solutions 2008-2018.
+Seed: 1521006944
+Logs started at 2020/07/01 16:30:50 host ahost.local.
+Logging to /home/auser/miro/log/2020/07/01/session002.
+
+[1]> ddd
+ddd: 10 records; 10 (100%) selected; 15 fields.
+[2]> by index
+index    count
+  0        1  
+  1        1  
+  2        1  
+  3        1  
+  4        1  
+  5        1  
+  6        1  
+  7        1  
+  8        1  
+  9        1  
+[3]> setq p ps
+28
+[4]> if (% p 2)
+[5]> echo ODD
+[6]> fi
+[7]> (+ 2 3)
+5
+[8]> echo Hello
+Hello
+[9]> bye
+No problems identified during session.
+
+Job completed after a total of 0.1545 seconds.
+Logs closed at 2020/07/01 16:30:50 host ahost.local.
+Logs written to /home/auser/miro/log/2020/07/01/session002.

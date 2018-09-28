@@ -14,12 +14,15 @@ import datetime
 import getpass
 import glob
 import os
+import re
 import shutil
 import socket
 import sys
 import subprocess
 import tempfile
 import timeit
+
+from collections import OrderedDict
 
 is_python3 = sys.version_info.major >= 3
 actual_input = input if is_python3 else raw_input
@@ -29,23 +32,59 @@ from tdda.referencetest.gentest_boilerplate import HEADER, TAIL
 from tdda.referencetest.diffrex import find_diff_lines
 from tdda.rexpy import extract
 
-USAGE = '''python gentest.py 'quoted shell command' [test_outputfile.py] [reference files]
+USAGE = '''tdda gentest
+
+or
+
+tdda gentest  'quoted shell command' [test_outputfile.py] [reference files]
 
 You can use STDOUT and STDERR (in any case) to those streams, which will
-by default not be checked.
+by default not be checked. You can also use NONZEROEXIT to indicate that
+a non-zero exit code is expected, so should not prevent test generation.
 '''
 
 MAX_SNAPSHOT_FILES = 10000
+MAX_SPECIFIC_DATE_VARIANTS = 5
 
-GENTEST_HELP = '''
-'''
+GENTEST_HELP = USAGE
+
+DATE_TERM = r'(\d{1,4})[/\-\.](\d{1,2})[/\-\.](\d{1,4})'
+TIME_TERM = r'(\d{1,2}):(\d{1,2})(:\d{1,2}|)(\.?\d*)'
+TZ_TERM = r' ?([+\-]\d{2}:?\d{2})?\]?Z?'
+TS_TERM = '[ T]'
+DS = '.*'
+ND = r'(|.*[^\d])'
+DATETIME_RE = re.compile(ND + DATE_TERM + TS_TERM + TIME_TERM + TZ_TERM + DS)
+DATE_RE = re.compile(ND + DATE_TERM + DS)
+
+
+
+class Specifics:
+    __slots__ = ['line', 'host', 'ip', 'cwd', 'homedir', 'user',
+                 'datelike', 'dtlike',
+                 'ignore', 'remove']
+
+    def __init__(self, line, host=False, ip=False, cwd=False,
+                 homedir=False, user=False, datelike=False, dtlike=False,
+                 ignore=None, remove=None):
+        self.line = line
+        self.host = host
+        self.ip = ip
+        self.cwd = cwd
+        self.homedir = homedir
+        self.user = user
+        self.datelike = datelike
+        self.dtlike = dtlike
+        self.ignore = ignore
+        self.remove = remove
 
 
 class TestGenerator:
     def __init__(self, cwd, command, script, reference_files,
                  check_stdout, check_stderr=True, require_zero_exit_code=True,
                  max_snapshot_files=MAX_SNAPSHOT_FILES,
-                 relative_paths=False, with_time_log=True, iterations=2):
+                 relative_paths=False, with_time_log=True, iterations=2,
+                 verbose=True):
         self.cwd = cwd
         self.command = command
         self.raw_script = script  # as specified by user
@@ -54,6 +93,7 @@ class TestGenerator:
         self.raw_files = [f for f in reference_files
                           if f.lower() not in ('stdout', 'stderr',
                                                'nonzeroexit')]
+        self.verbose = verbose
         reference_files = set(canonicalize(f) for f in self.raw_files)
         self.reference_files = {}
         for run in range(1, iterations + 1):
@@ -66,42 +106,48 @@ class TestGenerator:
         self.relative_paths = relative_paths
         self.with_timelog = with_time_log
         self.iterations = iterations
+        self.warnings = []
 
         self.host = socket.gethostname()
         self.ip_address = socket.gethostbyname(self.host)
-        self.user = getpass.getuser()
         self.homedir = home_dir()
-
+        self.user = getpass.getuser()
+        self.user_in_home = self.user in self.homedir
+        self.cwd_in_home = self.cwd.startswith(self.homedir)
 
         self.refdir = os.path.join(self.cwd, 'ref', self.name())
-        self.ref_map = {}  # mapping for conflicting reference files
+        self.ref_map = {}    # mapping for conflicting reference files
         self.snapshot = {}   # holds timestamps of file in ref dirs
 
         self.test_names = set()
         self.test_qualifier = 1
 
-        self.create_or_empty_ref_dir()
-        self.snapshot_filesystem()
+        if iterations > 0:
+            self.create_or_empty_ref_dir()
+            self.snapshot_filesystem()
 
-        self.run_command()
-        self.generate_exclusions()
+            self.run_command()
+            self.generate_exclusions()
 
-        self.write_script()
-        print(self.summary())
-
+            self.write_script()
+            if self.verbose:
+                print(self.summary())
 
     def run_command(self):
         self.results = {}
         N = self.iterations
         for run in range(1, N + 1):
             iteration = (' (run %d of %d)' % (run, N)) if N > 1 else ''
-            print('\nRunning command %s to generate output%s.\n'
-                  % (repr(self.command), iteration))
+            if self.verbose:
+                print('\nRunning command %s to generate output%s.\n'
+                      % (repr(self.command), iteration))
             if run == 1:
                 self.start_time = datetime.datetime.now()
+                self.min_time = self.start_time + datetime.timedelta(days=-1)
             r = ExecuteCommand(self.command, self.cwd)
             if run == 1:
                 self.stop_time = datetime.datetime.now()
+                self.max_time = self.stop_time + datetime.timedelta(days=1)
             self.results[run] = r
 
             self.fail_if_exception(r.exc)
@@ -113,47 +159,132 @@ class TestGenerator:
             self.copy_reference_files(run)
 
     def generate_exclusions(self):
+        """
+        Generate exclusion patterns needed for each file,
+        based on analysing differences between the two runs
+        and searching for strings that look to be over-specific
+        to the machine/time etc. that the command was run.
+        """
         self.exclusions = {}
-        N = self.iterations
-        if N < 2:
-            self.exclusions = 0
+        if self.iterations < 2:
+            return
         ref_files = os.listdir(self.refdir)
         for name in ref_files:
-            common = []
-            removals = []
-            first = self.ref_path(name)
-#            if not os.path.isdir(first):
-#                specifics = self.check_for_specific_references(first)
-            for run in range(2, N + 1):
-                later = self.ref_path(name, run)
-                if os.path.isdir(first):
-                    continue
-                if not os.path.exists(later):
-                    print('%s does not exist' % later)
-                    continue
-                pairs = find_diff_lines(first, later)
-                for p in pairs:
-                    if p.left_line_num and p.right_line_num:  # present in both
-                        common.append(p.left_content)
-                        common.append(p.right_content)
-                    elif p.left_line_num:     # left only
-                        removals.append(p.left_content)
-                    elif p.right_line_num:    # right only
-                        removals.append(p.right_content)
+            exc = self.generate_exclusions_for_file(name)
+            if exc:
+                self.update_exclusions_with_specifics(name, exc)
 
-#            self.exclusions[name] = (extract(common), extract(removals))
-            self.exclusions[name] = (extract(common), removals)
+    def generate_exclusions_for_file(self, name):
+        common, removals = [], []
+        specifics = {}
+        first = self.ref_path(name)
+        if os.path.isdir(first):
+            return None
+        specifics = self.check_for_specific_references(first)
+        for run in range(2, self.iterations + 1):
+            later = self.ref_path(name, run)
+            if not os.path.exists(later):
+                if self.verbose:
+                    print('%s does not exist' % later)
+                continue
+            pairs = find_diff_lines(first, later)
+            for p in pairs:
+                if p.left_line_num and p.right_line_num:  # present in both
+                    common.append(p.left_content)
+                    common.append(p.right_content)
+                elif p.left_line_num:     # left only
+                    removals.append(p.left_content)
+                elif p.right_line_num:    # right only
+                    removals.append(p.right_content)
+                self.update_specifics(specifics, p)
+        return specifics, common, removals
+
+    def update_exclusions_with_specifics(self, name, exc):
+        specifics, common, removals = exc
+        if self.verbose:
+            for (line, s) in specifics.items():
+                print('SPECIFIC LINE %d: %s\n'
+                      '  host: %s  ip: %s  cwd: %s  homedir: %s  user: %s'
+                      '  datelike: %s  dtlike: %s  ignore: %s  remove: %s'
+                      % (line, s.line.rstrip(),
+                         s.host, s.ip, s.cwd, s.homedir, s.user,
+                         bool(s.datelike), bool(s.dtlike),
+                         bool(s.ignore), bool(s.remove)))
+        ignores = extract(common)
+        self.exclusions[name] = (ignores, removals)
+
+        for k in ('host', 'ip', 'cwd', 'user', 'homedir'):
+            # need slightly different condition if cwd is in homedir
+            if k == 'homedir' and self.cwd.startswith(self.homedir):
+                f = lambda x: not x.cwd
+            else:
+                f = lambda x: 1
+            if any(getattr(s, k, None)
+                       and not s.ignore
+                       and not s.remove
+                       and f(s)
+                   for s in specifics.values()):
+                # Need this as an exclusion
+                specific_string = getattr(self, k)
+                if k == 'homedir':
+                    warning = ("*** WARNING: Non-portable reference to "
+                               "user's home dir (%s) found in %s"
+                               % (specific_string, name))
+                    self.warnings.append(warning)
+                    if self.verbose:
+                        print(warning)
+                    # Defer warning to later
+                else:
+                    ignores.append(re.escape(specific_string))
+        specific_date_lines = [s for s in specifics.values()
+                                 if s.datelike
+                                    and not s.ignore
+                                    and not s.remove]
+        extradates = self.find_specific_dates(specific_date_lines)
+        specific_dt_lines = [s for s in specifics.values()
+                               if s.dtlike and not s.ignore and not s.remove]
+        extradts = self.find_specific_datetimes(specific_dt_lines)
+        if len(extradates) + len(extradts) < MAX_SPECIFIC_DATE_VARIANTS:
+            extras = [re.escape(e) for e in (extradates + extradts)]
+        else:
+            extras = extract(extradates)
+            extras.extend(extract(extradts))
+        ignores.extend(extras)
+
+    def update_specifics(self, specifics, p):
+        nL = p.left_line_num + 1
+        ignore = remove = None
+        if p.right_line_num:
+            ignore = (p.left_content, p.right_content)
+        else:
+            remove = p.left_content
+        if nL and nL in specifics:
+            s = specifics[nL]
+        else:
+            s = specifics[nL] = Specifics(p.left_content)
+        s.ignore = ignore
+        s.remove = remove
 
     def check_for_specific_references(self, path):
+        specifics = OrderedDict()
         with open(path) as f:
             lines = f.readlines()
             for i, line in enumerate(lines, 1):
+                datelike = self.is_date_like(line, plausible=True)
+                dtlike = False
+                if datelike:
+                    dtlike = is_datetime_like(line)
+                    if dtlike:
+                        datelike = False
                 host = self.host in line
                 ip = self.ip_address in line
                 cwd = self.cwd in line
                 homedir = self.homedir in line
-                if host or ip or cwd or homedir:
-                    print('SPECIFIC LINE %d: %s' % (i, line.rstrip()))
+                user = (not self.user_in_home) and self.user in line
+                if any((datelike, dtlike, host, ip, cwd, homedir, user)):
+                    specifics[i] = Specifics(line, host, ip, cwd, homedir,
+                                             user, datelike, dtlike)
+        return specifics
 
     def snapshot_fail(self):
         """
@@ -480,6 +611,102 @@ class TestGenerator:
         return (as_join_repr(path, self.cwd, as_pwd='.') if self.relative_paths
                                                          else path)
 
+    def is_date_like(self, line, plausible=False, m=None):
+        if m is None:   # allow to be passed in
+            m = re.match(DATE_RE, line)
+        if not m or not plausible:
+            return m
+
+        n1, n2, n3 = int(m.group(2)), int(m.group(3)), int(m.group(4))
+        n1_poss_day = 1 <= n1 <= 31
+        n1_poss_month = 1 <= n1 <= 12
+
+        n2_poss_day = 1 <= n2 <= 31
+        n2_poss_month = 1 <= n2 <= 12
+
+        n3_poss_day = 1 <= n3 <= 31
+
+        if n1_poss_day and n2_poss_month:  # dd/mm/yyyy
+            d = datetime.datetime(n3, n2, n1)
+            if d >= self.min_time and d <= self.max_time:
+                return True
+
+        if n3_poss_day and n2_poss_month:  # yyyy/mm/dd
+            d = datetime.datetime(n1, n2, n3)
+            if d >= self.min_time and d <= self.max_time:
+                return True
+
+        if n2_poss_day and n1_poss_month:  # mm/dd/yyyy
+            d = datetime.datetime(n3, n1, n2)
+            if d >= self.min_time and d <= self.max_time:
+                return True
+        return None
+
+    def find_specific_datetimes(self, specific_lines):
+        """
+        Find the actual plausible datetimes in the specific lines provided
+        and return as a list.
+        """
+        extras = []
+        for s in specific_lines:
+            extras.extend(self.find_specific_datetimes_in_line(s.line))
+        return extras
+
+    def find_specific_datetimes_in_line(self, line):
+        """
+        Find the actual plausible datetimes in the line provided
+        and return as a list.
+        """
+        m = re.match(DATETIME_RE, line)
+        if not m:
+            return []
+        start = m.start(2)
+        end = m.end(8)
+        dt_str = line[start:end]
+        if self.is_date_like('', plausible=True, m=m):
+                             # first param isn't used when m is supplied
+            first = [dt_str]
+        else:
+            first = []
+        rest = line[end:]
+        others = self.find_specific_datetimes_in_line(rest) if rest else []
+        return first + others
+
+    def find_specific_dates(self, specific_lines):
+        """
+        Find the actual plausible dates in the specific_lines provided
+        that are NOT datetimes and return as a list.
+        """
+        extras = []
+        for s in specific_lines:
+            extras.extend(self.find_specific_dates_in_line(s.line))
+        return extras
+
+    def find_specific_dates_in_line(self, line):
+        """
+        Find the actual plausible dates in the line provided
+        that are NOT datetimes and return as a list.
+        """
+        print(line)
+        m = re.match(DATETIME_RE, line)
+        if not m:
+            return []
+        start = m.start(2)
+        end = m.end(4)
+        date_str = line[start:end]
+        poss_dt_str = line[start:end + 15]
+                      # 15 is enough for almost all time components;
+                      # but not enough to contain another full datetime
+        if (not self.is_datetime_like(poss_dt_str, plausible=True)
+                and self.is_date_like('', plausible=True, m=m)):
+            first = [date_str]
+        else:
+            first = []  # don't include dates that are part of datetimes
+        rest = line[end:]
+        others = self.find_specific_dates_in_line(rest) if rest else []
+        return first + others
+
+
 class ExecuteCommand:
     """
     Executes command, with cwd as provided, in a subprocess.
@@ -521,6 +748,10 @@ def stream_desc(check, expected):
                    else repr(expected) if L < 40
                    else '%d line%s' % (lines, 's' if lines != 1 else ''))
     return '%s (was %s)' % ('yes' if check else 'no', was)
+
+
+def is_datetime_like(line):
+    return re.match(DATETIME_RE, line)
 
 
 def canonicalize(path, default_ext=None, reject_other_exts=True):
