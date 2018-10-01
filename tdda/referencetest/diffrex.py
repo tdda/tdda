@@ -26,6 +26,7 @@ def diffs(left_path, right_path):
 
 def find_diff_lines(left_path, right_path):
     pairs, L, R = [], [], []
+    offset = 0
     left_num = right_num = None
     for i, line in enumerate(diffs(left_path, right_path)):
         if i < 2:
@@ -33,8 +34,9 @@ def find_diff_lines(left_path, right_path):
         line_source = line[:1]
         if line_source == '@':
             if L or R:
-                add_pairs(pairs, L, R, left_num, right_num)
+                add_pairs(pairs, L, R, left_num, right_num, offset)
                 L, R = [], []
+                offset = 0
             m = re.match(LINE_NUMBER_RE, line)
             if not m:
                 raise Exception('Bad line %s' % line[:-1])
@@ -43,10 +45,13 @@ def find_diff_lines(left_path, right_path):
             L.append(line[1:-1])
         elif line_source == '+':  # right
             R.append(line[1:-1])
-        elif line_source != ' ':  # common line
+        elif line_source == ' ':  # common line
+            if not L:
+                offset += 1  # context line at the start (skip over)
+        else:
             print('DID NOT EXPECT THIS', prev_source, line_source)
     if L or R:
-        add_pairs(pairs, L, R, left_num, right_num)
+        add_pairs(pairs, L, R, left_num, right_num, offset)
 
     return pairs
 
@@ -95,13 +100,13 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
         print('(no diffs)')
 
 
-def add_pairs(pairs, L, R, left_num, right_num):
+def add_pairs(pairs, L, R, left_num, right_num, offset=0):
     if L or R:
         for i in range(max(len(L), len(R))):
             pairs.append(Pair(L[i] if i < len(L) else '',
                               R[i] if i < len(R) else '',
-                              (left_num + i) if i < len(L) else 0,
-                              (right_num + i) if i < len(R) else 0))
+                              (left_num + i + offset) if i < len(L) else 0,
+                              (right_num + i + offset) if i < len(R) else 0))
 
 
 if __name__ == '__main__':

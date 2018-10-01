@@ -37,6 +37,7 @@ def set_test_attributes(t):
 
 
 class TestGenTest(ReferenceTestCase):
+    @tag
     def test1_exclusions(self):
         name = 'test_gentest1'
         # Create a test generator that doesn't actually run the tests
@@ -67,14 +68,13 @@ r'^Job completed after a total of 0\.\d{4} seconds\.$',
 r'^Logging to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
 r'^Logs [a-z]{6,7} at 2020\/07\/01 16\:30\:\d{2} host ahost\.local\.$',
 r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
-r'ahost\.local',
-r'2020\/07\/01',
-r'2020\/07\/01\ 16\:30\:48'
+#r'ahost\.local',
+#r'2020\/07\/01',
+#r'2020\/07\/01\ 16\:30\:48'
         }
         self.assertEqual(set(t.exclusions['STDOUT'][0]), expected)
         self.assertEqual(set(t.exclusions['STDOUT'][1]), {'ODD'})
 
-    @tag
     def test2_simple_date_exclusions(self):
         name = 'test_gentest2'
 

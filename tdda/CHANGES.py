@@ -158,6 +158,8 @@ The two hand-generated specific gentest tests are now producing
 what seem to be the correct results, starting to give some confidence
 that we're generating the intended exclusion patterns.
 
+More fixes for exclusion generation.
+
 ----------------------- end of branch gentest ---------------------------
 
 ------------------------- dev branch -------------------------

@@ -224,14 +224,16 @@ class TestGenerator:
         only occurs in lines identified as having differences.
         """
         nL = p.left_line_num
+        if not nL:
+            return
         ignore = remove = None
         if p.right_line_num:
             ignore = (p.left_content, p.right_content)
         else:
             remove = p.left_content
-        if nL and nL in specifics:
+        if nL and nL in specifics:  # specific already exists; use to update
             s = specifics[nL]
-        else:
+        else:                       # add Specifics for line with diffs only
             s = specifics[nL] = Specifics(p.left_content)
         s.ignore = ignore
         s.remove = remove
@@ -292,8 +294,7 @@ class TestGenerator:
         if len(extradates) + len(extradts) < MAX_SPECIFIC_DATE_VARIANTS:
             extras = [re.escape(e) for e in (extradates + extradts)]
         else:
-            extras = extract(extradates)
-            extras.extend(extract(extradts))
+            extras = extract(extradates) + extract(extradts)
         ignores.extend(extras)
 
     def check_for_specific_references(self, path):
