@@ -78,6 +78,11 @@ class Specifics:
         self.ignore = ignore
         self.remove = remove
 
+    def __repr__(self):
+        return ('Specifics(%s)'
+                % (',\n              '.join('%s=%s' % (k, repr(v))
+                for k, v in sorted(self.__dict__.items()))))
+
 
 class TestGenerator:
     def __init__(self, cwd, command, script, reference_files,
@@ -143,11 +148,9 @@ class TestGenerator:
                       % (repr(self.command), iteration))
             if run == 1:
                 self.start_time = datetime.datetime.now()
-                self.min_time = self.start_time + datetime.timedelta(days=-1)
             r = ExecuteCommand(self.command, self.cwd)
             if run == 1:
                 self.stop_time = datetime.datetime.now()
-                self.max_time = self.stop_time + datetime.timedelta(days=1)
             self.results[run] = r
 
             self.fail_if_exception(r.exc)
@@ -157,6 +160,12 @@ class TestGenerator:
             self.sort_reference_files(run)
             self.copy_reference_stream_output(run)
             self.copy_reference_files(run)
+        self.set_min_max_time()
+
+
+    def set_min_max_time(self):
+        self.min_time = self.start_time + datetime.timedelta(days=-1)
+        self.max_time = self.stop_time + datetime.timedelta(days=1)
 
     def generate_exclusions(self):
         """
@@ -175,6 +184,12 @@ class TestGenerator:
                 self.update_exclusions_with_specifics(name, exc)
 
     def generate_exclusions_for_file(self, name):
+        """
+        Generate exclusion patterns needed for the specific named (reference)
+        file, based on analysing differences between the two runs
+        and searching for strings that look to be over-specific
+        to the machine/time etc. that the command was run.
+        """
         common, removals = [], []
         specifics = {}
         first = self.ref_path(name)
@@ -199,7 +214,37 @@ class TestGenerator:
                 self.update_specifics(specifics, p)
         return specifics, common, removals
 
+    def update_specifics(self, specifics, p):
+        """
+        The potentially over-specific lines are identified before
+        differences between the files are generated, and ignore and remove
+        are both set to False at this point.
+
+        This method updates those values for any specific patterns that
+        only occurs in lines identified as having differences.
+        """
+        nL = p.left_line_num
+        ignore = remove = None
+        if p.right_line_num:
+            ignore = (p.left_content, p.right_content)
+        else:
+            remove = p.left_content
+        if nL and nL in specifics:
+            s = specifics[nL]
+        else:
+            s = specifics[nL] = Specifics(p.left_content)
+        s.ignore = ignore
+        s.remove = remove
+
     def update_exclusions_with_specifics(self, name, exc):
+        """
+        The ignore and inclusion lists are initially generated just by
+        looking at lines with differences.
+
+        This adds non-anchored ignore patterns for any overly suspicious
+        strings found (host, username, dates etc.) that occur on lines
+        that are not set as ignores or removals.
+        """
         specifics, common, removals = exc
         if self.verbose:
             for (line, s) in specifics.items():
@@ -251,21 +296,16 @@ class TestGenerator:
             extras.extend(extract(extradts))
         ignores.extend(extras)
 
-    def update_specifics(self, specifics, p):
-        nL = p.left_line_num + 1
-        ignore = remove = None
-        if p.right_line_num:
-            ignore = (p.left_content, p.right_content)
-        else:
-            remove = p.left_content
-        if nL and nL in specifics:
-            s = specifics[nL]
-        else:
-            s = specifics[nL] = Specifics(p.left_content)
-        s.ignore = ignore
-        s.remove = remove
-
     def check_for_specific_references(self, path):
+        """
+        Finds references in the file at path that look to be
+        over-specific to the details of the machine, user and time
+        that the command is run.
+
+        Returns an ordered dictionary, keyed on line number,
+        with details of what (potentially) over-specific references
+        were found on that line (only for affected lines).
+        """
         specifics = OrderedDict()
         with open(path) as f:
             lines = f.readlines()
@@ -280,7 +320,8 @@ class TestGenerator:
                 ip = self.ip_address in line
                 cwd = self.cwd in line
                 homedir = self.homedir in line
-                user = (not self.user_in_home) and self.user in line
+                user = (self.user in line
+                        and (not (homedir and self.user_in_home)))
                 if any((datelike, dtlike, host, ip, cwd, homedir, user)):
                     specifics[i] = Specifics(line, host, ip, cwd, homedir,
                                              user, datelike, dtlike)
@@ -615,7 +656,7 @@ class TestGenerator:
         if m is None:   # allow to be passed in
             m = re.match(DATE_RE, line)
         if not m or not plausible:
-            return m
+            return False
 
         n1, n2, n3 = int(m.group(2)), int(m.group(3)), int(m.group(4))
         n1_poss_day = 1 <= n1 <= 31
@@ -640,7 +681,7 @@ class TestGenerator:
             d = datetime.datetime(n3, n1, n2)
             if d >= self.min_time and d <= self.max_time:
                 return True
-        return None
+        return False
 
     def find_specific_datetimes(self, specific_lines):
         """
@@ -687,8 +728,7 @@ class TestGenerator:
         Find the actual plausible dates in the line provided
         that are NOT datetimes and return as a list.
         """
-        print(line)
-        m = re.match(DATETIME_RE, line)
+        m = re.match(DATE_RE, line)
         if not m:
             return []
         start = m.start(2)
@@ -697,7 +737,7 @@ class TestGenerator:
         poss_dt_str = line[start:end + 15]
                       # 15 is enough for almost all time components;
                       # but not enough to contain another full datetime
-        if (not self.is_datetime_like(poss_dt_str, plausible=True)
+        if (not is_datetime_like(poss_dt_str)
                 and self.is_date_like('', plausible=True, m=m)):
             first = [date_str]
         else:

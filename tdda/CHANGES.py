@@ -154,6 +154,10 @@ use a function to generate all the variable tests.
 
 Started adding code for over-specific lines (paths, timestamps etc.)
 
+The two hand-generated specific gentest tests are now producing
+what seem to be the correct results, starting to give some confidence
+that we're generating the intended exclusion patterns.
+
 ----------------------- end of branch gentest ---------------------------
 
 ------------------------- dev branch -------------------------
