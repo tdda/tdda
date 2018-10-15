@@ -182,7 +182,8 @@ class FilesComparison(BaseComparison):
             permutable = False
 
         if (preprocess or actual_ignored or expected_ignored
-                       or actual_removals or expected_removals):
+                       or actual_removals or expected_removals
+                       or (actual_path is None and ndiffs > 0)):
             reconstruction = self.reconstruct(original_actual,
                                               original_expected,
                                               actual_removals,
