@@ -119,5 +119,11 @@ such strings, which probably was not the intent of the test at all. Now,
 ignorable substrings only refer to the *expected* data (which is fixed for
 the test, and you know exactly what is in it and what is not).
 
+Add comment=None to all constraint constructors.
+
+This allows comments to be added to individual constraints by using
+a dictionary for constraint values with keys "value" (for the constraint
+value) and "comment" as an ignored string.
+
 ------------------------- end of dev branch -------------------------
 """

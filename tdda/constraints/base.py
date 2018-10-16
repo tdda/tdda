@@ -444,7 +444,7 @@ class MinConstraint(Constraint):
     """
     Constraint specifying the minimum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
+    def __init__(self, value, precision=None, comment=None):
         self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
 
@@ -460,7 +460,7 @@ class MaxConstraint(Constraint):
     """
     Constraint specifying the maximum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
+    def __init__(self, value, precision=None, comment=None):
         self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
 
@@ -481,7 +481,7 @@ class SignConstraint(Constraint):
     Possible values are ``positive``, ``non-negative``, ``zero``,
     ``non-positive``, ``negative`` and ``null``.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         self.check_validity('sign', value, [None], SIGNS)
         Constraint.__init__(self, 'sign', value)
 
@@ -501,7 +501,7 @@ class TypeConstraint(Constraint):
     sometimes used because of Pandas silent and automatic promotion
     of integer fields to floats if nulls are present.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         if type(value) in (list, tuple):
             for t in value:
                 self.check_validity('type', t, TYPES)
@@ -517,7 +517,7 @@ class MaxNullsConstraint(Constraint):
     (The constraint generator only generates 0 and 1, but the verifier
     will verify and number.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_nulls', value)
 
 
@@ -529,7 +529,7 @@ class NoDuplicatesConstraint(Constraint):
     Currently only generated for string fields, though could be used
     more broadly.
     """
-    def __init__(self, value=True):
+    def __init__(self, value=True, comment=None):
         self.check_validity('no_duplicates', value, [None, True, False])
         Constraint.__init__(self, 'no_duplicates', value)
 
@@ -545,7 +545,7 @@ class AllowedValuesConstraint(Constraint):
     time of writing, but check above in case this comment rusts)
     different values in the field.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'allowed_values', value)
 
 
@@ -567,7 +567,7 @@ class MaxLengthConstraint(Constraint):
     Generated instead of a ``MaxConstraint`` by this generation code,
     but can be used in conjunction with a ``MinConstraint``.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_length', value)
 
 
@@ -576,7 +576,7 @@ class RexConstraint(Constraint):
     Constraint restricting a string field to match (at least) one of
     the regular expressions in a list given.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'rex', [native_definite(v) for v in value])
 
 
