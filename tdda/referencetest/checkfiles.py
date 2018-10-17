@@ -35,7 +35,8 @@ class FilesComparison(BaseComparison):
                       lstrip=False, rstrip=False,
                       ignore_substrings=None, ignore_patterns=None,
                       remove_lines=None,
-                      preprocess=None, max_permutation_cases=0, msgs=None):
+                      preprocess=None, max_permutation_cases=0,
+                      create_temporaries=True, msgs=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
 
@@ -204,8 +205,9 @@ class FilesComparison(BaseComparison):
                               actual_path, expected_path,
                               ignore_substrings=ignore_substrings,
                               ignore_patterns=ignore_patterns,
-                              preprocess=preprocess, actual=actual,
-                              expected=expected)
+                              actual=actual, expected=expected,
+                              preprocess=preprocess,
+                              create_temporaries=create_temporaries)
         return (1 if ndiffs > 0 else 0, msgs)
 
     def wrong_content(self, diffs, actual, expected,
@@ -487,7 +489,7 @@ class FilesComparison(BaseComparison):
                                   ignore_patterns=None,
                                   remove_lines=None,
                                   preprocess=None, max_permutation_cases=0,
-                                  msgs=None):
+                                  create_temporaries=True, msgs=None):
         """
         Check a string (or list of strings) against the contents of a
         reference file.
@@ -529,6 +531,7 @@ class FilesComparison(BaseComparison):
                                           remove_lines=remove_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=mpc,
+                                          create_temporaries=create_temporaries,
                                           msgs=msgs)
         #if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -675,7 +678,8 @@ class FilesComparison(BaseComparison):
                           actual=actual, expected=expected,
                           binaryinfo=BinaryInfo(boff,
                                                 actualLen=len(actual),
-                                                expectedLen=len(expected)))
+                                                expectedLen=len(expected)),
+                          create_temporaries=False)
         return (1, msgs)
 
     def check_for_permutation_failures(self, failure_cases):
@@ -711,7 +715,7 @@ class FilesComparison(BaseComparison):
     def add_failures(self, msgs, reconstruction, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
                      preprocess=None, actual=None, expected=None,
-                     binaryinfo=None):
+                     binaryinfo=None, create_temporaries=True):
         """
         Build a list of messages describing the way in which two files are
         different, and construct an appropriate 'diff' command.
@@ -724,7 +728,7 @@ class FilesComparison(BaseComparison):
         raw_actual_path = actual_path
         raw_expected_path = expected_path
 
-        if not binary:
+        if create_temporaries:
             if raw_actual_path and raw_expected_path:
                 commonname = os.path.split(actual_path)[1]
             else:
@@ -758,13 +762,13 @@ class FilesComparison(BaseComparison):
             elif actual_path:
                 self.info(msgs,
                           'Actual file %s' % os.path.normpath(actual_path))
-            elif binary:
+            elif not create_temporaries:
                 self.info(msgs, 'No files available for comparison')
 
         if differ:
             self.info(msgs, differ)
 
-        if reconstruction:
+        if reconstruction and create_temporaries:
             # show diffs after ignores and removals have been collapsed
             if differ:
                 differ = '***\n' + differ + '***\n\n'
