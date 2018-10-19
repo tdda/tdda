@@ -136,5 +136,9 @@ allowing things like -W, -1 and -0 to be grouped (with themselves, and with
 standard unittest options). This means that passing grouped flags such as -1v
 or -1W now works as expected with referencetest tests under unittest.
 
+Relaxed limitation that ignore_patterns regex expressions in referencetest tests
+couldn't include grouped expressions. Now they can (which is very useful for when
+you want to use alternations in expressions, like (a|b)).
+
 ------------------------- end of dev branch -------------------------
 """

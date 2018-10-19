@@ -65,6 +65,20 @@ class TestInternals(unittest.TestCase):
                                                     actual, expected),
                              '%s <--> %s' % (actual, expected))
 
+    def test_grouped_pattern(self):
+        compare = FilesComparison()
+        cpatterns = compare.compile_patterns(['(a|an) (grapefruit|apple)'])
+        self.assertTrue(compare.check_patterns(cpatterns,
+                                               'a grapefruit', 'an apple'))
+        self.assertTrue(compare.check_patterns(cpatterns,
+                                               'I have a grapefruit', 'I have an apple'))
+        self.assertTrue(compare.check_patterns(cpatterns,
+                                               'I have a grapefruit and an apple',
+                                               'I have an apple and a grapefruit'))
+        self.assertFalse(compare.check_patterns(cpatterns,
+                                               'I have a grapefruit and a banana',
+                                               'I have an apple and a grapefruit'))
+
 
 class TestStrings(unittest.TestCase):
     def test_strings_ok(self):

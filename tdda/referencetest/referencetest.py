@@ -721,9 +721,11 @@ class ReferenceTest(object):
                 lines will be considered to be the same if
                 they only differ in substrings that match
                 one of these regular expressions.
-                The expressions must not contain parenthesised groups, and
-                should only include explicit anchors if they
+                The expressions should only include explicit anchors if they
                 need to refer to the whole line.
+                Only the matched expression within the line is ignored; any text
+                to the left or right of the matched expression must either be the
+                same or be ignorable.
 
             *remove_lines*
                 An optional list of substrings; lines
@@ -806,9 +808,11 @@ class ReferenceTest(object):
                 lines will be considered to be the same if
                 they only differ in substrings that match one
                 of these regular expressions. The expressions
-                must not contain parenthesised groups, and
                 should only include explicit anchors if they
                 need to refer to the whole line.
+                Only the matched expression within the line is ignored; any text
+                to the left or right of the matched expression must either be the
+                same or be ignorable.
 
             *remove_lines*
                 An optional list of substrings; lines
@@ -892,9 +896,11 @@ class ReferenceTest(object):
                 lines will be considered to be the same if
                 they only differ in substrings that match one
                 of these regular expressions. The expressions
-                must not contain parenthesised groups, and
                 should only include explicit anchors if they
                 need to refer to the whole line.
+                Only the matched expression within the line is ignored; any text
+                to the left or right of the matched expression must either be the
+                same or be ignorable.
 
             *remove_lines*
                 An optional list of substrings; lines
