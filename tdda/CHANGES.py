@@ -174,6 +174,12 @@ Also improved reporting of differences when there are different numbers
 of lines. It now says what line at which the (effective) differences start
 (taking into account removals and ignores).
 
+Also improved reporting of differences when there is no 'actual' file to
+compare (just a string in memory, with assertStringCorrect). It now produces
+a temporary file containing the 'actual' contents, if there are errors to
+report, so that a 'diff' command can be generated in the same way as it does
+when there is a file already available.
+
 The ignore_patterns parameter is now treated slightly more strictly than
 before, and has had its documentation improved. If you provide an unanchored
 regular expression pattern, it now requires that both sides match that
@@ -190,6 +196,17 @@ the actual data might be being unexpectedly ignored if they start to include
 such strings, which probably was not the intent of the test at all. Now,
 ignorable substrings only refer to the *expected* data (which is fixed for
 the test, and you know exactly what is in it and what is not).
+
+Add comment=None to all constraint constructors.
+
+This allows comments to be added to individual constraints by using
+a dictionary for constraint values with keys "value" (for the constraint
+value) and "comment" as an ignored string.
+
+Added better support for unittest single-letter command-line option flags,
+allowing things like -W, -1 and -0 to be grouped (with themselves, and with
+standard unittest options). This means that passing grouped flags such as -1v
+or -1W now works as expected with referencetest tests under unittest.
 
 ------------------------- end of dev branch -------------------------
 """

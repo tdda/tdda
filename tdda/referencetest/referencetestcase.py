@@ -154,31 +154,22 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        _run_tests(_set_write_from_argv())
+        argv, tagged, check = _set_flags_from_argv()
+        _run_tests(argv, tagged, check)
 
 
-def _run_tests(argv):
+def _run_tests(argv, tagged, check):
     """
-    If the -1 or --tagged option is set, then only run tagged tests.
+    Run tests
     """
     if argv is None:
         argv = sys.argv
-    tagged = False
-    check = False
-    for option in ('-1', '--tagged', '-0', '--istagged'):
-        if option in argv:
-            idx = argv.index(option)
-            argv = argv[:idx] + argv[idx+1:]
-            if option in ('-0', '--istagged'):
-                check = True
-            else:
-                tagged = True
     loader = (TaggedTestLoader(check) if tagged or check
               else unittest.defaultTestLoader)
     unittest.main(argv=argv, testLoader=loader)
 
 
-def _set_write_from_argv(argv=None):
+def _set_flags_from_argv(argv=None):
     """
     This is used to set the class's write flag if a **-write** or
     **--write-all** (or **-W** or **-w**) option is passed on the
@@ -197,23 +188,55 @@ def _set_write_from_argv(argv=None):
 
     The **--wquiet** option causes files to be rewritten silently.
 
-    ``argv`` or :py:data:`sys.argv` is returned, with any of the *rewrite*
-    options removed.
+    If the **-1** or **--tagged** option is set, then only run tagged tests.
+
+    If the **-0** or **--check** option is set, then only report tagged tests,
+    without running them.
+
+    A tuple is returned, containing ``argv`` or :py:data:`sys.argv`, with
+    any of the *rewrite*, *tagged* or *check* options options removed,
+    plus the *tagged* and *checked* state.
     """
     if argv is None:
         argv = sys.argv
+
+    tagged = False
+    check = False
+    regenerate = False
+
+    for i, arg in enumerate(argv[1:]):
+        if arg.startswith('-') and not arg.startswith('--'):
+            for flag in arg[1:]:
+                if flag == 'W':
+                    regenerate = True
+                    arg = arg.replace('W', '')
+                elif flag == '1':
+                    tagged = True
+                    arg = arg.replace('1', '')
+                elif flag == '0':
+                    check = True
+                    arg = arg.replace('0', '')
+            if arg == '-':
+                argv = argv[:i+1] + argv[i+2:]
+            else:
+                argv = argv[:i+1] + [arg] + argv[i+2:]
+        else:
+            break
+
     for quietflag in ('-wquiet', '--wquiet'):
         if quietflag in argv:
             idx = argv.index(quietflag)
             ReferenceTestCase.set_defaults(verbose=False)
             argv = argv[:idx] + argv[idx+1:]
-    if any(writeflag in argv for writeflag in ('-W', '--W', '--write-all')):
-        ReferenceTestCase.set_regeneration()
-    for writeflag in ('-W', '--W', '--write-all'):
+
+    for writeflag in ('--W', '--write-all'):
         if writeflag in argv:
             idx = argv.index(writeflag)
             if idx:
-                return argv[:idx] + argv[idx+1:]
+                regenerate = True
+                argv = argv[:idx] + argv[idx+1:]
+                break
+
     for writeflag in ('-w', '--w', '--write'):
         if writeflag in argv:
             idx = argv.index(writeflag)
@@ -226,9 +249,23 @@ def _set_write_from_argv(argv=None):
                     raise Exception('--write option requires parameters; '
                                     'use --write-all to regenerate all '
                                     'reference results')
-            return argv[:idx]
-    else:
-        return argv
+            argv = argv[:idx]
+            break
+
+    for option in ('--tagged', '--istagged'):
+        if option in argv:
+            idx = argv.index(option)
+            if idx:
+                argv = argv[:idx] + argv[idx+1:]
+                if option in ('-0', '--istagged'):
+                    check = True
+                else:
+                    tagged = True
+
+    if regenerate:
+        ReferenceTestCase.set_regeneration()
+
+    return (argv, tagged, check)
 
 
 class TaggedTestLoader(unittest.TestLoader):

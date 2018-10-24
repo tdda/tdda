@@ -100,10 +100,11 @@ def testExampleStringGeneration(ref):
 
     It is similar to the reference HTML in
         tdda/referencetest/examples/reference/string_result.html
-    except that the Copyright and version lines are slightly different.
+    except that the Copyright and Version lines are slightly different.
 
-    As shipped, the test should pass, because the ignore_patterns
-    tell it to ignore those lines.
+    As shipped, the test should pass, because the ignore_substrings
+    parameter tell it to ignore any lines in the expected result that
+    contain either of those strings.
 
     Make a change to the generation code in the generate_string
     function in generators.py to change the HTML output.
@@ -131,10 +132,11 @@ def testExampleFileGeneration(ref):
 
     It is similar to the reference HTML in
     tdda/examples/reference/file_result.html except that the
-    Copyright and version lines are slightly different.
+    Copyright and Version lines are slightly different.
 
     As shipped, the test should pass, because the ignore_patterns
-    tell it to ignore those lines.
+    tell it to ignore differences that match appropriate regular
+    expressions for those cases.
 
     Make a change to the generation code in the generate_file function
     in generators.py to change the HTML output.
@@ -155,7 +157,10 @@ def testExampleFileGeneration(ref):
     outpath = os.path.join(outdir, 'file_result.html')
     generate_file(outpath)
     ref.assertTextFileCorrect(outpath, 'file_result.html',
-                              ignore_patterns=['Copyright', 'Version'])
+                              ignore_patterns=[
+                                  r'Copyright .*',
+                                  r'Version \d+\.\d+\.\d+',
+                              ])
 
 
 @tag

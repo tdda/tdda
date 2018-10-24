@@ -18,9 +18,11 @@ from tdda.referencetest.basecomparison import diffcmd
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
+
 def check(compare, values, filename, diff=False, actual_path=None):
     (code, errs) = compare.check_string_against_file(values, refloc(filename),
-                                                     actual_path=actual_path)
+                                                     actual_path=actual_path,
+                                                     create_temporaries=False)
     if not diff:
         errs = [e for e in errs if not e.startswith('    ' + diffcmd())]
         errs = [e for e in errs if not e.startswith('Compare with:')]
@@ -184,16 +186,17 @@ class TestFiles(unittest.TestCase):
                                           refloc('ref.txt'),
                                           remove_lines=['line', 'And'])
         self.assertEqual(code, 1)
-        self.assertEqual(len(msgs.lines), 2)
+        self.assertEqual(len(msgs.lines), 3)
         self.assertEqual(msgs.lines[0],
                          'Files have different numbers of lines, '
                          'differences start at line 2')
-        self.assertTrue(msgs.lines[1].startswith('Compare with:\n'))
+        self.assertTrue(msgs.lines[1].startswith('Compare raw with:\n'))
+        self.assertTrue(msgs.lines[2].startswith('Compare post-processed with:\n'))
         self.assertEqual(msgs.reconstructions[0].diff_actual,
-                         ['This is a file containing some optional lines.',
+                         ['*** This is a file containing some optional lines.',
                            # NEXT LINE IS A REAL DIFFERENCE
                           "Here's one: I am optional",
-                          'And:',  # THIS IS REMOVED ON BOTH SIDES
+                          '*** And:',  # THIS IS REMOVED ON BOTH SIDES
                           "*** (|And here's a line on its own:)",
                            # NEXT LINE IS A REAL DIFFERENCE
                           "Here's another one: "
@@ -203,11 +206,11 @@ class TestFiles(unittest.TestCase):
                           'I am optional',
                           "That's all"])
         self.assertEqual(msgs.reconstructions[0].diff_expected,
-                         ['This is a file containing some optional lines.',
+                         ['*** This is a file containing some optional lines.',
                            # NEXT LINE IS A REAL DIFFERENCE
                           "Here's one: I am optional; but it's the only one; "
                               "the rest have been removed.",
-                          'And:',  # THIS IS REMOVED ON BOTH SIDES
+                          '*** And:',  # THIS IS REMOVED ON BOTH SIDES
                           "*** (|And here's a line on its own:)",
                            # NEXT LINE IS A REAL DIFFERENCE
                           "That's all",
@@ -293,12 +296,13 @@ class TestFiles(unittest.TestCase):
         ]
 
         self.assertEqual(code, 1)
-        self.assertEqual(len(msgs.lines), 4)
+        self.assertEqual(len(msgs.lines), 5)
         self.assertEqual(msgs.lines[0],
                          '1 line is different, starting at line 3')
-        self.assertEqual(msgs.lines[1][:13], 'Compare with:')
-        self.assertEqual(msgs.lines[2], 'Note exclusions:')
-        self.assertEqual(msgs.lines[3], '    ^.*opt...al.*$')
+        self.assertEqual(msgs.lines[1][:8], 'Compare ')
+        self.assertEqual(msgs.lines[2][:8], 'Compare ')
+        self.assertEqual(msgs.lines[3], 'Note exclusions:')
+        self.assertEqual(msgs.lines[4], '    ^.*opt...al.*$')
 
         difflines[2] = ('And: this line is different, '
                         'unless you ignore the first word')

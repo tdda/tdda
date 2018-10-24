@@ -35,7 +35,8 @@ class FilesComparison(BaseComparison):
                       lstrip=False, rstrip=False,
                       ignore_substrings=None, ignore_patterns=None,
                       remove_lines=None,
-                      preprocess=None, max_permutation_cases=0, msgs=None):
+                      preprocess=None, max_permutation_cases=0,
+                      create_temporaries=True, msgs=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
 
@@ -107,6 +108,7 @@ class FilesComparison(BaseComparison):
         permutable = True
         failure_cases = []
         reconstruction = None
+        format = None
 
         if preprocess:
             expected = preprocess(expected)
@@ -182,13 +184,15 @@ class FilesComparison(BaseComparison):
             permutable = False
 
         if (preprocess or actual_ignored or expected_ignored
-                       or actual_removals or expected_removals):
+                       or actual_removals or expected_removals
+                       or (actual_path is None and ndiffs > 0)):
             reconstruction = self.reconstruct(original_actual,
                                               original_expected,
                                               actual_removals,
                                               expected_removals,
                                               actual_ignored,
-                                              expected_ignored)
+                                              expected_ignored,
+                                              format=format)
             msgs.add_reconstruction(reconstruction)
 
         if permutable and ndiffs > 0 and ndiffs <= max_permutation_cases:
@@ -201,8 +205,9 @@ class FilesComparison(BaseComparison):
                               actual_path, expected_path,
                               ignore_substrings=ignore_substrings,
                               ignore_patterns=ignore_patterns,
-                              preprocess=preprocess, actual=actual,
-                              expected=expected)
+                              actual=actual, expected=expected,
+                              preprocess=preprocess,
+                              create_temporaries=create_temporaries)
         return (1 if ndiffs > 0 else 0, msgs)
 
     def wrong_content(self, diffs, actual, expected,
@@ -376,7 +381,7 @@ class FilesComparison(BaseComparison):
 
     def reconstruct(self, original_actual, original_expected,
                     actual_removals, expected_removals,
-                    actual_ignored, expected_ignored):
+                    actual_ignored, expected_ignored, format):
         """
         Reconstruct variants of the actual and expected to generate
         two outputs that are different where we found differences, but
@@ -392,21 +397,21 @@ class FilesComparison(BaseComparison):
                 # lines which were removed from both sides
                 marker = self.diff_marker(original_actual[iactual],
                                           original_expected[iexpected])
-                rebuilt_actual.append(marker)
-                rebuilt_expected.append(marker)
+                rebuilt_actual.append(self.format_marker(marker, format))
+                rebuilt_expected.append(self.format_marker(marker, format))
                 iactual += 1
                 iexpected += 1
             elif iactual in actual_removals:
                 # line removed from just the left
                 marker = self.diff_marker(original_actual[iactual], '')
-                rebuilt_actual.append(marker)
-                rebuilt_expected.append(marker)
+                rebuilt_actual.append(self.format_marker(marker, format))
+                rebuilt_expected.append(self.format_marker(marker, format))
                 iactual += 1
             elif iexpected in expected_removals:
                 # line removed from just the right
                 marker = self.diff_marker('', original_expected[iexpected])
-                rebuilt_actual.append(marker)
-                rebuilt_expected.append(marker)
+                rebuilt_actual.append(self.format_marker(marker, format))
+                rebuilt_expected.append(self.format_marker(marker, format))
                 iexpected += 1
             elif iactual >= len(original_actual):
                 # fallen off the end of the left
@@ -426,8 +431,8 @@ class FilesComparison(BaseComparison):
                 # lines are different, but differance has been ignored
                 marker = self.diff_marker(original_actual[iactual],
                                           original_expected[iexpected])
-                rebuilt_actual.append(marker)
-                rebuilt_expected.append(marker)
+                rebuilt_actual.append(self.format_marker(marker, format))
+                rebuilt_expected.append(self.format_marker(marker, format))
                 iactual += 1
                 iexpected += 1
             else:
@@ -466,6 +471,15 @@ class FilesComparison(BaseComparison):
         else:
             middle = '(%s|%s)' % (left[prefixend:], right[prefixend:])
             marker = left[:prefixend] + middle
+        return marker
+
+    def format_marker(self, marker, format):
+        """
+        Format a 'diff marker' in a way that is appropriate for the kind
+        of file it is being inserted into. Currently no special kinds of
+        formats are treated specially, but it might be possible (though
+        difficult) to do something more sensible for HTML files.
+        """
         return '*** ' + marker
 
     def check_string_against_file(self, actual, expected_path,
@@ -475,7 +489,7 @@ class FilesComparison(BaseComparison):
                                   ignore_patterns=None,
                                   remove_lines=None,
                                   preprocess=None, max_permutation_cases=0,
-                                  msgs=None):
+                                  create_temporaries=True, msgs=None):
         """
         Check a string (or list of strings) against the contents of a
         reference file.
@@ -517,6 +531,7 @@ class FilesComparison(BaseComparison):
                                           remove_lines=remove_lines,
                                           preprocess=preprocess,
                                           max_permutation_cases=mpc,
+                                          create_temporaries=create_temporaries,
                                           msgs=msgs)
         #if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -663,7 +678,8 @@ class FilesComparison(BaseComparison):
                           actual=actual, expected=expected,
                           binaryinfo=BinaryInfo(boff,
                                                 actualLen=len(actual),
-                                                expectedLen=len(expected)))
+                                                expectedLen=len(expected)),
+                          create_temporaries=False)
         return (1, msgs)
 
     def check_for_permutation_failures(self, failure_cases):
@@ -699,38 +715,46 @@ class FilesComparison(BaseComparison):
     def add_failures(self, msgs, reconstruction, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
                      preprocess=None, actual=None, expected=None,
-                     binaryinfo=None):
+                     binaryinfo=None, create_temporaries=True):
         """
         Build a list of messages describing the way in which two files are
         different, and construct an appropriate 'diff' command.
         """
         binary = binaryinfo is not None
+        assert not (binary and reconstruction)
 
         commonname = None
+        differ = None
         raw_actual_path = actual_path
         raw_expected_path = expected_path
 
-        if not binary:
-            if actual_path and expected_path:
+        if create_temporaries:
+            if raw_actual_path and raw_expected_path:
                 commonname = os.path.split(actual_path)[1]
-            elif actual_path:
-                commonname = os.path.split(actual_path)[1]
-                tmpExpectedPath = os.path.join(self.tmp_dir,
-                                               'expected-raw-' + commonname)
-                raw_expected_path = tmpExpectedPath
-            elif expected_path:
-                commonname = os.path.split(expected_path)[1]
-                tmpActualPath = os.path.join(self.tmp_dir,
-                                             'actual-raw-' + commonname)
-                raw_expected_path = tmpActualPath
-
-        raw = 'raw' if preprocess or (reconstruction and commonname) else None
+            else:
+                if raw_actual_path:
+                    commonname = os.path.split(actual_path)[1]
+                elif raw_expected_path:
+                    commonname = os.path.split(expected_path)[1]
+                else:
+                    commonname = 'file'
+                if expected is not None and not raw_expected_path:
+                    # no raw expected file, so write it
+                    tmpExpectedPath = os.path.join(self.tmp_dir,
+                                                   'expected-raw-' + commonname)
+                    raw_expected_path = tmpExpectedPath
+                    self.write_file(raw_expected_path, expected)
+                if actual is not None and not raw_actual_path:
+                    # no raw actual file, so write it
+                    tmpActualPath = os.path.join(self.tmp_dir,
+                                                 'actual-raw-' + commonname)
+                    raw_actual_path = tmpActualPath
+                    self.write_file(raw_actual_path, actual)
 
         if raw_actual_path and raw_expected_path:
+            raw = 'raw' if (preprocess or reconstruction) else None
             differ = self.compare_with(raw_actual_path, raw_expected_path,
                                        qualifier=raw, binary=binary)
-        else:
-            differ = None
 
         if not actual_path or not expected_path:
             if expected_path:
@@ -738,12 +762,13 @@ class FilesComparison(BaseComparison):
             elif actual_path:
                 self.info(msgs,
                           'Actual file %s' % os.path.normpath(actual_path))
-            elif raw:
-                self.info(msgs, 'No raw files available for comparison')
-            else:
+            elif not create_temporaries:
                 self.info(msgs, 'No files available for comparison')
 
-        if reconstruction and commonname:
+        if differ:
+            self.info(msgs, differ)
+
+        if reconstruction and create_temporaries:
             # show diffs after ignores and removals have been collapsed
             if differ:
                 differ = '***\n' + differ + '***\n\n'
@@ -757,10 +782,7 @@ class FilesComparison(BaseComparison):
                              (differ or '') + reconstruction.expected_lines(),
                             guide=guide)
             self.info(msgs, self.compare_with(diffActual, diffExpected,
-                                              binary=binary))
-        elif differ:
-            # show just the 'raw' diffs
-            self.info(msgs, differ)
+                                              qualifier='post-processed'))
 
         if ignore_substrings or ignore_patterns:
             self.info(msgs, 'Note exclusions:')
