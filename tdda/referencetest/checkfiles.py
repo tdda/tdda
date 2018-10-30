@@ -207,6 +207,7 @@ class FilesComparison(BaseComparison):
                               actual_path, expected_path,
                               ignore_substrings=ignore_substrings,
                               ignore_patterns=ignore_patterns,
+                              remove_lines=remove_lines,
                               actual=actual, expected=expected,
                               preprocess=preprocess,
                               create_temporaries=create_temporaries)
