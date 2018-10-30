@@ -68,9 +68,11 @@ class FilesComparison(BaseComparison):
                                 lines will be considered to be the same if
                                 they only differ in substrings that match one
                                 of these regular expressions. The expressions
-                                must not contain parenthesised groups, and
                                 should only include explicit anchors if they
                                 need refer to the whole line.
+                                Only the matched expression within the line is ignored;
+                                any text to the left or right of the matched expression
+                                must either be the same or be ignorable.
             *remove_lines*
                                 is an optional list of substrings; lines
                                 containing any of these substrings will be
@@ -308,8 +310,6 @@ class FilesComparison(BaseComparison):
                               + ('' if p.endswith('$') else '(.*)$')
                              for p in ignore_patterns or []]
         compiled_patterns = [re.compile(p) for p in anchored_patterns]
-        if any(cp.groups > 3 for cp in compiled_patterns):
-            raise Exception('Invalid patterns: %s' % ignore_patterns)
         return compiled_patterns
 
     def can_ignore(self, actual_line, expected_line,
@@ -338,7 +338,7 @@ class FilesComparison(BaseComparison):
         It expects the patterns to be in one of the following anchored forms:
             - a one-group pattern like ^(xxx)$
             - a two-group pattern like ^(.*)(xxx)$ or ^(xxx)(.*)$
-            - a three-group pattern like ^(.*)(xxx)(.*)$
+            - a three-or-more-group pattern like ^(.*)(xxx)(.*)$ or ^(.*)(xxx)(yyy)(.*)$
 
         For a one-group pattern, it just needs to fully match both lines.
 
@@ -364,19 +364,19 @@ class FilesComparison(BaseComparison):
                 mActual = re.match(pattern, actual_line)
                 if not mActual:
                     continue
-                if pattern.groups == 1:
+                if pattern.groups in (1, 2):
                     # matched a full-line expression
                     return True
                 else:
                     actual_left = mActual.group(1)
                     expected_left = mExpected.group(1)
-                    actual_right = mActual.group(3)
-                    expected_right = mExpected.group(3)
-                    if not self.check_patterns(compiled_patterns,
-                                               actual_left, expected_left):
-                        continue
-                    if self.check_patterns(compiled_patterns,
-                                           actual_right, expected_right):
+                    actual_right = mActual.group(pattern.groups)
+                    expected_right = mExpected.group(pattern.groups)
+                    if (self.check_patterns(compiled_patterns, actual_left, expected_left)
+                            and self.check_patterns(compiled_patterns,
+                                                    actual_right, expected_right)):
+                        # the .* groups at start and end of both lines both match up, so
+                        # this pair of lines can be ignored
                         return True
         return False
 

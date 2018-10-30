@@ -275,7 +275,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = actual_type in allowed_types
         else:
             if actual_type in allowed_types:
-                result = True       # definitely OK of the types actually match
+                result = True       # definitely OK if the types actually match
             elif 'int' in allowed_types and actual_type == 'real':
                 result = self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'real':
