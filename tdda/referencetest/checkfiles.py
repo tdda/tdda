@@ -714,6 +714,7 @@ class FilesComparison(BaseComparison):
 
     def add_failures(self, msgs, reconstruction, actual_path, expected_path,
                      ignore_substrings=None, ignore_patterns=None,
+                     remove_lines=None,
                      preprocess=None, actual=None, expected=None,
                      binaryinfo=None, create_temporaries=True):
         """
@@ -784,14 +785,20 @@ class FilesComparison(BaseComparison):
             self.info(msgs, self.compare_with(diffActual, diffExpected,
                                               qualifier='post-processed'))
 
-        if ignore_substrings or ignore_patterns:
+        if ignore_substrings or ignore_patterns or remove_lines:
             self.info(msgs, 'Note exclusions:')
         if ignore_substrings:
-            for pattern in ignore_substrings:
-                self.info(msgs, '    ' + pattern)
+            self.info(msgs, '    ignore_substrings:')
+            for substr in ignore_substrings:
+                self.info(msgs, '        ' + substr)
         if ignore_patterns:
+            self.info(msgs, '    ignore_patterns:')
             for pattern in ignore_patterns:
-                self.info(msgs, '    ' + pattern)
+                self.info(msgs, '        ' + pattern)
+        if remove_lines:
+            self.info(msgs, '    remove_lines:')
+            for substr in remove_lines:
+                self.info(msgs, '        ' + substr)
         if binary:
             if binaryinfo.actualLen == binaryinfo.expectedLen:
                 lengthinfo = 'both files have length %d' % binaryinfo.actualLen

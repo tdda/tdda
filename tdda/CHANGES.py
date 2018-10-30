@@ -140,5 +140,6 @@ Relaxed limitation that ignore_patterns regex expressions in referencetest tests
 couldn't include grouped expressions. Now they can (which is very useful for when
 you want to use alternations in expressions, like (a|b)).
 
+Better reporting of exclusions when checkfiles reports test failures.
 ------------------------- end of dev branch -------------------------
 """
