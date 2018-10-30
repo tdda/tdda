@@ -58,15 +58,17 @@ DATETIME_RE = re.compile(ND + DATE_TERM + TS_TERM + TIME_TERM + TZ_TERM + DS)
 DATE_RE = re.compile(ND + DATE_TERM + DS)
 
 
-
 class Specifics:
+    """
+    Container for over-specific items found in output lines.
+    """
     __slots__ = ['line', 'host', 'ip', 'cwd', 'homedir', 'user',
                  'datelike', 'dtlike',
-                 'ignore', 'remove']
+                 'rex_inputs', 'remove', 'substring']
 
     def __init__(self, line, host=False, ip=False, cwd=False,
                  homedir=False, user=False, datelike=False, dtlike=False,
-                 ignore=None, remove=None):
+                 rex_inputs=None, remove=None, substring=None):
         self.line = line
         self.host = host
         self.ip = ip
@@ -75,13 +77,15 @@ class Specifics:
         self.user = user
         self.datelike = datelike
         self.dtlike = dtlike
-        self.ignore = ignore
+        self.rex_inputs = rex_inputs  # strings to be given to rexpy
         self.remove = remove
+        self.substring = substring  # substring
 
     def __repr__(self):
         return ('Specifics(%s)'
-                % (',\n              '.join('%s=%s' % (k, repr(v))
-                for k, v in sorted(self.__dict__.items()))))
+                % (',\n              '.join('%s=%s'
+                                            % (k, repr(getattr(self, k)))))
+                   for k in __slots__)
 
 
 class TestGenerator:
@@ -120,7 +124,7 @@ class TestGenerator:
         self.user_in_home = self.user in self.homedir
         self.cwd_in_home = self.cwd.startswith(self.homedir)
 
-        self.refdir = os.path.join(self.cwd, 'ref', self.name())
+        self.refdir = os.path.join(self.cwd, 'ref', self.ref_subdir())
         self.ref_map = {}    # mapping for conflicting reference files
         self.snapshot = {}   # holds timestamps of file in ref dirs
 
@@ -162,8 +166,13 @@ class TestGenerator:
             self.copy_reference_files(run)
         self.set_min_max_time()
 
-
     def set_min_max_time(self):
+        """
+        To allow for timezone differences etc. (you might be running
+        on a machine at GMT+11 but writing at GMT-11) we really
+        have to allow 24 hours before the start time and 24 hours
+        after the stop time to be (fairly) safe.
+        """
         self.min_time = self.start_time + datetime.timedelta(days=-1)
         self.max_time = self.stop_time + datetime.timedelta(days=1)
 
@@ -175,27 +184,32 @@ class TestGenerator:
         to the machine/time etc. that the command was run.
         """
         self.exclusions = {}
-        if self.iterations < 2:
+        if self.iterations < 2:  # though could still do specifics...
             return
-        ref_files = os.listdir(self.refdir)
+        ref_files = [r for r in os.listdir(self.refdir)
+                       if not os.path.isdir(self.ref_path(r))]
         for name in ref_files:
             exc = self.generate_exclusions_for_file(name)
-            if exc:
-                self.update_exclusions_with_specifics(name, exc)
+            self.update_exclusions_with_specifics(name, exc)
 
     def generate_exclusions_for_file(self, name):
         """
-        Generate exclusion patterns needed for the specific named (reference)
-        file, based on analysing differences between the two runs
-        and searching for strings that look to be over-specific
-        to the machine/time etc. that the command was run.
+        Generate exclusion patterns needed for the specific named
+        (reference) file.
+        This is based on two things:
+          1. analysing differences between the output from the two
+             (or more) runs
+          2. searching for strings that look to be over-specific
+             to the machine/time etc. that the command was run.
+        Files passed in should not be directories.
         """
-        common, removals = [], []
-        specifics = {}
+        common = []       # similar but different content from both sides
+        removals = []     # lines to be removed (present only on one side)
+
         first = self.ref_path(name)
-        if os.path.isdir(first):
-            return None
+
         specifics = self.check_for_specific_references(first)
+
         for run in range(2, self.iterations + 1):
             later = self.ref_path(name, run)
             if not os.path.exists(later):
@@ -217,48 +231,56 @@ class TestGenerator:
     def update_specifics(self, specifics, p):
         """
         The potentially over-specific lines are identified before
-        differences between the files are generated, and ignore and remove
-        are both set to False at this point.
+        differences between the files are generated.
+
+        The properties rex_inputs, remove and substring, on specifics,
+        are all set to None in the object passed in.
 
         This method updates those values for any specific patterns that
-        only occurs in lines identified as having differences.
+        only occur in lines identified as having differences.
         """
         nL = p.left_line_num
         if not nL:
             return
-        ignore = remove = None
+
+        rex_inputs = remove = substring = None
         if p.right_line_num:
-            ignore = (p.left_content, p.right_content)
+            rex_inputs = (p.left_content, p.right_content)
         else:
             remove = p.left_content
-        if nL and nL in specifics:  # specific already exists; use to update
-            s = specifics[nL]
-        else:                       # add Specifics for line with diffs only
-            s = specifics[nL] = Specifics(p.left_content)
-        s.ignore = ignore
-        s.remove = remove
 
-    def update_exclusions_with_specifics(self, name, exc):
+        if nL not in specifics:  # add Specifics for line with diffs only
+            specifics[nL] = Specifics(p.left_content)
+
+        s = specifics[nL]
+        s.rex_inputs = rex_inputs
+        s.remove = remove
+        s.substring = substring
+
+    def update_exclusions_with_specifics(self, name, exc, debug=False):
         """
-        The ignore and inclusion lists are initially generated just by
+        The rex_inputs and inclusion lists are initially generated just by
         looking at lines with differences.
 
-        This adds non-anchored ignore patterns for any overly suspicious
+        This adds non-anchored rex patterns for any overly suspicious
         strings found (host, username, dates etc.) that occur on lines
-        that are not set as ignores or removals.
+        that are not set as rex_inputs, removals or substrings.
         """
         specifics, common, removals = exc
-        if self.verbose:
+        if debug:
             for (line, s) in specifics.items():
-                print('SPECIFIC LINE %d: %s\n'
+                print('SPECIFIC LINE IN %d: %s\n'
                       '  host: %s  ip: %s  cwd: %s  homedir: %s  user: %s'
-                      '  datelike: %s  dtlike: %s  ignore: %s  remove: %s'
+                      '  datelike: %s  dtlike: %s\n'
+                      '  rex inputs: %s  remove: %s  substring: %s'
                       % (line, s.line.rstrip(),
                          s.host, s.ip, s.cwd, s.homedir, s.user,
                          bool(s.datelike), bool(s.dtlike),
-                         bool(s.ignore), bool(s.remove)))
-        ignores = extract(common)
-        self.exclusions[name] = (ignores, removals)
+                         bool(s.rex_inputs), bool(s.remove),
+                         bool(s.substring)))
+        rexes = extract(common)
+        substrings = []
+        self.exclusions[name] = (rexes, removals, substrings)
 
         for k in ('host', 'ip', 'cwd', 'user', 'homedir'):
             # need slightly different condition if cwd is in homedir
@@ -266,10 +288,10 @@ class TestGenerator:
                 f = lambda x: not x.cwd
             else:
                 f = lambda x: 1
-            if any(getattr(s, k, None)
-                       and not s.ignore
-                       and not s.remove
-                       and f(s)
+            if any(getattr(s, k, None) and not s.rex_inputs
+                                       and not s.remove
+                                       and not s.substring
+                                       and f(s)
                    for s in specifics.values()):
                 # Need this as an exclusion
                 specific_string = getattr(self, k)
@@ -282,20 +304,27 @@ class TestGenerator:
                         print(warning)
                     # Defer warning to later
                 else:
-                    ignores.append(re.escape(specific_string))
+#                    rexes.append(re.escape(specific_string))
+                    substrings.append(specific_string)
         specific_date_lines = [s for s in specifics.values()
-                                 if s.datelike
-                                    and not s.ignore
-                                    and not s.remove]
+                                 if s.datelike]  # and not s.rex_inputs
+                                                 # and not s.remove
+                                                 # and not s.substring]
         extradates = self.find_specific_dates(specific_date_lines)
         specific_dt_lines = [s for s in specifics.values()
-                               if s.dtlike and not s.ignore and not s.remove]
+                               if s.dtlike]  # and not s.rex_inputs
+                                             # and not s.remove
+                                             # and not s.substring]
         extradts = self.find_specific_datetimes(specific_dt_lines)
         if len(extradates) + len(extradts) < MAX_SPECIFIC_DATE_VARIANTS:
-            extras = [re.escape(e) for e in (extradates + extradts)]
+            extras = [e for e in (extradates + extradts)]
+            substrings.extend(extras)
         else:
             extras = extract(extradates) + extract(extradts)
-        ignores.extend(extras)
+            rexes.extend(extras)
+        if debug:
+           print('OUT:\n  rexes: %s\nremoves: %s\nsubstrings: %s\n'
+                 % (rexes, removals, substrings))
 
     def check_for_specific_references(self, path):
         """
@@ -463,7 +492,7 @@ class TestGenerator:
                         or os.path.isdir(path)):
                     reference_files.add(path)
 
-    def name(self):
+    def ref_subdir(self):
         name = os.path.basename(self.script)[4:-3]  # knock off test and .py
         return name[1:] if name.startswith('_') else name
 
@@ -488,14 +517,16 @@ class TestGenerator:
                 print('DIR:', path)
                 continue
             ref_path = self.ref_path(path, run)
+            mapped_ref_path = ref_path
             suffix = 0
             while ref_path.lower() in ref_paths:
                 if suffix:
                     ref_path = ref_path[:-len(str(suffix))]
                 suffix += 1
                 ref_path = ref_path + str(suffix)
+                mapped_ref_path = self.ref_path(path) + str(suffix)
             if suffix:
-                self.ref_map[path] = ref_path
+                self.ref_map[path] = mapped_ref_path
             ref_paths.add(ref_path.lower())
             try:
                 shutil.copyfile(path, ref_path)
@@ -548,38 +579,47 @@ class TestGenerator:
         Generate the test script.
         """
         r = self.results[1]
-        reference_files = self.reference_files[1]
+        reference_files = self.reference_files[1]  # ones from run 1
         with open(self.script, 'w') as f:
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
                 'GEN_COMMAND': self.cli_command(),
                 'COMMAND': repr(self.command),
                 'CWD': repr(self.cwd),
-                'NAME': repr(self.name()),
+                'NAME': repr(self.ref_subdir()),
                 'EXIT_CODE': r.exit_code
             })
             if self.check_stdout:
-                path = as_join_repr(self.stdout_path(), self.cwd, self.name())
+                path = as_join_repr(self.stdout_path(), self.cwd,
+                                    self.ref_subdir())
                 exc = self.exclusions.get('STDOUT')
-                (patterns, removals) = exc if exc else (None, None)
+                (patterns, removals, substrings) = (exc if exc
+                                                        else (None, None,
+                                                              None))
                 f.write(test_def('stdout', 'self.output', 'String', path,
-                                 patterns, removals))
+                                 patterns, removals, substrings))
             if self.check_stderr:
-                path = as_join_repr(self.stderr_path(), self.cwd, self.name())
+                path = as_join_repr(self.stderr_path(), self.cwd,
+                                    self.ref_subdir())
                 exc = self.exclusions.get('STDERR')
-                (patterns, removals) = exc if exc else (None, None)
+                (patterns, removals, substrings) = (exc if exc else (None,
+                                                                     None,
+                                                                     None))
                 f.write(test_def('stderr', 'self.error', 'String', path,
-                                 patterns, removals))
+                                 patterns, removals, substrings))
 
             for path in reference_files:
                 testname = self.test_name(path)
                 ref_path = self.ref_map.get(path, self.ref_path(path))
-                ref_path = as_join_repr(ref_path, self.cwd, self.name())
-                actual_path = as_join_repr(path, self.cwd, self.name())
-                exc = self.exclusions.get(path)
-                (patterns, removals) = exc if exc else (None, None)
+                short_path = os.path.split(ref_path)[1]
+                ref_path = as_join_repr(ref_path, self.cwd, self.ref_subdir())
+                actual_path = as_join_repr(path, self.cwd, self.ref_subdir())
+                exc = self.exclusions.get(short_path)
+                (patterns, removals, substrings) = (exc if exc else (None,
+                                                                     None,
+                                                                     None))
                 f.write(test_def(testname, actual_path, 'File', ref_path,
-                                 patterns, removals))
+                                 patterns, removals, substrings))
 
             f.write(TAIL)
         print('\nTest script written as %s' % self.abs_or_rel(self.script))
@@ -778,6 +818,10 @@ class ExecuteCommand:
 
 
 def exec_command(command, cwd):
+    """
+    Execute the shell command given, in the directory specified as cwd.
+    and return the various ouputs.
+    """
     r = ExecuteCommand(command, cwd)
     return (r.out, r.err, r.exc, r.exit_code, r.duration)
 
@@ -792,6 +836,11 @@ def stream_desc(check, expected):
 
 
 def is_datetime_like(line):
+    """
+    Check whether a line contains a datetime, currently assuming it
+    is in an a forwards, backwards or confused-US-style date followed
+    by a time.
+    """
     return re.match(DATETIME_RE, line)
 
 
@@ -877,7 +926,11 @@ def as_join_repr(path, cwd, name=None, as_pwd=None):
     return repr(path)
 
 
-def test_def(name, actual, kind, ref_file_path, patterns, removals):
+def test_def(name, actual, kind, ref_file_path, patterns, removals,
+             substrings):
+    """
+    returns a ReferenceTestCase-style test as a string.
+    """
     lines = ['', 'def test_%s(self):' % name]
     extras = []
     assert kind in ('File', 'String')
@@ -889,6 +942,13 @@ def test_def(name, actual, kind, ref_file_path, patterns, removals):
             lines.append('        %s,' % quote_raw(p))
         lines.append('    ]')
         extras.append(spc + 'ignore_patterns=patterns')
+    if substrings:
+        lines.append('    substrings = [')
+        for s in substrings:
+            lines.append('        %s,' % repr(s))
+        lines.append('    ]')
+        rspc = '' if extras else spc
+        extras.append(rspc + 'ignore_substrings=substrings')
     if removals:
         lines.append('    removals = [')
         for p in removals:
@@ -965,6 +1025,11 @@ def getline(prompt='', empty_ok=True, default=None):
 
 
 def yes_no(msg, default='y'):
+    """
+    Repeatedly prompts with msg until a yes/no response is generated.
+
+    Returns True for Yes and False for No.
+    """
     check = None
     while check is None:
         reply = getline('%s?: [%s]' % (msg, default)).lower().strip()
@@ -977,8 +1042,27 @@ def yes_no(msg, default='y'):
     return check
 
 
+def get_int(msg, default, minval=None, maxval=None):
+    done = False
+    while not done:
+        reply = getline('%s?: [%d]' % (msg, default)).strip()
+        if reply == '':
+            n = default
+            done = True
+        try:
+            n = int(reply)
+            if ((minval is None or n >= minval)
+                   and (maxval is None or n <= maxval)):
+                done = True
+        except:
+            pass
+    return n
+
+
 def home_dir():
-    """Returns user's home directory."""
+    """
+    Returns user's home directory.
+    """
     if 'HOME' in os.environ:
         return os.environ['HOME']
     elif is_unix():
@@ -1006,7 +1090,7 @@ def format_time(duration):
     return ('%%.%dfs' % dps) % duration
 
 
-def wizard():
+def wizard(iterations):
     """
     Gather test specification from users with Q-and-A interface
     """
@@ -1025,8 +1109,11 @@ def wizard():
     check_stdout = yes_no('Check stdout')
     check_stderr = yes_no('Check stderr')
     require_zero_exit_code = yes_no('Exit code should be zero')
+    n_iterations = get_int('Number of times to run script', iterations, 
+                           2, None)
     return (shellcommand, output_script, reference_files,
-            check_stdout, check_stderr, require_zero_exit_code)
+            check_stdout, check_stderr, require_zero_exit_code,
+            n_iterations)
 
 
 def gentest_parser(usage=''):
@@ -1040,6 +1127,8 @@ def gentest_parser(usage=''):
                         help='max files to track')
     parser.add_argument('-r', '--relative-paths', action='store_true',
                         help='show relative paths wherever possible')
+    parser.add_argument('-n', '--iterations', type=int,
+                        help='number of times to run the command (default 2)')
     return parser
 
 
@@ -1049,6 +1138,8 @@ def gentest_flags(parser, args, params):
         params['max_files'] = flags.max_files
     if flags.relative_paths:
         params['relative_paths'] = True
+    if flags.iterations:  # None and zero both get default (2)
+        params['iterations'] = flags.iterations
     return flags, more
 
 
@@ -1068,7 +1159,8 @@ def gentest_wrapper(args):
 
 
 def gentest(shellcommand, output_script, reference_files,
-            max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False):
+            max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False,
+            iterations=2):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -1084,7 +1176,8 @@ def gentest(shellcommand, output_script, reference_files,
          reference_files,
          check_stdout,
          check_stderr,
-         require_zero_exit_code) = wizard()
+         require_zero_exit_code,
+         iterations) = wizard(iterations)
     else:
         check_stdout = False
         check_stderr = False
@@ -1107,9 +1200,8 @@ def gentest(shellcommand, output_script, reference_files,
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code,
                   max_snapshot_files=max_snapshot_files,
-                  relative_paths=relative_paths)
+                  relative_paths=relative_paths, iterations=iterations)
 
 
 if __name__ == '__main__':
     gentest_wrapper(sys.argv[1:])
-

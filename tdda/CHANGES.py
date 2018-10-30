@@ -208,5 +208,18 @@ allowing things like -W, -1 and -0 to be grouped (with themselves, and with
 standard unittest options). This means that passing grouped flags such as -1v
 or -1W now works as expected with referencetest tests under unittest.
 
+Fix various issues with gentest.
+
+It now does uses substrings and patterns for exclusion patterns,
+as appropriate, and (at least more often) gets the paths and
+exclusions right for files with the same name.
+
+It also now generates exclusion patterns for files, as well as for
+STDOUT and STDERR. (It was generating them before, but failing to write
+them out because of a failed lookup.)
+
+There is also now support for a number of iterations to be passed in
+and the wizard also offers this.
+
 ------------------------- end of dev branch -------------------------
 """

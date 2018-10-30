@@ -75,7 +75,7 @@ r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
         name = 'test_gentest2'
 
         # Create a test generator that doesn't actually run the tests
-        # (bcause of iterations=0)
+        # (beqcause of iterations=0)
         t = TestGenerator(cwd=D1, command='', script=name,
                           reference_files=['STDOUT'],
                           check_stdout=True,
@@ -94,20 +94,33 @@ r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
 
         set_test_attributes(t)
         t.generate_exclusions()
+        rexes, removals, substrings = t.exclusions['STDOUT']
 
-        expected = {
-r'^Plausible date 2020\-07\-01 12\:00\:\d{2} and the hostname ahost  \# diff$',
-        # ^ should be in because the line is different between the two files
-r'2020\-07\-01\ 12\:00\:13',  # should be in because it's a plausible date
-r'2020\-07\-02',              # should be in because it's a plausible date
-r'auser',                     # should be in because it's the user
-# r'ahost',                   # host, but only in variable line; not needed.
-# 2018-09-02                  # out of range date
-# 2018-09-02 03:00:00         # out of range datetime
-# ENDS                        # common; no reason to include
+        expected_rexes = {
+            r'^Plausible date 2020\-07\-01 12\:00\:\d{2} '
+            r'and the hostname ahost  \# diff$'
+            # ^ should be in because the line is different between
+            # the two files
         }
-        self.assertEqual(set(t.exclusions['STDOUT'][0]), expected)
-        self.assertEqual(set(t.exclusions['STDOUT'][1]), set())
+        expected_removals = set()
+        expected_substrings = {
+            r'2020-07-01 12:00:13',    # should be in: it's a plausible date
+            r'2020-07-01 12:00:00',    # should be in: it's a plausible date
+                                       # (albeit only in a variable line)
+            r'2020-07-02',             # should be in: it's a plausible date
+            r'auser',                  # should be in: it's the user
+        }
+
+        # others
+        # r'ahost',                   # host, but only in variable line;
+                                      # not needed.
+        # 2018-09-02                  # out of range date
+        # 2018-09-02 03:00:00         # out of range datetime
+        # ENDS                        # common; no reason to include
+
+        self.assertEqual(set(rexes), expected_rexes)
+        self.assertEqual(set(removals), expected_removals)
+        self.assertEqual(set(substrings), expected_substrings)
 
 
 if __name__ == '__main__':
