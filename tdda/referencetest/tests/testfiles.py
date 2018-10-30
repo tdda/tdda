@@ -296,13 +296,14 @@ class TestFiles(unittest.TestCase):
         ]
 
         self.assertEqual(code, 1)
-        self.assertEqual(len(msgs.lines), 5)
+        self.assertEqual(len(msgs.lines), 6)
         self.assertEqual(msgs.lines[0],
                          '1 line is different, starting at line 3')
         self.assertEqual(msgs.lines[1][:8], 'Compare ')
         self.assertEqual(msgs.lines[2][:8], 'Compare ')
         self.assertEqual(msgs.lines[3], 'Note exclusions:')
-        self.assertEqual(msgs.lines[4], '    ^.*opt...al.*$')
+        self.assertEqual(msgs.lines[4], '    ignore_patterns:')
+        self.assertEqual(msgs.lines[5], '        ^.*opt...al.*$')
 
         difflines[2] = ('And: this line is different, '
                         'unless you ignore the first word')

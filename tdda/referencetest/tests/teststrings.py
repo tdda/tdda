@@ -132,7 +132,9 @@ class TestStrings(unittest.TestCase):
                                                create_temporaries=False),
                          (1, ['1 line is different, starting at line 3',
                               'No files available for comparison',
-                              'Note exclusions:', '    re']))
+                              'Note exclusions:',
+                              '    ignore_substrings:',
+                              '        re']))
         self.assertEqual(compare.check_strings(['abc','red', 'banana'],
                                                ['abc','blue', 'grapefruit'],
                                                ignore_substrings=['ue','gra']),
@@ -155,7 +157,9 @@ class TestStrings(unittest.TestCase):
                                                create_temporaries=False),
                          (1, ['2 lines are different, starting at line 2',
                               'No files available for comparison',
-                              'Note exclusions:', '    gr.*t']))
+                              'Note exclusions:',
+                              '    ignore_patterns:',
+                              '        gr.*t']))
 
         # red != blue, but great DOES ~ gr.*t => 1 failure
         self.assertEqual(compare.check_strings(['abc','red', 'great'],
@@ -164,7 +168,9 @@ class TestStrings(unittest.TestCase):
                                                create_temporaries=False),
                          (1, ['1 line is different, starting at line 2',
                               'No files available for comparison',
-                              'Note exclusions:', '    gr.*t']))
+                              'Note exclusions:',
+                              '    ignore_patterns:',
+                              '        gr.*t']))
 
         # spangle DOES ~ sp......, and breadfruit DOES ~ .*fruit => success
         self.assertEqual(compare.check_strings(['abc','spangle', 'breadfruit'],

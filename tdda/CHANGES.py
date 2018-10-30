@@ -141,5 +141,7 @@ couldn't include grouped expressions. Now they can (which is very useful for whe
 you want to use alternations in expressions, like (a|b)).
 
 Better reporting of exclusions when checkfiles reports test failures.
+
+Updated reference test tests.
 ------------------------- end of dev branch -------------------------
 """
