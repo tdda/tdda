@@ -186,7 +186,7 @@ class TestFiles(unittest.TestCase):
                                           refloc('ref.txt'),
                                           remove_lines=['line', 'And'])
         self.assertEqual(code, 1)
-        self.assertEqual(len(msgs.lines), 3)
+        self.assertEqual(len(msgs.lines), 7)
         self.assertEqual(msgs.lines[0],
                          'Files have different numbers of lines, '
                          'differences start at line 2')
