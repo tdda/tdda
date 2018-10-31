@@ -173,6 +173,8 @@ them out because of a failed lookup.)
 There is also now support for a number of iterations to be passed in
 and the wizard also offers this.
 
+More kinds of dates are now recognized.
+
 ----------------------- end of branch gentest ---------------------------
 
 ------------------------- dev branch -------------------------

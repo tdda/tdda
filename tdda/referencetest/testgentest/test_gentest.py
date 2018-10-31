@@ -13,7 +13,7 @@ import os
 import sys
 
 from tdda.referencetest import ReferenceTestCase, tag
-from tdda.referencetest.gentest import TestGenerator
+from tdda.referencetest.gentest import *
 
 D1 = '/home/auser/python/tdda/tdda/referencetest/gentest'
 HOST = 'ahost.local'
@@ -71,6 +71,7 @@ r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
         self.assertEqual(set(t.exclusions['STDOUT'][0]), expected)
         self.assertEqual(set(t.exclusions['STDOUT'][1]), {'ODD'})
 
+#    @tag
     def test2_simple_date_exclusions(self):
         name = 'test_gentest2'
 
@@ -121,6 +122,108 @@ r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
         self.assertEqual(set(rexes), expected_rexes)
         self.assertEqual(set(removals), expected_removals)
         self.assertEqual(set(substrings), expected_substrings)
+
+    def test_date_finding_non_num_dates(self):
+        bads = [
+            '',
+            'a',
+            '111/22/3333',
+            '3333-33-11',
+            'lemons',
+        ]
+        for k in bads:
+            self.assertIsNone(is_date_like(k))
+
+    def test_date_finding_num_dates(self):
+        goods = [
+            '2018-10-22',
+            '22-10-2018',
+            '10-22-2018',
+        ]
+        for k in goods:
+            self.assertIsNotNone(is_date_like(k))
+
+
+    def test_date_finding_num_datetimes(self):
+        goods = [
+            '2018-10-22T01:23:45',
+            '2018-10-22 01:23:45',
+        ]
+        for k in goods:
+            self.assertIsNotNone(is_date_like(k))
+
+    def test_date_finding_plausible_num_dates(self):
+        goods = [
+            '2018-10-22',
+            '22-10-2018',
+            '10-22-2018',
+            '2018-10-22',
+        ]
+        bads = [
+            '2019-10-22',
+            '22-11-2018',
+            '10-05-2018',
+        ]
+        alphas = [
+            '22 October 2018',
+            'October 22, 2018',
+        ]
+        d10 = datetime.datetime(2018,10,10)
+        d21 = datetime.datetime(2018,10,21)
+        d22 = datetime.datetime(2018,10,22)
+        d23 = datetime.datetime(2018,10,23)
+        d30 = datetime.datetime(2018,10,30)
+        for k in goods:
+            self.assertIsNotNone(is_date_like(k, min_time=d22, max_time=d22))
+            self.assertIsNotNone(is_date_like(k, min_time=d21, max_time=d22))
+            self.assertIsNotNone(is_date_like(k, min_time=d22, max_time=d23))
+            self.assertIsNone(is_date_like(k, min_time=d10, max_time=d21))
+            self.assertIsNone(is_date_like(k, min_time=d23, max_time=d30))
+
+        for k in bads + alphas:
+            self.assertIsNone(is_date_like(k, inc_alpha=False,
+                             min_time=d22, max_time=d22))
+            self.assertIsNone(is_date_like(k, inc_alpha=False,
+                             min_time=d21, max_time=d22))
+            self.assertIsNone(is_date_like(k, inc_alpha=False,
+                             min_time=d22, max_time=d23))
+            self.assertIsNone(is_date_like(k, inc_alpha=False,
+                             min_time=d10, max_time=d21))
+            self.assertIsNone(is_date_like(k, inc_alpha=False,
+                             min_time=d23, max_time=d30))
+
+        for k in alphas:
+            self.assertIsNotNone(is_date_like(k, inc_alpha=True, min_time=d22,
+                                          max_time=d22))
+            self.assertIsNotNone(is_date_like(k, inc_alpha=True, min_time=d21,
+                                          max_time=d22))
+            self.assertIsNotNone(is_date_like(k, inc_alpha=True, min_time=d22,
+                                          max_time=d23))
+            self.assertIsNone(is_date_like(k, inc_alpha=True, min_time=d10,
+                                          max_time=d21))
+            self.assertIsNone(is_date_like(k, inc_alpha=True, min_time=d23,
+                                          max_time=d30))
+
+        self.assertIsNotNone(is_date_like('Tue 30 Oct 2018 18:05:20 GMT',
+                                     inc_alpha=True,
+                                     min_time=datetime.datetime(2018,10,29),
+                                     max_time=datetime.datetime(2018,11,1)))
+
+    def test_datetime_like(self):
+        m = datetime.datetime(2020,6, 30)
+        M = datetime.datetime(2020, 7, 2)
+
+        for s in ('2020-07-02', '2020-07-01 12:00:13', '2020-07-01 12:00:00',
+                  'Wed 2 Jul 2020 09:14:14 GMT'):
+            self.assertIsNotNone(is_date_like(s, inc_alpha=True,
+                                         min_time=m, max_time=M))
+        for s in (
+            '2020-07-01 12:00:13',
+            '2020-07-01 12:00:00',
+            'Wed 2 Jul 2020 09:14:14 GMT'
+        ):
+            self.assertIsNotNone(is_datetime_like(s))
+        self.assertIsNone(is_datetime_like('2020-07-02'))
 
 
 if __name__ == '__main__':
