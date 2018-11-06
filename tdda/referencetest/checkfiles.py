@@ -282,12 +282,16 @@ class FilesComparison(BaseComparison):
             actual_line = original_actual[iactual]
             expected_line = original_expected[iexpected]
             if normalize(actual_line) == normalize(expected_line):
+                iactual += 1
+                iexpected += 1
                 continue
             if self.can_ignore(actual_line, expected_line,
                                ignore_substrings=ignore_substrings,
                                compiled_patterns=compiled_patterns):
                 actual_ignored.add(actual_map[i])
                 expected_ignored.add(expected_map[i])
+                iactual += 1
+                iexpected += 1
                 continue
             first_error_line = 'line %d' % (iactual + 1)
             ndiffs += 1
@@ -424,7 +428,7 @@ class FilesComparison(BaseComparison):
                 iactual += 1
             elif (original_actual[iactual] == original_expected[iexpected]):
                 # lines are the same, no differences
-                rebuilt_actual.append( original_actual[iactual])
+                rebuilt_actual.append(original_actual[iactual])
                 rebuilt_expected.append(original_expected[iexpected])
                 iactual += 1
                 iexpected += 1
