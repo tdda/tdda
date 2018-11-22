@@ -1008,7 +1008,10 @@ def fuzz_down(v, epsilon):
     slightly more negative values can still pass a fuzzy minimum
     constraint.
     """
-    return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
+    if type(v) is datetime.datetime or type(v) is datetime.date:
+        return v
+    else:
+        return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
 
 
 def fuzz_up(v, epsilon):
