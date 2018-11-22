@@ -230,5 +230,7 @@ you want to use alternations in expressions, like (a|b)).
 Better reporting of exclusions when checkfiles reports test failures.
 
 Updated reference test tests.
+
+Reporting differences when there are different numbers of lines now improved.
 ------------------------- end of dev branch -------------------------
 """
