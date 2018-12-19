@@ -218,9 +218,9 @@ class ReferenceTest(object):
         """
         self.assert_fn = assert_fn
         self.reference_data_locations = self._cls_dataloc(self.__class__)
-        self.pandas = PandasComparison(print_fn=self.print_fn,
+        self.pandas = PandasComparison(print_fn=self.call_print_fn,
                                        verbose=self.verbose)
-        self.files = FilesComparison(print_fn=self.print_fn,
+        self.files = FilesComparison(print_fn=self.call_print_fn,
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
 
@@ -1044,6 +1044,10 @@ class ReferenceTest(object):
         Internal method for check for failures and reporting them.
         """
         self.assert_fn(failures == 0, msgs.message())
+
+    def call_print_fn(self, *args, **kwargs):
+        fn = self.print_fn or self._default_print_fn
+        fn(*args, **kwargs)
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):

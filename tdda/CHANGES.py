@@ -145,5 +145,7 @@ Better reporting of exclusions when checkfiles reports test failures.
 Updated reference test tests.
 
 Reporting differences when there are different numbers of lines now improved.
+
+Fixed problem with set_defaults, where print_fn setting wasn't working.
 ------------------------- end of dev branch -------------------------
 """
