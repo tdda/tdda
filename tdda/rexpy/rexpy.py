@@ -35,6 +35,13 @@ FLAGS are optional flags. Currently::
                     Mostly useful for matching identifiers.
                     Also --hyphen or --dash.
 
+  --perl            Generate Perl-format regular expressions
+
+  --portable        Generate portable regular expressions ([0-9] for \\d)
+
+  --grep            Alias for --portable, more compatible with Unix grep
+                    (not requiring egrep extensions)
+
   -v, --version     Print the version number.
 
   -V, --verbose     Set verbosity level to 1
@@ -155,70 +162,132 @@ class CODE(object):
     PUNC = '.'
 
 
+UNICHRS = True  # controls whether to include a unicode letter class
+UNIC = 'Ḉ'  # K
+COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
+
+
+REX_PERL_FORMAT = {}
+REX_PORTABLE_FORMAT = {
+    'Digit': '[0-9]'
+}
+REX_POSIX_FORMAT = {
+    'Digit': '[0-9]',
+    'ULetter': '[[:alpha:]]',
+    'ULetter_': '[[:alpha:]_]'
+}
+
+REX_FORMATS = {
+    'perl': REX_PERL_FORMAT,
+    'portable': REX_PORTABLE_FORMAT,
+    'grep': REX_PORTABLE_FORMAT,
+    #'posix': REX_POSIX_FORMAT,
+}
+DEFAULT_REX_FORMAT = 'portable'
+
+
+def Punctuation(el_re):
+    specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
+    return [chr(c) for c in range(32, 127) if not re.match(specials, chr(c))]
+
+
+def build_category_dict(rex_format, extra_letters, full_escape):
+    if extra_letters:
+        assert all(L in '_-.' for L in extra_letters)  # for now
+        el_re = ''.join(escape(r'%s') % L for L in extra_letters)
+        el_re_exc = '' if '_' in extra_letters else '_'
+    else:
+        el_re = ''
+        el_re_exc = '_'
+    el_re_inc = (extra_letters or '').replace('_', '')
+    punctuation = Punctuation(el_re)
+
+    d = {
+        'LETTER': '[A-Z]',
+        'letter': '[a-z]',
+        'Letter': '[A-Za-z]',
+        'ULetter': r'[^\W0-9_]',
+        'Digit': r'\d',
+        'hex': '[0-9a-f]',
+        'HEX': '[0-9A-F]',
+        'Hex': '[0-9a-fA-F]',
+        'ALPHANUMERIC': '[A-Z0-9%s]' % el_re,
+        'alphanumeric': '[a-z0-9%s]' % el_re,
+        'AlphaNumeric': '[A-Za-z0-9%s]' % el_re,
+        'UAlphaNumeric': u_alpha_numeric_re(el_re_inc, el_re_exc, rex_format),
+        'Whitespace': r'\s',
+        'Punctuation': '[%s]' % escape(''.join(punctuation), full=full_escape),
+        'Other': r'[^!-~\s]',
+        'Any': '.',
+    }
+
+    if extra_letters:
+        d['LETTER_'] = '[A-Z%s]' % el_re
+        d['letter_'] = '[a-z%s]' % el_re
+        d['Letter_'] = '[A-Za-z%s]' % el_re
+        if extra_letters == '_':
+            d['ULetter_'] = r'[^\W0-9]'
+        else:
+            d['ULetter_'] = u_alpha_numeric_re(el_re_inc, el_re_exc,
+                                               rex_format, digits=False)
+        ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
+                             ['ULetter_'] if  UNICHRS else [])
+    else:
+        d['ULetter_'] = r'[^\W0-9_]'
+        ExtraLetterGroups = []
+
+    if rex_format in REX_FORMATS:
+        d.update(REX_FORMATS[rex_format])
+    else:
+        raise KeyError('Unrecognised Regular Expression format %s.\n'
+                       'Known formats are: %s'
+                        % (rex_format, ', '.join(sorted(REX_FORMATS.keys()))))
+
+
+    return d, ExtraLetterGroups
+
+
 class Category(object):
-    def __init__(self, name, code, re_string):
+    def __init__(self, name, code, d):
         self.name = name
         self.code = code
+        re_string = d[name]
         self.re_string = re_string
         self.re_single = poss_term_cre(re_string)
         self.re_multiple = poss_term_cre(re_string + '+')
 
 
-UNICHRS = True  # controls whether to include a unicode letter class
-UNIC = 'Ḉ'  # K
-COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
-
 class Categories(object):
     escapableCodes = '.*?'
-    def __init__(self, extra_letters=None, full_escape=False):
+    def __init__(self, extra_letters=None, full_escape=False, rex_format=None):
+        if rex_format is None:
+            rex_format = DEFAULT_REX_FORMAT
+        d, ExtraLetterGroups = build_category_dict(rex_format, extra_letters,
+                                                   full_escape)
+        self.LETTER = Category('LETTER', 'A', d)
+        self.letter = Category('letter', 'a', d)
+        self.Letter = Category('Letter', 'L', d)
+        self.ULetter = Category('ULetter', 'Ḹ', d)
+        self.Digit = Category('Digit', 'D', d)
+        self.hex = Category('hex', 'h', d)
+        self.HEX = Category('HEX', 'H', d)
+        self.Hex = Category('Hex', 'X', d)
+        self.ALPHANUMERIC = Category('ALPHANUMERIC', 'N', d)
+        self.alphanumeric = Category('alphanumeric', 'n', d)
+        self.AlphaNumeric = Category('AlphaNumeric', 'C',d)
+        self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ', d)
+        self.Whitespace = Category('Whitespace', ' ', d)
+        self.Punctuation = Category('Punctuation', CODE.PUNC, d)
+        self.Other = Category('Other', '*', d)
+        self.Any = Category('Any', CODE.ANY, d)
+
         if extra_letters:
-            assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(escape(r'%s') % L for L in extra_letters)
-            el_re_exc = '' if '_' in extra_letters else '_'
-        else:
-            el_re = ''
-            el_re_exc = '_'
-        el_re_inc = (extra_letters or '').replace('_', '')
-        punctuation = self.Punctuation(el_re)
+            self.LETTER_ = Category('LETTER_', 'B', d)
+            self.letter_ = Category('letter_', 'b', d)
+            self.Letter_ = Category('Letter_', 'M', d)
+        self.ULetter_ = Category('ULetter_', 'Ṃ', d)
+
         self.extra_letters = extra_letters or ''
-        self.LETTER = Category('LETTER', 'A', '[A-Z]')
-        self.letter = Category('letter', 'a', '[a-z]')
-        self.Letter = Category('Letter', 'L', '[A-Za-z]')
-        self.ULetter = Category('ULetter', 'Ḹ', r'[^\W0-9_]')
-        if extra_letters:
-            self.LETTER_ = Category('LETTER_', 'B', '[A-Z%s]' % el_re)
-            self.letter_ = Category('letter_', 'b', '[a-z%s]' % el_re)
-            self.Letter_ = Category('Letter_', 'M', '[A-Za-z%s]' % el_re)
-            if extra_letters == '_':
-                self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
-            else:
-                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False)
-                self.ULetter_ = Category('ULetter_', 'Ṃ', p)
-
-            ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
-                                    ['ULetter_'] if  UNICHRS else []
-                                )
-        else:
-            self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9_]')
-            ExtraLetterGroups = []
-        self.Digit = Category('Digit', 'D', r'\d')
-        self.hex = Category('hex', 'h', '[0-9a-f]')
-        self.HEX = Category('HEX', 'H', '[0-9A-F]')
-        self.Hex = Category('Hex', 'X', '[0-9a-fA-F]')
-        self.ALPHANUMERIC = Category('ALPHANUMERIC', 'N', '[A-Z0-9%s]' % el_re)
-        self.alphanumeric = Category('alphanumeric', 'n', '[a-z0-9%s]' % el_re)
-        self.AlphaNumeric = Category('AlphaNumeric', 'C',
-                                     '[A-Za-z0-9%s]' % el_re)
-        self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
-                                      u_alpha_numeric_re(el_re_inc, el_re_exc))
-        self.Whitespace = Category('Whitespace', ' ', r'\s')
-        self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    '[%s]' % escape(''.join(punctuation),
-                                                    full=full_escape))
-
-        self.Other = Category('Other', '*', r'[^!-~\s]')
-        self.Any = Category('Any', CODE.ANY, '.')
-
         self.SpecificCoarseCats = [self.UAlphaNumeric if UNICHRS
                                                       else self.AlphaNumeric,
                                    self.Whitespace,
@@ -234,13 +303,7 @@ class Categories(object):
             'ALPHANUMERIC', 'alphanumeric', 'AlphaNumeric',
         ] + (
             ['UAlphaNumeric'] if UNICHRS else []
-
         )
-
-    def Punctuation(self, el_re):
-        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
-        return [chr(c) for c in range(32, 127) if not re.match(specials,
-                                                               chr(c))]
 
     def build_cat_map(self):
         """
@@ -320,7 +383,7 @@ class Extractor(object):
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
                  min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
-                 verbose=VERBOSITY):
+                 rex_format=None, verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -343,7 +406,7 @@ class Extractor(object):
         self.warnings = []
         self.n_too_many_groups = 0
         self.Cats = Categories(self.thin_extras(extra_letters),
-                               full_escape=full_escape)
+                               full_escape=full_escape, rex_format=rex_format)
         self.full_escape = full_escape
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
@@ -477,7 +540,7 @@ class Extractor(object):
         for cat in Cats.SpecificCoarseCats:
             if re.match(cat.re_single, c):
                 return cat.code
-        assert re.match(Cats.Other.re_single, c)
+        #assert re.match(Cats.Other.re_single, c)
         return Cats.Other.code
 
 
@@ -1454,7 +1517,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
-            verbose=VERBOSITY):
+            rex_format=None, verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1470,7 +1533,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     """
     if encoding:
         if isinstance(examples, dict):
-            examples ={x.decode(encoding): n for (x, n) in examples.items()}
+            examples = {x.decode(encoding): n for (x, n) in examples.items()}
         else:
             examples = [x.decode(encoding) for x in examples]
     r = Extractor(examples, tag=tag, extra_letters=extra_letters,
@@ -1479,7 +1542,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   max_patterns = max_patterns,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
-                  verbose=verbose)
+                  rex_format=rex_format, verbose=verbose)
     return r if as_object else r.results.rex
 
 
@@ -1732,6 +1795,10 @@ def get_params(args):
                 params['variableLengthFrags'] = True
             elif a in ('-flf', '--fixed'):
                 params['variableLengthFrags'] = False
+            elif a.startswith('--') and a[2:] in REX_FORMATS.keys():
+                params['rex_format'] = a[2:]
+            elif a in ('--portable', '--grep'):
+                params['rex_format'] = 'portable'
             elif a in ('-?', '--help'):
                 print(USAGE)
                 sys.exit(0)
@@ -1831,8 +1898,14 @@ def escape(s, full=False):
         return ''.join((c if c in unescapes else re.escape(c)) for c in s)
 
 
-def u_alpha_numeric_re(inc, exc, digits=True):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
+def u_alpha_numeric_re(inc, exc, rex_format, digits=True):
+    if rex_format == 'posix':
+        if digits:
+            r = '[[:alnum:]%s]' % ('' if exc else '_')
+        else:
+            r = '[[:alpha:]%s]' % ('' if exc else '_')
+    else:
+        r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
     i = '[%s]' % escape(inc) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 

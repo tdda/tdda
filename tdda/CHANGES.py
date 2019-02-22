@@ -148,4 +148,16 @@ Reporting differences when there are different numbers of lines now improved.
 
 Fixed problem with set_defaults, where print_fn setting wasn't working.
 ------------------------- end of dev branch -------------------------
+
+------------------------- rexformats branch -------------------------
+Added parameterisation so that rexpy can support other flavours of regexes.
+
+Currently supports 'perl' (which uses \d) and 'portable' (which uses [0-9]).
+Framework will allow other flavours in the future (such as POSIX).
+
+Command line now includes optional --perl and --portable (and --grep)
+options so you can control what you get.
+
+Default is now 'portable' (not 'perl'), in a change to what was before.
+------------------------- end of rexformats branch ------------------
 """
