@@ -145,7 +145,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         ReferenceTest.__init__(self, self.assertTrue)
 
     @staticmethod
-    def main():
+    def main(module=None, argv=None):
         """
         Wrapper around the :py:func:`unittest.main()` entry point.
 
@@ -154,10 +154,10 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        _run_tests(_set_write_from_argv())
+        _run_tests(module=module, argv=_set_write_from_argv(argv))
 
 
-def _run_tests(argv):
+def _run_tests(module=None, argv=None):
     """
     If the -1 or --tagged option is set, then only run tagged tests.
     """
@@ -175,7 +175,7 @@ def _run_tests(argv):
                 tagged = True
     loader = (TaggedTestLoader(check) if tagged or check
               else unittest.defaultTestLoader)
-    unittest.main(argv=argv, testLoader=loader)
+    unittest.main(module=module, argv=argv, testLoader=loader)
 
 
 def _set_write_from_argv(argv=None):

@@ -89,4 +89,17 @@ Also fixed some issues with tdda.referencetest ignore_patterns method.
 
 19.09.2018 1.0.20
 Added test files so that all the new tests will pass.
+
+###
+Changed 'test' command to from 'this' Python rather than a new Python.
+
+Previously, the 'test' command (run with 'tdda test') ran in a subshell
+using an os.system call. In order to do this, we used sys.executable()
+to find (ostensibly) the path to the running version of Python.
+
+It transpires, however, that sys.executable() does not always return
+the path to the running Python...and indeed sometimes returns a path
+that does not exist. We now, therefore, simply run the tests in the
+current Python, by calling the (new) function 'testall', now used
+by main() in tdda.testtdda.py.
 """

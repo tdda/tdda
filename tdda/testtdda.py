@@ -13,6 +13,9 @@ from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 
 
-if __name__ == '__main__':
-    ReferenceTestCase.main()
+def testall(module=None, argv=None):
+    ReferenceTestCase.main(module=module, argv=argv)
 
+
+if __name__ == '__main__':
+    testall(argv=sys.argv)
