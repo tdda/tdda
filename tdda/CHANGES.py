@@ -90,7 +90,7 @@ Also fixed some issues with tdda.referencetest ignore_patterns method.
 19.09.2018 1.0.20
 Added test files so that all the new tests will pass.
 
-###
+28.02.2019 1.0.21
 Changed 'test' command to from 'this' Python rather than a new Python.
 
 Previously, the 'test' command (run with 'tdda test') ran in a subshell
