@@ -652,7 +652,6 @@ class TestHelperMethods(ReferenceTestCase):
         self.assertEqual(results, expected)
 
 
-@tag
 class TestExtraction(ReferenceTestCase):
 
     def check_result(self, result, rexes, examples):
