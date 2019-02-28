@@ -220,13 +220,14 @@ except:
     pandas = None
 pd = pandas
 
-#from artists.miro.writabletestcase import WritableTestCase
+from tdda.referencetest import ReferenceTestCase, tag
+
 from tdda.rexpy.relib import re
 from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage
 
 
-class TestUtilityFunctions(unittest.TestCase):
+class TestUtilityFunctions(ReferenceTestCase):
     def test_signature(self):
         self.assertEqual(signature([]), '')
 
@@ -408,7 +409,7 @@ class TestUtilityFunctions(unittest.TestCase):
 
 
 
-class TestHelperMethods(unittest.TestCase):
+class TestHelperMethods(ReferenceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -651,7 +652,8 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(results, expected)
 
 
-class TestExtraction(unittest.TestCase):
+@tag
+class TestExtraction(ReferenceTestCase):
 
     def check_result(self, result, rexes, examples):
         self.assertEqual(result, rexes)
@@ -1526,4 +1528,4 @@ if sys.version_info[0] < 3:
 
 
 if __name__ == '__main__':
-    unittest.main()
+    ReferenceTestCase.main()

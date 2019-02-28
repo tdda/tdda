@@ -175,7 +175,10 @@ def _run_tests(module=None, argv=None):
                 tagged = True
     loader = (TaggedTestLoader(check) if tagged or check
               else unittest.defaultTestLoader)
-    unittest.main(module=module, argv=argv, testLoader=loader)
+    if module is None:
+        unittest.main(argv=argv, testLoader=loader)
+    else:
+        unittest.main(module=module, argv=argv, testLoader=loader)
 
 
 def _set_write_from_argv(argv=None):
