@@ -102,4 +102,7 @@ the path to the running Python...and indeed sometimes returns a path
 that does not exist. We now, therefore, simply run the tests in the
 current Python, by calling the (new) function 'testall', now used
 by main() in tdda.testtdda.py.
+
+###
+Fix for fuzzy comparison on date columns, previously crashing.
 """

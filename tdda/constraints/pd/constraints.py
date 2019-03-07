@@ -215,6 +215,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
     """
     def __init__(self, df):
         self.df = df
+        self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
         if df is not None:
             index = df.index.copy()
             if not index.name:
@@ -226,7 +227,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = colname + '_min_ok'
         c = self.df[colname]
-        if precision == 'closed':
+        if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c >= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c > value)
@@ -237,7 +238,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = colname + '_max_ok'
         c = self.df[colname]
-        if precision == 'closed':
+        if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c <= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c < value)
