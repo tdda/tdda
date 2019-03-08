@@ -1100,7 +1100,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
         c = discover_df_from_file(csv_path, constraints_path=tddafile1k,
                                   verbose=False)
-        self.assertTextFileCorrect(tddafile1k, reftddafile1k,
+        self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
                                        '"utc_time":',
@@ -1167,7 +1167,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile = os.path.join(TESTDATA_DIR, 'ref-accounts25k.tdda')
         c = discover_df_from_file(csv_path, constraints_path=tddafile,
                                   verbose=False)
-        self.assertTextFileCorrect(tddafile, reftddafile,
+        self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
                                        '"utc_time":',
