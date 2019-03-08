@@ -1001,6 +1001,11 @@ def discover_df(df, inc_rex=False, df_path=None):
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
 
+        ``rex``:
+                 For string fields only, a list of regular expressions
+                 where each value in the dataframe is expected to match
+                 at least one of the expressions.
+
     Example usage::
 
         import pandas as pd
