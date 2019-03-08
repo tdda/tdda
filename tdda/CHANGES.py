@@ -125,6 +125,5 @@ you run 'tdda examples'.
 Also fixed typo in link to 1-pager pdf in the documentation.
 
 Added tests for accounts-based constraints examples.
-
 Also, copying examples now unzips the file.
 """

@@ -130,12 +130,17 @@ class TestFiles(unittest.TestCase):
                                        refloc('single2.txt'))
         # single2.txt is deliberately not readable in text mode in python3
         self.assertEqual(r1, (0, []))
-        self.assertEqual(r2, (1, ['First difference at byte offset 14, '
-                                  'actual length 14, expected length 28.']))
-        self.assertEqual(r3, (1, ['First difference at byte offset 14, '
-                                  'actual length 28, expected length 14.']))
-        self.assertEqual(r4, (1, ['First difference at byte offset 2, '
-                                  'both files have length 14.']))
+        if os.name != 'nt':
+            # on Windows, the results will depend on hard-to-predict
+            # factors such as how the sources were obtained from git,
+            # whether it was a binary build or a source one, etc - so
+            # for now we'll just check these on Unix.
+            self.assertEqual(r2, (1, ['First difference at byte offset 14, '
+                                      'actual length 14, expected length 28.']))
+            self.assertEqual(r3, (1, ['First difference at byte offset 14, '
+                                      'actual length 28, expected length 14.']))
+            self.assertEqual(r4, (1, ['First difference at byte offset 2, '
+                                      'both files have length 14.']))
 
 
 if __name__ == '__main__':
