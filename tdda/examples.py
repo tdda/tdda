@@ -53,11 +53,17 @@ def copy(srcdir, destination):
         elif name.endswith('.pyc'):
             continue
         else:
-            binary = 'b' if fullname.endswith('.feather') else ''
-            with open(fullname, 'r%s' % binary) as fin:
-                with open(os.path.join(destination, name),
-                                       'w%s' % binary) as fout:
-                    fout.write(fin.read())
+            for run in (0, 1):
+                binary = 'b' if run  or fullname.endswith('.feather') else ''
+                try:
+                    with open(fullname, 'r%s' % binary) as fin:
+                        with open(os.path.join(destination, name),
+                                               'w%s' % binary) as fout:
+                            fout.write(fin.read())
+                    break
+                except UnicodeDecodeError:
+                    if run:
+                        raise
 
 
 def copy_main(name, verbose=True):

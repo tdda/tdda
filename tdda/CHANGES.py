@@ -104,5 +104,23 @@ current Python, by calling the (new) function 'testall', now used
 by main() in tdda.testtdda.py.
 
 ###
-Fix for fuzzy comparison on date columns, previously crashing.
+Fix for fuzzy min/max comparison on date columns, previously crashing.
+
+Also fixed issue with problems, on some platforms, with the 'tdda examples'
+command, for non-ascii example files. It had already had support for doing
+this, but it wasn't always working. Now it's much more bullet-proof.
+
+Also, it no longer generates warnings for unrecognised keys in the input
+.tdda file (on verify and detect), for keys with names that begin with '#'.
+This gives a mechanism for 'commented out' items in the file (which you
+could always do, but you'd get annoying warnings, which now you no longer
+get).
+
+Also added some examples of 'detect' in the constraints examples and README.
+
+Also added some examples for the 'accounts' banking datasets for constraints,
+and included this new dataset as part of the standard examples you get if
+you run 'tdda examples'.
+
+Also fixed typo in link to 1-pager pdf in the documentation.
 """

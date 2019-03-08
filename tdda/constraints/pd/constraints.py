@@ -215,13 +215,14 @@ class PandasConstraintDetector(BaseConstraintDetector):
     """
     def __init__(self, df):
         self.df = df
-        self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
         if df is not None:
+            self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
             index = df.index.copy()
             if not index.name:
                 index.name = 'Index'
             self.out_df = pd.DataFrame(index=index)
         else:
+            self.date_cols = []
             self.out_df = None
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
