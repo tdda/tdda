@@ -60,7 +60,10 @@ from tdda.constraints.pd import constraints as pdc
 from tdda.constraints.pd.constraints import (load_df, verify_df,
                                              discover_df, detect_df)
 from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file
+from tdda.constraints.pd.verify import verify_df_from_file#, detect_df_from_file
+from tdda.constraints.pd.detect import detect_df_from_file
+
+from tdda.examples import copy_accounts_data_unzipped
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -1083,6 +1086,97 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
                                 verbose=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
+
+
+@tag
+class TestPandasExampleAccountsData(ReferenceTestCase):
+    @classmethod
+    def setUpClass(cls):
+        copy_accounts_data_unzipped(TESTDATA_DIR)
+
+    def testDiscover1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
+        tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        c = discover_df_from_file(csv_path, constraints_path=tddafile1k,
+                                  verbose=False)
+        self.assertTextFileCorrect(tddafile1k, reftddafile1k,
+                                   ignore_lines=[
+                                       '"local_time":',
+                                       '"utc_time":',
+                                       '"creator":',
+                                       '"source":',
+                                       '"host":',
+                                       '"user":',
+                                       '"tddafile":',
+                                   ])
+
+    def testVerify1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                verbose=False)
+        self.assertEqual(v.passes, 72)
+        self.assertEqual(v.failures, 0)
+
+    def testVerify25kAgainst1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                  verbose=False)
+
+        passingConstraints = 53
+        failingConstraints = 19
+        expected = (passingConstraints, failingConstraints)
+
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
+
+        # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
+        self.assertEqual(expected, (53, 19), "NUMBERS DIFFER FROM README!")
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    def testDetect25kAgainst1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        refpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.txt')
+        outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
+        v = detect_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                outpath=outfile, verbose=False)
+        passingConstraints = 53
+        failingConstraints = 19
+        passingRecords = 24883
+        failingRecords = 117
+        expected = (passingConstraints, failingConstraints,
+                    passingRecords, failingRecords)
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
+        self.assertEqual(v.detection.n_passing_records,  passingRecords)
+        self.assertEqual(v.detection.n_failing_records, failingRecords)
+
+        # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
+        self.assertEqual(expected, (53, 19, 24883, 117),
+                         "NUMBERS DIFFER FROM README!")
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        self.assertTextFileCorrect(outfile, refpath)
+
+    def testDiscover25k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
+        reftddafile = os.path.join(TESTDATA_DIR, 'ref-accounts25k.tdda')
+        c = discover_df_from_file(csv_path, constraints_path=tddafile,
+                                  verbose=False)
+        self.assertTextFileCorrect(tddafile, reftddafile,
+                                   ignore_lines=[
+                                       '"local_time":',
+                                       '"utc_time":',
+                                       '"creator":',
+                                       '"source":',
+                                       '"host":',
+                                       '"user":',
+                                       '"tddafile":',
+                                   ])
 
 
 class TestPandasMultipleConstraintDetector(ReferenceTestCase):
