@@ -48,6 +48,10 @@ and categorical values.
 These examples also include constraints for regular expressions on string
 fields.
 
+To use the data for this example, you need to unzip the 'accounts.zip'
+file in the 'testdata' directory. That will give you files accounts1k.csv
+and accounts25k.csv.
+
 The equivalent steps to the "elements" ones above are:
 
 1. Generate constraints using a small sample (1000 records).
