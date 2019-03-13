@@ -103,7 +103,7 @@ that does not exist. We now, therefore, simply run the tests in the
 current Python, by calling the (new) function 'testall', now used
 by main() in tdda.testtdda.py.
 
-###
+13.03.2019 1.0.22
 Fix for fuzzy min/max comparison on date columns, previously crashing.
 
 Also fixed issue with problems, on some platforms, with the 'tdda examples'
