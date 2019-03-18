@@ -135,4 +135,6 @@ only escapes characters that would otherwise be treated as having special
 meaning within a regular expression. So the tests now need to allow BOTH
 outputs to be considered correct. It's less easy than you'd imagine to work
 out exactly what subversion the behaviour changed in.
+
+Small fix to onwtest to ensure it still works in Pythons 2.7 & 3.6.
 """

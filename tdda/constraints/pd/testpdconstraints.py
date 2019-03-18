@@ -1320,16 +1320,17 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
                              (field, set(new_ref_field.keys())))
             for c, new_expected in new_ref_field.items():
                 actual = discovered_field[c]
+                old_expected = old_ref_field[c]
                 if type(new_expected) == float:
                     self.assertAlmostEqual(actual, new_expected, 4)
                 elif type(new_expected) == list:
-                    self.assertEqual(set(actual), set(new_expected))
+                    self.assertIn(set(actual), [set(new_expected),
+                                                set(old_expected)])
                 elif new_expected in ('int', 'real'):  # pandas too broken to
                                                        # get this right for now
                     self.assertTrue(actual in ('int', 'real'))
                 else:
                     # regular expressions must match either 'old' or 'new'
-                    old_expected = old_ref_field[c]
                     self.assertIn(actual, (old_expected, new_expected))
 
 
