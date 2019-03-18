@@ -81,14 +81,30 @@ environment, Python API examples are provided which carry out the same
 steps as the command-line example steps above, but with each step
 explicitly implemented using custom Python code, using the API.
 
-The steps here are equivalent to steps 1 to 4 using the 'tdda' command
+The steps here are equivalent to steps 1 to 5 using the 'tdda' command
 in the "elements" section above:
 
 1.  python elements_discover_92.py
 2.  python elements_verify_92.py
 3.  python elements_verify_118_against_92.py
-3.  python elements_detect_118_against_92.py
+4.  python elements_detect_118_against_92.py
 5.  python elements_verify_118.py
+
+## Python API Bank Accounts Data examples ("accounts" dataset)
+
+For embedding constraint discovery and verification within a Python
+environment, Python API examples are provided which carry out the same
+steps as the command-line example steps above, but with each step
+explicitly implemented using custom Python code, using the API.
+
+The steps here are equivalent to steps 1 to 5 using the 'tdda' command
+in the "elements" section above:
+
+1.  python accounts_discover_1k.py
+2.  python accounts_verify_1k.py
+3.  python accounts_verify_25k_against_1k.py
+4.  python accounts_detect_25k_against_1k.py
+5.  python accounts_verify_25k.py
 
 
 ## Creating DataFrame Output from Verifications

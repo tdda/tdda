@@ -155,7 +155,7 @@ def testExampleFileGeneration(ref):
     outpath = os.path.join(outdir, 'file_result.html')
     generate_file(outpath)
     ref.assertTextFileCorrect(outpath, 'file_result.html',
-                              ignore_patterns=['Copyright', 'Version'])
+                              ignore_substrings=['Copyright', 'Version'])
 
 
 @tag

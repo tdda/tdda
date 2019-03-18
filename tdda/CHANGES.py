@@ -136,5 +136,10 @@ meaning within a regular expression. So the tests now need to allow BOTH
 outputs to be considered correct. It's less easy than you'd imagine to work
 out exactly what subversion the behaviour changed in.
 
-Small fix to onwtest to ensure it still works in Pythons 2.7 & 3.6.
+Small fix to one test to ensure it still works in Pythons 2.7 & 3.6.
+
+Fixed reftest example to use ignore_substrings rather than ignore_patterns
+(as a result of the change to semantics of ignore_patterns in 1.0.19).
+
+Added API examples for reference tests using accounts data.
 """
