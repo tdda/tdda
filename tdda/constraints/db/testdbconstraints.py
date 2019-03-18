@@ -225,9 +225,12 @@ class TestDatabaseConstraintDiscoverers:
         constraints = discover_db_table(self.dbh.dbtype, self.db, elements,
                                         inc_rex=True)
         constraints.remove_field('_rowindex') # hidden field, ignore it
-        self.assertStringCorrect(constraints.to_json(),
-                                 'elements118rex.tdda',
-                                 rstrip=True,
+        j = constraints.to_json()
+        # compare against the right expected file, depending on whether the
+        # version of python we're running under has escaped commas or not.
+        expected_file = ('elements118oldrex.tdda' if '\\,' in j
+                         else 'elements118rex.tdda')
+        self.assertStringCorrect(j, expected_file, rstrip=True,
                                  ignore_substrings=['"as_at":',
                                                     '"local_time":',
                                                     '"utc_time":',

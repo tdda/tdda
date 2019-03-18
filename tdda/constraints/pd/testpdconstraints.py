@@ -1290,33 +1290,47 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def constraintsGenerationTest(self, inc_rex=False):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
-        ref_name = 'elements92%s.tdda' % ('rex' if inc_rex else '')
-        ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
-        with open(ref_constraints_path) as f:
-            refjson = f.read()
-        ref = native_definite(json.loads(refjson))
+        if inc_rex:
+            old_ref_name = 'elements92oldrex.tdda'
+            new_ref_name = 'elements92rex.tdda'
+            old_ref_constraints_path = os.path.join(TESTDATA_DIR, old_ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATA_DIR, new_ref_name)
+        else:
+            ref_name = 'elements92.tdda'
+            old_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
+        with open(old_ref_constraints_path) as f:
+            old_refjson = f.read()
+        with open(new_ref_constraints_path) as f:
+            new_refjson = f.read()
+        old_ref = native_definite(json.loads(old_refjson))
+        new_ref = native_definite(json.loads(new_refjson))
         constraints = discover_df(df, inc_rex=inc_rex)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
-        ref_fields = ref['fields']
+        old_ref_fields = old_ref['fields']
+        new_ref_fields = new_ref['fields']
         self.assertEqual(set(discovered_fields.keys()),
-                         set(ref_fields.keys()))
-        for field, ref_field in ref_fields.items():
-            ref_field = ref_fields[field]
+                         set(new_ref_fields.keys()))
+        for field, ref_field in new_ref_fields.items():
+            old_ref_field = old_ref_fields[field]
+            new_ref_field = new_ref_fields[field]
             discovered_field = discovered_fields[field]
             self.assertEqual((field, set(discovered_field.keys())),
-                             (field, set(ref_field.keys())))
-            for c, expected in ref_field.items():
+                             (field, set(new_ref_field.keys())))
+            for c, new_expected in new_ref_field.items():
                 actual = discovered_field[c]
-                if type(expected) == float:
-                    self.assertAlmostEqual(actual, expected, 4)
-                elif type(expected) == list:
-                    self.assertEqual(set(actual), set(expected))
-                elif expected in ('int', 'real'):  # pandas too broken to
-                                                   # get this right for now
+                if type(new_expected) == float:
+                    self.assertAlmostEqual(actual, new_expected, 4)
+                elif type(new_expected) == list:
+                    self.assertEqual(set(actual), set(new_expected))
+                elif new_expected in ('int', 'real'):  # pandas too broken to
+                                                       # get this right for now
                     self.assertTrue(actual in ('int', 'real'))
                 else:
-                    self.assertEqual(actual, expected)
+                    # regular expressions must match either 'old' or 'new'
+                    old_expected = old_ref_field[c]
+                    self.assertIn(actual, (old_expected, new_expected))
 
 
 class CommandLineHelper:

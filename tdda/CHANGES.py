@@ -126,4 +126,13 @@ Also fixed typo in link to 1-pager pdf in the documentation.
 
 Added tests for accounts-based constraints examples.
 Also, copying examples now unzips the file.
+
+###
+Fixed tests to pass under Python 3.7.2.
+
+The standard re.escape method changed after python version 3.7.1 so that it
+only escapes characters that would otherwise be treated as having special
+meaning within a regular expression. So the tests now need to allow BOTH
+outputs to be considered correct. It's less easy than you'd imagine to work
+out exactly what subversion the behaviour changed in.
 """
