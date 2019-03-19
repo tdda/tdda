@@ -1,7 +1,11 @@
+import os
 import sys
 
 with open('one.txt', 'w') as f:
     f.write('This is file 1')
+
+if not os.path.exists('subdir'):
+    os.mkdir('subdir')
 
 with open('subdir/one.txt', 'w') as f:
     f.write('This is file 2')
