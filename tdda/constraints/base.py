@@ -175,7 +175,7 @@ class DatasetConstraints(object):
                     if is_date and kind in DATE_VALUED_CONSTRAINTS:
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
-                else:
+                elif not kind.startswith('#'):
                     warn('Constraint kind %s for field %s unknown: ignored.'
                          % (kind, fieldname))
             if fc:

@@ -149,7 +149,7 @@ class TestUnstructuredDataExample(ReferenceTestCase):
         tdda/examples/reference/file_result.html except that the
         Copyright and Version lines are slightly different.
 
-        As shipped, the test should pass, because the ignore_patterns
+        As shipped, the test should pass, because the ignore_substrings
         tell it to ignore differences that match appropriate regular
         expressions for those cases.
 
@@ -170,10 +170,7 @@ class TestUnstructuredDataExample(ReferenceTestCase):
         outpath = os.path.join(outdir, 'file_result.html')
         generate_file(outpath)
         self.assertTextFileCorrect(outpath, 'file_result.html',
-                                   ignore_patterns=[
-                                       r'Copyright .*',
-                                       r'Version \d+\.\d+\.\d+',
-                                   ])
+                                   ignore_substrings=['Copyright', 'Version'])
 
 
 TestStructuredDataExample.set_default_data_location(reference_data_dir)

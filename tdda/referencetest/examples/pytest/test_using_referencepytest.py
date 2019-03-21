@@ -134,7 +134,7 @@ def testExampleFileGeneration(ref):
     tdda/examples/reference/file_result.html except that the
     Copyright and Version lines are slightly different.
 
-    As shipped, the test should pass, because the ignore_patterns
+    As shipped, the test should pass, because the ignore_substrings
     tell it to ignore differences that match appropriate regular
     expressions for those cases.
 
@@ -157,10 +157,7 @@ def testExampleFileGeneration(ref):
     outpath = os.path.join(outdir, 'file_result.html')
     generate_file(outpath)
     ref.assertTextFileCorrect(outpath, 'file_result.html',
-                              ignore_patterns=[
-                                  r'Copyright .*',
-                                  r'Version \d+\.\d+\.\d+',
-                              ])
+                              ignore_substrings=['Copyright', 'Version'])
 
 
 @tag

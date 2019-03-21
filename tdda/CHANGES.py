@@ -90,6 +90,59 @@ Also fixed some issues with tdda.referencetest ignore_patterns method.
 19.09.2018 1.0.20
 Added test files so that all the new tests will pass.
 
+28.02.2019 1.0.21
+Changed 'test' command to from 'this' Python rather than a new Python.
+
+Previously, the 'test' command (run with 'tdda test') ran in a subshell
+using an os.system call. In order to do this, we used sys.executable()
+to find (ostensibly) the path to the running version of Python.
+
+It transpires, however, that sys.executable() does not always return
+the path to the running Python...and indeed sometimes returns a path
+that does not exist. We now, therefore, simply run the tests in the
+current Python, by calling the (new) function 'testall', now used
+by main() in tdda.testtdda.py.
+
+13.03.2019 1.0.22
+Fix for fuzzy min/max comparison on date columns, previously crashing.
+
+Also fixed issue with problems, on some platforms, with the 'tdda examples'
+command, for non-ascii example files. It had already had support for doing
+this, but it wasn't always working. Now it's much more bullet-proof.
+
+Also, it no longer generates warnings for unrecognised keys in the input
+.tdda file (on verify and detect), for keys with names that begin with '#'.
+This gives a mechanism for 'commented out' items in the file (which you
+could always do, but you'd get annoying warnings, which now you no longer
+get).
+
+Also added some examples of 'detect' in the constraints examples and README.
+
+Also added some examples for the 'accounts' banking datasets for constraints,
+and included this new dataset as part of the standard examples you get if
+you run 'tdda examples'.
+
+Also fixed typo in link to 1-pager pdf in the documentation.
+
+Added tests for accounts-based constraints examples.
+Also, copying examples now unzips the file.
+
+18.03.2019 1.0.23
+Fixed tests to pass under Python 3.7.2.
+
+The standard re.escape method changed after python version 3.7.1 so that it
+only escapes characters that would otherwise be treated as having special
+meaning within a regular expression. So the tests now need to allow BOTH
+outputs to be considered correct. It's less easy than you'd imagine to work
+out exactly what subversion the behaviour changed in.
+
+Small fix to one test to ensure it still works in Pythons 2.7 & 3.6.
+
+Fixed reftest example to use ignore_substrings rather than ignore_patterns
+(as a result of the change to semantics of ignore_patterns in 1.0.19).
+
+Added API examples for reference tests using accounts data.
+
 ------------------------- dev branch -------------------------
 Refactored reporting of differences for files and strings, to take
 better account of 'ignore' and 'remove' parameters. It now builds a 'diff'

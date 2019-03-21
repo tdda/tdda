@@ -163,7 +163,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
         if not self.types_compatible(m, value, colname):
             result = False
-        elif precision == 'closed':
+        elif precision == 'closed' or isinstance(value, datetime.datetime):
             result = m >= value
         elif precision == 'open':
             result = m > value
@@ -199,7 +199,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if not self.types_compatible(M, value, colname):
             result = False
 
-        elif precision == 'closed':
+        elif precision == 'closed' or isinstance(value, datetime.datetime):
             result = M <= value
         elif precision == 'open':
             result = M < value
@@ -601,6 +601,7 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         sign_constraint = SignConstraint('null')
 
             if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
+                # all values are unique
                 no_duplicates_constraint = NoDuplicatesConstraint()
 
         if type_ == 'string' and self.inc_rex:

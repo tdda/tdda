@@ -216,17 +216,19 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def __init__(self, df):
         self.df = df
         if df is not None:
+            self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
             index = df.index.copy()
             if not index.name:
                 index.name = 'Index'
             self.out_df = pd.DataFrame(index=index)
         else:
+            self.date_cols = []
             self.out_df = None
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = colname + '_min_ok'
         c = self.df[colname]
-        if precision == 'closed':
+        if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c >= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c > value)
@@ -237,7 +239,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = colname + '_max_ok'
         c = self.df[colname]
-        if precision == 'closed':
+        if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c <= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c < value)
@@ -998,6 +1000,11 @@ def discover_df(df, inc_rex=False, df_path=None):
                  values in the dataframe, an AllowedValues constraint
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
+
+        ``rex``:
+                 For string fields only, a list of regular expressions
+                 where each value in the dataframe is expected to match
+                 at least one of the expressions.
 
     Example usage::
 
