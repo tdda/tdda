@@ -23,6 +23,13 @@ FLAGS are optional flags. Currently::
                         e.g.     '^([A-Z]+)\-([0-9]+)$'
                         becomes  '^[A-Z]+\-[0-9]+$'
 
+  -q, --quote       Display the resulting regular expressions as
+                    double-quoted, escaped strings, in a form broadly
+                    suitable for use in Unix shells, JSON, and string
+                    literals in many programming languages.
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  "^[A-Z]+\\-[0-9]+$"
+
   -u, --underscore  Allow underscore to be treated as a letter.
                     Mostly useful for matching identifiers
                     Also allow -_.
@@ -1677,8 +1684,22 @@ def get_nCalls():
     return nCalls
 
 
-def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
-    if in_path:
+def rexpy_streams(in_path=None, out_path=None, skip_header=False,
+                  quote=False, **kwargs):
+    """
+    in_path is
+        None:             to read inputs from stdin
+        path to file:     to read inputs from file at in_path
+        list of strings:  to use those strings as the inputs
+
+    out_path is:
+        None:             to write outputs to stdout
+        path to file:     to write outputs from file at out_path
+        False:            to return the strings as a list
+    """
+    if type(in_path) in (list, tuple):
+        strings = in_path
+    elif in_path:
         with open(in_path) as f:
             strings = f.read().splitlines()
     else:
@@ -1688,7 +1709,11 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
     if skip_header:
         strings = strings[1:]
     patterns = extract(strings, **kwargs)
-    if out_path:
+    if quote:
+        patterns = [dquote(p) for p in patterns]
+    if out_path is False:
+        return patterns
+    elif out_path:
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
@@ -1704,6 +1729,7 @@ def get_params(args):
         'skip_header': False,
         'extra_letters': None,
         'tag': None,
+        'quote': False,
         'verbose': 0,
         'variableLengthFrags': False,
     }
@@ -1715,6 +1741,8 @@ def get_params(args):
                 params['skip_header'] = True
             elif a in ('-g', '--group'):
                 params['tag'] = True
+            elif a in ('-q', '--quote'):
+                params['quote'] = True
             elif a in ('-u', '-_', '--underscore'):
                 params['extra_letters'] = (params['extra_letters'] or '') + '_'
             elif a in ('-d', '-.', '--dot', '--period'):
@@ -1865,6 +1893,12 @@ def is_outer_group(m, i):
     return not any(m.start(g) <= m.start(i) and m.end(g) >= m.end(i)
                    for g in range(1, N) if g != i)
 
+
+def dquote(string):
+    parts = [p.replace('\\', r'\\').replace('\n', r'\n')
+             for p in string.split('"')]
+    quoted = ('\\"').join(parts)
+    return '"%s"' % quoted
 
 
 def usage_error():

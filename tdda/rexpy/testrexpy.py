@@ -1715,6 +1715,19 @@ class TestExtraction(ReferenceTestCase):
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
 
+    def testRexpyCommandLineAPIQuoting(self):
+        inputs = ['EH12 3LH', 'AL64 1BB']
+        self.assertEqual(rexpy_streams(inputs, out_path=False),
+                         [r'^[A-Z]{2}\d{2} \d[A-Z]{2}$'])
+        self.assertEqual(rexpy_streams(inputs, out_path=False, quote=True),
+                         [r'"^[A-Z]{2}\\d{2} \\d[A-Z]{2}$"'])
+        inputs = [r'''one \"' two''', r'''three \"' four''']
+        self.assertEqual(rexpy_streams(inputs, out_path=False),
+                         [r'''^[a-z]{3,5} \\\"\' [a-z]{3,4}$'''])
+        self.assertEqual(rexpy_streams(inputs, out_path=False, quote=True),
+                         [r'''"^[a-z]{3,5} \\\\\\\"\\' [a-z]{3,4}$"'''])
+
+
 
 
 def print_ordered_dict(od):

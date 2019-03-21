@@ -200,5 +200,7 @@ Updated reference test tests.
 Reporting differences when there are different numbers of lines now improved.
 
 Fixed problem with set_defaults, where print_fn setting wasn't working.
+
+Add -q/--quote flag to rexpy CLI to quote output strings.
 ------------------------- end of dev branch -------------------------
 """
