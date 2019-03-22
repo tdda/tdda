@@ -52,6 +52,8 @@ except ImportError:
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
+    STANDARD_CONSTRAINT_SUFFIXES,
+    CONSTRAINT_SUFFIX_MAP,
     native_definite,
     DatasetConstraints,
     Verification,
@@ -80,6 +82,7 @@ else:
 isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
+OK_FIELD_RE = re.compile('_ok_\d+$')
 
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
@@ -226,7 +229,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             self.out_df = None
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
-        name = colname + '_min_ok'
+        name = verification_field(colname, 'min')
         c = self.df[colname]
         if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c >= value)
@@ -237,7 +240,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
-        name = colname + '_max_ok'
+        name = verification_field(colname, 'max')
         c = self.df[colname]
         if precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c <= value)
@@ -248,21 +251,21 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
 
     def detect_min_length_constraint(self, colname, value):
-        name = colname + '_min_length_ok'
+        name = verification_field(colname, 'min_length')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, c.str.len() >= value)
 
     def detect_max_length_constraint(self, colname, value):
-        name = colname + '_max_length_ok'
+        name = verification_field(colname, 'max_length')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, c.str.len() <= value)
 
     def detect_tdda_type_constraint(self, colname, value):
-        name = colname + '_type_ok'
+        name = verification_field(colname, 'type')
         self.out_df[name] = False
 
     def detect_sign_constraint(self, colname, value):
-        name = colname + '_sign_ok'
+        name = verification_field(colname, 'sign')
         c = self.df[colname]
 
         if value == 'null':
@@ -280,25 +283,25 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def detect_max_nulls_constraint(self, colname, value):
         # found more nulls than are allowed, so mark all null values as bad
-        name = colname + '_nonnull_ok'
+        name = verification_field(colname, 'max_nulls')
         c = self.df[colname]
         self.out_df[name] = pd.notnull(c)
 
     def detect_no_duplicates_constraint(self, colname, value):
         # found duplicates, so mark anything duplicated as bad
-        name = colname + '_nodups_ok'
+        name = verification_field(colname, 'no_duplicates')
         c = self.df[colname]
         unique = ~ self.df.duplicated(colname, keep=False)
         self.out_df[name] = detection_field(c, unique, default=True)
 
     def detect_allowed_values_constraint(self, colname, allowed_values,
                                          violations):
-        name = colname + '_values_ok'
+        name = verification_field(colname, 'allowed_values')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def detect_rex_constraint(self, colname, violations):
-        name = colname + '_rex_ok'
+        name = verification_field(colname, 'rex')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
@@ -311,10 +314,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_in_place=False,
                                rownumber_is_index=True,
                                boolean_ints=False,
+                               interleave=False,
                                **kwargs):
         if self.out_df is None:
             return None
-
+        orig_fields = list(self.df)
         output_is_feather = (detect_outpath
                              and file_format(detect_outpath) == 'feather')
 
@@ -348,6 +352,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     out_df.insert(0, fname, self.df[fname])
                 else:
                     raise Exception('DataFrame has no column %s' % fname)
+
+        if interleave:
+            out_df = self.interleave(out_df, orig_fields, nfailname)
+#             if detect_in_place:  # does not work in place
+#                 self.interleave(self.df, orig_fields, nfailname)
 
         if detect_outpath:
             index_is_trivial = is_pd_index_trivial(out_df)
@@ -393,6 +402,25 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if not detect_write_all:
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
+
+    def interleave(self, df, orig_fields, nfailname):
+        if set(orig_fields) - set(list(df)):
+            return df
+            # Only interleave if all of the original fields
+            # are in the output
+
+        all_vfields = set(list(df)) - set(orig_fields) - set([nfailname])
+        new_fields = []
+        for f in orig_fields:
+            new_fields.append(f)
+            new_fields.extend(sorted([v for v in all_vfields
+                                      if is_ver_field(v, f)]))
+        new_fields.append(nfailname)
+        if not (set(list(df)) == set(new_fields)):
+            print('list(df))', list(df), len(list(df)))
+            print('new fields', new_fields, len(new_fields))
+        assert set(list(df)) == set(new_fields)
+        return df[new_fields]
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
@@ -1144,6 +1172,33 @@ def df_fuzzy_lt(a, b, epsilon):
     and makes it 1% less negative if it is negative.
     """
     return (a <= b) | (a <= fuzz_up(b, epsilon))
+
+
+def is_ver_field(v, f):
+    """Test whether v is a verification field for original field f"""
+    L = len(f)
+    if v[:L + 1] != f + '_':
+        return False  # didn't start with f
+
+    v = v[L + 1:]
+    has_digits = False
+    while v and v[-1].isdigit():  # remove any trailing (disambiguation) digits
+        v = v[:-1]
+        has_digits = True
+    if has_digits:
+        if not v.endswith('_'):  # was only disamb. if ended _ddd
+            return False
+        v = v[:-1]    # remove the underscore
+
+    if not v.endswith('_ok'):
+        return False
+
+    v = v[:-3]
+    return v in STANDARD_CONSTRAINT_SUFFIXES
+
+
+def verification_field(col, ctype):
+    return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
 
 
 # for backwards compatibility (old name for function)

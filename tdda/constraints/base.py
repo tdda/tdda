@@ -20,9 +20,23 @@ from collections import OrderedDict
 from tdda.version import version
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
-STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
-                              'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values', 'rex', 'transform')
+
+CONSTRAINT_SUFFIX_MAP = OrderedDict((
+    ('type', 'type'),
+    ('min', 'min'),
+    ('min_length', 'min_length'),
+    ('max', 'max'),
+    ('max_length', 'max_length'),
+    ('sign', 'sign'),
+    ('max_nulls', 'nonnull'),
+    ('no_duplicates', 'nodups'),
+    ('allowed_values', 'values'),
+    ('rex', 'rex'),
+    ('transform', None),  # this mapped value isn't used
+))
+
+STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
+STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
          'null')

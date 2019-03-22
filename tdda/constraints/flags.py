@@ -59,6 +59,9 @@ Optional flags are:
       original columns are written out, unless you use --output-fields.
   * --output-fields FIELD1 FIELD2 ...
       Specify original columns to write out.
+  * --interleave
+      In the output, place the verification fields immediately after
+      the original field to which they correspond.
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
@@ -146,6 +149,8 @@ def detect_parser(usage=''):
                              'be included.')
     parser.add_argument('--output-fields', nargs='*',
                         help='Specify original columns to write out.')
+    parser.add_argument('--interleave', action='store_true',
+                        help='Interleave ok columns with original fields.')
     parser.add_argument('--index', action='store_true',
                         help='Include a row-number index in the output file '
                              'when detecting. Rows are usually numbered from '
@@ -210,10 +215,14 @@ def detect_flags(parser, args, params):
         params['index'] = True
     if flags.boolean_ints:
         params['boolean_ints'] = True
+
     if flags.output_fields is not None:
         params['output_fields'] = flags.output_fields
     elif not flags.no_output_fields:
         params['output_fields'] = []
+
+    if flags.interleave:
+        params['interleave'] = True
     params['in_place'] = False  # Only applicable in API case
     params['report'] = 'records'
     return flags

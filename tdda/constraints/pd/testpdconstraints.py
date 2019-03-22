@@ -1088,7 +1088,6 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 0)
 
 
-@tag
 class TestPandasExampleAccountsData(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
@@ -1355,6 +1354,7 @@ class CommandLineHelper:
         cls.e92tdda = os.path.join(cls.test_tmpdir, 'elements92.tdda')
         cls.e92bads1 = os.path.join(cls.test_tmpdir, 'elements92bads1.csv')
         cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
+        cls.e92bads3 = os.path.join(cls.test_tmpdir, 'elements92bads3.csv')
 
         argv = ['tdda', 'examples', cls.test_tmpdir]
         cls.execute_command(argv)
@@ -1464,6 +1464,19 @@ class CommandLineHelper:
         self.assertTextFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
         os.remove(self.e92bads1)
 
+    def testDetectE118CmdInterleaved(self):
+        argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
+                self.e92bads3, '--per-constraint', '--output-fields',
+                '--interleave']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Records passing: 91\n'
+                                                'Records failing: 27'))
+        self.assertTrue(os.path.exists(self.e92bads3))
+        self.assertTextFileCorrect(self.e92bads3,
+                                   'detect-els-cmdline-interleaved.csv')
+        os.remove(self.e92bads3)
+
     @unittest.skipIf(pmmif is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectE118FeatherCmd(self):
@@ -1512,6 +1525,31 @@ class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
     @classmethod
     def execute_command(self, argv):
         return check_shell_output(argv)
+
+
+class TestUtilityFunctions(ReferenceTestCase):
+    def testVerificationFieldIdentifier(self):
+        for name in ('a_type_ok',
+                     'a_min_ok',
+                     'a_min_length_ok',
+                     'a_max_ok',
+                     'a_max_length_ok',
+                     'a_sign_ok',
+                     'a_nonnull_ok',
+                     'a_nodups_ok',
+                     'a_values_ok',
+                     'a_rex_ok',
+                     'a_min_ok',
+                     'a_values_ok_68'):
+            self.assertTrue(pdc.is_ver_field(name, 'a'))
+
+        for name in ('a_b',
+                     'a_b_ok',
+                     'a_b_min_ok',
+                     'a_b_min_ok_68',
+                     'a_min_ok68',
+                     'a_transform_ok'):
+            self.assertFalse(pdc.is_ver_field(name, 'a'))
 
 
 TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATA_DIR)
