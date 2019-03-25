@@ -45,10 +45,11 @@ try:
     from pmmif import featherpmm
 except ImportError:
     featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
+
+try:
+    import feather as feather
+except ImportError:
+    feather = None
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
@@ -82,7 +83,6 @@ else:
 isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
-OK_FIELD_RE = re.compile('_ok_\d+$')
 
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
@@ -416,7 +416,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             new_fields.extend(sorted([v for v in all_vfields
                                       if is_ver_field(v, f)]))
         new_fields.append(nfailname)
-        if not (set(list(df)) == set(new_fields)):
+        if DEBUG and set(list(df)) != set(new_fields):
             print('list(df))', list(df), len(list(df)))
             print('new fields', new_fields, len(new_fields))
         assert set(list(df)) == set(new_fields)
@@ -1069,7 +1069,7 @@ def file_format(path):
 def load_df(path):
     if file_format(path) != 'feather':
         return default_csv_loader(path)
-    elif featherpmm:
+    elif featherpmm and feather:
         ds = featherpmm.read_dataframe(path)
         return ds.df
     elif feather:
@@ -1085,7 +1085,7 @@ def save_df(df, path, index=False):
         print(default_csv_writer(df, None, index=index))
     elif file_format(path) != 'feather':
         default_csv_writer(df, path, index=index)
-    elif featherpmm:
+    elif featherpmm and feather:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)
     elif feather:
