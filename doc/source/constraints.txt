@@ -267,11 +267,16 @@ name (including an optional schema) can be preceded by ``DBTYPE`` chosen
 from ``postgres``, ``mysql``, ``sqlite`` or ``mongodb``:
 ::
 
-    DBTYPE:schema.tablename
+    DBTYPE:[schema.]tablename
 
-If ``DBTYPE`` is used, this will cause the file ``.tdda_db_conn_DBTYPE``
-to be read from your home directory (see :ref:`tdda_db_conn`), which can
-contain all connection parameters.
+For example:
+::
+
+    tdda discover postgres:mytable
+
+This example will use the file ``.tdda_db_conn_postgres`` from your
+home directory (see :ref:`tdda_db_conn`),
+containing all the connection parameters.
 
 Parameters can also be provided using the following flags (which override
 the values in the ``.tdda_db_conn_DBTYPE`` file, if provided):
@@ -297,7 +302,20 @@ the database connection details are read from the specified file.
 If the database type is specified (with the ``-dbtype`` option, or by
 prefixing the table name, such as ``postgres:mytable``), then a default
 connection file ``.tdda_db_conn_DBTYPE`` (in your home directory) is used,
-if present.
+if present (where `DBTYPE` is the name of the kind of database server).
+
+To use constraints for databases, you must have an appropriate
+DB-API (PEP-0249) driver library installed within your Python environment.
+
+These are:
+
+* For PostgreSQL: ``pygresql`` or ``PyGreSQL``
+
+* For MySQL: ``MySQLdb``, ``mysqlclient`` or  ``mysql-connector-python``
+
+* For Sqlite: ``sqlite3``
+
+* For MongoDB: ``pymongo``
 
 
 .. _tdda_db_conn:
@@ -307,7 +325,8 @@ Database Connection Files
 
 To use a database source, you can either specify the database type
 using the ``--dbtype DBTYPE`` option, or you can prefix the table name
-with ``DBTYPE:``.
+with an appropriate ``DBTYPE:`` (one of the supported kinds of database
+server, such as ``postgres``).
 
 You can provide default values for all of the other database options in
 a database connection file ``.tdda_db_conn_DBTYPE``, in your home directory.
@@ -337,12 +356,19 @@ If a ``schema`` is provided, then it will be used as the default schema,
 when constraints are discovered or verified on a table name with no
 schema specified.
 
+Note that for MySQL (in a ``.tdda_db_conn_mysql`` file), the "schema" parameter
+**must** be specified, as there is no built-in default for it to use.
+
+Note that for Microsoft Windows, the connector file should have the very
+same name as for Unix, beginning with a dot, even though this form of filename
+is not otherwise commonly used on Windows.
+
 
 API
 ~~~
 
 .. automodule:: tdda.constraints.db.constraints
-    :members: discover_db_table, verify_db_table, DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
+    :members: discover_db_table, verify_db_table, detect_db_table, DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
 
 Extension Framework
 -------------------
