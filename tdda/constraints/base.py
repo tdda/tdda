@@ -446,7 +446,9 @@ class Constraint(object):
                                              '(%s)' % (name, value, errmsg))
 
     def to_dict_value(self, raw=False):
-        return (self.value if type(self.value) != datetime.datetime or raw
+        return (self.value
+                   if raw or type(self.value) not in (datetime.datetime,
+                                                      datetime.date)
                 else str(self.value))
 
 

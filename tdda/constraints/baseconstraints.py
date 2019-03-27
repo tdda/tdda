@@ -158,12 +158,14 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             m = self.to_datetime(m)
 
         if not self.types_compatible(m, value, colname):
             result = False
-        elif precision == 'closed' or isinstance(value, datetime.datetime):
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
             result = m >= value
         elif precision == 'open':
             result = m > value
@@ -193,13 +195,15 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(M):       # If there are no values, no value can
             return True           # the maximum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             M = self.to_datetime(M)
 
         if not self.types_compatible(M, value, colname):
             result = False
 
-        elif precision == 'closed' or isinstance(value, datetime.datetime):
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
             result = M <= value
         elif precision == 'open':
             result = M < value

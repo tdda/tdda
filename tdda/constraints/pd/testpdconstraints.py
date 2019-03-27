@@ -1087,6 +1087,26 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
+    def testDataframeDates(self):
+        df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
+                                 datetime.date(2019, 1, 2)]})
+        c = discover_df(df)
+        ac = c.fields['a'].constraints
+        self.assertEqual(ac['type'].value, 'date')
+        self.assertEqual(ac['min'].value, datetime.date(1987, 1, 1))
+        self.assertEqual(ac['max'].value, datetime.date(2019, 1, 2))
+        self.assertEqual(ac['max_nulls'].value, 0)
+
+    def testDataframeDateTimes(self):
+        df = pd.DataFrame({'a': [datetime.datetime(1987, 1, 1),
+                                 datetime.datetime(2019, 1, 2)]})
+        c = discover_df(df)
+        ac = c.fields['a'].constraints
+        self.assertEqual(ac['type'].value, 'date')
+        self.assertEqual(ac['min'].value, datetime.datetime(1987, 1, 1))
+        self.assertEqual(ac['max'].value, datetime.datetime(2019, 1, 2))
+        self.assertEqual(ac['max_nulls'].value, 0)
+
 
 class TestPandasExampleAccountsData(ReferenceTestCase):
     @classmethod

@@ -113,7 +113,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             m = self.df[colname].dropna().min()  # Otherwise -inf!
         else:
             m = self.df[colname].min()
-        if pandas_tdda_type(m) == 'date':
+        if pandas_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
             m = m.to_pydatetime(warn=False)
         elif hasattr(m, 'item'):
             m = m.item()
@@ -124,7 +124,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             M = self.df[colname].dropna().max()
         else:
             M = self.df[colname].max()
-        if pandas_tdda_type(M) == 'date':
+        if pandas_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
             M = M.to_pydatetime(warn=False)
         elif hasattr(M, 'item'):
             M = M.item()
@@ -603,12 +603,16 @@ def pandas_tdda_type(x):
         return 'string'
     dt = getattr(x, 'dtype', None)
     if dt == np.dtype('O'):
-        # objects could be either strings or booleans-with-nulls
+        # objects could be either strings or booleans-with-nulls or dates
         for v in x:
             if type(v) in (bool, np.bool, np.bool_):
                 return 'bool'
             elif type(v) in (unicode_string, byte_string):
                 return 'string'
+            elif isinstance(v, datetime.datetime):
+                return 'date'
+            elif isinstance(v, datetime.date):
+                return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
     dts = str(dt)
@@ -618,8 +622,10 @@ def pandas_tdda_type(x):
         return 'int'
     if type(x) == float or 'float' in dts:
         return 'real'
-    if (type(x) == datetime.datetime or 'datetime' in dts
-                or type(x) == pandas_Timestamp):
+    if ('date' in dts
+                or isinstance(x, datetime.datetime)
+                or isinstance(x, datetime.date)
+                or isinstance(x, pandas_Timestamp)):
         return 'date'
     if x is None:
         return 'null'

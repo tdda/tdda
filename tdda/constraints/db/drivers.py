@@ -22,7 +22,10 @@ except ImportError:
 try:
     import MySQLdb
 except ImportError:
-    MySQLdb = None
+    try:
+        import mysql.connector as MySQLdb
+    except ImportError:
+        MySQLdb = None
 
 try:
     import sqlite3
@@ -656,12 +659,15 @@ class MongoDBDatabaseHandler:
         Search through the collections hierarchy to resolve dotted names
         """
         parts = tablename.split('.')
-        collection = self.db
+        collection = self.db.connection
         for p in parts:
             if p not in collection.collection_names():
                 raise Exception('collection %s does not exist' % tablename)
             collection = collection[p]
         return collection
+
+    def resolve_table(self, name):
+        return name
 
     def check_table_exists(self, tablename):
         try:
@@ -727,10 +733,15 @@ class MongoDBDatabaseHandler:
                 return 'string'
             elif isinstance(val, datetime.datetime):
                 return 'date'
+            elif isinstance(val, datetime.date):
+                return 'date'
             else:
                 return 'other'
         else:
             return None
+
+    def get_nrows(self, tablename):
+        return self.get_database_nrows(tablename)
 
     def get_database_nrows(self, tablename):
         collection = self.find_collection(tablename)

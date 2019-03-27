@@ -134,9 +134,9 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
             *dbtype*:
                     Type of database.
             *db*:
-                    A DB-API database connection object (for example, as
-                    obtained from a call to pgdb.connect() for PostGreSQL
-                    or as a call to MySQLdb.connect() for MySQL).
+                    A DB-API database connection object (as obtained from
+                    a call to the connect() method on the underlying database
+                    driver).
             *tablename*:
                     A table name, referring to a table that exists in the
                     database and is accessible. It can either be a simple
@@ -417,6 +417,9 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
                  values in the dataframe, an AllowedValues constraint
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
+
+    Regular Expression constraints are not (currently) generated for fields
+    in database tables.
 
     Example usage::
 
