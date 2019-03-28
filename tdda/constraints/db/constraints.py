@@ -62,7 +62,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def get_nrecords(self):
         return self.get_database_nrows(self.tablename)
 
-    def types_compatible(self, x, y, colname):
+    def types_compatible(self, x, y, colname=None):
         return types_compatible(x, y, colname if not self.testing else None)
 
     def calc_min(self, colname):

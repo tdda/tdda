@@ -162,7 +162,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                 or isinstance(value, datetime.date)):
             m = self.to_datetime(m)
 
-        if not self.types_compatible(m, value, colname):
+        if not self.types_compatible(m, value):
             result = False
         elif (precision == 'closed' or isinstance(value, datetime.datetime)
                                     or isinstance(value, datetime.date)):
@@ -199,9 +199,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                 or isinstance(value, datetime.date)):
             M = self.to_datetime(M)
 
-        if not self.types_compatible(M, value, colname):
+        if not self.types_compatible(M, value):
             result = False
-
         elif (precision == 'closed' or isinstance(value, datetime.datetime)
                                     or isinstance(value, datetime.date)):
             result = M <= value
@@ -227,6 +226,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return True           # to be an active constraint, so is always
                                   # satisfied
 
+        if self.get_tdda_type(colname) != 'string':
+            return False
+
         m = self.get_min_length(colname)
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum length constraint
@@ -249,6 +251,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(value):   # a null minimum length is not considered
             return True           # to be an active constraint, so is always
                                   # satisfied
+
+        if self.get_tdda_type(colname) != 'string':
+            return False
 
         M = self.get_max_length(colname)
         if self.is_null(M):       # If there are no values, no value can
@@ -312,7 +317,11 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(m):
             return True  # no values: cannot violate constraint
 
-        if value == 'null':
+        if type(m) not in (bool, int, long_type, float):
+            result = False
+        elif type(M) not in (bool, int, long_type, float):
+            result = False
+        elif value == 'null':
              result = False
         elif value == 'positive':
             result = m > 0
@@ -413,6 +422,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         expressions given).
         """
         if not self.column_exists(colname):
+            return False
+        if self.get_tdda_type(colname) != 'string':
             return False
 
         violations = self.calc_rex_constraint(colname, constraint,

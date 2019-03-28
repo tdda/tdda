@@ -1087,7 +1087,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
-    def testDataframeDates(self):
+    def testDiscoverDataframeDates(self):
         df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
                                  datetime.date(2019, 1, 2)]})
         c = discover_df(df)
@@ -1097,7 +1097,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(ac['max'].value, datetime.date(2019, 1, 2))
         self.assertEqual(ac['max_nulls'].value, 0)
 
-    def testDataframeDateTimes(self):
+    def testDiscoverDataframeDateTimes(self):
         df = pd.DataFrame({'a': [datetime.datetime(1987, 1, 1),
                                  datetime.datetime(2019, 1, 2)]})
         c = discover_df(df)
@@ -1106,6 +1106,67 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(ac['min'].value, datetime.datetime(1987, 1, 1))
         self.assertEqual(ac['max'].value, datetime.datetime(2019, 1, 2))
         self.assertEqual(ac['max_nulls'].value, 0)
+
+    def testVerifySignWithWrongType(self):
+        df = pd.DataFrame({'a': ['one', 'two', 'three']})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'int',
+                    'sign': 'positive',
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict, repair=False)
+        self.assertFalse(v.fields['a']['type'])
+        self.assertFalse(v.fields['a']['sign'])
+
+    def testVerifyStringLengthWithWrongType(self):
+        df = pd.DataFrame({'a': [1, 2, -1]})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'string',
+                    'min_length': 2,
+                    'max_length': 3,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict, repair=False)
+        self.assertFalse(v.fields['a']['type'])
+        self.assertFalse(v.fields['a']['min_length'])
+        self.assertFalse(v.fields['a']['max_length'])
+
+    def testDetectWithWrongTypes(self):
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', 'three']})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'string',
+                    'min_length': 2,
+                    'max_length': 3,
+                },
+                'b': {
+                    'type': 'int',
+                    'min': 1,
+                    'max': 3,
+                    'sign': 'positive',
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = detect_df(df, cdict, per_constraint=True, output_fields=[],
+                      interleave=True, repair=False)
+        d = v.detected()
+        self.assertTrue(not d['a_type_ok'].any())
+        self.assertTrue(not d['b_type_ok'].any())
+        self.assertTrue(not d['b_min_ok'].any())
+        self.assertTrue(not d['b_max_ok'].any())
 
 
 class TestPandasExampleAccountsData(ReferenceTestCase):

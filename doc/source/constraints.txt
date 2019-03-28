@@ -269,14 +269,23 @@ from ``postgres``, ``mysql``, ``sqlite`` or ``mongodb``:
 
     DBTYPE:[schema.]tablename
 
-For example:
+The following  example will use the file ``.tdda_db_conn_postgres`` from your
+home directory (see :ref:`tdda_db_conn`), providing all of the default
+parameters for the database connection.
 ::
 
     tdda discover postgres:mytable
+    tdda discover postgres:myschema.mytable
 
-This example will use the file ``.tdda_db_conn_postgres`` from your
-home directory (see :ref:`tdda_db_conn`),
-containing all the connection parameters.
+For a NoSQL MongoDB database, document collections are used instead
+of database tables, and a document can be referred to at any level in
+the collection structure. Only scalar properties are used for constraint
+discovery and verification (and any deeper nested structure is ignored).
+For example::
+
+    tdda discover mongodb:mydocument
+    tdda discover mongodb:subcollection.mysubdocument
+
 
 Parameters can also be provided using the following flags (which override
 the values in the ``.tdda_db_conn_DBTYPE`` file, if provided):
@@ -346,22 +355,25 @@ A ``tdda_db_conn_DBTYPE`` file is a JSON file of the form::
         "schema": SCHEMA,
     }
 
-All the entries are optional.
+Some additional notes:
 
-If a ``password`` is provided, then care should be taken to ensure that the
-file has appropriate filesystem permissions so that it cannot be read by
-other users.
+* All the entries are optional.
 
-If a ``schema`` is provided, then it will be used as the default schema,
-when constraints are discovered or verified on a table name with no
-schema specified.
+* If a ``password`` is provided, then care should be taken to ensure that the
+  file has appropriate filesystem permissions so that it cannot be read by
+  other users.
 
-Note that for MySQL (in a ``.tdda_db_conn_mysql`` file), the "schema" parameter
-**must** be specified, as there is no built-in default for it to use.
+* If a ``schema`` is provided, then it will be used as the default schema,
+  when constraints are discovered or verified on a table name with no
+  schema specified.
 
-Note that for Microsoft Windows, the connector file should have the very
-same name as for Unix, beginning with a dot, even though this form of filename
-is not otherwise commonly used on Windows.
+* For MySQL (in a ``.tdda_db_conn_mysql`` file), the "schema"
+  parameter **must** be specified, as there is no built-in default for it to
+  use.
+
+* For Microsoft Windows, the connector file should have the very
+  same name as for Unix, beginning with a dot, even though this form of
+  filename is not otherwise commonly used on Windows.
 
 
 API
