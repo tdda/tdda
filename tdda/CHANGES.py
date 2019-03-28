@@ -202,5 +202,25 @@ Reporting differences when there are different numbers of lines now improved.
 Fixed problem with set_defaults, where print_fn setting wasn't working.
 
 Add -q/--quote flag to rexpy CLI to quote output strings.
+
+Fixed problems with exceptions being raised for constraints that couldn't
+apply because of type mis-match. (e.g. if a field is supposed to be a string,
+and has min/max length constraints, or a rex constraint, then these should
+fail when verified in an environment when it turns out not to be a string
+any more; but it was raising an exception instead). Similar for things like
+sign constraints, where it's expecting a numeric field, but it should cope
+(and fail the constraint rather than blowing up) if the field is not numeric.
+
+Added some 'convenience' imports at the root of the tdda module. So now
+you can just import 'tdda', and then refer to things within tdda.constraints
+or tdda.referencetest or tdda.rexpy. Previously you had to individually
+import each submodule.
+
+Updated MongoDB constraint support, which had rusted.
+
+Updated constraint support for Pandas dataframes to include datetime.date
+columns. Previously it only supported datetime.datetime (and raised an
+exception if given a date-only).
+
 ------------------------- end of dev branch -------------------------
 """
