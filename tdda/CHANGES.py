@@ -222,5 +222,12 @@ Updated constraint support for Pandas dataframes to include datetime.date
 columns. Previously it only supported datetime.datetime (and raised an
 exception if given a date-only).
 
+Extended Pandas verify_df and detect_df so that they can accept an in-memory
+dictionary to represent the constraints to verify/detect, as well as accepting
+a path for a .tdda file. This means that, when using the tdda.constraints API,
+you can now use the library to verify/detect against constraints that are
+stored in other places, not just in the filesystem. (E.g. S3, version control,
+etc).
+
 ------------------------- end of dev branch -------------------------
 """
