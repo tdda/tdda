@@ -20,3 +20,6 @@ with references, or the `blog <http://tdda.info>`_)
   or from a (Python) list of examples.
   There is also a command-line utility for Rexpy.
 
+Although the library is provided as a Python package, and can be called
+through its Python API, it also provides command-line tools.
+

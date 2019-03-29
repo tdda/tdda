@@ -1168,6 +1168,27 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertTrue(not d['b_min_ok'].any())
         self.assertTrue(not d['b_max_ok'].any())
 
+    def testVerifyWithMalformedInMemoryConstraintDict(self):
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', 'three']})
+        cdicts = [
+            [],
+            {},
+            {'fields': []},
+            {'fields': None},
+            {'fields': 'a'},
+            {'fields': 22},
+            {'fields': {
+                    'a': 33,
+                    'b': 'b',
+                }
+            }
+        ]
+        for cdict in cdicts:
+            constraints = DatasetConstraints()
+            with self.assertRaises(Exception):
+                constraints.initialize_from_dict(native_definite(cdict))
+                v = verify_df(df, cdict, repair=False)
+
 
 class TestPandasExampleAccountsData(ReferenceTestCase):
     @classmethod

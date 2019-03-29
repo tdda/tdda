@@ -230,4 +230,9 @@ stored in other places, not just in the filesystem. (E.g. S3, version control,
 etc).
 
 ------------------------- end of dev branch -------------------------
+
+###
+Merged dev branch into master.
+
+All changes listed above are now included in master.
 """
