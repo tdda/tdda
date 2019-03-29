@@ -44,8 +44,10 @@ Changes since Previous Release
   however it wants to, rather than having to use the filesystem.
 
 * The :py:mod:`tdda.constraint` package can now access MySQL databases using
-  the `mysql.connector` driver, in addition to the `MySQLdb` and
-  `mysqlclient` drivers.
+  the `mysql.connector <https://pypi.org/project/mysql-connector-python>`_
+  driver, in addition to the
+  `MySQLdb <https://pypi.org/project/MySQL-python>`_ and
+  `mysqlclient <https://pypi.org/project/mysqlclient>`_ drivers.
 
 * The :py:mod:`tdda.rexpy` tool can now *quote* the regular expressions it
   produces (with the new `--quote` option flag). This makes it easier to
