@@ -231,7 +231,7 @@ etc).
 
 ------------------------- end of dev branch -------------------------
 
-###
+2.04.2019 1.0.24
 Merged dev branch into master.
 
 All changes listed above are now included in master.
