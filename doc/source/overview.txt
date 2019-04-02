@@ -11,9 +11,10 @@ with references, or the `blog <http://tdda.info>`_)
 
 * The :py:mod:`tdda.constraints` library is used to *discover* constraints
   from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
-  datasets meet the constraints in the constraints file.
+  datasets meet the constraints in the constraints file. It also supports
+  tables in a variety of relation databases.
   There is also a command-line utility for discovering and verifying
-  constraints.
+  constraints, and detecting failing records.
 
 * The :py:mod:`tdda.rexpy` library is a tool for automatically
   inferring regular expressions from a column in a Pandas DataFrame

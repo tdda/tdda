@@ -22,8 +22,8 @@ Changes since Previous Release
   will apply to the entire line.
 
 * The `ignore_patterns` parameter in :py:mod:`tdda.referencetest` can now
-  accept grouped subexpressios in regular expressions. This allows use of
-  alternations, such as `(a|b)`, which were previously not supported.
+  accept grouped subexpressions in regular expressions. This allows use of
+  alternations, which were previously not supported.
 
 * The `ignore_substrings` parameter in
   :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
@@ -40,13 +40,14 @@ Changes since Previous Release
   constraints, rather than failures.
 
 * The :py:mod:`tdda.constraint` package now supports Python `datetime.date`
-  fields in Pandas DataFrames, as well as `datetime.datetime`.
+  fields in Pandas DataFrames, in addition to the existing support of
+  `datetime.datetime`.
 
 * The :py:mod:`tdda.constraint` Python API now provides support for in-memory
-  constraints (by allowing Python dictionaries to be passed in to
+  constraints, by allowing Python dictionaries to be passed in to
   :py:meth:`~tdda.contraints.verify_df` and
   :py:meth:`~tdda.constraints.detect_df`,
-  as an alternative to passing in a `.tdda` filename).
+  as an alternative to passing in a `.tdda` filename.
   This allows an application using the library to store its constraints
   however it wants to, rather than having to use the filesystem.
 
@@ -57,7 +58,7 @@ Changes since Previous Release
   `mysqlclient <https://pypi.org/project/mysqlclient>`_ drivers.
 
 * The :py:mod:`tdda.rexpy` tool can now *quote* the regular expressions it
-  produces (with the new `--quote` option flag). This makes it easier to
+  produces, with the new `--quote` option flag. This makes it easier to
   copy the expressions to use them on the command line, or embed them in
   strings in many programming languages.
 
