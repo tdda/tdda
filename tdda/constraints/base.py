@@ -159,8 +159,8 @@ class DatasetConstraints(object):
         """
         with open(path) as f:
             text = f.read()
-        self.initialize_from_dict(native_definite(json.loads(text)))
-
+        obj = json.loads(text, object_pairs_hook=OrderedDict)
+        self.initialize_from_dict(native_definite(obj))
 
     def initialize_from_dict(self, in_constraints):
         """
@@ -295,7 +295,7 @@ class FieldConstraints(object):
         into the dictionary using the constraint kind as a key.
         """
         self.name = name
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -349,7 +349,7 @@ class MultiFieldConstraints(FieldConstraints):
         into the dictionary using the constraint kind as a key.
         """
         self.names = tuple(names)
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -945,7 +945,7 @@ def UTF8DefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
                            for (k, v) in s.items())
-    elif type(s) == dict:
+    elif isinstance(s, dict):
         return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
                 for (k, v) in s.items()}
     return s
@@ -967,7 +967,7 @@ def NativeDefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
                            for (k, v) in s.items()))
-    elif type(s) is dict:
+    elif isinstance(s, dict):
         return {NativeDefiniteObject(k): NativeDefiniteObject(v)
                 for (k, v) in s.items()}
     return s

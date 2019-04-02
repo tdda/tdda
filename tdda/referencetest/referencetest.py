@@ -752,7 +752,8 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_result(string, expected_path)
+            self._write_reference_result(string, expected_path,
+                                         lstrip=lstrip, rstrip=rstrip)
         else:
             ilc = ignore_substrings
             ip = ignore_patterns
@@ -842,7 +843,8 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
@@ -932,7 +934,8 @@ class ReferenceTest(object):
         """
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_files(actual_paths, expected_paths)
+            self._write_reference_files(actual_paths, expected_paths,
+                                        lstrip=strip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
@@ -1005,22 +1008,27 @@ class ReferenceTest(object):
             kind = None
         return kind in self.regenerate and self.regenerate[kind]
 
-    def _write_reference_file(self, actual_path, reference_path, binary=False):
+    def _write_reference_file(self, actual_path, reference_path, binary=False,
+                              lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data.
         """
         mode = 'rb' if binary else 'r'
         with open(actual_path, mode) as fin:
             actual = fin.read()
+        if not binary:
+            actual = self._normalize_whitespace(actual, lstrip, rstrip)
         self._write_reference_result(actual, reference_path, binary=binary)
 
-    def _write_reference_files(self, actual_paths, reference_paths):
+    def _write_reference_files(self, actual_paths, reference_paths,
+                               lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data for a list of
         files.
         """
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
 
     def _write_reference_dataset(self, df, reference_path):
         """
@@ -1028,12 +1036,20 @@ class ReferenceTest(object):
         """
         self.pandas.write_csv(df, reference_path)
 
-    def _write_reference_result(self, result, reference_path, binary=False):
+    def _write_reference_result(self, result, reference_path, binary=False,
+                                lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data from in-memory
         results.
         """
         mode = 'wb' if binary else 'w'
+        if not binary and (lstrip or rstrip):
+            if lstrip and rstrip:
+                result = '\n'.join([r.strip() for r in result.splitlines()])
+            elif lstrip:
+                result = '\n'.join([r.lstrip() for r in result.splitlines()])
+            elif rstrip:
+                result = '\n'.join([r.rstrip() for r in result.splitlines()])
         with open(reference_path, mode) as fout:
             fout.write(result)
         if self.verbose and self.print_fn:
