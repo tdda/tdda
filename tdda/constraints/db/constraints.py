@@ -6,16 +6,16 @@ of DB-API (PEP-0249) compliant databases, and also for a number of other
 
 The top-level functions are:
 
-    :py:func:`discover_db_table`:
+    :py:func:`~tdda.constraints.discover_db_table`:
         Discover constraints from a single database table.
 
-    :py:func:`verify_db_table`:
+    :py:func:`~tdda.constraints.verify_db_table`:
         Verify (check) a single database table, against a set of previously
         discovered constraints.
 
-    :py:func:`detect_db_table`:
-        Verify (check) a single database table, against a set of previously
-        discovered constraints.
+    :py:func:`~tdda.constraints.detect_db_table`:
+        For detection of failing records in a single database table,
+        but not yet implemented for databases.
 """
 from __future__ import division
 from __future__ import print_function
@@ -259,9 +259,9 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         *report*:
                             ``all`` or ``fields``.
                             This controls the behaviour of the
-                            :py:meth:`~DatabaseVerification.__str__`
+                            :py:meth:`~~tdda.constraints.db.constraints.DatabaseVerification.__str__`
                             method on the resulting
-                            :py:class:`~DatabaseVerification`
+                            :py:class:`~tdda.constraints.db.constraints.DatabaseVerification`
                             object (but not its content).
 
                             The default is ``all``, which means that
@@ -279,7 +279,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 
     Returns:
 
-        :py:class:`~DatabaseVerification` object.
+        :py:class:`~tdda.constraints.db.constraints.DatabaseVerification` object.
 
         This object has attributes:
 
@@ -315,7 +315,8 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                     type_checking='strict', testing=False, **kwargs):
     """
-    Detect failures from verification of constraints
+    For detection of failures from verification of constraints, but
+    not yet implemented for database tables.
     """
     raise NotImplementedError('Detection is not implemented (yet) '
                               'for databases.')

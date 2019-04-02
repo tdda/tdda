@@ -9,16 +9,17 @@ DataFrames saved as Feather files.
 
 The top-level functions are:
 
-    :py:func:`discover_df`:
+    :py:func:`tdda.constraints.discover_df`:
         Discover constraints from a Pandas DataFrame.
 
-    :py:func:`verify_df`:
+    :py:func:`tdda.constraints.verify_df`:
         Verify (check) a Pandas DataFrame, against a set of previously
         discovered constraints.
 
-    :py:func:`detect_df`:
-        Verify (check) a Pandas DataFrame, against a set of previously
-        discovered constraints, and generate an output dataset containing
+    :py:func:`tdda.constraints.detect_df`:
+        For detection of failing rows in a Pandas DataFrame,
+        verified against a set of previously discovered constraints,
+        and generate an output dataset containing
         information about input rows which failed any of the constraints.
 
 """
@@ -736,8 +737,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         *report*:
                             ``all`` or ``fields``.
                             This controls the behaviour of the
-                            :py:meth:`~PandasVerification.__str__` method on
-                            the resulting :py:class:`~PandasVerification`
+                            :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.__str__` method on
+                            the resulting :py:class:`~tdda.constraints.pd.constraints.PandasVerification`
                             object (but not its content).
 
                             The default is ``all``, which means that
@@ -750,16 +751,16 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
     Returns:
 
-        :py:class:`~PandasVerification` object.
+        :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
 
         This object has attributes:
 
         - *passes*      --- Number of passing constriants
         - *failures*    --- Number of failing constraints
 
-        It also has a :py:meth:`~PandasVerification.to_frame()` method for
+        It also has a :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.to_frame()` method for
         converting the results of the verification to a Pandas DataFrame,
-        and a :py:meth:`~PandasVerification.__str__` method to print
+        and a :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.__str__` method to print
         both the detailed and summary results of the verification.
 
     Example usage::
@@ -944,7 +945,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
     Returns:
 
-        :py:class:`~PandasDetection` object.
+        :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
 
         This object has a :py:meth:`~PandasDetection.detected()` method
         for obtaining the Pandas DataFrame containing the detection
