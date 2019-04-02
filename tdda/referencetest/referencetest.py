@@ -633,6 +633,10 @@ class ReferenceTest(object):
 
         The *ignore_lines* parameter exists for backwards compatibility as
         an alias for *remove_lines*.
+
+        The :py:meth:`assertFileCorrect()` method can be used as an alias for
+        :py:meth:`assertTextFileCorrect()`, retained for backwards
+        compatibility.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
@@ -676,6 +680,10 @@ class ReferenceTest(object):
         ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
         ``preprocess`` and ``max_permutation_cases``
         optional parameters described in :py:meth:`assertStringCorrect()`.
+
+        The :py:meth:`assertFilesCorrect()` metohd can be used as an alias for
+        :py:meth:`assertTextFilesCorrect()`, retained for backwards
+        compatibility.
         """
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
