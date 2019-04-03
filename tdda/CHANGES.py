@@ -236,4 +236,8 @@ Merged dev branch into master.
 
 All changes listed above are now included in master.
 
+------------------------- dev branch (continuing) -------------------------
+Merged master back into dev, so dev is now up to date and ready as a place
+for development to continue.
+------------------------- end of dev branch (continuing) ------------------
 """
