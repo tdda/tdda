@@ -615,11 +615,13 @@ class Extractor(object):
         leftFixed = get_only_present_at_pos(leftPos)
 
         if leftFixed:
-            print('LEFT FOUND!', leftFixed)
+            if self.verbose:
+                print('LEFT FOUND!', leftFixed)
             return left_parts(patterns, leftFixed)
         rightFixed = get_only_present_at_pos(rightPos, verbose=self.verbose)
         if rightFixed:
-            print('RIGHT FOUND!', rightFixed)
+            if self.verbose:
+                print('RIGHT FOUND!', rightFixed)
             return right_parts(patterns, rightFixed)
         return [patterns]
 
@@ -710,6 +712,7 @@ class Extractor(object):
                         results[i] = [x]
                     break
             else:
+                # TODO: should never happen, so should raise an exception
                 print('Example "%s" did not match any pattern' % x)
         return results
 
@@ -1246,6 +1249,7 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                      for r in range(np)]
     pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(example_freqs))
                      for r in range(np)]
+    changed = False
     while len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
         uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
@@ -1260,15 +1264,27 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
         while sort_totals[p] < target:
             p += 1
         rex = patterns[p]
-        results[rex] = Coverage(n=pattern_freqs[p],
-                                n_uniq=pattern_uniqs[p],
-                                incr=totals[p],
-                                incr_uniq=uniq_totals[p],
-                                index=indexes[p])
+        added = rex not in results.keys()
+        zeroed = False
         for i, x in enumerate(example_freqs):
             if matrix[i][p]:
                 matrix[i] = zeros
                 deduped[i] = zeros
+                zeroed = True
+        if not added and not zeroed:
+            # we've got to 100% coverage without using all of the patterns!
+            for zp in range(p+1, np):
+                zrex = patterns[zp]
+                results[zrex] = Coverage(n=pattern_freqs[zp],
+                                         n_uniq=pattern_uniqs[zp],
+                                         incr=0, incr_uniq=0,
+                                         index=indexes[zp])
+        else:
+            results[rex] = Coverage(n=pattern_freqs[p],
+                                    n_uniq=pattern_uniqs[p],
+                                    incr=totals[p],
+                                    incr_uniq=uniq_totals[p],
+                                    index=indexes[p])
     return results
 
 
