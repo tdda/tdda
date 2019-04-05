@@ -239,5 +239,10 @@ All changes listed above are now included in master.
 ------------------------- dev branch (continuing) -------------------------
 Merged master back into dev, so dev is now up to date and ready as a place
 for development to continue.
+
+Fix in rexpy code for computing incremental coverage, to deal with some
+edge cases that were hanging. It wasn't taking account of the possibility
+that a *subset* of the expressions found could give 100% coverage, and
+therefore some of the other expressions aren't contributing anything.
 ------------------------- end of dev branch (continuing) ------------------
 """
