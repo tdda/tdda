@@ -236,4 +236,8 @@ Merged dev branch into master.
 
 All changes listed above are now included in master.
 
+###
+cherry-pick 3e068695a5cf431faea2a4c1d2f4194b6655c137
+
+Fix for hang in computing rex coverage when patterns can overlap.
 """
