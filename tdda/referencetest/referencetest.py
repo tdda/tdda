@@ -796,17 +796,22 @@ class ReferenceTest(object):
         results.
         """
         mode = 'wb' if binary else 'w'
-        if not binary and (lstrip or rstrip):
-            if lstrip and rstrip:
-                result = '\n'.join([r.strip() for r in result.splitlines()])
-            elif lstrip:
-                result = '\n'.join([r.lstrip() for r in result.splitlines()])
-            elif rstrip:
-                result = '\n'.join([r.rstrip() for r in result.splitlines()])
+        if not binary:
+            result = self._normalize_whitespace(result, lstrip, rstrip)
         with open(reference_path, mode) as fout:
             fout.write(result)
         if self.verbose and self.print_fn:
             self.print_fn('Written %s' % reference_path)
+
+    def _normalize_whitespace(self, result, lstrip=False, rstrip=False):
+        if lstrip and rstrip:
+            return '\n'.join([r.strip() for r in result.splitlines()])
+        elif lstrip:
+            return '\n'.join([r.lstrip() for r in result.splitlines()])
+        elif rstrip:
+            return '\n'.join([r.rstrip() for r in result.splitlines()])
+        else:
+            return result
 
     def _check_failures(self, failures, msgs):
         """

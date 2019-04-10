@@ -244,5 +244,8 @@ Fix in rexpy code for computing incremental coverage, to deal with some
 edge cases that were hanging. It wasn't taking account of the possibility
 that a *subset* of the expressions found could give 100% coverage, and
 therefore some of the other expressions aren't contributing anything.
+
+Fix for output regeneration in referencetests having rusted.
+It was missing the new method _normalize_whitespace.
 ------------------------- end of dev branch (continuing) ------------------
 """
