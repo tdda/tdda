@@ -80,10 +80,11 @@ class, so that the ``ReferenceTest`` methods can be called directly from
 This example shows how to write a test for a function that generates
 a CSV file::
 
-    from tdda.referencetest.referencetestcase import ReferenceTestCase
+    from tdda.referencetest import ReferenceTestCase, tag
     import my_module
 
     class MyTest(ReferenceTestCase):
+        @tag
         def test_my_csv_file(self):
             result = my_module.produce_a_csv_file(self.tmp_dir)
             self.assertCSVFileCorrect(result, 'result.csv')
@@ -93,13 +94,25 @@ a CSV file::
     if __name__ == '__main__':
         ReferenceTestCase.main()
 
-To run the test::
+To run the test:
+
+.. code-block:: bash
 
     python mytest.py
 
+The test is tagged with ``@tag``, meaning that it will be included if
+you run the tests with the ``--tagged`` option flag to specify that only
+tagged tests should be run:
+
+.. code-block:: bash
+
+    python mytest.py --tagged
+
 The first time you run the test, it will produce an error unless you
 have already created the expected ("reference") results. You can
-create the reference results automatically::
+create the reference results automatically
+
+.. code-block:: bash
 
     python mytest.py --write-all
 
@@ -121,9 +134,10 @@ methods and properties.
 This example shows how to write a test for a function that generates
 a CSV file::
 
-    from tdda.referencetest import referencepytest
+    from tdda.referencetest import referencepytest, tag
     import my_module
 
+    @tag
     def test_my_csv_function(ref):
         resultfile = my_module.produce_a_csv_file(ref.tmp_dir)
         ref.assertCSVFileCorrect(resultfile, 'result.csv')
@@ -138,19 +152,34 @@ You also need a ``conftest.py`` file, to define the fixtures and defaults::
     def pytest_addoption(parser):
         referencepytest.addoption(parser)
 
+    def pytest_collection_modifyitems(session, config, items):
+        referencepytest.tagged(config, items)
+
     @pytest.fixture(scope='module')
     def ref(request):
         return referencepytest.ref(request)
 
     referencepytest.set_default_data_location('testdata')
 
-To run the test::
+To run the test:
+
+.. code-block:: bash
 
     pytest
 
+The test is tagged with ``@tag``, meaning that it will be included if
+you run the tests with the ``--tagged`` option flag to specify that only
+tagged tests should be run:
+
+.. code-block:: bash
+
+    pytest --tagged
+
 The first time you run the test, it will produce an error unless you
 have already created the expected ("reference") results. You can
-create the reference results automatically::
+create the reference results automatically:
+
+.. code-block:: bash
 
     pytest --write-all -s
 
@@ -159,5 +188,7 @@ produced in the data output location, to check that they are as expected.
 
 """
 
-from tdda.referencetest.referencetestcase import ReferenceTestCase
+from tdda.referencetest.referencetest import tag
+from tdda.referencetest.referencetestcase import (ReferenceTestCase,
+                                                  TaggedTestLoader)
 from tdda.referencetest.captureoutput import CaptureOutput

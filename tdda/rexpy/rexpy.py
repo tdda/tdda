@@ -3,7 +3,7 @@
 """
 Usage::
 
-    tdda rexpy [FLAGS] [input file [output file]]
+    rexpy [FLAGS] [input file [output file]]
 
 If input file is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
@@ -22,6 +22,13 @@ FLAGS are optional flags. Currently::
                     variable components with parentheses
                         e.g.     '^([A-Z]+)\-([0-9]+)$'
                         becomes  '^[A-Z]+\-[0-9]+$'
+
+  -q, --quote       Display the resulting regular expressions as
+                    double-quoted, escaped strings, in a form broadly
+                    suitable for use in Unix shells, JSON, and string
+                    literals in many programming languages.
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  "^[A-Z]+\\-[0-9]+$"
 
   -u, --underscore  Allow underscore to be treated as a letter.
                     Mostly useful for matching identifiers
@@ -70,8 +77,8 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info.major < 3 else str
-bytes_type = str if sys.version_info.major < 3 else bytes
+str_type = unicode if sys.version_info[0] < 3 else str
+bytes_type = str if sys.version_info[0] < 3 else bytes
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -98,8 +105,8 @@ MIN_STRINGS_PER_PATTERN = 1
 USE_SAMPLING = False
 USE_SAMPLING = True
 
-USE_SAMPLING = 0
 VERBOSITY = 0
+RE_FLAGS = re.UNICODE | re.DOTALL
 
 
 class Size(object):
@@ -145,7 +152,7 @@ def cre(rex):
     if c:
         return c
     else:
-        memo[rex] = c = re.compile(rex, re.U)
+        memo[rex] = c = re.compile(rex, RE_FLAGS)
         return c
 
 
@@ -256,7 +263,7 @@ class Categories(object):
         )
 
     def Punctuation(self, el_re):
-        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, re.U)
+        specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
 
@@ -675,11 +682,13 @@ class Extractor(object):
         leftFixed = get_only_present_at_pos(leftPos)
 
         if leftFixed:
-            print('LEFT FOUND!', leftFixed)
+            if self.verbose:
+                print('LEFT FOUND!', leftFixed)
             return left_parts(patterns, leftFixed)
         rightFixed = get_only_present_at_pos(rightPos, verbose=self.verbose)
         if rightFixed:
-            print('RIGHT FOUND!', rightFixed)
+            if self.verbose:
+                print('RIGHT FOUND!', rightFixed)
             return right_parts(patterns, rightFixed)
         return [patterns]
 
@@ -784,6 +793,7 @@ class Extractor(object):
                         results[i] = [x]
                     break
             else:
+                # TODO: should never happen, so should raise an exception
                 print('Example "%s" did not match any pattern' % x)
         return results
 
@@ -1259,7 +1269,7 @@ def rex_coverage(patterns, examples, dedup=False):
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
                         p,
                         '' if p.endswith('$') else '$')
-        r = re.compile(p, re.U)
+        r = re.compile(p, RE_FLAGS)
         if dedup:
             strings = examples.strings
             results.append(sum(1 if re.match(r, k) else 0
@@ -1404,7 +1414,7 @@ def coverage_matrices(patterns, examples):
 
     matrix = []
     deduped = []  # deduped version of same
-    rexes = [re.compile(p, re.U) for p in patterns]
+    rexes = [re.compile(p, RE_FLAGS) for p in patterns]
     strings = examples.strings
     freqs = examples.freqs
     for (x, n) in zip(strings, freqs):
@@ -1431,6 +1441,7 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                      for r in range(np)]
     pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
+    changed = False
     while len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
         uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
@@ -1450,10 +1461,27 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                                 incr=totals[p],
                                 incr_uniq=uniq_totals[p],
                                 index=indexes[p])
+        added = rex not in results.keys()
+        zeroed = False
         for i in range(examples.n_uniqs):
             if matrix[i][p]:
                 matrix[i] = zeros
                 deduped[i] = zeros
+                zeroed = True
+        if not added and not zeroed:
+            # we've got to 100% coverage without using all of the patterns!
+            for zp in range(p + 1, np):
+                zrex = patterns[zp]
+                results[zrex] = Coverage(n=pattern_freqs[zp],
+                                         n_uniq=pattern_uniqs[zp],
+                                         incr=0, incr_uniq=0,
+                                         index=indexes[zp])
+        else:
+            results[rex] = Coverage(n=pattern_freqs[p],
+                                    n_uniq=pattern_uniqs[p],
+                                    incr=totals[p],
+                                    incr_uniq=uniq_totals[p],
+                                    index=indexes[p])
     return results
 
 
@@ -1680,7 +1708,7 @@ class ResultsSummary(object):
         return '\n'.join(out)
 
     def to_re(self, patterns, grouped=False, as_re=True):
-        f = (self.extractor.rle2re if len(patterns[0]) == 2
+        f = (self.extractor.rle2re if not patterns or len(patterns[0]) == 2
                                    else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 
@@ -1919,8 +1947,22 @@ def get_nCalls():
     return nCalls
 
 
-def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
-    if in_path:
+def rexpy_streams(in_path=None, out_path=None, skip_header=False,
+                  quote=False, **kwargs):
+    """
+    in_path is
+        None:             to read inputs from stdin
+        path to file:     to read inputs from file at in_path
+        list of strings:  to use those strings as the inputs
+
+    out_path is:
+        None:             to write outputs to stdout
+        path to file:     to write outputs from file at out_path
+        False:            to return the strings as a list
+    """
+    if type(in_path) in (list, tuple):
+        strings = in_path
+    elif in_path:
         with open(in_path) as f:
             strings = f.read().splitlines()
     else:
@@ -1930,7 +1972,11 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
     if skip_header:
         strings = strings[1:]
     patterns = extract(strings, **kwargs)
-    if out_path:
+    if quote:
+        patterns = [dquote(p) for p in patterns]
+    if out_path is False:
+        return patterns
+    elif out_path:
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
@@ -1946,6 +1992,7 @@ def get_params(args):
         'skip_header': False,
         'extra_letters': None,
         'tag': None,
+        'quote': False,
         'verbose': 0,
         'variableLengthFrags': False,
     }
@@ -1957,6 +2004,8 @@ def get_params(args):
                 params['skip_header'] = True
             elif a in ('-g', '--group'):
                 params['tag'] = True
+            elif a in ('-q', '--quote'):
+                params['quote'] = True
             elif a in ('-u', '-_', '--underscore'):
                 params['extra_letters'] = (params['extra_letters'] or '') + '_'
             elif a in ('-d', '-.', '--dot', '--period'):
@@ -2110,6 +2159,12 @@ def is_outer_group(m, i):
 
 def ilist(L=None):
     return array('i', L or [])
+
+def dquote(string):
+    parts = [p.replace('\\', r'\\').replace('\n', r'\n')
+             for p in string.split('"')]
+    quoted = ('\\"').join(parts)
+    return '"%s"' % quoted
 
 
 def usage_error():

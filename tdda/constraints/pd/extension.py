@@ -11,9 +11,9 @@ import sys
 
 from tdda.constraints.extension import ExtensionBase
 
-from tdda.constraints.pd.constraints import applicable
 from tdda.constraints.pd.discover import PandasDiscoverer
 from tdda.constraints.pd.verify import PandasVerifier
+from tdda.constraints.pd.detect import PandasDetector
 
 
 class TDDAPandasExtension(ExtensionBase):
@@ -21,11 +21,14 @@ class TDDAPandasExtension(ExtensionBase):
         ExtensionBase.__init__(self, argv, verbose=verbose)
 
     def applicable(self):
-        return applicable(self.argv)
+        for a in self.argv:
+            if a.endswith('.csv') or a.endswith('.feather') or a == '-':
+                return True
+        return False
 
     def help(self, stream=sys.stdout):
-        print('  - CSV files', file=stream)
-        print('  - Pandas DataFrames as .feather files', file=stream)
+        print('  - Flat files (filename.csv)', file=stream)
+        print('  - Pandas DataFrames (filename.feather)', file=stream)
 
     def spec(self):
         return 'a CSV file or a .feather file'
@@ -35,4 +38,7 @@ class TDDAPandasExtension(ExtensionBase):
 
     def verify(self):
         return PandasVerifier(self.argv, verbose=self.verbose).verify()
+
+    def detect(self):
+        return PandasDetector(self.argv, verbose=self.verbose).detect()
 

@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from tdda.referencetest.tests.testbase import *
 from tdda.referencetest.tests.teststrings import *
 from tdda.referencetest.tests.testfiles import *
 from tdda.referencetest.tests.testpandas import *

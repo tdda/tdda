@@ -2,7 +2,7 @@
 """
 The :py:mod:`tdda.constraints` module includes a set of examples.
 
-To copy these examples to your own *constraints-examples* subdirectory
+To copy these examples to your own *constraints_examples* subdirectory
 (or to a location of your choice), run the command::
 
     tdda examples constraints [mydirectory]

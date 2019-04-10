@@ -8,6 +8,11 @@ To copy these examples to your own *referencetest-examples* subdirectory
 
     tdda examples referencetest [mydirectory]
 
+Alternatively, you can copy all examples using the following command::
+
+    tdda examples
+
+which will create three separate sub-directories.
 """
 from __future__ import absolute_import
 

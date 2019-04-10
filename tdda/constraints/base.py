@@ -8,19 +8,38 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import datetime
+import getpass
 import json
+import os
 import re
+import socket
 import sys
 
 from collections import OrderedDict
 
+from tdda.version import version
+
 PRECISIONS = ('open', 'closed', 'fuzzy')
-STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
-                              'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values', 'rex')
+
+CONSTRAINT_SUFFIX_MAP = OrderedDict((
+    ('type', 'type'),
+    ('min', 'min'),
+    ('min_length', 'min_length'),
+    ('max', 'max'),
+    ('max_length', 'max_length'),
+    ('sign', 'sign'),
+    ('max_nulls', 'nonnull'),
+    ('no_duplicates', 'nodups'),
+    ('allowed_values', 'values'),
+    ('rex', 'rex'),
+    ('transform', None),  # this mapped value isn't used
+))
+
+STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
+STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
-         'zero', 'null')
+         'null')
 TYPES = ('bool', 'int', 'real', 'date', 'string')
 DATE_VALUED_CONSTRAINTS = ('min', 'max')
 UTF8 = 'UTF-8'
@@ -33,10 +52,14 @@ RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
                   r'(\d{1,2}):(\d{2}):(\d{2})'
                   r'\.(\d+)$')
 
-UNICODE_TYPE = str if sys.version_info.major >= 3 else unicode
+UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 
-EPSILON_DEFAULT = 0.01  # 1 per cent tolerance for min/max constraints for
+EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
                         # real (i.e. floating point) fields.
+
+METADATA_KEYS = ('as_at', 'local_time', 'utc_time', 'creator',
+                 'rdbms', 'source', 'host','user', 'dataset',
+                 'n_records', 'n_selected', 'tddafile')
 
 
 
@@ -50,6 +73,10 @@ class SafeMarks:
     tick = 'OK'
     cross = 'X'
     nothing = '-'
+
+
+class InvalidConstraintSpecification(Exception):
+    pass
 
 
 class TDDAObject(OrderedDict):
@@ -76,11 +103,37 @@ class DatasetConstraints(object):
     Currently only supports per-field constraints.
     """
     def __init__(self, per_field_constraints=None, loadpath=None):
+        self.as_at = None
+        self.local_time = None
+        self.utc_time = None
+        self.host = None
+        self.user = None
+        self.creator = None
+        self.loadpath = self.tddafile = loadpath
+        self.source = None
+        self.dataset = None
+        self.n_records = None
+        self.n_selected = None
         if loadpath:
             self.fields = Fields()
             self.load(loadpath)
         else:
             self.fields = Fields(per_field_constraints)
+
+    def set_creator(self, creator=None):
+        self.creator = creator or 'TDDA %s' % version
+
+    def set_rdbms(self, rdbms):
+        self.rdbms = rdbms
+
+    def set_source(self, source, dataset=None):
+        self.source = source
+        self.dataset = (dataset
+                        or (os.path.basename(source) if source else None))
+
+    def set_stats(self, n_records, n_selected=None):
+        self.n_records = n_records
+        self.n_selected = n_selected
 
     def __getitem__(self, k):
         if type(k) == int:
@@ -93,6 +146,10 @@ class DatasetConstraints(object):
     def add_field(self, fc):
         self.fields[fc.name] = fc
 
+    def remove_field(self, name):
+        if name in self.fields:
+            del self.fields[name]
+
     def __str__(self):
         return 'FIELDS:\n\n%s' % str(self.fields)
 
@@ -102,7 +159,8 @@ class DatasetConstraints(object):
         """
         with open(path) as f:
             text = f.read()
-        self.initialize_from_dict(native_definite(json.loads(text)))
+        obj = json.loads(text, object_pairs_hook=OrderedDict)
+        self.initialize_from_dict(native_definite(obj))
 
     def initialize_from_dict(self, in_constraints):
         """
@@ -131,27 +189,70 @@ class DatasetConstraints(object):
                     if is_date and kind in DATE_VALUED_CONSTRAINTS:
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
-                else:
+                elif not kind.startswith('#'):
                     warn('Constraint kind %s for field %s unknown: ignored.'
                          % (kind, fieldname))
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
+        metadata = in_constraints.get('creation_metadata', {})
+        for (k, v) in metadata.items():
+            if k in METADATA_KEYS and v is not None:
+                self.__dict__[k] = v
+                if k == 'tddafile':
+                    self.loadpath = v  # I think...
 
-    def to_dict(self):
+        try:
+            self.postloadhook(in_constraints)
+        except:
+            pass
+
+    def set_dates_user_host_creator(self, as_at=None):
+        now = datetime.datetime.now()
+        utcnow = datetime.datetime.utcnow()
+        self.as_at = as_at
+        self.local_time = now.strftime('%Y-%m-%d %H:%H:%S')
+        self.utc_time = utcnow.strftime('%Y-%m-%d %H:%H:%S')
+        self.host = socket.gethostname()
+        self.user = getpass.getuser()
+        self.set_creator()
+
+    def get_metadata(self, tddafile=None):
+        d = OrderedDict(
+            (k, getattr(self, k, None))
+            for k in METADATA_KEYS if getattr(self, k, None) is not None
+        )
+        if tddafile:
+            d['tddafile'] = tddafile
+        return d
+
+    def clear_metadata(self):
+        self.metadata = None
+
+    def to_dict(self, tddafile=None):
         """
         Converts the constraints in this object to a dictionary.
         """
         constraints = OrderedDict((
             (f, v.to_dict_value()) for f, v in self.fields.items()
         ))
-        return OrderedDict((('fields', constraints),))
+        metadata = self.get_metadata(tddafile=tddafile)
+        d = OrderedDict()
+        if metadata:
+            d['creation_metadata'] = metadata
+        d['fields'] = constraints
+        try:
+            self.postdicthook(d)
+        except:
+            pass
 
-    def to_json(self):
+        return d
+
+    def to_json(self, tddafile=None):
         """
         Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps(self.to_dict(), indent=4) + '\n'
+        return json.dumps(self.to_dict(tddafile=tddafile), indent=4) + '\n'
 
     def sort_fields(self, fields=None):
         """
@@ -172,8 +273,8 @@ class Fields(TDDAObject):
         for c in constraints or []:
             self[c.name] = c
 
-    def to_dict_value(self):
-        return OrderedDict((name, c.to_dict_value())
+    def to_dict_value(self, raw=False):
+        return OrderedDict((name, c.to_dict_value(raw=raw))
                              for (name, c) in self.items())
 
     def __str__(self):
@@ -194,12 +295,12 @@ class FieldConstraints(object):
         into the dictionary using the constraint kind as a key.
         """
         self.name = name
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         """
         Returns a pair consisting of the name supplied, or the stored name,
         and an ordered dictionary keyed on constraint kind with the value
@@ -214,7 +315,7 @@ class FieldConstraints(object):
         keys = to_preferred_order(self.constraints.keys(),
                                   STANDARD_FIELD_CONSTRAINTS)
         for k in keys:
-            d[k] = self.constraints[k].to_dict_value()
+            d[k] = self.constraints[k].to_dict_value(raw=raw)
         return d
 
     def __getitem__(self, k):
@@ -248,7 +349,7 @@ class MultiFieldConstraints(FieldConstraints):
         into the dictionary using the constraint kind as a key.
         """
         self.names = tuple(names)
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -261,7 +362,7 @@ class MultiFieldConstraints(FieldConstraints):
               specifying the constraint.
 
         For simple constraints, the value is a
-        base type; for more complex constraints with several components,
+        base type; for more complex Constraints with several components,
         the value will itself be an (ordered) dictionary.
 
         The ordering is all to make the JSON file get written in a sensible
@@ -329,8 +430,25 @@ class Constraint(object):
                                    repr(self.value),
                                    (', ' + kws) if kws else '')
 
-    def to_dict_value(self):
-        return (self.value if type(self.value) != datetime.datetime
+    def check_validity(self, name, value, *valids):
+        """
+        Check that the value of a constraint is allowed. If it isn't,
+        then the TDDA file is not valid.
+        """
+        allowed = []
+        for vs in valids:
+            allowed.extend(vs)
+            if value in vs:
+                return
+        errmsg = ('must be one of: %s'
+                  % (', '.join([json.dumps(v) for v in allowed])))
+        raise InvalidConstraintSpecification('Invalid %s constraint value %s '
+                                             '(%s)' % (name, value, errmsg))
+
+    def to_dict_value(self, raw=False):
+        return (self.value
+                   if raw or type(self.value) not in (datetime.datetime,
+                                                      datetime.date)
                 else str(self.value))
 
 
@@ -342,13 +460,13 @@ class MinConstraint(Constraint):
     """
     Constraint specifying the minimum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
-        assert precision is None or precision in PRECISIONS
+    def __init__(self, value, precision=None, comment=None):
+        self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         if self.precision is None:
-            return Constraint.to_dict_value(self)
+            return Constraint.to_dict_value(self, raw=raw)
         else:
             return OrderedDict((('value', self.value),
                                 ('precision', self.precision)))
@@ -358,13 +476,13 @@ class MaxConstraint(Constraint):
     """
     Constraint specifying the maximum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
-        assert precision is None or precision in PRECISIONS
+    def __init__(self, value, precision=None, comment=None):
+        self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
 
-    def to_dict_value(self):
+    def to_dict_value(self, raw=False):
         if self.precision is None:
-            return Constraint.to_dict_value(self)
+            return Constraint.to_dict_value(self, raw=raw)
         else:
             return OrderedDict((('value', self.value),
                                 ('precision', self.precision)))
@@ -379,8 +497,8 @@ class SignConstraint(Constraint):
     Possible values are ``positive``, ``non-negative``, ``zero``,
     ``non-positive``, ``negative`` and ``null``.
     """
-    def __init__(self, value):
-        assert value is None or value in SIGNS
+    def __init__(self, value, comment=None):
+        self.check_validity('sign', value, [None], SIGNS)
         Constraint.__init__(self, 'sign', value)
 
 
@@ -399,11 +517,12 @@ class TypeConstraint(Constraint):
     sometimes used because of Pandas silent and automatic promotion
     of integer fields to floats if nulls are present.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         if type(value) in (list, tuple):
-            assert all(t in TYPES for t in value)
+            for t in value:
+                self.check_validity('type', t, TYPES)
         else:
-            assert value is None or value in TYPES
+            self.check_validity('type', value, [None], TYPES)
         Constraint.__init__(self, 'type', value)
 
 
@@ -414,7 +533,7 @@ class MaxNullsConstraint(Constraint):
     (The constraint generator only generates 0 and 1, but the verifier
     will verify and number.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_nulls', value)
 
 
@@ -426,8 +545,8 @@ class NoDuplicatesConstraint(Constraint):
     Currently only generated for string fields, though could be used
     more broadly.
     """
-    def __init__(self, value=True):
-        assert value is None or value == True
+    def __init__(self, value=True, comment=None):
+        self.check_validity('no_duplicates', value, [None, True, False])
         Constraint.__init__(self, 'no_duplicates', value)
 
 
@@ -442,7 +561,7 @@ class AllowedValuesConstraint(Constraint):
     time of writing, but check above in case this comment rusts)
     different values in the field.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'allowed_values', value)
 
 
@@ -464,7 +583,7 @@ class MaxLengthConstraint(Constraint):
     Generated instead of a ``MaxConstraint`` by this generation code,
     but can be used in conjunction with a ``MinConstraint``.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_length', value)
 
 
@@ -473,7 +592,7 @@ class RexConstraint(Constraint):
     Constraint restricting a string field to match (at least) one of
     the regular expressions in a list given.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'rex', [native_definite(v) for v in value])
 
 
@@ -526,20 +645,46 @@ class GteConstraint(Constraint):
         Constraint.__init__(self, 'gte', value)
 
 
+class TransformConstraint(Constraint):
+    """
+    Not really a constraint, but a tranform to be applied to a field,
+    allowing constraints to be applied to that transformed field.
+    """
+    def __init__(self, value):
+        Constraint.__init__(self, 'transform', value)
+
+
 class Verification(object):
     """
     Container for the result of a constraint verification for a dataset
     in the context of a given set of constraints.
     """
-    def __init__(self, constraints, report='all', one_per_line=False,
-                 ascii=False):
+    def __init__(self, constraints, report='all',
+                 ascii=False, detect=False, detect_outpath=None,
+                 detect_write_all=False, detect_per_constraint=False,
+                 detect_output_fields=None, detect_index=False,
+                 detect_in_place=False, **kwargs):
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
+        self.detection = None
         self.report = report
-        self.one_per_line = one_per_line
         self.ascii = ascii
-        assert report in ('all', 'fields', 'constraints')
+        self.detect = detect
+        self.detect_outpath = detect_outpath
+        self.detect_write_all = detect_write_all
+        self.detect_per_constraint = detect_per_constraint
+        self.detect_output_fields = detect_output_fields
+        self.detect_index = detect_index
+        self.detect_in_place = detect_in_place
+        if report not in ('all', 'fields', 'records'):
+            raise Exception('Value for report must be one of "all", "fields"'
+                            ' or "records", not "%s".' % report)
+        if not detect_outpath and not detect and not detect_in_place:
+            if any((detect_write_all, detect_per_constraint,
+                    detect_output_fields, detect_index)):
+                raise Exception('You have specified detection parameters '
+                                'without specifying\na detection output path.')
 
     def __str__(self):
         """
@@ -549,7 +694,8 @@ class Verification(object):
         object's :py:attr:`report` property. If this is set to 'fields',
         then it reports only those fields that have failures.
         """
-        if self.report == 'fields':  # Report only fields with failures
+        if self.report in ('fields', 'records'):
+            # Report only fields with failures
             field_items = list((field, ver)
                                for (field, ver) in self.fields.items()
                                if ver.failures > 0)
@@ -563,8 +709,40 @@ class Verification(object):
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
-        return ('%sSUMMARY:\n\nPasses: %d\nFailures: %d'
-                % (fields_part, self.passes, self.failures))
+
+        if self.report == 'records' and self.detection:
+            return ('%sSUMMARY:\n\n'
+                    'Records passing: %d\n'
+                    'Records failing: %d'
+                    % (fields_part,
+                       self.detection.n_passing_records,
+                       self.detection.n_failing_records))
+        else:
+            return ('%sSUMMARY:\n\n'
+                    'Constraints passing: %d\n'
+                    'Constraints failing: %d'
+                    % (fields_part, self.passes, self.failures))
+
+
+class Detection(object):
+    """
+    Object to represent the result of running detect.
+    """
+    def __init__(self, obj, n_passing_records, n_failing_records):
+        """
+        *obj*:
+                            Object containing information about the detection,
+                            of a type specific to the data source.
+
+        *n_passing_records:
+                            Number of passing records.
+
+        *n_failing_records:
+                            Number of failing records.
+        """
+        self.obj = obj
+        self.n_passing_records = n_passing_records
+        self.n_failing_records = n_failing_records
 
 
 def constraint_class(kind):
@@ -600,13 +778,16 @@ def strip_lines(s, side='r'):
     return '\n'.join([strip(line) for line in s.splitlines()]) + end
 
 
-def verify(constraints, verifiers, VerificationClass=None, **kwargs):
+def verify(constraints, fieldnames, verifiers, VerificationClass=None,
+           detected_records_writer=None, **kwargs):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
     specific verifiers for various types of data.
-    (Specifically, at the moment, the Pandas verifier verify_df
-    uses this function.)
+
+    (Specifically, at the moment, the Pandas verifier verify_df, and
+    the daatabase verifier, verify_db_table, both use this function, as
+    does any other extension.)
 
     Inputs:
 
@@ -631,18 +812,35 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.
 
-                            report, one_per_line and ascii can all be set
-                            this way.
+    Returns a Verification object.
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
-    for name in constraints.fields:
-        field_results = TDDAObject()  # results.fields[name]
+    detect_outpath = kwargs.get('detect_outpath')
+    detect = (detect_outpath is not None
+              or kwargs.get('detect') is not None
+              or kwargs.get('detect_in_place') is not None)
+
+    allfields = sorted(constraints.fields.keys(),
+                       key=lambda f: fieldnames.index(f) if f in fieldnames
+                                                         else -1)
+
+    if detect_outpath:
+        # empty (and then remove) the detection output file first,
+        # so that we can get an early error if the file isn't writeable,
+        # and so that we don't leave a bogus wrong file in place if
+        # we turn out not to detect anything.
+        with open(detect_outpath, 'w') as f:
+            pass
+        os.remove(detect_outpath)
+
+    for name in allfields:
+        field_results = TDDAObject()
         failures = passes = 0
         for c in constraints.fields[name]:
             verify = verifiers.get(c.kind)
             if verify:
-                satisfied = verify(name, c)
+                satisfied = verify(name, c, detect)
                 if satisfied:
                     passes += 1
                 else:
@@ -655,7 +853,21 @@ def verify(constraints, verifiers, VerificationClass=None, **kwargs):
         field_results.passes = passes
         results.passes += passes
         results.fields[name] = field_results
+
+    if detect and detected_records_writer and results.failures > 0:
+        results.detection = detected_records_writer(**kwargs)
     return results
+
+
+def detect(constraints, fieldnames, verifiers, VerificationClass=None,
+           detected_records_writer=None, **kwargs):
+    """
+    Variation of verify which does detection too.
+    """
+    return verify(constraints, fieldnames, verifiers,
+                  VerificationClass=VerificationClass,
+                  detect=True, detected_records_writer=detected_records_writer,
+                  **kwargs)
 
 
 def tcn(sat, ascii=False):
@@ -699,7 +911,7 @@ def plural(n, s, pl=None):
 
 
 def native_definite(o):
-    return (UnicodeDefinite(o) if sys.version_info.major >= 3
+    return (UnicodeDefinite(o) if sys.version_info[0] >= 3
                                else UTF8DefiniteObject(o))
 
 
@@ -730,8 +942,33 @@ def UTF8DefiniteObject(s):
         return [UTF8DefiniteObject(v) for v in s]
     elif type(s) == tuple:
         return tuple([UTF8DefiniteObject(v) for v in s])
-    elif type(s) == dict:
+    elif isinstance(s, OrderedDict):
+        return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
+                           for (k, v) in s.items())
+    elif isinstance(s, dict):
         return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
+                for (k, v) in s.items()}
+    return s
+
+
+def NativeDefiniteObject(s):
+    """
+    Converts all non-native strings within scalar or object, recursively,
+    to native strings.
+    Handles lists, tuples and dictionaries, as well as scalars.
+    """
+    NON_NATIVE_STR = bytes if sys.version_info[0] >= 3 else unicode
+    if type(s) is NON_NATIVE_STR:
+        return native_definite(s)
+    elif type(s) is list:
+        return [NativeDefiniteObject(v) for v in s]
+    elif type(s) is tuple:
+        return tuple([NativeDefiniteObject(v) for v in s])
+    elif isinstance(s, OrderedDict):
+        return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
+                           for (k, v) in s.items()))
+    elif isinstance(s, dict):
+        return {NativeDefiniteObject(k): NativeDefiniteObject(v)
                 for (k, v) in s.items()}
     return s
 
@@ -762,21 +999,17 @@ def fuzzy_greater_than(a, b, epsilon):
     At the moment, this simply reduces b by 1% if it is positive,
     and makes it 1% more negative if it is negative.
     """
-    if a >= b:
-        return True
-    return (a >= fuzz_down(b, epsilon))
+    return (a >= b) or (a >= fuzz_down(b, epsilon))
 
 
 def fuzzy_less_than(a, b, epsilon):
     """
-    Returns a <~ b (a is greater than or approximately equal to b)
+    Returns a <~ b (a is less than or approximately equal to b)
 
     At the moment, this increases b by 1% if it is positive,
     and makes it 1% less negative if it is negative.
     """
-    if a <= b:
-        return True
-    return (a <= fuzz_up(b, epsilon))
+    return (a <= b) or (a <= fuzz_up(b, epsilon))
 
 
 def fuzz_down(v, epsilon):
@@ -793,6 +1026,7 @@ def fuzz_down(v, epsilon):
     """
     return v * ((1 - epsilon) if v >= 0 else (1 + epsilon))
 
+
 def fuzz_up(v, epsilon):
     """
     Adjust v upwards, by a proportion controlled by self.epsilon.
@@ -805,7 +1039,10 @@ def fuzz_up(v, epsilon):
     slightly less negative values can still pass a fuzzy maximum
     constraint.
     """
-    return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
+    if type(v) is datetime.datetime or type(v) is datetime.date:
+        return v
+    else:
+        return v * ((1 + epsilon) if v >= 0 else (1 - epsilon))
 
 
 def sort_constraint_dict(d):
@@ -826,4 +1063,3 @@ def sort_constraint_dict(d):
         for f, v in sorted(d['fields'].items())
     ))
     return OrderedDict((('fields', fields),))
-

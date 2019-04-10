@@ -18,7 +18,7 @@ from tdda.constraints.base import (
     PRECISIONS,
     SIGNS,
     STANDARD_FIELD_CONSTRAINTS,
-    verify,
+    verify, detect,
     native_definite,
     DatasetConstraints,
     FieldConstraints,
@@ -32,14 +32,17 @@ from tdda.constraints.base import (
     fuzzy_greater_than, fuzzy_less_than
 )
 
-from tdda.constraints.extension import BaseConstraintCalculator
+from tdda.constraints.extension import (BaseConstraintCalculator,
+                                        BaseConstraintDetector)
 
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     unicode_string = str
     byte_string = bytes
+    long_type = int
 else:
     unicode_string = unicode
     byte_string = str
+    long_type = long
 
 DEBUG = False
 
@@ -50,14 +53,15 @@ MAX_CATEGORIES = 20     # String fields with up to 20 categories will
                         # generate AllowedValues constraints
 
 
-class BaseConstraintVerifier(BaseConstraintCalculator):
+class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
     """
     The :py:mod:`BaseConstraintVerifier` class provides a generic
     framework for verifying constraints.
 
     A concrete implementation of this class is constructed by creating
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintVerifier`
-    and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
+    and from specific implementations of :py:mod:`BaseConstraintCalculator`
+    and :py:mod:`BaseConstraintDetector`.
     """
     def __init__(self, epsilon=None, type_checking=None, **kwargs):
         self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
@@ -85,10 +89,36 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
 
     def verify(self, constraints, VerificationClass=Verification, **kwargs):
         """
-        Apply verifiers to a set of constraints
+        Apply verifiers to a set of constraints, for reporting
         """
-        return verify(constraints, self.verifiers(),
-                      VerificationClass=VerificationClass, **kwargs)
+        return verify(constraints, self.get_column_names(), self.verifiers(),
+                      VerificationClass=VerificationClass,
+                      detected_records_writer=self.write_detected_records,
+                      **kwargs)
+
+    def detect(self, constraints, VerificationClass=Verification,
+               outpath=None, write_all=False, per_constraint=False,
+               output_fields=None, index=False, in_place=False,
+               rownumber_is_index=True, boolean_ints=False, **kwargs):
+        """
+        Apply verifiers to a set of constraints, for detection.
+
+        Note that if there is a constraint for a field that does not exist,
+        then it fails verification, but there are no records to detect
+        against. Similarly if the field exists but the dataset has no
+        records.
+        """
+        return detect(constraints, self.get_column_names(), self.verifiers(),
+                      VerificationClass=VerificationClass,
+                      detect_outpath=outpath, detect_write_all=write_all,
+                      detect_per_constraint=per_constraint,
+                      detect_output_fields=output_fields,
+                      detect_index=index,
+                      detect_in_place=in_place,
+                      detected_records_writer=self.write_detected_records,
+                      rownumber_is_index=rownumber_is_index,
+                      boolean_ints=boolean_ints,
+                      **kwargs)
 
     def get_cached_value(self, value, colname, f):
         """
@@ -109,7 +139,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             self.cache[colname] = {}
         return self.cache[colname]
 
-    def verify_min_constraint(self, colname, constraint):
+    def verify_min_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the minimum value
         constraint specified.
@@ -118,7 +148,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             return False
 
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
+        precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
         assert precision in PRECISIONS
 
         if self.is_null(value):   # a null minimum is not considered to be an
@@ -128,19 +158,25 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             m = self.to_datetime(m)
-        if not self.types_compatible(m, value, colname):
-            return False
 
-        if precision == 'closed':
-            return m >= value
+        if not self.types_compatible(m, value):
+            result = False
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
+            result = m >= value
         elif precision == 'open':
-            return m > value
+            result = m > value
         else:
-            return fuzzy_greater_than(m, value, self.epsilon)
+            result = fuzzy_greater_than(m, value, self.epsilon)
 
-    def verify_max_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_min_constraint(colname, value, precision, self.epsilon)
+        return result
+
+    def verify_max_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the maximum value
         constraint specified.
@@ -149,8 +185,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             return False
 
         value = constraint.value
-        precision = getattr(constraint, 'precision', 'closed') or 'closed'
-        assert precision in ('open', 'closed', 'fuzzy')
+        precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
+        assert precision in PRECISIONS
 
         if self.is_null(value):   # a null maximum is not considered to be an
             return True           # active constraint, so is always satisfied
@@ -159,19 +195,25 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         if self.is_null(M):       # If there are no values, no value can
             return True           # the maximum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             M = self.to_datetime(M)
-        if not self.types_compatible(M, value, colname):
-            return False
 
-        if precision == 'closed':
-            return M <= value
+        if not self.types_compatible(M, value):
+            result = False
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
+            result = M <= value
         elif precision == 'open':
-            return M < value
+            result = M < value
         else:
-            return fuzzy_less_than(M, value, self.epsilon)
+            result = fuzzy_less_than(M, value, self.epsilon)
 
-    def verify_min_length_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_max_constraint(colname, value, precision, self.epsilon)
+        return result
+
+    def verify_min_length_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given (string) column satisfies the minimum length
         constraint specified.
@@ -184,13 +226,20 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             return True           # to be an active constraint, so is always
                                   # satisfied
 
+        if self.get_tdda_type(colname) != 'string':
+            return False
+
         m = self.get_min_length(colname)
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum length constraint
 
-        return m >= value
+        result = m >= value
 
-    def verify_max_length_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_min_length_constraint(colname, value)
+        return result
+
+    def verify_max_length_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given (string) column satisfies the maximum length
         constraint specified.
@@ -203,13 +252,20 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             return True           # to be an active constraint, so is always
                                   # satisfied
 
+        if self.get_tdda_type(colname) != 'string':
+            return False
+
         M = self.get_max_length(colname)
         if self.is_null(M):       # If there are no values, no value can
             return True           # the maximum length constraint
 
-        return M <= value
+        result = M <= value
 
-    def verify_tdda_type_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_max_length_constraint(colname, value)
+        return result
+
+    def verify_tdda_type_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied type constraint.
         """
@@ -225,22 +281,26 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
 
         actual_type = self.get_tdda_type(colname)
         if self.type_checking == 'strict':
-            return actual_type in allowed_types
+            result = actual_type in allowed_types
         else:
             if actual_type in allowed_types:
-                return True       # definitely OK of the types actually match
+                result = True       # definitely OK if the types actually match
             elif 'int' in allowed_types and actual_type == 'real':
-                return self.get_non_integer_values_count(colname) == 0
+                result = self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'real':
-                return self.get_non_integer_values_count(colname) == 0
+                result = self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'string':
                 # boolean columns with nulls get converted to dtype
                 # object, which is usually used for strings
-                return self.get_all_non_nulls_boolean(colname)
+                result =  self.get_all_non_nulls_boolean(colname)
             else:
-                return False
+                result = False
 
-    def verify_sign_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_tdda_type_constraint(colname, required_type)
+        return result
+
+    def verify_sign_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied sign constraint.
         """
@@ -256,21 +316,30 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         M = self.get_max(colname)
         if self.is_null(m):
             return True  # no values: cannot violate constraint
-        if value == 'null':
-            return False
+
+        if type(m) not in (bool, int, long_type, float):
+            result = False
+        elif type(M) not in (bool, int, long_type, float):
+            result = False
+        elif value == 'null':
+             result = False
         elif value == 'positive':
-            return m > 0
+            result = m > 0
         elif value == 'non-negative':
-            return m >= 0
+            result = m >= 0
         elif value == 'zero':
-            return m == M == 0
+            result = m == M == 0
         elif value == 'non-positive':
-            return M <= 0
+            result = M <= 0
         elif value == 'negative':
-            return M < 0
+            result = M < 0
         assert value in SIGNS
 
-    def verify_max_nulls_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_sign_constraint(colname, value)
+        return result
+
+    def verify_max_nulls_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied constraint
         that it should contain no nulls.
@@ -281,9 +350,15 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         value = constraint.value
         if self.is_null(value):   # a null value is not considered to be an
             return True           # active constraint, so is always satisfied
-        return self.get_null_count(colname) <= value
+        result = self.get_null_count(colname) <= value
 
-    def verify_no_duplicates_constraint(self, colname, constraint):
+        if bool(result) or not detect:
+            return result
+        self.detect_max_nulls_constraint(colname, value)
+        return False
+
+    def verify_no_duplicates_constraint(self, colname, constraint,
+                                        detect=False):
         """
         Verify whether a given column satisfies the constraint supplied,
         that it should contain no duplicate (non-null) values.
@@ -292,15 +367,22 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
             return False
 
         value = constraint.value
-        if self.is_null(value):   # a null value is not considered to be an
-            return True           # active constraint, so is always satisfied
+        if value is False or self.is_null(value):
+            # a null value is not considered to be an active constraint,
+            # so is always satisfied
+            return True
 
         assert value == True      # value not really used; but should be True
 
         non_nulls = self.get_non_null_count(colname)
-        return self.get_nunique(colname) == non_nulls
+        result = self.get_nunique(colname) == non_nulls
 
-    def verify_allowed_values_constraint(self, colname, constraint):
+        if detect and not bool(result):
+            self.detect_no_duplicates_constraint(colname, value)
+        return result
+
+    def verify_allowed_values_constraint(self, colname, constraint,
+                                         detect=False):
         """
         Verify whether a given column satisfies the constraint on allowed
         (string) values provided.
@@ -317,14 +399,42 @@ class BaseConstraintVerifier(BaseConstraintCalculator):
         n_allowed_values = len(allowed_values)
         n_actual_values = self.get_nunique(colname)
 
-        if n_actual_values > n_allowed_values:
+        if not detect and n_actual_values > n_allowed_values:
+            # can know the result without actually identifying values
+            result = False
+        else:
+            actual_values = self.get_unique_values(colname)
+            exclusions = exclusions or []
+
+            violations = (set(actual_values) - set(allowed_values)
+                                             - set(exclusions))
+            result = len(violations) == 0
+
+        if detect and not bool(result):
+            self.detect_allowed_values_constraint(colname, allowed_values,
+                                                  violations)
+        return result
+
+    def verify_rex_constraint(self, colname, constraint, detect=False):
+        """
+        Verify whether a given column satisfies a given regular
+        expression constraint (by matching at least one of the regular
+        expressions given).
+        """
+        if not self.column_exists(colname):
+            return False
+        if self.get_tdda_type(colname) != 'string':
             return False
 
-        actual_values = self.get_unique_values(colname)
-        exclusions = exclusions or []
-
-        violations = set(actual_values) - set(allowed_values) - set(exclusions)
-        return len(violations) == 0
+        violations = self.calc_rex_constraint(colname, constraint,
+                                              detect=detect)
+        if bool(violations):
+            # a truthy result means some values failed the constraint
+            if detect:
+                self.detect_rex_constraint(colname, violations)
+            return False
+        else:
+            return True
 
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""
@@ -506,6 +616,7 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         sign_constraint = SignConstraint('null')
 
             if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
+                # all values are unique
                 no_duplicates_constraint = NoDuplicatesConstraint()
 
         if type_ == 'string' and self.inc_rex:
@@ -514,11 +625,11 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
 
         constraints = [c for c in [type_constraint,
                                    min_constraint, max_constraint,
-                                   min_length_constraint, max_length_constraint,
+                                   min_length_constraint,
+                                   max_length_constraint,
                                    sign_constraint, max_nulls_constraint,
                                    no_duplicates_constraint,
                                    allowed_values_constraint,
                                    rex_constraint]
                          if c is not None]
         return FieldConstraints(fieldname, constraints)
-

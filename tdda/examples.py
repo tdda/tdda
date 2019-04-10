@@ -17,19 +17,24 @@ from __future__ import division
 import os
 import shutil
 import sys
+import zipfile
+
+
+def examples_srcdir(name):
+    path = os.path.join(os.path.dirname(__file__), name)
+    return os.path.join(path, 'examples')
 
 
 def copy_examples(name, destination='.', verbose=True):
     """
     Copy example files to a specified directory
     """
-    path = os.path.join(os.path.dirname(__file__), name)
-    srcdir = os.path.join(path, 'examples')
+    srcdir = examples_srcdir(name)
     if not os.path.isdir(destination):
         print('copyexamples: output directory %s does not exist' % destination,
               file=sys.stderr)
         sys.exit(1)
-    outdir = os.path.join(destination, '%s-examples' % name)
+    outdir = os.path.join(destination, '%s_examples' % name)
     shutil.rmtree(outdir, ignore_errors=True)
     os.mkdir(outdir)
     copy(srcdir, outdir)
@@ -52,10 +57,28 @@ def copy(srcdir, destination):
             copy(fullname, outdir)
         elif name.endswith('.pyc'):
             continue
+        elif name == ('accounts.zip'):
+            copy_accounts_data_unzipped(destination)
         else:
-            with open(fullname) as fin:
-                with open(os.path.join(destination, name), 'w') as fout:
-                    fout.write(fin.read())
+            for run in (0, 1):
+                binary = 'b' if run  or fullname.endswith('.feather') else ''
+                try:
+                    with open(fullname, 'r%s' % binary) as fin:
+                        with open(os.path.join(destination, name),
+                                               'w%s' % binary) as fout:
+                            fout.write(fin.read())
+                    break
+                except UnicodeDecodeError:
+                    if run:
+                        raise
+
+
+def copy_accounts_data_unzipped(destdir):
+    srcdir = os.path.join(examples_srcdir('constraints'), 'testdata')
+    zippath = os.path.join(srcdir, 'accounts.zip')
+    with zipfile.ZipFile(zippath) as z:
+        for f in z.namelist():
+            z.extract(f, destdir)
 
 
 def copy_main(name, verbose=True):
@@ -64,4 +87,3 @@ def copy_main(name, verbose=True):
         sys.exit(1)
     destination = sys.argv[1] if len(sys.argv) == 2 else '.'
     copy_examples(name, destination, verbose=verbose)
-

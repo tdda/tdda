@@ -1,0 +1,127 @@
+{
+    "creation_metadata": {
+        "local_time": "2019-03-08 15:15:35", 
+        "utc_time": "2019-03-08 15:15:35", 
+        "creator": "TDDA 1.0.21", 
+        "source": "/Users/njr/python/tdda/tdda/constraints/testdata/accounts25k.csv", 
+        "host": "bartok.local", 
+        "user": "njr", 
+        "dataset": "accounts25k.csv", 
+        "n_records": 25000, 
+        "n_selected": 25000, 
+        "tddafile": "/var/folders/zv/3xvhmvpj0216687_pk__2f5h0000gn/T/accounts25kgen.tdda"
+    }, 
+    "fields": {
+        "account_number": {
+            "type": "int", 
+            "min": 10000191, 
+            "max": 12999930, 
+            "sign": "positive", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "open_date": {
+            "type": "date", 
+            "min": "1970-01-01 00:00:00", 
+            "max": "2018-11-19 00:00:00", 
+            "max_nulls": 0
+        }, 
+        "close_date": {
+            "type": "date", 
+            "min": "1990-03-09 00:00:00", 
+            "max": "2018-11-19 00:00:00"
+        }, 
+        "title": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 4, 
+            "max_nulls": 0, 
+            "allowed_values": [
+                "Dr", 
+                "M", 
+                "Miss", 
+                "Mr", 
+                "Mrs", 
+                "Ms", 
+                "Prof"
+            ]
+        }, 
+        "forename": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 9, 
+            "max_nulls": 0
+        }, 
+        "middle_name": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 9
+        }, 
+        "surname": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 10, 
+            "max_nulls": 0
+        }, 
+        "address1": {
+            "type": "string", 
+            "min_length": 7, 
+            "max_length": 25, 
+            "max_nulls": 1
+        }, 
+        "city": {
+            "type": "string", 
+            "min_length": 4, 
+            "max_length": 18
+        }, 
+        "postcode": {
+            "type": "string", 
+            "min_length": 7, 
+            "max_length": 8, 
+            "max_nulls": 1
+        }, 
+        "home_tel": {
+            "type": "string", 
+            "min_length": 13, 
+            "max_length": 13, 
+            "no_duplicates": true
+        }, 
+        "mobile_tel": {
+            "type": "string", 
+            "min_length": 13, 
+            "max_length": 13
+        }, 
+        "email": {
+            "type": "string", 
+            "min_length": 14, 
+            "max_length": 39, 
+            "max_nulls": 0
+        }, 
+        "account_type": {
+            "type": "string", 
+            "min_length": 5, 
+            "max_length": 15, 
+            "allowed_values": [
+                "basic", 
+                "current", 
+                "current+", 
+                "no longer valid", 
+                "offset", 
+                "premium"
+            ]
+        }, 
+        "overdraft_limit": {
+            "type": "int", 
+            "min": 0, 
+            "max": 20000, 
+            "sign": "non-negative", 
+            "max_nulls": 0
+        }, 
+        "cash_card_number": {
+            "type": "string", 
+            "min_length": 19, 
+            "max_length": 19, 
+            "max_nulls": 0
+        }
+    }
+}

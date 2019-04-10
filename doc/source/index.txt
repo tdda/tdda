@@ -6,6 +6,8 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
+Version |version|
+
 **CONTENTS**
 
 .. toctree::
@@ -16,8 +18,10 @@ Test-Driven Data Analysis (Python TDDA library)
    referencetest.txt
    constraints.txt
    rexpy.txt
+   windows.txt
    tests.txt
    examples.txt
+   changes.txt
 
 
 Indices and tables

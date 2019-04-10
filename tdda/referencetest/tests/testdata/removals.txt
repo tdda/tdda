@@ -1,0 +1,7 @@
+This is a file containing some optional lines.
+Here's one: I am optional
+And:
+Here's another one: I am optional and I have some trailing stuff
+And here's a line on its own:
+I am optional
+That's all

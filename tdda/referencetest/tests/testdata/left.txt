@@ -1,0 +1,5 @@
+This is a file containing some optional lines.
+Here's one: And it will get ignored even if not optionally removed.
+And: this line is different, unless you ignore the first word
+And here's a line on its own:
+That's all

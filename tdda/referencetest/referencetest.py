@@ -16,9 +16,18 @@ from tdda.referencetest.checkfiles import FilesComparison
 
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
-# if assertStringCorrect or assertFileCorrect fail with 'preprocessing'
+# if assertStringCorrect or assertTextFileCorrect fail with 'preprocessing'
 # in place. This can be overridden using the set_defaults() class method.
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
+
+
+def tag(test):
+    """
+    Decorator for tests, so that you can specify you only want to
+    run a tagged subset of tests, with the -1 or --tagged option.
+    """
+    test._tagged = True
+    return test
 
 
 class ReferenceTest(object):
@@ -46,24 +55,7 @@ class ReferenceTest(object):
     In addition to the various test-assertion methods, the module also
     provides some useful instance variables. All of these can be set
     explicitly in test setup code, using the :py:meth:`set_defaults`
-    class method:
-
-        *tmp_dir*
-            The location where temporary files can be written to. It defaults
-            to a system-specific temporary area.
-
-        *print_fn*
-            The function to use to display information while running tests,
-            which should have the same signature as Python3's
-            standard print function (the ``__future__`` print function
-            in Python2).
-
-        *verbose*
-            Boolean verbose flag, to control reporting of errors while running
-            tests. Reference tests tend to take longer to run than traditional
-            unit tests, so it is often useful to be able to see
-            information from failing tests as they happen, rather
-            than waiting for the full report at the end.
+    class method.
     """
 
     # Verbose flag
@@ -120,7 +112,6 @@ class ReferenceTest(object):
                 it defaults to */tmp*, *c:\\temp* or whatever
                 :py:func:`tempfile.gettempdir()` returns, as
                 appropriate.
-
         """
         for k in kwargs:
             if k == 'verbose':
@@ -149,25 +140,50 @@ class ReferenceTest(object):
     def set_default_data_location(cls, location, kind=None):
         """
         Declare the default filesystem location for reference files of a
-        particular kind. This sets the location globally, and will apply
-        to all instances of the class.
+        particular kind. This sets the location for all instances of the class
+        it is called on. Subclasses will inherit this default (unless they
+        explicitly override it).
+
+        To set the location globally for all tests in all classes
+        within an application, call this method on the
+        :py:class:`ReferenceTest` class.
 
         The instance method :py:meth:`set_data_location()` can be used to set
-        the per-kind data locations for an individual instance of the class.
+        the per-kind data locations for an individual instance of a class.
 
-        If calls to :py:meth:`assertFileCorrect()` (etc) are made for
+        If calls to :py:meth:`assertTextFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
         explicitly, then the
         default location is used. This is the location declared for
         the ``None`` *kind* and this default **must** be specified.
 
         If you haven't even defined the ``None`` default, and you make calls
-        to :py:meth:`assertFileCorrect()` (etc) using relative pathnames for
-        the reference data files, then it can't check correctness, so it will
-        raise an exception.
+        to :py:meth:`assertTextFileCorrect()` (etc) using relative pathnames
+        for the reference data files, then it can't check correctness, so it
+        will raise an exception.
 
         """
-        cls.default_data_locations[kind] = os.path.normpath(location)
+        clsid = id(cls)
+        if clsid not in cls.default_data_locations:
+            cls.default_data_locations[clsid] = {}
+        cls.default_data_locations[clsid][kind] = os.path.normpath(location)
+
+    @staticmethod
+    def _cls_dataloc(cls, d=None):
+        """
+        Internal function for obtaining the default data location settings
+        for the given class, inheriting from all parent classes all the
+        way up to the :py:class:`ReferenceTest` class root.
+        """
+        if d is None:
+            d = {}
+        for parentcls in cls.__bases__:
+            if issubclass(parentcls, ReferenceTest):
+                parentcls._cls_dataloc(parentcls, d)
+        clsid = id(cls)
+        if clsid in cls.default_data_locations:
+            d.update(cls.default_data_locations[clsid])
+        return d
 
     def __init__(self, assert_fn):
         """
@@ -183,10 +199,10 @@ class ReferenceTest(object):
                       failed, if the value does not evaluate as ``True``).
         """
         self.assert_fn = assert_fn
-        self.reference_data_locations = dict(self.default_data_locations)
-        self.pandas = PandasComparison(print_fn=self.print_fn,
+        self.reference_data_locations = self._cls_dataloc(self.__class__)
+        self.pandas = PandasComparison(print_fn=self.call_print_fn,
                                        verbose=self.verbose)
-        self.files = FilesComparison(print_fn=self.print_fn,
+        self.files = FilesComparison(print_fn=self.call_print_fn,
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
 
@@ -209,19 +225,19 @@ class ReferenceTest(object):
         __init__ method when constructing an instance of
         ReferenceTestCase as a superclass.
 
-        If calls to :py:meth:`assertFileCorrect()` (etc) are made for
+        If calls to :py:meth:`assertTextFileCorrect()` (etc) are made for
         kinds of reference data that hasn't had their location defined
         explicitly, then the
         default location is used. This is the location declared for
         the ``None`` *kind* and this default **must** be specified.
 
         This method overrides any global defaults set from calls to the
-        set_default_data_location class-method.
+        :py:meth:`ReferenceeTest.set_default_data_location()` class-method.
 
         If you haven't even defined the ``None`` default, and you make calls
-        to :py:meth:`assertFileCorrect()` (etc) using relative pathnames for
-        the reference data files, then it can't check correctness, so it will
-        raise an exception.
+        to :py:meth:`assertTextFileCorrect()` (etc) using relative pathnames
+        for the reference data files, then it can't check correctness, so it
+        will raise an exception.
 
         """
         self.reference_data_locations[kind] = os.path.normpath(location)
@@ -321,7 +337,8 @@ class ReferenceTest(object):
                                check_data=None, check_types=None,
                                check_order=None, condition=None, sortby=None,
                                precision=None, **kwargs):
-        """Check that an in-memory Pandas DataFrame matches a reference one
+        """
+        Check that an in-memory Pandas DataFrame matches a reference one
         from a saved reference CSV file.
 
             *df*:
@@ -357,58 +374,9 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a `DataFrame` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use for
-                floating-point comparisons.  Default is not to perform
-                rounding.
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -463,65 +431,15 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a `DataFrame` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use
-                for floating-point comparisons.  Default is not to
-                perform rounding.
-
             *\*\*kwargs*:
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
 
-        Raises :py:class:`NotImplementedError` if Pandas is not available.
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
         """
         expected_path = self._resolve_reference_path(ref_csv, kind=kind)
         if self._should_regenerate(kind):
@@ -572,62 +490,13 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a ``DataFrame`` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use for
-                floating-point comparisons.  Default is not to perform
-                rounding.
-
             *\*\*kwargs*:
                 Any additional named parameters are passed straight
                 through to the *csv_read_fn* function.
+
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -648,8 +517,8 @@ class ReferenceTest(object):
 
     def assertStringCorrect(self, string, ref_path, kind=None,
                             lstrip=False, rstrip=False,
-                            ignore_substrings=None,
-                            ignore_patterns=None, ignore_lines=None,
+                            ignore_substrings=None, ignore_patterns=None,
+                            remove_lines=None, ignore_lines=None,
                             preprocess=None, max_permutation_cases=0):
         """
         Check that an in-memory string matches the contents from a reference
@@ -687,11 +556,13 @@ class ReferenceTest(object):
                 lines will be considered to be the same if
                 they only differ in substrings that match
                 one of these regular expressions.
-                The expressions must not contain parenthesised groups, and
-                should only include explicit anchors if they
+                The expressions should only include explicit anchors if they
                 need to refer to the whole line.
+                Only the matched expression within the line is ignored; any text
+                to the left or right of the matched expression must either be
+                **exactly** the same on both sides, or be ignorable.
 
-            *ignore_lines*
+            *remove_lines*
                 An optional list of substrings; lines
                 containing any of these substrings will be
                 completely removed before carrying out the
@@ -711,33 +582,37 @@ class ReferenceTest(object):
                 the number of such permutations does not
                 exceed this limit, then the two are considered to be identical.
 
+        The *ignore_lines* parameter exists for backwards compatibility as
+        an alias for *remove_lines*.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_result(string, expected_path)
+            self._write_reference_result(string, expected_path,
+                                         lstrip=lstrip, rstrip=rstrip)
         else:
             ilc = ignore_substrings
             ip = ignore_patterns
             mpc = max_permutation_cases
+            rl = remove_lines or ignore_lines
             r = self.files.check_string_against_file(string, expected_path,
                                                      actual_path=None,
                                                      lstrip=lstrip,
                                                      rstrip=rstrip,
                                                      ignore_substrings=ilc,
                                                      ignore_patterns=ip,
-                                                     ignore_lines=ignore_lines,
+                                                     remove_lines=rl,
                                                      preprocess=preprocess,
                                                      max_permutation_cases=mpc)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertFileCorrect(self, actual_path, ref_path, kind=None,
-                          lstrip=False, rstrip=False,
-                          ignore_substrings=None,
-                          ignore_patterns=None, ignore_lines=None,
-                          preprocess=None, max_permutation_cases=0):
+    def assertTextFileCorrect(self, actual_path, ref_path, kind=None,
+                              lstrip=False, rstrip=False,
+                              ignore_substrings=None, ignore_patterns=None,
+                              remove_lines=None, ignore_lines=None,
+                              preprocess=None, max_permutation_cases=0):
         """
-        Check that a file matches the contents from a reference text file.
+        Check that a text file matches the contents from a reference text file.
 
             *actual_path*:
                 A path for a text file.
@@ -748,77 +623,45 @@ class ReferenceTest(object):
                 the configuration via
                 :py:meth:`set_data_location()`.
 
-            *kind*:
-                The reference *kind*, used to locate the reference file.
-
-            *lstrip*:
-                If set to ``True``, lines are left-stripped
-                before the comparison is carried out.
-
-            *rstrip*:
-                If set to ``True``, lines are right-stripped before
-                the comparison is carried out.
-
-            *ignore_substrings*:
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                ignored in the comparison.
-
-            *ignore_patterns*:
-                An optional list of regular expressions;
-                lines will be considered to be the same if
-                they only differ in substrings that match one
-                of these regular expressions. The expressions
-                must not contain parenthesised groups, and
-                should only include explicit anchors if they
-                need to refer to the whole line.
-
-            *ignore_lines*
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                completely removed before carrying out the
-                comparison. This is the means by which you
-                would exclude 'optional' content.
-
-            *preprocess*:
-                An optional function that takes a list of
-                strings and preprocesses it in some way; this
-                function will be applied to both the actual and expected.
-
-            *max_permutation_cases*:
-                An optional number specifying the maximum
-                number of permutations allowed; if the actual
-                and expected lists differ only in that their
-                lines are permutations of each other, and
-                the number of such permutations does not
-                exceed this limit, then the two are considered to be identical.
+        It also accepts the ``kind``, ``lstrip``, ``rstrip``,
+        ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
+        ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
 
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
 
+        The *ignore_lines* parameter exists for backwards compatibility as
+        an alias for *remove_lines*.
+
+        The :py:meth:`assertFileCorrect()` method can be used as an alias for
+        :py:meth:`assertTextFileCorrect()`, retained for backwards
+        compatibility.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
+            rl = remove_lines or ignore_lines
             r = self.files.check_file(actual_path, expected_path,
                                       lstrip=lstrip, rstrip=rstrip,
                                       ignore_substrings=ignore_substrings,
                                       ignore_patterns=ignore_patterns,
-                                      ignore_lines=ignore_lines,
+                                      remove_lines=rl,
                                       preprocess=preprocess,
                                       max_permutation_cases=mpc)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertFilesCorrect(self, actual_paths, ref_paths, kind=None,
-                           lstrip=False, rstrip=False,
-                           ignore_substrings=None,
-                           ignore_patterns=None, ignore_lines=None,
-                           preprocess=None, max_permutation_cases=0):
+    def assertTextFilesCorrect(self, actual_paths, ref_paths, kind=None,
+                               lstrip=False, rstrip=False,
+                               ignore_substrings=None, ignore_patterns=None,
+                               remove_lines=None, ignore_lines=None,
+                               preprocess=None, max_permutation_cases=0):
         """
-        Check that a collection of files matche the contents from
+        Check that a collection of text files matche the contents from
         matching collection of reference text files.
 
             *actual_paths*:
@@ -830,70 +673,61 @@ class ReferenceTest(object):
                 is determined by the configuration via
                 :py:meth:`set_data_location()`.
 
-            *kind*:
-                The reference *kind*, used to locate the reference files.
-                All the files must be of the same kind.
-
-            *lstrip*:
-                If set to ``True``, lines are left-stripped before
-                the comparison is carried out.
-
-            *rstrip*:
-                If set to ``True``, lines are right-stripped before the
-                comparison is carried out.
-
-            *ignore_substrings*:
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                ignored in the comparison.
-
-            *ignore_patterns*:
-                An optional list of regular expressions;
-                lines will be considered to be the same if
-                they only differ in substrings that match one
-                of these regular expressions. The expressions
-                must not contain parenthesised groups, and
-                should only include explicit anchors if they
-                need to refer to the whole line.
-
-            *ignore_lines*
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                completely removed before carrying out the
-                comparison. This is the means by which you
-                would exclude 'optional' content.
-
-            *preprocess*:
-                An optional function that takes a list of
-                strings and preprocesses it in some way; this
-                function will be applied to both the actual
-                and expected.
-
-            *max_permutation_cases*:
-                An optional number specifying the maximum
-                number of permutations allowed; if the actual
-                and expected lists differ only in that their
-                lines are permutations of each other, and
-                the number of such permutations does not
-                exceed this limit, then the two are considered
-                to be identical.
-
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
 
+        It also accepts the ``kind``, ``lstrip``, ``rstrip``,
+        ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
+        ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
+
+        The :py:meth:`assertFilesCorrect()` metohd can be used as an alias for
+        :py:meth:`assertTextFilesCorrect()`, retained for backwards
+        compatibility.
         """
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_files(actual_paths, expected_paths)
+            self._write_reference_files(actual_paths, expected_paths,
+                                        lstrip=strip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
+            rl = remove_lines or ignore_lines
             r = self.files.check_files(actual_paths, expected_paths,
                                        lstrip=lstrip, rstrip=rstrip,
                                        ignore_substrings=ignore_substrings,
                                        ignore_patterns=ignore_patterns,
-                                       ignore_lines=ignore_lines,
+                                       remove_lines=rl,
                                        preprocess=preprocess,
                                        max_permutation_cases=mpc)
+            (failures, msgs) = r
+            self._check_failures(failures, msgs)
+
+    # DEPRECATED
+    assertFileCorrect = assertTextFileCorrect
+    assertFilesCorrect = assertTextFilesCorrect
+
+    def assertBinaryFileCorrect(self, actual_path, ref_path, kind=None):
+        """
+        Check that a binary file matches the contents from a reference
+        binary file.
+
+            *actual_path*:
+                A path for a binary file.
+
+            *ref_path*:
+                The name of the reference binary file. The
+                location of the reference file is determined by
+                the configuration via
+                :py:meth:`set_data_location()`.
+
+            *kind*:
+                The reference *kind*, used to locate the reference file.
+        """
+        expected_path = self._resolve_reference_path(ref_path, kind=kind)
+        if self._should_regenerate(kind):
+            self._write_reference_file(actual_path, expected_path, binary=True)
+        else:
+            r = self.files.check_binary_file(actual_path, expected_path)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
@@ -927,21 +761,27 @@ class ReferenceTest(object):
             kind = None
         return kind in self.regenerate and self.regenerate[kind]
 
-    def _write_reference_file(self, actual_path, reference_path):
+    def _write_reference_file(self, actual_path, reference_path, binary=False,
+                              lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data.
         """
-        with open(actual_path) as fin:
+        mode = 'rb' if binary else 'r'
+        with open(actual_path, mode) as fin:
             actual = fin.read()
-        self._write_reference_result(actual, reference_path)
+        if not binary:
+            actual = self._normalize_whitespace(actual, lstrip, rstrip)
+        self._write_reference_result(actual, reference_path, binary=binary)
 
-    def _write_reference_files(self, actual_paths, reference_paths):
+    def _write_reference_files(self, actual_paths, reference_paths,
+                               lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data for a list of
         files.
         """
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
 
     def _write_reference_dataset(self, df, reference_path):
         """
@@ -949,21 +789,39 @@ class ReferenceTest(object):
         """
         self.pandas.write_csv(df, reference_path)
 
-    def _write_reference_result(self, result, reference_path):
+    def _write_reference_result(self, result, reference_path, binary=False,
+                                lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data from in-memory
         results.
         """
-        with open(reference_path, 'w') as fout:
+        mode = 'wb' if binary else 'w'
+        if not binary:
+            result = self._normalize_whitespace(result, lstrip, rstrip)
+        with open(reference_path, mode) as fout:
             fout.write(result)
         if self.verbose and self.print_fn:
             self.print_fn('Written %s' % reference_path)
+
+    def _normalize_whitespace(self, result, lstrip=False, rstrip=False):
+        if lstrip and rstrip:
+            return '\n'.join([r.strip() for r in result.splitlines()])
+        elif lstrip:
+            return '\n'.join([r.lstrip() for r in result.splitlines()])
+        elif rstrip:
+            return '\n'.join([r.rstrip() for r in result.splitlines()])
+        else:
+            return result
 
     def _check_failures(self, failures, msgs):
         """
         Internal method for check for failures and reporting them.
         """
-        self.assert_fn(failures == 0, '\n'.join(msgs))
+        self.assert_fn(failures == 0, msgs.message())
+
+    def call_print_fn(self, *args, **kwargs):
+        fn = self.print_fn or self._default_print_fn
+        fn(*args, **kwargs)
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):

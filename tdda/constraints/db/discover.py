@@ -52,11 +52,18 @@ def discover_constraints_from_database(table, constraints_path=None,
                              host=host, port=port,
                              user=user, password=password)
     constraints = discover_db_table(dbtype, db, table, **kwargs)
+    if constraints is None:
+        # should never happen
+        return
+
+    output = constraints.to_json(tddafile=constraints_path)
+
     if constraints_path:
         with open(constraints_path, 'w') as f:
-            f.write(constraints.to_json())
+            f.write(output);
     else:
-        print(constraints.to_json())
+        print(output)
+    return output
 
 
 def get_params(args):
@@ -67,8 +74,7 @@ def get_params(args):
     params = {}
     flags = database_arg_flags(discover_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (flags.constraints if flags.constraints
-                                  else None)
+    params['constraints_path'] = flags.constraints
     return params
 
 

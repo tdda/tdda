@@ -6,12 +6,16 @@ of DB-API (PEP-0249) compliant databases, and also for a number of other
 
 The top-level functions are:
 
-    :py:func:`discover_db_table`:
+    :py:func:`~tdda.constraints.discover_db_table`:
         Discover constraints from a single database table.
 
-    :py:func:`verify_db_table`:
+    :py:func:`~tdda.constraints.verify_db_table`:
         Verify (check) a single database table, against a set of previously
         discovered constraints.
+
+    :py:func:`~tdda.constraints.detect_db_table`:
+        For detection of failing records in a single database table,
+        but not yet implemented for databases.
 """
 from __future__ import division
 from __future__ import print_function
@@ -25,6 +29,7 @@ from tdda.constraints.base import (
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
+    BaseConstraintDetector,
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
@@ -33,7 +38,7 @@ from tdda.constraints.baseconstraints import (
 from tdda.constraints.db.drivers import DatabaseHandler
 from tdda import rexpy
 
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     long = int
 
 
@@ -49,7 +54,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
         return self.db_value_to_datetime(value)
 
     def column_exists(self, colname):
-        return self.canon(colname) in self.get_column_names()
+        return colname in self.get_column_names()
 
     def get_column_names(self):
         return self.get_database_column_names(self.tablename)
@@ -57,7 +62,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def get_nrecords(self):
         return self.get_database_nrows(self.tablename)
 
-    def types_compatible(self, x, y, colname):
+    def types_compatible(self, x, y, colname=None):
         return types_compatible(x, y, colname if not self.testing else None)
 
     def calc_min(self, colname):
@@ -99,13 +104,24 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
             values = self.get_database_unique_values(self.tablename, colname)
         return rexpy.extract(values)
 
-    def verify_rex_constraint(self, colname, constraint):
-        return self.get_database_rex_match(self.tablename, colname,
-                                           constraint.value)
+    def calc_rex_constraint(self, colname, constraint, detect=False):
+        return not self.get_database_rex_match(self.tablename, colname,
+                                               constraint.value)
+
+
+class DatabaseConstraintDetector(BaseConstraintDetector):
+    """
+    No-op implementation of the Constraint Detector methods for
+    databases.
+    """
+    def __init__(self, tablename):
+        pass
 
 
 class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
-                                 BaseConstraintVerifier, DatabaseHandler):
+                                 DatabaseConstraintDetector,
+                                 BaseConstraintVerifier,
+                                 DatabaseHandler):
     """
     A :py:class:`DatabaseConstraintVerifier` object provides methods
     for verifying every type of constraint against a single database table.
@@ -118,18 +134,21 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
             *dbtype*:
                     Type of database.
             *db*:
-                    A DB-API database connection object (for example, as
-                    obtained from a call to pgdb.connect() for PostGreSQL
-                    or as a call to MySQLdb.connect() for MySQL).
+                    A DB-API database connection object (as obtained from
+                    a call to the connect() method on the underlying database
+                    driver).
             *tablename*:
                     A table name, referring to a table that exists in the
                     database and is accessible. It can either be a simple
                     name, or a schema-qualified name of the form `schema.name`.
         """
+        DatabaseHandler.__init__(self, dbtype, db)
+        tablename = self.resolve_table(tablename)
+
         DatabaseConstraintCalculator.__init__(self, tablename, testing)
+        DatabaseConstraintDetector.__init__(self, tablename)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
-        DatabaseHandler.__init__(self, dbtype, db)
 
 
 class DatabaseVerification(Verification):
@@ -150,9 +169,11 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     constraints on a single database table.
     """
     def __init__(self, dbtype, db, tablename, inc_rex=False):
+        DatabaseHandler.__init__(self, dbtype, db)
+        tablename = self.resolve_table(tablename)
+
         DatabaseConstraintCalculator.__init__(self, tablename)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
-        DatabaseHandler.__init__(self, dbtype, db)
         self.tablename = tablename
 
 
@@ -179,7 +200,8 @@ def types_compatible(x, y, colname):
 
 
 def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
-                    type_checking='strict', testing=False, **kwargs):
+                    type_checking='strict', testing=False, report='all',
+                    **kwargs):
     """
     Verify that (i.e. check whether) the database table provided
     satisfies the constraints in the JSON .tdda file provided.
@@ -208,15 +230,18 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             of the constraint value by which the
                             constraint can be exceeded without causing
                             a constraint violation to be issued.
-                            With the default value of epsilon
-                            (:py:const:`EPSILON_DEFAULT` = 0.01, i.e. 1%),
+
+                            For example, with epsilon set to 0.01 (i.e. 1%),
                             values can be up to 1% larger than a max constraint
                             without generating constraint failure,
                             and minimum values can be up to 1% smaller
                             that the minimum constraint value without
                             generating a constraint failure. (These
-                            are modified, as appropraite, for negative
+                            are modified, as appropriate, for negative
                             values.)
+
+                            If not specified, an *epsilon* of 0 is used,
+                            so there is no tolerance.
 
                             NOTE: A consequence of the fact that these
                             are proportionate is that min/max values
@@ -224,7 +249,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             the wrong sign always generates a failure.
 
         *type_checking*:
-                            'strict' or 'sloppy'. For databases (unlike
+                            ``strict`` or ``sloppy``. For databases (unlike
                             Pandas DataFrames), this defaults to 'strict'.
 
                             If this is set to sloppy, a database "real"
@@ -232,28 +257,20 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                             an "int" type constraint.
 
         *report*:
-                            'all' or 'fields'.
+                            ``all`` or ``fields``.
                             This controls the behaviour of the
-                            :py:meth:`~DatabaseVerification.__str__`
+                            :py:meth:`~~tdda.constraints.db.constraints.DatabaseVerification.__str__`
                             method on the resulting
-                            :py:class:`~DatabaseVerification`
+                            :py:class:`~tdda.constraints.db.constraints.DatabaseVerification`
                             object (but not its content).
 
-                            The default is 'all', which means that
+                            The default is ``all``, which means that
                             all fields are shown, together with the
                             verification status of each constraint
                             for that field.
 
-                            If report is set to 'fields', only fields for
+                            If report is set to ``fields``, only fields for
                             which at least one constraint failed are shown.
-
-                            NOTE: The method also accepts two further
-                            parameters to control (not yet implemented)
-                            behaviour. 'constraints', will be used to
-                            indicate that only failing constraints for
-                            failing fields should be shown.
-                            'one_per_line' will indicate that each constraint
-                            failure should be reported on a separate line.
 
         *testing*:
                             Boolean flag. Should only be set to ``True``
@@ -262,7 +279,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 
     Returns:
 
-        :py:class:`~DatabaseVerification` object.
+        :py:class:`~tdda.constraints.db.constraints.DatabaseVerification` object.
 
         This object has attributes:
 
@@ -272,18 +289,16 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
     Example usage::
 
         import pgdb
-        from tdda.constraints.dbconstraints import verify_db_table
+        from tdda.constraints import verify_db_table
 
         dbspec = 'localhost:databasename:username:password'
         tablename = 'schemaname.tablename'
         db = pgdb.connect(dbspec)
         v = verify_db_table('postgres' db, tablename, 'myconstraints.tdda')
 
-        print('Passes:', v.passes)
-        print('Failures: %d\\n' % v.failures)
+        print('Constraints passing:', v.passes)
+        print('Constraints failing: %d\\n' % v.failures)
         print(str(v))
-        print(v.to_frame())
-
     """
     dbv = DatabaseConstraintVerifier(dbtype, db, tablename, epsilon=epsilon,
                                      type_checking=type_checking,
@@ -292,8 +307,19 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return dbv.verify(constraints, 
-                      VerificationClass=DatabaseVerification, **kwargs)
+    return dbv.verify(constraints,
+                      VerificationClass=DatabaseVerification,
+                      report=report, **kwargs)
+
+
+def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
+                    type_checking='strict', testing=False, **kwargs):
+    """
+    For detection of failures from verification of constraints, but
+    not yet implemented for database tables.
+    """
+    raise NotImplementedError('Detection is not implemented (yet) '
+                              'for databases.')
 
 
 def discover_db_table(dbtype, db, tablename, inc_rex=False):
@@ -393,15 +419,18 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
 
+    Regular Expression constraints are not (currently) generated for fields
+    in database tables.
+
     Example usage::
 
         import pgdb
-        from tdda.constraints.dbconstraints import discover_db_table_constraints
+        from tdda.constraints import discover_db_table
 
         dbspec = 'localhost:databasename:username:password'
         tablename = 'schemaname.tablename'
         db = pgdb.connect(dbspec)
-        constraints = discover_db_table_constraints('postgres', db, tablename)
+        constraints = discover_db_table('postgres', db, tablename)
 
         with open('myconstraints.tdda', 'w') as f:
             f.write(constraints.to_json())
@@ -412,6 +441,13 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
     if not disco.check_table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
-    return disco.discover()
-
+    constraints = disco.discover()
+    if constraints:
+        nrows = disco.get_nrows(tablename)
+        constraints.set_stats(n_records=nrows, n_selected=nrows)
+        constraints.set_dates_user_host_creator()
+        constraints.set_rdbms('%s:%s:%s:%s' % (dbtype or '', db.host or '',
+                                               db.user, db.database))
+        constraints.set_source(tablename, tablename)
+    return constraints
 
