@@ -244,4 +244,6 @@ therefore some of the other expressions aren't contributing anything.
 
 Fix for output regeneration in referencetests having rusted.
 It was missing the new method _normalize_whitespace.
+
+Merged dev branch into master again.
 """
