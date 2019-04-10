@@ -399,10 +399,11 @@ class Extractor(object):
 
         size = self.size
         if self.examples.n_uniqs <= size.do_all:
-            self.results = self.batch_extract(self.examples.strings,
-                                              self.examples.freqs)
+            self.results = self.batch_extract()
         else:
+            self.all_examples = self.examples
             examples, freqs = self.sample(size.do_all)
+            self.examples = Examples(examples, freqs)
             attempt = 1
             failures = []
             while attempt <= size.max_sampled_attempts + 1:
@@ -410,7 +411,7 @@ class Extractor(object):
                     print('Pass %d' % attempt)
                     print('Examples: %s ... %s' % (examples[:5],
                                                    examples[-5:]))
-                self.results = self.batch_extract(examples, freqs)
+                self.results = self.batch_extract()
                 failures, fail_freqs = self.find_non_matches()
                 if self.verbose:
                     print('REs:', self.results.rex)
@@ -420,14 +421,15 @@ class Extractor(object):
                     break
                 elif (len(failures) <= size.do_all_exceptions
                       or attempt > size.max_sampled_attempts):
-                    examples.extend(failures)
-                    freqs.extend(fail_freqs)
+                    self.examples.extend(failures)
+                    self.freqs.extend(fail_freqs)
                 else:
                     z = list(zip(failures, freqs))
                     sampled = random.sample(z, size.do_all_exceptions)
-                    examples.extend(s[0] for s in sampled)
-                    freqs.extend(s[1] for s in sampled)
+                    self.examples.extend(s[0] for s in sampled)
+                    self.freqs.extend(s[1] for s in sampled)
                 attempt += 1
+            self.examples = self.all_examples
         self.add_warnings()
 
     def add_warnings(self):
@@ -477,11 +479,12 @@ class Extractor(object):
 
         return Examples(list(counter.keys()), ilist(counter.values()))
 
-    def batch_extract(self, examples, freqs):
+    def batch_extract(self):
         """
         Find regular expressions for a batch of examples (as given).
         """
-
+        examples = self.examples.strings
+        freqs = self.examples.freqs
         # First, run-length encode each (distinct) example
         rles = [self.run_length_encode_coarse_classes(s) for s in examples]
         rle_freqs = IDCounter()
@@ -749,10 +752,10 @@ class Extractor(object):
         """
         Sample strings for potentially faster induction.
         """
-        indices = list(range(len(self.examples.strings)))
+        indices = list(range(len(self.all_examples.strings)))
         sample_indices = random.sample(indices, n)
-        return ([self.examples.strings[i] for i in indices],
-                [self.examples.freqs[i] for i in indices])
+        return ([self.all_examples.strings[i] for i in sample_indices],
+                [self.all_examples.freqs[i] for i in sample_indices])
 #        return random.sample(self.examples.strings, n)
 
 
