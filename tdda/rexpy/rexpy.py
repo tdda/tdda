@@ -1456,11 +1456,6 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
         while sort_totals[p] < target:
             p += 1
         rex = patterns[p]
-        results[rex] = Coverage(n=pattern_freqs[p],
-                                n_uniq=pattern_uniqs[p],
-                                incr=totals[p],
-                                incr_uniq=uniq_totals[p],
-                                index=indexes[p])
         added = rex not in results.keys()
         zeroed = False
         for i in range(examples.n_uniqs):
