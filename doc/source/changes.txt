@@ -1,7 +1,23 @@
 .. _changes:
 
-Changes since Previous Release
-==============================
+Recent Changes
+==============
+
+This Version
+------------
+
+* Added new option flag `--interleave` for :ref:`tdda_detect_tool`.
+  This causes the `_ok` detection fields to be interleaved with the original
+  fields that they refer to in the resulting detection dataset, rather than
+  all appearing together at the far right hand side. This option was actually
+  present in the previous release, but not sufficiently documented.
+
+* Fix for the `--write-all` parameter for :py:mod:`tdda.referencetest`
+  result regeneration, which had regressed slightly in the previous version.
+
+
+Older Versions
+--------------
 
 * Improved reporting of differences for text files in
   :py:mod:`tdda.referencetest` when the *actual* results do not match the
