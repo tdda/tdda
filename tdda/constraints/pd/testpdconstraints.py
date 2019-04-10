@@ -1626,7 +1626,14 @@ class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
 
     @classmethod
     def execute_command(self, argv):
-        return check_shell_output(argv)
+        try:
+            result = check_shell_output(argv)
+        except:
+            print('\n\nIf this test fails, it often means you do not have a '
+                  'working command-line\ninstallation of the tdda command.\n\n'
+                  'To test this, try typing\n\n  tdda version\n\n')
+            raise
+        return result
 
 
 class TestUtilityFunctions(ReferenceTestCase):

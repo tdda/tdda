@@ -24,27 +24,33 @@ from __future__ import absolute_import
 
 import json
 import os
+import sys
 import unittest
 
 try:
     import pgdb
 except ImportError:
+    print('Skipping Postgres tests (no driver library)', file=sys.stderr)
     pgdb = None
 
 try:
     import MySQLdb
 except ImportError:
+    print('Skipping MySQL tests (no driver library)', file=sys.stderr)
     MySQLdb = None
 
 try:
     import sqlite3
 except ImportError:
+    print('Skipping SQLite tests (no driver library)', file=sys.stderr)
     sqlite3 = None
 
 try:
     import pymongo
 except ImportError:
+    #print('Skipping MongoDB tests (no driver library)', file=sys.stderr)
     pymongo = None
+pymongo = None  # The tests don't yet work for MongoDB
 
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
@@ -61,6 +67,8 @@ POSTGRES_CONN_FILE = os.path.join(os.path.expanduser('~'),
                                   '.tdda_db_conn_postgres')
 MYSQL_CONN_FILE = os.path.join(os.path.expanduser('~'),
                               '.tdda_db_conn_mysql')
+MONGODB_CONN_FILE = os.path.join(os.path.expanduser('~'),
+                                 '.tdda_db_conn_mongodb')
 
 
 class TestDatabaseHandlers:
@@ -140,6 +148,15 @@ class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
         elements = dbh.resolve_table('elements')
         self.assertTrue(dbh.check_table_exists(elements))
         self.assertFalse(dbh.check_table_exists('does_not_exist'))
+
+
+@unittest.skipIf(pymongo is None or not os.path.exists(MONGODB_CONN_FILE),
+                 'MongoDB not available, or no tdda mongodb connection file')
+class TestMongoDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
+    @classmethod
+    def setUpClass(cls):
+        db = database_connection(dbtype='mongodb')
+        cls.dbh = DatabaseHandler('mongodb', db)
 
 
 class TestDatabaseConstraintVerifiers:
@@ -273,9 +290,20 @@ class TestMySQLDBConstraintDiscoverers(ReferenceTestCase,
         cls.dbh = DatabaseHandler('mysql', cls.db)
 
 
+@unittest.skipIf(pymongo is None or not os.path.exists(MONGODB_CONN_FILE),
+                 'MongoDB not available, or no tdda mongodb connection file')
+class TestMongoDBConstraintDiscoverers(ReferenceTestCase,
+                                       TestDatabaseConstraintDiscoverers):
+    @classmethod
+    def setUpClass(cls):
+        cls.db = database_connection(dbtype='mongodb')
+        cls.dbh = DatabaseHandler('mongodb', cls.db)
+
+
 TestSQLiteDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
 TestPostgresDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
 TestMySQLDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
+TestMongoDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
 
 
 if __name__ == '__main__':

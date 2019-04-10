@@ -246,4 +246,14 @@ Fix for output regeneration in referencetests having rusted.
 It was missing the new method _normalize_whitespace.
 
 Merged dev branch into master again.
+
+Fixed various documentation and release notes issues, including expanding
+and updating the list of drivers supported and required for various
+databases and other data sources.
+
+Minor changes to tests to make them report more accurately and completely
+what's going on when there are skipped tests.
+
+Added boilerplate tests for MongoDB, but these are currently disabled
+since they cannot yet work entirely correctly.
 """

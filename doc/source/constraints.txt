@@ -26,23 +26,37 @@ The module includes:
 Python Prerequisites
 --------------------
 
-* :py:mod:`numpy` and :py:mod:`pandas` (required for CSV files and
-  :py:mod:`feather` files)
+Extra libraries are required to access some of the constraint generation
+and verification functionality, depending on the data sources that you
+wish to use.
+
+* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
 * :py:mod:`feather-format` (required for :py:mod:`feather` files)
+* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
 * :py:mod:`pygresql` (required for PostgreSQL database tables)
-* :py:mod:`mysql` (required for MySQL database tables)
+* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
+* :py:mod:`sqlite3` (required for SQLite database tables)
+* :py:mod:`pymongo` (required for MongoDB document collections)
+
 
 These can be installed with (some/all of)::
 
-    pip install numpy
     pip install pandas
     pip install feather-format
+    pip install pmmif
     pip install pygresql
-    pip install mysql-python
+    pip install sqlite3
+    pip install pymongo
 
-The :py:mod:`sqlite3` module is provided by default as part of the
-standard Python libraries, so SQLite database tables can be used without
-having to explicitly install it.
+and, for MySQL, **one** of::
+
+    pip install MySQL-python
+    pip install mysqlclient
+    pip install mysql-connector-python
+
+
+The :py:mod:`sqlite3` module is sometimes provided by default as part of the
+standard Python libraries.
 
 To install :py:mod:`feather-format` on Windows, you will need to install
 :py:mod:`cython` as a prerequisite, which might also require you to install
@@ -323,7 +337,7 @@ These are:
 
 * For PostgreSQL: ``pygresql`` or ``PyGreSQL``
 
-* For MySQL: ``MySQLdb``, ``mysqlclient`` or  ``mysql-connector-python``
+* For MySQL: ``MySQL-python``, ``mysqlclient`` or  ``mysql-connector-python``
 
 * For Sqlite: ``sqlite3``
 

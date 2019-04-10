@@ -6,13 +6,13 @@ Recent Changes
 This Version
 ------------
 
-* Added new option flag `--interleave` for :ref:`tdda_detect_tool`.
-  This causes the `_ok` detection fields to be interleaved with the original
+* Added new option flag ``--interleave`` for :ref:`tdda_detect_tool`.
+  This causes the ``_ok`` detection fields to be interleaved with the original
   fields that they refer to in the resulting detection dataset, rather than
   all appearing together at the far right hand side. This option was actually
   present in the previous release, but not sufficiently documented.
 
-* Fix for the `--write-all` parameter for :py:mod:`tdda.referencetest`
+* Fix for the ``--write-all`` parameter for :py:mod:`tdda.referencetest`
   result regeneration, which had regressed slightly in the previous version.
 
 
@@ -22,9 +22,9 @@ Older Versions
 * Improved reporting of differences for text files in
   :py:mod:`tdda.referencetest` when the *actual* results do not match the
   *expected* file contents.
-  Now fully takes account of the `ignore` and `remove` parameters.
+  Now fully takes account of the ``ignore`` and ``remove`` parameters.
   
-* The `ignore_patterns` parameter in
+* The ``ignore_patterns`` parameter in
   :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
   in :py:mod:`tdda.referencetest` now causes only the portion of a line that
   matches the regular expressions to be ignored; anything else on the line
@@ -34,14 +34,14 @@ Older Versions
   differ, rather than marking an entire line to be ignored.
   This is a change in functionality, but is what had always been intended.
   For fuller control (and to get the previous behaviour),
-  you can anchor the expressions with `^.*(...).*$`, and then they
+  you can anchor the expressions with ``^.*(...).*$``, and then they
   will apply to the entire line.
 
-* The `ignore_patterns` parameter in :py:mod:`tdda.referencetest` can now
+* The ``ignore_patterns`` parameter in :py:mod:`tdda.referencetest` can now
   accept grouped subexpressions in regular expressions. This allows use of
   alternations, which were previously not supported.
 
-* The `ignore_substrings` parameter in
+* The ``ignore_substrings`` parameter in
   :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
   :py:mod:`tdda.referencetest` now only matches lines in the *expected*
   file (where you have full control over what will appear there), not in
@@ -50,35 +50,37 @@ Older Versions
   problems) if the *actual* happened to include unexpected matching content
   on lines other than where intended.
 
-* The :py:mod:`tdda.constraint` package is now more resilient against
+* The :py:mod:`tdda.constraints` package is now more resilient against
   unexpected type mismatches. Previously, if the type didn't match, then
   in some circumstances exceptions would be (incorrectly) raised for other
   constraints, rather than failures.
 
-* The :py:mod:`tdda.constraint` package now supports Python `datetime.date`
+* The :py:mod:`tdda.constraints` package now supports Python ``datetime.date``
   fields in Pandas DataFrames, in addition to the existing support of
-  `datetime.datetime`.
+  ``datetime.datetime``.
 
-* The :py:mod:`tdda.constraint` Python API now provides support for in-memory
+* The :py:mod:`tdda.constraints` Python API now provides support for in-memory
   constraints, by allowing Python dictionaries to be passed in to
-  :py:meth:`~tdda.contraints.verify_df` and
+  :py:meth:`~tdda.constraints.verify_df` and
   :py:meth:`~tdda.constraints.detect_df`,
-  as an alternative to passing in a `.tdda` filename.
+  as an alternative to passing in a ``.tdda`` filename.
   This allows an application using the library to store its constraints
-  however it wants to, rather than having to use the filesystem.
+  however it wants to, rather than having to use the filesystem
+  (e.g. storing it online and fetching with an HTTP ``GET``).
 
-* The :py:mod:`tdda.constraint` package can now access MySQL databases using
+* The :py:mod:`tdda.constraints` package can now access MySQL databases using
   the `mysql.connector <https://pypi.org/project/mysql-connector-python>`_
   driver, in addition to the
   `MySQLdb <https://pypi.org/project/MySQL-python>`_ and
   `mysqlclient <https://pypi.org/project/mysqlclient>`_ drivers.
 
 * The :py:mod:`tdda.rexpy` tool can now *quote* the regular expressions it
-  produces, with the new `--quote` option flag. This makes it easier to
+  produces, with the new ``--quote`` option flag. This makes it easier to
   copy the expressions to use them on the command line, or embed them in
   strings in many programming languages.
 
-* The Python API now allows you to `import tdda` and then refer to its
-  subpackages via `tdda.referencetest`, `tdda.constraints` or `tdda.rexpy`.
+* The Python API now allows you to ``import tdda`` and then refer to its
+  subpackages via ``tdda.referencetest``, ``tdda.constraints``
+  or ``tdda.rexpy``.
   Previously you had to explicitly import each submodule separately.
 
