@@ -99,10 +99,10 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def calc_all_non_nulls_boolean(self, colname):
         raise Exception('database should not require all_non_nulls_boolean')
 
-    def find_rexes(self, colname, values=None):
+    def find_rexes(self, colname, values=None, seed=None):
         if not values:
             values = self.get_database_unique_values(self.tablename, colname)
-        return rexpy.extract(values)
+        return rexpy.extract(values, seed=seed)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         return not self.get_database_rex_match(self.tablename, colname,
@@ -168,12 +168,12 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     A :py:class:`DatabaseConstraintDiscoverer` object is used to discover
     constraints on a single database table.
     """
-    def __init__(self, dbtype, db, tablename, inc_rex=False):
+    def __init__(self, dbtype, db, tablename, inc_rex=False, seed=None):
         DatabaseHandler.__init__(self, dbtype, db)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename)
-        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
+        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex, seed=seed)
         self.tablename = tablename
 
 
@@ -322,7 +322,7 @@ def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                               'for databases.')
 
 
-def discover_db_table(dbtype, db, tablename, inc_rex=False):
+def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
     """
     Automatically discover potentially useful constraints that characterize
     the database table provided.
@@ -437,7 +437,7 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
 
     """
     disco = DatabaseConstraintDiscoverer(dbtype, db, tablename,
-                                         inc_rex=inc_rex)
+                                         inc_rex=inc_rex, seed=seed)
     if not disco.check_table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)

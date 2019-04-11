@@ -178,11 +178,11 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         # unique values, despite not counting them with .nunique()
         return [None, np.nan, pd.NaT]
 
-    def find_rexes(self, colname, values=None):
+    def find_rexes(self, colname, values=None, seed=None):
         if values is None:
             return rexpy.pdextract(self.df[colname])
         else:
-            return rexpy.extract(values)
+            return rexpy.extract(values, seed=None)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         # note that this should return a set of violations, not True/False.

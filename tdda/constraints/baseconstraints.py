@@ -524,8 +524,9 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
-    def __init__(self, inc_rex=False, **kwargs):
+    def __init__(self, inc_rex=False, seed=None, **kwargs):
         self.inc_rex = inc_rex
+        self.seed = seed
 
     def discover(self):
         field_constraints = []
@@ -621,7 +622,8 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
 
         if type_ == 'string' and self.inc_rex:
             rex_constraint = RexConstraint(self.find_rexes(fieldname,
-                                                           values=uniqs))
+                                                           values=uniqs,
+                                                           seed=self.seed))
 
         constraints = [c for c in [type_constraint,
                                    min_constraint, max_constraint,
