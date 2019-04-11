@@ -79,6 +79,7 @@ from tdda import __version__
 
 str_type = unicode if sys.version_info[0] < 3 else str
 bytes_type = str if sys.version_info[0] < 3 else bytes
+INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -1764,7 +1765,7 @@ class ResultsSummary(object):
             self.__dict__[name] = [d[i] for i in remaining]
         if add_dot_star:
             dot_star = ((x.Cats.Any.code, None, None),)
-            self.refrags.append(dot_star)
+            self.refrags.append([Fragment('.*', True)])
             self.rex.append(x.vrle2re(dot_star, tagged=x.tag))
 
     def __str__(self):
@@ -2229,7 +2230,7 @@ def is_outer_group(m, i):
 
 
 def ilist(L=None):
-    return array('i', L or [])
+    return array(INT_ARRAY, L or [])
 
 
 def dquote(string):

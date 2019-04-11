@@ -227,6 +227,10 @@ from tdda.rexpy.relib import re
 from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage, Examples
 
+# does re escape all punctuation, or only special ones?
+re_escape_all = re.escape('%') != '%'
+
+
 
 class TestUtilityFunctions(ReferenceTestCase):
     def test_signature(self):
