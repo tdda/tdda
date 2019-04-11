@@ -240,7 +240,7 @@ class TestDatabaseConstraintDiscoverers:
         # build constraints for full 118 element dataset
         elements = self.dbh.resolve_table('elements')
         constraints = discover_db_table(self.dbh.dbtype, self.db, elements,
-                                        inc_rex=True)
+                                        inc_rex=True, seed=827364)
         constraints.remove_field('_rowindex') # hidden field, ignore it
         j = constraints.to_json()
         # compare against the right expected file, depending on whether the

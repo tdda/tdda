@@ -256,4 +256,16 @@ what's going on when there are skipped tests.
 
 Added boilerplate tests for MongoDB, but these are currently disabled
 since they cannot yet work entirely correctly.
+
+---------------------------- rexless branch -----------------------------
+Use sampling and fewer regexes to speed up rexpy.
+
+Also support specification of a seed (temporarily reseeds PRNG).
+
+Also now use the max_patterns and min_strings_per_pattern parameters,
+as well as the use_sampling parameter.
+
+Two discover tests changed to use fixed seeds in light of above.
+------------------------- end of rexless branch -------------------------
+
 """

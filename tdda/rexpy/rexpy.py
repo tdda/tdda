@@ -102,7 +102,6 @@ MAX_PATTERNS = None
 MIN_DIFF_STRINGS_PER_PATTERN = 1
 MIN_STRINGS_PER_PATTERN = 1
 
-USE_SAMPLING = False
 USE_SAMPLING = True
 
 VERBOSITY = 0
@@ -111,7 +110,8 @@ RE_FLAGS = re.UNICODE | re.DOTALL
 
 class Size(object):
     def __init__(self, **kwargs):
-        self.use_sampling = kwargs.get('use_sampling', USE_SAMPLING)
+        self.use_sampling = nvl(kwargs.get('use_sampling', USE_SAMPLING),
+                                USE_SAMPLING)
         do_all = kwargs.get('do_all')
         if do_all is None:
             if self.use_sampling:
@@ -128,8 +128,8 @@ class Size(object):
         self.max_punc_in_group = 5
         self.max_strings_in_group = 10
         for (k, v) in kwargs.items():
-            if k in self.__dict__():
-                if v is None:
+            if k in self.__dict__:
+                if v is None and k not in ('use_sampling', 'do_all'):
                     raise Exception('Bad null value for parameter %s to Size.'
                                     % k)
                 else:
@@ -192,6 +192,7 @@ class Category(object):
 UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
 COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
+
 
 class Categories(object):
     escapableCodes = '.*?'
@@ -346,6 +347,11 @@ class Extractor(object):
     The examples may be given as a list or as a dictionary:
     if a dictionary, the values are assumed to be string frequencies.
 
+    size can be provided as:
+        - a Size() instance, to control various sizes within rexpy
+        - None (the default), in which case rexpy's defaults are used
+        - False or 0, which means don't use sampling
+
     Verbose is usually 0 or ``False``. It can be to ``True`` or 1 for various
     extra output, and to higher numbers for even more verbose output.
     The highest level currently used is 2.
@@ -357,14 +363,14 @@ class Extractor(object):
                  specialize=False,
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-                 verbose=VERBOSITY):
+                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+                 size=None, seed=None, verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
         self.verbose = verbose
-        self.size = size or Size()
+        self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
             self.by_length = Tree()         # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
@@ -385,52 +391,83 @@ class Extractor(object):
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
         self.min_strings_per_pattern = min_strings_per_pattern
+        self.max_patterns = nvl(max_patterns, MAX_PATTERNS)
+        self.seed = seed
 
         if extract:
             self.extract()                  # Stores results
-
 
     def extract(self):
         """
         Actually perform the regular expression 'extraction'.
         """
-        if self.examples.n_uniqs == 0:
-            self.results = None
+        self.prng_state = PRNGState(self.seed)
+        try:
+            if self.examples.n_uniqs == 0:
+                self.results = None
 
-        size = self.size
-        if self.examples.n_uniqs <= size.do_all:
-            self.results = self.batch_extract()
-        else:
-            self.all_examples = self.examples
-            examples, freqs = self.sample(size.do_all)
-            self.examples = Examples(examples, freqs)
-            attempt = 1
-            failures = []
-            while attempt <= size.max_sampled_attempts + 1:
-                if self.verbose:
-                    print('Pass %d' % attempt)
-                    print('Examples: %s ... %s' % (examples[:5],
-                                                   examples[-5:]))
+            size = self.size
+            if self.examples.n_uniqs <= size.do_all:
                 self.results = self.batch_extract()
-                failures, fail_freqs = self.find_non_matches()
-                if self.verbose:
-                    print('REs:', self.results.rex)
-                    print('Failures (%d): %s' % (len(failures),
-                                                 failures[:5]))
-                if len(failures) == 0:
-                    break
-                elif (len(failures) <= size.do_all_exceptions
-                      or attempt > size.max_sampled_attempts):
-                    self.examples.extend(failures)
-                    self.freqs.extend(fail_freqs)
-                else:
-                    z = list(zip(failures, freqs))
-                    sampled = random.sample(z, size.do_all_exceptions)
-                    self.examples.extend(s[0] for s in sampled)
-                    self.freqs.extend(s[1] for s in sampled)
-                attempt += 1
-            self.examples = self.all_examples
-        self.add_warnings()
+                failures, fail_freqs, re_freqs = self.find_non_matches()
+            else:
+                self.all_examples = self.examples
+                examples, freqs = self.sample(size.do_all)
+                self.examples = Examples(examples, freqs)
+                attempt = 1
+                failures = []
+                while attempt <= size.max_sampled_attempts + 1:
+                    if self.verbose:
+                        print('Pass %d' % attempt)
+                        print('Examples: %s ... %s' % (examples[:5],
+                                                       examples[-5:]))
+                    self.results = self.batch_extract()
+                    failures, fail_freqs, re_freqs = self.find_non_matches()
+                    if self.verbose:
+                        print('REs:', self.results.rex)
+                        print('Failures (%d): %s' % (len(failures),
+                                                     failures[:5]))
+                    if len(failures) == 0:
+                        break
+                    elif (len(failures) <= size.do_all_exceptions
+                          or attempt > size.max_sampled_attempts):
+                        self.examples.extend(failures)
+                        self.freqs.extend(fail_freqs)
+                    else:
+                        z = list(zip(failures, freqs))
+                        sampled = random.sample(z, size.do_all_exceptions)
+                        self.examples.extend(s[0] for s in sampled)
+                        self.freqs.extend(s[1] for s in sampled)
+                    attempt += 1
+                self.examples = self.all_examples
+            self.add_warnings()
+            self.results.remove(self.find_bad_patterns(re_freqs))
+        finally:
+            self.prng_state.restore()
+
+    def find_bad_patterns(self, freqs):
+        """
+        Given freqs, a list of frequencies (for the corresponding indexed RE)
+        identify indexes to patterns that:
+            - have too few strings
+            - cause too many patterns to be returned
+
+        NOTE: min_diff_strings_per_pattern is currently ignored.
+
+        Returns set of indices for deletion
+        """
+        M = self.max_patterns
+        deletions = set()
+        if M is not None and len(freqs) > self.max_patterns:
+            deletions = set(list(sorted(range(len(freqs)),
+                                        key=lambda k: -freqs[k]))[M:])
+
+        m = self.min_strings_per_pattern
+        if m > 1:
+            deletions = deletions.union({i for (i, v) in enumerate(freqs)
+                                           if v < m})
+        return deletions
+
 
     def add_warnings(self):
         if self.n_too_many_groups:
@@ -765,23 +802,26 @@ class Extractor(object):
         expressions in results, together with their frequencies.
         """
         strings = self.examples.strings
+        freqs = self.examples.freqs
         N = len(strings)
         matched = [False] * N
         nRemaining = N
+        re_freqs = [0] * len(self.results.rex)
         if self.results:
-            for r in self.results.rex:
+            for j, r in enumerate(self.results.rex):
                 cr = cre(r)
                 for i in range(N):
                     if not matched[i]:
                         if re.match(cr, strings[i]):
-                            matched[i] += 1
+                            matched[i] = True
                             nRemaining -= 1
+                            re_freqs[j] += freqs[i]
                             if nRemaining == 0:
-                                return [], []
+                                return [], [], re_freqs
         indices = [i for i in range(N) if not matched[i]]
         failures = [strings[i] for i in indices]
-        freqs = [self.examples.freqs[i] for i in indices]
-        return failures, freqs
+        out_freqs = [self.examples.freqs[i] for i in indices]
+        return failures, out_freqs, re_freqs
 
     def pattern_matches(self):
         compiled = [cre(r) for r in self.results.rex]
@@ -1630,7 +1670,6 @@ class IDCounter(object):
         return self.ids.__len__()
 
 
-
 class ResultsSummary(object):
     def __init__(self, rles, rle_freqs, vrles,
                  vrle_freqs, refined_vrles, rex, refrags, extractor=None):
@@ -1710,9 +1749,43 @@ class ResultsSummary(object):
                                    else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 
+    def remove(self, indexes, add_dot_star=True):
+        """
+        Given a set of indexes, remove patterns with those indexes
+        and (by default) add a .* wildcard pattern.
+        """
+        if not indexes:
+            return
+
+        x = self.extractor
+        remaining = [i for i in range(len(self.rex)) if not i in indexes]
+        for name in ('rex', 'refrags'):
+            d = self.__dict__[name]
+            self.__dict__[name] = [d[i] for i in remaining]
+        if add_dot_star:
+            dot_star = ((x.Cats.Any.code, None, None),)
+            self.refrags.append(dot_star)
+            self.rex.append(x.vrle2re(dot_star, tagged=x.tag))
+
     def __str__(self):
         return self.to_string()
 
+
+class PRNGState:
+    """
+    Seeds the Python PRNG and after captures its state.
+
+    restore() cam be used to set them back to the captured state.
+    """
+
+    def __init__(self, n):
+        if n is not None:
+            self.saved = random.getstate()
+            random.seed(n)
+
+    def restore(self):
+        if hasattr(self, 'saved'):
+            random.setstate(self.saved)
 
 
 def extract(examples, tag=False, encoding=None, as_object=False,
@@ -1722,7 +1795,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            verbose=VERBOSITY):
+            seed=None, verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1747,11 +1820,11 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   max_patterns = max_patterns,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
-                  size=size, verbose=verbose)
+                  size=size, seed=seed, verbose=verbose)
     return r if as_object else r.results.rex
 
 
-def pdextract(cols):
+def pdextract(cols, seed=None):
     """
     Extract regular expression(s) from the Pandas column (``Series``) object
     or list of Pandas columns given.
@@ -1784,7 +1857,7 @@ def pdextract(cols):
     for c in cols:
         strings.extend(list(c.dropna().unique()))
     try:
-        return extract(strings)
+        return extract(strings, seed=seed)
     except:
         if not all(type(s) == str_type for s in strings):
             raise ValueError('Non-null, non-string values found in input.')
@@ -2158,11 +2231,19 @@ def is_outer_group(m, i):
 def ilist(L=None):
     return array('i', L or [])
 
+
 def dquote(string):
     parts = [p.replace('\\', r'\\').replace('\n', r'\n')
              for p in string.split('"')]
     quoted = ('\\"').join(parts)
     return '"%s"' % quoted
+
+
+def nvl(v, w):
+    """
+    This function is used as syntactic sugar for replacing null values.
+    """
+    return w if v is None else v
 
 
 def usage_error():

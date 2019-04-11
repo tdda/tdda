@@ -209,6 +209,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
+import random
 import sys
 import unittest
 
@@ -1807,6 +1808,54 @@ class TestExtraction(ReferenceTestCase):
                       ([r'''"^[a-z]{3,5} \\\\\\\"\\' [a-z]{3,4}$"'''],
                        [r'''"^[a-z]{3,5} \\\\\"' [a-z]{3,4}$"''']))
 
+    def testConstraints(self):
+        inputs = {'aa_bb': 10, '.123': 5, 'a': 1, 'b.' : 2}
+        r = extract(inputs)
+        self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', r'^aa\_bb$'])
+
+        r = extract(inputs, max_patterns=2)
+        self.assertEqual(r, [r'^\.123$', r'^aa\_bb$', r'^.*$'])
+
+        r = extract(inputs, max_patterns=1)
+        self.assertEqual(r, [r'^aa\_bb$', r'^.*$'])
+
+        r = extract(inputs, min_strings_per_pattern=2)
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', r'^aa\_bb$', r'^.*$'])
+
+        r = extract(inputs, min_strings_per_pattern=2, max_patterns=3)
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', r'^aa\_bb$', r'^.*$'])
+
+
+    def test_save_seed(self):
+        state = random.getstate()
+        s_seed = PRNGState(12345678)
+        s_noseed = PRNGState(None)
+        random.random()
+        self.assertNotEqual(random.getstate(), state)
+        s_noseed.restore()  # no effect
+        self.assertNotEqual(random.getstate(), state)
+
+        s_seed.restore()  # should restore
+        self.assertEqual(random.getstate(), state)
+
+    def testSeeding(self):
+        inputs = ['a', 'a.a', 'a.a.a', 'a.a.a.a', 'a.a.a.a.a']
+        state = random.getstate()
+        self.assertEqual(random.getstate(), state)
+        r = extract(inputs, size=Size(n_per_length=1, do_all=2),
+                    seed=12345678)
+        self.assertEqual(random.getstate(), state)
+        expected_with_seed = [u'^a\\.a$', u'^a\\.a\\.a\\.a\\.a$']
+        self.assertEqual(r, expected_with_seed)
+            # but not always True
+        always_same = True
+        for i in range(100):    # Loop up to 100 times until get a diff
+                                # result. Will most often fail first time
+            r = extract(inputs, size=Size(n_per_length=1, do_all=2))
+            always_same = (r == expected_with_seed)
+            if not always_same:
+                break
+        self.assertFalse(always_same)
 
 
 def print_ordered_dict(od):
