@@ -230,6 +230,8 @@ from tdda.rexpy.rexpy import Coverage, Examples
 # does re escape all punctuation, or only special ones?
 re_escape_more = re.escape('%') != '%'
 isPython2 = sys.version_info[0] < 3
+PC = re.escape('%')
+UNDERSCORE = re.escape('_')
 
 
 class TestUtilityFunctions(ReferenceTestCase):
@@ -1815,7 +1817,7 @@ class TestExtraction(ReferenceTestCase):
     def testConstraints(self):
         inputs = {'aa_bb': 10, '.123': 5, 'a': 1, 'b.' : 2}
         r = extract(inputs)
-        aa_bb = choose_escape(r'^aa\_bb$', r'^aa_bb$')
+        aa_bb = r'^aa%sbb$' % UNDERSCORE
         self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', aa_bb])
 
         r = extract(inputs, max_patterns=2)
@@ -1880,19 +1882,6 @@ def CtoUC(s):
         return s.replace('C', UNIC)
     else:
         return s
-
-
-def choose_escape(more, less):
-    """
-    Older versions of Python (before 3.2.x, for some unknown x)
-    escape some punctuation characters unnecessarily.
-
-    Given an "overescaped" string more, and a less escaped string less,
-    this chooses the appropriately escaped one for the version of Python
-    running, which is determined by the variable re_escape_more, which
-    tries escaping a percent to see which regime is in force.
-    """
-    return more if re_escape_more else less
 
 
 def choose23(two, three):

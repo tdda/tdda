@@ -70,6 +70,7 @@ MYSQL_CONN_FILE = os.path.join(os.path.expanduser('~'),
 MONGODB_CONN_FILE = os.path.join(os.path.expanduser('~'),
                                  '.tdda_db_conn_mongodb')
 
+isPython2 = sys.version_info[0] < 3
 
 class TestDatabaseHandlers:
     """
@@ -245,8 +246,12 @@ class TestDatabaseConstraintDiscoverers:
         j = constraints.to_json()
         # compare against the right expected file, depending on whether the
         # version of python we're running under has escaped commas or not.
-        expected_file = ('elements118oldrex.tdda' if '\\,' in j
-                         else 'elements118rex.tdda')
+        if isPython2:
+            expected_file = ('elements118oldrex.tdda' if '\\,' in j
+                             else 'elements118rex.tdda')
+        else:
+            expected_file = ('elements118oldrex-3.tdda' if '\\,' in j
+                             else 'elements118rex-3.tdda')
         self.assertStringCorrect(j, expected_file, rstrip=True,
                                  ignore_substrings=['"as_at":',
                                                     '"local_time":',
