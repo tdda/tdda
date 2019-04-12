@@ -257,7 +257,7 @@ what's going on when there are skipped tests.
 Added boilerplate tests for MongoDB, but these are currently disabled
 since they cannot yet work entirely correctly.
 
----------------------------- rexless branch -----------------------------
+-------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.
 
 Also support specification of a seed (temporarily reseeds PRNG).
@@ -266,6 +266,18 @@ Also now use the max_patterns and min_strings_per_pattern parameters,
 as well as the use_sampling parameter.
 
 Two discover tests changed to use fixed seeds in light of above.
-------------------------- end of rexless branch -------------------------
 
+Fixed two new tests to work properly both Python2 and Python3.
+
+Also now ensure that 'i' of appropriate type is used as type
+specifier for an array in Python2. On Python 2.7.5 on Linux,
+it complains if this is unicode rather thans ("bytes") str,
+whereas on MacOS under Python 2.7.16 it doesn't, so it's not
+entirely clear whether this is a feature of old Python 2.7
+versions or Python 2.7 on Linux, but either way, forcing the
+'i' to be of (bytes) str type under Python2 appears to be safe.
+
+Also changed the default for add_dot_star to False, since adding
+it is profoundly unhelpful when discovering constraints.
+----------------------- end of rexless branch -----------------------
 """

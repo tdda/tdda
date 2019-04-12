@@ -228,8 +228,8 @@ from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage, Examples
 
 # does re escape all punctuation, or only special ones?
-re_escape_all = re.escape('%') != '%'
-
+re_escape_more = re.escape('%') != '%'
+isPython2 = sys.version_info[0] < 3
 
 
 class TestUtilityFunctions(ReferenceTestCase):
@@ -1815,20 +1815,20 @@ class TestExtraction(ReferenceTestCase):
     def testConstraints(self):
         inputs = {'aa_bb': 10, '.123': 5, 'a': 1, 'b.' : 2}
         r = extract(inputs)
-        self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', r'^aa\_bb$'])
+        aa_bb = choose_escape(r'^aa\_bb$', r'^aa_bb$')
+        self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', aa_bb])
 
         r = extract(inputs, max_patterns=2)
-        self.assertEqual(r, [r'^\.123$', r'^aa\_bb$', r'^.*$'])
+        self.assertEqual(r, [r'^\.123$', aa_bb, r'^.*$'])
 
         r = extract(inputs, max_patterns=1)
-        self.assertEqual(r, [r'^aa\_bb$', r'^.*$'])
+        self.assertEqual(r, [aa_bb, r'^.*$'])
 
         r = extract(inputs, min_strings_per_pattern=2)
-        self.assertEqual(r, [r'^\.123$', r'^b\.$', r'^aa\_bb$', r'^.*$'])
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb, r'^.*$'])
 
         r = extract(inputs, min_strings_per_pattern=2, max_patterns=3)
-        self.assertEqual(r, [r'^\.123$', r'^b\.$', r'^aa\_bb$', r'^.*$'])
-
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb, r'^.*$'])
 
     def test_save_seed(self):
         state = random.getstate()
@@ -1849,7 +1849,10 @@ class TestExtraction(ReferenceTestCase):
         r = extract(inputs, size=Size(n_per_length=1, do_all=2),
                     seed=12345678)
         self.assertEqual(random.getstate(), state)
-        expected_with_seed = [u'^a\\.a$', u'^a\\.a\\.a\\.a\\.a$']
+
+        expected_with_seed = choose23([u'^a\\.a$', u'^a\\.a\\.a\\.a\\.a$'],
+                                      [u'^a$', u'^a\\.a$'])
+
         self.assertEqual(r, expected_with_seed)
             # but not always True
         always_same = True
@@ -1879,8 +1882,27 @@ def CtoUC(s):
         return s
 
 
+def choose_escape(more, less):
+    """
+    Older versions of Python (before 3.2.x, for some unknown x)
+    escape some punctuation characters unnecessarily.
 
-if sys.version_info[0] < 3:
+    Given an "overescaped" string more, and a less escaped string less,
+    this chooses the appropriately escaped one for the version of Python
+    running, which is determined by the variable re_escape_more, which
+    tries escaping a percent to see which regime is in force.
+    """
+    return more if re_escape_more else less
+
+
+def choose23(two, three):
+    """
+    Choose between results based on whether running in Python2 or Python3
+    """
+    return two if isPython2 else three
+
+
+if isPython2:
     # Quieten down Python3's vexatious complaining
     TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
 

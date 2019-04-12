@@ -1750,10 +1750,13 @@ class ResultsSummary(object):
                                    else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 
-    def remove(self, indexes, add_dot_star=True):
+    def remove(self, indexes, add_dot_star=False):
         """
-        Given a set of indexes, remove patterns with those indexes
-        and (by default) add a .* wildcard pattern.
+        Given a set of indexes, remove patterns with those indexes.
+
+        If add_dot_star is set to True, a '.*' wildcard pattern will
+        also be added. This is off, by default, since adding '.*'
+        is unhelpful when discovering constraints.
         """
         if not indexes:
             return
