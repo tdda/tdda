@@ -1819,16 +1819,16 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', aa_bb])
 
         r = extract(inputs, max_patterns=2)
-        self.assertEqual(r, [r'^\.123$', aa_bb, r'^.*$'])
+        self.assertEqual(r, [r'^\.123$', aa_bb])
 
         r = extract(inputs, max_patterns=1)
-        self.assertEqual(r, [aa_bb, r'^.*$'])
+        self.assertEqual(r, [aa_bb])
 
         r = extract(inputs, min_strings_per_pattern=2)
-        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb, r'^.*$'])
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb])
 
         r = extract(inputs, min_strings_per_pattern=2, max_patterns=3)
-        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb, r'^.*$'])
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb])
 
     def test_save_seed(self):
         state = random.getstate()
