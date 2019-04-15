@@ -441,7 +441,8 @@ class Extractor(object):
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
                  min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
-                 size=None, seed=None, dialect=None, verbose=VERBOSITY):
+                 size=None, seed=None, dialect=DEFAULT_DIALECT,
+                 verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -1904,7 +1905,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            seed=None, dialect=None, verbose=VERBOSITY):
+            seed=None, dialect=DEFAULT_DIALECT, verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 

@@ -952,11 +952,11 @@ class TestExtraction(ReferenceTestCase):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
-                         [[(u'[0-9]{4}', True),
+                         [[(u'\d{4}', True),
                            (u'[\\-\\.]', False),
-                           (u'[0-9]{3}', True),
+                           (u'\d{3}', True),
                            (u'[\\-\\.]', False),
-                            (u'[0-9]{4}', True),
+                            (u'\d{4}', True),
                           ]])
         self.check_result(r.results.rex, [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
                           self.tels3)
