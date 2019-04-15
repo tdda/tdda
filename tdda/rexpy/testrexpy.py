@@ -83,8 +83,8 @@ Goal:
 
 TELEPHONES 2
 
- \(\d{3,4}\) \d{3,4} \d{4}
- \+\d{1,2} \d{2,3} \d{3,4} \d{4}
+ \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
+ \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -118,10 +118,10 @@ Goal
 
 TELEPHONES 5
 
- \d{3} \d{3} \d{4}
- \d{3}\-\d{3}\-\d{4}
- 1 \d{3} \d{3} \d{4}
- \(\d{3}\) \d{3} \d{4}
+ [0-9]{3} [0-9]{3} [0-9]{4}
+ [0-9]{3}\-[0-9]{3}\-[0-9]{4}
+ 1 [0-9]{3} [0-9]{3} [0-9]{4}
+ \([0-9]{3}\) [0-9]{3} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -176,11 +176,11 @@ Goal:
 
 TELS 1-5
 
- \d{3} \d{3} \d{4}
- \d{3,4}[\-\.]\d{3}[\-\.]\d{4}
- 1 \d{3} \d{3} \d{4}
- \(\d{3,4}\) \d{3,4} \d{4}
- \+\d{1,2} \d{2,3} \d{3,4} \d{4}
+ [0-9]{3} [0-9]{3} [0-9]{4}
+ [0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}
+ 1 [0-9]{3} [0-9]{3} [0-9]{4}
+ \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
+ \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 
 ** With s replacing space and backslashes removed, spaced in groups:
@@ -718,11 +718,11 @@ class TestExtraction(ReferenceTestCase):
                 self.assertTrue(all(any(match(rex, x) for rex in compiled)
                                     for x in examples if x))
 
-    def test_re_pqs_id(self):
+    def test_re_pqs_id_perl(self):
         # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         rexes = [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$']
-        x = extract(iids, strip=True, remove_empties=True)
+        x = extract(iids, strip=True, remove_empties=True, dialect='perl')
         self.check_result(x, rexes, iids)
 
     def test_re_pqs_id_portable(self):
@@ -747,8 +747,8 @@ class TestExtraction(ReferenceTestCase):
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', '12-AB-4321', '', None, '321-BA-123']
-        old_rexes = [r'^$', r'^\d{2,3}[A-Z\-][A-Z]{2}[A-Z\-]\d{3,4}$']
-        new_rexes = [r'^$', r'^\d{2,3}[A-Z-][A-Z]{2}[A-Z-]\d{3,4}$']
+        old_rexes = [r'^$', r'^[0-9]{2,3}[A-Z\-][A-Z]{2}[A-Z\-][0-9]{3,4}$']
+        new_rexes = [r'^$', r'^[0-9]{2,3}[A-Z-][A-Z]{2}[A-Z-][0-9]{3,4}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, (old_rexes, new_rexes), iids)
         # Test result has changed with improved behaviour.
@@ -851,7 +851,8 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_tels1(self):
         x = extract(self.tels1)
-        self.check_result(x, [r'^\(\d{3,4}\) \d{3,4} \d{4}$'], self.tels1)
+        self.check_result(x, [r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'],
+                          self.tels1)
 
 
     tels2 = [
@@ -868,8 +869,8 @@ class TestExtraction(ReferenceTestCase):
 
     def test_tels2(self):
         x = set(extract(self.tels2))
-        rexes = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
-                     r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
+        rexes = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                     r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
         self.check_result(x, rexes, self.tels2)
 
     def test_tels2_portable(self):
@@ -900,11 +901,11 @@ class TestExtraction(ReferenceTestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 5,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 4,
                          })
-        expected = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
-                        r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
+        expected = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                        r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
         self.check_result(set(rex), expected, self.tels2)
 
     def test_incremental_coverage_tels2(self):
@@ -913,10 +914,9 @@ class TestExtraction(ReferenceTestCase):
         od = x.incremental_coverage()
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
-                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$', 5),
+                            (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
-
     def test_coverage_tels2_dedup(self):
         x = Extractor(self.tels2 + self.tels2[:6])
         rex = x.results.rex
@@ -924,14 +924,14 @@ class TestExtraction(ReferenceTestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 9,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 6,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 9,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 6,
                          })
         d = dict(zip(rex, x.coverage(dedup=True)))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 5,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 4,
                          })
 
     def test_incremental_coverage_tels2_dedup(self):
@@ -940,26 +940,25 @@ class TestExtraction(ReferenceTestCase):
         od = x.incremental_coverage(dedup=True)
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
-                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$', 5),
+                            (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
 
     tels3 = [
         '0131-222-9876',
         '0207.987.2287'
     ]
-
     def test_tels3(self):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
-                         [[(u'\\d{4}', True),
+                         [[(u'[0-9]{4}', True),
                            (u'[\\-\\.]', False),
-                           (u'\\d{3}', True),
+                           (u'[0-9]{3}', True),
                            (u'[\\-\\.]', False),
-                            (u'\\d{4}', True),
+                            (u'[0-9]{4}', True),
                           ]])
-        self.check_result(r.results.rex, [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'],
+        self.check_result(r.results.rex, [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
                           self.tels3)
 
     tels4 = [
@@ -970,7 +969,7 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_tels4(self):
         x = extract(self.tels4)
-        self.check_result(x, [r'^\d{3}\-\d{3}\-\d{4}$'], self.tels4)
+        self.check_result(x, [r'^[0-9]{3}\-[0-9]{3}\-[0-9]{4}$'], self.tels4)
 
 
     tels5 = [
@@ -987,10 +986,10 @@ class TestExtraction(ReferenceTestCase):
 #        print(Extractor(self.tels5))
         x = extract(self.tels5)
         rexes = [
-            r'^\d{3} \d{3} \d{4}$',
-            r'^\d{3}\-\d{3}\-\d{4}$',
-            r'^\(\d{3}\) \d{3} \d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
+            r'^[0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^[0-9]{3}\-[0-9]{3}\-[0-9]{4}$',
+            r'^\([0-9]{3}\) [0-9]{3} [0-9]{4}$',
+            r'^1 [0-9]{3} [0-9]{3} [0-9]{4}$',
         ]
         self.check_result(x, rexes, self.tels5)
 
@@ -998,11 +997,11 @@ class TestExtraction(ReferenceTestCase):
         tels = self.tels1 + self.tels2 + self.tels3 + self.tels4 + self.tels5
         x = extract(tels)
         rexes = [
-            r'^\d{3} \d{3} \d{4}$',
-            r'^\d{3,4}[\-\.]\d{3}[\-\.]\d{4}$',
-            r'^\(\d{3,4}\) \d{3,4} \d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
-            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
+            r'^[0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^[0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}$',
+            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$',
+            r'^1 [0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
         ]
         self.check_result(x, rexes, tels)
 
@@ -1027,7 +1026,7 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_POSTCODES(self):
         self.assertEqual(extract(self.POSTCODES),
-                         [r'^[A-Z]{1,2}\d \d[A-Z]{2}$'])
+                         [r'^[A-Z]{1,2}[0-9] [0-9][A-Z]{2}$'])
         # Improved answer
         # Previously
         #    [r'^[A-Z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -1047,7 +1046,7 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_Postcodes2(self):
         self.assertEqual(extract(self.postcodes),
-                         [r'^[a-z]{1,2}\d \d[a-z]{2}$'])
+                         [r'^[a-z]{1,2}[0-9] [0-9][a-z]{2}$'])
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [a-z0-9]{3}$'])
@@ -1058,7 +1057,7 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_postCODES(self):
         self.assertEqual(extract(self.postCODES),
-                         [r'^[a-z]{1,2}\d \d[A-Z]{2}$'])
+                         [r'^[a-z]{1,2}[0-9] [0-9][A-Z]{2}$'])
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -1069,7 +1068,7 @@ class TestExtraction(ReferenceTestCase):
     ]
     def test_POSTcodes(self):
         self.assertEqual(extract(self.POSTcodes),
-                         [r'^[A-Z]{1,2}\d \d[a-z]{2}$'])
+                         [r'^[A-Z]{1,2}[0-9] [0-9][a-z]{2}$'])
 #                         [r'^[A-Z0-9]{2,3} [a-z0-9]{3}$'])
 
 
@@ -1783,14 +1782,14 @@ class TestExtraction(ReferenceTestCase):
 
     def testmflag(self):
         patterns = ('a.1', 'b_2', 'c-3')
-        old_expected = ['^c\-3$', r'^([a-z])([A-Z\.\_])(\d)$']
-        new_expected = ['^c\-3$', r'^([a-z])([A-Z._])(\d)$']
+        old_expected = ['^c\-3$', r'^([a-z])([A-Z\.\_])([0-9])$']
+        new_expected = ['^c\-3$', r'^([a-z])([A-Z._])([0-9])$']
         r = extract(patterns, tag=True, extra_letters='._')
         self.assertIn(r, (old_expected, new_expected))
 
     def testmflag2(self):
         patterns = ('a-1', 'c-3')
-        expected = [r'^([a-z])\-(\d)$']
+        expected = [r'^([a-z])\-([0-9])$']
         r = extract(patterns, tag=True, extra_letters='._')
         self.assertEqual(r, expected)
 
@@ -1896,15 +1895,17 @@ class TestExtraction(ReferenceTestCase):
 
     def testRexpyCommandLineAPIQuoting(self):
         inputs = ['EH12 3LH', 'AL64 1BB']
-        self.assertEqual(rexpy_streams(inputs, out_path=False),
+        self.assertEqual(rexpy_streams(inputs, out_path=False, dialect='perl'),
                          [r'^[A-Z]{2}\d{2} \d[A-Z]{2}$'])
-        self.assertEqual(rexpy_streams(inputs, out_path=False, quote=True),
+        self.assertEqual(rexpy_streams(inputs, out_path=False, quote=True,
+                                       dialect='perl'),
                          [r'"^[A-Z]{2}\\d{2} \\d[A-Z]{2}$"'])
         inputs = [r'''one \"' two''', r'''three \"' four''']
-        self.assertIn(rexpy_streams(inputs, out_path=False),
+        self.assertIn(rexpy_streams(inputs, out_path=False, dialect='perl'),
                       ([r'''^[a-z]{3,5} \\\"\' [a-z]{3,4}$'''],
                        [r'''^[a-z]{3,5} \\"' [a-z]{3,4}$''']))
-        self.assertIn(rexpy_streams(inputs, out_path=False, quote=True),
+        self.assertIn(rexpy_streams(inputs, out_path=False, quote=True,
+                                    dialect='perl'),
                       ([r'''"^[a-z]{3,5} \\\\\\\"\\' [a-z]{3,4}$"'''],
                        [r'''"^[a-z]{3,5} \\\\\"' [a-z]{3,4}$"''']))
 

@@ -31,7 +31,7 @@ FLAGS are optional flags. Currently::
                         becomes  "^[A-Z]+\\-[0-9]+$"
 
   --portable        Product maximally portable regular expressions
-                    (e.g. [0-9] rather than \d).
+                    (e.g. [0-9] rather than \d). (This is the default.)
 
   --grep            Same as --portable
 
@@ -217,7 +217,7 @@ DIALECTS = [
     'posix',
 ]
 
-DEFAULT_DIALECT = None
+DEFAULT_DIALECT = 'portable'
 
 
 class Categories(object):
@@ -289,7 +289,7 @@ class Categories(object):
             ['UAlphaNumeric'] if UNICHRS else []
 
         )
-        if dialect:
+        if dialect and dialect != 'perl':
             self.adapt_for_output(dialect, el_re)
 
     def Punctuation(self, el_re):
@@ -367,8 +367,6 @@ class Categories(object):
                 self.UAlphaNumeric.set('[\p{Alnum}%s]' % el_re)
             else:
                 self.Punctuation.set(r'\p{Punct}')
-        elif dialect == 'perl':
-            pass  # that's our default
         else:
             raise Exception('Unknown dialect: %s' % dialect)
 
