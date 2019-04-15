@@ -30,6 +30,16 @@ FLAGS are optional flags. Currently::
                         e.g.     ^[A-Z]+\-[0-9]+$
                         becomes  "^[A-Z]+\\-[0-9]+$"
 
+  --portable        Product maximally portable regular expressions
+                    (e.g. [0-9] rather than \d).
+
+  --grep            Same as --portable
+
+  --posix           Produce posix-compilant regular expressions
+                    (e.g. [[:digit:]] rather than \d).
+
+  --perl            Produce Perl-style regular expressions (e.g. \d)
+
   -u, --underscore  Allow underscore to be treated as a letter.
                     Mostly useful for matching identifiers
                     Also allow -_.
@@ -194,6 +204,13 @@ UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
 COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
 
+DIALECTS = [
+    'grep',
+    'perl',
+    'portable',
+    'posix',
+]
+
 DEFAULT_DIALECT = None
 
 
@@ -309,10 +326,12 @@ class Categories(object):
         since not all dialects can be used internally for determining
         what patterns to generate.
         """
-        if dialect == 'portable':
+        if dialect in ('portable', 'grep'):
             self.Digit.re_string = r'[0-9]'
         elif dialect == 'posix':
             self.Digit.re_string = r'[[:digit:]]'
+        elif dialect == 'perl':
+            pass  # that's our default
         else:
             raise Exception('Unknown dialect: %s' % dialect)
 
@@ -2145,6 +2164,8 @@ def get_params(args):
                 params['variableLengthFrags'] = True
             elif a in ('-flf', '--fixed'):
                 params['variableLengthFrags'] = False
+            elif a.startswith('--') and a[2:] in DIALECTS:
+                params['dialect'] = a[2:]
             elif a in ('-?', '--help'):
                 print(USAGE)
                 sys.exit(0)
