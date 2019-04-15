@@ -35,6 +35,8 @@ FLAGS are optional flags. Currently::
 
   --grep            Same as --portable
 
+  --java            Produce Java-style regular expressions (e.g. \p{Digit})
+
   --posix           Produce posix-compilant regular expressions
                     (e.g. [[:digit:]] rather than \d).
 
@@ -199,6 +201,9 @@ class Category(object):
         self.re_single = poss_term_cre(re_string)
         self.re_multiple = poss_term_cre(re_string + '+')
 
+    def set(self, rex):
+        self.re_string = rex
+
 
 UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
@@ -206,6 +211,7 @@ COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
 
 DIALECTS = [
     'grep',
+    'java',
     'perl',
     'portable',
     'posix',
@@ -284,12 +290,13 @@ class Categories(object):
 
         )
         if dialect:
-            self.adapt_for_output(dialect)
+            self.adapt_for_output(dialect, el_re)
 
     def Punctuation(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
+
 
     def build_cat_map(self):
         """
@@ -316,7 +323,7 @@ class Categories(object):
     def escape_code(cls, code):
         return escape(code) if code in cls.escapableCodes else code
 
-    def adapt_for_output(self, dialect):
+    def adapt_for_output(self, dialect, el_re):
         """
         This converts the output regular expressions for each kind of
         fragment identified to one of the supported, dialects, as listed
@@ -327,9 +334,39 @@ class Categories(object):
         what patterns to generate.
         """
         if dialect in ('portable', 'grep'):
-            self.Digit.re_string = r'[0-9]'
+            self.Digit.set(r'[0-9]')
         elif dialect == 'posix':
-            self.Digit.re_string = r'[[:digit:]]'
+            self.Digit.set(r'[[:digit:]]')
+
+            self.letter.set(r'[[:lower:]]')
+            self.LETTER.set(r'[[:upper:]]')
+            self.Letter.set(r'[[:alpha:]]')
+            self.ULetter.set(r'[[:alpha:]]')
+            self.Hex.set(r'[[:xdigit:]]')
+            self.Whitespace.set(r'[[:space:]]')
+            if el_re:
+                self.ALPHANUMERIC.set('[[:upper:][:digit:]%s]' % el_re)
+                self.alphanumeric.set('[[:lower:][:digit:]%s]' % el_re)
+                self.AlphaNumeric.set('[[:alnum:]%s]' % el_re)
+                self.UAlphaNumeric.set('[[:alnum:]%s]' % el_re)
+            else:
+                self.Punctuation.set(r'[[:punct:]]')
+
+        elif dialect == 'java':
+            self.Digit.set(r'\p{Digit}')
+            self.letter.set(r'\p{Lower}')
+            self.LETTER.set(r'\p{Upper}')
+            self.Letter.set(r'\p{Alpha}')
+            self.ULetter.set(r'\p{Alpha}')
+            self.Hex.set(r'\p{XDigit}')
+            self.Whitespace.set(r'\p{Space}')
+            if el_re:
+                self.ALPHANUMERIC.set('[\p{Upper}\p{Digit}%s]' % el_re)
+                self.alphanumeric.set('[\p{Lower}\p{Digit}%s]' % el_re)
+                self.AlphaNumeric.set('[\p{Alnum}%s]' % el_re)
+                self.UAlphaNumeric.set('[\p{Alnum}%s]' % el_re)
+            else:
+                self.Punctuation.set(r'\p{Punct}')
         elif dialect == 'perl':
             pass  # that's our default
         else:
@@ -1116,7 +1153,8 @@ class Extractor(object):
                                   output=output)
                  for frag in vrles]
         if self.n_stripped > 0:
-            ws = [r'\s*']
+            Cats = self.OutCats if output and self.dialect else self.Cats
+            ws = [r'%s*' % Cats.Whitespace.re_string]
             parts = ws + parts + ws
         return poss_term_re(''.join(parts))
 
@@ -1127,12 +1165,13 @@ class Extractor(object):
         and list of fragments
         """
         if self.n_stripped > 0:
-            return ([Fragment(r'\s*', True)]
+            ws = r'\s*'
+            return ([Fragment(ws, True)]
                     + [Fragment(self.fragment2re(frag, tagged=False,
                                                  as_re=True),
                               len(frag) < 4)
                        for frag in vrles]
-                     + [Fragment(r'\s*', True)])
+                     + [Fragment(ws, True)])
 
         else:
             return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),

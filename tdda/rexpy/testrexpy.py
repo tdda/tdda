@@ -695,7 +695,7 @@ class TestExtraction(ReferenceTestCase):
         if dialect is None or dialect == 'portable':
             match = re.match
             re_compile = re.compile
-        elif dialect == 'posix' and regex is not None:
+        elif dialect in ('posix', 'java') and regex is not None:
             match = regex.match
             re_compile = regex.compile
         else:
@@ -724,6 +724,26 @@ class TestExtraction(ReferenceTestCase):
         rexes = [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$']
         x = extract(iids, strip=True, remove_empties=True)
         self.check_result(x, rexes, iids)
+
+    def test_re_pqs_id_portable(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^\s*[0-9]{2,3}\-[A-Z]{2}\-[0-9]{3,4}\s*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='portable')
+        self.check_result(x, rexes, iids)
+
+    def test_re_pqs_id_java(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^\p{Space}*\p{Digit}{2,3}\-\p{Upper}{2}\-'
+                 r'\p{Digit}{3,4}\p{Space}*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='java')
+        self.check_result(x, rexes, iids, dialect='java')
+
+    def test_re_pqs_id_posix(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^[[:space:]]*[[:digit:]]{2,3}\-[[:upper:]]{2}\-'
+                 r'[[:digit:]]{3,4}[[:space:]]*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='posix')
+        self.check_result(x, rexes, iids, dialect='posix')
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', '12-AB-4321', '', None, '321-BA-123']
@@ -789,8 +809,34 @@ class TestExtraction(ReferenceTestCase):
         rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
                  r'[0-9a-f]{4}\-[0-9a-f]{12}$']
 
-        x = extract(uuid4s, variableLengthFrags=True)       # Not refining down yet
+        x = extract(uuid4s, variableLengthFrags=True)
         self.check_result(x, rexes, uuid4s)
+
+    uuid4s_mixed = ['2ffb8eaa-dd75-41c2-aca6-0444914b8713',
+                    'F69C5651-0B97-4909-B896-8EF0891F81FF',
+                    '13f984fe-65db-4646-99d4-a93c06f78472',
+                    '50a886d2-78c9-4b7b-81a9-25caf4deb212',
+                    '2D4429DF-9A80-B581-9565-27880CE171B0',
+                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
+
+    def test_re_uuid4mixed(self):
+        rexes = [r'^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-'
+                 r'[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$']
+        x = extract(self.uuid4s_mixed)
+        self.check_result(x, rexes, self.uuid4s_mixed)
+
+    def test_re_uuid4mixed_java(self):
+        rexes = [r'^\p{XDigit}{8}\-\p{XDigit}{4}\-\p{XDigit}{4}\-'
+                 r'\p{XDigit}{4}\-\p{XDigit}{12}$']
+        x = extract(self.uuid4s_mixed, dialect='java')
+        self.check_result(x, rexes, self.uuid4s_mixed, dialect='java')
+
+    def test_re_uuid4mixed_posix(self):
+        rexes = [r'^[[:xdigit:]]{8}\-[[:xdigit:]]{4}\-[[:xdigit:]]{4}\-'
+                 r'[[:xdigit:]]{4}\-[[:xdigit:]]{12}$']
+        x = extract(self.uuid4s_mixed, dialect='posix')
+        self.check_result(x, rexes, self.uuid4s_mixed, dialect='posix')
+
 
     tels1 = [
         '(0131) 496 0091',
@@ -839,6 +885,14 @@ class TestExtraction(ReferenceTestCase):
                      r'^\([[:digit:]]{3,4}\) [[:digit:]]{3,4} '
                          r'[[:digit:]]{4}$'])
         self.check_result(x, rexes, self.tels2, dialect='posix')
+
+    def test_tels2_java(self):
+        x = set(extract(self.tels2, dialect='java'))
+        rexes = set([r'^\+\p{Digit}{1,2} \p{Digit}{2,3} \p{Digit}{3,4}'
+                         r' \p{Digit}{4}$',
+                     r'^\(\p{Digit}{3,4}\) \p{Digit}{3,4} '
+                         r'\p{Digit}{4}$'])
+        self.check_result(x, rexes, self.tels2, dialect='java')
 
     def test_coverage_tels2(self):
         x = Extractor(self.tels2)
@@ -1078,7 +1132,7 @@ class TestExtraction(ReferenceTestCase):
                         [r'^[A-Z][a-z]+ [^\W0-9_]+$'])
 
     @unittest.skipIf(not UNICHRS, 'Unicode handling off')
-    def test_namesAU(self):
+    def test_namesUA(self):
         self.assertEqual(extract(self.namesUA),
                          [r'^[^\W0-9_]+ [A-Z][a-z]+$'])
 
@@ -1086,6 +1140,17 @@ class TestExtraction(ReferenceTestCase):
     def test_namesUAU(self):
         self.assertEqual(extract(self.namesUAU),
                          [r'^[^\W0-9_]{4,6} [A-Za-z]+ [^\W0-9_]+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesUAUjava(self):
+        self.assertEqual(extract(self.namesUAU, dialect='java'),
+                         [r'^\p{Alpha}{4,6} \p{Alpha}+ \p{Alpha}+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesUAUjava(self):
+        self.assertEqual(extract(self.namesUAU, dialect='posix'),
+                         [r'^[[:alpha:]]{4,6} [[:alpha:]]+ [[:alpha:]]+$'])
+
 
     def test_names_dot_initial(self):
         self.assertEqual(extract(self.names_dot_initial),
