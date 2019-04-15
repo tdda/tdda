@@ -224,6 +224,11 @@ pd = pandas
 from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.rexpy.relib import re
+try:
+    import regex
+except ImportError:
+    regex = None
+
 from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage, Examples
 
@@ -598,10 +603,10 @@ class TestHelperMethods(ReferenceTestCase):
         rle = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
-        regex = self.x.rle2re(rle)
-        self.assertEqual(regex,
+        rex = self.x.rle2re(rle)
+        self.assertEqual(rex,
                          '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an))
-        cre = re.compile(regex)
+        cre = re.compile(rex)
         for s in ['123-AB-321', '321-BA-123']:
             self.assertIsNotNone(re.match(cre, s))
 
@@ -686,22 +691,32 @@ class TestHelperMethods(ReferenceTestCase):
 
 class TestExtraction(ReferenceTestCase):
 
-    def check_result(self, result, rexes, examples):
+    def check_result(self, result, rexes, examples, dialect=None):
+        if dialect is None or dialect == 'portable':
+            match = re.match
+            re_compile = re.compile
+        elif dialect == 'posix' and regex is not None:
+            match = regex.match
+            re_compile = regex.compile
+        else:
+            match = None
+
         if type(rexes) is tuple:
             self.assertIn(result, rexes)
-            old_compiled = [re.compile(r) for r in rexes[0]]
-            new_compiled = [re.compile(r) for r in rexes[1]]
-            self.assertTrue(all(any(re.match(rex, x) for rex in old_compiled)
+            if match:
+                old_compiled = [re_compile(r) for r in rexes[0]]
+                new_compiled = [re_compile(r) for r in rexes[1]]
+                self.assertTrue(all(any(match(rex, x) for rex in old_compiled)
                                  for x in examples if x)
                               or
-                            all(any(re.match(rex, x) for rex in new_compiled)
+                            all(any(match(rex, x) for rex in new_compiled)
                                  for x in examples if x))
         else:
             self.assertEqual(result, rexes)
-            compiled = [re.compile(r) for r in rexes]
-            self.assertTrue(all(any(re.match(rex, x) for rex in compiled)
-                                 for x in examples if x))
-
+            if match:
+                compiled = [re_compile(r) for r in rexes]
+                self.assertTrue(all(any(match(rex, x) for rex in compiled)
+                                    for x in examples if x))
 
     def test_re_pqs_id(self):
         # Space in second string should cause \s* at start, no?
@@ -810,6 +825,20 @@ class TestExtraction(ReferenceTestCase):
         rexes = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
                      r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
         self.check_result(x, rexes, self.tels2)
+
+    def test_tels2_portable(self):
+        x = set(extract(self.tels2, dialect='portable'))
+        rexes = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                     r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
+        self.check_result(x, rexes, self.tels2)
+
+    def test_tels2_posix(self):
+        x = set(extract(self.tels2, dialect='posix'))
+        rexes = set([r'^\+[[:digit:]]{1,2} [[:digit:]]{2,3} [[:digit:]]{3,4}'
+                         r' [[:digit:]]{4}$',
+                     r'^\([[:digit:]]{3,4}\) [[:digit:]]{3,4} '
+                         r'[[:digit:]]{4}$'])
+        self.check_result(x, rexes, self.tels2, dialect='posix')
 
     def test_coverage_tels2(self):
         x = Extractor(self.tels2)
@@ -1718,8 +1747,8 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(f(1), 1)
         self.assertRaises(KeyError, f, 2)
 
-        regex = '@ (a(b)c) d (e(f(g)h(i(j)k)l)m) n (o) p (q(r)s) t'
-        r = re.compile(regex, re.U)
+        rex = '@ (a(b)c) d (e(f(g)h(i(j)k)l)m) n (o) p (q(r)s) t'
+        r = re.compile(rex, re.U)
         m = re.match(r, '@ abc d efghijklm n o p qrs t')
         f = group_map_function(m, 4)
         self.assertEqual(f(1), 1)
@@ -1729,8 +1758,8 @@ class TestExtraction(ReferenceTestCase):
         self.assertRaises(KeyError, f, 5)
 
     def testFindHarderOuterCaptureGroups(self):
-        regex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
-        r = re.compile(regex, re.U)
+        rex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
+        r = re.compile(rex, re.U)
         m = re.match(r, '!a b c')
         f = group_map_function(m, 2)
         self.assertIsNotNone(m)

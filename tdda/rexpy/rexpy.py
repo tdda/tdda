@@ -194,10 +194,13 @@ UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
 COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
 
+DEFAULT_DIALECT = None
+
 
 class Categories(object):
     escapableCodes = '.*?'
-    def __init__(self, extra_letters=None, full_escape=False):
+    def __init__(self, extra_letters=None, full_escape=False,
+                 dialect=DEFAULT_DIALECT):
         if extra_letters:
             assert all(L in '_-.' for L in extra_letters)  # for now
             el_re = ''.join(escape(r'%s') % L for L in extra_letters)
@@ -263,6 +266,8 @@ class Categories(object):
             ['UAlphaNumeric'] if UNICHRS else []
 
         )
+        if dialect:
+            self.adapt_for_output(dialect)
 
     def Punctuation(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
@@ -293,6 +298,24 @@ class Categories(object):
     @classmethod
     def escape_code(cls, code):
         return escape(code) if code in cls.escapableCodes else code
+
+    def adapt_for_output(self, dialect):
+        """
+        This converts the output regular expressions for each kind of
+        fragment identified to one of the supported, dialects, as listed
+        below.
+
+        This is called at the very end of regular-expression generation,
+        since not all dialects can be used internally for determining
+        what patterns to generate.
+        """
+        if dialect == 'portable':
+            self.Digit.re_string = r'[0-9]'
+        elif dialect == 'posix':
+            self.Digit.re_string = r'[[:digit:]]'
+        else:
+            raise Exception('Unknown dialect: %s' % dialect)
+
 
 
 class Fragment(namedtuple('Fragment', 're group')):
@@ -365,7 +388,7 @@ class Extractor(object):
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
                  min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
-                 size=None, seed=None, verbose=VERBOSITY):
+                 size=None, seed=None, dialect=None, verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -388,6 +411,10 @@ class Extractor(object):
         self.n_too_many_groups = 0
         self.Cats = Categories(self.thin_extras(extra_letters),
                                full_escape=full_escape)
+        self.dialect = dialect
+        if dialect:
+            self.OutCats = Categories(self.thin_extras(extra_letters),
+                                      full_escape=full_escape, dialect=dialect)
         self.full_escape = full_escape
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
@@ -443,6 +470,7 @@ class Extractor(object):
                 self.examples = self.all_examples
             self.add_warnings()
             self.results.remove(self.find_bad_patterns(re_freqs))
+            self.convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
 
@@ -572,6 +600,9 @@ class Extractor(object):
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex, mergedfrags,
                               extractor=self)
+
+    def convert_rex_to_dialect(self):
+        self.results.convert_to_dialect(self)
 
     def specialize(self, patterns):
         """
@@ -1030,10 +1061,16 @@ class Extractor(object):
         else:
             return cats.ULetter_.code
 
-    def fragment2re(self, fragment, tagged=False, as_re=True):
+    def fragment2re(self, fragment, tagged=False, as_re=True, output=False):
+        """
+        Convert fragment to RE.
+
+        If output is set, this is for final output, and should be in the
+        specified dialect (if any).
+        """
         (c, m, M) = fragment[:3]
         fixed = len(fragment) > 3
-        Cats = self.Cats
+        Cats = self.OutCats if (output and self.dialect) else self.Cats
         regex = c if (fixed or not as_re) else Cats[c].re_string
         if (m is None or m == 0) and M is None:
             part = regex + '*'
@@ -1049,11 +1086,15 @@ class Extractor(object):
             part = regex + ('?' if m == 0 and M == 1 else ('{%d,%s}' % (m, M)))
         return capture_group(part) if (tagged and not fixed) else part
 
-    def vrle2re(self, vrles, tagged=False, as_re=True):
+    def vrle2re(self, vrles, tagged=False, as_re=True, output=False):
         """
         Convert variable run-length-encoded code string to regular expression
+
+        If output is set, this is for final output, and should be in the
+        specified dialect (if any).
         """
-        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re)
+        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re,
+                                  output=output)
                  for frag in vrles]
         if self.n_stripped > 0:
             ws = [r'\s*']
@@ -1763,13 +1804,19 @@ class ResultsSummary(object):
 
         x = self.extractor
         remaining = [i for i in range(len(self.rex)) if not i in indexes]
-        for name in ('rex', 'refrags'):
+        for name in ('refined_vrles', 'rex', 'refrags'):
             d = self.__dict__[name]
             self.__dict__[name] = [d[i] for i in remaining]
         if add_dot_star:
             dot_star = ((x.Cats.Any.code, None, None),)
             self.refrags.append([Fragment('.*', True)])
             self.rex.append(x.vrle2re(dot_star, tagged=x.tag))
+
+    def convert_to_dialect(self, x):
+        if not x.dialect:
+            return          # No dialect set, so nothing to do
+        self.rex = [x.vrle2re(m, tagged=x.tag, output=True)
+                        for m in self.refined_vrles]
 
     def __str__(self):
         return self.to_string()
@@ -1799,7 +1846,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            seed=None, verbose=VERBOSITY):
+            seed=None, dialect=None, verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1824,7 +1871,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   max_patterns = max_patterns,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
-                  size=size, seed=seed, verbose=verbose)
+                  size=size, seed=seed, dialect=dialect, verbose=verbose)
     return r if as_object else r.results.rex
 
 
