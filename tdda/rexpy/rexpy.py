@@ -222,8 +222,7 @@ DEFAULT_DIALECT = 'portable'
 
 class Categories(object):
     escapableCodes = '.*?'
-    def __init__(self, extra_letters=None, full_escape=False,
-                 dialect=DEFAULT_DIALECT):
+    def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
             assert all(L in '_-.' for L in extra_letters)  # for now
             el_re = ''.join(escape(r'%s') % L for L in extra_letters)
@@ -464,11 +463,14 @@ class Extractor(object):
         self.warnings = []
         self.n_too_many_groups = 0
         self.Cats = Categories(self.thin_extras(extra_letters),
-                               full_escape=full_escape)
+                               full_escape=full_escape)  # no dialect
+        if dialect == 'perl':
+            dialect = None
         self.dialect = dialect
-        if dialect:
+        if dialect is not None:
             self.OutCats = Categories(self.thin_extras(extra_letters),
-                                      full_escape=full_escape, dialect=dialect)
+                                      full_escape=full_escape,
+                                      dialect=dialect)  # output dialect
         self.full_escape = full_escape
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
