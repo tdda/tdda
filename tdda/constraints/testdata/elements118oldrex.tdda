@@ -1,7 +1,7 @@
 {
     "creation_metadata": {
-        "local_time": "2019-04-15 15:15:35", 
-        "utc_time": "2019-04-15 14:14:35", 
+        "local_time": "2019-04-15 17:17:53", 
+        "utc_time": "2019-04-15 16:16:53", 
         "creator": "TDDA 1.0.25", 
         "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.db", 
         "source": "elements", 
@@ -96,7 +96,7 @@
                 "^Greek protos and actinium$", 
                 "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$", 
                 "^State and University of California$", 
-                "^Latin uni\\, uni\\, and quadr$", 
+                "^Latin uni\\, uni\\, and [a-z]+$", 
                 "^Latin uni\\, uni\\, and Greek [a-z]{3,4}$", 
                 "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$", 
                 "^Pierre and Marie Curie and the traditional \\-um ending$"

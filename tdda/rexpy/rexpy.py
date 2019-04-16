@@ -516,8 +516,8 @@ class Extractor(object):
                         break
                     elif (len(failures) <= size.do_all_exceptions
                           or attempt > size.max_sampled_attempts):
-                        self.examples.extend(failures)
-                        self.freqs.extend(fail_freqs)
+                        self.examples.strings.extend(failures)
+                        self.examples.freqs.extend(fail_freqs)
                     else:
                         z = list(zip(failures, freqs))
                         sampled = random.sample(z, size.do_all_exceptions)
@@ -890,8 +890,9 @@ class Extractor(object):
         Returns all example strings that do not match any of the regular
         expressions in results, together with their frequencies.
         """
-        strings = self.examples.strings
-        freqs = self.examples.freqs
+        examples = getattr(self, 'all_examples', self.examples)
+        strings = examples.strings
+        freqs = examples.freqs
         N = len(strings)
         matched = [False] * N
         nRemaining = N
@@ -909,7 +910,7 @@ class Extractor(object):
                                 return [], [], re_freqs
         indices = [i for i in range(N) if not matched[i]]
         failures = [strings[i] for i in indices]
-        out_freqs = [self.examples.freqs[i] for i in indices]
+        out_freqs = [freqs[i] for i in indices]
         return failures, out_freqs, re_freqs
 
     def pattern_matches(self):
