@@ -1,7 +1,7 @@
 {
     "creation_metadata": {
-        "local_time": "2019-04-12 12:12:31",
-        "utc_time": "2019-04-12 11:11:31",
+        "local_time": "2019-04-16 08:08:00",
+        "utc_time": "2019-04-16 07:07:00",
         "creator": "TDDA 1.0.25",
         "rdbms": "sqlite::None:/home/njr/python/tdda/tdda/constraints/testdata/example.db",
         "source": "elements",
@@ -93,12 +93,13 @@
                 "^[A-Za-z]+ [A-Za-z]+$",
                 "^[A-Za-z]+ [A-Za-z]+ [A-Za-z]+$",
                 "^[A-Z][a-z]+\\, [A-Z][a-z]+$",
-                "^Glenn T\\. Seaborg$",
                 "^Greek protos and actinium$",
+                "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$",
                 "^State and University of California$",
                 "^Latin uni\\, uni\\, and [a-z]+$",
                 "^Latin uni\\, uni\\, and Greek [a-z]{3,4}$",
-                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$"
+                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$",
+                "^Pierre and Marie Curie and the traditional \\-um ending$"
             ]
         },
         "RelativeAtomicMass": {
