@@ -769,8 +769,6 @@ class ReferenceTest(object):
         mode = 'rb' if binary else 'r'
         with open(actual_path, mode) as fin:
             actual = fin.read()
-        if not binary:
-            actual = self._normalize_whitespace(actual, lstrip, rstrip)
         self._write_reference_result(actual, reference_path, binary=binary)
 
     def _write_reference_files(self, actual_paths, reference_paths,
@@ -796,22 +794,10 @@ class ReferenceTest(object):
         results.
         """
         mode = 'wb' if binary else 'w'
-        if not binary:
-            result = self._normalize_whitespace(result, lstrip, rstrip)
         with open(reference_path, mode) as fout:
             fout.write(result)
         if self.verbose and self.print_fn:
             self.print_fn('Written %s' % reference_path)
-
-    def _normalize_whitespace(self, result, lstrip=False, rstrip=False):
-        if lstrip and rstrip:
-            return '\n'.join([r.strip() for r in result.splitlines()])
-        elif lstrip:
-            return '\n'.join([r.lstrip() for r in result.splitlines()])
-        elif rstrip:
-            return '\n'.join([r.rstrip() for r in result.splitlines()])
-        else:
-            return result
 
     def _check_failures(self, failures, msgs):
         """

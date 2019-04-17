@@ -295,5 +295,8 @@ Also, reinstated relib to determine whether to use re or regex.
 regex is preferred, where available.
 Two variables are set by relib: relib is either 're' or 'regex',
 and reIsRegex is set to True if the regex library is being used.
+
+Referencetest no longer strips whitespace when its regenerating outputs,
+which it was incorrectly doing due to a recent misplaced 'fix'.
 ------------------------- end of dev branch -------------------------
 """
