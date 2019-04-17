@@ -940,7 +940,8 @@ class TestExtraction(ReferenceTestCase):
         od = x.incremental_coverage(dedup=True)
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$', 5),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                             5),
                             (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
 
@@ -952,13 +953,14 @@ class TestExtraction(ReferenceTestCase):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
-                         [[(u'\d{4}', True),
+                         [[(u'[0-9]{4}', True),
                            (u'[\\-\\.]', False),
-                           (u'\d{3}', True),
+                           (u'[0-9]{3}', True),
                            (u'[\\-\\.]', False),
-                            (u'\d{4}', True),
+                            (u'[0-9]{4}', True),
                           ]])
-        self.check_result(r.results.rex, [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
+        self.check_result(r.results.rex,
+                          [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
                           self.tels3)
 
     tels4 = [

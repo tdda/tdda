@@ -1161,7 +1161,7 @@ class Extractor(object):
         return poss_term_re(''.join(parts))
 
 
-    def vrle2refrags(self, vrles):
+    def vrle2refrags(self, vrles, output=False):
         """
         Convert variable run-length-encoded code string to regular expression
         and list of fragments
@@ -1170,13 +1170,14 @@ class Extractor(object):
             ws = r'\s*'
             return ([Fragment(ws, True)]
                     + [Fragment(self.fragment2re(frag, tagged=False,
-                                                 as_re=True),
+                                                 as_re=True, output=output),
                               len(frag) < 4)
                        for frag in vrles]
                      + [Fragment(ws, True)])
 
         else:
-            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
+            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True,
+                                              output=output),
                              len(frag) < 4)
                     for frag in vrles]
 
@@ -1876,6 +1877,9 @@ class ResultsSummary(object):
         if not x.dialect:
             return          # No dialect set, so nothing to do
         self.rex = [x.vrle2re(m, tagged=x.tag, output=True)
+                        for m in self.refined_vrles]
+
+        self.refrags = [x.vrle2refrags(m, output=True)
                         for m in self.refined_vrles]
 
     def __str__(self):

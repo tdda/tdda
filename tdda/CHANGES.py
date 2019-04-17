@@ -280,4 +280,20 @@ versions or Python 2.7 on Linux, but either way, forcing the
 Also changed the default for add_dot_star to False, since adding
 it is profoundly unhelpful when discovering constraints.
 ----------------------- end of rexless branch -----------------------
+
+---------------------------- dev branch -----------------------------
+Add dialect support for rexpy: Can now generate output in any of
+
+    - perl (the old default, using, e.g. \d)
+    - portable (the new default, using, e.g. [0-9], aka grep)
+    - java (using, e.g. \p{Digit})
+    - posix (using, e.g. [[:digit:]])
+
+Test results have been updated to reflect this new behaviour.
+
+Also, reinstated relib to determine whether to use re or regex.
+regex is preferred, where available.
+Two variables are set by relib: relib is either 're' or 'regex',
+and reIsRegex is set to True if the regex library is being used.
+------------------------- end of dev branch -------------------------
 """
