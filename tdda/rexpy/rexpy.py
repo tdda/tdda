@@ -105,6 +105,7 @@ USE_SAMPLING = False
 
 RE_FLAGS = re.UNICODE | re.DOTALL
 
+DIALECTS = ['perl']
 
 class SIZE(object):
     if USE_SAMPLING:
