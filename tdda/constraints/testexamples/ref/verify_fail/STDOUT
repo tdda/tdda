@@ -1,0 +1,38 @@
+FIELDS:
+
+account_number: 2 failures  4 passes  type OK  min X  max X  sign OK  max_nulls OK  no_duplicates OK
+
+open_date: 2 failures  2 passes  type OK  min X  max X  max_nulls OK
+
+close_date: 2 failures  1 pass  type OK  min X  max X
+
+title: 0 failures  6 passes  type OK  min_length OK  max_length OK  max_nulls OK  allowed_values OK  rex OK
+
+forename: 0 failures  5 passes  type OK  min_length OK  max_length OK  max_nulls OK  rex OK
+
+middle_name: 0 failures  4 passes  type OK  min_length OK  max_length OK  rex OK
+
+surname: 0 failures  5 passes  type OK  min_length OK  max_length OK  max_nulls OK  rex OK
+
+address1: 1 failure  4 passes  type OK  min_length OK  max_length OK  max_nulls X  rex OK
+
+city: 1 failure  4 passes  type OK  min_length OK  max_length OK  max_nulls X  rex OK
+
+postcode: 2 failures  4 passes  type OK  min_length OK  max_length OK  max_nulls X  no_duplicates X  rex OK
+
+home_tel: 1 failure  5 passes  type OK  min_length OK  max_length OK  max_nulls X  no_duplicates OK  rex OK
+
+mobile_tel: 2 failures  4 passes  type OK  min_length OK  max_length OK  max_nulls X  no_duplicates X  rex OK
+
+email: 2 failures  4 passes  type OK  min_length OK  max_length X  max_nulls OK  no_duplicates X  rex OK
+
+account_type: 4 failures  2 passes  type OK  min_length OK  max_length X  max_nulls X  allowed_values X  rex X
+
+overdraft_limit: 0 failures  5 passes  type OK  min OK  max OK  sign OK  max_nulls OK
+
+cash_card_number: 2 failures  4 passes  type OK  min_length OK  max_length OK  max_nulls OK  no_duplicates X  rex X
+
+SUMMARY:
+
+Constraints passing: 63
+Constraints failing: 21

@@ -1,0 +1,24 @@
+FIELDS:
+
+open_date: 1 failure  3 passes  type OK  min X  max OK  max_nulls OK
+
+close_date: 1 failure  2 passes  type OK  min X  max OK
+
+address1: 1 failure  4 passes  type OK  min_length OK  max_length OK  max_nulls X  rex OK
+
+city: 1 failure  4 passes  type OK  min_length OK  max_length OK  max_nulls X  rex OK
+
+postcode: 1 failure  4 passes  type OK  min_length OK  max_length OK  max_nulls X  rex OK
+
+home_tel: 1 failure  5 passes  type OK  min_length OK  max_length OK  max_nulls X  no_duplicates OK  rex OK
+
+mobile_tel: 2 failures  4 passes  type OK  min_length OK  max_length OK  max_nulls X  no_duplicates X  rex OK
+
+account_type: 4 failures  2 passes  type OK  min_length OK  max_length X  max_nulls X  allowed_values X  rex X
+
+cash_card_number: 2 failures  4 passes  type OK  min_length OK  max_length OK  max_nulls OK  no_duplicates X  rex X
+
+SUMMARY:
+
+Records passing: 24989
+Records failing: 11

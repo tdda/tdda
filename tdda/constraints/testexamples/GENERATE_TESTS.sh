@@ -40,3 +40,6 @@ echo 'Generate test for second successful verify command'
 tdda gentest 'tdda verify -7 INPUTS/testdata/accounts1k.csv INPUTS/accounts25k.tdda' test_verify2.py . STDOUT STDERR
 
 rm -rf constraints_examples output/*
+
+# Then add cleanup code for outputs.
+# And change to use $TMP or similar.
