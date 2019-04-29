@@ -20,9 +20,23 @@ from collections import OrderedDict
 from tdda.version import version
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
-STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
-                              'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values', 'rex', 'transform')
+
+CONSTRAINT_SUFFIX_MAP = OrderedDict((
+    ('type', 'type'),
+    ('min', 'min'),
+    ('min_length', 'min_length'),
+    ('max', 'max'),
+    ('max_length', 'max_length'),
+    ('sign', 'sign'),
+    ('max_nulls', 'nonnull'),
+    ('no_duplicates', 'nodups'),
+    ('allowed_values', 'values'),
+    ('rex', 'rex'),
+    ('transform', None),  # this mapped value isn't used
+))
+
+STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
+STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
          'null')
@@ -145,8 +159,8 @@ class DatasetConstraints(object):
         """
         with open(path) as f:
             text = f.read()
-        self.initialize_from_dict(native_definite(json.loads(text)))
-
+        obj = json.loads(text, object_pairs_hook=OrderedDict)
+        self.initialize_from_dict(native_definite(obj))
 
     def initialize_from_dict(self, in_constraints):
         """
@@ -175,7 +189,7 @@ class DatasetConstraints(object):
                     if is_date and kind in DATE_VALUED_CONSTRAINTS:
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
-                else:
+                elif not kind.startswith('#'):
                     warn('Constraint kind %s for field %s unknown: ignored.'
                          % (kind, fieldname))
             if fc:
@@ -281,7 +295,7 @@ class FieldConstraints(object):
         into the dictionary using the constraint kind as a key.
         """
         self.name = name
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -335,7 +349,7 @@ class MultiFieldConstraints(FieldConstraints):
         into the dictionary using the constraint kind as a key.
         """
         self.names = tuple(names)
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -432,7 +446,9 @@ class Constraint(object):
                                              '(%s)' % (name, value, errmsg))
 
     def to_dict_value(self, raw=False):
-        return (self.value if type(self.value) != datetime.datetime or raw
+        return (self.value
+                   if raw or type(self.value) not in (datetime.datetime,
+                                                      datetime.date)
                 else str(self.value))
 
 
@@ -929,7 +945,7 @@ def UTF8DefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
                            for (k, v) in s.items())
-    elif type(s) == dict:
+    elif isinstance(s, dict):
         return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
                 for (k, v) in s.items()}
     return s
@@ -951,7 +967,7 @@ def NativeDefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
                            for (k, v) in s.items()))
-    elif type(s) is dict:
+    elif isinstance(s, dict):
         return {NativeDefiniteObject(k): NativeDefiniteObject(v)
                 for (k, v) in s.items()}
     return s

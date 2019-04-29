@@ -6,16 +6,16 @@ of DB-API (PEP-0249) compliant databases, and also for a number of other
 
 The top-level functions are:
 
-    :py:func:`discover_db_table`:
+    :py:func:`~tdda.constraints.discover_db_table`:
         Discover constraints from a single database table.
 
-    :py:func:`verify_db_table`:
+    :py:func:`~tdda.constraints.verify_db_table`:
         Verify (check) a single database table, against a set of previously
         discovered constraints.
 
-    :py:func:`detect_db_table`:
-        Verify (check) a single database table, against a set of previously
-        discovered constraints.
+    :py:func:`~tdda.constraints.detect_db_table`:
+        For detection of failing records in a single database table,
+        but not yet implemented for databases.
 """
 from __future__ import division
 from __future__ import print_function
@@ -62,7 +62,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def get_nrecords(self):
         return self.get_database_nrows(self.tablename)
 
-    def types_compatible(self, x, y, colname):
+    def types_compatible(self, x, y, colname=None):
         return types_compatible(x, y, colname if not self.testing else None)
 
     def calc_min(self, colname):
@@ -99,10 +99,10 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def calc_all_non_nulls_boolean(self, colname):
         raise Exception('database should not require all_non_nulls_boolean')
 
-    def find_rexes(self, colname, values=None):
+    def find_rexes(self, colname, values=None, seed=None):
         if not values:
             values = self.get_database_unique_values(self.tablename, colname)
-        return rexpy.extract(values)
+        return rexpy.extract(values, seed=seed)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         return not self.get_database_rex_match(self.tablename, colname,
@@ -134,9 +134,9 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
             *dbtype*:
                     Type of database.
             *db*:
-                    A DB-API database connection object (for example, as
-                    obtained from a call to pgdb.connect() for PostGreSQL
-                    or as a call to MySQLdb.connect() for MySQL).
+                    A DB-API database connection object (as obtained from
+                    a call to the connect() method on the underlying database
+                    driver).
             *tablename*:
                     A table name, referring to a table that exists in the
                     database and is accessible. It can either be a simple
@@ -168,12 +168,12 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     A :py:class:`DatabaseConstraintDiscoverer` object is used to discover
     constraints on a single database table.
     """
-    def __init__(self, dbtype, db, tablename, inc_rex=False):
+    def __init__(self, dbtype, db, tablename, inc_rex=False, seed=None):
         DatabaseHandler.__init__(self, dbtype, db)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename)
-        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
+        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex, seed=seed)
         self.tablename = tablename
 
 
@@ -259,9 +259,9 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         *report*:
                             ``all`` or ``fields``.
                             This controls the behaviour of the
-                            :py:meth:`~DatabaseVerification.__str__`
+                            :py:meth:`~~tdda.constraints.db.constraints.DatabaseVerification.__str__`
                             method on the resulting
-                            :py:class:`~DatabaseVerification`
+                            :py:class:`~tdda.constraints.db.constraints.DatabaseVerification`
                             object (but not its content).
 
                             The default is ``all``, which means that
@@ -279,7 +279,7 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 
     Returns:
 
-        :py:class:`~DatabaseVerification` object.
+        :py:class:`~tdda.constraints.db.constraints.DatabaseVerification` object.
 
         This object has attributes:
 
@@ -315,13 +315,14 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
 def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                     type_checking='strict', testing=False, **kwargs):
     """
-    Detect failures from verification of constraints
+    For detection of failures from verification of constraints, but
+    not yet implemented for database tables.
     """
     raise NotImplementedError('Detection is not implemented (yet) '
                               'for databases.')
 
 
-def discover_db_table(dbtype, db, tablename, inc_rex=False):
+def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
     """
     Automatically discover potentially useful constraints that characterize
     the database table provided.
@@ -418,6 +419,9 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
 
+    Regular Expression constraints are not (currently) generated for fields
+    in database tables.
+
     Example usage::
 
         import pgdb
@@ -433,7 +437,7 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False):
 
     """
     disco = DatabaseConstraintDiscoverer(dbtype, db, tablename,
-                                         inc_rex=inc_rex)
+                                         inc_rex=inc_rex, seed=seed)
     if not disco.check_table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)

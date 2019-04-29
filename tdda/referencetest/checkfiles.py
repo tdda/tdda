@@ -188,8 +188,10 @@ class FilesComparison(BaseComparison):
         if (preprocess or actual_ignored or expected_ignored
                        or actual_removals or expected_removals
                        or (actual_path is None and ndiffs > 0)):
-            reconstruction = self.reconstruct(original_actual,
-                                              original_expected,
+            norm_actual = [normalize(s) for s in original_actual]
+            norm_expected = [normalize(s) for s in original_expected]
+            reconstruction = self.reconstruct(norm_actual,
+                                              norm_expected,
                                               actual_removals,
                                               expected_removals,
                                               actual_ignored,

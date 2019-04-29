@@ -1,0 +1,106 @@
+{
+    "creation_metadata": {
+        "as_at": "2018-05-15 16:16:51", 
+        "local_time": "2018-05-15 16:16:51", 
+        "utc_time": "2018-05-15 15:15:51", 
+        "creator": "TDDA 1.0.00", 
+        "source": null, 
+        "host": "mymachine", 
+        "user": "me", 
+        "dataset": null, 
+        "n_records": null, 
+        "n_selected": null, 
+        "tddafile": "/home/me/ddd.tdda"
+    }, 
+    "fields": {
+        "index": {
+            "type": "int", 
+            "min": 0, 
+            "max": 9, 
+            "sign": "non-negative", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "evennulls": {
+            "type": "bool", 
+            "min": true, 
+            "max": true
+        }, 
+        "oddnulls": {
+            "type": "bool", 
+            "min": true, 
+            "max": true
+        }, 
+        "evens": {
+            "type": "int", 
+            "min": 0, 
+            "max": 8, 
+            "sign": "non-negative", 
+            "no_duplicates": true
+        }, 
+        "odds": {
+            "type": "int", 
+            "min": 1, 
+            "max": 9, 
+            "sign": "positive", 
+            "no_duplicates": true
+        }, 
+        "evenreals": {
+            "type": "real", 
+            "min": 0.0, 
+            "max": 8.0, 
+            "sign": "non-negative"
+        }, 
+        "oddreals": {
+            "type": "real", 
+            "min": 1.0, 
+            "max": 9.0, 
+            "sign": "positive"
+        }, 
+        "evenstr": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 1, 
+            "no_duplicates": true
+        }, 
+        "oddstr": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 1, 
+            "no_duplicates": true
+        }, 
+        "elevens": {
+            "type": "string", 
+            "min_length": 2, 
+            "max_length": 2, 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "binnedindex": {
+            "type": "int", 
+            "min": 1, 
+            "max": 10, 
+            "sign": "positive", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "binnedodds": {
+            "type": "int", 
+            "min": 1, 
+            "max": 9, 
+            "sign": "positive", 
+            "no_duplicates": true
+        }, 
+        "basedate": {
+            "type": "date", 
+            "min": "1970-01-01 00:00:00", 
+            "max": "1970-01-10 00:00:00", 
+            "max_nulls": 0
+        }, 
+        "evendates": {
+            "type": "date", 
+            "min": "1970-01-01 00:00:00", 
+            "max": "1970-01-09 00:00:08"
+        }
+    }
+}

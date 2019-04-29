@@ -158,12 +158,14 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             m = self.to_datetime(m)
 
-        if not self.types_compatible(m, value, colname):
+        if not self.types_compatible(m, value):
             result = False
-        elif precision == 'closed':
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
             result = m >= value
         elif precision == 'open':
             result = m > value
@@ -193,13 +195,14 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(M):       # If there are no values, no value can
             return True           # the maximum constraint
 
-        if isinstance(value, datetime.datetime):
+        if (isinstance(value, datetime.datetime)
+                or isinstance(value, datetime.date)):
             M = self.to_datetime(M)
 
-        if not self.types_compatible(M, value, colname):
+        if not self.types_compatible(M, value):
             result = False
-
-        elif precision == 'closed':
+        elif (precision == 'closed' or isinstance(value, datetime.datetime)
+                                    or isinstance(value, datetime.date)):
             result = M <= value
         elif precision == 'open':
             result = M < value
@@ -223,6 +226,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return True           # to be an active constraint, so is always
                                   # satisfied
 
+        if self.get_tdda_type(colname) != 'string':
+            return False
+
         m = self.get_min_length(colname)
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum length constraint
@@ -245,6 +251,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(value):   # a null minimum length is not considered
             return True           # to be an active constraint, so is always
                                   # satisfied
+
+        if self.get_tdda_type(colname) != 'string':
+            return False
 
         M = self.get_max_length(colname)
         if self.is_null(M):       # If there are no values, no value can
@@ -308,7 +317,11 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if self.is_null(m):
             return True  # no values: cannot violate constraint
 
-        if value == 'null':
+        if type(m) not in (bool, int, long_type, float):
+            result = False
+        elif type(M) not in (bool, int, long_type, float):
+            result = False
+        elif value == 'null':
              result = False
         elif value == 'positive':
             result = m > 0
@@ -410,6 +423,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         """
         if not self.column_exists(colname):
             return False
+        if self.get_tdda_type(colname) != 'string':
+            return False
 
         violations = self.calc_rex_constraint(colname, constraint,
                                               detect=detect)
@@ -509,8 +524,9 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
-    def __init__(self, inc_rex=False, **kwargs):
+    def __init__(self, inc_rex=False, seed=None, **kwargs):
         self.inc_rex = inc_rex
+        self.seed = seed
 
     def discover(self):
         field_constraints = []
@@ -601,11 +617,13 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         sign_constraint = SignConstraint('null')
 
             if n_unique == nNonNull and n_unique > 1 and type_ != 'real':
+                # all values are unique
                 no_duplicates_constraint = NoDuplicatesConstraint()
 
         if type_ == 'string' and self.inc_rex:
             rex_constraint = RexConstraint(self.find_rexes(fieldname,
-                                                           values=uniqs))
+                                                           values=uniqs,
+                                                           seed=self.seed))
 
         constraints = [c for c in [type_constraint,
                                    min_constraint, max_constraint,

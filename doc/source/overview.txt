@@ -3,7 +3,7 @@ Overview
 
 The :py:mod:`tdda` package provides Python support for
 test-driven data analysis
-(see `1-page summary <http://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf/>`_
+(see `1-page summary <http://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf>`_
 with references, or the `blog <http://tdda.info>`_)
 
 * The :py:mod:`tdda.referencetest` library is used to support the creation of
@@ -11,12 +11,16 @@ with references, or the `blog <http://tdda.info>`_)
 
 * The :py:mod:`tdda.constraints` library is used to *discover* constraints
   from a (Pandas) DataFrame, write them out as JSON, and to *verify* that
-  datasets meet the constraints in the constraints file.
+  datasets meet the constraints in the constraints file. It also supports
+  tables in a variety of relation databases.
   There is also a command-line utility for discovering and verifying
-  constraints.
+  constraints, and detecting failing records.
 
 * The :py:mod:`tdda.rexpy` library is a tool for automatically
   inferring regular expressions from a column in a Pandas DataFrame
   or from a (Python) list of examples.
   There is also a command-line utility for Rexpy.
+
+Although the library is provided as a Python package, and can be called
+through its Python API, it also provides command-line tools.
 

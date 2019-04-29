@@ -298,10 +298,12 @@ class FilesConstraintDetector(BaseConstraintDetector):
         input_fields = ['name', 'size']
         if detect_outpath:
             if detect_output_fields is None:
+                detect_output_fields = []
+            elif len(detect_output_fields) == 0:
                 detect_output_fields = input_fields
             else:
                 for k in detect_output_fields:
-                    if k not in ('name', 'size'):
+                    if k not in input_fields:
                         raise Exception('Unknown column %s' % k)
             cnames = ('min', 'max', 'min_length', 'max_length',
                       'no_dups', 'values', 'rex')

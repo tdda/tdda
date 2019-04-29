@@ -12,13 +12,14 @@
 #
 
 
-# try:
-#     import regex as re
-#     relib = 'regex'
-# except ImportError:
-if 1:
+try:
+    import regex as re
+    relib = 'regex'
+    reIsRegex = True
+except ImportError:
     import re
     relib = 're'
+    reIsRegex = False
 
 
 

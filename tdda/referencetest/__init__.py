@@ -192,4 +192,3 @@ from tdda.referencetest.referencetest import tag
 from tdda.referencetest.referencetestcase import (ReferenceTestCase,
                                                   TaggedTestLoader)
 from tdda.referencetest.captureoutput import CaptureOutput
-

@@ -14,13 +14,14 @@ Version |version|
    :maxdepth: 2
 
    overview.txt
-   windows.txt
    cmdline.txt
    referencetest.txt
    constraints.txt
    rexpy.txt
+   windows.txt
    tests.txt
    examples.txt
+   changes.txt
 
 
 Indices and tables

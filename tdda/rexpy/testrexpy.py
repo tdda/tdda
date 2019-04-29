@@ -83,8 +83,8 @@ Goal:
 
 TELEPHONES 2
 
- \(\d{3,4}\) \d{3,4} \d{4}
- \+\d{1,2} \d{2,3} \d{3,4} \d{4}
+ \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
+ \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -118,10 +118,10 @@ Goal
 
 TELEPHONES 5
 
- \d{3} \d{3} \d{4}
- \d{3}\-\d{3}\-\d{4}
- 1 \d{3} \d{3} \d{4}
- \(\d{3}\) \d{3} \d{4}
+ [0-9]{3} [0-9]{3} [0-9]{4}
+ [0-9]{3}\-[0-9]{3}\-[0-9]{4}
+ 1 [0-9]{3} [0-9]{3} [0-9]{4}
+ \([0-9]{3}\) [0-9]{3} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -176,11 +176,11 @@ Goal:
 
 TELS 1-5
 
- \d{3} \d{3} \d{4}
- \d{3,4}[\-\.]\d{3}[\-\.]\d{4}
- 1 \d{3} \d{3} \d{4}
- \(\d{3,4}\) \d{3,4} \d{4}
- \+\d{1,2} \d{2,3} \d{3,4} \d{4}
+ [0-9]{3} [0-9]{3} [0-9]{4}
+ [0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}
+ 1 [0-9]{3} [0-9]{3} [0-9]{4}
+ \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
+ \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 
 ** With s replacing space and backslashes removed, spaced in groups:
@@ -209,6 +209,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
+import random
 import sys
 import unittest
 
@@ -220,13 +221,25 @@ except:
     pandas = None
 pd = pandas
 
-#from artists.miro.writabletestcase import WritableTestCase
+from tdda.referencetest import ReferenceTestCase, tag
+
 from tdda.rexpy.relib import re
+try:
+    import regex
+except ImportError:
+    regex = None
+
 from tdda.rexpy import *
-from tdda.rexpy.rexpy import Coverage
+from tdda.rexpy.rexpy import Coverage, Examples
+
+# does re escape all punctuation, or only special ones?
+re_escape_more = re.escape('%') != '%'
+isPython2 = sys.version_info[0] < 3
+PC = re.escape('%')
+UNDERSCORE = re.escape('_')
 
 
-class TestUtilityFunctions(unittest.TestCase):
+class TestUtilityFunctions(ReferenceTestCase):
     def test_signature(self):
         self.assertEqual(signature([]), '')
 
@@ -406,9 +419,34 @@ class TestUtilityFunctions(unittest.TestCase):
                               ' c   /   !'])
         self.assertEqual(x.aligned_parts(parts), expected)
 
+    def testIDCounter(self):
+        c = IDCounter()
+        self.assertEqual(c.add('two'), 1)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('two'), 1)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('one'), 3)
+        self.assertEqual(c.add('three'), 2)
+        self.assertEqual(c.add('four', 4), 4)
+
+        self.assertEqual(c['zero'], 0)
+        self.assertEqual(c['one'], 1)
+        self.assertEqual(c['two'], 2)
+        self.assertEqual(c['three'], 3)
+        self.assertEqual(c['four'], 4)
+        self.assertEqual(c.getitem('three'), 3)
+
+        self.assertEqual(c.ids.get('zero'), None)
+        self.assertEqual(c.ids.get('two'), 1)         # 'cos added first
+        self.assertEqual(c.ids.get('three'), 2)       # 'cos added second
+        self.assertEqual(c.ids.get('one'), 3)         # 'cos added third
+        self.assertEqual(c.ids.get('four'), 4)        # 'cos added fourth
+
+        self.assertEqual(list(c.keys()), ['two', 'three' ,'one', 'four'])
 
 
-class TestHelperMethods(unittest.TestCase):
+
+class TestHelperMethods(ReferenceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -510,33 +548,33 @@ class TestHelperMethods(unittest.TestCase):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123']
         x = Extractor(examples, remove_empties=True, strip=True)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 1)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123'})
 
     def test_cleaning_keep_empties(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '321-BA-123', '']
         x = Extractor(examples, remove_empties=False, strip=True)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 2)
         self.assertEqual(x.n_empties, 0)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), {'123-AB-321', '321-BA-123', ''})
 
     def test_cleaning_no_strip_no_empties(self):
         examples = ['123-AB-321', ' 123-AB-321', '', None, '321-BA-123 ']
         keys = ['123-AB-321', '', ' 123-AB-321', '321-BA-123 ']
         x = Extractor(examples, remove_empties=False, strip=False)
-        self.assertEqual(set(x.example_freqs.keys()), set(keys))
+        self.assertEqual(set(x.examples.strings), set(keys))
         self.assertEqual(x.n_stripped, 0)
         self.assertEqual(x.n_empties, 0)
         self.assertEqual(x.n_nulls, 1)
-        items = x.example_freqs.keys()
+        items = x.examples.strings
         self.assertEqual(set(items), set(keys))
 
     def test_batch_rle_extract_single(self):
@@ -546,7 +584,7 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(len(freqs), 1)
         key = ((C, 3), ('.', 1), (C, 2), ('.', 1), (C, 3))
         self.assertEqual(list(freqs.keys()), [key])
-        self.assertEqual(freqs[key], 2)
+        self.assertEqual(freqs[key], 3)
 
     def test_batch_rle_extract_pair(self):
         examples = ['123-AB-321', '12-AB-4321', None, '321-BA-123']
@@ -565,10 +603,10 @@ class TestHelperMethods(unittest.TestCase):
         rle = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
-        regex = self.x.rle2re(rle)
-        self.assertEqual(regex,
+        rex = self.x.rle2re(rle)
+        self.assertEqual(rex,
                          '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an))
-        cre = re.compile(regex)
+        cre = re.compile(rex)
         for s in ['123-AB-321', '321-BA-123']:
             self.assertIsNotNone(re.match(cre, s))
 
@@ -576,7 +614,7 @@ class TestHelperMethods(unittest.TestCase):
         key1 = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         key2 = (('C', 2), ('.', 1), ('C', 2), ('.', 1), ('C', 4))
         keys = [key1, key2]
-        range_rles = to_vrles(keys)
+        range_rles, _, _ = to_vrles(keys)
         self.assertEqual(range_rles, [(('C', 2, 3), ('.', 1, 1),
                                        ('C', 2, 2), ('.', 1, 1),
                                        ('C', 3, 4))])
@@ -651,27 +689,68 @@ class TestHelperMethods(unittest.TestCase):
         self.assertEqual(results, expected)
 
 
-class TestExtraction(unittest.TestCase):
+class TestExtraction(ReferenceTestCase):
 
-    def check_result(self, result, rexes, examples):
-        self.assertEqual(result, rexes)
-        compiled = [re.compile(r) for r in rexes]
-        self.assertEqual(all(any(re.match(rex, x) for rex in compiled)
-                             for x in examples if x),
-                         True)
+    def check_result(self, result, rexes, examples, dialect=None):
+        if dialect is None or dialect == 'portable':
+            match = re.match
+            re_compile = re.compile
+        elif dialect in ('posix', 'java') and regex is not None:
+            match = regex.match
+            re_compile = regex.compile
+        else:
+            match = None
 
-    def test_re_pqs_id(self):
+        if type(rexes) is tuple:
+            self.assertIn(result, rexes)
+            if match:
+                old_compiled = [re_compile(r) for r in rexes[0]]
+                new_compiled = [re_compile(r) for r in rexes[1]]
+                self.assertTrue(all(any(match(rex, x) for rex in old_compiled)
+                                 for x in examples if x)
+                              or
+                            all(any(match(rex, x) for rex in new_compiled)
+                                 for x in examples if x))
+        else:
+            self.assertEqual(result, rexes)
+            if match:
+                compiled = [re_compile(r) for r in rexes]
+                self.assertTrue(all(any(match(rex, x) for rex in compiled)
+                                    for x in examples if x))
+
+    def test_re_pqs_id_perl(self):
         # Space in second string should cause \s* at start, no?
         iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
         rexes = [r'^\s*\d{2,3}\-[A-Z]{2}\-\d{3,4}\s*$']
-        x = extract(iids, strip=True, remove_empties=True)
+        x = extract(iids, strip=True, remove_empties=True, dialect='perl')
         self.check_result(x, rexes, iids)
+
+    def test_re_pqs_id_portable(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^\s*[0-9]{2,3}\-[A-Z]{2}\-[0-9]{3,4}\s*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='portable')
+        self.check_result(x, rexes, iids)
+
+    def test_re_pqs_id_java(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^\p{Space}*\p{Digit}{2,3}\-\p{Upper}{2}\-'
+                 r'\p{Digit}{3,4}\p{Space}*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='java')
+        self.check_result(x, rexes, iids, dialect='java')
+
+    def test_re_pqs_id_posix(self):
+        iids = ['123-AB-321', ' 12-AB-4321', '', None, '321-BA-123 ']
+        rexes = [r'^[[:space:]]*[[:digit:]]{2,3}\-[[:upper:]]{2}\-'
+                 r'[[:digit:]]{3,4}[[:space:]]*$']
+        x = extract(iids, strip=True, remove_empties=True, dialect='posix')
+        self.check_result(x, rexes, iids, dialect='posix')
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', '12-AB-4321', '', None, '321-BA-123']
-        rexes = [r'^$', r'^\d{2,3}[A-Z\-][A-Z]{2}[A-Z\-]\d{3,4}$']
+        old_rexes = [r'^$', r'^[0-9]{2,3}[A-Z\-][A-Z]{2}[A-Z\-][0-9]{3,4}$']
+        new_rexes = [r'^$', r'^[0-9]{2,3}[A-Z-][A-Z]{2}[A-Z-][0-9]{3,4}$']
         x = extract(iids, extra_letters='-')
-        self.check_result(x, rexes, iids)
+        self.check_result(x, (old_rexes, new_rexes), iids)
         # Test result has changed with improved behaviour.
         # Now us spots that the base sequence is the same
         # Previously this found this:
@@ -679,27 +758,31 @@ class TestExtraction(unittest.TestCase):
 
     def test_re_pqs_id_with_dash2(self):
         iids = ['123-AB-321', 'AB-1B-4A21', None, '321-BA-1A23']
-        rexes = [r'^[A-Z0-9\-]{10,11}$']
+        old_rexes = [r'^[A-Z0-9\-]{10,11}$']
+        new_rexes = [r'^[A-Z0-9-]{10,11}$']
         x = extract(iids, extra_letters='-')
-        self.check_result(x, rexes, iids)
+        self.check_result(x, (old_rexes, new_rexes), iids)
 
     def test_re_pqs_id_with_underscore(self):
         iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
-        rexes = [r'^[A-Za-z0-9\_]+$']
+        old_rexes = [r'^[A-Za-z0-9\_]+$']
+        new_rexes = [r'^[A-Za-z0-9_]+$']
         x = extract(iids, extra_letters='_')
-        self.check_result(x, rexes, iids)
+        self.check_result(x, (old_rexes, new_rexes), iids)
 
     def test_re_pqs_id_with_underscores2(self):
         iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
-        rexes = [r'^[A-Za-z0-9\_]+$']
+        old_rexes = [r'^[A-Za-z0-9\_]+$']
+        new_rexes = [r'^[A-Za-z0-9_]+$']
         x = extract(iids, extra_letters='_-')
-        self.check_result(x, rexes, iids)
+        self.check_result(x, (old_rexes, new_rexes), iids)
 
     def test_re_pqs_id_with_underscores3(self):
         iids = ['123-AB_321', 'AB_1B-4A21', None, '321_BA_1A23ab2rj']
-        rexes = [r'^[A-Za-z0-9\_\-]+$']
+        old_rexes = [r'^[A-Za-z0-9\_\-]+$']
+        new_rexes = [r'^[A-Za-z0-9_-]+$']
         x = extract(iids, extra_letters='_-.')
-        self.check_result(x, rexes, iids)
+        self.check_result(x, (old_rexes, new_rexes), iids)
 
     def test_re_uuid(self):
         uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
@@ -726,8 +809,34 @@ class TestExtraction(unittest.TestCase):
         rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
                  r'[0-9a-f]{4}\-[0-9a-f]{12}$']
 
-        x = extract(uuid4s, variableLengthFrags=True)       # Not refining down yet
+        x = extract(uuid4s, variableLengthFrags=True)
         self.check_result(x, rexes, uuid4s)
+
+    uuid4s_mixed = ['2ffb8eaa-dd75-41c2-aca6-0444914b8713',
+                    'F69C5651-0B97-4909-B896-8EF0891F81FF',
+                    '13f984fe-65db-4646-99d4-a93c06f78472',
+                    '50a886d2-78c9-4b7b-81a9-25caf4deb212',
+                    '2D4429DF-9A80-B581-9565-27880CE171B0',
+                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
+
+    def test_re_uuid4mixed(self):
+        rexes = [r'^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-'
+                 r'[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$']
+        x = extract(self.uuid4s_mixed)
+        self.check_result(x, rexes, self.uuid4s_mixed)
+
+    def test_re_uuid4mixed_java(self):
+        rexes = [r'^\p{XDigit}{8}\-\p{XDigit}{4}\-\p{XDigit}{4}\-'
+                 r'\p{XDigit}{4}\-\p{XDigit}{12}$']
+        x = extract(self.uuid4s_mixed, dialect='java')
+        self.check_result(x, rexes, self.uuid4s_mixed, dialect='java')
+
+    def test_re_uuid4mixed_posix(self):
+        rexes = [r'^[[:xdigit:]]{8}\-[[:xdigit:]]{4}\-[[:xdigit:]]{4}\-'
+                 r'[[:xdigit:]]{4}\-[[:xdigit:]]{12}$']
+        x = extract(self.uuid4s_mixed, dialect='posix')
+        self.check_result(x, rexes, self.uuid4s_mixed, dialect='posix')
+
 
     tels1 = [
         '(0131) 496 0091',
@@ -742,7 +851,8 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_tels1(self):
         x = extract(self.tels1)
-        self.check_result(x, [r'^\(\d{3,4}\) \d{3,4} \d{4}$'], self.tels1)
+        self.check_result(x, [r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'],
+                          self.tels1)
 
 
     tels2 = [
@@ -759,9 +869,31 @@ class TestExtraction(unittest.TestCase):
 
     def test_tels2(self):
         x = set(extract(self.tels2))
-        rexes = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
-                     r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
+        rexes = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                     r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
         self.check_result(x, rexes, self.tels2)
+
+    def test_tels2_portable(self):
+        x = set(extract(self.tels2, dialect='portable'))
+        rexes = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                     r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
+        self.check_result(x, rexes, self.tels2)
+
+    def test_tels2_posix(self):
+        x = set(extract(self.tels2, dialect='posix'))
+        rexes = set([r'^\+[[:digit:]]{1,2} [[:digit:]]{2,3} [[:digit:]]{3,4}'
+                         r' [[:digit:]]{4}$',
+                     r'^\([[:digit:]]{3,4}\) [[:digit:]]{3,4} '
+                         r'[[:digit:]]{4}$'])
+        self.check_result(x, rexes, self.tels2, dialect='posix')
+
+    def test_tels2_java(self):
+        x = set(extract(self.tels2, dialect='java'))
+        rexes = set([r'^\+\p{Digit}{1,2} \p{Digit}{2,3} \p{Digit}{3,4}'
+                         r' \p{Digit}{4}$',
+                     r'^\(\p{Digit}{3,4}\) \p{Digit}{3,4} '
+                         r'\p{Digit}{4}$'])
+        self.check_result(x, rexes, self.tels2, dialect='java')
 
     def test_coverage_tels2(self):
         x = Extractor(self.tels2)
@@ -769,11 +901,11 @@ class TestExtraction(unittest.TestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 5,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 4,
                          })
-        expected = set([r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
-                        r'^\(\d{3,4}\) \d{3,4} \d{4}$'])
+        expected = set([r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                        r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'])
         self.check_result(set(rex), expected, self.tels2)
 
     def test_incremental_coverage_tels2(self):
@@ -782,10 +914,9 @@ class TestExtraction(unittest.TestCase):
         od = x.incremental_coverage()
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
-                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$', 5),
+                            (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
-
     def test_coverage_tels2_dedup(self):
         x = Extractor(self.tels2 + self.tels2[:6])
         rex = x.results.rex
@@ -793,14 +924,14 @@ class TestExtraction(unittest.TestCase):
         d = dict(zip(rex, x.coverage()))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 9,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 6,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 9,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 6,
                          })
         d = dict(zip(rex, x.coverage(dedup=True)))
         self.assertEqual(d,
                          {
-                            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$': 5,
-                            r'^\(\d{3,4}\) \d{3,4} \d{4}$': 4,
+                            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$': 5,
+                            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$': 4,
                          })
 
     def test_incremental_coverage_tels2_dedup(self):
@@ -809,26 +940,27 @@ class TestExtraction(unittest.TestCase):
         od = x.incremental_coverage(dedup=True)
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$', 5),
-                            (r'^\(\d{3,4}\) \d{3,4} \d{4}$', 4),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                             5),
+                            (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
 
     tels3 = [
         '0131-222-9876',
         '0207.987.2287'
     ]
-
     def test_tels3(self):
         r = extract(self.tels3, as_object=True)
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
-                         [[(u'\\d{4}', True),
+                         [[(u'[0-9]{4}', True),
                            (u'[\\-\\.]', False),
-                           (u'\\d{3}', True),
+                           (u'[0-9]{3}', True),
                            (u'[\\-\\.]', False),
-                            (u'\\d{4}', True),
+                            (u'[0-9]{4}', True),
                           ]])
-        self.check_result(r.results.rex, [r'^\d{4}[\-\.]\d{3}[\-\.]\d{4}$'],
+        self.check_result(r.results.rex,
+                          [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
                           self.tels3)
 
     tels4 = [
@@ -839,7 +971,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_tels4(self):
         x = extract(self.tels4)
-        self.check_result(x, [r'^\d{3}\-\d{3}\-\d{4}$'], self.tels4)
+        self.check_result(x, [r'^[0-9]{3}\-[0-9]{3}\-[0-9]{4}$'], self.tels4)
 
 
     tels5 = [
@@ -856,10 +988,10 @@ class TestExtraction(unittest.TestCase):
 #        print(Extractor(self.tels5))
         x = extract(self.tels5)
         rexes = [
-            r'^\d{3} \d{3} \d{4}$',
-            r'^\d{3}\-\d{3}\-\d{4}$',
-            r'^\(\d{3}\) \d{3} \d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
+            r'^[0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^[0-9]{3}\-[0-9]{3}\-[0-9]{4}$',
+            r'^\([0-9]{3}\) [0-9]{3} [0-9]{4}$',
+            r'^1 [0-9]{3} [0-9]{3} [0-9]{4}$',
         ]
         self.check_result(x, rexes, self.tels5)
 
@@ -867,11 +999,11 @@ class TestExtraction(unittest.TestCase):
         tels = self.tels1 + self.tels2 + self.tels3 + self.tels4 + self.tels5
         x = extract(tels)
         rexes = [
-            r'^\d{3} \d{3} \d{4}$',
-            r'^\d{3,4}[\-\.]\d{3}[\-\.]\d{4}$',
-            r'^\(\d{3,4}\) \d{3,4} \d{4}$',
-            r'^1 \d{3} \d{3} \d{4}$',
-            r'^\+\d{1,2} \d{2,3} \d{3,4} \d{4}$',
+            r'^[0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^[0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}$',
+            r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$',
+            r'^1 [0-9]{3} [0-9]{3} [0-9]{4}$',
+            r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
         ]
         self.check_result(x, rexes, tels)
 
@@ -896,7 +1028,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTCODES(self):
         self.assertEqual(extract(self.POSTCODES),
-                         [r'^[A-Z]{1,2}\d \d[A-Z]{2}$'])
+                         [r'^[A-Z]{1,2}[0-9] [0-9][A-Z]{2}$'])
         # Improved answer
         # Previously
         #    [r'^[A-Z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -916,7 +1048,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_Postcodes2(self):
         self.assertEqual(extract(self.postcodes),
-                         [r'^[a-z]{1,2}\d \d[a-z]{2}$'])
+                         [r'^[a-z]{1,2}[0-9] [0-9][a-z]{2}$'])
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [a-z0-9]{3}$'])
@@ -927,7 +1059,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_postCODES(self):
         self.assertEqual(extract(self.postCODES),
-                         [r'^[a-z]{1,2}\d \d[A-Z]{2}$'])
+                         [r'^[a-z]{1,2}[0-9] [0-9][A-Z]{2}$'])
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -938,7 +1070,7 @@ class TestExtraction(unittest.TestCase):
     ]
     def test_POSTcodes(self):
         self.assertEqual(extract(self.POSTcodes),
-                         [r'^[A-Z]{1,2}\d \d[a-z]{2}$'])
+                         [r'^[A-Z]{1,2}[0-9] [0-9][a-z]{2}$'])
 #                         [r'^[A-Z0-9]{2,3} [a-z0-9]{3}$'])
 
 
@@ -1001,7 +1133,7 @@ class TestExtraction(unittest.TestCase):
                         [r'^[A-Z][a-z]+ [^\W0-9_]+$'])
 
     @unittest.skipIf(not UNICHRS, 'Unicode handling off')
-    def test_namesAU(self):
+    def test_namesUA(self):
         self.assertEqual(extract(self.namesUA),
                          [r'^[^\W0-9_]+ [A-Z][a-z]+$'])
 
@@ -1009,6 +1141,17 @@ class TestExtraction(unittest.TestCase):
     def test_namesUAU(self):
         self.assertEqual(extract(self.namesUAU),
                          [r'^[^\W0-9_]{4,6} [A-Za-z]+ [^\W0-9_]+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesUAUjava(self):
+        self.assertEqual(extract(self.namesUAU, dialect='java'),
+                         [r'^\p{Alpha}{4,6} \p{Alpha}+ \p{Alpha}+$'])
+
+    @unittest.skipIf(not UNICHRS, 'Unicode handling off')
+    def test_namesUAUjava(self):
+        self.assertEqual(extract(self.namesUAU, dialect='posix'),
+                         [r'^[[:alpha:]]{4,6} [[:alpha:]]+ [[:alpha:]]+$'])
+
 
     def test_names_dot_initial(self):
         self.assertEqual(extract(self.names_dot_initial),
@@ -1043,20 +1186,31 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls1, verbose=True)
 #        x = Extractor(self.urls1, verbose=True)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls1, variableLengthFrags=False)),
-                         set([r'^http\:\/\/www\.[a-z]+\.com\/$',
-                              r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
-                              r'^http\:\/\/[a-z]+\.com\/$',
-                              r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
-                              r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',]))
+        old_set = set([r'^http\:\/\/www\.[a-z]+\.com\/$',
+                       r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
+                       r'^http\:\/\/[a-z]+\.com\/$',
+                       r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
+                       r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',])
+        new_set = set([r'^http://www\.[a-z]+\.com/$',
+                       r'^http://[a-z]{3,4}\.[a-z]{3,4}$',
+                       r'^http://[a-z]+\.com/$',
+                       r'^[a-z]{4,5}://[a-z]{3}\.[a-z]+\.com$',
+                       r'^http://www\.[a-z]+\.co\.uk/$',])
+        self.assertIn(set(extract(self.urls1, variableLengthFrags=False)),
+                      (old_set, new_set))
 
-        self.assertEqual(set(extract(self.urls1, variableLengthFrags=True)),
-                         set([r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
-                              r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-                              r'^http\:\/\/www\.[a-z]+\.com\/$',
-                              r'^http\:\/\/[a-z]+\.com\/$',
-                              r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$',]))
-
+        old_set = set([r'^http\:\/\/[a-z]{3,4}\.[a-z]{3,4}$',
+                       r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
+                       r'^http\:\/\/www\.[a-z]+\.com\/$',
+                       r'^http\:\/\/[a-z]+\.com\/$',
+                       r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$',])
+        new_set = set([r'^http://[a-z]{3,4}\.[a-z]{3,4}$',
+                       r'^http://www\.[a-z]+\.co\.uk/$',
+                       r'^http://www\.[a-z]+\.com/$',
+                       r'^http://[a-z]+\.com/$',
+                       r'^https?://w{1,3}e?b?\.[a-z]+\.com$',])
+        self.assertIn(set(extract(self.urls1, variableLengthFrags=True)),
+                      (old_set, new_set))
 
         # Sorted by length, these forms are:These are All:
         #
@@ -1068,7 +1222,6 @@ class TestExtraction(unittest.TestCase):
 
         # So: C+.+C+.C+(.C+)*.?
         # But that's a bit general!
-
 
         # Really want:
         #    '^https?\:\/\/([a-z]+\.)+[a-z]+\/?$'
@@ -1105,60 +1258,95 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls2, variableLengthFrags=True)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls2, variableLengthFrags=False)), {
+        old_set = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
             r'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-        })
-        self.assertEqual(set(extract(self.urls2, variableLengthFrags=True)), {
+        }
+        new_set = {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com/$',
+            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^[a-z]{4,5}://www\.[a-z]+\.com$',
+            r'^http://www\.[a-z]{6,8}\.com/$',
+            r'^http://www\.[a-z]+\.co\.uk/$',
+        }
+        self.assertIn(set(extract(self.urls2, variableLengthFrags=False)),
+                      (old_set, new_set))
+
+        old_set = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
             r'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
             r'^https?\:\/\/www\.[a-z]+\.com$',
-        })
+        }
+        new_set = {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com/$',
+            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^http://www\.[a-z]{6,8}\.com/$',
+            r'^http://www\.[a-z]+\.co\.uk/$',
+            r'^https?://www\.[a-z]+\.com$',
+        }
+        self.assertIn(set(extract(self.urls2, variableLengthFrags=True)), 
+                      (old_set, new_set))
 
     def test_incremental_coverage_urls2(self):
         x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.incremental_coverage()
-        expected = OrderedDict((
+        old_expected = OrderedDict((
                       (u'^[a-z]{4,5}\\:\\/\\/www\\.[a-z]+\\.com$', 4),
                       (u'^[a-z]+\\.com\\/$', 3),
                       (u'^http\\:\\/\\/www\\.[a-z]+\\.co\\.uk\\/$', 3),
                       (u'^[a-z]{3,4}[\\.\\/\\:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
                       (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
                       (u'^http\\:\\/\\/www\\.[a-z]{6,8}\\.com\\/$', 2)))
-        self.assertEqual(od, expected)
+        new_expected = OrderedDict((
+                      (u'^[a-z]{4,5}://www\\.[a-z]+\\.com$', 4),
+                      (u'^[a-z]+\\.com/$', 3),
+                      (u'^http://www\\.[a-z]+\\.co\\.uk/$', 3),
+                      (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                      (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
+                      (u'^http://www\\.[a-z]{6,8}\\.com/$', 2)))
+        self.assertIn(od, (old_expected, new_expected))
         self.assertEqual(x.n_examples(), 16)
 
-        expected_dd = OrderedDict((
+        old_expected_dd = OrderedDict((
                          (u'^[a-z]{4,5}\\:\\/\\/www\\.[a-z]+\\.com$', 4),
                          (u'^http\\:\\/\\/www\\.[a-z]+\\.co\\.uk\\/$', 3),
                          (u'^[a-z]+\\.com\\/$', 2),
                          (u'^[a-z]{3,4}[\\.\\/\\:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
                          (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
                          (u'^http\\:\\/\\/www\\.[a-z]{6,8}\\.com\\/$', 2)))
+        new_expected_dd = OrderedDict((
+                         (u'^[a-z]{4,5}://www\\.[a-z]+\\.com$', 4),
+                         (u'^http://www\\.[a-z]+\\.co\\.uk/$', 3),
+                         (u'^[a-z]+\\.com/$', 2),
+                         (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                         (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
+                         (u'^http://www\\.[a-z]{6,8}\\.com/$', 2)))
         od = x.incremental_coverage(dedup=True)
-        self.assertEqual(od, expected_dd)
+        self.assertIn(od, (old_expected_dd, new_expected_dd))
         self.assertEqual(x.n_examples(dedup=True), 15)
 
-
         x = Extractor(self.urls2 * 2, variableLengthFrags=False)
-        doubled = OrderedDict([(k, n * 2) for k, n in expected.items()])
+        old_doubled = OrderedDict([(k, n * 2) for k, n in old_expected.items()])
+        new_doubled = OrderedDict([(k, n * 2) for k, n in new_expected.items()])
         od = x.incremental_coverage()
-        self.assertEqual(od, doubled)
+        self.assertIn(od, (old_doubled, new_doubled))
         self.assertEqual(x.n_examples(), 32)
 
         od = x.incremental_coverage(dedup=True)
-        self.assertEqual(od, expected_dd)
+        self.assertIn(od, (old_expected_dd, new_expected_dd))
         self.assertEqual(x.n_examples(dedup=True), 15)
 
     def test_full_incremental_coverage(self):
-        freqs = {
+        freq_hash = {
             'One': 1,
             'one': 1,
             'two': 2,
@@ -1168,6 +1356,7 @@ class TestExtraction(unittest.TestCase):
             'six': 6,
             'seven': 7,
         }
+        freqs = Examples(list(freq_hash.keys()), list(freq_hash.values()))
         patterns = ['^f.+$', '^.{3}$', '^[st].+$']
         results = rexpy.rex_full_incremental_coverage(patterns, freqs)
 
@@ -1223,7 +1412,7 @@ class TestExtraction(unittest.TestCase):
     def test_full_incremental_coverage_urls2(self):
         x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.full_incremental_coverage()
-        expected = OrderedDict((
+        old_expected = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
@@ -1237,10 +1426,25 @@ class TestExtraction(unittest.TestCase):
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
+        new_expected = OrderedDict((
+            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+            (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
+        ))
 
-        self.assertEqual(od, expected)
+        self.assertIn(od, (old_expected, new_expected))
         self.assertEqual(x.n_examples(), 16)
-        expected_dd = OrderedDict((
+
+        old_expected_dd = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
@@ -1252,15 +1456,29 @@ class TestExtraction(unittest.TestCase):
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
+        ))
+        new_expected_dd = OrderedDict((
+            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
         od = x.full_incremental_coverage(dedup=True)
-        self.assertEqual(od, expected_dd)
+        self.assertIn(od, (old_expected_dd, new_expected_dd))
         self.assertEqual(x.n_examples(dedup=True), 15)
 
         x = Extractor(self.urls2 * 2, variableLengthFrags=False)
-        doubled = OrderedDict((
+        old_doubled = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^[a-z]+\.com\/$',
@@ -1274,13 +1492,27 @@ class TestExtraction(unittest.TestCase):
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
+        new_doubled = OrderedDict((
+            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
+        ))
         od = x.full_incremental_coverage()
-        self.assertEqual(od, doubled)
+        self.assertIn(od, (old_doubled, new_doubled))
         self.assertEqual(x.n_examples(), 32)
 
         od = x.full_incremental_coverage(dedup=True)
 
-        expected_doubled_dd = OrderedDict((
+        old_expected_doubled_dd = OrderedDict((
             (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
             (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
@@ -1294,13 +1526,27 @@ class TestExtraction(unittest.TestCase):
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
-        self.assertEqual(od, expected_doubled_dd)
+        new_expected_doubled_dd = OrderedDict((
+            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
+        ))
+        self.assertIn(od, (old_expected_doubled_dd, new_expected_doubled_dd))
         self.assertEqual(x.n_examples(dedup=True), 15)
 
     def test_full_incremental_coverage_urls2_var(self):
         x = Extractor(self.urls2, variableLengthFrags=True)
         od = x.full_incremental_coverage()
-        expected = OrderedDict((
+        old_expected = OrderedDict((
             (u'^https?\:\/\/www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=4)),
             (u'^[a-z]+\.com\/$',
@@ -1314,9 +1560,23 @@ class TestExtraction(unittest.TestCase):
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=3))
         ))
+        new_expected = OrderedDict((
+            (u'^https?://www\.[a-z]+\.com$',
+             Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=4)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
+            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
+             Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=3))
+        ))
 
         x = Extractor(self.urls2 * 2, variableLengthFrags=True)
-        doubled = OrderedDict((
+        old_doubled = OrderedDict((
             (u'^https?\:\/\/www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=5)),
             (u'^[a-z]+\.com\/$',
@@ -1330,10 +1590,23 @@ class TestExtraction(unittest.TestCase):
             (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=3)),
         ))
+        new_doubled = OrderedDict((
+            (u'^https?://www\.[a-z]+\.com$',
+             Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=5)),
+            (u'^[a-z]+\.com/$',
+             Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
+            (u'^http://www\.[a-z]+\.co\.uk/$',
+             Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
+            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
+            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+            (u'^http://www\.[a-z]{6,8}\.com/$',
+             Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=3)),
+        ))
         od = x.full_incremental_coverage()
-        self.assertEqual(od, doubled)
+        self.assertIn(od, (old_doubled, new_doubled))
         self.assertEqual(x.n_examples(), 32)
-
 
     def test_urls2_grouped(self):
 
@@ -1341,24 +1614,45 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls2)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls2, tag=True,
-                                     variableLengthFrags=False)), {
+        old_set = {
             r'^([a-z]{4,5})\:\/\/www\.([a-z]+)\.com$',
             r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
             r'^([a-z]{3,4})\.([a-z]{2,4})$',
             r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
             r'^([a-z]+)\.com\/$',
             r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
-        })
-        self.assertEqual(set(extract(self.urls2, tag=True,
-                                     variableLengthFrags=True)), {
+        }
+        new_set = {
+            r'^([a-z]{4,5})://www\.([a-z]+)\.com$',
+            r'^http://www\.([a-z]{6,8})\.com/$',
+            r'^([a-z]{3,4})\.([a-z]{2,4})$',
+            r'^([a-z]{3,4})[\./:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^([a-z]+)\.com/$',
+            r'^http://www\.([a-z]+)\.co\.uk/$',
+        }
+        self.assertIn(set(extract(self.urls2, tag=True,
+                                     variableLengthFrags=False)),
+                      (old_set, new_set))
+
+        old_set = {
             r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
             r'^([a-z]{3,4})\.([a-z]{2,4})$',
             r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
             r'^https?\:\/\/www\.([a-z]+)\.com$',
             r'^([a-z]+)\.com\/$',
             r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
-        })
+        }
+        new_set = {
+            r'^http://www\.([a-z]{6,8})\.com/$',
+            r'^([a-z]{3,4})\.([a-z]{2,4})$',
+            r'^([a-z]{3,4})[\./:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^https?://www\.([a-z]+)\.com$',
+            r'^([a-z]+)\.com/$',
+            r'^http://www\.([a-z]+)\.co\.uk/$',
+        }
+        self.assertIn(set(extract(self.urls2, tag=True,
+                                  variableLengthFrags=True)),
+                      (old_set, new_set))
 
     def test_urls_all(self):
 
@@ -1366,8 +1660,7 @@ class TestExtraction(unittest.TestCase):
 #        x = Extractor(self.urls2, verbose=True)
 #        x = Extractor(self.urls1 + self.urls2)
 #        print(str(x))
-        self.assertEqual(set(extract(self.urls1 + self.urls2,
-                                     variableLengthFrags=False)), {
+        old_set = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3,4}$',
@@ -1375,10 +1668,21 @@ class TestExtraction(unittest.TestCase):
             r'^[a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]+\.com$',
             r'^http\:\/\/www\.[a-z]+\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-        })
+        }
+        new_set = {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com/$',
+            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^http://[a-z]+\.com/$',
+            r'^[a-z]{4,5}://[a-z]{3}\.[a-z]+\.com$',
+            r'^http://www\.[a-z]+\.com/$',
+            r'^http://www\.[a-z]+\.co\.uk/$',
+        }
+        self.assertIn(set(extract(self.urls1 + self.urls2,
+                                  variableLengthFrags=False)),
+                      (old_set, new_set))
 
-        self.assertEqual(set(extract(self.urls1 + self.urls2,
-                                     variableLengthFrags=True)), {
+        old_set = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com\/$',
             r'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3,4}$',
@@ -1386,7 +1690,19 @@ class TestExtraction(unittest.TestCase):
             r'^http\:\/\/www\.[a-z]+\.com\/$',
             r'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
             r'^https?\:\/\/w{1,3}e?b?\.[a-z]+\.com$'
-        })
+        }
+        new_set = {
+            r'^[a-z]{3,4}\.[a-z]{2,4}$',
+            r'^[a-z]+\.com/$',
+            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^http://[a-z]+\.com/$',
+            r'^http://www\.[a-z]+\.com/$',
+            r'^http://www\.[a-z]+\.co\.uk/$',
+            r'^https?://w{1,3}e?b?\.[a-z]+\.com$'
+        }
+        self.assertIn(set(extract(self.urls1 + self.urls2,
+                                     variableLengthFrags=True)),
+                      (old_set, new_set))
 
     def test_agents(self):
         # This is really just a check that it doesn't bomb out, for the
@@ -1397,7 +1713,7 @@ class TestExtraction(unittest.TestCase):
         with open(agents_path) as f:
             examples = f.read().splitlines()
         r = extract(examples, as_object=True)
-        self.assertEqual(set(r.results.rex), {
+        old_result = {
             r'^Mozilla\/4\.0 \(compatible\; MSIE 8\.0\; Windows NT '
             r'6\.0\; Trident\/4\.0\;   Acoo Browser\; GTB5\; '
             r'Mozilla\/4\.0 \(compatible\; MSIE 6\.0\; Windows '
@@ -1428,20 +1744,54 @@ class TestExtraction(unittest.TestCase):
             r'\(compatible\; MSIE 6\.0\; Windows NT 5\.1\; '
             r'SV1\) \; Maxthon\; InfoPath\.1\; \.NET CLR 3\.5\.30729\; '
             r'\.NET CLR 3\.0\.30618\)$',
-        })
+        }
+        new_result = {
+            r'^Mozilla/4\.0 \(compatible; MSIE 8\.0; Windows NT '
+            r'6\.0; Trident/4\.0;   Acoo Browser; GTB5; '
+            r'Mozilla/4\.0 \(compatible; MSIE 6\.0; Windows '
+            r'NT 5\.1;   SV1\) ; InfoPath\.1; \.NET CLR '
+            r'3\.5\.30729; \.NET CLR 3\.0\.30618\)$',
+
+            r'^Mozilla/5\.0 \(compatible; ABrowse 0\.4; Syllable\)$',
+
+            r'^Mozilla/5\.0 \(compatible; U; ABrowse 0\.6; '
+            r'{1,2}Syllable\) AppleWebKit/420\+ \(KHTML, like Gecko\)$',
+
+            r'^Mozilla/5\.0 \(compatible; MSIE 8\.0; Windows '
+            r'NT 6\.0; Trident/4\.0; Acoo Browser 1\.98\.744; '
+            r'\.NET CLR {1,3}3\.5\.30729\)$',
+
+            r'^Mozilla/4\.0 \(compatible; MSIE 7\.0; Windows '
+            r'NT 6\.0; Acoo Browser; SLCC1;   \.NET CLR '
+            r'2\.0\.50727; Media Center PC 5\.0; \.NET CLR '
+            r'3\.0\.04506\)$',
+
+            r'^Mozilla/4\.0 \(compatible; MSIE 8\.0; Windows '
+            r'NT 5\.1; Trident/4\.0; SV1; Acoo Browser; '
+            r'\.NET CLR 2\.0\.50727; \.NET CLR 3\.0\.4506\.2152; '
+            r'\.NET CLR 3\.5\.30729; Avant Browser\)$',
+
+            r'^Mozilla/4\.0 \(compatible; MSIE 7\.0; Windows '
+            r'NT 6\.0; Acoo Browser; GTB5; Mozilla/4\.0 '
+            r'\(compatible; MSIE 6\.0; Windows NT 5\.1; '
+            r'SV1\) ; Maxthon; InfoPath\.1; \.NET CLR 3\.5\.30729; '
+            r'\.NET CLR 3\.0\.30618\)$',
+        }
+        self.assertIn(set(r.results.rex), (old_result, new_result))
         self.assertEqual(r.n_too_many_groups, 1)
         self.assertEqual(r.warnings[0], '1 string assigned to .{m,n} for '
                                         'needing "too many" groups.')
 
     def testmflag(self):
         patterns = ('a.1', 'b_2', 'c-3')
-        expected = ['^c\-3$', r'^([a-z])([A-Z\.\_])(\d)$']
+        old_expected = ['^c\-3$', r'^([a-z])([A-Z\.\_])([0-9])$']
+        new_expected = ['^c\-3$', r'^([a-z])([A-Z._])([0-9])$']
         r = extract(patterns, tag=True, extra_letters='._')
-        self.assertEqual(r, expected)
+        self.assertIn(r, (old_expected, new_expected))
 
     def testmflag2(self):
         patterns = ('a-1', 'c-3')
-        expected = [r'^([a-z])\-(\d)$']
+        expected = [r'^([a-z])\-([0-9])$']
         r = extract(patterns, tag=True, extra_letters='._')
         self.assertEqual(r, expected)
 
@@ -1463,8 +1813,8 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(f(1), 1)
         self.assertRaises(KeyError, f, 2)
 
-        regex = '@ (a(b)c) d (e(f(g)h(i(j)k)l)m) n (o) p (q(r)s) t'
-        r = re.compile(regex, re.U)
+        rex = '@ (a(b)c) d (e(f(g)h(i(j)k)l)m) n (o) p (q(r)s) t'
+        r = re.compile(rex, re.U)
         m = re.match(r, '@ abc d efghijklm n o p qrs t')
         f = group_map_function(m, 4)
         self.assertEqual(f(1), 1)
@@ -1473,6 +1823,58 @@ class TestExtraction(unittest.TestCase):
         self.assertEqual(f(4), 9)
         self.assertRaises(KeyError, f, 5)
 
+    def testFindHarderOuterCaptureGroups(self):
+        rex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
+        r = re.compile(rex, re.U)
+        m = re.match(r, '!a b c')
+        f = group_map_function(m, 2)
+        self.assertIsNotNone(m)
+        groups = ('!', 'a', 'a', ' ', 'b', 'b', ' ', 'c', 'c')
+        self.assertEqual(m.groups(), groups)
+        actual = tuple(f(i) for i in range(1, 7))
+        self.assertEqual(actual, (1, 2, 4, 5, 7, 8))
+
+    def atest_vrle_consolidation(self):
+        examples = [
+            'AA',
+            'CC',
+            'BBBBBBBBBBBB',
+            'CC-DD',
+            'EE-FF',
+            'GG-HH-II',
+            'JJ-KK-LL',
+            'AA-KK-LL',
+            'BB-KK-LL',
+
+            'AA',
+            'BBBBBBBBBBBC',
+            'CC- DD',
+            'EE- FF',
+            'GG- HH-II',
+            'JJ- KK-LL',
+        ]
+        r = extract(examples, as_object=True)
+        self.assertEqual(r.warnings, [])
+        expected = [
+            '^[A-Z]+$',
+            '^[A-Z]{2}\\-[A-Z]{2}$',
+            '^[A-Z]{2}\\- [A-Z]{2}$',
+            '^[A-Z]{2}\\-[A-Z]{2}\\-[A-Z]{2}$',
+            '^[A-Z]{2}\\- [A-Z]{2}\\-[A-Z]{2}$',
+        ]
+        self.check_result(r.results.rex, expected, examples)
+
+        from pprint import pprint as pp
+        freqs = r.examples.vrle_freqs
+        pp({k: freqs[k] for k in freqs})
+        print()
+        pp(r.build_tree(r.results.vrles))
+
+        tree = r.build_tree(r.results.vrles)
+        tree, results = r.find_frag_sep_frag_repeated(tree),
+        self.assertEqual(results, [['Ḉ', '.', 'Ḉ']])
+        from pprint import pprint
+        pprint(tree)
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
@@ -1493,6 +1895,76 @@ class TestExtraction(unittest.TestCase):
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
 
+    def testRexpyCommandLineAPIQuoting(self):
+        inputs = ['EH12 3LH', 'AL64 1BB']
+        self.assertEqual(rexpy_streams(inputs, out_path=False, dialect='perl'),
+                         [r'^[A-Z]{2}\d{2} \d[A-Z]{2}$'])
+        self.assertEqual(rexpy_streams(inputs, out_path=False, quote=True,
+                                       dialect='perl'),
+                         [r'"^[A-Z]{2}\\d{2} \\d[A-Z]{2}$"'])
+        inputs = [r'''one \"' two''', r'''three \"' four''']
+        self.assertIn(rexpy_streams(inputs, out_path=False, dialect='perl'),
+                      ([r'''^[a-z]{3,5} \\\"\' [a-z]{3,4}$'''],
+                       [r'''^[a-z]{3,5} \\"' [a-z]{3,4}$''']))
+        self.assertIn(rexpy_streams(inputs, out_path=False, quote=True,
+                                    dialect='perl'),
+                      ([r'''"^[a-z]{3,5} \\\\\\\"\\' [a-z]{3,4}$"'''],
+                       [r'''"^[a-z]{3,5} \\\\\"' [a-z]{3,4}$"''']))
+
+    def testConstraints(self):
+        inputs = {'aa_bb': 10, '.123': 5, 'a': 1, 'b.' : 2}
+        r = extract(inputs)
+        aa_bb = r'^aa%sbb$' % UNDERSCORE
+        self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', aa_bb])
+
+        r = extract(inputs, max_patterns=2)
+        self.assertEqual(r, [r'^\.123$', aa_bb])
+
+        r = extract(inputs, max_patterns=1)
+        self.assertEqual(r, [aa_bb])
+
+        r = extract(inputs, min_strings_per_pattern=2)
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb])
+
+        r = extract(inputs, min_strings_per_pattern=2, max_patterns=3)
+        self.assertEqual(r, [r'^\.123$', r'^b\.$', aa_bb])
+
+    def test_save_seed(self):
+        state = random.getstate()
+        s_seed = PRNGState(12345678)
+        s_noseed = PRNGState(None)
+        random.random()
+        self.assertNotEqual(random.getstate(), state)
+        s_noseed.restore()  # no effect
+        self.assertNotEqual(random.getstate(), state)
+
+        s_seed.restore()  # should restore
+        self.assertEqual(random.getstate(), state)
+
+    def atestSeeding(self):
+        inputs = ['a', 'a.a', 'a.a.a', 'a.a.a.a', 'a.a.a.a.a']
+        state = random.getstate()
+        self.assertEqual(random.getstate(), state)
+        r = extract(inputs, size=Size(n_per_length=1, do_all=2),
+                    seed=12345678)
+        self.assertEqual(random.getstate(), state)
+
+        expected_with_seed = choose23([u'^a$', u'^a\\.a$',
+                                       u'^a\\.a\\.a$',
+                                       u'^a\\.a\\.a\\.a$',
+                                       u'^a\\.a\\.a\\.a\\.a$'],
+                                      [u'^a$', u'^a\\.a$'])
+
+        self.assertEqual(r, expected_with_seed)
+            # but not always True
+        always_same = True
+        for i in range(100):    # Loop up to 100 times until get a diff
+                                # result. Will most often fail first time
+            r = extract(inputs, size=Size(n_per_length=1, do_all=2))
+            always_same = (r == expected_with_seed)
+            if not always_same:
+                break
+        self.assertFalse(always_same)
 
 
 def print_ordered_dict(od):
@@ -1512,8 +1984,14 @@ def CtoUC(s):
         return s
 
 
+def choose23(two, three):
+    """
+    Choose between results based on whether running in Python2 or Python3
+    """
+    return two if isPython2 else three
 
-if sys.version_info[0] < 3:
+
+if isPython2:
     # Quieten down Python3's vexatious complaining
     TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
 
@@ -1526,4 +2004,4 @@ if sys.version_info[0] < 3:
 
 
 if __name__ == '__main__':
-    unittest.main()
+    ReferenceTestCase.main()

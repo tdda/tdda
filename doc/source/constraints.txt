@@ -21,28 +21,42 @@ The module includes:
   - PostgreSQL database tables (``postgres:``)
   - MySQL database tables (``mysql:``)
   - SQLite database tables (``sqlite:``)
-  - MongoDB document collections (``mongodb``)
+  - MongoDB document collections (``mongodb:``)
 
 Python Prerequisites
 --------------------
 
-* :py:mod:`numpy` and :py:mod:`pandas` (required for CSV files and
-  :py:mod:`feather` files)
+Extra libraries are required to access some of the constraint generation
+and verification functionality, depending on the data sources that you
+wish to use.
+
+* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
 * :py:mod:`feather-format` (required for :py:mod:`feather` files)
+* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
 * :py:mod:`pygresql` (required for PostgreSQL database tables)
-* :py:mod:`mysql` (required for MySQL database tables)
+* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
+* :py:mod:`sqlite3` (required for SQLite database tables)
+* :py:mod:`pymongo` (required for MongoDB document collections)
+
 
 These can be installed with (some/all of)::
 
-    pip install numpy
     pip install pandas
     pip install feather-format
+    pip install pmmif
     pip install pygresql
-    pip install mysql-python
+    pip install sqlite3
+    pip install pymongo
 
-The :py:mod:`sqlite3` module is provided by default as part of the
-standard Python libraries, so SQLite database tables can be used without
-having to explicitly install it.
+and, for MySQL, **one** of::
+
+    pip install MySQL-python
+    pip install mysqlclient
+    pip install mysql-connector-python
+
+
+The :py:mod:`sqlite3` module is sometimes provided by default as part of the
+standard Python libraries.
 
 To install :py:mod:`feather-format` on Windows, you will need to install
 :py:mod:`cython` as a prerequisite, which might also require you to install
@@ -242,8 +256,11 @@ See :ref:`tdda_db_table` for details of how database tables are accessed.
 Constraints for CSV Files and Pandas DataFrames
 -----------------------------------------------
 
+.. automodule:: tdda.constraints
+    :members: discover_df, verify_df, detect_df
+
 .. automodule:: tdda.constraints.pd.constraints
-    :members: discover_df, verify_df, detect_df, PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection
+    :members: PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection
 
 If a CSV file is used with the ``tdda`` command-line tool, it will be
 processed by the standard Pandas CSV file reader with the following settings:
@@ -267,11 +284,25 @@ name (including an optional schema) can be preceded by ``DBTYPE`` chosen
 from ``postgres``, ``mysql``, ``sqlite`` or ``mongodb``:
 ::
 
-    DBTYPE:schema.tablename
+    DBTYPE:[schema.]tablename
 
-If ``DBTYPE`` is used, this will cause the file ``.tdda_db_conn_DBTYPE``
-to be read from your home directory (see :ref:`tdda_db_conn`), which can
-contain all connection parameters.
+The following  example will use the file ``.tdda_db_conn_postgres`` from your
+home directory (see :ref:`tdda_db_conn`), providing all of the default
+parameters for the database connection.
+::
+
+    tdda discover postgres:mytable
+    tdda discover postgres:myschema.mytable
+
+For a NoSQL MongoDB database, document collections are used instead
+of database tables, and a document can be referred to at any level in
+the collection structure. Only scalar properties are used for constraint
+discovery and verification (and any deeper nested structure is ignored).
+For example::
+
+    tdda discover mongodb:mydocument
+    tdda discover mongodb:subcollection.mysubdocument
+
 
 Parameters can also be provided using the following flags (which override
 the values in the ``.tdda_db_conn_DBTYPE`` file, if provided):
@@ -297,7 +328,20 @@ the database connection details are read from the specified file.
 If the database type is specified (with the ``-dbtype`` option, or by
 prefixing the table name, such as ``postgres:mytable``), then a default
 connection file ``.tdda_db_conn_DBTYPE`` (in your home directory) is used,
-if present.
+if present (where `DBTYPE` is the name of the kind of database server).
+
+To use constraints for databases, you must have an appropriate
+DB-API (PEP-0249) driver library installed within your Python environment.
+
+These are:
+
+* For PostgreSQL: ``pygresql`` or ``PyGreSQL``
+
+* For MySQL: ``MySQL-python``, ``mysqlclient`` or  ``mysql-connector-python``
+
+* For Sqlite: ``sqlite3``
+
+* For MongoDB: ``pymongo``
 
 
 .. _tdda_db_conn:
@@ -307,7 +351,8 @@ Database Connection Files
 
 To use a database source, you can either specify the database type
 using the ``--dbtype DBTYPE`` option, or you can prefix the table name
-with ``DBTYPE:``.
+with an appropriate ``DBTYPE:`` (one of the supported kinds of database
+server, such as ``postgres``).
 
 You can provide default values for all of the other database options in
 a database connection file ``.tdda_db_conn_DBTYPE``, in your home directory.
@@ -327,22 +372,35 @@ A ``tdda_db_conn_DBTYPE`` file is a JSON file of the form::
         "schema": SCHEMA,
     }
 
-All the entries are optional.
+Some additional notes:
 
-If a ``password`` is provided, then care should be taken to ensure that the
-file has appropriate filesystem permissions so that it cannot be read by
-other users.
+* All the entries are optional.
 
-If a ``schema`` is provided, then it will be used as the default schema,
-when constraints are discovered or verified on a table name with no
-schema specified.
+* If a ``password`` is provided, then care should be taken to ensure that the
+  file has appropriate filesystem permissions so that it cannot be read by
+  other users.
+
+* If a ``schema`` is provided, then it will be used as the default schema,
+  when constraints are discovered or verified on a table name with no
+  schema specified.
+
+* For MySQL (in a ``.tdda_db_conn_mysql`` file), the "schema"
+  parameter **must** be specified, as there is no built-in default for it to
+  use.
+
+* For Microsoft Windows, the connector file should have the very
+  same name as for Unix, beginning with a dot, even though this form of
+  filename is not otherwise commonly used on Windows.
 
 
 API
 ~~~
 
+.. automodule:: tdda.constraints
+    :members: discover_db_table, verify_db_table, detect_db_table
+
 .. automodule:: tdda.constraints.db.constraints
-    :members: discover_db_table, verify_db_table, DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
+    :members: DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
 
 Extension Framework
 -------------------
