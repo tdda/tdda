@@ -87,7 +87,7 @@ MONTH_MAP = {
 }
 
 TMPDIR = tempfile.mkdtemp()        # Writable area for tests
-os.environ['TMPDIR'] = TMPDIR
+DEFAULT_TMP_DIR_SHELL_VAR = 'TMPDIR'
 
 
 class Specifics:
@@ -125,8 +125,13 @@ class TestGenerator:
                  check_stdout, check_stderr=True, require_zero_exit_code=True,
                  max_snapshot_files=MAX_SNAPSHOT_FILES,
                  relative_paths=False, with_time_log=True, iterations=2,
+                 tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR,
                  verbose=True):
         self.cwd = cwd
+        self.tmp_dir_shell_var = tmp_dir_shell_var
+        if tmp_dir_shell_var:
+            os.environ[tmp_dir_shell_var] = TMPDIR
+
         self.command = command
         self.raw_script = script  # as specified by user
         self.script = force_start(canonicalize(script, '.py'), 'test', 'test_')
@@ -620,6 +625,13 @@ class TestGenerator:
         """
         r = self.results[1]
         reference_files = self.reference_files[1]  # ones from run 1
+        if self.tmp_dir_shell_var:
+            SET_TMPDIR = '%s\n%s\n' % ('TMPDIR = tempfile.mkdtemp()',
+                                       'os.environ['%s'] = TMPDIR'
+                                       % self.tmp_dir_shell_var)
+        else:
+            SET_TMPDIR = ''
+
         with open(self.script, 'w') as f:
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
@@ -627,7 +639,8 @@ class TestGenerator:
                 'COMMAND': repr(self.command),
                 'CWD': repr(self.cwd),
                 'NAME': repr(self.ref_subdir()),
-                'EXIT_CODE': r.exit_code
+                'EXIT_CODE': r.exit_code,
+                'SET_TMPDIR': set_tmpdir,
             })
             if self.check_stdout:
                 path = as_join_repr(self.stdout_path(), self.cwd,
@@ -1190,7 +1203,7 @@ def wizard(iterations):
     check_stdout = yes_no('Check stdout')
     check_stderr = yes_no('Check stderr')
     require_zero_exit_code = yes_no('Exit code should be zero')
-    n_iterations = get_int('Number of times to run script', iterations, 
+    n_iterations = get_int('Number of times to run script', iterations,
                            2, None)
     return (shellcommand, output_script, reference_files,
             check_stdout, check_stderr, require_zero_exit_code,

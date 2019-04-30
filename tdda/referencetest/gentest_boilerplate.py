@@ -22,9 +22,7 @@ from tdda.referencetest.gentest import exec_command
 COMMAND = %(COMMAND)s
 CWD = os.path.abspath(os.path.dirname(__file__))
 REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
-TMPDIR = tempfile.mkdtemp()
-os.environ['TMPDIR'] = TMPDIR
-
+%(SET_TMPDIR)s
 class TestAnalysis(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
