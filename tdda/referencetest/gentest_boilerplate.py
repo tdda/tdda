@@ -14,6 +14,7 @@ from __future__ import division
 
 import os
 import sys
+import tempfile
 
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
@@ -21,7 +22,8 @@ from tdda.referencetest.gentest import exec_command
 COMMAND = %(COMMAND)s
 CWD = os.path.abspath(os.path.dirname(__file__))
 REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
-
+TMPDIR = tempfile.mkdtemp()
+os.environ['TMPDIR'] = TMPDIR
 
 class TestAnalysis(ReferenceTestCase):
     @classmethod

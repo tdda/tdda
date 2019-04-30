@@ -86,6 +86,9 @@ MONTH_MAP = {
     'dec': 12,
 }
 
+TMPDIR = tempfile.mkdtemp()        # Writable area for tests
+os.environ['TMPDIR'] = TMPDIR
+
 
 class Specifics:
     """
@@ -650,7 +653,8 @@ class TestGenerator:
                 ref_path = self.ref_map.get(path, self.ref_path(path))
                 short_path = os.path.split(ref_path)[1]
                 ref_path = as_join_repr(ref_path, self.cwd, self.ref_subdir())
-                actual_path = as_join_repr(path, self.cwd, self.ref_subdir())
+                actual_path = as_join_repr(path, self.cwd, self.ref_subdir(),
+                                           as_tmpdir=True)
                 exc = self.exclusions.get(short_path)
                 (patterns, removals, substrings) = (exc if exc else (None,
                                                                      None,
@@ -945,7 +949,7 @@ def as_pwd_repr(path, cwd):
     return as_join_repr(path, cwd, as_pwd='$(pwd)')
 
 
-def as_join_repr(path, cwd, name=None, as_pwd=None):
+def as_join_repr(path, cwd, name=None, as_pwd=None, as_tmpdir=None):
     """
     This function aims to produce more comprehensible representations
     of paths under cwd (the assumed current working directory, as would
@@ -995,6 +999,11 @@ def as_join_repr(path, cwd, name=None, as_pwd=None):
                     return 'os.path.join(REFDIR, %s)' % repr(tail)
                 else:
                     return 'os.path.join(CWD, %s)' % repr(tail)
+    if as_tmpdir:
+        tmpdir = TMPDIR + os.path.sep
+        if path.startswith(tmpdir):
+            L = len(ref) + len(os.path.sep)
+            return 'os.path.join(TMPDIR, %s)' % repr(path[L:])
     return repr(path)
 
 
