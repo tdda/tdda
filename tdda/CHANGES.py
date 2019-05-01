@@ -395,5 +395,11 @@ if they are already there.
 
 When multiple runs are used, we now remove outputs from later runs
 (which are no longer needed) once the tests have been written.
+
+Fixed TMPDIR handling so it works if you generate multiple test files
+and run them together using either pytest or testall.py.
+
+Added test_discover25k.py.
+
 ----------------------- end of branch gentest ---------------------------
 """

@@ -19,22 +19,22 @@ import tempfile
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
-COMMAND = %(COMMAND)s
-CWD = os.path.abspath(os.path.dirname(__file__))
-REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
-%(SET_TMPDIR)s
-%(GENERATED_FILES)s
 
 
-class TestAnalysis(ReferenceTestCase):
+class Test%(CLASSNAME)s(ReferenceTestCase):
+    command = %(COMMAND)s
+    cwd = os.path.abspath(os.path.dirname(__file__))
+    refdir = os.path.join(cwd, 'ref', %(NAME)s)
+    %(SET_TMPDIR)s
+    %(GENERATED_FILES)s
     @classmethod
     def setUpClass(cls):
+        %(REMOVE_PREVIOUS_OUTPUTS)s
         (cls.output,
          cls.error,
          cls.exc,
          cls.exit_code,
-         cls.duration) = exec_command(COMMAND, CWD)
-        %(REMOVE_PREVIOUS_OUTPUTS)s
+         cls.duration) = exec_command(cls.command, cls.cwd)
 
     def test_no_exception(self):
         msg = 'No exception should be generated'

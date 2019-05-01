@@ -14,23 +14,27 @@ from __future__ import division
 
 import os
 import sys
+import tempfile
 
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
-COMMAND = 'tdda verify -7 INPUTS/testdata/accounts25k.csv INPUTS/testdata/accounts1k.tdda'
-CWD = os.path.abspath(os.path.dirname(__file__))
-REFDIR = os.path.join(CWD, 'ref', 'verify_fail')
 
 
-class TestAnalysis(ReferenceTestCase):
+class TestVERIFY_FAIL(ReferenceTestCase):
+    command = 'tdda verify -7 INPUTS/testdata/accounts25k.csv INPUTS/testdata/accounts1k.tdda'
+    cwd = os.path.abspath(os.path.dirname(__file__))
+    refdir = os.path.join(cwd, 'ref', 'verify_fail')
+    
+    
     @classmethod
     def setUpClass(cls):
+        
         (cls.output,
          cls.error,
          cls.exc,
          cls.exit_code,
-         cls.duration) = exec_command(COMMAND, CWD)
+         cls.duration) = exec_command(cls.command, cls.cwd)
 
     def test_no_exception(self):
         msg = 'No exception should be generated'
@@ -41,11 +45,11 @@ class TestAnalysis(ReferenceTestCase):
 
     def test_stdout(self):
         self.assertStringCorrect(self.output,
-                                 os.path.join(REFDIR, 'STDOUT'))
+                                 os.path.join(self.refdir, 'STDOUT'))
 
     def test_stderr(self):
         self.assertStringCorrect(self.error,
-                                 os.path.join(REFDIR, 'STDERR'))
+                                 os.path.join(self.refdir, 'STDERR'))
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

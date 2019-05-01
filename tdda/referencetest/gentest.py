@@ -87,6 +87,7 @@ MONTH_MAP = {
 }
 
 TMPDIR = tempfile.mkdtemp()        # Writable area for tests
+TERM_TMPDIR = TMPDIR + os.path.sep
 DEFAULT_TMP_DIR_SHELL_VAR = 'TMPDIR'
 
 
@@ -491,7 +492,6 @@ class TestGenerator:
                 d = os.path.join(self.refdir, str(run))
                 if os.path.exists(d):
                     shutil.rmtree(d)
-                    print('Removed %s' % d)
 
     def snapshot_filesystem(self):
         """
@@ -641,23 +641,33 @@ class TestGenerator:
         """
         r = self.results[1]
         reference_files = self.reference_files[1]  # ones from run 1
+        actual_paths = self.generated_file_paths()
+        if any(istmpfile(p) for p in reference_files):
+            self.tmpdir_used = True
         if self.tmpdir_used:
-            set_tmpdir = '%s\n%s\n%s\n' % ('ORIG_TMPDIR = %s' % repr(TMPDIR),
-                                           'TMPDIR = tempfile.mkdtemp()',
-                                           "os.environ['%s'] = TMPDIR"
-                                           % self.tmp_dir_shell_var)
+            set_tmpdir = ('\n    '.join([
+                          'orig_tmpdir = %s' % repr(TMPDIR),
+                          "if not os.environ.get('TMPDIR_SET_BY_GENTEST'):",
+                          '    tmpdir = tempfile.mkdtemp()',
+                          "    os.environ['%s'] = tmpdir"
+                               % self.tmp_dir_shell_var,
+                          "    os.environ['TMPDIR_SET_BY_GENTEST'] = 'true'",
+                          'else:',
+                          "    tmpdir = os.environ['TMPDIR']",
+                          '']))
         else:
             set_tmpdir = ''
         with open(self.script, 'w') as f:
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
+                'CLASSNAME': os.path.basename(self.raw_script[5:-3]).upper(),
                 'GEN_COMMAND': self.cli_command(),
                 'COMMAND': repr(self.command),
                 'CWD': repr(self.cwd),
                 'NAME': repr(self.ref_subdir()),
                 'EXIT_CODE': r.exit_code,
                 'SET_TMPDIR': set_tmpdir,
-                'GENERATED_FILES': self.generated_file_paths(),
+                'GENERATED_FILES': self.generated_files_var(),
                 'REMOVE_PREVIOUS_OUTPUTS': self.remove_previous_outputs(),
             })
             if self.check_stdout:
@@ -696,25 +706,30 @@ class TestGenerator:
             f.write(TAIL)
         print('\nTest script written as %s' % self.abs_or_rel(self.script))
 
-    def generated_file_paths(self):
+    def generated_file_paths(self, in_cls=False):
+        """
+        List of generated files.
+        """
+        return [self.path_repr(ref_path, as_dollar=False, in_cls=in_cls)
+                for ref_path in self.reference_files[1]]
+
+    def generated_files_var(self):
         """
         Generates files GENERATED_FILES assignment, if needed,
         used by setUpClass to remove any outputs that are already there.
         """
-        refs = self.reference_files[1]
-        if not refs:
+        paths = self.generated_file_paths(in_cls=True)
+        if paths:
+            return ('generated_files = [\n        %s\n    ]'
+                    % (',\n    '.join(paths)))
+        else:
             return ''
-
-        actual_paths = [as_join_repr(ref_path, self.cwd, self.ref_subdir())
-                        for ref_path in refs]
-        return ('GENERATED_FILES = [\n    %s\n]'
-                % ('\n    '.join(actual_paths)))
 
     def remove_previous_outputs(self):
         refs = self.reference_files[1]
         if not refs:
             return ''
-        return ('for path in GENERATED_FILES:\n'
+        return ('for path in cls.generated_files:\n'
                 '            if os.path.exists(path):\n'
                 '                os.unlink(path)')
 
@@ -856,19 +871,27 @@ class TestGenerator:
         others = self.find_specific_dates_in_line(rest) if rest else []
         return first + others
 
-    def path_repr(self, path):
+    def path_repr(self, path, as_dollar=True, in_cls=False):
         """
         Convenience function for as_join_repr with as_pwd=$(pwd)
         and inc_tmpdir set to True and as_tmpdir set to $TMPDIR
         or whatever the correct name is.
         """
         if self.tmp_dir_shell_var:
-            return as_join_repr(path, self.cwd, as_pwd='$(pwd)',
-                                inc_tmpdir=True,
-                                as_tmpdir='$%s' % self.tmp_dir_shell_var)
+            if as_dollar:
+                return as_join_repr(path, self.cwd, as_pwd='$(pwd)',
+                                    inc_tmpdir=True,
+                                    as_tmpdir='$%s' % self.tmp_dir_shell_var,
+                                    in_cls=in_cls)
+            else:
+                return as_join_repr(path, self.cwd, inc_tmpdir=True,
+                                    in_cls=in_cls)
         else:
-            return as_join_repr(path, self.cwd, as_pwd='$(pwd)')
-
+            if as_dollar:
+                return as_join_repr(path, self.cwd, as_pwd='$(pwd)',
+                                    in_cls=in_cls)
+            else:
+                return as_join_repr(path, self.cwd, in_cls=in_cls)
 
 
 class ExecuteCommand:
@@ -1019,7 +1042,7 @@ def as_pwd_repr(path, cwd):
 
 
 def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
-                 as_tmpdir=None):
+                 as_tmpdir=None, in_cls=False):
     """
     This function aims to produce more comprehensible representations
     of paths under cwd (the assumed current working directory, as would
@@ -1066,19 +1089,24 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
                 L = len(ref) + len(os.path.sep)
                 if tail.startswith(ref + os.path.sep):
                     tail = tail[L:]
-                    return 'os.path.join(REFDIR, %s)' % repr(tail)
+                    return 'os.path.join(self.refdir, %s)' % repr(tail)
                 else:
-                    return 'os.path.join(CWD, %s)' % repr(tail)
+                    return 'os.path.join(self.cwd, %s)' % repr(tail)
     if inc_tmpdir:
         tmpdir = TMPDIR + os.path.sep
-        if path.startswith(tmpdir):
-            L = len(tmpdir)
+        if istmpfile(path):
+            L = len(TERM_TMPDIR)
             tail = path[L:]
             if as_tmpdir:
                 return '%s%s%s' % (as_tmpdir, os.path.sep, tail)
             else:
-                return 'os.path.join(TMPDIR, %s)' % repr(tail)
+                prefix = '' if in_cls else 'self.'
+                return 'os.path.join(%stmpdir, %s)' % (prefix, repr(tail))
     return repr(path)
+
+
+def istmpfile(path):
+    return path.startswith(TERM_TMPDIR)
 
 
 def test_def(name, actual, kind, ref_file_path, patterns, removals,
@@ -1099,7 +1127,7 @@ def test_def(name, actual, kind, ref_file_path, patterns, removals,
         extras.append(spc + 'ignore_patterns=patterns')
     if substrings:
         lines.append('    substrings = [')
-        ss = ['ORIG_TMPDIR' if s == TMPDIR else repr(s)
+        ss = ['self.orig_tmpdir' if s == TMPDIR else repr(s)
               for s in substrings]
         for s in sorted(set(ss)):
             lines.append('        %s,' % s)

@@ -1,7 +1,7 @@
 {
     "creation_metadata": {
-        "local_time": "2019-04-29 18:18:21", 
-        "utc_time": "2019-04-29 17:17:21", 
+        "local_time": "2019-05-01 15:15:22", 
+        "utc_time": "2019-05-01 14:14:22", 
         "creator": "TDDA 1.0.25", 
         "source": "INPUTS/testdata/accounts25k.csv", 
         "host": "bartok.local", 
@@ -9,7 +9,7 @@
         "dataset": "accounts25k.csv", 
         "n_records": 25000, 
         "n_selected": 25000, 
-        "tddafile": "output/accounts25k.tdda"
+        "tddafile": "/var/folders/zv/3xvhmvpj0216687_pk__2f5h0000gn/T/tmp9wX6S5/accounts25k.tdda"
     }, 
     "fields": {
         "account_number": {
