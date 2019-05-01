@@ -10,6 +10,11 @@
 #
 
 echo "Cleaning out anything that shouldn't be here"
+if [ ! -f "GENERATE_TESTS.sh" ]
+then
+    echo "You are in the wrong directory!" 1>&2
+    exit 1
+fi
 rm -rf [a-z]*
 
 echo 'Generate test for copying examples'
