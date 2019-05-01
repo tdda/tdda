@@ -23,6 +23,9 @@ COMMAND = %(COMMAND)s
 CWD = os.path.abspath(os.path.dirname(__file__))
 REFDIR = os.path.join(CWD, 'ref', %(NAME)s)
 %(SET_TMPDIR)s
+%(GENERATED_FILES)s
+
+
 class TestAnalysis(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
@@ -31,6 +34,7 @@ class TestAnalysis(ReferenceTestCase):
          cls.exc,
          cls.exit_code,
          cls.duration) = exec_command(COMMAND, CWD)
+        %(REMOVE_PREVIOUS_OUTPUTS)s
 
     def test_no_exception(self):
         msg = 'No exception should be generated'

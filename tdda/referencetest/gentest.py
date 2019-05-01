@@ -94,18 +94,19 @@ class Specifics:
     """
     Container for over-specific items found in output lines.
     """
-    __slots__ = ['line', 'host', 'ip', 'cwd', 'homedir', 'user',
-                 'datelike', 'dtlike',
+    __slots__ = ['line', 'host', 'ip', 'cwd', 'homedir', 'tmpdir',
+                 'user', 'datelike', 'dtlike',
                  'rex_inputs', 'remove', 'substring']
 
-    def __init__(self, line, host=False, ip=False, cwd=False,
-                 homedir=False, user=False, datelike=False, dtlike=False,
+    def __init__(self, line, host=False, ip=False, cwd=False, homedir=False,
+                 tmpdir=False, user=False, datelike=False, dtlike=False,
                  rex_inputs=None, remove=None, substring=None):
         self.line = line
         self.host = host
         self.ip = ip
         self.cwd = cwd
         self.homedir = homedir
+        self.tmpdir = tmpdir
         self.user = user
         self.datelike = datelike
         self.dtlike = dtlike
@@ -125,13 +126,14 @@ class TestGenerator:
                  check_stdout, check_stderr=True, require_zero_exit_code=True,
                  max_snapshot_files=MAX_SNAPSHOT_FILES,
                  relative_paths=False, with_time_log=True, iterations=2,
-                 tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR,
-                 verbose=True):
+                 tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR, verbose=True):
         self.cwd = cwd
-        self.tmp_dir_shell_var = tmp_dir_shell_var
+        self.tmp_dir_shell_var = tmp_dir_shell_var  # If None, not used
+        self.tmpdir = TMPDIR
         if tmp_dir_shell_var:
             os.environ[tmp_dir_shell_var] = TMPDIR
-
+            reference_files.append(TMPDIR)
+        self.tmpdir_used = False  # Updated later if used
         self.command = command
         self.raw_script = script  # as specified by user
         self.script = force_start(canonicalize(script, '.py'), 'test', 'test_')
@@ -178,6 +180,7 @@ class TestGenerator:
             self.write_script()
             if self.verbose:
                 print(self.summary())
+        self.remove_extra_reference_files()
 
     def run_command(self):
         self.results = {}
@@ -309,19 +312,19 @@ class TestGenerator:
         if debug:
             for (line, s) in specifics.items():
                 print('SPECIFIC LINE IN %d: %s\n'
-                      '  host: %s  ip: %s  cwd: %s  homedir: %s  user: %s'
-                      '  datelike: %s  dtlike: %s\n'
-                      '  rex inputs: %s  remove: %s  substring: %s'
+                      '  host: %s  ip: %s  cwd: %s  homedir: %s  tmpdir: %s'
+                      '  user: %s  datelike: %s  dtlike: %s\n'
+                      '  rex inputs: %s  remove: %s  substring: %s\n'
                       % (line, s.line.rstrip(),
-                         s.host, s.ip, s.cwd, s.homedir, s.user,
-                         bool(s.datelike), bool(s.dtlike),
+                         s.host, s.ip, s.cwd, s.homedir, s.tmpdir,
+                         s.user, bool(s.datelike), bool(s.dtlike),
                          bool(s.rex_inputs), bool(s.remove),
                          bool(s.substring)))
         rexes = extract(common)
         substrings = []
         self.exclusions[name] = (rexes, removals, substrings)
 
-        for k in ('host', 'ip', 'cwd', 'user', 'homedir'):
+        for k in ('host', 'ip', 'cwd', 'user', 'homedir', 'tmpdir'):
             # need slightly different condition if cwd is in homedir
             if k == 'homedir' and self.cwd.startswith(self.homedir):
                 f = lambda x: not x.cwd
@@ -389,11 +392,15 @@ class TestGenerator:
                 ip = self.ip_address in line
                 cwd = self.cwd in line
                 homedir = self.homedir in line
+                tmpdir = self.tmp_dir_shell_var and TMPDIR in line
+                if tmpdir:
+                    self.tmpdir_used = True
                 user = (self.user in line
                         and (not (homedir and self.user_in_home)))
-                if any((datelike, dtlike, host, ip, cwd, homedir, user)):
+                if any((datelike, dtlike, host, ip, cwd, homedir, tmpdir,
+                        user)):
                     specifics[i] = Specifics(line, host, ip, cwd, homedir,
-                                             user, datelike, dtlike)
+                                             tmpdir, user, datelike, dtlike)
         return specifics
 
     def snapshot_fail(self):
@@ -476,6 +483,15 @@ class TestGenerator:
 
         if os.path.exists(self.script):
             os.unlink(self.script)
+
+    def remove_extra_reference_files(self):
+        # Remove subdirs 2, 3, ..., N
+        if self.iterations > 1:
+            for run in range(2, self.iterations + 1):
+                d = os.path.join(self.refdir, str(run))
+                if os.path.exists(d):
+                    shutil.rmtree(d)
+                    print('Removed %s' % d)
 
     def snapshot_filesystem(self):
         """
@@ -625,13 +641,13 @@ class TestGenerator:
         """
         r = self.results[1]
         reference_files = self.reference_files[1]  # ones from run 1
-        if self.tmp_dir_shell_var:
-            SET_TMPDIR = '%s\n%s\n' % ('TMPDIR = tempfile.mkdtemp()',
-                                       'os.environ['%s'] = TMPDIR'
-                                       % self.tmp_dir_shell_var)
+        if self.tmpdir_used:
+            set_tmpdir = '%s\n%s\n%s\n' % ('ORIG_TMPDIR = %s' % repr(TMPDIR),
+                                           'TMPDIR = tempfile.mkdtemp()',
+                                           "os.environ['%s'] = TMPDIR"
+                                           % self.tmp_dir_shell_var)
         else:
-            SET_TMPDIR = ''
-
+            set_tmpdir = ''
         with open(self.script, 'w') as f:
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
@@ -641,6 +657,8 @@ class TestGenerator:
                 'NAME': repr(self.ref_subdir()),
                 'EXIT_CODE': r.exit_code,
                 'SET_TMPDIR': set_tmpdir,
+                'GENERATED_FILES': self.generated_file_paths(),
+                'REMOVE_PREVIOUS_OUTPUTS': self.remove_previous_outputs(),
             })
             if self.check_stdout:
                 path = as_join_repr(self.stdout_path(), self.cwd,
@@ -667,7 +685,7 @@ class TestGenerator:
                 short_path = os.path.split(ref_path)[1]
                 ref_path = as_join_repr(ref_path, self.cwd, self.ref_subdir())
                 actual_path = as_join_repr(path, self.cwd, self.ref_subdir(),
-                                           as_tmpdir=True)
+                                           inc_tmpdir=True)
                 exc = self.exclusions.get(short_path)
                 (patterns, removals, substrings) = (exc if exc else (None,
                                                                      None,
@@ -677,6 +695,28 @@ class TestGenerator:
 
             f.write(TAIL)
         print('\nTest script written as %s' % self.abs_or_rel(self.script))
+
+    def generated_file_paths(self):
+        """
+        Generates files GENERATED_FILES assignment, if needed,
+        used by setUpClass to remove any outputs that are already there.
+        """
+        refs = self.reference_files[1]
+        if not refs:
+            return ''
+
+        actual_paths = [as_join_repr(ref_path, self.cwd, self.ref_subdir())
+                        for ref_path in refs]
+        return ('GENERATED_FILES = [\n    %s\n]'
+                % ('\n    '.join(actual_paths)))
+
+    def remove_previous_outputs(self):
+        refs = self.reference_files[1]
+        if not refs:
+            return ''
+        return ('for path in GENERATED_FILES:\n'
+                '            if os.path.exists(path):\n'
+                '                os.unlink(path)')
 
     def test_name(self, path):
         """
@@ -692,7 +732,9 @@ class TestGenerator:
 
     def cli_command(self, zec=None):
         files = ' '
-        files += ' '.join(repr(f) for f in self.raw_files)
+        exclusions = set([self.tmpdir]) if self.tmp_dir_shell_var else set()
+        files += ' '.join(repr(f) for f in self.raw_files
+                          if not f in exclusions)
         if self.check_stdout:
             files += ' STDOUT'
         if self.check_stderr:
@@ -728,7 +770,7 @@ class TestGenerator:
             'Reference files:       %s' % ('' if reference_files
                                               else '[None]'),
         ] + [
-            '    %s' % as_pwd_repr(f, self.cwd) for f in reference_files
+            '    %s' % self.path_repr(f) for f in reference_files
 
         ] + [
             'Check stdout:          %s' % stream_desc(self.check_stdout,
@@ -813,6 +855,20 @@ class TestGenerator:
         rest = line[end:]
         others = self.find_specific_dates_in_line(rest) if rest else []
         return first + others
+
+    def path_repr(self, path):
+        """
+        Convenience function for as_join_repr with as_pwd=$(pwd)
+        and inc_tmpdir set to True and as_tmpdir set to $TMPDIR
+        or whatever the correct name is.
+        """
+        if self.tmp_dir_shell_var:
+            return as_join_repr(path, self.cwd, as_pwd='$(pwd)',
+                                inc_tmpdir=True,
+                                as_tmpdir='$%s' % self.tmp_dir_shell_var)
+        else:
+            return as_join_repr(path, self.cwd, as_pwd='$(pwd)')
+
 
 
 class ExecuteCommand:
@@ -962,7 +1018,8 @@ def as_pwd_repr(path, cwd):
     return as_join_repr(path, cwd, as_pwd='$(pwd)')
 
 
-def as_join_repr(path, cwd, name=None, as_pwd=None, as_tmpdir=None):
+def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
+                 as_tmpdir=None):
     """
     This function aims to produce more comprehensible representations
     of paths under cwd (the assumed current working directory, as would
@@ -1003,7 +1060,7 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, as_tmpdir=None):
             if os.path.isabs(tail):
                 tail = tail[1:]
             if as_pwd:
-                return '%s/%s' % (as_pwd, tail)
+                return os.path.join('%s%s%s' % (as_pwd, os.path.sep, tail))
             else:
                 ref = os.path.join('ref', name)
                 L = len(ref) + len(os.path.sep)
@@ -1012,11 +1069,15 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, as_tmpdir=None):
                     return 'os.path.join(REFDIR, %s)' % repr(tail)
                 else:
                     return 'os.path.join(CWD, %s)' % repr(tail)
-    if as_tmpdir:
+    if inc_tmpdir:
         tmpdir = TMPDIR + os.path.sep
         if path.startswith(tmpdir):
-            L = len(ref) + len(os.path.sep)
-            return 'os.path.join(TMPDIR, %s)' % repr(path[L:])
+            L = len(tmpdir)
+            tail = path[L:]
+            if as_tmpdir:
+                return '%s%s%s' % (as_tmpdir, os.path.sep, tail)
+            else:
+                return 'os.path.join(TMPDIR, %s)' % repr(tail)
     return repr(path)
 
 
@@ -1038,8 +1099,10 @@ def test_def(name, actual, kind, ref_file_path, patterns, removals,
         extras.append(spc + 'ignore_patterns=patterns')
     if substrings:
         lines.append('    substrings = [')
-        for s in substrings:
-            lines.append('        %s,' % repr(s))
+        ss = ['ORIG_TMPDIR' if s == TMPDIR else repr(s)
+              for s in substrings]
+        for s in sorted(set(ss)):
+            lines.append('        %s,' % s)
         lines.append('    ]')
         rspc = '' if extras else spc
         extras.append(rspc + 'ignore_substrings=substrings')
@@ -1193,6 +1256,8 @@ def wizard(iterations):
                             default='test_' + sanitize_string(shellcommand))
     reference_files = []
     check_cwd = yes_no('Check all files written under $(pwd)')
+    check_tmpdir = yes_no("Check all files written under (gentest's) $TMPDIR")
+    tmp_dir_shell_var = DEFAULT_TMP_DIR_SHELL_VAR if check_tmpdir else None
     if check_cwd:
         reference_files.append('.')
     print('Enter other files to be checked, one per line, then blank line:')
@@ -1207,7 +1272,7 @@ def wizard(iterations):
                            2, None)
     return (shellcommand, output_script, reference_files,
             check_stdout, check_stderr, require_zero_exit_code,
-            n_iterations)
+            n_iterations, tmp_dir_shell_var)
 
 
 def gentest_parser(usage=''):
@@ -1254,7 +1319,7 @@ def gentest_wrapper(args):
 
 def gentest(shellcommand, output_script, reference_files,
             max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False,
-            iterations=2):
+            iterations=2, tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -1271,7 +1336,8 @@ def gentest(shellcommand, output_script, reference_files,
          check_stdout,
          check_stderr,
          require_zero_exit_code,
-         iterations) = wizard(iterations)
+         iterations,
+         tmp_dir_shell_var) = wizard(iterations)
     else:
         check_stdout = False
         check_stderr = False
@@ -1294,7 +1360,8 @@ def gentest(shellcommand, output_script, reference_files,
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code,
                   max_snapshot_files=max_snapshot_files,
-                  relative_paths=relative_paths, iterations=iterations)
+                  relative_paths=relative_paths, iterations=iterations,
+                  tmp_dir_shell_var=tmp_dir_shell_var)
 
 
 if __name__ == '__main__':

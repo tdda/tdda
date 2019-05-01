@@ -385,5 +385,15 @@ There is also now support for a number of iterations to be passed in
 and the wizard also offers this.
 
 More kinds of dates are now recognized.
+
+Now sets TMPDIR and checks that as output place, by default.
+
+Further improvements to utility and handling of TMPDIR.
+
+setUpClass now removes and files expected to be generated before running,
+if they are already there.
+
+When multiple runs are used, we now remove outputs from later runs
+(which are no longer needed) once the tests have been written.
 ----------------------- end of branch gentest ---------------------------
 """
