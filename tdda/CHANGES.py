@@ -401,5 +401,10 @@ and run them together using either pytest or testall.py.
 
 Added test_discover25k.py.
 
+Fixed problem with self.cwd being generated in test file where it should
+not have been (should have been cwd).
+
+Fixed problem with empty (None) name being joined onto path wrongly.
+
 ----------------------- end of branch gentest ---------------------------
 """

@@ -1085,13 +1085,14 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
             if as_pwd:
                 return os.path.join('%s%s%s' % (as_pwd, os.path.sep, tail))
             else:
-                ref = os.path.join('ref', name)
+                ref = os.path.join('ref', name) if name else 'ref'
                 L = len(ref) + len(os.path.sep)
                 if tail.startswith(ref + os.path.sep):
                     tail = tail[L:]
                     return 'os.path.join(self.refdir, %s)' % repr(tail)
                 else:
-                    return 'os.path.join(self.cwd, %s)' % repr(tail)
+                    prefix = '' if in_cls else 'self.'
+                    return 'os.path.join(%scwd, %s)' % (prefix, repr(tail))
     if inc_tmpdir:
         tmpdir = TMPDIR + os.path.sep
         if istmpfile(path):
