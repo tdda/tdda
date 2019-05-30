@@ -257,7 +257,7 @@ what's going on when there are skipped tests.
 Added boilerplate tests for MongoDB, but these are currently disabled
 since they cannot yet work entirely correctly.
 
-###
+30.05.2019 1.0.26
 Better JSON generation and protect against unfathomable user.
 
 Tweaked the JSON produced for TDDA files:
