@@ -256,4 +256,20 @@ what's going on when there are skipped tests.
 
 Added boilerplate tests for MongoDB, but these are currently disabled
 since they cannot yet work entirely correctly.
+
+###
+Better JSON generation and protect against unfathomable user.
+
+Tweaked the JSON produced for TDDA files:
+  1. ensure no trailing whitespace, even in Python2
+  2. don't force ASCII, so that accented characters, greek characters etc.,
+     come out in UTF-8, rather than as character codes.
+
+Also protect the lookup of the current user in a try ... except
+and set to the empty string if it fails. This addresses issue #18,
+whereby (poorly configured?) Docker containers with no non-root users
+can cause getpass.getuser() to fail with an error. Whether or not
+the software should need to deal with this, there seems little harm
+in setting an empty user when the alternative is crashing, so that's
+what now happens.
 """
