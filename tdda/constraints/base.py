@@ -213,7 +213,11 @@ class DatasetConstraints(object):
         self.local_time = now.strftime('%Y-%m-%d %H:%H:%S')
         self.utc_time = utcnow.strftime('%Y-%m-%d %H:%H:%S')
         self.host = socket.gethostname()
-        self.user = getpass.getuser()
+        try:    # Issue 18: getuser() can fail under Docker with password
+                # files with no non-root users
+            self.user = getpass.getuser()
+        except:
+            self.user = ''
         self.set_creator()
 
     def get_metadata(self, tddafile=None):
@@ -252,7 +256,8 @@ class DatasetConstraints(object):
         Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps(self.to_dict(tddafile=tddafile), indent=4) + '\n'
+        return strip_lines(json.dumps(self.to_dict(tddafile=tddafile),
+                                      indent=4, ensure_ascii=False)) + '\n'
 
     def sort_fields(self, fields=None):
         """
@@ -765,17 +770,15 @@ def constraint_class(kind):
     return '%sConstraint' % ''.join(part.title() for part in kind.split('_'))
 
 
-def strip_lines(s, side='r'):
+def strip_lines(s):
     """
-    Splits the given string into lines (at newlines), strips each line
-    and rejoins. Is careful about last newline and default to stripping
-    on the right only (side='r'). Use 'l' for left strip or anything
-    else to strip both sides.
+    Splits the given string into lines (at newlines), strips trailing
+    whitespace from each line before rejoining.
+
+    Is careful about last newline.
     """
-    strip = (str.rstrip if side == 'r' else str.lstrip if side == 'l'
-             else str.strip)
     end = '\n' if s.endswith('\n') else ''
-    return '\n'.join([strip(line) for line in s.splitlines()]) + end
+    return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
 
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
