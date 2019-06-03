@@ -237,7 +237,6 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"dataset":',
                                                     '"tddafile":'])
 
-    @tag
     def test_discover_elements_rex(self):
         # build constraints for full 118 element dataset
         elements = self.dbh.resolve_table('elements')
