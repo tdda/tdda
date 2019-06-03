@@ -120,6 +120,7 @@ USE_SAMPLING = True
 VERBOSITY = 0
 RE_FLAGS = re.UNICODE | re.DOTALL
 
+DIALECTS = ['perl']
 
 class Size(object):
     def __init__(self, **kwargs):
