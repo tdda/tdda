@@ -1,12 +1,12 @@
 {
     "creation_metadata": {
-        "local_time": "2019-03-18 13:13:58",
-        "utc_time": "2019-03-18 13:13:58",
-        "creator": "TDDA 1.0.22",
-        "rdbms": "sqlite::None:/Users/simon/tdda/tdda/constraints/testdata/example.db",
+        "local_time": "2019-06-03 14:14:00",
+        "utc_time": "2019-06-03 13:13:00",
+        "creator": "TDDA 1.0.27",
+        "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.db",
         "source": "elements",
-        "host": "teacsa.local",
-        "user": "simon",
+        "host": "bartok.local",
+        "user": "njr",
         "dataset": "elements",
         "n_records": 118,
         "n_selected": 118
@@ -96,7 +96,7 @@
                 "^Greek protos and actinium$",
                 "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$",
                 "^State and University of California$",
-                "^Latin uni, uni, and [a-z]+$",
+                "^Latin uni, uni, and quadr$",
                 "^Latin uni, uni, and Greek [a-z]{3,4}$",
                 "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$",
                 "^Pierre and Marie Curie and the traditional \\-um ending$"
@@ -143,8 +143,8 @@
             "rex": [
                 "^[a-z0-9]+$",
                 "^[a-z]+ [a-z]{3,5}$",
-                "^\\d\\.\\d{1,2}$",
-                "^\\d[\\-\\.]\\d [a-z]{8,9}$",
+                "^[0-9]\\.[0-9]{1,2}$",
+                "^[0-9][\\-\\.][0-9] [a-z]{8,9}$",
                 "^radioactive alkali metal$",
                 "^1\\.5 soft metal$",
                 "^radioactive alkaline earth metal$",

@@ -237,6 +237,7 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"dataset":',
                                                     '"tddafile":'])
 
+    @tag
     def test_discover_elements_rex(self):
         # build constraints for full 118 element dataset
         elements = self.dbh.resolve_table('elements')
@@ -244,9 +245,14 @@ class TestDatabaseConstraintDiscoverers:
                                         inc_rex=True, seed=827364)
         constraints.remove_field('_rowindex') # hidden field, ignore it
         j = constraints.to_json()
-        # Now same in Python2 and 3, with Python3-like escaping
-        expected_file = ('elements118oldrex-3.tdda' if '\\,' in j
-                         else 'elements118rex-3.tdda')
+        # compare against the right expected file, depending on whether the
+        # version of python we're running under has escaped commas or not.
+        if isPython2:
+            expected_file = ('elements118oldrex.tdda' if '\\,' in j
+                             else 'elements118rex.tdda')
+        else:
+            expected_file = ('elements118oldrex-3.tdda' if '\\,' in j
+                             else 'elements118rex-3.tdda')
         self.assertStringCorrect(j, expected_file, rstrip=True,
                                  ignore_substrings=['"as_at":',
                                                     '"local_time":',
