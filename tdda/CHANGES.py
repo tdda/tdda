@@ -272,4 +272,7 @@ can cause getpass.getuser() to fail with an error. Whether or not
 the software should need to deal with this, there seems little harm
 in setting an empty user when the alternative is crashing, so that's
 what now happens.
+
+###
+Less excessive escaping (Python3-like even in Python2)
 """
