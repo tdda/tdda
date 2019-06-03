@@ -1914,7 +1914,8 @@ class TestExtraction(ReferenceTestCase):
     def testConstraints(self):
         inputs = {'aa_bb': 10, '.123': 5, 'a': 1, 'b.' : 2}
         r = extract(inputs)
-        aa_bb = r'^aa%sbb$' % UNDERSCORE
+#        aa_bb = r'^aa%sbb$' % UNDERSCORE
+        aa_bb = r'^aa_bb$' # now escaping consistently across pythons
         self.assertEqual(r, [r'^a$', r'^\.123$', r'^b\.$', aa_bb])
 
         r = extract(inputs, max_patterns=2)

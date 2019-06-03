@@ -273,6 +273,8 @@ the software should need to deal with this, there seems little harm
 in setting an empty user when the alternative is crashing, so that's
 what now happens.
 
+3.06.2019 1.0.27
+Less excessive escaping (Python3-like even in Python2)
 
 -------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.
@@ -315,5 +317,6 @@ and reIsRegex is set to True if the regex library is being used.
 
 Referencetest no longer strips whitespace when its regenerating outputs,
 which it was incorrectly doing due to a recent misplaced 'fix'.
-------------------------- end of dev branch -------------------------
+------------------------- end of dev vbranch -------------------------
+=======
 """
