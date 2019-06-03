@@ -89,9 +89,11 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info[0] < 3 else str
-bytes_type = str if sys.version_info[0] < 3 else bytes
+isPython2 = sys.version_info[0] < 3
+str_type = unicode if isPython2 else str
+bytes_type = str if isPython2 else bytes
 INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
+UNESCAPES = '''!"%',/:;<=>@_` '''  if isPython2 else ' '
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -2335,8 +2337,7 @@ def escape(s, full=False):
     if full:
         return re.escape(s)
     else:
-        unescapes = ' '
-        return ''.join((c if c in unescapes else re.escape(c)) for c in s)
+        return ''.join((c if c in UNESCAPES else re.escape(c)) for c in s)
 
 
 def u_alpha_numeric_re(inc, exc, digits=True):
