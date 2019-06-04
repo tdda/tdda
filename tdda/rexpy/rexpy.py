@@ -228,7 +228,7 @@ class Categories(object):
     def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
             assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(escape(r'%s') % L for L in extra_letters)
+            el_re = ''.join(escape(L) for L in extra_letters)
             el_re_exc = '' if '_' in extra_letters else '_'
         else:
             el_re = ''
