@@ -179,19 +179,24 @@ UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
 COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
 
+
 class Categories(object):
     escapableCodes = '.*?'
-    def __init__(self, extra_letters=None, full_escape=False):
+    def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
-            assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(escape(L) for L in extra_letters)
+            assert all(L in '_.-' for L in extra_letters)   # For now
+            extra_letters = ''.join(e for e in '_.-'
+                                    if e in extra_letters)  # Force '-' to end
+            el_re = extra_letters
             el_re_exc = '' if '_' in extra_letters else '_'
         else:
             el_re = ''
             el_re_exc = '_'
         el_re_inc = (extra_letters or '').replace('_', '')
-        punctuation = self.Punctuation(el_re)
+        punctuation = self.PunctuationChars(el_re)
+        self.dialect = dialect
         self.extra_letters = extra_letters or ''
+        self.full_escape = full_escape
         self.LETTER = Category('LETTER', 'A', '[A-Z]')
         self.letter = Category('letter', 'a', '[a-z]')
         self.Letter = Category('Letter', 'L', '[A-Za-z]')
@@ -203,7 +208,8 @@ class Categories(object):
             if extra_letters == '_':
                 self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
             else:
-                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False)
+                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False,
+                                       dialect=dialect)
                 self.ULetter_ = Category('ULetter_', 'Ṃ', p)
 
             ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
@@ -221,11 +227,12 @@ class Categories(object):
         self.AlphaNumeric = Category('AlphaNumeric', 'C',
                                      '[A-Za-z0-9%s]' % el_re)
         self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
-                                      u_alpha_numeric_re(el_re_inc, el_re_exc))
+                                      u_alpha_numeric_re(el_re_inc, el_re_exc,
+                                                         dialect=dialect))
         self.Whitespace = Category('Whitespace', ' ', r'\s')
         self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    '[%s]' % escape(''.join(punctuation),
-                                                    full=full_escape))
+                                    escaped_bracket(punctuation,
+                                                    dialect=dialect))
 
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
@@ -248,7 +255,7 @@ class Categories(object):
 
         )
 
-    def Punctuation(self, el_re):
+    def PunctuationChars(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
@@ -276,7 +283,10 @@ class Categories(object):
 
     @classmethod
     def escape_code(cls, code):
-        return escape(code) if code in cls.escapableCodes else code
+        return escape(code, full=False) if code in cls.escapableCodes else code
+
+    def escape(self, s, full=None):
+        return escape(s, full=self.full_escape if full is None else full)
 
 
 class Fragment(namedtuple('Fragment', 're group')):
@@ -354,8 +364,7 @@ class Extractor(object):
         self.warnings = []
         self.n_too_many_groups = 0
         self.Cats = Categories(self.thin_extras(extra_letters),
-                               full_escape=full_escape)
-        self.full_escape = full_escape
+                               full_escape=full_escape, dialect=dialect)
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
         self.min_strings_per_pattern = min_strings_per_pattern
@@ -781,11 +790,11 @@ class Extractor(object):
             fixed = False
             refined = None
             if len(strings) == 1:   # Same string for whole group
-                refined = escape(list(strings)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(strings)[0])
                 m = M = 1
                 fixed = True
             elif len(chars) == 1:   # Same character, possibly repeated
-                refined = escape(list(chars)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(chars)[0])
                 fixed = True
             elif c == COARSEST_ALPHANUMERIC_CODE:  # Alphanumeric
                 if rlec:  # Always same sequence of chars
@@ -812,7 +821,7 @@ class Extractor(object):
                     refined = c
             elif (c == CODE.PUNC
                   and len(chars) <= SIZE.MAX_PUNC_IN_GROUP):  # Punctuation
-                refined = '[%s]' % escape(char_str, full=self.full_escape)
+                refined = escaped_bracket(char_str, dialect=self.Cats.dialect)
                 fixed = True
             else:
                 refined = c
@@ -1878,9 +1887,44 @@ def escape(s, full=False):
         return ''.join((c if c in UNESCAPES else re.escape(c)) for c in s)
 
 
-def u_alpha_numeric_re(inc, exc, digits=True):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
-    i = '[%s]' % escape(inc) if len(inc) == 2 else escape(inc)
+def escaped_bracket(chars, dialect=None, inner=False):
+    """
+    Construct a regular expression Bracket (character class),
+    obeying the special regex rules for escaping these:
+
+      - Characters do not, in general need to be escaped
+      - If there is a close bracket ("]") it mst be the first character
+      - If there is a hyphen ("-") it must be the last character
+      - If there is a carat ("^"), it must not be the first character
+      - If there is a backslash, it's probably best to escape it.
+        Some implementations don't require this, but it will rarely
+        do any harm, and most implementation understand at least some
+        escape sequences ("\w", "\W", "\d", "\s" etc.), so escaping
+        seems prudent.
+
+    However, javascript and ruby do not follow the unescaped "]" as the
+    first character rule, so if either of these dialects is specified,
+    the "]" will be escaped (but still placed in the first position.
+
+    If inner is set to True, the result is returned without brackets.
+    """
+    opener, closer = ('', '') if inner else ('[', ']')
+    if dialect in ('javascript', 'ruby'):
+        prefix = '\]' if ']' in chars else ''
+    else:
+        prefix = ']' if ']' in chars else ''
+    suffix = ((r'\\' if '\\' in chars else '')
+              + ('^' if '^' in chars else '')
+              + ('-' if '-' in chars else ''))
+    specials = r']\-^'
+    mains = ''.join(c for c in chars if c not in specials)
+    return '%s%s%s%s%s' % (opener, prefix, mains, suffix, closer)
+
+
+def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
+    r = '[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
+                       dialect=dialect, inner=True))
+    i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 
 

@@ -144,7 +144,7 @@
                 "^[a-z0-9]+$", 
                 "^[a-z]+ [a-z]{3,5}$", 
                 "^\\d\\.\\d{1,2}$", 
-                "^\\d[\\-\\.]\\d [a-z]{8,9}$", 
+                "^\\d[.-]\\d [a-z]{8,9}$", 
                 "^radioactive alkali metal$", 
                 "^1\\.5 soft metal$", 
                 "^radioactive alkaline earth metal$", 
