@@ -1385,6 +1385,7 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
+    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 

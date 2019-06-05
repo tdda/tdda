@@ -283,6 +283,26 @@ Now that we do regular expression escapinge in (almost) the same way in
 Python2 and Python3, we can remove a lot of nasty tests that have
 two versions of the results.
 
+Updated bracket generatation ("character classes: [...]").
+
+We now use almost no escaping for characters in character classes,
+instead using special rules to force
+  - close square bracket ("]") to the start
+  - dash (hyphen "-") to the end
+  - carat ("^") away from the start
+Only backslash is now normally escaped in character classes.
+
+There is also embryonic provision for new dialects "javascript" and "ruby"
+to force escaping of "]" in character classes, since they don't appear to
+obey the normal rules, but the embryonic provision isn't really used by
+anything (or available outside the API) at this point.
+
+Many tests have been updated as a result. Many tests also now check,
+to a greater extent than was previously the case, that the regular expressions
+generated actually actually match the strings used to generate them and
+(equally relevantly) don't match certain strings you might worry they would
+match if you weren't fully "au fait" with the details of regex rules!
+
 -------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.
 
