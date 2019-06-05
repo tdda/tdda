@@ -303,4 +303,8 @@ to a greater extent than was previously the case, that the regular expressions
 generated actually actually match the strings used to generate them and
 (equally relevantly) don't match certain strings you might worry they would
 match if you weren't fully "au fait" with the details of regex rules!
+
+###
+Simplified the list of characters to NOT be specially escaped, so it's
+now just the same across all python versions.
 """
