@@ -462,7 +462,7 @@ class TestHelperMethods(ReferenceTestCase):
             self.assertEqual(x.coarse_classify_char(chr(i)), C)
         for c in ' \t\r\n\f\v':
             self.assertEqual(x.coarse_classify_char(c), ' ')
-        for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[\]^_`{|}~':
+        for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[]^_`{|}~':
             self.assertEqual(x.coarse_classify_char(c), '.')
         for i in range(0, 0x1c):  # 1C to 1F are considered whitespace
                                   # in unicode
@@ -747,9 +747,11 @@ class TestExtraction(ReferenceTestCase):
 
     def test_re_pqs_id_with_dash(self):
         iids = ['123-AB-321', '12-AB-4321', '', None, '321-BA-123']
-        rexes = [r'^$', r'^[0-9]{2,3}[A-Z\-][A-Z]{2}[A-Z\-][0-9]{3,4}$']
+        rexes = [r'^$', r'^[0-9]{2,3}[A-Z-][A-Z]{2}[A-Z-][0-9]{3,4}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
+        self.assertTrue(all(any(re.match(rex, x) for rex in rexes)
+                            for x in iids if x))
         # Test result has changed with improved behaviour.
         # Now us spots that the base sequence is the same
         # Previously this found this:
@@ -757,9 +759,11 @@ class TestExtraction(ReferenceTestCase):
 
     def test_re_pqs_id_with_dash2(self):
         iids = ['123-AB-321', 'AB-1B-4A21', None, '321-BA-1A23']
-        rexes = [r'^[A-Z0-9\-]{10,11}$']
+        rexes = [r'^[A-Z0-9-]{10,11}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
+        self.assertTrue(all(any(re.match(rex, x) for rex in rexes)
+                            for x in iids if x))
 
     def test_re_pqs_id_with_underscore(self):
         iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
@@ -775,9 +779,11 @@ class TestExtraction(ReferenceTestCase):
 
     def test_re_pqs_id_with_underscores3(self):
         iids = ['123-AB_321', 'AB_1B-4A21', None, '321_BA_1A23ab2rj']
-        rexes = [r'^[A-Za-z0-9_\-]+$']
+        rexes = [r'^[A-Za-z0-9_-]+$']
         x = extract(iids, extra_letters='_-.')
         self.check_result(x, rexes, iids)
+        self.assertTrue(all(any(re.match(rex, x) for rex in rexes)
+                            for x in iids if x))
 
     def test_re_uuid(self):
         uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
@@ -949,13 +955,13 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(r.warnings, [])
         self.assertEqual(r.results.refrags,
                          [[(u'[0-9]{4}', True),
-                           (u'[\\-\\.]', False),
+                           (u'[.-]', False),
                            (u'[0-9]{3}', True),
-                           (u'[\\-\\.]', False),
+                           (u'[.-]', False),
                             (u'[0-9]{4}', True),
                           ]])
         self.check_result(r.results.rex,
-                          [r'^[0-9]{4}[\-\.][0-9]{3}[\-\.][0-9]{4}$'],
+                          [r'^[0-9]{4}[.-][0-9]{3}[.-][0-9]{4}$'],
                           self.tels3)
 
     tels4 = [
@@ -995,12 +1001,17 @@ class TestExtraction(ReferenceTestCase):
         x = extract(tels)
         rexes = [
             r'^[0-9]{3} [0-9]{3} [0-9]{4}$',
-            r'^[0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}$',
+            r'^[0-9]{3,4}[.-][0-9]{3}[.-][0-9]{4}$',
             r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$',
             r'^1 [0-9]{3} [0-9]{3} [0-9]{4}$',
             r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
         ]
         self.check_result(x, rexes, tels)
+        self.assertTrue(all(any(re.match(rex, x) for rex in rexes)
+                            for x in tels))
+        R = rexes[1]
+        self.assertFalse(re.match(R, '123y321y4444'))
+
 
     urls1 = [
         'http://www.stochasticsolutions.com/',
@@ -1246,7 +1257,7 @@ class TestExtraction(ReferenceTestCase):
         expected = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com/$',
-            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
             r'^[a-z]{4,5}://www\.[a-z]+\.com$',
             r'^http://www\.[a-z]{6,8}\.com/$',
             r'^http://www\.[a-z]+\.co\.uk/$',
@@ -1254,16 +1265,21 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(set(extract(self.urls2, variableLengthFrags=False)),
                          expected)
 
+        for url in self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
+
         expected = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com/$',
-            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
             r'^http://www\.[a-z]{6,8}\.com/$',
             r'^http://www\.[a-z]+\.co\.uk/$',
             r'^https?://www\.[a-z]+\.com$',
         }
         self.assertEqual(set(extract(self.urls2, variableLengthFrags=True)),
                          expected)
+        for url in self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
 
     def test_incremental_coverage_urls2(self):
         x = Extractor(self.urls2, variableLengthFrags=False)
@@ -1272,7 +1288,7 @@ class TestExtraction(ReferenceTestCase):
                       (u'^[a-z]{4,5}://www\\.[a-z]+\\.com$', 4),
                       (u'^[a-z]+\\.com/$', 3),
                       (u'^http://www\\.[a-z]+\\.co\\.uk/$', 3),
-                      (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                      (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
                       (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
                       (u'^http://www\\.[a-z]{6,8}\\.com/$', 2)))
         self.assertEqual(od, expected)
@@ -1282,7 +1298,7 @@ class TestExtraction(ReferenceTestCase):
                          (u'^[a-z]{4,5}://www\\.[a-z]+\\.com$', 4),
                          (u'^http://www\\.[a-z]+\\.co\\.uk/$', 3),
                          (u'^[a-z]+\\.com/$', 2),
-                         (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
+                         (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\\.[a-z]{3}$', 2),
                          (u'^[a-z]{3,4}\\.[a-z]{2,4}$', 2),
                          (u'^http://www\\.[a-z]{6,8}\\.com/$', 2)))
         od = x.incremental_coverage(dedup=True)
@@ -1363,23 +1379,10 @@ class TestExtraction(ReferenceTestCase):
         ))
         self.assertEqual(results, expected)
 
+    @tag
     def test_full_incremental_coverage_urls2(self):
         x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.full_incremental_coverage()
-        # old_expected = OrderedDict((
-        #     (u'^[a-z]{4,5}\:\/\/www\.[a-z]+\.com$',
-        #      Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
-        #     (u'^[a-z]+\.com\/$',
-        #      Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
-        #     (u'^http\:\/\/www\.[a-z]+\.co\.uk\/$',
-        #      Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-        #     (u'^[a-z]{3,4}[\.\/\:]{1,3}[a-z]+\.[a-z]{3}$',
-        #      Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
-        #     (u'^[a-z]{3,4}\.[a-z]{2,4}$',
-        #      Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
-        #     (u'^http\:\/\/www\.[a-z]{6,8}\.com\/$',
-        #      Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
-        # ))
         expected = OrderedDict((
             (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
@@ -1387,7 +1390,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[\\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
@@ -1405,7 +1408,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com/$',
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
@@ -1425,7 +1428,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
@@ -1445,7 +1448,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
             (u'^[a-z]+\.com/$',
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
@@ -1465,7 +1468,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
             (u'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
@@ -1481,7 +1484,7 @@ class TestExtraction(ReferenceTestCase):
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
             (u'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
-            (u'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
             (u'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
@@ -1499,18 +1502,10 @@ class TestExtraction(ReferenceTestCase):
 #        x = Extractor(self.urls2)
 #        print(str(x))
         expected = {
-            r'^([a-z]{4,5})\:\/\/www\.([a-z]+)\.com$',
-            r'^http\:\/\/www\.([a-z]{6,8})\.com\/$',
-            r'^([a-z]{3,4})\.([a-z]{2,4})$',
-            r'^([a-z]{3,4})[\.\/\:]{1,3}([a-z]+)\.([a-z]{3})$',
-            r'^([a-z]+)\.com\/$',
-            r'^http\:\/\/www\.([a-z]+)\.co\.uk\/$',
-        }
-        expected = {
             r'^([a-z]{4,5})://www\.([a-z]+)\.com$',
             r'^http://www\.([a-z]{6,8})\.com/$',
             r'^([a-z]{3,4})\.([a-z]{2,4})$',
-            r'^([a-z]{3,4})[\./:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^([a-z]{3,4})[./:]{1,3}([a-z]+)\.([a-z]{3})$',
             r'^([a-z]+)\.com/$',
             r'^http://www\.([a-z]+)\.co\.uk/$',
         }
@@ -1518,10 +1513,16 @@ class TestExtraction(ReferenceTestCase):
                                      variableLengthFrags=False)),
                          expected)
 
+        for url in self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
+
+        badurl = 'www!zzzzzzz.com'
+        self.assertFalse(any(re.match(R, badurl) for R in expected))
+
         expected = {
             r'^http://www\.([a-z]{6,8})\.com/$',
             r'^([a-z]{3,4})\.([a-z]{2,4})$',
-            r'^([a-z]{3,4})[\./:]{1,3}([a-z]+)\.([a-z]{3})$',
+            r'^([a-z]{3,4})[./:]{1,3}([a-z]+)\.([a-z]{3})$',
             r'^https?://www\.([a-z]+)\.com$',
             r'^([a-z]+)\.com/$',
             r'^http://www\.([a-z]+)\.co\.uk/$',
@@ -1529,6 +1530,9 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(set(extract(self.urls2, tag=True,
                                      variableLengthFrags=True)),
                          expected)
+        for url in self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
+        self.assertFalse(any(re.match(R, badurl) for R in expected))
 
     def test_urls_all(self):
 
@@ -1539,28 +1543,32 @@ class TestExtraction(ReferenceTestCase):
         expected = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com/$',
-            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3,4}$',
             r'^http://[a-z]+\.com/$',
             r'^[a-z]{4,5}://[a-z]{3}\.[a-z]+\.com$',
             r'^http://www\.[a-z]+\.com/$',
             r'^http://www\.[a-z]+\.co\.uk/$',
         }
-        self.assertIn(set(extract(self.urls1 + self.urls2,
+        self.assertEqual(set(extract(self.urls1 + self.urls2,
                                   variableLengthFrags=False)),
-                      (expected, expected))
+                         expected)
+        for url in self.urls1 + self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
 
         expected = {
             r'^[a-z]{3,4}\.[a-z]{2,4}$',
             r'^[a-z]+\.com/$',
-            r'^[a-z]{3,4}[\./:]{1,3}[a-z]+\.[a-z]{3,4}$',
+            r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3,4}$',
             r'^http://[a-z]+\.com/$',
             r'^http://www\.[a-z]+\.com/$',
             r'^http://www\.[a-z]+\.co\.uk/$',
             r'^https?://w{1,3}e?b?\.[a-z]+\.com$'
         }
-        self.assertIn(set(extract(self.urls1 + self.urls2,
+        self.assertEqual(set(extract(self.urls1 + self.urls2,
                                      variableLengthFrags=True)),
-                      (expected, expected))
+                         expected)
+        for url in self.urls1 + self.urls2:
+            self.assertTrue(any(re.match(R, url) for R in expected))
 
     def test_agents(self):
         # This is really just a check that it doesn't bomb out, for the
@@ -1610,9 +1618,15 @@ class TestExtraction(ReferenceTestCase):
 
     def testmflag(self):
         patterns = ('a.1', 'b_2', 'c-3')
-        expected = ['^c\-3$', r'^([a-z])([A-Z\._])([0-9])$']
+        R1 = '^c\-3$'
+        R2 = r'^([a-z])([A-Z_.])([0-9])$'
+        expected = [R1, R2]
         r = extract(patterns, tag=True, extra_letters='._')
         self.assertEqual(r, expected)
+        self.assertIsNotNone(re.match(R2, 'a.1'))
+        self.assertIsNotNone(re.match(R2, 'b_2'))
+        self.assertIsNotNone(re.match(R1, 'c-3'))
+        self.assertIsNone(re.match(R1, 'aa3'))  # Check dot isn't matching
 
     def testmflag2(self):
         patterns = ('a-1', 'c-3')
