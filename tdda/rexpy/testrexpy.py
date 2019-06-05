@@ -1379,7 +1379,6 @@ class TestExtraction(ReferenceTestCase):
         ))
         self.assertEqual(results, expected)
 
-    @tag
     def test_full_incremental_coverage_urls2(self):
         x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.full_incremental_coverage()

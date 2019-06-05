@@ -93,7 +93,7 @@ isPython2 = sys.version_info[0] < 3
 str_type = unicode if isPython2 else str
 bytes_type = str if isPython2 else bytes
 INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
-UNESCAPES = '''!"%',/:;<=>@_` '''  if isPython2 else ' '
+UNESCAPES = '''!"%',/:;<=>@_` '''
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 

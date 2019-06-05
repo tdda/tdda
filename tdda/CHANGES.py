@@ -344,5 +344,8 @@ and reIsRegex is set to True if the regex library is being used.
 
 Referencetest no longer strips whitespace when its regenerating outputs,
 which it was incorrectly doing due to a recent misplaced 'fix'.
+
+Simplified the list of characters to NOT be specially escaped, so it's
+now just the same across all python versions.
 ------------------------- end of dev vbranch -------------------------
 """
