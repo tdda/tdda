@@ -6,6 +6,13 @@ Recent Changes
 This Version
 ------------
 
+* Bugfixes only, no new functionality. The ``tdda test`` command now works
+  properly to self-test an installation.
+
+
+Older Versions
+--------------
+
 * Added new option flag ``--interleave`` for :ref:`tdda_detect_tool`.
   This causes the ``_ok`` detection fields to be interleaved with the original
   fields that they refer to in the resulting detection dataset, rather than
@@ -14,10 +21,6 @@ This Version
 
 * Fix for the ``--write-all`` parameter for :py:mod:`tdda.referencetest`
   result regeneration, which had regressed slightly in the previous version.
-
-
-Older Versions
---------------
 
 * Improved reporting of differences for text files in
   :py:mod:`tdda.referencetest` when the *actual* results do not match the
