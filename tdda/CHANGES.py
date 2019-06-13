@@ -305,6 +305,9 @@ generated actually actually match the strings used to generate them and
 match if you weren't fully "au fait" with the details of regex rules!
 
 ###
-Simplified the list of characters to NOT be specially escaped, so it's
-now just the same across all python versions.
+Fixed problem with the 'tdda test' command. It was failing with:
+    AttributeError: module 'tdda.testtdda' has no attribute 'test'
+
+Also simplified the list of characters to NOT be specially escaped for rexpy,
+so it's now just the same across all python versions.
 """
