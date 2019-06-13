@@ -304,7 +304,7 @@ generated actually actually match the strings used to generate them and
 (equally relevantly) don't match certain strings you might worry they would
 match if you weren't fully "au fait" with the details of regex rules!
 
-###
+13.06.2019 1.0.30
 Fixed problem with the 'tdda test' command. It was failing with:
     AttributeError: module 'tdda.testtdda' has no attribute 'test'
 
