@@ -6,8 +6,14 @@ Recent Changes
 This Version
 ------------
 
-* Bugfixes only, no new functionality. The ``tdda test`` command now works
-  properly to self-test an installation.
+* Escaping of special characters for regular expressions is now done
+  in a way that is uniform across Python2, Python pre-3.7, and Python 3.7+.
+
+* JSON is now generated the same for Python2 and PYthon3 (no blank lines at
+  the end of lines, and UTF8-encoded).
+
+* Fixed issue with ``tdda test`` command not working properly in the
+  previous version, to self-test an installation.
 
 
 Older Versions
