@@ -283,6 +283,7 @@ Now that we do regular expression escapinge in (almost) the same way in
 Python2 and Python3, we can remove a lot of nasty tests that have
 two versions of the results.
 
+5.06.2019 1.0.29
 Updated bracket generatation ("character classes: [...]").
 
 We now use almost no escaping for characters in character classes,
@@ -302,6 +303,13 @@ to a greater extent than was previously the case, that the regular expressions
 generated actually actually match the strings used to generate them and
 (equally relevantly) don't match certain strings you might worry they would
 match if you weren't fully "au fait" with the details of regex rules!
+
+13.06.2019 1.0.30
+Fixed problem with the 'tdda test' command. It was failing with:
+    AttributeError: module 'tdda.testtdda' has no attribute 'test'
+
+Also simplified the list of characters to NOT be specially escaped for rexpy,
+so it's now just the same across all python versions.
 
 -------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.

@@ -154,7 +154,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check = _set_flags_from_argv()
+        argv, tagged, check = _set_flags_from_argv(argv)
         _run_tests(module=module, argv=argv, tagged=tagged, check=check)
 
 

@@ -95,6 +95,7 @@ bytes_type = str if isPython2 else bytes
 INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
 UNESCAPES = '''!"%',/:;<=>@_` '''
 
+
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
 MIN_MERGE_SIMILARITY = 0.5

@@ -6,6 +6,19 @@ Recent Changes
 This Version
 ------------
 
+* Escaping of special characters for regular expressions is now done
+  in a way that is uniform across Python2, Python pre-3.7, and Python 3.7+.
+
+* JSON is now generated the same for Python2 and PYthon3 (no blank lines at
+  the end of lines, and UTF8-encoded).
+
+* Fixed issue with ``tdda test`` command not working properly in the
+  previous version, to self-test an installation.
+
+
+Older Versions
+--------------
+
 * Added new option flag ``--interleave`` for :ref:`tdda_detect_tool`.
   This causes the ``_ok`` detection fields to be interleaved with the original
   fields that they refer to in the resulting detection dataset, rather than
@@ -14,10 +27,6 @@ This Version
 
 * Fix for the ``--write-all`` parameter for :py:mod:`tdda.referencetest`
   result regeneration, which had regressed slightly in the previous version.
-
-
-Older Versions
---------------
 
 * Improved reporting of differences for text files in
   :py:mod:`tdda.referencetest` when the *actual* results do not match the
