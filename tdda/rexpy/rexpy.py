@@ -527,7 +527,7 @@ class Extractor(object):
                         for r in self.results.rex:
                             print('    %s' % r)
                         print('\nFailures (%d): %s' % (len(failures),
-                                                     failures[:5]))
+                                                       failures[:5]))
                     if len(failures) == 0:
                         break
                     elif (len(failures) <= size.do_all_exceptions
@@ -882,21 +882,6 @@ class Extractor(object):
     def similarity(self, p, q):
         return 1
 
-    def sample_old(self, nPerLength):
-        """
-        Sample strings for potentially faster induction.
-        """
-        lengths = self.by_length.keys()
-        lengths.sort()
-        examples = []
-        for L in lengths:
-            x = self.by_length[L]
-            if len(self.by_length[L]) <= nPerLength:
-                examples.extend(x)
-            else:
-                examples.extend(random.sample(x, nPerLength))
-        return examples
-
     def sample(self, n):
         """
         Sample strings for potentially faster induction.
@@ -905,8 +890,6 @@ class Extractor(object):
         sample_indices = random.sample(indices, n)
         return ([self.all_examples.strings[i] for i in sample_indices],
                 [self.all_examples.freqs[i] for i in sample_indices])
-#        return random.sample(self.examples.strings, n)
-
 
     def find_non_matches(self):
         """
@@ -2205,7 +2188,7 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False,
             for p in patterns:
                 f.write(p + '\n')
         if verbose:
-            print('Writen results to %s.' % out_path)
+            print('Written results to %s.' % out_path)
     else:
         for p in patterns:
             print(p)
