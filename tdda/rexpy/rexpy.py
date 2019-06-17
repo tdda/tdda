@@ -516,26 +516,37 @@ class Extractor(object):
                 failures = []
                 while attempt <= size.max_sampled_attempts + 1:
                     if self.verbose:
-                        print('Pass %d' % attempt)
-                        print('Examples: %s ... %s' % (examples[:5],
-                                                       examples[-5:]))
+                        print('\n*** Pass %d (%s strings)'
+                              % (attempt, len(examples)))
+                        if self.verbose > 1:
+                            print('Examples: %s ... %s' % (examples[:5],
+                                                           examples[-5:]))
                     self.results = self.batch_extract()
                     failures, fail_freqs, re_freqs = self.find_non_matches()
                     if self.verbose:
-                        print('REs:', self.results.rex)
-                        print('Failures (%d): %s' % (len(failures),
-                                                     failures[:5]))
+                        print('%s REs:' % len(self.results.rex))
+                        for r in self.results.rex:
+                            print('    %s' % r)
+                        print('\nFailures (%d): %s' % (len(failures),
+                                                       failures[:5]))
                     if len(failures) == 0:
                         break
                     elif (len(failures) <= size.do_all_exceptions
                           or attempt > size.max_sampled_attempts):
-                        self.examples.strings.extend(failures)
-                        self.examples.freqs.extend(fail_freqs)
+                        if self.verbose:
+                            print('\n\n\n*** Now doing all failures...')
+                            self.examples.strings.extend(failures)
+                            self.examples.freqs.extend(fail_freqs)
+                            print('\n\n\n*** Total strings = %s'
+                                  % len(self.examples.strings))
                     else:
                         z = list(zip(failures, freqs))
-                        sampled = random.sample(z, size.do_all_exceptions)
-                        self.examples.extend(s[0] for s in sampled)
-                        self.freqs.extend(s[1] for s in sampled)
+                        if len(z) > size.do_all_exceptions:
+                            sampled = random.sample(z, size.do_all_exceptions)
+                        else:
+                            sampled = z
+                        self.examples.strings.extend(s[0] for s in sampled)
+                        self.examples.freqs.extend(s[1] for s in sampled)
                     attempt += 1
                 self.examples = self.all_examples
             self.add_warnings()
@@ -737,7 +748,7 @@ class Extractor(object):
                 new_parts.extend(self.merge_fixed_only_present_at_pos(part))
             else:
                 raise ValueError('Level out of range (%d)' % level)
-        if self.verbose:
+        if self.verbose > 1:
             print('\nOUT:')
             print(self.aligned_parts(new_parts))
         return new_parts
@@ -872,21 +883,6 @@ class Extractor(object):
     def similarity(self, p, q):
         return 1
 
-    def sample_old(self, nPerLength):
-        """
-        Sample strings for potentially faster induction.
-        """
-        lengths = self.by_length.keys()
-        lengths.sort()
-        examples = []
-        for L in lengths:
-            x = self.by_length[L]
-            if len(self.by_length[L]) <= nPerLength:
-                examples.extend(x)
-            else:
-                examples.extend(random.sample(x, nPerLength))
-        return examples
-
     def sample(self, n):
         """
         Sample strings for potentially faster induction.
@@ -895,8 +891,6 @@ class Extractor(object):
         sample_indices = random.sample(indices, n)
         return ([self.all_examples.strings[i] for i in sample_indices],
                 [self.all_examples.freqs[i] for i in sample_indices])
-#        return random.sample(self.examples.strings, n)
-
 
     def find_non_matches(self):
         """
@@ -2159,26 +2153,43 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False,
         path to file:     to write outputs from file at out_path
         False:            to return the strings as a list
     """
+    verbose = kwargs.get('verbose', 0)
     if type(in_path) in (list, tuple):
         strings = in_path
     elif in_path:
+        if verbose:
+            print('Reading file %s.' % in_path)
         with open(in_path) as f:
             strings = f.read().splitlines()
+        if verbose:
+            print('Read file %s' % in_path)
     else:
+        if verbose:
+            print('Ingesting strings')
         strings = [s.strip() for s in sys.stdin.readlines()]
         if strings and type(strings[0]) == bytes_type:
             strings = [s.decode('UTF-8') for s in strings]
+        if verbose:
+            print('Ingested strings.')
     if skip_header:
         strings = strings[1:]
+    if verbose:
+        print('Extracting strings')
     patterns = extract(strings, **kwargs)
+    if verbose:
+         print('Extracted strings')
     if quote:
         patterns = [dquote(p) for p in patterns]
     if out_path is False:
         return patterns
     elif out_path:
+        if verbose:
+            print('Writing results to %s.' % out_path)
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
+        if verbose:
+            print('Written results to %s.' % out_path)
     else:
         for p in patterns:
             print(p)
@@ -2418,7 +2429,6 @@ def usage_error():
 def main():
     params = get_params(sys.argv[1:])
     rexpy_streams(**params)
-
 
 if __name__ == '__main__':
     main()

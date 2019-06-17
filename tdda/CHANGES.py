@@ -333,6 +333,10 @@ versions or Python 2.7 on Linux, but either way, forcing the
 
 Also changed the default for add_dot_star to False, since adding
 it is profoundly unhelpful when discovering constraints.
+
+Slightly modified verbose printing in rexpy.
+
+Fixed problem with sampling in rexpy.
 ----------------------- end of rexless branch -----------------------
 
 ---------------------------- dev branch -----------------------------
