@@ -175,7 +175,7 @@ class DatasetConstraints(object):
         contain either a single value (a scalar or a list), or a dictionary
         of keyword arguments for the constraint initializer.
         """
-        fields = in_constraints['fields'] or []
+        fields = in_constraints['fields'] or {}
         for fieldname, c in fields.items():
             fc = []
             is_date = 'type' in c and c['type'] == 'date'
@@ -275,7 +275,7 @@ class DatasetConstraints(object):
 class Fields(TDDAObject):
     def __init__(self, constraints=None):
         TDDAObject.__init__(self)
-        for c in constraints or []:
+        for c in constraints or {}:
             self[c.name] = c
 
     def to_dict_value(self, raw=False):
@@ -301,9 +301,8 @@ class FieldConstraints(object):
         """
         self.name = name
         self.constraints = OrderedDict()
-        for c in constraints or []:
+        for c in constraints or {}:
             self.constraints[c.kind] = c
-
 
     def to_dict_value(self, raw=False):
         """
@@ -355,9 +354,8 @@ class MultiFieldConstraints(FieldConstraints):
         """
         self.names = tuple(names)
         self.constraints = OrderedDict()
-        for c in constraints or []:
+        for c in constraints or {}:
             self.constraints[c.kind] = c
-
 
     def to_dict_value(self):
         """

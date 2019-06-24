@@ -359,5 +359,7 @@ which it was incorrectly doing due to a recent misplaced 'fix'.
 
 Simplified the list of characters to NOT be specially escaped, so it's
 now just the same across all python versions.
+
+Added re.UNICODE and re.DOTALL to flags used for regular expresions.
 ------------------------- end of dev branch -------------------------
 """
