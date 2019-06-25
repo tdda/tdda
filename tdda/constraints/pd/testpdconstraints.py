@@ -1173,8 +1173,6 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         cdicts = [
             [],
             {},
-            {'fields': []},
-            {'fields': None},
             {'fields': 'a'},
             {'fields': 22},
             {'fields': {
