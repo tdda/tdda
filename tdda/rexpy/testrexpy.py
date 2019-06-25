@@ -785,29 +785,33 @@ class TestExtraction(ReferenceTestCase):
         self.assertTrue(all(any(re.match(rex, x) for rex in rexes)
                             for x in iids if x))
 
+    uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
+             '88888888-4444-4444-4444-cccccccccccc',
+             'aaaaaaaa-1111-0000-9999-0123456789ab',
+             '22ecc913-68eb-4cfb-a9cc-18df44137a4c',
+             '634962c3-8bc1-4b51-b36d-3dcbfdc92b63',
+             'aac65b99-92ff-11e6-b97d-b8f6b118f191',
+             '6fa459ea-ee8a-3ca4-8f4e-db77e160355e',
+             '886313e1-3b8a-e372-9b90-0c9aee199e5d'
+    ]
+
     def test_re_uuid(self):
-        uuids = ['1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
-                 '88888888-4444-4444-4444-cccccccccccc',
-                 'aaaaaaaa-1111-0000-9999-0123456789ab',
-                 '22ecc913-68eb-4cfb-a9cc-18df44137a4c',
-                 '634962c3-8bc1-4b51-b36d-3dcbfdc92b63',
-                 'aac65b99-92ff-11e6-b97d-b8f6b118f191',
-                 '6fa459ea-ee8a-3ca4-8f4e-db77e160355e',
-                 '886313e1-3b8a-e372-9b90-0c9aee199e5d']
         rexes = ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
                  '[0-9a-f]{4}\\-[0-9a-f]{12}$']
-        x = extract(uuids)
-        self.check_result(x, rexes, uuids)
+        x = extract(self.uuids)
+        self.check_result(x, rexes, self.uuids)
 
     def test_re_uuid4(self):
         uuid4s = ['2ffb8eaa-dd75-41c2-aca6-0444914b8713',
                   'f69c5651-0b97-4909-b896-8ef0891f81ff',
                   '13f984fe-65db-4646-99d4-a93c06f78472',
                   '50a886d2-78c9-4b7b-81a9-25caf4deb212',
-                  '2d4429df-9a80-b581-9565-27880ce171b0',
+                  '2d4429df-9a80-45a1-9565-27880ce171b0',
                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
 
-        rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-'
+        # This isn't great: but it's what it does!
+        rexes = [r'^[0-9a-f]{8}\-[0-9a-f]{4}\-'
+                 r'[0-9]+[a-z]?[0-9]?[a-z]?\-'
                  r'[0-9a-f]{4}\-[0-9a-f]{12}$']
 
         x = extract(uuid4s, variableLengthFrags=True)
@@ -818,7 +822,7 @@ class TestExtraction(ReferenceTestCase):
                     '13f984fe-65db-4646-99d4-a93c06f78472',
                     '50a886d2-78c9-4b7b-81a9-25caf4deb212',
                     '2D4429DF-9A80-B581-9565-27880CE171B0',
-                   '857e0ec6-1511-478b-93a3-15ac9212fd0d']
+                    '857e0ec6-1511-478b-93a3-15ac9212fd0d']
 
     def test_re_uuid4mixed(self):
         rexes = [r'^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-'
@@ -838,6 +842,42 @@ class TestExtraction(ReferenceTestCase):
         x = extract(self.uuid4s_mixed, dialect='posix')
         self.check_result(x, rexes, self.uuid4s_mixed, dialect='posix')
 
+    def test_re_uuid_small_sample1(self):
+        rexes = ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
+                 '[0-9a-f]{4}\\-[0-9a-f]{12}$']
+        size = Size(do_all=2, do_all_exceptions=2, n_per_length=1)
+        for i in range(8):  # Try a few times, with different samples
+            x = extract(self.uuids, size=size)
+            self.check_result(x, rexes, self.uuids)
+
+    def test_re_uuids_with_function(self):
+        rexes = ['^[0-9a-f]{8}\\-[0-9a-f]{4}\\-[0-9a-f]{4}\\-'
+                 '[0-9a-f]{4}\\-[0-9a-f]{12}$']
+        size = Size(do_all=2, do_all_exceptions=2, n_per_length=1)
+        def f(rexes, maxN):
+            failures = []
+            re_freqs = [0] * len(rexes)
+            if rexes:
+                patterns = [re.compile(r) for r in rexes]
+                for u in self.uuids:
+                    for i, r in enumerate(patterns):
+                        if re.match(r, u):
+                            re_freqs[i] += 1
+                            break
+                    else:
+                        failures.append(u)
+            else:
+                failures = self.uuids
+            if maxN is not None and len(failures) > maxN:
+                failures = random.sample(failures, maxN)
+            return Examples(failures, None), re_freqs
+
+        for i in range(8):  # Try a few times, with different samples
+            x = extract(f, size=size)
+            self.check_result(x, rexes, self.uuids)
+
+        # Also try without sampling
+        x = extract(f)
 
     tels1 = [
         '(0131) 496 0091',
@@ -915,7 +955,8 @@ class TestExtraction(ReferenceTestCase):
         od = x.incremental_coverage()
         self.assertEqual(od,
                          OrderedDict((
-                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$', 5),
+                            (r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
+                             5),
                             (r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$', 4),
                          )))
     def test_coverage_tels2_dedup(self):

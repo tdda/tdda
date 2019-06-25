@@ -414,12 +414,11 @@ def Tree():
 
 
 class Examples(object):
-    def __init__(self, strings, freqs):
+    def __init__(self, strings, freqs=None):
         self.strings = strings
-        self.freqs = freqs
+        self.freqs = freqs if freqs is not None else [1] * len(strings)
         self.n_uniqs = len(strings)
-        self.n_strings = sum(freqs)
-
+        self.n_strings = sum(self.freqs)
 
 
 class Extractor(object):
@@ -434,8 +433,14 @@ class Extractor(object):
     which happens by default on initialization, but can be invoked
     manually.
 
-    The examples may be given as a list or as a dictionary:
-    if a dictionary, the values are assumed to be string frequencies.
+    The examples may be given as a list of strings, a integer-valued,
+    string-keyed dictionary or a function.
+
+      - If it's a list, each string in the list is an example string
+      - It it's a dictionary (or counter), each string is to be
+        used, and the values are taken as frequencies (should be non-negative)
+      - If it's a function, it should be as specified below
+        (see the definition of example_check_function)
 
     size can be provided as:
         - a Size() instance, to control various sizes within rexpy
@@ -472,7 +477,15 @@ class Extractor(object):
         self.variableLengthFrags = variableLengthFrags
         self.specialize = specialize
         self.tag = tag                      # Returned tagged (grouped) RE
-        self.examples = self.clean(examples)
+        # self.examples = self.clean(examples)  !!!
+        if callable(examples):
+            self.check_fn = examples
+        else:
+            self.check_fn = self.check_for_failures
+            self.all_examples = self.clean(examples)
+        strings, _ = self.check_fn([], self.size.do_all)
+        self.examples = self.clean(strings)
+
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
@@ -501,59 +514,68 @@ class Extractor(object):
         """
         self.prng_state = PRNGState(self.seed)
         try:
+            size = self.size
             if self.examples.n_uniqs == 0:
                 self.results = None
+                return
 
-            size = self.size
-            if self.examples.n_uniqs <= size.do_all:
+            attempt = 1
+            failures = []
+            while attempt <= size.max_sampled_attempts + 1:
+#                print('!!!')
+#                print(self.examples.strings)
+                if self.verbose:
+                    strings = self.examples.strings
+                    print('\n*** Pass %d (%s strings)'
+                          % (attempt, len(strings)))
+                    if self.verbose > 1:
+                        print('Examples: %s ... %s' % (strings[:5],
+                                                       strings[-5:]))
                 self.results = self.batch_extract()
-                failures, fail_freqs, re_freqs = self.find_non_matches()
-            else:
-                self.all_examples = self.examples
-                examples, freqs = self.sample(size.do_all)
-                self.examples = Examples(examples, freqs)
-                attempt = 1
-                failures = []
-                while attempt <= size.max_sampled_attempts + 1:
+                maxN = (None if attempt > size.max_sampled_attempts
+                             else size.do_all_exceptions)
+                failex, re_freqs = self.check_fn(self.results.rex, maxN)
+                failex = self.clean(failex)
+                if self.verbose:
+                    print('%s REs:' % len(self.results.rex))
+                    for r in self.results.rex:
+                        print('    %s' % r)
+                    print('\nFailures (%d): %s' % (len(failex.strings),
+                                                   failex.strings[:5]))
+                if len(failex.strings) == 0:
+                    break
+                elif (len(failex.strings) <= size.do_all_exceptions
+                      or attempt > size.max_sampled_attempts):
                     if self.verbose:
-                        print('\n*** Pass %d (%s strings)'
-                              % (attempt, len(examples)))
-                        if self.verbose > 1:
-                            print('Examples: %s ... %s' % (examples[:5],
-                                                           examples[-5:]))
-                    self.results = self.batch_extract()
-                    failures, fail_freqs, re_freqs = self.find_non_matches()
+                        print('\n\n\n*** Now doing all failures...')
+                    self.examples.strings.extend(failex.strings)
+                    self.examples.freqs.extend(failex.freqs)
                     if self.verbose:
-                        print('%s REs:' % len(self.results.rex))
-                        for r in self.results.rex:
-                            print('    %s' % r)
-                        print('\nFailures (%d): %s' % (len(failures),
-                                                       failures[:5]))
-                    if len(failures) == 0:
-                        break
-                    elif (len(failures) <= size.do_all_exceptions
-                          or attempt > size.max_sampled_attempts):
-                        if self.verbose:
-                            print('\n\n\n*** Now doing all failures...')
-                            self.examples.strings.extend(failures)
-                            self.examples.freqs.extend(fail_freqs)
-                            print('\n\n\n*** Total strings = %s'
-                                  % len(self.examples.strings))
+                        print('\n\n\n*** Total strings = %s'
+                              % len(failex.strings))
+                else:
+                    z = list(zip(failex.strings, failex.freqs))
+                    if len(z) > size.do_all_exceptions:
+                        sampled = random.sample(z, size.do_all_exceptions)
                     else:
-                        z = list(zip(failures, freqs))
-                        if len(z) > size.do_all_exceptions:
-                            sampled = random.sample(z, size.do_all_exceptions)
-                        else:
-                            sampled = z
-                        self.examples.strings.extend(s[0] for s in sampled)
-                        self.examples.freqs.extend(s[1] for s in sampled)
-                    attempt += 1
-                self.examples = self.all_examples
+                        sampled = z
+                    self.examples.strings.extend(s[0] for s in sampled)
+                    self.examples.freqs.extend(s[1] for s in sampled)
+                attempt += 1
+
             self.add_warnings()
             self.results.remove(self.find_bad_patterns(re_freqs))
             self.convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
+
+    def check_for_failures(self, rexes, maxExamples):
+        """
+        This method is the default check_fn
+        (See the definition of example_check_function below.)
+        """
+        failures, freqs, re_freqs = self.sample_non_matches(rexes, maxExamples)
+        return Examples(failures, freqs), re_freqs
 
     def find_bad_patterns(self, freqs):
         """
@@ -601,11 +623,14 @@ class Extractor(object):
         of each length.
         """
         isdict = isinstance(examples, dict)
+        isExamples = isinstance(examples, Examples)
         counter = Counter()
-        for s in examples:
-            n = examples[s] if isdict else 1
+        items = examples.strings if isExamples else examples
+        for i, s in enumerate(items):
+            n = (examples[s] if isdict else examples.freqs[i] if isExamples
+                                       else 1)
             if s is None:
-                self.n_nulls += 1
+                self.n_nulls += n
             elif n == 0:
                 continue  # dictionary entry with count 0
             else:
@@ -621,7 +646,7 @@ class Extractor(object):
 
         if self.verbose > 1:
             print('Examples:')
-            pprint([(k, v) for (k, v) in zip(counter.strings, counter.freqs)])
+            pprint([(k, v) for (k, v) in counter.items()])
             print()
 
         return Examples(list(counter.keys()), ilist(counter.values()))
@@ -885,27 +910,50 @@ class Extractor(object):
 
     def sample(self, n):
         """
-        Sample strings for potentially faster induction.
+        Sample self.all_examples for potentially faster induction.
         """
-        indices = list(range(len(self.all_examples.strings)))
-        sample_indices = random.sample(indices, n)
-        return ([self.all_examples.strings[i] for i in sample_indices],
-                [self.all_examples.freqs[i] for i in sample_indices])
+        return self.sample_examples(self.all_examples, n)
 
-    def find_non_matches(self):
+    def sample_examples(self, examples, n):
+        """
+        Sample examples provided for potentially faster induction.
+        """
+        indices = list(range(len(examples.strings)))
+        sample_indices = random.sample(indices, n)
+        return ([examples.strings[i] for i in sample_indices],
+                [examples.freqs[i] for i in sample_indices])
+
+    def sample_non_matches(self, rexes, maxN=None):
+        failures, freqs, re_freqs = self.find_non_matches(rexes)
+        if maxN is not None:
+            if len(failures) > maxN:
+                z = list(zip(failures, freqs))
+                n = len(z)
+                if n > maxN and n > self.size.do_all_exceptions:
+                    sampled = random.sample(z, self.size.do_all_exceptions)
+                else:
+                    sampled = z
+                failures = [s[0] for s in sampled]
+                freqs = [s[1] for s in sampled]
+        return failures, freqs, re_freqs
+
+    def find_non_matches(self, rexes):
         """
         Returns all example strings that do not match any of the regular
         expressions in results, together with their frequencies.
         """
-        examples = getattr(self, 'all_examples', self.examples)
+        examples = self.all_examples
+        if not rexes:
+            return examples.strings, examples.freqs, []
+
         strings = examples.strings
         freqs = examples.freqs
         N = len(strings)
         matched = [False] * N
         nRemaining = N
-        re_freqs = [0] * len(self.results.rex)
+        re_freqs = [0] * len(rexes)
         if self.results:
-            for j, r in enumerate(self.results.rex):
+            for j, r in enumerate(rexes):
                 cr = cre(r)
                 for i in range(N):
                     if not matched[i]:
@@ -1406,6 +1454,68 @@ class Extractor(object):
                                                                   newpat,
                                                                   results)
         return results, tree
+
+
+def example_check_function(rexes, maxN=None):
+    """
+    **CHECK FUNCTIONS**
+    This is an example check function
+
+    A check function takes a list of regular expressions (as strings)
+    and optionally, a maximum number of (different) strings to return.
+
+    It should return two things:
+
+      - An Examples object (importing that class from rexpy.py)
+        containing strings that don't match any of the regular expressions
+        in the list provided. (If the list is empty, all strings are candidates
+        to be returned.)
+
+      - a list of how many strings matched each regular expression
+        provided (in the same order).
+
+    If maxN is None, it should return all strings that fail to match;
+    if it is a number, that is the maximum number of (distinct) failures
+    to return. The function *is* expected to return all failures, however,
+    if there are fewer than maxN failures (i.e., it's not OK if maxN
+    is 20 to return just 1 failiing string if actually 5 different
+    strings fail.)
+
+    Examples: The examples object is initialized with a list of (distinct)
+    failing strings, and optionally a corresponding list of their frequencies.
+    If no frequencies are provided, all frequencies will be set to 1
+    when the Examples object is initialized.
+
+    The regular expression match frequencies are used to eliminate
+    low-frequency or low-ranked regular expressions. It is not essential
+    that the values cover all candidate strings; it is enough to give
+    frequencies for those strings tested before maxN failures are generated.
+
+    (Normally, the regular expressions provided will be exclusive, i.e.
+    at most one will match, so it's also fine only to test a string
+    against regular expressions until a match is found...you don't
+    need to test against other patterns in case the string also matches
+    more than one.)
+    """
+    # STRINGS = ['some', 'strings', 'in', 'scope']
+    # In this example function, we are assuming each string in STRINGS
+    # is distinct.
+    failures = []
+    re_freqs = [0] * len(rexes)
+    if rexes:
+        patterns = [re.compile(r) for r in rexes]  # compile for efficiency
+        for u in STRINGS:
+            for i, r in enumerate(patterns):
+                if re.match(r, u):
+                    re_freqs[i] += 1  # record the fact that this rex matched
+                    break             # don't try later patterns
+            else:   # Record strings that don't match any rex
+                failures.append(u)
+    else:
+        failures = STRINGS     # If there are no rexes, all strings fail
+    if maxN is not None and len(failures) > maxN:
+        failures = random.sample(failures, maxN)
+    return Examples(failures), re_freqs
 
 
 def rex_coverage(patterns, examples, dedup=False):
@@ -1931,7 +2041,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     with results in .results.rex; otherwise, a list of regular
     expressions, as unicode strings is returned.
     """
-    if encoding:
+    if encoding and not callable(examples):
         if isinstance(examples, dict):
             examples ={x.decode(encoding): n for (x, n) in examples.items()}
         else:

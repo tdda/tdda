@@ -1,8 +1,8 @@
 {
     "creation_metadata": {
-        "local_time": "2019-06-03 14:14:00",
-        "utc_time": "2019-06-03 13:13:00",
-        "creator": "TDDA 1.0.27",
+        "local_time": "2019-06-25 13:13:40",
+        "utc_time": "2019-06-25 12:12:40",
+        "creator": "TDDA 1.0.30",
         "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.db",
         "source": "elements",
         "host": "bartok.local",
@@ -96,7 +96,7 @@
                 "^Greek protos and actinium$",
                 "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$",
                 "^State and University of California$",
-                "^Latin uni, uni, and quadr$",
+                "^Latin uni, uni, and [a-z]+$",
                 "^Latin uni, uni, and Greek [a-z]{3,4}$",
                 "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$",
                 "^Pierre and Marie Curie and the traditional \\-um ending$"
