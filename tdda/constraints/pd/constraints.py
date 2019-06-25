@@ -85,6 +85,8 @@ isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
 
+RE_FLAGS = re.UNICODE | re.DOTALL
+
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
     """
@@ -190,7 +192,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         if rexes is None:      # a null value is not considered
             return None        # to be an active constraint,
                                # so is always satisfied
-        rexes = [re.compile(r) for r in rexes]
+        rexes = [re.compile(r, RE_FLAGS) for r in rexes]
         strings = [native_definite(s)
                    for s in self.df[colname].dropna().unique()]
 
