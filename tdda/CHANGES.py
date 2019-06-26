@@ -361,5 +361,8 @@ Simplified the list of characters to NOT be specially escaped, so it's
 now just the same across all python versions.
 
 Added re.UNICODE and re.DOTALL to flags used for regular expresions.
+
+Discover of regular expressions in database now sorts the values
+before running rexpy on them. The order they come in makes a difference.
 ------------------------- end of dev branch -------------------------
 """
