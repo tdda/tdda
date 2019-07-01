@@ -102,7 +102,7 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def find_rexes(self, colname, values=None, seed=None):
         if not values:
             values = self.get_database_unique_values(self.tablename, colname)
-        return rexpy.extract(values, seed=seed)
+        return rexpy.extract(sorted(values), seed=seed)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         return not self.get_database_rex_match(self.tablename, colname,
