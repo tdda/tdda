@@ -451,7 +451,9 @@ class ReferenceTest(object):
                                            check_order=check_order,
                                            condition=condition,
                                            sortby=sortby,
-                                           precision=precision)
+                                           precision=precision,
+                                           loader=csv_read_fn,
+                                           **kwargs)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
@@ -511,7 +513,9 @@ class ReferenceTest(object):
                                             check_order=check_order,
                                             condition=condition,
                                             sortby=sortby,
-                                            precision=precision)
+                                            precision=precision,
+                                            loader=csv_read_fn,
+                                            **kwargs)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
