@@ -4,7 +4,7 @@ try:
 except ImportError:
     pd = None
 
-if pd:
+if pd is not None:
     from tdda.constraints.pd.constraints import (discover_df,
                                                  verify_df,
                                                  detect_df)
