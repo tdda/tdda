@@ -1397,7 +1397,7 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(results, expected)
 
         results = rexpy.rex_full_incremental_coverage(patterns, freqs,
-                                                      dedup=True)
+                                                      sort_on_deduped=True)
         expected = OrderedDict((
             (u'^.{3}$',
              Coverage(n=10,       # 1 + 1 + 2 + 6
@@ -1534,6 +1534,57 @@ class TestExtraction(ReferenceTestCase):
         od = x.full_incremental_coverage()
         self.assertEqual(od, doubled)
         self.assertEqual(x.n_examples(), 32)
+
+    def test_full_incr_coverage_all_patterns(self):
+        examples = OrderedDict((
+            ('1-A', 1),
+            ('2-B', 2),
+            ('a 1', 1),
+            ('c 3', 3),
+        ))
+        x = Extractor(examples)
+
+        L = '^[0-9]\\-[A-Z]$'         # LOWER FREQ RE
+        H = '^[a-z] [0-9]$'           # HIGHER FREQ RE
+        EXPECTED_REX = [H, L]         # Come out in this order
+        self.assertEqual(x.results.rex, EXPECTED_REX)
+
+        # First component of rex_full-incremental_coverage:
+        patterns, indexes = terminate_patterns_and_sort(x.results.rex)
+
+        EXPECTED_PATTERNS = [L, H]   # Sorted by Freq (increasing)
+        EXPECTED_INDEXES = [1, 0]    # (reversed)
+        self.assertEqual(patterns, EXPECTED_PATTERNS)
+        self.assertEqual(indexes, EXPECTED_INDEXES)
+
+        # Second component of rex_full-incremental_coverage:
+        matrix, deduped = coverage_matrices(patterns, x.examples)
+
+        EXPECTED_MATRIX = [
+            # L  H
+             [1, 0],   # 1-A is instance of L only
+             [2, 0],   # 2-B is instance of L only (two copies)
+             [0, 1],   # a 1 is instance of H only
+             [0, 3],   # 2-B is instance of H only (three copies)
+        ]
+        EXPECTED_DEDUPED = [
+            # L  H
+             [1, 0],   # 1-A is instance of L only
+             [1, 0],   # 2-B is instance of L only
+             [0, 1],   # a 1 is instance of H only
+             [0, 1],   # 2-B is instance of H only
+        ]
+        self.assertEqual(matrix, EXPECTED_MATRIX)
+        self.assertEqual(deduped, EXPECTED_DEDUPED)
+
+        # Second component of rex_full-incremental_coverage:
+        cov = matrices2incremental_coverage(patterns, matrix, deduped, indexes,
+                                            x.examples, sort_on_deduped=False)
+        EXPECTED_COVERAGE = OrderedDict([
+            (H, Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
+            (L, Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
+        ])
+        self.assertEqual(cov, EXPECTED_COVERAGE)
 
     def test_urls2_grouped(self):
 

@@ -364,6 +364,11 @@ Added re.UNICODE and re.DOTALL to flags used for regular expresions.
 
 Discover of regular expressions in database now sorts the values
 before running rexpy on them. The order they come in makes a difference.
+
+Updated the rexpy coverage code to handle the possibility that
+not enough regular expressions have been generated to cover all
+strings. (Probably fixed some edge-case bugs in the coverage code
+at the same time.)
 ------------------------- end of dev branch -------------------------
 
 ###

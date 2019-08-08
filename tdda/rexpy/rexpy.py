@@ -417,7 +417,11 @@ class Examples(object):
     def __init__(self, strings, freqs=None):
         self.strings = strings
         self.freqs = freqs if freqs is not None else [1] * len(strings)
-        self.n_uniqs = len(strings)
+        assert(len(self.strings) == len(set(self.strings)))
+        self.update()
+
+    def update(self):
+        self.n_uniqs = len(self.strings)
         self.n_strings = sum(self.freqs)
 
 
@@ -550,6 +554,7 @@ class Extractor(object):
                         print('\n\n\n*** Now doing all failures...')
                     self.examples.strings.extend(failex.strings)
                     self.examples.freqs.extend(failex.freqs)
+                    self.examples.update()
                     if self.verbose:
                         print('\n\n\n*** Total strings = %s'
                               % len(failex.strings))
@@ -561,6 +566,7 @@ class Extractor(object):
                         sampled = z
                     self.examples.strings.extend(s[0] for s in sampled)
                     self.examples.freqs.extend(s[1] for s in sampled)
+                    self.examples.update()
                 attempt += 1
 
             self.add_warnings()
@@ -1320,7 +1326,8 @@ class Extractor(object):
         The values in the results dictionary are the numbers of (new)
         examples matched.
 
-        If ``dedup`` is set to ``True``, frequencies are ignored.
+        If ``dedup`` is set to ``True``, frequencies are ignored in
+        the sort order.
 
         Each result is a ``Coverage`` object with the following attributes:
 
@@ -1340,7 +1347,8 @@ class Extractor(object):
 
         """
         return rex_full_incremental_coverage(self.results.rex, self.examples,
-                                             dedup, debug=debug)
+                                             sort_on_deduped=dedup,
+                                             debug=debug)
 
     def n_examples(self, dedup=False):
         """
@@ -1526,7 +1534,7 @@ def rex_coverage(patterns, examples, dedup=False):
 
     If ``dedup`` is set to ``True``, the frequencies are ignored, so that only
     the number of keys is returned.
-   """
+    """
     results = []
     for p in patterns:
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
@@ -1545,7 +1553,7 @@ def rex_coverage(patterns, examples, dedup=False):
     return results
 
 
-def rex_full_incremental_coverage(patterns, examples, dedup=False,
+def rex_full_incremental_coverage(patterns, examples, sort_on_deduped=False,
                                   debug=False):
     """
     Returns an ordered dictionary containing, keyed on terminated
@@ -1577,7 +1585,8 @@ def rex_full_incremental_coverage(patterns, examples, dedup=False,
     patterns, indexes = terminate_patterns_and_sort(patterns)
     matrix, deduped = coverage_matrices(patterns, examples)
     return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                         examples, dedup=dedup,)
+                                         examples,
+                                         sort_on_deduped=sort_on_deduped)
 
 
 def terminate_patterns_and_sort(patterns):
@@ -1595,7 +1604,8 @@ def terminate_patterns_and_sort(patterns):
     return [r[0] for r in z], [r[1] for r in z]
 
 
-def rex_incremental_coverage(patterns, examples, dedup=False, debug=False):
+def rex_incremental_coverage(patterns, examples, sort_on_deduped=False,
+                             debug=False):
     """
     Given a list of regular expressions and a dictionary of examples
     and their frequencies, this computes their incremental coverage,
@@ -1663,8 +1673,9 @@ def rex_incremental_coverage(patterns, examples, dedup=False, debug=False):
 
     """
     results = rex_full_incremental_coverage(patterns, examples,
-                                            dedup=dedup, debug=False)
-    if dedup:
+                                            sort_on_deduped=sort_on_deduped,
+                                            debug=False)
+    if sort_on_deduped:
         return OrderedDict((k, v.incr_uniq) for (k, v) in results.items())
     else:
         return OrderedDict((k, v.incr) for (k, v) in results.items())
@@ -1688,15 +1699,17 @@ def coverage_matrices(patterns, examples):
 
 
 def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                  examples, dedup=False):
+                                  examples, sort_on_deduped=False):
     """
-    Find patterns, in order of # of matches, and pull out freqs.
+    Find patterns, in (descending) order of # of matches, and pull out freqs.
+
     Then set overlapping matches to zero and repeat.
+
     Returns ordered dict, sorted by incremental match rate,
     with number of (previously unaccounted for) strings matched.
     """
     results = OrderedDict()
-    sort_matrix = deduped if dedup else matrix
+    sort_matrix = deduped if sort_on_deduped else matrix
     np = len(patterns)
     zeros = [0] * np
     strings = examples.strings
@@ -1704,42 +1717,48 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                      for r in range(np)]
     pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
-    changed = False
-    while len(results) < np:
+    some_left = True
+    while some_left and len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
         uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
         M, uM = max(totals), max(uniq_totals)
-        if dedup:
+        if sort_on_deduped:
             sort_totals = uniq_totals
             target = uM
         else:
             sort_totals = totals
             target = M
-        p = 0  # index of pattern
-        while sort_totals[p] < target:
-            p += 1
-        rex = patterns[p]
-        added = rex not in results.keys()
-        zeroed = False
-        for i in range(examples.n_uniqs):
-            if matrix[i][p]:
-                matrix[i] = zeros
-                deduped[i] = zeros
-                zeroed = True
-        if not added and not zeroed:
-            # we've got to 100% coverage without using all of the patterns!
-            for zp in range(p + 1, np):
-                zrex = patterns[zp]
-                results[zrex] = Coverage(n=pattern_freqs[zp],
-                                         n_uniq=pattern_uniqs[zp],
-                                         incr=0, incr_uniq=0,
-                                         index=indexes[zp])
+
+        if target > 0:
+            # find pattern with frequency of target
+            p = 0  # index of pattern
+            while sort_totals[p] < target:
+                p += 1
+            rex = patterns[p]
+
+            in_results = rex in results
+            if not in_results:
+                for i in range(examples.n_uniqs):
+                    if matrix[i][p]:
+                        matrix[i] = zeros
+                        deduped[i] = zeros
+                        zeroed = True
+                results[rex] = Coverage(n=pattern_freqs[p],
+                                        n_uniq=pattern_uniqs[p],
+                                        incr=totals[p],
+                                        incr_uniq=uniq_totals[p],
+                                        index=indexes[p])
         else:
-            results[rex] = Coverage(n=pattern_freqs[p],
-                                    n_uniq=pattern_uniqs[p],
-                                    incr=totals[p],
-                                    incr_uniq=uniq_totals[p],
-                                    index=indexes[p])
+            some_left = False
+
+    if some_left and len(results) < np:
+        for p in range(np):
+            rex = patterns[p]
+            if rex not in results:
+                results[rex] = Coverage(n=pattern_freqs[p],
+                                        n_uniq=pattern_uniqs[p],
+                                        incr=0, incr_uniq=0,
+                                        index=indexes[p])
     return results
 
 
@@ -1879,6 +1898,9 @@ class IDCounter(object):
 
     def keys(self):
         return self.ids.keys()
+
+    def items(self):
+        return self.ids.items()
 
     def __iter__(self):
         return self.ids.__iter__()
