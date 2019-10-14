@@ -125,6 +125,8 @@ RE_FLAGS = re.UNICODE | re.DOTALL
 
 DIALECTS = ['perl']
 
+DO_ALL_SIZE = 100000000
+
 class Size(object):
     def __init__(self, **kwargs):
         self.use_sampling = nvl(kwargs.get('use_sampling', USE_SAMPLING),
@@ -134,7 +136,7 @@ class Size(object):
             if self.use_sampling:
                 do_all = 100             # Use all examples up to this many
             else:
-                do_all = 100000000       # Use all examples up to this many
+                do_all = DO_ALL_SIZE     # Use all examples up to this many
         self.do_all = do_all
         self.do_all_exceptions = 4000    # Add in all failures up to this many
         self.n_per_length = 64           # When sampling, use this many
