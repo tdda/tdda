@@ -55,7 +55,7 @@ def copy(srcdir, destination):
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
             copy(fullname, outdir)
-        elif name.endswith('.pyc'):
+        elif name.endswith('.pyc') or name.endswith('~'):
             continue
         elif name == ('accounts.zip'):
             copy_accounts_data_unzipped(destination)
