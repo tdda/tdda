@@ -10,7 +10,7 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2019
 """
 import time
-from tdda.referencetest import tag
+
 from generators import generate_string
 
 

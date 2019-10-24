@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-exercise1/test_all.py: A simple example of how to tag tests.
+exercise1/test_all.py: A simple exercise to show tagging tests
 
 Source repository: http://github.com/tdda/tdda
 
@@ -9,18 +9,14 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2019
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import time
 
-from tdda.referencetest import ReferenceTestCase, tag
+from tdda.referencetest import ReferenceTestCase
 
 from generators import generate_string
 
 
-class TestFileGeneration(ReferenceTestCase):
+class TestQuickThings(ReferenceTestCase):
 
     def testExampleStringGeneration(self):
         actual = generate_string()
