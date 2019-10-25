@@ -311,7 +311,7 @@ Fixed problem with the 'tdda test' command. It was failing with:
 Also simplified the list of characters to NOT be specially escaped for rexpy,
 so it's now just the same across all python versions.
 
-###
+25.10.2019 1.0.31
 Constraint verify/detect of regular expressions now handles '.' better.
 
 It wasn't set to allow newlines to match '.', meaning that regular expressions
