@@ -23,6 +23,25 @@ FLAGS are optional flags. Currently::
                         e.g.     '^([A-Z]+)\-([0-9]+)$'
                         becomes  '^[A-Z]+\-[0-9]+$'
 
+  -q, --quote       Display the resulting regular expressions as
+                    double-quoted, escaped strings, in a form broadly
+                    suitable for use in Unix shells, JSON, and string
+                    literals in many programming languages.
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  "^[A-Z]+\\-[0-9]+$"
+
+  --portable        Product maximally portable regular expressions
+                    (e.g. [0-9] rather than \d). (This is the default.)
+
+  --grep            Same as --portable
+
+  --java            Produce Java-style regular expressions (e.g. \p{Digit})
+
+  --posix           Produce posix-compilant regular expressions
+                    (e.g. [[:digit:]] rather than \d).
+
+  --perl            Produce Perl-style regular expressions (e.g. \d)
+
   -u, --underscore  Allow underscore to be treated as a letter.
                     Mostly useful for matching identifiers
                     Also allow -_.
@@ -70,8 +89,12 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info[0] < 3 else str
-bytes_type = str if sys.version_info[0] < 3 else bytes
+isPython2 = sys.version_info[0] < 3
+str_type = unicode if isPython2 else str
+bytes_type = str if isPython2 else bytes
+INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
+UNESCAPES = '''!"%',/:;<=>@_` '''
+
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -95,17 +118,17 @@ MAX_PATTERNS = None
 MIN_DIFF_STRINGS_PER_PATTERN = 1
 MIN_STRINGS_PER_PATTERN = 1
 
-USE_SAMPLING = False
 USE_SAMPLING = True
 
-#USE_SAMPLING = 0
 VERBOSITY = 0
 RE_FLAGS = re.UNICODE | re.DOTALL
 
+DIALECTS = ['perl']
 
 class Size(object):
     def __init__(self, **kwargs):
-        self.use_sampling = kwargs.get('use_sampling', USE_SAMPLING)
+        self.use_sampling = nvl(kwargs.get('use_sampling', USE_SAMPLING),
+                                USE_SAMPLING)
         do_all = kwargs.get('do_all')
         if do_all is None:
             if self.use_sampling:
@@ -122,8 +145,8 @@ class Size(object):
         self.max_punc_in_group = 5
         self.max_strings_in_group = 10
         for (k, v) in kwargs.items():
-            if k in self.__dict__():
-                if v is None:
+            if k in self.__dict__:
+                if v is None and k not in ('use_sampling', 'do_all'):
                     raise Exception('Bad null value for parameter %s to Size.'
                                     % k)
                 else:
@@ -182,24 +205,42 @@ class Category(object):
         self.re_single = poss_term_cre(re_string)
         self.re_multiple = poss_term_cre(re_string + '+')
 
+    def set(self, rex):
+        self.re_string = rex
+
 
 UNICHRS = True  # controls whether to include a unicode letter class
 UNIC = 'Ḉ'  # K
 COARSEST_ALPHANUMERIC_CODE = UNIC if UNICHRS else 'C'
 
+DIALECTS = [
+    'grep',
+    'java',
+    'perl',
+    'portable',
+    'posix',
+]
+
+DEFAULT_DIALECT = 'portable'
+
+
 class Categories(object):
     escapableCodes = '.*?'
-    def __init__(self, extra_letters=None, full_escape=False):
+    def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
-            assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(escape(r'%s') % L for L in extra_letters)
+            assert all(L in '_.-' for L in extra_letters)   # For now
+            extra_letters = ''.join(e for e in '_.-'
+                                    if e in extra_letters)  # Force '-' to end
+            el_re = extra_letters
             el_re_exc = '' if '_' in extra_letters else '_'
         else:
             el_re = ''
             el_re_exc = '_'
         el_re_inc = (extra_letters or '').replace('_', '')
-        punctuation = self.Punctuation(el_re)
+        punctuation = self.PunctuationChars(el_re)
+        self.dialect = dialect
         self.extra_letters = extra_letters or ''
+        self.full_escape = full_escape
         self.LETTER = Category('LETTER', 'A', '[A-Z]')
         self.letter = Category('letter', 'a', '[a-z]')
         self.Letter = Category('Letter', 'L', '[A-Za-z]')
@@ -211,7 +252,8 @@ class Categories(object):
             if extra_letters == '_':
                 self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
             else:
-                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False)
+                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False,
+                                       dialect=dialect)
                 self.ULetter_ = Category('ULetter_', 'Ṃ', p)
 
             ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
@@ -229,11 +271,12 @@ class Categories(object):
         self.AlphaNumeric = Category('AlphaNumeric', 'C',
                                      '[A-Za-z0-9%s]' % el_re)
         self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
-                                      u_alpha_numeric_re(el_re_inc, el_re_exc))
+                                      u_alpha_numeric_re(el_re_inc, el_re_exc,
+                                                         dialect=dialect))
         self.Whitespace = Category('Whitespace', ' ', r'\s')
         self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    '[%s]' % escape(''.join(punctuation),
-                                                    full=full_escape))
+                                    escaped_bracket(punctuation,
+                                                    dialect=dialect))
 
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
@@ -255,11 +298,14 @@ class Categories(object):
             ['UAlphaNumeric'] if UNICHRS else []
 
         )
+        if dialect and dialect != 'perl':
+            self.adapt_for_output(dialect, el_re)
 
-    def Punctuation(self, el_re):
+    def PunctuationChars(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
+
 
     def build_cat_map(self):
         """
@@ -284,7 +330,58 @@ class Categories(object):
 
     @classmethod
     def escape_code(cls, code):
-        return escape(code) if code in cls.escapableCodes else code
+        return escape(code, full=False) if code in cls.escapableCodes else code
+
+    def escape(self, s, full=None):
+        return escape(s, full=self.full_escape if full is None else full)
+
+    def adapt_for_output(self, dialect, el_re):
+        """
+        This converts the output regular expressions for each kind of
+        fragment identified to one of the supported, dialects, as listed
+        below.
+
+        This is called at the very end of regular-expression generation,
+        since not all dialects can be used internally for determining
+        what patterns to generate.
+        """
+        if dialect in ('portable', 'grep'):
+            self.Digit.set(r'[0-9]')
+        elif dialect == 'posix':
+            self.Digit.set(r'[[:digit:]]')
+
+            self.letter.set(r'[[:lower:]]')
+            self.LETTER.set(r'[[:upper:]]')
+            self.Letter.set(r'[[:alpha:]]')
+            self.ULetter.set(r'[[:alpha:]]')
+            self.Hex.set(r'[[:xdigit:]]')
+            self.Whitespace.set(r'[[:space:]]')
+            if el_re:
+                self.ALPHANUMERIC.set('[[:upper:][:digit:]%s]' % el_re)
+                self.alphanumeric.set('[[:lower:][:digit:]%s]' % el_re)
+                self.AlphaNumeric.set('[[:alnum:]%s]' % el_re)
+                self.UAlphaNumeric.set('[[:alnum:]%s]' % el_re)
+            else:
+                self.Punctuation.set(r'[[:punct:]]')
+
+        elif dialect == 'java':
+            self.Digit.set(r'\p{Digit}')
+            self.letter.set(r'\p{Lower}')
+            self.LETTER.set(r'\p{Upper}')
+            self.Letter.set(r'\p{Alpha}')
+            self.ULetter.set(r'\p{Alpha}')
+            self.Hex.set(r'\p{XDigit}')
+            self.Whitespace.set(r'\p{Space}')
+            if el_re:
+                self.ALPHANUMERIC.set('[\p{Upper}\p{Digit}%s]' % el_re)
+                self.alphanumeric.set('[\p{Lower}\p{Digit}%s]' % el_re)
+                self.AlphaNumeric.set('[\p{Alnum}%s]' % el_re)
+                self.UAlphaNumeric.set('[\p{Alnum}%s]' % el_re)
+            else:
+                self.Punctuation.set(r'\p{Punct}')
+        else:
+            raise Exception('Unknown dialect: %s' % dialect)
+
 
 
 class Fragment(namedtuple('Fragment', 're group')):
@@ -340,6 +437,11 @@ class Extractor(object):
     The examples may be given as a list or as a dictionary:
     if a dictionary, the values are assumed to be string frequencies.
 
+    size can be provided as:
+        - a Size() instance, to control various sizes within rexpy
+        - None (the default), in which case rexpy's defaults are used
+        - False or 0, which means don't use sampling
+
     Verbose is usually 0 or ``False``. It can be to ``True`` or 1 for various
     extra output, and to higher numbers for even more verbose output.
     The highest level currently used is 2.
@@ -351,14 +453,15 @@ class Extractor(object):
                  specialize=False,
                  max_patterns=MAX_PATTERNS,
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
+                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+                 size=None, seed=None, dialect=DEFAULT_DIALECT,
                  verbose=VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
         self.verbose = verbose
-        self.size = size or Size()
+        self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
             self.by_length = Tree()         # Also store examples by length
         self.n_stripped = 0                 # Number that required stripping
@@ -374,55 +477,107 @@ class Extractor(object):
         self.warnings = []
         self.n_too_many_groups = 0
         self.Cats = Categories(self.thin_extras(extra_letters),
-                               full_escape=full_escape)
+                               full_escape=full_escape)  # no dialect
+        if dialect == 'perl':
+            dialect = None
+        self.dialect = dialect
+        if dialect is not None:
+            self.OutCats = Categories(self.thin_extras(extra_letters),
+                                      full_escape=full_escape,
+                                      dialect=dialect)  # output dialect
         self.full_escape = full_escape
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
         self.min_strings_per_pattern = min_strings_per_pattern
+        self.max_patterns = nvl(max_patterns, MAX_PATTERNS)
+        self.seed = seed
 
         if extract:
             self.extract()                  # Stores results
-
 
     def extract(self):
         """
         Actually perform the regular expression 'extraction'.
         """
-        if self.examples.n_uniqs == 0:
-            self.results = None
+        self.prng_state = PRNGState(self.seed)
+        try:
+            if self.examples.n_uniqs == 0:
+                self.results = None
 
-        size = self.size
-        if self.examples.n_uniqs <= size.do_all:
-            self.results = self.batch_extract(self.examples.strings,
-                                              self.examples.freqs)
-        else:
-            examples, freqs = self.sample(size.do_all)
-            attempt = 1
-            failures = []
-            while attempt <= size.max_sampled_attempts + 1:
-                if self.verbose:
-                    print('Pass %d' % attempt)
-                    print('Examples: %s ... %s' % (examples[:5],
-                                                   examples[-5:]))
-                self.results = self.batch_extract(examples, freqs)
-                failures, fail_freqs = self.find_non_matches()
-                if self.verbose:
-                    print('REs:', self.results.rex)
-                    print('Failures (%d): %s' % (len(failures),
-                                                 failures[:5]))
-                if len(failures) == 0:
-                    break
-                elif (len(failures) <= size.do_all_exceptions
-                      or attempt > size.max_sampled_attempts):
-                    examples.extend(failures)
-                    freqs.extend(fail_freqs)
-                else:
-                    z = list(zip(failures, freqs))
-                    sampled = random.sample(z, size.do_all_exceptions)
-                    examples.extend(s[0] for s in sampled)
-                    freqs.extend(s[1] for s in sampled)
-                attempt += 1
-        self.add_warnings()
+            size = self.size
+            if self.examples.n_uniqs <= size.do_all:
+                self.results = self.batch_extract()
+                failures, fail_freqs, re_freqs = self.find_non_matches()
+            else:
+                self.all_examples = self.examples
+                examples, freqs = self.sample(size.do_all)
+                self.examples = Examples(examples, freqs)
+                attempt = 1
+                failures = []
+                while attempt <= size.max_sampled_attempts + 1:
+                    if self.verbose:
+                        print('\n*** Pass %d (%s strings)'
+                              % (attempt, len(examples)))
+                        if self.verbose > 1:
+                            print('Examples: %s ... %s' % (examples[:5],
+                                                           examples[-5:]))
+                    self.results = self.batch_extract()
+                    failures, fail_freqs, re_freqs = self.find_non_matches()
+                    if self.verbose:
+                        print('%s REs:' % len(self.results.rex))
+                        for r in self.results.rex:
+                            print('    %s' % r)
+                        print('\nFailures (%d): %s' % (len(failures),
+                                                       failures[:5]))
+                    if len(failures) == 0:
+                        break
+                    elif (len(failures) <= size.do_all_exceptions
+                          or attempt > size.max_sampled_attempts):
+                        if self.verbose:
+                            print('\n\n\n*** Now doing all failures...')
+                            self.examples.strings.extend(failures)
+                            self.examples.freqs.extend(fail_freqs)
+                            print('\n\n\n*** Total strings = %s'
+                                  % len(self.examples.strings))
+                    else:
+                        z = list(zip(failures, freqs))
+                        if len(z) > size.do_all_exceptions:
+                            sampled = random.sample(z, size.do_all_exceptions)
+                        else:
+                            sampled = z
+                        self.examples.strings.extend(s[0] for s in sampled)
+                        self.examples.freqs.extend(s[1] for s in sampled)
+                    attempt += 1
+                self.examples = self.all_examples
+            self.add_warnings()
+            self.results.remove(self.find_bad_patterns(re_freqs))
+            self.convert_rex_to_dialect()
+        finally:
+            self.prng_state.restore()
+
+    def find_bad_patterns(self, freqs):
+        """
+        Given freqs, a list of frequencies (for the corresponding indexed RE)
+        identify indexes to patterns that:
+            - have too few strings
+            - cause too many patterns to be returned
+
+        NOTE: min_diff_strings_per_pattern is currently ignored.
+
+        Returns set of indices for deletion
+        """
+        M = self.max_patterns
+        deletions = set()
+        if M is not None and len(freqs) > self.max_patterns:
+            deletions = set(list(sorted(range(len(freqs)),
+                                        key=lambda k: -freqs[k]))[M:])
+
+        m = self.min_strings_per_pattern
+        if m > 1:
+            deletions = deletions.union({i for (i, v) in enumerate(freqs)
+                                           if v < m})
+        return deletions
+
 
     def add_warnings(self):
         if self.n_too_many_groups:
@@ -471,11 +626,12 @@ class Extractor(object):
 
         return Examples(list(counter.keys()), ilist(counter.values()))
 
-    def batch_extract(self, examples, freqs):
+    def batch_extract(self):
         """
         Find regular expressions for a batch of examples (as given).
         """
-
+        examples = self.examples.strings
+        freqs = self.examples.freqs
         # First, run-length encode each (distinct) example
         rles = [self.run_length_encode_coarse_classes(s) for s in examples]
         rle_freqs = IDCounter()
@@ -525,6 +681,9 @@ class Extractor(object):
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex, mergedfrags,
                               extractor=self)
+
+    def convert_rex_to_dialect(self):
+        self.results.convert_to_dialect(self)
 
     def specialize(self, patterns):
         """
@@ -589,7 +748,7 @@ class Extractor(object):
                 new_parts.extend(self.merge_fixed_only_present_at_pos(part))
             else:
                 raise ValueError('Level out of range (%d)' % level)
-        if self.verbose:
+        if self.verbose > 1:
             print('\nOUT:')
             print(self.aligned_parts(new_parts))
         return new_parts
@@ -676,11 +835,13 @@ class Extractor(object):
         leftFixed = get_only_present_at_pos(leftPos)
 
         if leftFixed:
-            print('LEFT FOUND!', leftFixed)
+            if self.verbose:
+                print('LEFT FOUND!', leftFixed)
             return left_parts(patterns, leftFixed)
         rightFixed = get_only_present_at_pos(rightPos, verbose=self.verbose)
         if rightFixed:
-            print('RIGHT FOUND!', rightFixed)
+            if self.verbose:
+                print('RIGHT FOUND!', rightFixed)
             return right_parts(patterns, rightFixed)
         return [patterns]
 
@@ -722,55 +883,42 @@ class Extractor(object):
     def similarity(self, p, q):
         return 1
 
-    def sample_old(self, nPerLength):
-        """
-        Sample strings for potentially faster induction.
-        """
-        lengths = self.by_length.keys()
-        lengths.sort()
-        examples = []
-        for L in lengths:
-            x = self.by_length[L]
-            if len(self.by_length[L]) <= nPerLength:
-                examples.extend(x)
-            else:
-                examples.extend(random.sample(x, nPerLength))
-        return examples
-
     def sample(self, n):
         """
         Sample strings for potentially faster induction.
         """
-        indices = list(range(len(self.examples.strings)))
+        indices = list(range(len(self.all_examples.strings)))
         sample_indices = random.sample(indices, n)
-        return ([self.examples.strings[i] for i in indices],
-                [self.examples.freqs[i] for i in indices])
-#        return random.sample(self.examples.strings, n)
-
+        return ([self.all_examples.strings[i] for i in sample_indices],
+                [self.all_examples.freqs[i] for i in sample_indices])
 
     def find_non_matches(self):
         """
         Returns all example strings that do not match any of the regular
         expressions in results, together with their frequencies.
         """
-        strings = self.examples.strings
+        examples = getattr(self, 'all_examples', self.examples)
+        strings = examples.strings
+        freqs = examples.freqs
         N = len(strings)
         matched = [False] * N
         nRemaining = N
+        re_freqs = [0] * len(self.results.rex)
         if self.results:
-            for r in self.results.rex:
+            for j, r in enumerate(self.results.rex):
                 cr = cre(r)
                 for i in range(N):
                     if not matched[i]:
                         if re.match(cr, strings[i]):
-                            matched[i] += 1
+                            matched[i] = True
                             nRemaining -= 1
+                            re_freqs[j] += freqs[i]
                             if nRemaining == 0:
-                                return [], []
+                                return [], [], re_freqs
         indices = [i for i in range(N) if not matched[i]]
         failures = [strings[i] for i in indices]
-        freqs = [self.examples.freqs[i] for i in indices]
-        return failures, freqs
+        out_freqs = [freqs[i] for i in indices]
+        return failures, out_freqs, re_freqs
 
     def pattern_matches(self):
         compiled = [cre(r) for r in self.results.rex]
@@ -785,6 +933,7 @@ class Extractor(object):
                         results[i] = [x]
                     break
             else:
+                # TODO: should never happen, so should raise an exception
                 print('Example "%s" did not match any pattern' % x)
         return results
 
@@ -858,11 +1007,11 @@ class Extractor(object):
             fixed = False
             refined = None
             if len(strings) == 1:   # Same string for whole group
-                refined = escape(list(strings)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(strings)[0])
                 m = M = 1
                 fixed = True
             elif len(chars) == 1:   # Same character, possibly repeated
-                refined = escape(list(chars)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(chars)[0])
                 fixed = True
             elif c == COARSEST_ALPHANUMERIC_CODE:  # Alphanumeric
                 if rlec:  # Always same sequence of chars
@@ -889,7 +1038,7 @@ class Extractor(object):
                     refined = c
             elif (c == CODE.PUNC
                   and len(chars) <= size.max_punc_in_group):  # Punctuation
-                refined = '[%s]' % escape(char_str, full=self.full_escape)
+                refined = escaped_bracket(char_str, dialect=self.Cats.dialect)
                 fixed = True
             else:
                 refined = c
@@ -977,10 +1126,16 @@ class Extractor(object):
         else:
             return cats.ULetter_.code
 
-    def fragment2re(self, fragment, tagged=False, as_re=True):
+    def fragment2re(self, fragment, tagged=False, as_re=True, output=False):
+        """
+        Convert fragment to RE.
+
+        If output is set, this is for final output, and should be in the
+        specified dialect (if any).
+        """
         (c, m, M) = fragment[:3]
         fixed = len(fragment) > 3
-        Cats = self.Cats
+        Cats = self.OutCats if (output and self.dialect) else self.Cats
         regex = c if (fixed or not as_re) else Cats[c].re_string
         if (m is None or m == 0) and M is None:
             part = regex + '*'
@@ -996,33 +1151,40 @@ class Extractor(object):
             part = regex + ('?' if m == 0 and M == 1 else ('{%d,%s}' % (m, M)))
         return capture_group(part) if (tagged and not fixed) else part
 
-    def vrle2re(self, vrles, tagged=False, as_re=True):
+    def vrle2re(self, vrles, tagged=False, as_re=True, output=False):
         """
         Convert variable run-length-encoded code string to regular expression
+
+        If output is set, this is for final output, and should be in the
+        specified dialect (if any).
         """
-        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re)
+        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re,
+                                  output=output)
                  for frag in vrles]
         if self.n_stripped > 0:
-            ws = [r'\s*']
+            Cats = self.OutCats if output and self.dialect else self.Cats
+            ws = [r'%s*' % Cats.Whitespace.re_string]
             parts = ws + parts + ws
         return poss_term_re(''.join(parts))
 
 
-    def vrle2refrags(self, vrles):
+    def vrle2refrags(self, vrles, output=False):
         """
         Convert variable run-length-encoded code string to regular expression
         and list of fragments
         """
         if self.n_stripped > 0:
-            return ([Fragment(r'\s*', True)]
+            ws = r'\s*'
+            return ([Fragment(ws, True)]
                     + [Fragment(self.fragment2re(frag, tagged=False,
-                                                 as_re=True),
+                                                 as_re=True, output=output),
                               len(frag) < 4)
                        for frag in vrles]
-                     + [Fragment(r'\s*', True)])
+                     + [Fragment(ws, True)])
 
         else:
-            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True),
+            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True,
+                                              output=output),
                              len(frag) < 4)
                     for frag in vrles]
 
@@ -1432,6 +1594,7 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                      for r in range(np)]
     pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
+    changed = False
     while len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
         uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
@@ -1446,15 +1609,27 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
         while sort_totals[p] < target:
             p += 1
         rex = patterns[p]
-        results[rex] = Coverage(n=pattern_freqs[p],
-                                n_uniq=pattern_uniqs[p],
-                                incr=totals[p],
-                                incr_uniq=uniq_totals[p],
-                                index=indexes[p])
+        added = rex not in results.keys()
+        zeroed = False
         for i in range(examples.n_uniqs):
             if matrix[i][p]:
                 matrix[i] = zeros
                 deduped[i] = zeros
+                zeroed = True
+        if not added and not zeroed:
+            # we've got to 100% coverage without using all of the patterns!
+            for zp in range(p + 1, np):
+                zrex = patterns[zp]
+                results[zrex] = Coverage(n=pattern_freqs[zp],
+                                         n_uniq=pattern_uniqs[zp],
+                                         incr=0, incr_uniq=0,
+                                         index=indexes[zp])
+        else:
+            results[rex] = Coverage(n=pattern_freqs[p],
+                                    n_uniq=pattern_uniqs[p],
+                                    incr=totals[p],
+                                    incr_uniq=uniq_totals[p],
+                                    index=indexes[p])
     return results
 
 
@@ -1605,7 +1780,6 @@ class IDCounter(object):
         return self.ids.__len__()
 
 
-
 class ResultsSummary(object):
     def __init__(self, rles, rle_freqs, vrles,
                  vrle_freqs, refined_vrles, rex, refrags, extractor=None):
@@ -1685,9 +1859,55 @@ class ResultsSummary(object):
                                    else self.extractor.vrle2re)
         return f(patterns, tagged=grouped, as_re=as_re)
 
+    def remove(self, indexes, add_dot_star=False):
+        """
+        Given a set of indexes, remove patterns with those indexes.
+
+        If add_dot_star is set to True, a '.*' wildcard pattern will
+        also be added. This is off, by default, since adding '.*'
+        is unhelpful when discovering constraints.
+        """
+        if not indexes:
+            return
+
+        x = self.extractor
+        remaining = [i for i in range(len(self.rex)) if not i in indexes]
+        for name in ('refined_vrles', 'rex', 'refrags'):
+            d = self.__dict__[name]
+            self.__dict__[name] = [d[i] for i in remaining]
+        if add_dot_star:
+            dot_star = ((x.Cats.Any.code, None, None),)
+            self.refrags.append([Fragment('.*', True)])
+            self.rex.append(x.vrle2re(dot_star, tagged=x.tag))
+
+    def convert_to_dialect(self, x):
+        if not x.dialect:
+            return          # No dialect set, so nothing to do
+        self.rex = [x.vrle2re(m, tagged=x.tag, output=True)
+                        for m in self.refined_vrles]
+
+        self.refrags = [x.vrle2refrags(m, output=True)
+                        for m in self.refined_vrles]
+
     def __str__(self):
         return self.to_string()
 
+
+class PRNGState:
+    """
+    Seeds the Python PRNG and after captures its state.
+
+    restore() cam be used to set them back to the captured state.
+    """
+
+    def __init__(self, n):
+        if n is not None:
+            self.saved = random.getstate()
+            random.seed(n)
+
+    def restore(self):
+        if hasattr(self, 'saved'):
+            random.setstate(self.saved)
 
 
 def extract(examples, tag=False, encoding=None, as_object=False,
@@ -1697,7 +1917,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            verbose=VERBOSITY):
+            seed=None, dialect=DEFAULT_DIALECT, verbose=VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -1722,11 +1942,11 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   max_patterns = max_patterns,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
-                  size=size, verbose=verbose)
+                  size=size, seed=seed, dialect=dialect, verbose=verbose)
     return r if as_object else r.results.rex
 
 
-def pdextract(cols):
+def pdextract(cols, seed=None):
     """
     Extract regular expression(s) from the Pandas column (``Series``) object
     or list of Pandas columns given.
@@ -1759,7 +1979,7 @@ def pdextract(cols):
     for c in cols:
         strings.extend(list(c.dropna().unique()))
     try:
-        return extract(strings)
+        return extract(strings, seed=seed)
     except:
         if not all(type(s) == str_type for s in strings):
             raise ValueError('Non-null, non-string values found in input.')
@@ -1920,21 +2140,56 @@ def get_nCalls():
     return nCalls
 
 
-def rexpy_streams(in_path=None, out_path=None, skip_header=False, **kwargs):
-    if in_path:
+def rexpy_streams(in_path=None, out_path=None, skip_header=False,
+                  quote=False, **kwargs):
+    """
+    in_path is
+        None:             to read inputs from stdin
+        path to file:     to read inputs from file at in_path
+        list of strings:  to use those strings as the inputs
+
+    out_path is:
+        None:             to write outputs to stdout
+        path to file:     to write outputs from file at out_path
+        False:            to return the strings as a list
+    """
+    verbose = kwargs.get('verbose', 0)
+    if type(in_path) in (list, tuple):
+        strings = in_path
+    elif in_path:
+        if verbose:
+            print('Reading file %s.' % in_path)
         with open(in_path) as f:
             strings = f.read().splitlines()
+        if verbose:
+            print('Read file %s' % in_path)
     else:
+        if verbose:
+            print('Ingesting strings')
         strings = [s.strip() for s in sys.stdin.readlines()]
         if strings and type(strings[0]) == bytes_type:
             strings = [s.decode('UTF-8') for s in strings]
+        if verbose:
+            print('Ingested strings.')
     if skip_header:
         strings = strings[1:]
+    if verbose:
+        print('Extracting strings')
     patterns = extract(strings, **kwargs)
-    if out_path:
+    if verbose:
+         print('Extracted strings')
+    if quote:
+        patterns = [dquote(p) for p in patterns]
+    if out_path is False:
+        return patterns
+    elif out_path:
+        if verbose:
+            print('Writing results to %s.' % out_path)
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
+        if verbose:
+            print('Written results to %s.' % out_path)
     else:
         for p in patterns:
             print(p)
@@ -1947,6 +2202,7 @@ def get_params(args):
         'skip_header': False,
         'extra_letters': None,
         'tag': None,
+        'quote': False,
         'verbose': 0,
         'variableLengthFrags': False,
     }
@@ -1958,6 +2214,8 @@ def get_params(args):
                 params['skip_header'] = True
             elif a in ('-g', '--group'):
                 params['tag'] = True
+            elif a in ('-q', '--quote'):
+                params['quote'] = True
             elif a in ('-u', '-_', '--underscore'):
                 params['extra_letters'] = (params['extra_letters'] or '') + '_'
             elif a in ('-d', '-.', '--dot', '--period'):
@@ -1975,6 +2233,8 @@ def get_params(args):
                 params['variableLengthFrags'] = True
             elif a in ('-flf', '--fixed'):
                 params['variableLengthFrags'] = False
+            elif a.startswith('--') and a[2:] in DIALECTS:
+                params['dialect'] = a[2:]
             elif a in ('-?', '--help'):
                 print(USAGE)
                 sys.exit(0)
@@ -2070,13 +2330,47 @@ def escape(s, full=False):
     if full:
         return re.escape(s)
     else:
-        unescapes = ' '
-        return ''.join((c if c in unescapes else re.escape(c)) for c in s)
+        return ''.join((c if c in UNESCAPES else re.escape(c)) for c in s)
 
 
-def u_alpha_numeric_re(inc, exc, digits=True):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
-    i = '[%s]' % escape(inc) if len(inc) == 2 else escape(inc)
+def escaped_bracket(chars, dialect=None, inner=False):
+    """
+    Construct a regular expression Bracket (character class),
+    obeying the special regex rules for escaping these:
+
+      - Characters do not, in general need to be escaped
+      - If there is a close bracket ("]") it mst be the first character
+      - If there is a hyphen ("-") it must be the last character
+      - If there is a carat ("^"), it must not be the first character
+      - If there is a backslash, it's probably best to escape it.
+        Some implementations don't require this, but it will rarely
+        do any harm, and most implementation understand at least some
+        escape sequences ("\w", "\W", "\d", "\s" etc.), so escaping
+        seems prudent.
+
+    However, javascript and ruby do not follow the unescaped "]" as the
+    first character rule, so if either of these dialects is specified,
+    the "]" will be escaped (but still placed in the first position.
+
+    If inner is set to True, the result is returned without brackets.
+    """
+    opener, closer = ('', '') if inner else ('[', ']')
+    if dialect in ('javascript', 'ruby'):
+        prefix = '\]' if ']' in chars else ''
+    else:
+        prefix = ']' if ']' in chars else ''
+    suffix = ((r'\\' if '\\' in chars else '')
+              + ('^' if '^' in chars else '')
+              + ('-' if '-' in chars else ''))
+    specials = r']\-^'
+    mains = ''.join(c for c in chars if c not in specials)
+    return '%s%s%s%s%s' % (opener, prefix, mains, suffix, closer)
+
+
+def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
+    r = '[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
+                       dialect=dialect, inner=True))
+    i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 
 
@@ -2110,7 +2404,21 @@ def is_outer_group(m, i):
 
 
 def ilist(L=None):
-    return array('i', L or [])
+    return array(INT_ARRAY, L or [])
+
+
+def dquote(string):
+    parts = [p.replace('\\', r'\\').replace('\n', r'\n')
+             for p in string.split('"')]
+    quoted = ('\\"').join(parts)
+    return '"%s"' % quoted
+
+
+def nvl(v, w):
+    """
+    This function is used as syntactic sugar for replacing null values.
+    """
+    return w if v is None else v
 
 
 def usage_error():
@@ -2121,7 +2429,6 @@ def usage_error():
 def main():
     params = get_params(sys.argv[1:])
     rexpy_streams(**params)
-
 
 if __name__ == '__main__':
     main()

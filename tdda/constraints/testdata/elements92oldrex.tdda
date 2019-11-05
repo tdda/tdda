@@ -1,0 +1,169 @@
+{
+    "fields": {
+        "AtomicWeight": {
+            "type": "real", 
+            "min": 1.007947, 
+            "max": 238.028913, 
+            "sign": "positive", 
+            "max_nulls": 0
+        }, 
+        "Group": {
+            "type": "real", 
+            "min": 1.0, 
+            "max": 18.0, 
+            "sign": "positive"
+        }, 
+        "Name": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 12, 
+            "max_nulls": 0, 
+            "no_duplicates": true, 
+            "rex": [
+                "^[A-Z][a-z]+$"
+            ]
+        }, 
+        "Density": {
+            "type": "real", 
+            "min": 8.988e-05, 
+            "max": 22.61, 
+            "sign": "positive", 
+            "max_nulls": 0
+        }, 
+        "MeltingPointKelvin": {
+            "type": "real", 
+            "min": 14.2, 
+            "max": 3948.0, 
+            "sign": "positive", 
+            "max_nulls": 1
+        }, 
+        "Symbol": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 2, 
+            "max_nulls": 0, 
+            "no_duplicates": true, 
+            "rex": [
+                "^[A-Za-z]{1,2}$"
+            ]
+        }, 
+        "Period": {
+            "type": "int", 
+            "min": 1, 
+            "max": 7, 
+            "sign": "positive", 
+            "max_nulls": 0
+        }, 
+        "Description": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 83, 
+            "rex": [
+                "^[a-z0-9]+$", 
+                "^[0-9]\\.[0-9]{1,2}$", 
+                "^[a-z]+ [a-z]{3,5}$", 
+                "^[0-9][.-][0-9] [a-z]{8,9}$", 
+                "^radioactive alkali metal$", 
+                "^1\\.5 soft metal$", 
+                "^radioactive alkaline earth metal$", 
+                "^halogen solid that sublimes at room temperatures into an irritating purple\\-pink gas$"
+            ]
+        }, 
+        "BoilingPointF": {
+            "type": "real", 
+            "min": -452.07, 
+            "max": 10105.0, 
+            "max_nulls": 0
+        }, 
+        "Etymology": {
+            "type": "string", 
+            "min_length": 4, 
+            "max_length": 39, 
+            "max_nulls": 0, 
+            "rex": [
+                "^[A-Za-z]+$", 
+                "^[A-Za-z]+ [A-Za-z]+$", 
+                "^[A-Za-z]{4,6} [A-Za-z]+ [a-z]+$", 
+                "^[A-Z][a-z]{6,7}\\, [A-Z][a-z]{5}$", 
+                "^Greek protos and actinium$", 
+                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$"
+            ]
+        }, 
+        "ChemicalSeries": {
+            "type": "string", 
+            "min_length": 7, 
+            "max_length": 20, 
+            "max_nulls": 0, 
+            "allowed_values": [
+                "Nonmetal", 
+                "Noble gas", 
+                "Alkali metal", 
+                "Alkaline earth metal", 
+                "Metalloid", 
+                "Halogen", 
+                "Poor metal", 
+                "Transition metal", 
+                "Lanthanoid", 
+                "Actinoid"
+            ], 
+            "rex": [
+                "^[A-Z][a-z]+$", 
+                "^[A-Z][a-z]+ [a-z]{3,5}$", 
+                "^Alkaline earth metal$"
+            ]
+        }, 
+        "MeltingPointC": {
+            "type": "real", 
+            "min": -258.975, 
+            "max": 3675.0, 
+            "max_nulls": 1
+        }, 
+        "Z": {
+            "type": "int", 
+            "min": 1, 
+            "max": 92, 
+            "sign": "positive", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "BoilingPointC": {
+            "type": "real", 
+            "min": -268.93, 
+            "max": 5596.0, 
+            "max_nulls": 0
+        }, 
+        "Colour": {
+            "type": "string", 
+            "min_length": 4, 
+            "max_length": 80, 
+            "rex": [
+                "^[a-z]+$", 
+                "^[a-z]+ [a-z]+$", 
+                "^silvery\\-white$", 
+                "^silvery lustrous [a-z]{4}$", 
+                "^silvery white\\/gray$", 
+                "^[a-z]{4}\\, [a-z]{7,8} [a-z]{5,6}$", 
+                "^silvery white\\, metallic$", 
+                "^[a-z]+ [a-z]{4,5}\\, [a-z]+ tinge$", 
+                "^violet\\-dark gray\\, lustrous$", 
+                "^yellow\\-green or yellowish brown$", 
+                "^yellowish green or greenish yellow$", 
+                "^waxy white\\/ red\\/ black\\/ colorless$", 
+                "^a soft silver\\-white or yellowish metallic element$", 
+                "^gas\\/liquid\\: red\\-brown solid\\: metallic luster$", 
+                "^metallic gray\\, allotropic forms\\; yellow\\, black and grey$", 
+                "^almost pure white\\, readily oxidizes on exposure to air\\, turning black$", 
+                "^black\\/brown\\/ amorphous boron is a brown powder\\, metallic boron is black$", 
+                "^radioactive metallic element\\. glows in the dark with an eerie blue light\\.$", 
+                "^soft\\, silvery\\, develops a slightly yellowish or pinkish cast when exposed to air$"
+            ]
+        }, 
+        "RelativeAtomicMass": {
+            "type": "real", 
+            "min": 1.007947, 
+            "max": 238.028913, 
+            "sign": "positive", 
+            "max_nulls": 0
+        }
+    }
+}

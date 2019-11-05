@@ -1,0 +1,95 @@
+.. _changes:
+
+Recent Changes
+==============
+
+This Version
+------------
+
+* Escaping of special characters for regular expressions is now done
+  in a way that is uniform across Python2, Python pre-3.7, and Python 3.7+.
+
+* JSON is now generated the same for Python2 and PYthon3 (no blank lines at
+  the end of lines, and UTF8-encoded).
+
+* Fixed issue with ``tdda test`` command not working properly in the
+  previous version, to self-test an installation.
+
+
+Older Versions
+--------------
+
+* Added new option flag ``--interleave`` for :ref:`tdda_detect_tool`.
+  This causes the ``_ok`` detection fields to be interleaved with the original
+  fields that they refer to in the resulting detection dataset, rather than
+  all appearing together at the far right hand side. This option was actually
+  present in the previous release, but not sufficiently documented.
+
+* Fix for the ``--write-all`` parameter for :py:mod:`tdda.referencetest`
+  result regeneration, which had regressed slightly in the previous version.
+
+* Improved reporting of differences for text files in
+  :py:mod:`tdda.referencetest` when the *actual* results do not match the
+  *expected* file contents.
+  Now fully takes account of the ``ignore`` and ``remove`` parameters.
+  
+* The ``ignore_patterns`` parameter in
+  :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
+  in :py:mod:`tdda.referencetest` now causes only the portion of a line that
+  matches the regular expressions to be ignored; anything else on the line
+  (before or after the part that matches a regular expression) must be
+  **identical** in the *actual* and *expected* results.
+  This means that you are specifying the part of the line that is allowed to
+  differ, rather than marking an entire line to be ignored.
+  This is a change in functionality, but is what had always been intended.
+  For fuller control (and to get the previous behaviour),
+  you can anchor the expressions with ``^.*(...).*$``, and then they
+  will apply to the entire line.
+
+* The ``ignore_patterns`` parameter in :py:mod:`tdda.referencetest` can now
+  accept grouped subexpressions in regular expressions. This allows use of
+  alternations, which were previously not supported.
+
+* The ``ignore_substrings`` parameter in
+  :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
+  :py:mod:`tdda.referencetest` now only matches lines in the *expected*
+  file (where you have full control over what will appear there), not in
+  the *actual* file.
+  This fixes a problem with differences being masked (and not reported as
+  problems) if the *actual* happened to include unexpected matching content
+  on lines other than where intended.
+
+* The :py:mod:`tdda.constraints` package is now more resilient against
+  unexpected type mismatches. Previously, if the type didn't match, then
+  in some circumstances exceptions would be (incorrectly) raised for other
+  constraints, rather than failures.
+
+* The :py:mod:`tdda.constraints` package now supports Python ``datetime.date``
+  fields in Pandas DataFrames, in addition to the existing support of
+  ``datetime.datetime``.
+
+* The :py:mod:`tdda.constraints` Python API now provides support for in-memory
+  constraints, by allowing Python dictionaries to be passed in to
+  :py:meth:`~tdda.constraints.verify_df` and
+  :py:meth:`~tdda.constraints.detect_df`,
+  as an alternative to passing in a ``.tdda`` filename.
+  This allows an application using the library to store its constraints
+  however it wants to, rather than having to use the filesystem
+  (e.g. storing it online and fetching with an HTTP ``GET``).
+
+* The :py:mod:`tdda.constraints` package can now access MySQL databases using
+  the `mysql.connector <https://pypi.org/project/mysql-connector-python>`_
+  driver, in addition to the
+  `MySQLdb <https://pypi.org/project/MySQL-python>`_ and
+  `mysqlclient <https://pypi.org/project/mysqlclient>`_ drivers.
+
+* The :py:mod:`tdda.rexpy` tool can now *quote* the regular expressions it
+  produces, with the new ``--quote`` option flag. This makes it easier to
+  copy the expressions to use them on the command line, or embed them in
+  strings in many programming languages.
+
+* The Python API now allows you to ``import tdda`` and then refer to its
+  subpackages via ``tdda.referencetest``, ``tdda.constraints``
+  or ``tdda.rexpy``.
+  Previously you had to explicitly import each submodule separately.
+

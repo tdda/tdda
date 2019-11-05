@@ -9,16 +9,17 @@ DataFrames saved as Feather files.
 
 The top-level functions are:
 
-    :py:func:`discover_df`:
+    :py:func:`tdda.constraints.discover_df`:
         Discover constraints from a Pandas DataFrame.
 
-    :py:func:`verify_df`:
+    :py:func:`tdda.constraints.verify_df`:
         Verify (check) a Pandas DataFrame, against a set of previously
         discovered constraints.
 
-    :py:func:`detect_df`:
-        Verify (check) a Pandas DataFrame, against a set of previously
-        discovered constraints, and generate an output dataset containing
+    :py:func:`tdda.constraints.detect_df`:
+        For detection of failing rows in a Pandas DataFrame,
+        verified against a set of previously discovered constraints,
+        and generate an output dataset containing
         information about input rows which failed any of the constraints.
 
 """
@@ -45,13 +46,16 @@ try:
     from pmmif import featherpmm
 except ImportError:
     featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
+
+try:
+    import feather as feather
+except ImportError:
+    feather = None
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
+    STANDARD_CONSTRAINT_SUFFIXES,
+    CONSTRAINT_SUFFIX_MAP,
     native_definite,
     DatasetConstraints,
     Verification,
@@ -102,15 +106,15 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
     def get_nrecords(self):
         return len(self.df)
 
-    def types_compatible(self, x, y, colname):
-        return pandas_types_compatible(x, y, colname)
+    def types_compatible(self, x, y, colname=None):
+        return pandas_types_compatible(x, y, colname=colname)
 
     def calc_min(self, colname):
         if self.df[colname].dtype == np.dtype('O'):
             m = self.df[colname].dropna().min()  # Otherwise -inf!
         else:
             m = self.df[colname].min()
-        if pandas_tdda_type(m) == 'date':
+        if pandas_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
             m = m.to_pydatetime(warn=False)
         elif hasattr(m, 'item'):
             m = m.item()
@@ -121,7 +125,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             M = self.df[colname].dropna().max()
         else:
             M = self.df[colname].max()
-        if pandas_tdda_type(M) == 'date':
+        if pandas_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
             M = M.to_pydatetime(warn=False)
         elif hasattr(M, 'item'):
             M = M.item()
@@ -174,11 +178,11 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         # unique values, despite not counting them with .nunique()
         return [None, np.nan, pd.NaT]
 
-    def find_rexes(self, colname, values=None):
+    def find_rexes(self, colname, values=None, seed=None):
         if values is None:
             return rexpy.pdextract(self.df[colname])
         else:
-            return rexpy.extract(values)
+            return rexpy.extract(values, seed=None)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         # note that this should return a set of violations, not True/False.
@@ -216,17 +220,21 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def __init__(self, df):
         self.df = df
         if df is not None:
+            self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
             index = df.index.copy()
             if not index.name:
                 index.name = 'Index'
             self.out_df = pd.DataFrame(index=index)
         else:
+            self.date_cols = []
             self.out_df = None
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
-        name = colname + '_min_ok'
+        name = verification_field(colname, 'min')
         c = self.df[colname]
-        if precision == 'closed':
+        if not pandas_types_compatible(c, value):
+            self.out_df[name] = False
+        elif precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c >= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c > value)
@@ -235,9 +243,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
-        name = colname + '_max_ok'
+        name = verification_field(colname, 'max')
         c = self.df[colname]
-        if precision == 'closed':
+        if not pandas_types_compatible(c, value):
+            self.out_df[name] = False
+        elif precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c <= value)
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c < value)
@@ -246,24 +256,32 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                                                epsilon))
 
     def detect_min_length_constraint(self, colname, value):
-        name = colname + '_min_length_ok'
+        name = verification_field(colname, 'min_length')
         c = self.df[colname]
-        self.out_df[name] = detection_field(c, c.str.len() >= value)
+        if pandas_coarse_type(c) != 'string':
+            self.out_df[name] = False
+        else:
+            self.out_df[name] = detection_field(c, c.str.len() >= value)
 
     def detect_max_length_constraint(self, colname, value):
-        name = colname + '_max_length_ok'
+        name = verification_field(colname, 'max_length')
         c = self.df[colname]
-        self.out_df[name] = detection_field(c, c.str.len() <= value)
+        if pandas_coarse_type(c) != 'string':
+            self.out_df[name] = False
+        else:
+            self.out_df[name] = detection_field(c, c.str.len() <= value)
 
     def detect_tdda_type_constraint(self, colname, value):
-        name = colname + '_type_ok'
+        name = verification_field(colname, 'type')
         self.out_df[name] = False
 
     def detect_sign_constraint(self, colname, value):
-        name = colname + '_sign_ok'
+        name = verification_field(colname, 'sign')
         c = self.df[colname]
 
-        if value == 'null':
+        if pandas_coarse_type(c) != 'number':
+            result = False
+        elif value == 'null':
             self.out_df[name] = False
         elif value == 'positive':
             self.out_df[name] = detection_field(c, c > 0)
@@ -278,27 +296,30 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def detect_max_nulls_constraint(self, colname, value):
         # found more nulls than are allowed, so mark all null values as bad
-        name = colname + '_nonnull_ok'
+        name = verification_field(colname, 'max_nulls')
         c = self.df[colname]
         self.out_df[name] = pd.notnull(c)
 
     def detect_no_duplicates_constraint(self, colname, value):
         # found duplicates, so mark anything duplicated as bad
-        name = colname + '_nodups_ok'
+        name = verification_field(colname, 'no_duplicates')
         c = self.df[colname]
         unique = ~ self.df.duplicated(colname, keep=False)
         self.out_df[name] = detection_field(c, unique, default=True)
 
     def detect_allowed_values_constraint(self, colname, allowed_values,
                                          violations):
-        name = colname + '_values_ok'
+        name = verification_field(colname, 'allowed_values')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def detect_rex_constraint(self, colname, violations):
-        name = colname + '_rex_ok'
+        name = verification_field(colname, 'rex')
         c = self.df[colname]
-        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+        if pandas_coarse_type(c) != 'string':
+            self.out_df[name] = False
+        else:
+            self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def write_detected_records(self,
                                detect_outpath=None,
@@ -309,10 +330,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_in_place=False,
                                rownumber_is_index=True,
                                boolean_ints=False,
+                               interleave=False,
                                **kwargs):
         if self.out_df is None:
             return None
-
+        orig_fields = list(self.df)
         output_is_feather = (detect_outpath
                              and file_format(detect_outpath) == 'feather')
 
@@ -346,6 +368,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     out_df.insert(0, fname, self.df[fname])
                 else:
                     raise Exception('DataFrame has no column %s' % fname)
+
+        if interleave:
+            out_df = self.interleave(out_df, orig_fields, nfailname)
+#             if detect_in_place:  # does not work in place
+#                 self.interleave(self.df, orig_fields, nfailname)
 
         if detect_outpath:
             index_is_trivial = is_pd_index_trivial(out_df)
@@ -391,6 +418,25 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if not detect_write_all:
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
+
+    def interleave(self, df, orig_fields, nfailname):
+        if set(orig_fields) - set(list(df)):
+            return df
+            # Only interleave if all of the original fields
+            # are in the output
+
+        all_vfields = set(list(df)) - set(orig_fields) - set([nfailname])
+        new_fields = []
+        for f in orig_fields:
+            new_fields.append(f)
+            new_fields.extend(sorted([v for v in all_vfields
+                                      if is_ver_field(v, f)]))
+        new_fields.append(nfailname)
+        if DEBUG and set(list(df)) != set(new_fields):
+            print('list(df))', list(df), len(list(df)))
+            print('new fields', new_fields, len(new_fields))
+        assert set(list(df)) == set(new_fields)
+        return df[new_fields]
 
 
 class PandasConstraintVerifier(PandasConstraintCalculator,
@@ -573,12 +619,16 @@ def pandas_tdda_type(x):
         return 'string'
     dt = getattr(x, 'dtype', None)
     if dt == np.dtype('O'):
-        # objects could be either strings or booleans-with-nulls
+        # objects could be either strings or booleans-with-nulls or dates
         for v in x:
             if type(v) in (bool, np.bool, np.bool_):
                 return 'bool'
             elif type(v) in (unicode_string, byte_string):
                 return 'string'
+            elif isinstance(v, datetime.datetime):
+                return 'date'
+            elif isinstance(v, datetime.date):
+                return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
     dts = str(dt)
@@ -588,8 +638,10 @@ def pandas_tdda_type(x):
         return 'int'
     if type(x) == float or 'float' in dts:
         return 'real'
-    if (type(x) == datetime.datetime or 'datetime' in dts
-                or type(x) == pandas_Timestamp):
+    if ('date' in dts
+                or isinstance(x, datetime.datetime)
+                or isinstance(x, datetime.date)
+                or isinstance(x, pandas_Timestamp)):
         return 'date'
     if x is None:
         return 'null'
@@ -603,7 +655,7 @@ def pandas_tdda_type(x):
 
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,
-              report='all', **kwargs):
+              repair=True, report='all', **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -617,6 +669,9 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             The path to a JSON ``.tdda`` file (possibly
                             generated by the discover_df function, below)
                             containing constraints to be checked.
+                            Or, alternatively, an in-memory dictionary
+                            containing the structured contents of a ``.tdda``
+                            file.
 
     Optional Inputs:
 
@@ -669,11 +724,21 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
                                 c.dropnulls().astype(bool) == c.dropnulls()
 
+        *repair*:
+                            A boolean to specify whether to try to use the
+                            information in the constraints to attempt to
+                            repair potentially-incorrect type inferrences
+                            made when constructing the dataframe. When the
+                            dataframe has been loaded from a .csv file, this
+                            can often be useful (but should not be used with
+                            dataframes that have come from a more reliable
+                            source).
+
         *report*:
                             ``all`` or ``fields``.
                             This controls the behaviour of the
-                            :py:meth:`~PandasVerification.__str__` method on
-                            the resulting :py:class:`~PandasVerification`
+                            :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.__str__` method on
+                            the resulting :py:class:`~tdda.constraints.pd.constraints.PandasVerification`
                             object (but not its content).
 
                             The default is ``all``, which means that
@@ -686,16 +751,16 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
     Returns:
 
-        :py:class:`~PandasVerification` object.
+        :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
 
         This object has attributes:
 
         - *passes*      --- Number of passing constriants
         - *failures*    --- Number of failing constraints
 
-        It also has a :py:meth:`~PandasVerification.to_frame()` method for
+        It also has a :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.to_frame()` method for
         converting the results of the verification to a Pandas DataFrame,
-        and a :py:meth:`~PandasVerification.__str__` method to print
+        and a :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.__str__` method to print
         both the detailed and summary results of the verification.
 
     Example usage::
@@ -718,8 +783,13 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     """
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
-    constraints = DatasetConstraints(loadpath=constraints_path)
-    pdv.repair_field_types(constraints)
+    if isinstance(constraints_path, dict):
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(constraints_path))
+    else:
+        constraints = DatasetConstraints(loadpath=constraints_path)
+    if repair:
+        pdv.repair_field_types(constraints)
     return pdv.verify(constraints,
                       VerificationClass=PandasVerification,
                       report=report, **kwargs)
@@ -728,7 +798,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all=False, per_constraint=False,
               output_fields=None, index=False, in_place=False,
-              rownumber_is_index=True, boolean_ints=False, report='records',
+              rownumber_is_index=True, boolean_ints=False,
+              repair=True, report='records',
               **kwargs):
     """
     Check the records from the Pandas DataFrame provided, to detect
@@ -744,6 +815,9 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             The path to a JSON ``.tdda`` file (possibly
                             generated by the discover_df function, below)
                             containing constraints to be checked.
+                            Or, alternatively, an in-memory dictionary
+                            containing the structured contents of a ``.tdda``
+                            file.
 
     Optional Inputs:
 
@@ -855,13 +929,23 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             false), rather than as ``true`` and ``false``
                             values.
 
+        *repair*:
+                            A boolean to specify whether to try to use the
+                            information in the constraints to attempt to
+                            repair potentially-incorrect type inferrences
+                            made when constructing the dataframe. When the
+                            dataframe has been loaded from a .csv file, this
+                            can often be useful (but should not be used with
+                            dataframes that have come from a more reliable
+                            source).
+
     The *report* parameter from :py:func:`verify_df` can also be
     used, in which case a verification report will also be produced in
     addition to the detection results.
 
     Returns:
 
-        :py:class:`~PandasDetection` object.
+        :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
 
         This object has a :py:meth:`~PandasDetection.detected()` method
         for obtaining the Pandas DataFrame containing the detection
@@ -881,8 +965,13 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
     """
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
-    constraints = DatasetConstraints(loadpath=constraints_path)
-    pdv.repair_field_types(constraints)
+    if isinstance(constraints_path, dict):
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(constraints_path))
+    else:
+        constraints = DatasetConstraints(loadpath=constraints_path)
+    if repair:
+        pdv.repair_field_types(constraints)
     return pdv.detect(constraints, VerificationClass=PandasDetection,
                       outpath=outpath, write_all=write_all,
                       per_constraint=per_constraint,
@@ -999,6 +1088,11 @@ def discover_df(df, inc_rex=False, df_path=None):
                  listing them will be generated.
                  :py:const:`MAX_CATEGORIES` is currently "hard-wired" to 20.
 
+        ``rex``:
+                 For string fields only, a list of regular expressions
+                 where each value in the dataframe is expected to match
+                 at least one of the expressions.
+
     Example usage::
 
         import pandas as pd
@@ -1034,7 +1128,7 @@ def file_format(path):
 def load_df(path):
     if file_format(path) != 'feather':
         return default_csv_loader(path)
-    elif featherpmm:
+    elif featherpmm and feather:
         ds = featherpmm.read_dataframe(path)
         return ds.df
     elif feather:
@@ -1050,7 +1144,7 @@ def save_df(df, path, index=False):
         print(default_csv_writer(df, None, index=index))
     elif file_format(path) != 'feather':
         default_csv_writer(df, path, index=index)
-    elif featherpmm:
+    elif featherpmm and feather:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)
     elif feather:
@@ -1137,6 +1231,33 @@ def df_fuzzy_lt(a, b, epsilon):
     and makes it 1% less negative if it is negative.
     """
     return (a <= b) | (a <= fuzz_up(b, epsilon))
+
+
+def is_ver_field(v, f):
+    """Test whether v is a verification field for original field f"""
+    L = len(f)
+    if v[:L + 1] != f + '_':
+        return False  # didn't start with f
+
+    v = v[L + 1:]
+    has_digits = False
+    while v and v[-1].isdigit():  # remove any trailing (disambiguation) digits
+        v = v[:-1]
+        has_digits = True
+    if has_digits:
+        if not v.endswith('_'):  # was only disamb. if ended _ddd
+            return False
+        v = v[:-1]    # remove the underscore
+
+    if not v.endswith('_ok'):
+        return False
+
+    v = v[:-3]
+    return v in STANDARD_CONSTRAINT_SUFFIXES
+
+
+def verification_field(col, ctype):
+    return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
 
 
 # for backwards compatibility (old name for function)

@@ -1,0 +1,181 @@
+{
+    "creation_metadata": {
+        "local_time": "2019-04-15 17:17:53", 
+        "utc_time": "2019-04-15 16:16:53", 
+        "creator": "TDDA 1.0.25", 
+        "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.db", 
+        "source": "elements", 
+        "host": "bartok.local", 
+        "user": "njr", 
+        "dataset": "elements", 
+        "n_records": 118, 
+        "n_selected": 118
+    }, 
+    "fields": {
+        "Z": {
+            "type": "int", 
+            "min": 1, 
+            "max": 118, 
+            "sign": "positive", 
+            "max_nulls": 0, 
+            "no_duplicates": true
+        }, 
+        "Name": {
+            "type": "string", 
+            "min_length": 3, 
+            "max_length": 13, 
+            "max_nulls": 0, 
+            "no_duplicates": true, 
+            "rex": [
+                "^[A-Z][a-z]+$"
+            ]
+        }, 
+        "Symbol": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 3, 
+            "max_nulls": 0, 
+            "no_duplicates": true, 
+            "rex": [
+                "^[A-Za-z]{1,3}$"
+            ]
+        }, 
+        "Period": {
+            "type": "int", 
+            "min": 1, 
+            "max": 7, 
+            "sign": "positive", 
+            "max_nulls": 0
+        }, 
+        "Group": {
+            "type": "int", 
+            "min": 1, 
+            "max": 18, 
+            "sign": "positive"
+        }, 
+        "ChemicalSeries": {
+            "type": "string", 
+            "min_length": 7, 
+            "max_length": 20, 
+            "max_nulls": 0, 
+            "allowed_values": [
+                "Actinoid", 
+                "Alkali metal", 
+                "Alkaline earth metal", 
+                "Halogen", 
+                "Lanthanoid", 
+                "Metalloid", 
+                "Noble gas", 
+                "Nonmetal", 
+                "Poor metal", 
+                "Transition metal"
+            ], 
+            "rex": [
+                "^[A-Z][a-z]+$", 
+                "^[A-Z][a-z]+ [a-z]{3,5}$", 
+                "^Alkaline earth metal$"
+            ]
+        }, 
+        "AtomicWeight": {
+            "type": "real", 
+            "min": 1.007947, 
+            "max": 294.0, 
+            "sign": "positive", 
+            "max_nulls": 1
+        }, 
+        "Etymology": {
+            "type": "string", 
+            "min_length": 4, 
+            "max_length": 53, 
+            "max_nulls": 1, 
+            "rex": [
+                "^[A-Za-z]+$", 
+                "^[A-Za-z]+ [A-Za-z]+$", 
+                "^[A-Za-z]+ [A-Za-z]+ [A-Za-z]+$", 
+                "^[A-Z][a-z]+\\, [A-Z][a-z]+$", 
+                "^Greek protos and actinium$", 
+                "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$", 
+                "^State and University of California$", 
+                "^Latin uni\\, uni\\, and [a-z]+$", 
+                "^Latin uni\\, uni\\, and Greek [a-z]{3,4}$", 
+                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$", 
+                "^Pierre and Marie Curie and the traditional \\-um ending$"
+            ]
+        }, 
+        "RelativeAtomicMass": {
+            "type": "real", 
+            "min": 1.007947, 
+            "max": 294.0, 
+            "sign": "positive", 
+            "max_nulls": 1
+        }, 
+        "MeltingPointC": {
+            "type": "real", 
+            "min": -258.975, 
+            "max": 3675.0
+        }, 
+        "MeltingPointKelvin": {
+            "type": "real", 
+            "min": 14.2, 
+            "max": 3948.0, 
+            "sign": "positive"
+        }, 
+        "BoilingPointC": {
+            "type": "real", 
+            "min": -268.93, 
+            "max": 5596.0
+        }, 
+        "BoilingPointF": {
+            "type": "real", 
+            "min": -452.07, 
+            "max": 10105.0
+        }, 
+        "Density": {
+            "type": "real", 
+            "min": 8.988e-05, 
+            "max": 41.0, 
+            "sign": "positive"
+        }, 
+        "Description": {
+            "type": "string", 
+            "min_length": 1, 
+            "max_length": 83, 
+            "rex": [
+                "^[a-z0-9]+$", 
+                "^[a-z]+ [a-z]{3,5}$", 
+                "^[0-9]\\.[0-9]{1,2}$", 
+                "^[0-9][.-][0-9] [a-z]{8,9}$", 
+                "^radioactive alkali metal$", 
+                "^1\\.5 soft metal$", 
+                "^radioactive alkaline earth metal$", 
+                "^halogen solid that sublimes at room temperatures into an irritating purple\\-pink gas$"
+            ]
+        }, 
+        "Colour": {
+            "type": "string", 
+            "min_length": 4, 
+            "max_length": 80, 
+            "rex": [
+                "^[a-z]+$", 
+                "^[a-z]+ [a-z]+$", 
+                "^silvery\\-white$", 
+                "^silvery white\\/gray$", 
+                "^silvery lustrous [a-z]{4}$", 
+                "^[a-z]{4}\\, [a-z]{7,8} [a-z]{5,6}$", 
+                "^silvery white\\, metallic$", 
+                "^[a-z]+ [a-z]{4,5}\\, [a-z]+ tinge$", 
+                "^violet\\-dark gray\\, lustrous$", 
+                "^yellow\\-green or yellowish brown$", 
+                "^yellowish green or greenish yellow$", 
+                "^waxy white\\/ red\\/ black\\/ colorless$", 
+                "^a soft silver\\-white or yellowish metallic element$", 
+                "^gas\\/liquid\\: red\\-brown solid\\: metallic luster$", 
+                "^metallic gray\\, allotropic forms\\; yellow\\, black and grey$", 
+                "^almost pure white\\, readily oxidizes on exposure to air\\, turning black$", 
+                "^black\\/brown\\/ amorphous boron is a brown powder\\, metallic boron is black$", 
+                "^radioactive metallic element\\. glows in the dark with an eerie blue light\\.$", 
+                "^soft\\, silvery\\, develops a slightly yellowish or pinkish cast when exposed to air$"
+            ]
+        }
+    }
+}

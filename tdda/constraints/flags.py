@@ -16,7 +16,7 @@ DISCOVER_HELP = '''
 Optional flags are:
 
   * -r or --rex
-      Include regular expression generation
+      Include regular expression generation. Disabled by default.
   * -R or --norex
       Exclude regular expression generation (the default)
 '''
@@ -48,11 +48,20 @@ Optional flags are:
   * --write-all
       Include passing records in the output.
   * --per-constraint
-      Write one column per failing constraint, as well as the n_failures
-      total column for each row.
+      Write one additional column per failing constraint, to show if a
+      constraint passed or failed, as well as the n_failures
+      total column for each row. This is set by default.
+  * --no-per-constraint
+      Disable the --per-constraint flag, so that the only constraint-based
+      column written out is the nfailures field.
+  * --no-original-fields
+      Do not write out any of the original columns. By default, all of the
+      original columns are written out, unless you use --output-fields.
   * --output-fields FIELD1 FIELD2 ...
       Specify original columns to write out.
-      If used with no field names, all original columns will be included.
+  * --interleave
+      In the output, place the verification fields immediately after
+      the original field to which they correspond.
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
@@ -130,12 +139,18 @@ def detect_parser(usage=''):
     parser.add_argument('--write-all', action='store_true',
                         help='Include passing records')
     parser.add_argument('--per-constraint', action='store_true',
-                        help='Write one column per failing constraint '
-                             'in addition to n_failures')
+                        help='Write one flag column per failing constraint '
+                             'in addition to n_failures. Set by default.')
+    parser.add_argument('--no-per-constraint', action='store_true',
+                        help='Do not write out any per-constraint flag columns')
+    parser.add_argument('--no-output-fields', action='store_true',
+                        help='Do not write out any original fields in the '
+                             'output. By default, all original columns will '
+                             'be included.')
     parser.add_argument('--output-fields', nargs='*',
-                        help='Specify original columns to write out. '
-                             'If used with no field names, then '
-                             'all original columns will be included')
+                        help='Specify original columns to write out.')
+    parser.add_argument('--interleave', action='store_true',
+                        help='Interleave ok columns with original fields.')
     parser.add_argument('--index', action='store_true',
                         help='Include a row-number index in the output file '
                              'when detecting. Rows are usually numbered from '
@@ -178,10 +193,14 @@ def detect_flags(parser, args, params):
         'report': 'records',
         'ascii': False,
     })
-    if flags.all:
-        params['report'] = 'all'
-    elif flags.fields:
-        params['report'] = 'records'
+    if flags.per_constraint and flags.no_per_constraint:
+        print('You must not specify both --per-constraint and '
+              '--no-per-constraint.', file=sys.stderr)
+        sys.exit(1)
+    if flags.output_fields and flags.no_output_fields:
+        print('You must not specify both --output-fields and '
+              '--no-output-fields.', file=sys.stderr)
+        sys.exit(1)
     if flags.ascii:
         params['ascii'] = True
     if flags.type_checking is not None:
@@ -190,14 +209,20 @@ def detect_flags(parser, args, params):
         params['epsilon'] = float(flags.epsilon)
     if flags.write_all:
         params['write_all'] = True
-    if flags.per_constraint:
+    if not flags.no_per_constraint:
         params['per_constraint'] = True
     if flags.index:
         params['index'] = True
     if flags.boolean_ints:
         params['boolean_ints'] = True
+
     if flags.output_fields is not None:
         params['output_fields'] = flags.output_fields
+    elif not flags.no_output_fields:
+        params['output_fields'] = []
+
+    if flags.interleave:
+        params['interleave'] = True
     params['in_place'] = False  # Only applicable in API case
     params['report'] = 'records'
     return flags

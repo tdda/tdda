@@ -1,5 +1,9 @@
 # Examples of using tdda.constraints with CSV files
 
+For all of these examples, you should run commands on the command line,
+after cd'ing to this directory.
+
+
 ## Command-line Periodic table examples ("elements" dataset)
 
 1. Generate constraints from first 92 elements in periodic table.
@@ -22,11 +26,52 @@
    Now we get some failures. For example, the original discovered highest
    atomic number of Z=92 is not satisfied in the expanded data.
 
-4. The example data includes elements118.tdda, a TDDA file generated from
+4. Detect using the first 118 elements, using the constraints generated
+   from the first 92 elements. This will write out a new csv file containing
+   just the (27) records that had values that failed the constraints.
+
+       tdda detect testdata/elements118.csv elements92.tdda elements118_detect.csv
+
+5. The example data includes elements118.tdda, a TDDA file generated from
    all 118 elements. You can verify that these constraints are satisfied
    by the larger dataset by running
 
        tdda verify testdata/elements118.csv elements118.tdda
+
+
+## Command-line bank account data examples ("accounts" dataset)
+
+This can be used in the same way as the "elements" example above, but is
+more interesting as there is more data, and this data also includes dates
+and categorical values.
+
+These examples also include constraints for regular expressions on string
+fields. The two main datasets are accounts1k.csv and accounts25k.csv.
+
+The equivalent steps to the "elements" ones above are:
+
+1. Generate constraints using a small sample (1000 records).
+
+        tdda discover -r testdata/accounts1k.csv accounts1k.tdda
+
+2. Verify the same data against those constraints.
+
+       tdda verify testdata/accounts1k.csv accounts1k.tdda
+
+3. Verify against a larger dataset (25,000 records), using the constraints
+   generated on the 1,000 record sample.
+
+       tdda verify testdata/accounts25k.csv accounts1k.tdda
+
+4. Detect against the larger dataset, to produce a new csv file that contains
+   just the records that failed the constraints.
+
+       tdda detect testdata/accounts25k.csv accounts1k.tdda accounts25k_detect.csv
+
+5. Verify constraints built from the larger dataset, against the larger
+   dataset (which should all pass).
+
+       tdda verify testdata/accounts25k.csv accounts25k.tdda
 
 
 ## Python API Periodic table examples ("elements" dataset)
@@ -36,13 +81,30 @@ environment, Python API examples are provided which carry out the same
 steps as the command-line example steps above, but with each step
 explicitly implemented using custom Python code, using the API.
 
-The steps here are equivalent to steps 1 to 4 using the 'tdda' command
-above:
+The steps here are equivalent to steps 1 to 5 using the 'tdda' command
+in the "elements" section above:
 
 1.  python elements_discover_92.py
 2.  python elements_verify_92.py
 3.  python elements_verify_118_against_92.py
-4.  python elements_verify_118.py
+4.  python elements_detect_118_against_92.py
+5.  python elements_verify_118.py
+
+## Python API Bank Accounts Data examples ("accounts" dataset)
+
+For embedding constraint discovery and verification within a Python
+environment, Python API examples are provided which carry out the same
+steps as the command-line example steps above, but with each step
+explicitly implemented using custom Python code, using the API.
+
+The steps here are equivalent to steps 1 to 5 using the 'tdda' command
+in the "elements" section above:
+
+1.  python accounts_discover_1k.py
+2.  python accounts_verify_1k.py
+3.  python accounts_verify_25k_against_1k.py
+4.  python accounts_detect_25k_against_1k.py
+5.  python accounts_verify_25k.py
 
 
 ## Creating DataFrame Output from Verifications
@@ -66,7 +128,7 @@ tiny, generated dataset:
         1  2  two
         2  9  NaN
 
-2. Verify a smaller, DataFrame that is consistent with the constraints,
+2. Verify a smaller DataFrame that is consistent with the constraints,
    namely:
 
            a    b

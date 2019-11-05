@@ -8,13 +8,15 @@ def read(fname):
     # read contents of file
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-def data(path, pathitems):
+def data(path, pathitems, exclusions=None):
     # build list of additional files to package up from a subdirectory
     names = []
     for relpath in pathitems:
         subpath = path + [relpath]
         dirname = os.path.join(*subpath)
         for name in os.listdir(dirname):
+            if exclusions and name in exclusions:
+                continue
             pathname = os.path.join(relpath, name)
             fullpathname = os.path.join(dirname, name)
             if os.path.isdir(fullpathname):
@@ -40,7 +42,9 @@ setup(
         'tdda.referencetest.tests': data(['tdda', 'referencetest', 'tests'],
                                          ['testdata']),
         'tdda.constraints': data(['tdda', 'constraints'],
-                                 ['testdata', 'examples'])
+                                 ['testdata', 'examples'],
+                                 exclusions=['accounts1k.csv',
+                                             'accounts25k.csv'])
                             + ['tdda_json_file_format.md'],
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],

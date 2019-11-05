@@ -20,9 +20,23 @@ from collections import OrderedDict
 from tdda.version import version
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
-STANDARD_FIELD_CONSTRAINTS = ('type', 'min', 'min_length', 'max', 'max_length',
-                              'sign', 'max_nulls', 'no_duplicates',
-                              'allowed_values', 'rex', 'transform')
+
+CONSTRAINT_SUFFIX_MAP = OrderedDict((
+    ('type', 'type'),
+    ('min', 'min'),
+    ('min_length', 'min_length'),
+    ('max', 'max'),
+    ('max_length', 'max_length'),
+    ('sign', 'sign'),
+    ('max_nulls', 'nonnull'),
+    ('no_duplicates', 'nodups'),
+    ('allowed_values', 'values'),
+    ('rex', 'rex'),
+    ('transform', None),  # this mapped value isn't used
+))
+
+STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
+STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
 SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
          'null')
@@ -145,8 +159,8 @@ class DatasetConstraints(object):
         """
         with open(path) as f:
             text = f.read()
-        self.initialize_from_dict(native_definite(json.loads(text)))
-
+        obj = json.loads(text, object_pairs_hook=OrderedDict)
+        self.initialize_from_dict(native_definite(obj))
 
     def initialize_from_dict(self, in_constraints):
         """
@@ -175,7 +189,7 @@ class DatasetConstraints(object):
                     if is_date and kind in DATE_VALUED_CONSTRAINTS:
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
-                else:
+                elif not kind.startswith('#'):
                     warn('Constraint kind %s for field %s unknown: ignored.'
                          % (kind, fieldname))
             if fc:
@@ -199,7 +213,11 @@ class DatasetConstraints(object):
         self.local_time = now.strftime('%Y-%m-%d %H:%H:%S')
         self.utc_time = utcnow.strftime('%Y-%m-%d %H:%H:%S')
         self.host = socket.gethostname()
-        self.user = getpass.getuser()
+        try:    # Issue 18: getuser() can fail under Docker with password
+                # files with no non-root users
+            self.user = getpass.getuser()
+        except:
+            self.user = ''
         self.set_creator()
 
     def get_metadata(self, tddafile=None):
@@ -238,7 +256,8 @@ class DatasetConstraints(object):
         Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return json.dumps(self.to_dict(tddafile=tddafile), indent=4) + '\n'
+        return strip_lines(json.dumps(self.to_dict(tddafile=tddafile),
+                                      indent=4, ensure_ascii=False)) + '\n'
 
     def sort_fields(self, fields=None):
         """
@@ -281,7 +300,7 @@ class FieldConstraints(object):
         into the dictionary using the constraint kind as a key.
         """
         self.name = name
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -335,7 +354,7 @@ class MultiFieldConstraints(FieldConstraints):
         into the dictionary using the constraint kind as a key.
         """
         self.names = tuple(names)
-        self.constraints = {}
+        self.constraints = OrderedDict()
         for c in constraints or []:
             self.constraints[c.kind] = c
 
@@ -432,7 +451,9 @@ class Constraint(object):
                                              '(%s)' % (name, value, errmsg))
 
     def to_dict_value(self, raw=False):
-        return (self.value if type(self.value) != datetime.datetime or raw
+        return (self.value
+                   if raw or type(self.value) not in (datetime.datetime,
+                                                      datetime.date)
                 else str(self.value))
 
 
@@ -444,7 +465,7 @@ class MinConstraint(Constraint):
     """
     Constraint specifying the minimum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
+    def __init__(self, value, precision=None, comment=None):
         self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
 
@@ -460,7 +481,7 @@ class MaxConstraint(Constraint):
     """
     Constraint specifying the maximum allowed value in a field.
     """
-    def __init__(self, value, precision=None):
+    def __init__(self, value, precision=None, comment=None):
         self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
 
@@ -481,7 +502,7 @@ class SignConstraint(Constraint):
     Possible values are ``positive``, ``non-negative``, ``zero``,
     ``non-positive``, ``negative`` and ``null``.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         self.check_validity('sign', value, [None], SIGNS)
         Constraint.__init__(self, 'sign', value)
 
@@ -501,7 +522,7 @@ class TypeConstraint(Constraint):
     sometimes used because of Pandas silent and automatic promotion
     of integer fields to floats if nulls are present.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         if type(value) in (list, tuple):
             for t in value:
                 self.check_validity('type', t, TYPES)
@@ -517,7 +538,7 @@ class MaxNullsConstraint(Constraint):
     (The constraint generator only generates 0 and 1, but the verifier
     will verify and number.)
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_nulls', value)
 
 
@@ -529,7 +550,7 @@ class NoDuplicatesConstraint(Constraint):
     Currently only generated for string fields, though could be used
     more broadly.
     """
-    def __init__(self, value=True):
+    def __init__(self, value=True, comment=None):
         self.check_validity('no_duplicates', value, [None, True, False])
         Constraint.__init__(self, 'no_duplicates', value)
 
@@ -545,7 +566,7 @@ class AllowedValuesConstraint(Constraint):
     time of writing, but check above in case this comment rusts)
     different values in the field.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'allowed_values', value)
 
 
@@ -567,7 +588,7 @@ class MaxLengthConstraint(Constraint):
     Generated instead of a ``MaxConstraint`` by this generation code,
     but can be used in conjunction with a ``MinConstraint``.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_length', value)
 
 
@@ -576,7 +597,7 @@ class RexConstraint(Constraint):
     Constraint restricting a string field to match (at least) one of
     the regular expressions in a list given.
     """
-    def __init__(self, value):
+    def __init__(self, value, comment=None):
         Constraint.__init__(self, 'rex', [native_definite(v) for v in value])
 
 
@@ -749,17 +770,15 @@ def constraint_class(kind):
     return '%sConstraint' % ''.join(part.title() for part in kind.split('_'))
 
 
-def strip_lines(s, side='r'):
+def strip_lines(s):
     """
-    Splits the given string into lines (at newlines), strips each line
-    and rejoins. Is careful about last newline and default to stripping
-    on the right only (side='r'). Use 'l' for left strip or anything
-    else to strip both sides.
+    Splits the given string into lines (at newlines), strips trailing
+    whitespace from each line before rejoining.
+
+    Is careful about last newline.
     """
-    strip = (str.rstrip if side == 'r' else str.lstrip if side == 'l'
-             else str.strip)
     end = '\n' if s.endswith('\n') else ''
-    return '\n'.join([strip(line) for line in s.splitlines()]) + end
+    return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
 
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
@@ -929,7 +948,7 @@ def UTF8DefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
                            for (k, v) in s.items())
-    elif type(s) == dict:
+    elif isinstance(s, dict):
         return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
                 for (k, v) in s.items()}
     return s
@@ -951,7 +970,7 @@ def NativeDefiniteObject(s):
     elif isinstance(s, OrderedDict):
         return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
                            for (k, v) in s.items()))
-    elif type(s) is dict:
+    elif isinstance(s, dict):
         return {NativeDefiniteObject(k): NativeDefiniteObject(v)
                 for (k, v) in s.items()}
     return s

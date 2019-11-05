@@ -55,24 +55,7 @@ class ReferenceTest(object):
     In addition to the various test-assertion methods, the module also
     provides some useful instance variables. All of these can be set
     explicitly in test setup code, using the :py:meth:`set_defaults`
-    class method:
-
-        *tmp_dir*
-            The location where temporary files can be written to. It defaults
-            to a system-specific temporary area.
-
-        *print_fn*
-            The function to use to display information while running tests,
-            which should have the same signature as Python3's
-            standard print function (the ``__future__`` print function
-            in Python2).
-
-        *verbose*
-            Boolean verbose flag, to control reporting of errors while running
-            tests. Reference tests tend to take longer to run than traditional
-            unit tests, so it is often useful to be able to see
-            information from failing tests as they happen, rather
-            than waiting for the full report at the end.
+    class method.
     """
 
     # Verbose flag
@@ -129,7 +112,6 @@ class ReferenceTest(object):
                 it defaults to */tmp*, *c:\\temp* or whatever
                 :py:func:`tempfile.gettempdir()` returns, as
                 appropriate.
-
         """
         for k in kwargs:
             if k == 'verbose':
@@ -218,9 +200,9 @@ class ReferenceTest(object):
         """
         self.assert_fn = assert_fn
         self.reference_data_locations = self._cls_dataloc(self.__class__)
-        self.pandas = PandasComparison(print_fn=self.print_fn,
+        self.pandas = PandasComparison(print_fn=self.call_print_fn,
                                        verbose=self.verbose)
-        self.files = FilesComparison(print_fn=self.print_fn,
+        self.files = FilesComparison(print_fn=self.call_print_fn,
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
 
@@ -355,7 +337,8 @@ class ReferenceTest(object):
                                check_data=None, check_types=None,
                                check_order=None, condition=None, sortby=None,
                                precision=None, **kwargs):
-        """Check that an in-memory Pandas DataFrame matches a reference one
+        """
+        Check that an in-memory Pandas DataFrame matches a reference one
         from a saved reference CSV file.
 
             *df*:
@@ -391,58 +374,9 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a `DataFrame` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use for
-                floating-point comparisons.  Default is not to perform
-                rounding.
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -497,65 +431,15 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a `DataFrame` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use
-                for floating-point comparisons.  Default is not to
-                perform rounding.
-
             *\*\*kwargs*:
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
 
-        Raises :py:class:`NotImplementedError` if Pandas is not available.
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
+        Raises :py:class:`NotImplementedError` if Pandas is not available.
         """
         expected_path = self._resolve_reference_path(ref_csv, kind=kind)
         if self._should_regenerate(kind):
@@ -606,62 +490,13 @@ class ReferenceTest(object):
                     - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *check_data*:
-                (Optional) restriction of fields whose values should
-                be compared.
-                Possible values are:
-
-                    - ``None`` or ``True`` (to apply the comparison to
-                      *all* fields; this is the default).
-                    - ``False`` (to skip the comparison completely)
-                    - a list of field names (to check only these fields)
-                    - a function taking a ``DataFrame`` as its single
-                      parameter,
-                      and returning a list of field names to check.
-
-            *check_types*:
-                (Optional) restriction of fields whose types should be
-                compared.
-                See *check_data* (above) for possible values.
-
-            *check_order*:
-                (Optional) restriction of fields whose (relative)
-                order should be compared.
-                See *check_data* (above) for possible values.
-
-            *check_extra_cols*:
-                (Optional) restriction of extra fields in the actual dataset
-                which, if found, will cause the check to fail.
-                See *check_data* (above) for possible values.
-
-            *sortby*:
-                (Optional) specification of fields to sort by before comparing.
-
-                    - ``None`` or ``False`` (do not sort; this is the default)
-                    - ``True`` (to sort on all fields based on their
-                      order in the reference datasets; you probably
-                      don't want to use this option)
-                    - a list of field names (to sort on these fields, in order)
-                    - a function taking a ``DataFrame`` (which will be
-                      the reference data frame) as its single
-                      parameter,
-                      and returning a list of field names to sort on.
-
-            *condition*:
-                (Optional) filter to be applied to datasets before comparing.
-                It can be ``None``, or can be a function that
-                takes a ``DataFrame`` as its single parameter and
-                returns a vector of booleans (to specify which rows
-                should be compared).
-
-            *precision*:
-                (Optional) number of decimal places to use for
-                floating-point comparisons.  Default is not to perform
-                rounding.
-
             *\*\*kwargs*:
                 Any additional named parameters are passed straight
                 through to the *csv_read_fn* function.
+
+        It also accepts the ``check_data``, ``check_types``, ``check_order``,
+        ``check_extra_cols``, ``sortby``, ``condition`` and ``precision``
+        optional parameters described in :py:meth:`assertDataFramesEqual()`.
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
@@ -721,9 +556,11 @@ class ReferenceTest(object):
                 lines will be considered to be the same if
                 they only differ in substrings that match
                 one of these regular expressions.
-                The expressions must not contain parenthesised groups, and
-                should only include explicit anchors if they
+                The expressions should only include explicit anchors if they
                 need to refer to the whole line.
+                Only the matched expression within the line is ignored; any text
+                to the left or right of the matched expression must either be
+                **exactly** the same on both sides, or be ignorable.
 
             *remove_lines*
                 An optional list of substrings; lines
@@ -750,7 +587,8 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_result(string, expected_path)
+            self._write_reference_result(string, expected_path,
+                                         lstrip=lstrip, rstrip=rstrip)
         else:
             ilc = ignore_substrings
             ip = ignore_patterns
@@ -785,60 +623,25 @@ class ReferenceTest(object):
                 the configuration via
                 :py:meth:`set_data_location()`.
 
-            *kind*:
-                The reference *kind*, used to locate the reference file.
-
-            *lstrip*:
-                If set to ``True``, lines are left-stripped
-                before the comparison is carried out.
-
-            *rstrip*:
-                If set to ``True``, lines are right-stripped before
-                the comparison is carried out.
-
-            *ignore_substrings*:
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                ignored in the comparison.
-
-            *ignore_patterns*:
-                An optional list of regular expressions;
-                lines will be considered to be the same if
-                they only differ in substrings that match one
-                of these regular expressions. The expressions
-                must not contain parenthesised groups, and
-                should only include explicit anchors if they
-                need to refer to the whole line.
-
-            *remove_lines*
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                completely removed before carrying out the
-                comparison. This is the means by which you
-                would exclude 'optional' content.
-
-            *preprocess*:
-                An optional function that takes a list of
-                strings and preprocesses it in some way; this
-                function will be applied to both the actual and expected.
-
-            *max_permutation_cases*:
-                An optional number specifying the maximum
-                number of permutations allowed; if the actual
-                and expected lists differ only in that their
-                lines are permutations of each other, and
-                the number of such permutations does not
-                exceed this limit, then the two are considered to be identical.
+        It also accepts the ``kind``, ``lstrip``, ``rstrip``,
+        ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
+        ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
 
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
 
         The *ignore_lines* parameter exists for backwards compatibility as
         an alias for *remove_lines*.
+
+        The :py:meth:`assertFileCorrect()` method can be used as an alias for
+        :py:meth:`assertTextFileCorrect()`, retained for backwards
+        compatibility.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
@@ -870,63 +673,22 @@ class ReferenceTest(object):
                 is determined by the configuration via
                 :py:meth:`set_data_location()`.
 
-            *kind*:
-                The reference *kind*, used to locate the reference files.
-                All the files must be of the same kind.
-
-            *lstrip*:
-                If set to ``True``, lines are left-stripped before
-                the comparison is carried out.
-
-            *rstrip*:
-                If set to ``True``, lines are right-stripped before the
-                comparison is carried out.
-
-            *ignore_substrings*:
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                ignored in the comparison.
-
-            *ignore_patterns*:
-                An optional list of regular expressions;
-                lines will be considered to be the same if
-                they only differ in substrings that match one
-                of these regular expressions. The expressions
-                must not contain parenthesised groups, and
-                should only include explicit anchors if they
-                need to refer to the whole line.
-
-            *remove_lines*
-                An optional list of substrings; lines
-                containing any of these substrings will be
-                completely removed before carrying out the
-                comparison. This is the means by which you
-                would exclude 'optional' content.
-
-            *preprocess*:
-                An optional function that takes a list of
-                strings and preprocesses it in some way; this
-                function will be applied to both the actual
-                and expected.
-
-            *max_permutation_cases*:
-                An optional number specifying the maximum
-                number of permutations allowed; if the actual
-                and expected lists differ only in that their
-                lines are permutations of each other, and
-                the number of such permutations does not
-                exceed this limit, then the two are considered
-                to be identical.
-
         This should be used for unstructured data such as logfiles, etc.
         For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
 
-        The *ignore_lines* parameter exists for backwards compatibility as
-        an alias for *remove_lines*.
+        It also accepts the ``kind``, ``lstrip``, ``rstrip``,
+        ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
+        ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
+
+        The :py:meth:`assertFilesCorrect()` metohd can be used as an alias for
+        :py:meth:`assertTextFilesCorrect()`, retained for backwards
+        compatibility.
         """
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_files(actual_paths, expected_paths)
+            self._write_reference_files(actual_paths, expected_paths,
+                                        lstrip=strip, rstrip=rstrip)
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
@@ -999,7 +761,8 @@ class ReferenceTest(object):
             kind = None
         return kind in self.regenerate and self.regenerate[kind]
 
-    def _write_reference_file(self, actual_path, reference_path, binary=False):
+    def _write_reference_file(self, actual_path, reference_path, binary=False,
+                              lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data.
         """
@@ -1008,13 +771,15 @@ class ReferenceTest(object):
             actual = fin.read()
         self._write_reference_result(actual, reference_path, binary=binary)
 
-    def _write_reference_files(self, actual_paths, reference_paths):
+    def _write_reference_files(self, actual_paths, reference_paths,
+                               lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data for a list of
         files.
         """
         for (actual_path, expected_path) in zip(actual_paths, reference_paths):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_file(actual_path, expected_path,
+                                       lstrip=lstrip, rstrip=rstrip)
 
     def _write_reference_dataset(self, df, reference_path):
         """
@@ -1022,7 +787,8 @@ class ReferenceTest(object):
         """
         self.pandas.write_csv(df, reference_path)
 
-    def _write_reference_result(self, result, reference_path, binary=False):
+    def _write_reference_result(self, result, reference_path, binary=False,
+                                lstrip=False, rstrip=False):
         """
         Internal method for regenerating reference data from in-memory
         results.
@@ -1037,7 +803,11 @@ class ReferenceTest(object):
         """
         Internal method for check for failures and reporting them.
         """
-        self.assert_fn(failures == 0, '\n'.join(msgs))
+        self.assert_fn(failures == 0, msgs.message())
+
+    def call_print_fn(self, *args, **kwargs):
+        fn = self.print_fn or self._default_print_fn
+        fn(*args, **kwargs)
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):

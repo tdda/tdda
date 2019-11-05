@@ -1,0 +1,39 @@
+master:
+
+  master.
+
+  What we push to PyPI always comes from master, but not all changes
+  to master are immediately pushed to PyPI.
+
+  We only use pushv when we intend to push to PyPI, and when we actually
+  do that we also tag the release with 'v%s' % versionnumber.
+
+dev:
+
+  Most new work should happen on this branch and only be merged
+  onto master when we are ready to release it for the world on Github.
+
+rexless:
+
+  This branch attempts to speed up rexpy through two main mechanisms:
+
+    1. Not using regular expressions in figuring out what the pattern are
+    2. Working on samples that get expanded when necessary.
+
+regexformats:
+
+  Initial experiment to support different kinds of regular expressions,
+  e.g.
+
+    - portable
+    - perl
+    - posix ...
+
+gentest:
+
+    Automatic test generation.
+
+algorithm:
+
+    Branch for documenting the rexpy algorithm.
+

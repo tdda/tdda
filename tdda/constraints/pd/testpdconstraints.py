@@ -60,7 +60,10 @@ from tdda.constraints.pd import constraints as pdc
 from tdda.constraints.pd.constraints import (load_df, verify_df,
                                              discover_df, detect_df)
 from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file
+from tdda.constraints.pd.verify import verify_df_from_file#, detect_df_from_file
+from tdda.constraints.pd.detect import detect_df_from_file
+
+from tdda.examples import copy_accounts_data_unzipped
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -1084,6 +1087,198 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
+    def testDiscoverDataframeDates(self):
+        df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
+                                 datetime.date(2019, 1, 2)]})
+        c = discover_df(df)
+        ac = c.fields['a'].constraints
+        self.assertEqual(ac['type'].value, 'date')
+        self.assertEqual(ac['min'].value, datetime.date(1987, 1, 1))
+        self.assertEqual(ac['max'].value, datetime.date(2019, 1, 2))
+        self.assertEqual(ac['max_nulls'].value, 0)
+
+    def testDiscoverDataframeDateTimes(self):
+        df = pd.DataFrame({'a': [datetime.datetime(1987, 1, 1),
+                                 datetime.datetime(2019, 1, 2)]})
+        c = discover_df(df)
+        ac = c.fields['a'].constraints
+        self.assertEqual(ac['type'].value, 'date')
+        self.assertEqual(ac['min'].value, datetime.datetime(1987, 1, 1))
+        self.assertEqual(ac['max'].value, datetime.datetime(2019, 1, 2))
+        self.assertEqual(ac['max_nulls'].value, 0)
+
+    def testVerifySignWithWrongType(self):
+        df = pd.DataFrame({'a': ['one', 'two', 'three']})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'int',
+                    'sign': 'positive',
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict, repair=False)
+        self.assertFalse(v.fields['a']['type'])
+        self.assertFalse(v.fields['a']['sign'])
+
+    def testVerifyStringLengthWithWrongType(self):
+        df = pd.DataFrame({'a': [1, 2, -1]})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'string',
+                    'min_length': 2,
+                    'max_length': 3,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict, repair=False)
+        self.assertFalse(v.fields['a']['type'])
+        self.assertFalse(v.fields['a']['min_length'])
+        self.assertFalse(v.fields['a']['max_length'])
+
+    def testDetectWithWrongTypes(self):
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', 'three']})
+        cdict = {
+            'fields': {
+                'a': {
+                    'type': 'string',
+                    'min_length': 2,
+                    'max_length': 3,
+                },
+                'b': {
+                    'type': 'int',
+                    'min': 1,
+                    'max': 3,
+                    'sign': 'positive',
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = detect_df(df, cdict, per_constraint=True, output_fields=[],
+                      interleave=True, repair=False)
+        d = v.detected()
+        self.assertTrue(not d['a_type_ok'].any())
+        self.assertTrue(not d['b_type_ok'].any())
+        self.assertTrue(not d['b_min_ok'].any())
+        self.assertTrue(not d['b_max_ok'].any())
+
+    def testVerifyWithMalformedInMemoryConstraintDict(self):
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', 'three']})
+        cdicts = [
+            [],
+            {},
+            {'fields': []},
+            {'fields': None},
+            {'fields': 'a'},
+            {'fields': 22},
+            {'fields': {
+                    'a': 33,
+                    'b': 'b',
+                }
+            }
+        ]
+        for cdict in cdicts:
+            constraints = DatasetConstraints()
+            with self.assertRaises(Exception):
+                constraints.initialize_from_dict(native_definite(cdict))
+                v = verify_df(df, cdict, repair=False)
+
+
+class TestPandasExampleAccountsData(ReferenceTestCase):
+    @classmethod
+    def setUpClass(cls):
+        copy_accounts_data_unzipped(TESTDATA_DIR)
+
+    def testDiscover1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
+        tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        c = discover_df_from_file(csv_path, constraints_path=tddafile1k,
+                                  verbose=False)
+        self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
+                                   ignore_lines=[
+                                       '"local_time":',
+                                       '"utc_time":',
+                                       '"creator":',
+                                       '"source":',
+                                       '"host":',
+                                       '"user":',
+                                       '"tddafile":',
+                                   ])
+
+    def testVerify1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                verbose=False)
+        self.assertEqual(v.passes, 72)
+        self.assertEqual(v.failures, 0)
+
+    def testVerify25kAgainst1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                  verbose=False)
+
+        passingConstraints = 53
+        failingConstraints = 19
+        expected = (passingConstraints, failingConstraints)
+
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
+
+        # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
+        self.assertEqual(expected, (53, 19), "NUMBERS DIFFER FROM README!")
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    def testDetect25kAgainst1k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        refpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.txt')
+        outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
+        v = detect_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                outpath=outfile, verbose=False)
+        passingConstraints = 53
+        failingConstraints = 19
+        passingRecords = 24883
+        failingRecords = 117
+        expected = (passingConstraints, failingConstraints,
+                    passingRecords, failingRecords)
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
+        self.assertEqual(v.detection.n_passing_records,  passingRecords)
+        self.assertEqual(v.detection.n_failing_records, failingRecords)
+
+        # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
+        self.assertEqual(expected, (53, 19, 24883, 117),
+                         "NUMBERS DIFFER FROM README!")
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        self.assertTextFileCorrect(outfile, refpath)
+
+    def testDiscover25k(self):
+        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
+        reftddafile = os.path.join(TESTDATA_DIR, 'ref-accounts25k.tdda')
+        c = discover_df_from_file(csv_path, constraints_path=tddafile,
+                                  verbose=False)
+        self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
+                                   ignore_lines=[
+                                       '"local_time":',
+                                       '"utc_time":',
+                                       '"creator":',
+                                       '"source":',
+                                       '"host":',
+                                       '"user":',
+                                       '"tddafile":',
+                                   ])
+
 
 class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118rexToFile(self):
@@ -1190,39 +1385,55 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
+    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 
     def constraintsGenerationTest(self, inc_rex=False):
         csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
-        ref_name = 'elements92%s.tdda' % ('rex' if inc_rex else '')
-        ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
-        with open(ref_constraints_path) as f:
-            refjson = f.read()
-        ref = native_definite(json.loads(refjson))
+        if inc_rex:
+            old_ref_name = 'elements92oldrex.tdda'
+            new_ref_name = 'elements92rex.tdda'
+            old_ref_constraints_path = os.path.join(TESTDATA_DIR, old_ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATA_DIR, new_ref_name)
+        else:
+            ref_name = 'elements92.tdda'
+            old_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
+        with open(old_ref_constraints_path) as f:
+            old_refjson = f.read()
+        with open(new_ref_constraints_path) as f:
+            new_refjson = f.read()
+        old_ref = native_definite(json.loads(old_refjson))
+        new_ref = native_definite(json.loads(new_refjson))
         constraints = discover_df(df, inc_rex=inc_rex)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
-        ref_fields = ref['fields']
+        old_ref_fields = old_ref['fields']
+        new_ref_fields = new_ref['fields']
         self.assertEqual(set(discovered_fields.keys()),
-                         set(ref_fields.keys()))
-        for field, ref_field in ref_fields.items():
-            ref_field = ref_fields[field]
+                         set(new_ref_fields.keys()))
+        for field, ref_field in new_ref_fields.items():
+            old_ref_field = old_ref_fields[field]
+            new_ref_field = new_ref_fields[field]
             discovered_field = discovered_fields[field]
             self.assertEqual((field, set(discovered_field.keys())),
-                             (field, set(ref_field.keys())))
-            for c, expected in ref_field.items():
+                             (field, set(new_ref_field.keys())))
+            for c, new_expected in new_ref_field.items():
                 actual = discovered_field[c]
-                if type(expected) == float:
-                    self.assertAlmostEqual(actual, expected, 4)
-                elif type(expected) == list:
-                    self.assertEqual(set(actual), set(expected))
-                elif expected in ('int', 'real'):  # pandas too broken to
-                                                   # get this right for now
+                old_expected = old_ref_field[c]
+                if type(new_expected) == float:
+                    self.assertAlmostEqual(actual, new_expected, 4)
+                elif type(new_expected) == list:
+                    self.assertIn(set(actual), [set(new_expected),
+                                                set(old_expected)])
+                elif new_expected in ('int', 'real'):  # pandas too broken to
+                                                       # get this right for now
                     self.assertTrue(actual in ('int', 'real'))
                 else:
-                    self.assertEqual(actual, expected)
+                    # regular expressions must match either 'old' or 'new'
+                    self.assertIn(actual, (old_expected, new_expected))
 
 
 class CommandLineHelper:
@@ -1246,6 +1457,7 @@ class CommandLineHelper:
         cls.e92tdda = os.path.join(cls.test_tmpdir, 'elements92.tdda')
         cls.e92bads1 = os.path.join(cls.test_tmpdir, 'elements92bads1.csv')
         cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
+        cls.e92bads3 = os.path.join(cls.test_tmpdir, 'elements92bads3.csv')
 
         argv = ['tdda', 'examples', cls.test_tmpdir]
         cls.execute_command(argv)
@@ -1355,6 +1567,19 @@ class CommandLineHelper:
         self.assertTextFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
         os.remove(self.e92bads1)
 
+    def testDetectE118CmdInterleaved(self):
+        argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
+                self.e92bads3, '--per-constraint', '--output-fields',
+                '--interleave']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Records passing: 91\n'
+                                                'Records failing: 27'))
+        self.assertTrue(os.path.exists(self.e92bads3))
+        self.assertTextFileCorrect(self.e92bads3,
+                                   'detect-els-cmdline-interleaved.csv')
+        os.remove(self.e92bads3)
+
     @unittest.skipIf(pmmif is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectE118FeatherCmd(self):
@@ -1402,7 +1627,39 @@ class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
 
     @classmethod
     def execute_command(self, argv):
-        return check_shell_output(argv)
+        try:
+            result = check_shell_output(argv)
+        except:
+            print('\n\nIf this test fails, it often means you do not have a '
+                  'working command-line\ninstallation of the tdda command.\n\n'
+                  'To test this, try typing\n\n  tdda version\n\n')
+            raise
+        return result
+
+
+class TestUtilityFunctions(ReferenceTestCase):
+    def testVerificationFieldIdentifier(self):
+        for name in ('a_type_ok',
+                     'a_min_ok',
+                     'a_min_length_ok',
+                     'a_max_ok',
+                     'a_max_length_ok',
+                     'a_sign_ok',
+                     'a_nonnull_ok',
+                     'a_nodups_ok',
+                     'a_values_ok',
+                     'a_rex_ok',
+                     'a_min_ok',
+                     'a_values_ok_68'):
+            self.assertTrue(pdc.is_ver_field(name, 'a'))
+
+        for name in ('a_b',
+                     'a_b_ok',
+                     'a_b_min_ok',
+                     'a_b_min_ok_68',
+                     'a_min_ok68',
+                     'a_transform_ok'):
+            self.assertFalse(pdc.is_ver_field(name, 'a'))
 
 
 TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATA_DIR)

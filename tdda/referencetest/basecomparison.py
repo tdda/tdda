@@ -22,10 +22,12 @@ import tempfile
 
 
 class BaseComparison(object):
-
+    """
+    Common base class for different implementations of comparisons.
+    """
     def __init__(self, print_fn=None, verbose=True, tmp_dir=None):
         """
-        Constructor for an instance of the PandasComparison class.
+        Constructor for an instance of the BaseComparison class.
 
         The optional print_fn parameter is a function to be used to
         display information while comparison operations are running.
@@ -59,6 +61,51 @@ class BaseComparison(object):
             msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
             cmd = copycmd()
         return msg % (qualifier, cmd, actual, expected)
+
+
+class Diffs(object):
+    """
+    Class for representing a list of messages describing differences
+    resulting from applying comparisons to a set of pairs of actual/expected
+    files or strings.
+
+    The 'messages' are a stream of message-strings, whereas the
+    'reconstructions' are a list of one-per-comparison objects.
+
+    It doesn't (currently) try to tie up the messages to individual
+    comparison operations.
+    """
+    def __init__(self, lines=None):
+        self.lines = lines or []
+        self.reconstructions = []
+
+    def append(self, line):
+        self.lines.append(line)
+
+    def add_reconstruction(self, r):
+        self.reconstructions.append(r)
+
+    def message(self):
+        return '\n'.join(self.lines)
+
+    def __repr__(self):
+        # representation of a Diffs object is just its lines; used in tests.
+        return repr(self.lines)
+
+    def __eq__(self, other):
+        # comparison between a Diffs object and a list of messages just
+        # compares the lines part of the diffs; used in tests.
+        if isinstance(other, Diffs):
+            return self.lines == other.lines
+        elif type(other) is list:
+            return self.lines == other
+        else:
+            return False
+
+    def __iter__(self):
+        # iterating over a Diffs object is the same as iterating over
+        # its internal messages; used in tests.
+        return iter(self.lines)
 
 
 def diffcmd():

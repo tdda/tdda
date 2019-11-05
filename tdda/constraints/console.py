@@ -182,7 +182,8 @@ def main_with_argv(argv, verbose=True):
     elif name in ('version', '-v', '--version'):
         print(__version__)
     elif name == 'test':
-        sys.exit(os.system('%s -m tdda.testtdda' % sys.executable) != 0)
+        from tdda import testtdda
+        testtdda.testall(module=testtdda, argv=['python'])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
         help(extensions, cmd, stream=sys.stderr)
@@ -197,4 +198,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
