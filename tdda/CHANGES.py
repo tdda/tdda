@@ -319,6 +319,6 @@ matching text with newlines in it wasn't always matching as you might expect.
 
 Reftest Exercises added.
 
-###
+20.05.2020 1.0.32
 Replaced deprecated uses of pandas.np (pd.np) with np.
 """
