@@ -433,10 +433,10 @@ def default_csv_loader(csvfile, **kwargs):
     if options.get('infer_datetime_format'):
         colnames = df.columns.tolist()
         for c in colnames:
-            if df[c].dtype == pd.np.dtype('O'):
+            if df[c].dtype == np.dtype('O'):
                 try:
                     datecol = pd.to_datetime(df[c])
-                    if datecol.dtype == pd.np.dtype('datetime64[ns]'):
+                    if datecol.dtype == np.dtype('datetime64[ns]'):
                         df[c] = datecol
                 except Exception as e:
                     pass

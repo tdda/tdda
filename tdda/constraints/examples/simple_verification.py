@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import os
 import sys
+import numpy as np
 import pandas as pd
 
 from tdda.constraints.pd.constraints import verify_df
@@ -23,7 +24,7 @@ TDDA_FILE = os.path.join(THIS_DIR, 'example_constraints.tdda')
 
 def example_positive_verification():
     n_failures = 0
-    df = pd.DataFrame({'a': [2, 4], 'b': ['one', pd.np.NaN]})
+    df = pd.DataFrame({'a': [2, 4], 'b': ['one', np.NaN]})
     v = verify_df(df, TDDA_FILE)
 
     if v.failures == 0:
@@ -39,8 +40,8 @@ def example_positive_verification():
 
 def example_failing_verification():
     n_failures = 0
-    df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
-                       'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
+    df = pd.DataFrame({'a': [0, 1, 2, 10, np.NaN],
+                       'b': ['one', 'one', 'two', 'three', np.NaN]})
     v = verify_df(df, TDDA_FILE)
 
     if v.failures > 0:

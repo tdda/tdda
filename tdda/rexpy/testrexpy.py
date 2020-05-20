@@ -219,6 +219,7 @@ try:
 except:
     pandas = None
 pd = pandas
+import numpy as np
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -1537,7 +1538,7 @@ class TestExtraction(ReferenceTestCase):
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
-        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+        df = pd.DataFrame({'a3': ["one", "two", np.NaN],
                            'a45': ['three', 'four', 'five']})
 
         re3 = pdextract(df['a3'])
@@ -1550,7 +1551,7 @@ class TestExtraction(ReferenceTestCase):
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract2(self):
-        df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
+        df = pd.DataFrame({'ab': ["one", True, np.NaN]})
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
 

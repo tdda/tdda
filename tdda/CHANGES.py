@@ -318,4 +318,7 @@ It wasn't set to allow newlines to match '.', meaning that regular expressions
 matching text with newlines in it wasn't always matching as you might expect.
 
 Reftest Exercises added.
+
+###
+Replaced deprecated uses of pandas.np (pd.np) with np.
 """
