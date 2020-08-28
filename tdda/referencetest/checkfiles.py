@@ -70,9 +70,10 @@ class FilesComparison(BaseComparison):
                                 of these regular expressions. The expressions
                                 should only include explicit anchors if they
                                 need refer to the whole line.
-                                Only the matched expression within the line is ignored;
-                                any text to the left or right of the matched expression
-                                must either be the same or be ignorable.
+                                Only the matched expression within the line
+                                is ignored; any text to the left or right
+                                of the matched expression must either be
+                                 the same or be ignorable.
             *remove_lines*
                                 is an optional list of substrings; lines
                                 containing any of these substrings will be

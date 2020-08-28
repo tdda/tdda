@@ -13,6 +13,7 @@ import tempfile
 
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkfiles import FilesComparison
+from tdda.referencetest.equality import EqualityComparison, UNSPECIFIED
 
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
@@ -205,6 +206,8 @@ class ReferenceTest(object):
         self.files = FilesComparison(print_fn=self.call_print_fn,
                                      verbose=self.verbose,
                                      tmp_dir=self.tmp_dir)
+        self.equality = EqualityComparison(print_fn=self.call_print_fn,
+                                           verbose=self.verbose)
 
     def all_fields_except(self, exclusions):
         """
@@ -371,7 +374,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                      and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
         It also accepts the ``check_data``, ``check_types``, ``check_order``,
@@ -428,7 +432,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                       and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
             *\*\*kwargs*:
@@ -489,7 +494,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                       and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
             *\*\*kwargs*:
@@ -562,9 +568,10 @@ class ReferenceTest(object):
                 one of these regular expressions.
                 The expressions should only include explicit anchors if they
                 need to refer to the whole line.
-                Only the matched expression within the line is ignored; any text
-                to the left or right of the matched expression must either be
-                **exactly** the same on both sides, or be ignorable.
+                Only the matched expression within the line is ignored;
+                any text to the left or right of the matched expression
+                must either be **exactly** the same on both sides,
+                or be ignorable.
 
             *remove_lines*
                 An optional list of substrings; lines
@@ -816,6 +823,94 @@ class ReferenceTest(object):
             return '\n'.join([r.rstrip() for r in result.splitlines()])
         else:
             return result
+
+    def assertCaseEqual(self, case, actual, expected, preprocess=None):
+        """
+        Check that a named comparison between actual and expected is true.
+
+        Optionally, a preprocessing function can be provided, which will
+        be applied before the comparison.
+
+        If there is a failure, the case name will be reported as well
+        as the failure itself.
+
+            *actual*:
+                The actual result of a test.
+
+            *expected*:
+                The expected result of that test.
+
+        It also accepts the ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
+
+        """
+        (failures, msgs) = self.equality.assertEqual(case, actual, expected,
+                                                     preprocess=preprocess)
+        self._check_failures(failures, msgs)
+
+    def assertCasesEqual(self, cases, preprocess=None):
+        """
+        Check multiple named equality comparisons between named cases.
+
+        Optionally, a preprocessing function can be provided, which will
+        be applied before each comparison.
+
+        If there is are failure, the case name for each failure will be
+        reported
+
+            *cases*
+                A collection of cases, either as a lists/tuples
+
+                    [
+                        [case_name1, actual1, expected1],
+                        [case_name2, actual2, expected2],
+                        ...,
+                        [case_nameN, actualN, expectedN]
+                    ]
+
+                or as a dictionary or pairs keyed on case name:
+
+                    {
+                        case_name1: (actual1, expected2),
+                        case_name2: (actual2, expected2),
+                        ...
+                        case_nameN: (actualN, expectedN),
+                    }
+
+        It also accepts the ``preprocess`` and ``max_permutation_cases``
+        optional parameters described in :py:meth:`assertStringCorrect()`.
+        """
+        r = self.equality.multipleAssertEqual(cases, preprocess=preprocess)
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
+
+    def checkFunctionByArg(self, f, cases, preprocess=None,
+                           fixedresult=UNSPECIFIED):
+        r = self.equality.checkFunctionByArg(f, cases, preprocess,
+                                             fixedresult=fixedresult)
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
+
+    def checkFunctionByArgs(self, f, cases, preprocess=None,
+                            fixedresult=UNSPECIFIED):
+        r = self.equality.checkFunctionByArgs(f, cases, preprocess,
+                                              fixedresult=fixedresult)
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
+
+    def checkFunctionByKWArgs(self, f, cases, preprocess=None,
+                            fixedresult=UNSPECIFIED):
+        r = self.equality.checkFunctionByKWArgs(f, cases, preprocess,
+                                                fixedresult=fixedresult)
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
+
+    def checkFunctionByArgsKWArgs(self, f, cases, preprocess=None,
+                                  fixedresult=UNSPECIFIED):
+        r = self.equality.checkFunctionByArgsKWArgs(f, cases, preprocess,
+                                                    fixedresult=fixedresult)
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
 
     def _check_failures(self, failures, msgs):
         """
