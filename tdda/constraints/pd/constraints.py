@@ -485,13 +485,10 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                         self.df.loc[ser.notnull(), c] = ser.astype(str)
                         if not is_real:
                             self.df[c] = self.df[c].str.replace('.0', '')
-                elif ctype == 'bool' and dtype == np.dtype('int64'):
-                    self.df[c] = ser.astype(bool)
-                elif ctype == 'bool' and dtype == np.dtype('int32'):
+                elif ctype == 'bool' and 'int' in str(dtype).lower():
                     self.df[c] = ser.astype(bool)
             except Exception as e:
                 print('%s: %s' % (e.__class__.__name__, str(e)))
-                pass
 
 
 class PandasVerification(Verification):
@@ -633,7 +630,7 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    dts = str(dt)
+    dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
         return 'bool'
     if type(x) in (int, long_type) or 'int' in dts:
