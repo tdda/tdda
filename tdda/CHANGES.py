@@ -321,4 +321,11 @@ Reftest Exercises added.
 
 20.05.2020 1.0.32
 Replaced deprecated uses of pandas.np (pd.np) with np.
+
+9.7.2021 1.0.33
+Add parquet support; deprecate feather files.
+
+Use of feather files now generates a warning (but still works, asssuming
+the appropriate libraries are available). Support for feather is planned
+to be removed no earlier than July 2022.
 """

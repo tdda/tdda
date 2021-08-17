@@ -4,7 +4,8 @@
 Command line interface for constraint discovery and verification.
 
 If pandas is available, constraints can be discovered and verified on
-.csv files and saved .feather dataframe files.
+.csv files and saved dataframes,as .parquet files (or .feather files,
+DEPRECATED)
 
 If supported database drivers are available, constraints can be discovered
 and verified on tables in databases.

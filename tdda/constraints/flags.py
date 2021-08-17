@@ -65,9 +65,8 @@ Optional flags are:
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
-      specified. Rows are usually numbered from 1, unless the (feather)
-      input file already has an index.
-
+      specified. Rows are usually numbered from 1, unless the (parquet
+      or feather) input file already has an index.
 '''
 
 def discover_parser(usage=''):

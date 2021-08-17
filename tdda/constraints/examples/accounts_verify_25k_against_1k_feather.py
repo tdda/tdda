@@ -1,11 +1,10 @@
 # accounts_verify_25k_against_1k_feather.py
 
 from __future__ import print_function
-import pandas as pd
 
-from tdda.constraints.pd.constraints import verify_df
+from tdda.constraints.pd.constraints import verify_df, load_df
 
-df = pd.read_csv('testdata/accounts25k.csv')
+df = load_df('testdata/accounts25k.feather')
 verification = verify_df(df, 'testdata/accounts1k.tdda')
 
 print('Basic Verification:')

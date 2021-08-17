@@ -34,23 +34,13 @@ import sys
 
 from collections import OrderedDict
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import numpy as np
 import pandas as pd
 
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-
-try:
-    import feather as feather
-except ImportError:
-    feather = None
+from tdda.constraints.pd.dataframe_support import (parquet, StringIO,
+                                                   feather, featherpmm,
+                                                   write_parquet_file,
+                                                   read_parquet_file)
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
@@ -84,6 +74,7 @@ else:
 isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
+WARNINGS = True
 
 RE_FLAGS = re.UNICODE | re.DOTALL
 
@@ -337,9 +328,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if self.out_df is None:
             return None
         orig_fields = list(self.df)
-        output_is_feather = (detect_outpath
-                             and file_format(detect_outpath) == 'feather')
-
+        output_is_df = (detect_outpath
+                        and file_format(detect_outpath) in ('parquet',
+                                                            'feather'))
         out_df = self.out_df
         add_index = detect_index or detect_output_fields is None
         if detect_output_fields is None:
@@ -378,7 +369,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
         if detect_outpath:
             index_is_trivial = is_pd_index_trivial(out_df)
-            if output_is_feather:
+            if output_is_df:
                 df_to_save = out_df
             else:
                 df_to_save = convert_output_types(out_df, boolean_ints)
@@ -394,7 +385,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 #       to do that in this case (when featherpmm is set, and
                 #       output_is_feather).
                 indexes = []
-                if output_is_feather or rownumber_is_index:
+                if output_is_df or rownumber_is_index:
                     stem = 'Index' if rownumber_is_index else 'RowNumber'
                     if isinstance(df_to_save.index, pd.MultiIndex):
                         for i, level in enumerate(df_to_save.index.levels):
@@ -1123,33 +1114,47 @@ def file_format(path):
         return 'csv'
     else:
         parts = os.path.splitext(path)
-        return ('feather' if len(parts) > 1 and parts[1] == '.feather'
-                          else 'csv')
+        if len(parts) > 1:
+            if parts[1] in ('.parquet', '.feather'):
+                return parts[1][1:]
+        return 'csv'
 
 
-def load_df(path):
-    if file_format(path) != 'feather':
-        return default_csv_loader(path)
-    elif featherpmm and feather:
-        ds = featherpmm.read_dataframe(path)
-        return ds.df
-    elif feather:
-        return feather.read_dataframe(path)
-    else:
-        raise Exception('The Python feather module is not installed.\n'
-                        'Use:\n    pip install feather-format\n'
-                        'to add capability.\n')
+def load_df(path, csv_format_options=None):
+    fmt = file_format(path)
+    if fmt not in ('parquet', 'feather'):
+        return default_csv_loader(path, **(csv_format_options or {}))
+    elif fmt == 'parquet':
+        return read_parquet_file(path)
+    else:  # feather
+        feather_deprecation_warning()
+        if featherpmm and feather:
+            ds = featherpmm.read_dataframe(path)
+            return ds.df
+        elif feather:
+            return feather.read_dataframe(path)
+        else:
+            raise Exception('The Python feather module is not installed.\n'
+                            'Use:\n    pip install feather-format\n'
+                            'to add capability.\n')
 
 
 def save_df(df, path, index=False):
     if path == '-' or path is None:
         print(default_csv_writer(df, None, index=index))
-    elif file_format(path) != 'feather':
+        return
+
+    fmt = file_format(path)
+    if fmt not in ('parquet', 'feather'):
         default_csv_writer(df, path, index=index)
+    elif parquet:
+        write_parquet_file(df, path)
     elif featherpmm and feather:
+        feather_deprecation_warning()
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)
     elif feather:
+        feather_deprecation_warning()
         feather.write_dataframe(df, path)
     else:
         raise Exception('The Python feather module is not installed.\n'
@@ -1210,7 +1215,7 @@ def is_pd_index_trivial(df):
         return False
     if df.index.has_duplicates:
         return False
-    if df.index._start != 0:
+    if df.index.start != 0:
         return False
     return True
 
@@ -1261,6 +1266,12 @@ def is_ver_field(v, f):
 def verification_field(col, ctype):
     return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
 
+
+def feather_deprecation_warning():
+    if WARNINGS:
+        print('DEPRECATION WARNING: Feather support will be removed during\n'
+              'or after July 2022.\n'
+              'Please consider using .parquet files instead.')
 
 # for backwards compatibility (old name for function)
 discover_constraints = discover_df

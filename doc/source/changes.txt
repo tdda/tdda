@@ -6,10 +6,16 @@ Recent Changes
 This Version
 ------------
 
-Reference test exercises added.
+* Support for parquet files added; support for feather files DEPRECATED.
+  The current plan is to drop support for feather files in a release
+  no earlier than July 2022.
 
 Older Versions
 --------------
+
+* No longer import numpy as pandas.np (but directly)
+
+* Reference test exercises added.
 
 * Escaping of special characters for regular expressions is now done
   in a way that is uniform across Python2, Python pre-3.7, and Python 3.7+.

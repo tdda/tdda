@@ -25,15 +25,7 @@ from distutils.spawn import find_executable
 import pandas as pd
 import numpy as np
 
-try:
-    import pmmif
-except ImportError:
-    pmmif = None
-
-try:
-    import feather
-except ImportError:
-    feather = None
+from tdda.constraints.pd.dataframe_support import parquet, feather, featherpmm
 
 from tdda.constraints.base import (
     MinConstraint,
@@ -1189,6 +1181,108 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
                 constraints.initialize_from_dict(native_definite(cdict))
                 v = verify_df(df, cdict, repair=False)
 
+    def testVerifyMinLengthConstraintInMemory(self):
+        df = pd.DataFrame({'n': [1,2,3], 's': ['', 'x', None]})
+        cdict = {
+            'fields': {
+                's': {
+                    'type': 'string',
+                    'min_length': 1,
+                    'max_length': 1,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertFalse(v.fields['s']['min_length'])
+
+    def testVerifyMinLengthConstraintFromCSV(self):
+        constraints_path = os.path.join(TESTDATA_DIR, 's.csv')
+        df = load_df(constraints_path, csv_format_options={'na_values': ['NULL']})
+        cdict = {
+            'fields': {
+                's': {
+                    'type': 'string',
+                    'min_length': 1,
+                    'max_length': 1,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertFalse(v.fields['s']['min_length'])
+
+    def testVerifyMinLengthConstraintFromFeather(self):
+        constraints_path = os.path.join(TESTDATA_DIR, 's.feather')
+        df = load_df(constraints_path)
+        cdict = {
+            'fields': {
+                's': {
+                    'type': 'string',
+                    'min_length': 1,
+                    'max_length': 1,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertFalse(v.fields['s']['min_length'])
+
+    def testVerifyMinLengthConstraintFromParquet(self):
+        constraints_path = os.path.join(TESTDATA_DIR, 's.parquet')
+        df = load_df(constraints_path)
+        cdict = {
+            'fields': {
+                's': {
+                    'type': 'string',
+                    'min_length': 1,
+                    'max_length': 1,
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertFalse(v.fields['s']['min_length'])
+
+    @tag
+    def testVerifyDateTypeConstraintFromFeather(self):
+        constraints_path = os.path.join(TESTDATA_DIR, 'dt.feather')
+        df = load_df(constraints_path)
+        cdict = {
+            'fields': {
+                'dt': {
+                    'type': 'date',
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertTrue(v.fields['dt']['type'])
+
+    @tag
+    def testVerifyDateTypeConstraintFromParquet(self):
+        constraints_path = os.path.join(TESTDATA_DIR, 'dt.parquet')
+        df = load_df(constraints_path)
+        cdict = {
+            'fields': {
+                'dt': {
+                    'type': 'date',  # ALSO PASSES WITH 'string' ???
+                                     # BECAUSE BOTH OBJECTS ??
+                                     # strict/sloppy?
+                }
+            }
+        }
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(cdict))
+        v = verify_df(df, cdict)
+        self.assertTrue(v.fields['dt']['type'])
+
+
 
 class TestPandasExampleAccountsData(ReferenceTestCase):
     @classmethod
@@ -1321,17 +1415,32 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118_csv_to_csv(self):
         self.detectElements('csv', 'csv')
 
-    @unittest.skipIf(pmmif is None or feather is None,
+    @unittest.skipIf(parquet is None,
+                     'pyarrow is not installed')
+    def testDetectElements118_csv_to_parquet(self):
+        self.detectElements('csv', 'parquet')
+
+    @unittest.skipIf(parquet is None,
+                     'pyarrow is not installed')
+    def testDetectElements118_parquet_to_csv(self):
+        self.detectElements('parquet', 'csv')
+
+    @unittest.skipIf(parquet is None,
+                     'pyarrow is not installed')
+    def testDetectElements118_parquet_to_parquet(self):
+        self.detectElements('parquet', 'parquet')
+
+    @unittest.skipIf(featherpmm is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_csv_to_feather(self):
         self.detectElements('csv', 'feather')
 
-    @unittest.skipIf(pmmif is None or feather is None,
+    @unittest.skipIf(featherpmm is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_feather_to_csv(self):
         self.detectElements('feather', 'csv')
 
-    @unittest.skipIf(pmmif is None or feather is None,
+    @unittest.skipIf(featherpmm is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_feather_to_feather(self):
         self.detectElements('feather', 'feather')
@@ -1342,13 +1451,14 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
         detect_name = 'elements118_detect_from_%s.%s' % (input, output)
         detectfile = os.path.join(self.tmp_dir, detect_name)
+        idx = input in ('parquet', 'feather')
         v = detect_df(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
                       per_constraint=True, index=True,
-                      rownumber_is_index=(input == 'feather'))
+                      rownumber_is_index=(idx))
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
-        if output == 'feather':
+        if output in ('parquet', 'feather'):
             # TODO: compare binary feather files and check they're the same
             pass
         else:
@@ -1449,6 +1559,7 @@ class CommandLineHelper:
         cls.e92csv = os.path.join(cls.testDataDir, 'elements92.csv')
         cls.e118csv = os.path.join(cls.testDataDir, 'elements118.csv')
         cls.e118feather = os.path.join(cls.testDataDir, 'elements118.feather')
+        cls.e118parquet = os.path.join(cls.testDataDir, 'elements118.parquet')
         cls.e92tdda_correct = os.path.join(cls.testDataDir, 'elements92.tdda')
         cls.dddcsv = os.path.join(cls.testDataDir, 'ddd.csv')
         cls.dddtdda_correct = os.path.join(cls.testDataDir, 'ddd.tdda')
@@ -1579,7 +1690,21 @@ class CommandLineHelper:
                                    'detect-els-cmdline-interleaved.csv')
         os.remove(self.e92bads3)
 
-    @unittest.skipIf(pmmif is None or feather is None,
+    @unittest.skipIf(parquet is None,
+                     'pyarrow not installed')
+    def testDetectE118ParquetCmd(self):
+        argv = ['tdda', 'detect', self.e118parquet, self.e92tdda_correct,
+                self.e92bads2, '--per-constraint', '--output-fields',
+                '--index']
+        result = self.execute_command(argv)
+        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
+                                                'Records passing: 91\n'
+                                                'Records failing: 27'))
+        self.assertTrue(os.path.exists(self.e92bads2))
+        self.assertTextFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
+        os.remove(self.e92bads2)
+
+    @unittest.skipIf(featherpmm is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectE118FeatherCmd(self):
         argv = ['tdda', 'detect', self.e118feather, self.e92tdda_correct,

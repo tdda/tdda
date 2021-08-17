@@ -4,7 +4,8 @@
 Support for Pandas constraint detection from the command-line tool
 
 Detect constraints using CSV files, or Pandas or R DataFrames saved as
-feather files, against a constraints from .tdda JSON constraints file.
+parquet (or feather, DEPRECATED)  files, against a constraints from .tdda
+JSON constraints file.
 """
 
 from __future__ import division
@@ -17,13 +18,15 @@ Parameters:
   * input is one of:
 
       - a csv file
-      - a feather file containing a Pandas or R DataFrame
+      - a parquet file (or a feather file, DEPRECATED) containing a Pandas
+        or R DataFrame
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
 
-  * name of output file (.csv or .feather) where detection results
+  * name of output file (.csv or .parquet or .feather (DEPRECATED))
+    where detection results
     are to be written. Can be - (or missing) to write to standard output.
 
 '''
@@ -31,26 +34,14 @@ Parameters:
 import os
 import sys
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import pandas as pd
 import numpy as np
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
 
 from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
+from tdda.constraints.pd.dataframe_support import (parquet, StringIO,
+                                                   feather, featherpmm)
 
 
 def detect_df_from_file(df_path, constraints_path, outpath,
@@ -60,16 +51,16 @@ def detect_df_from_file(df_path, constraints_path, outpath,
     if constraints_path is None:
         if not isinstance(df_path, StringIO):
             split = os.path.splitext(df_path)
-            if split[1] in ('.csv', '.feather'):
+            if split[1] in ('.csv', '.parquet', '.feather'):
                 constraints_path = split[0] + '.tdda'
         if constraints_path is None:
             print('No constraints file specified.', file=sys.stderr)
             sys.exit(1)
 
     df = load_df(df_path)
-    from_feather = file_format(df_path) == 'feather'
+    idx = file_format(df_path) in ('parquet', 'feather')
     v = detect_df(df, constraints_path, outpath=outpath,
-                  rownumber_is_index=from_feather, **kwargs)
+                  rownumber_is_index=idx, **kwargs)
     if verbose and outpath is not None and outpath != '-':
         print(v)
     return v

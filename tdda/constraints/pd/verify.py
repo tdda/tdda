@@ -4,7 +4,8 @@
 Support for Pandas constraint verification from the command-line tool
 
 Verify constraints using CSV files, or Pandas or R DataFrames saved as
-feather files, against a constraints from .tdda JSON constraints file.
+parqet (or feather, DEPRECATED) files, against a constraints
+from .tdda JSON constraints file.
 """
 
 from __future__ import division
@@ -17,7 +18,8 @@ Parameters:
   * input is one of:
 
       - a csv file. Can be - to read from standard input.
-      - a feather file containing a Pandas or R DataFrame.
+      - a parquet (or feather, DEPRECATED) file containing a Pandas
+        or R DataFrame.
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
@@ -31,26 +33,14 @@ input file, with a .tdda extension will be tried.
 import os
 import sys
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import pandas as pd
 import numpy as np
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
 
 from tdda import __version__
 from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.pd.constraints import verify_df, load_df
+from tdda.constraints.pd.dataframe_support import (parquet, StringIO,
+                                                   feather, featherpmm)
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
@@ -59,7 +49,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     if constraints_path is None:
         if not isinstance(df_path, StringIO):
             split = os.path.splitext(df_path)
-            if split[1] in ('.csv', '.feather'):
+            if split[1] in ('.csv', '.parquet', '.feather'):
                 constraints_path = split[0] + '.tdda'
         if constraints_path is None:
             print('No constraints file specified.', file=sys.stderr)
@@ -74,7 +64,8 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def pd_verify_parser():
     parser = verify_parser(USAGE)
-    parser.add_argument('input', nargs=1, help='CSV or feather file')
+    parser.add_argument('input', nargs=1,
+                        help='CSV or parquet file (or feather, DEPRECATED)')
     parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     return parser

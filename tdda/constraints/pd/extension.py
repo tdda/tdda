@@ -22,13 +22,17 @@ class TDDAPandasExtension(ExtensionBase):
 
     def applicable(self):
         for a in self.argv:
-            if a.endswith('.csv') or a.endswith('.feather') or a == '-':
+            if (a.endswith('.csv')
+                    or a.endswith('.parquet')
+                    or a.endswith('.feather')
+                    or a == '-'):
                 return True
         return False
 
     def help(self, stream=sys.stdout):
         print('  - Flat files (filename.csv)', file=stream)
-        print('  - Pandas DataFrames (filename.feather)', file=stream)
+        print('  - Pandas DataFrames (filename.parquet or filename.feather)',
+              file=stream)
 
     def spec(self):
         return 'a CSV file or a .feather file'

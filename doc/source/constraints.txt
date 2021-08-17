@@ -17,7 +17,8 @@ The module includes:
   and anomaly detection for a number of data sources:
 
   - CSV files
-  - Pandas and R DataFrames saved as ``.feather`` files
+  - Pandas and R DataFrames saved as ``.parquet`` files (or ``.feather``
+    files, DEPRECATED)
   - PostgreSQL database tables (``postgres:``)
   - MySQL database tables (``mysql:``)
   - SQLite database tables (``sqlite:``)
@@ -30,23 +31,27 @@ Extra libraries are required to access some of the constraint generation
 and verification functionality, depending on the data sources that you
 wish to use.
 
-* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
-* :py:mod:`feather-format` (required for :py:mod:`feather` files)
-* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
+* :py:mod:`pandas` (required for CSV files, :py:mod:`parquet` files,
+  and :py:mod:`feather` files)
+  DEPRECATED))
+* :py:mod:`pyarrow` (required for :py:mod:`parquet` files; DEPRECATED)
 * :py:mod:`pygresql` (required for PostgreSQL database tables)
 * :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
 * :py:mod:`sqlite3` (required for SQLite database tables)
 * :py:mod:`pymongo` (required for MongoDB document collections)
+* :py:mod:`feather-format` (required for :py:mod:`feather` files; DEPRECATED)
+* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust;
 
 
 These can be installed with (some/all of)::
 
     pip install pandas
-    pip install feather-format
-    pip install pmmif
+    pip install pyarrow
     pip install pygresql
     pip install sqlite3
     pip install pymongo
+    pip install feather-format
+    pip install pmmif
 
 and, for MySQL, **one** of::
 
@@ -108,8 +113,10 @@ where
 
     - a CSV file
     - a ``-``, meaning it will read a csv file from standard input
+    - a :py:mod:`parquet` file containing a DataFrame, with extension
+      ``.parquet``
     - a :py:mod:`feather` file containing a DataFrame, with extension
-      ``.feather``
+      ``.feather`` (DEPRECATED)
     - a database table
 
   * *constraints.tdda*, if provided, specifies the name of a file to
@@ -146,14 +153,17 @@ where:
 
   - a csv file
   - a ``-``, meaning it will read a csv file from standard input
+  - a :py:mod:`parquet` file containing a DataFrame, with extension
+    ``.parquet``
   - a :py:mod:`feather` file containing a DataFrame, with extension
-    ``.feather``
+    ``.feather`` (DEPRECATED)
   - a database table
 
 * *constraints.tdda*, if provided, is a JSON *.tdda* file
   constaining constraints.
 
-If no constraints file is provided and the input is a CSV or feather file,
+If no constraints file is provided and the input is a CSV or parquet file
+(or a DEPRECATED feather),
 a constraints file with the same path as the input file, but with a *.tdda*
 extension, will be used.
 
@@ -197,8 +207,10 @@ where:
 
   - a csv file name
   - a ``-``, meaning it will read a csv file from standard input
+  - a :py:mod:`parquet` file containing a DataFrame, with extension
+    ``.parquet``
   - a :py:mod:`feather` file containing a DataFrame, with extension
-    ``.feather``
+    ``.feather`` (DEPRECATED)
   - a database table
 
 * *constraints.tdda*, is a JSON *.tdda* file constaining constraints.
@@ -208,10 +220,13 @@ where:
   - a csv file to be created containing failing records
   - a ``-``, meaning it will write the  csv file containing
     failing records to standard output
-  - a :py:mod:`feather` file with extension ``.feather``, to be created
-    containing a DataFrame of failing records
+  - a :py:mod:`parquet` file containing a DataFrame, with extension
+    ``.parquet``
+  - a :py:mod:`feather` file containing a DataFrame, with extension
+    ``.feather`` (DEPRECATED)
 
-If no constraints file is provided and the input is a CSV or feather file,
+If no constraints file is provided and the input is a CSV or parquet file,
+(or a DEPRECATED feather file),
 a constraints file with the same path as the input file, but with a *.tdda*
 extension, will be used.
 
@@ -240,9 +255,9 @@ Optional flags are:
 * ``--index``
     Include a row-number index in the output file. The row number is
     automatically included if no output fields are specified. Rows are
-    usually numbered from 1, unless the (feather) input file already has
-    an index.
-  
+    usually numbered from 1, unless the (parquet or DEPRECATED feather)
+    input file already has an index.
+
 If no records fail any of the constraints, then no output file is
 created (and if the output file already exists, it is deleted).
 
