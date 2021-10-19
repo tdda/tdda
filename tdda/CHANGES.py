@@ -321,4 +321,14 @@ Reftest Exercises added.
 
 20.05.2020 1.0.32
 Replaced deprecated uses of pandas.np (pd.np) with np.
+
+19.10.2021 1.0.33
+Updates for recent numpy and pandas deprecations and warnings.
+
+Removed used of np.int (now int), np.float (now float) and np.bool (now bool).
+
+Removed used of RangeIndex._start (now RangeIndex.start).
+
+Added regex=False to Series.str.replace, which will be the new default
+and which the code (implicitly) assumed was the default previously.
 """
