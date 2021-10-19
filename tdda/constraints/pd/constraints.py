@@ -484,7 +484,8 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                             is_real = self.calc_non_integer_values_count(c) > 0
                         self.df.loc[ser.notnull(), c] = ser.astype(str)
                         if not is_real:
-                            self.df[c] = self.df[c].str.replace('.0', '')
+                            self.df[c] = self.df[c].str.replace('.0', '',
+                                                                regex=False)
                 elif ctype == 'bool' and dtype == np.dtype('int64'):
                     self.df[c] = ser.astype(bool)
                 elif ctype == 'bool' and dtype == np.dtype('int32'):
@@ -623,7 +624,7 @@ def pandas_tdda_type(x):
     if dt == np.dtype('O'):
         # objects could be either strings or booleans-with-nulls or dates
         for v in x:
-            if type(v) in (bool, np.bool, np.bool_):
+            if type(v) in (bool, np.bool_):
                 return 'bool'
             elif type(v) in (unicode_string, byte_string):
                 return 'string'
@@ -1187,8 +1188,8 @@ def convert_output_types(df, boolean_ints):
     newdf = pd.DataFrame(index=df.index)
     trueval = '1' if boolean_ints else 'true'
     falseval = '0' if boolean_ints else 'false'
-    pandas_true_values = (True, np.bool(True), np.bool_(True))
-    pandas_false_values = (True, np.bool(False), np.bool_(False))
+    pandas_true_values = (True, np.bool_(True))
+    pandas_false_values = (True, np.bool_(False))
     for col in list(df):
         c = df[col]
         if c.dtype in (np.dtype('O'), np.dtype(bool)):
@@ -1210,7 +1211,7 @@ def is_pd_index_trivial(df):
         return False
     if df.index.has_duplicates:
         return False
-    if df.index._start != 0:
+    if df.index.start != 0:
         return False
     return True
 
