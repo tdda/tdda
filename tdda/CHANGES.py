@@ -332,7 +332,7 @@ Removed used of RangeIndex._start (now RangeIndex.start).
 Added regex=False to Series.str.replace, which will be the new default
 and which the code (implicitly) assumed was the default previously.
 
-###
+19.10.2021 1.0.34
 Bump requirements on numpy/pandas; pandas update.
 
 Pandas update now (starts to) add recognition of Integer Series type.
