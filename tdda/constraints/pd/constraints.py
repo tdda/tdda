@@ -1208,7 +1208,9 @@ def is_pd_index_trivial(df):
         return False
     if df.index.has_duplicates:
         return False
-    if df.index.start != 0:
+    if hasattr(df.index, 'start') and df.index.start != 0:
+        # not clear why start can be missing with modern pandas;
+        # but sometimes it seem to be
         return False
     return True
 
