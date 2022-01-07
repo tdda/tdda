@@ -67,6 +67,8 @@ def detect_df_from_file(df_path, constraints_path, outpath,
             sys.exit(1)
 
     df = load_df(df_path)
+    print('\n>>>', df_path)
+    print('\n>>>', pd.__version__)
     from_feather = file_format(df_path) == 'feather'
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=from_feather, **kwargs)
