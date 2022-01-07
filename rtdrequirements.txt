@@ -1,3 +1,5 @@
 # prerequisites
 pytest
+pandas
+cython
 
