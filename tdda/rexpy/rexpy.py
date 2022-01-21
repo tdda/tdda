@@ -308,7 +308,6 @@ class Categories(object):
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
 
-
     def build_cat_map(self):
         """
         Lazily builds (on first use) mapping from single-character category
@@ -589,8 +588,9 @@ class Extractor(object):
         """
         Given freqs, a list of frequencies (for the corresponding indexed RE)
         identify indexes to patterns that:
-            - have too few strings
-            - cause too many patterns to be returned
+
+          - have too few strings
+          - cause too many patterns to be returned
 
         NOTE: min_diff_strings_per_pattern is currently ignored.
 
@@ -999,11 +999,13 @@ class Extractor(object):
         examples it matches.
 
         Return zip of
-            - the characters in each fragment
-            - the strings in each fragment
-            - the run-length encoded fine classes in each fragment
-            - the run-length encoded characters in each fragment
-            - the fragment itself
+
+          - the characters in each fragment
+          - the strings in each fragment
+          - the run-length encoded fine classes in each fragment
+          - the run-length encoded characters in each fragment
+          - the fragment itself
+
         all indexed on the (zero-based) group number.
         """
         examples = self.examples
@@ -1425,6 +1427,7 @@ class Extractor(object):
             A
             ABA
             ABABA
+
         etc., where A and B are both fragments.
         A common example is that A is recognizably a pattern and B is
         recognizably a separator. So, for example:

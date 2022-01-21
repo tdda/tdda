@@ -41,6 +41,8 @@ tdda gentest  'quoted shell command' [test_outputfile.py] [reference files]
 You can use STDOUT and STDERR (in any case) to those streams, which will
 by default not be checked. You can also use NONZEROEXIT to indicate that
 a non-zero exit code is expected, so should not prevent test generation.
+
+THIS FUNCTIONALITY IS CURRENTLY IN BETA.
 '''
 
 MAX_SNAPSHOT_FILES = 10000

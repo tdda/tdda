@@ -37,7 +37,7 @@ HELP="""Use
     tdda verify        to verify data against constraints
     tdda detect        to detect failed constraints on data
     tdda examples      to copy the example data and code
-    tdda gentest       to generate a reference test "automagically"
+    tdda gentest       to generate a reference test "automagically" (BETA)
     tdda version       to print the TDDA version number
     tdda help          to print this help
     tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
