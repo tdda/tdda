@@ -1173,8 +1173,6 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         cdicts = [
             [],
             {},
-            {'fields': []},
-            {'fields': None},
             {'fields': 'a'},
             {'fields': 22},
             {'fields': {
@@ -1385,6 +1383,7 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
+    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 

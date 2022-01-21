@@ -56,5 +56,6 @@ setup(
         ],
     },
     zip_safe=False,
+    install_requires=['numpy>=1.10', 'pandas>=1.3.2'],
 )
 

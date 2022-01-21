@@ -258,6 +258,86 @@ what's going on when there are skipped tests.
 Added boilerplate tests for MongoDB, but these are currently disabled
 since they cannot yet work entirely correctly.
 
+30.05.2019 1.0.26
+Better JSON generation and protect against unfathomable user.
+
+Tweaked the JSON produced for TDDA files:
+  1. ensure no trailing whitespace, even in Python2
+  2. don't force ASCII, so that accented characters, greek characters etc.,
+     come out in UTF-8, rather than as character codes.
+
+Also protect the lookup of the current user in a try ... except
+and set to the empty string if it fails. This addresses issue #18,
+whereby (poorly configured?) Docker containers with no non-root users
+can cause getpass.getuser() to fail with an error. Whether or not
+the software should need to deal with this, there seems little harm
+in setting an empty user when the alternative is crashing, so that's
+what now happens.
+
+3.06.2019 1.0.27
+Less excessive escaping (Python3-like even in Python2)
+
+4.06.2019 1.0.28
+Fixed (nasty) bug in escaping (above). Updated/improved tests.
+
+Now that we do regular expression escapinge in (almost) the same way in
+Python2 and Python3, we can remove a lot of nasty tests that have
+two versions of the results.
+
+5.06.2019 1.0.29
+Updated bracket generatation ("character classes: [...]").
+
+We now use almost no escaping for characters in character classes,
+instead using special rules to force
+  - close square bracket ("]") to the start
+  - dash (hyphen "-") to the end
+  - carat ("^") away from the start
+Only backslash is now normally escaped in character classes.
+
+There is also embryonic provision for new dialects "javascript" and "ruby"
+to force escaping of "]" in character classes, since they don't appear to
+obey the normal rules, but the embryonic provision isn't really used by
+anything (or available outside the API) at this point.
+
+Many tests have been updated as a result. Many tests also now check,
+to a greater extent than was previously the case, that the regular expressions
+generated actually actually match the strings used to generate them and
+(equally relevantly) don't match certain strings you might worry they would
+match if you weren't fully "au fait" with the details of regex rules!
+
+13.06.2019 1.0.30
+Fixed problem with the 'tdda test' command. It was failing with:
+    AttributeError: module 'tdda.testtdda' has no attribute 'test'
+
+Also simplified the list of characters to NOT be specially escaped for rexpy,
+so it's now just the same across all python versions.
+
+25.10.2019 1.0.31
+Constraint verify/detect of regular expressions now handles '.' better.
+
+It wasn't set to allow newlines to match '.', meaning that regular expressions
+matching text with newlines in it wasn't always matching as you might expect.
+
+Reftest Exercises added.
+
+20.05.2020 1.0.32
+Replaced deprecated uses of pandas.np (pd.np) with np.
+
+19.10.2021 1.0.33
+Updates for recent numpy and pandas deprecations and warnings.
+
+Removed used of np.int (now int), np.float (now float) and np.bool (now bool).
+
+Removed used of RangeIndex._start (now RangeIndex.start).
+
+Added regex=False to Series.str.replace, which will be the new default
+and which the code (implicitly) assumed was the default previously.
+
+19.10.2021 1.0.34
+Bump requirements on numpy/pandas; pandas update.
+
+Pandas update now (starts to) add recognition of Integer Series type.
+
 -------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.
 
@@ -280,6 +360,10 @@ versions or Python 2.7 on Linux, but either way, forcing the
 
 Also changed the default for add_dot_star to False, since adding
 it is profoundly unhelpful when discovering constraints.
+
+Slightly modified verbose printing in rexpy.
+
+Fixed problem with sampling in rexpy.
 ----------------------- end of rexless branch -----------------------
 
 ---------------------------- dev branch -----------------------------
@@ -299,6 +383,19 @@ and reIsRegex is set to True if the regex library is being used.
 
 Referencetest no longer strips whitespace when its regenerating outputs,
 which it was incorrectly doing due to a recent misplaced 'fix'.
+
+Simplified the list of characters to NOT be specially escaped, so it's
+now just the same across all python versions.
+
+Added re.UNICODE and re.DOTALL to flags used for regular expresions.
+
+Discover of regular expressions in database now sorts the values
+before running rexpy on them. The order they come in makes a difference.
+
+Updated the rexpy coverage code to handle the possibility that
+not enough regular expressions have been generated to cover all
+strings. (Probably fixed some edge-case bugs in the coverage code
+at the same time.)
 ------------------------- end of dev branch -------------------------
 
 --------------------------- branch gentest -------------------------------

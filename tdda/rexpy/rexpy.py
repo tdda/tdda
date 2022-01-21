@@ -89,9 +89,12 @@ from pprint import pprint
 
 from tdda import __version__
 
-str_type = unicode if sys.version_info[0] < 3 else str
-bytes_type = str if sys.version_info[0] < 3 else bytes
+isPython2 = sys.version_info[0] < 3
+str_type = unicode if isPython2 else str
+bytes_type = str if isPython2 else bytes
 INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
+UNESCAPES = '''!"%',/:;<=>@_` '''
+
 
 USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
 
@@ -120,6 +123,9 @@ USE_SAMPLING = True
 VERBOSITY = 0
 RE_FLAGS = re.UNICODE | re.DOTALL
 
+DIALECTS = ['perl']
+
+DO_ALL_SIZE = 100000000
 
 class Size(object):
     def __init__(self, **kwargs):
@@ -130,7 +136,7 @@ class Size(object):
             if self.use_sampling:
                 do_all = 100             # Use all examples up to this many
             else:
-                do_all = 100000000       # Use all examples up to this many
+                do_all = DO_ALL_SIZE     # Use all examples up to this many
         self.do_all = do_all
         self.do_all_exceptions = 4000    # Add in all failures up to this many
         self.n_per_length = 64           # When sampling, use this many
@@ -224,15 +230,19 @@ class Categories(object):
     escapableCodes = '.*?'
     def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
-            assert all(L in '_-.' for L in extra_letters)  # for now
-            el_re = ''.join(escape(r'%s') % L for L in extra_letters)
+            assert all(L in '_.-' for L in extra_letters)   # For now
+            extra_letters = ''.join(e for e in '_.-'
+                                    if e in extra_letters)  # Force '-' to end
+            el_re = extra_letters
             el_re_exc = '' if '_' in extra_letters else '_'
         else:
             el_re = ''
             el_re_exc = '_'
         el_re_inc = (extra_letters or '').replace('_', '')
-        punctuation = self.Punctuation(el_re)
+        punctuation = self.PunctuationChars(el_re)
+        self.dialect = dialect
         self.extra_letters = extra_letters or ''
+        self.full_escape = full_escape
         self.LETTER = Category('LETTER', 'A', '[A-Z]')
         self.letter = Category('letter', 'a', '[a-z]')
         self.Letter = Category('Letter', 'L', '[A-Za-z]')
@@ -244,7 +254,8 @@ class Categories(object):
             if extra_letters == '_':
                 self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
             else:
-                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False)
+                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False,
+                                       dialect=dialect)
                 self.ULetter_ = Category('ULetter_', 'Ṃ', p)
 
             ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
@@ -262,11 +273,12 @@ class Categories(object):
         self.AlphaNumeric = Category('AlphaNumeric', 'C',
                                      '[A-Za-z0-9%s]' % el_re)
         self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
-                                      u_alpha_numeric_re(el_re_inc, el_re_exc))
+                                      u_alpha_numeric_re(el_re_inc, el_re_exc,
+                                                         dialect=dialect))
         self.Whitespace = Category('Whitespace', ' ', r'\s')
         self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    '[%s]' % escape(''.join(punctuation),
-                                                    full=full_escape))
+                                    escaped_bracket(punctuation,
+                                                    dialect=dialect))
 
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
@@ -291,7 +303,7 @@ class Categories(object):
         if dialect and dialect != 'perl':
             self.adapt_for_output(dialect, el_re)
 
-    def Punctuation(self, el_re):
+    def PunctuationChars(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
         return [chr(c) for c in range(32, 127) if not re.match(specials,
                                                                chr(c))]
@@ -320,7 +332,10 @@ class Categories(object):
 
     @classmethod
     def escape_code(cls, code):
-        return escape(code) if code in cls.escapableCodes else code
+        return escape(code, full=False) if code in cls.escapableCodes else code
+
+    def escape(self, s, full=None):
+        return escape(s, full=self.full_escape if full is None else full)
 
     def adapt_for_output(self, dialect, el_re):
         """
@@ -401,12 +416,15 @@ def Tree():
 
 
 class Examples(object):
-    def __init__(self, strings, freqs):
+    def __init__(self, strings, freqs=None):
         self.strings = strings
-        self.freqs = freqs
-        self.n_uniqs = len(strings)
-        self.n_strings = sum(freqs)
+        self.freqs = freqs if freqs is not None else [1] * len(strings)
+        assert(len(self.strings) == len(set(self.strings)))
+        self.update()
 
+    def update(self):
+        self.n_uniqs = len(self.strings)
+        self.n_strings = sum(self.freqs)
 
 
 class Extractor(object):
@@ -421,8 +439,14 @@ class Extractor(object):
     which happens by default on initialization, but can be invoked
     manually.
 
-    The examples may be given as a list or as a dictionary:
-    if a dictionary, the values are assumed to be string frequencies.
+    The examples may be given as a list of strings, a integer-valued,
+    string-keyed dictionary or a function.
+
+      - If it's a list, each string in the list is an example string
+      - It it's a dictionary (or counter), each string is to be
+        used, and the values are taken as frequencies (should be non-negative)
+      - If it's a function, it should be as specified below
+        (see the definition of example_check_function)
 
     size can be provided as:
         - a Size() instance, to control various sizes within rexpy
@@ -459,7 +483,15 @@ class Extractor(object):
         self.variableLengthFrags = variableLengthFrags
         self.specialize = specialize
         self.tag = tag                      # Returned tagged (grouped) RE
-        self.examples = self.clean(examples)
+        # self.examples = self.clean(examples)  !!!
+        if callable(examples):
+            self.check_fn = examples
+        else:
+            self.check_fn = self.check_for_failures
+            self.all_examples = self.clean(examples)
+        strings, _ = self.check_fn([], self.size.do_all)
+        self.examples = self.clean(strings)
+
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
@@ -488,48 +520,70 @@ class Extractor(object):
         """
         self.prng_state = PRNGState(self.seed)
         try:
+            size = self.size
             if self.examples.n_uniqs == 0:
                 self.results = None
+                return
 
-            size = self.size
-            if self.examples.n_uniqs <= size.do_all:
+            attempt = 1
+            failures = []
+            while attempt <= size.max_sampled_attempts + 1:
+#                print('!!!')
+#                print(self.examples.strings)
+                if self.verbose:
+                    strings = self.examples.strings
+                    print('\n*** Pass %d (%s strings)'
+                          % (attempt, len(strings)))
+                    if self.verbose > 1:
+                        print('Examples: %s ... %s' % (strings[:5],
+                                                       strings[-5:]))
                 self.results = self.batch_extract()
-                failures, fail_freqs, re_freqs = self.find_non_matches()
-            else:
-                self.all_examples = self.examples
-                examples, freqs = self.sample(size.do_all)
-                self.examples = Examples(examples, freqs)
-                attempt = 1
-                failures = []
-                while attempt <= size.max_sampled_attempts + 1:
+                maxN = (None if attempt > size.max_sampled_attempts
+                             else size.do_all_exceptions)
+                failex, re_freqs = self.check_fn(self.results.rex, maxN)
+                failex = self.clean(failex)
+                if self.verbose:
+                    print('%s REs:' % len(self.results.rex))
+                    for r in self.results.rex:
+                        print('    %s' % r)
+                    print('\nFailures (%d): %s' % (len(failex.strings),
+                                                   failex.strings[:5]))
+                if len(failex.strings) == 0:
+                    break
+                elif (len(failex.strings) <= size.do_all_exceptions
+                      or attempt > size.max_sampled_attempts):
                     if self.verbose:
-                        print('Pass %d' % attempt)
-                        print('Examples: %s ... %s' % (examples[:5],
-                                                       examples[-5:]))
-                    self.results = self.batch_extract()
-                    failures, fail_freqs, re_freqs = self.find_non_matches()
+                        print('\n\n\n*** Now doing all failures...')
+                    self.examples.strings.extend(failex.strings)
+                    self.examples.freqs.extend(failex.freqs)
+                    self.examples.update()
                     if self.verbose:
-                        print('REs:', self.results.rex)
-                        print('Failures (%d): %s' % (len(failures),
-                                                     failures[:5]))
-                    if len(failures) == 0:
-                        break
-                    elif (len(failures) <= size.do_all_exceptions
-                          or attempt > size.max_sampled_attempts):
-                        self.examples.strings.extend(failures)
-                        self.examples.freqs.extend(fail_freqs)
-                    else:
-                        z = list(zip(failures, freqs))
+                        print('\n\n\n*** Total strings = %s'
+                              % len(failex.strings))
+                else:
+                    z = list(zip(failex.strings, failex.freqs))
+                    if len(z) > size.do_all_exceptions:
                         sampled = random.sample(z, size.do_all_exceptions)
-                        self.examples.extend(s[0] for s in sampled)
-                        self.freqs.extend(s[1] for s in sampled)
-                    attempt += 1
-                self.examples = self.all_examples
+                    else:
+                        sampled = z
+                    self.examples.strings.extend(s[0] for s in sampled)
+                    self.examples.freqs.extend(s[1] for s in sampled)
+                    self.examples.update()
+                attempt += 1
+
             self.add_warnings()
             self.results.remove(self.find_bad_patterns(re_freqs))
             self.convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
+
+    def check_for_failures(self, rexes, maxExamples):
+        """
+        This method is the default check_fn
+        (See the definition of example_check_function below.)
+        """
+        failures, freqs, re_freqs = self.sample_non_matches(rexes, maxExamples)
+        return Examples(failures, freqs), re_freqs
 
     def find_bad_patterns(self, freqs):
         """
@@ -577,11 +631,14 @@ class Extractor(object):
         of each length.
         """
         isdict = isinstance(examples, dict)
+        isExamples = isinstance(examples, Examples)
         counter = Counter()
-        for s in examples:
-            n = examples[s] if isdict else 1
+        items = examples.strings if isExamples else examples
+        for i, s in enumerate(items):
+            n = (examples[s] if isdict else examples.freqs[i] if isExamples
+                                       else 1)
             if s is None:
-                self.n_nulls += 1
+                self.n_nulls += n
             elif n == 0:
                 continue  # dictionary entry with count 0
             else:
@@ -597,7 +654,7 @@ class Extractor(object):
 
         if self.verbose > 1:
             print('Examples:')
-            pprint([(k, v) for (k, v) in zip(counter.strings, counter.freqs)])
+            pprint([(k, v) for (k, v) in counter.items()])
             print()
 
         return Examples(list(counter.keys()), ilist(counter.values()))
@@ -724,7 +781,7 @@ class Extractor(object):
                 new_parts.extend(self.merge_fixed_only_present_at_pos(part))
             else:
                 raise ValueError('Level out of range (%d)' % level)
-        if self.verbose:
+        if self.verbose > 1:
             print('\nOUT:')
             print(self.aligned_parts(new_parts))
         return new_parts
@@ -859,46 +916,52 @@ class Extractor(object):
     def similarity(self, p, q):
         return 1
 
-    def sample_old(self, nPerLength):
-        """
-        Sample strings for potentially faster induction.
-        """
-        lengths = self.by_length.keys()
-        lengths.sort()
-        examples = []
-        for L in lengths:
-            x = self.by_length[L]
-            if len(self.by_length[L]) <= nPerLength:
-                examples.extend(x)
-            else:
-                examples.extend(random.sample(x, nPerLength))
-        return examples
-
     def sample(self, n):
         """
-        Sample strings for potentially faster induction.
+        Sample self.all_examples for potentially faster induction.
         """
-        indices = list(range(len(self.all_examples.strings)))
+        return self.sample_examples(self.all_examples, n)
+
+    def sample_examples(self, examples, n):
+        """
+        Sample examples provided for potentially faster induction.
+        """
+        indices = list(range(len(examples.strings)))
         sample_indices = random.sample(indices, n)
-        return ([self.all_examples.strings[i] for i in sample_indices],
-                [self.all_examples.freqs[i] for i in sample_indices])
-#        return random.sample(self.examples.strings, n)
+        return ([examples.strings[i] for i in sample_indices],
+                [examples.freqs[i] for i in sample_indices])
 
+    def sample_non_matches(self, rexes, maxN=None):
+        failures, freqs, re_freqs = self.find_non_matches(rexes)
+        if maxN is not None:
+            if len(failures) > maxN:
+                z = list(zip(failures, freqs))
+                n = len(z)
+                if n > maxN and n > self.size.do_all_exceptions:
+                    sampled = random.sample(z, self.size.do_all_exceptions)
+                else:
+                    sampled = z
+                failures = [s[0] for s in sampled]
+                freqs = [s[1] for s in sampled]
+        return failures, freqs, re_freqs
 
-    def find_non_matches(self):
+    def find_non_matches(self, rexes):
         """
         Returns all example strings that do not match any of the regular
         expressions in results, together with their frequencies.
         """
-        examples = getattr(self, 'all_examples', self.examples)
+        examples = self.all_examples
+        if not rexes:
+            return examples.strings, examples.freqs, []
+
         strings = examples.strings
         freqs = examples.freqs
         N = len(strings)
         matched = [False] * N
         nRemaining = N
-        re_freqs = [0] * len(self.results.rex)
+        re_freqs = [0] * len(rexes)
         if self.results:
-            for j, r in enumerate(self.results.rex):
+            for j, r in enumerate(rexes):
                 cr = cre(r)
                 for i in range(N):
                     if not matched[i]:
@@ -1000,11 +1063,11 @@ class Extractor(object):
             fixed = False
             refined = None
             if len(strings) == 1:   # Same string for whole group
-                refined = escape(list(strings)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(strings)[0])
                 m = M = 1
                 fixed = True
             elif len(chars) == 1:   # Same character, possibly repeated
-                refined = escape(list(chars)[0], full=self.full_escape)
+                refined = self.Cats.escape(list(chars)[0])
                 fixed = True
             elif c == COARSEST_ALPHANUMERIC_CODE:  # Alphanumeric
                 if rlec:  # Always same sequence of chars
@@ -1031,7 +1094,7 @@ class Extractor(object):
                     refined = c
             elif (c == CODE.PUNC
                   and len(chars) <= size.max_punc_in_group):  # Punctuation
-                refined = '[%s]' % escape(char_str, full=self.full_escape)
+                refined = escaped_bracket(char_str, dialect=self.Cats.dialect)
                 fixed = True
             else:
                 refined = c
@@ -1265,7 +1328,8 @@ class Extractor(object):
         The values in the results dictionary are the numbers of (new)
         examples matched.
 
-        If ``dedup`` is set to ``True``, frequencies are ignored.
+        If ``dedup`` is set to ``True``, frequencies are ignored in
+        the sort order.
 
         Each result is a ``Coverage`` object with the following attributes:
 
@@ -1285,7 +1349,8 @@ class Extractor(object):
 
         """
         return rex_full_incremental_coverage(self.results.rex, self.examples,
-                                             dedup, debug=debug)
+                                             sort_on_deduped=dedup,
+                                             debug=debug)
 
     def n_examples(self, dedup=False):
         """
@@ -1401,6 +1466,68 @@ class Extractor(object):
         return results, tree
 
 
+def example_check_function(rexes, maxN=None):
+    """
+    **CHECK FUNCTIONS**
+    This is an example check function
+
+    A check function takes a list of regular expressions (as strings)
+    and optionally, a maximum number of (different) strings to return.
+
+    It should return two things:
+
+      - An Examples object (importing that class from rexpy.py)
+        containing strings that don't match any of the regular expressions
+        in the list provided. (If the list is empty, all strings are candidates
+        to be returned.)
+
+      - a list of how many strings matched each regular expression
+        provided (in the same order).
+
+    If maxN is None, it should return all strings that fail to match;
+    if it is a number, that is the maximum number of (distinct) failures
+    to return. The function *is* expected to return all failures, however,
+    if there are fewer than maxN failures (i.e., it's not OK if maxN
+    is 20 to return just 1 failiing string if actually 5 different
+    strings fail.)
+
+    Examples: The examples object is initialized with a list of (distinct)
+    failing strings, and optionally a corresponding list of their frequencies.
+    If no frequencies are provided, all frequencies will be set to 1
+    when the Examples object is initialized.
+
+    The regular expression match frequencies are used to eliminate
+    low-frequency or low-ranked regular expressions. It is not essential
+    that the values cover all candidate strings; it is enough to give
+    frequencies for those strings tested before maxN failures are generated.
+
+    (Normally, the regular expressions provided will be exclusive, i.e.
+    at most one will match, so it's also fine only to test a string
+    against regular expressions until a match is found...you don't
+    need to test against other patterns in case the string also matches
+    more than one.)
+    """
+    # STRINGS = ['some', 'strings', 'in', 'scope']
+    # In this example function, we are assuming each string in STRINGS
+    # is distinct.
+    failures = []
+    re_freqs = [0] * len(rexes)
+    if rexes:
+        patterns = [re.compile(r) for r in rexes]  # compile for efficiency
+        for u in STRINGS:
+            for i, r in enumerate(patterns):
+                if re.match(r, u):
+                    re_freqs[i] += 1  # record the fact that this rex matched
+                    break             # don't try later patterns
+            else:   # Record strings that don't match any rex
+                failures.append(u)
+    else:
+        failures = STRINGS     # If there are no rexes, all strings fail
+    if maxN is not None and len(failures) > maxN:
+        failures = random.sample(failures, maxN)
+    return Examples(failures), re_freqs
+
+
 def rex_coverage(patterns, examples, dedup=False):
     """
     Given a list of regular expressions and a dictionary of examples
@@ -1409,7 +1536,7 @@ def rex_coverage(patterns, examples, dedup=False):
 
     If ``dedup`` is set to ``True``, the frequencies are ignored, so that only
     the number of keys is returned.
-   """
+    """
     results = []
     for p in patterns:
         p = '%s%s%s' % ('' if p.startswith('^') else '^',
@@ -1428,7 +1555,7 @@ def rex_coverage(patterns, examples, dedup=False):
     return results
 
 
-def rex_full_incremental_coverage(patterns, examples, dedup=False,
+def rex_full_incremental_coverage(patterns, examples, sort_on_deduped=False,
                                   debug=False):
     """
     Returns an ordered dictionary containing, keyed on terminated
@@ -1460,7 +1587,8 @@ def rex_full_incremental_coverage(patterns, examples, dedup=False,
     patterns, indexes = terminate_patterns_and_sort(patterns)
     matrix, deduped = coverage_matrices(patterns, examples)
     return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                         examples, dedup=dedup,)
+                                         examples,
+                                         sort_on_deduped=sort_on_deduped)
 
 
 def terminate_patterns_and_sort(patterns):
@@ -1478,7 +1606,8 @@ def terminate_patterns_and_sort(patterns):
     return [r[0] for r in z], [r[1] for r in z]
 
 
-def rex_incremental_coverage(patterns, examples, dedup=False, debug=False):
+def rex_incremental_coverage(patterns, examples, sort_on_deduped=False,
+                             debug=False):
     """
     Given a list of regular expressions and a dictionary of examples
     and their frequencies, this computes their incremental coverage,
@@ -1546,8 +1675,9 @@ def rex_incremental_coverage(patterns, examples, dedup=False, debug=False):
 
     """
     results = rex_full_incremental_coverage(patterns, examples,
-                                            dedup=dedup, debug=False)
-    if dedup:
+                                            sort_on_deduped=sort_on_deduped,
+                                            debug=False)
+    if sort_on_deduped:
         return OrderedDict((k, v.incr_uniq) for (k, v) in results.items())
     else:
         return OrderedDict((k, v.incr) for (k, v) in results.items())
@@ -1571,15 +1701,17 @@ def coverage_matrices(patterns, examples):
 
 
 def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                  examples, dedup=False):
+                                  examples, sort_on_deduped=False):
     """
-    Find patterns, in order of # of matches, and pull out freqs.
+    Find patterns, in (descending) order of # of matches, and pull out freqs.
+
     Then set overlapping matches to zero and repeat.
+
     Returns ordered dict, sorted by incremental match rate,
     with number of (previously unaccounted for) strings matched.
     """
     results = OrderedDict()
-    sort_matrix = deduped if dedup else matrix
+    sort_matrix = deduped if sort_on_deduped else matrix
     np = len(patterns)
     zeros = [0] * np
     strings = examples.strings
@@ -1587,42 +1719,48 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                      for r in range(np)]
     pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
                      for r in range(np)]
-    changed = False
-    while len(results) < np:
+    some_left = True
+    while some_left and len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
         uniq_totals = [sum(row[i] for row in deduped) for i in range(np)]
         M, uM = max(totals), max(uniq_totals)
-        if dedup:
+        if sort_on_deduped:
             sort_totals = uniq_totals
             target = uM
         else:
             sort_totals = totals
             target = M
-        p = 0  # index of pattern
-        while sort_totals[p] < target:
-            p += 1
-        rex = patterns[p]
-        added = rex not in results.keys()
-        zeroed = False
-        for i in range(examples.n_uniqs):
-            if matrix[i][p]:
-                matrix[i] = zeros
-                deduped[i] = zeros
-                zeroed = True
-        if not added and not zeroed:
-            # we've got to 100% coverage without using all of the patterns!
-            for zp in range(p + 1, np):
-                zrex = patterns[zp]
-                results[zrex] = Coverage(n=pattern_freqs[zp],
-                                         n_uniq=pattern_uniqs[zp],
-                                         incr=0, incr_uniq=0,
-                                         index=indexes[zp])
+
+        if target > 0:
+            # find pattern with frequency of target
+            p = 0  # index of pattern
+            while sort_totals[p] < target:
+                p += 1
+            rex = patterns[p]
+
+            in_results = rex in results
+            if not in_results:
+                for i in range(examples.n_uniqs):
+                    if matrix[i][p]:
+                        matrix[i] = zeros
+                        deduped[i] = zeros
+                        zeroed = True
+                results[rex] = Coverage(n=pattern_freqs[p],
+                                        n_uniq=pattern_uniqs[p],
+                                        incr=totals[p],
+                                        incr_uniq=uniq_totals[p],
+                                        index=indexes[p])
         else:
-            results[rex] = Coverage(n=pattern_freqs[p],
-                                    n_uniq=pattern_uniqs[p],
-                                    incr=totals[p],
-                                    incr_uniq=uniq_totals[p],
-                                    index=indexes[p])
+            some_left = False
+
+    if some_left and len(results) < np:
+        for p in range(np):
+            rex = patterns[p]
+            if rex not in results:
+                results[rex] = Coverage(n=pattern_freqs[p],
+                                        n_uniq=pattern_uniqs[p],
+                                        incr=0, incr_uniq=0,
+                                        index=indexes[p])
     return results
 
 
@@ -1762,6 +1900,9 @@ class IDCounter(object):
 
     def keys(self):
         return self.ids.keys()
+
+    def items(self):
+        return self.ids.items()
 
     def __iter__(self):
         return self.ids.__iter__()
@@ -1924,7 +2065,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     with results in .results.rex; otherwise, a list of regular
     expressions, as unicode strings is returned.
     """
-    if encoding:
+    if encoding and not callable(examples):
         if isinstance(examples, dict):
             examples ={x.decode(encoding): n for (x, n) in examples.items()}
         else:
@@ -1949,10 +2090,11 @@ def pdextract(cols, seed=None):
 
     Example use::
 
+        import numpy as np
         import pandas as pd
         from tdda.rexpy import pdextract
 
-        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+        df = pd.DataFrame({'a3': ["one", "two", np.NaN],
                            'a45': ['three', 'four', 'five']})
 
         re3 = pdextract(df['a3'])
@@ -2146,26 +2288,43 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False,
         path to file:     to write outputs from file at out_path
         False:            to return the strings as a list
     """
+    verbose = kwargs.get('verbose', 0)
     if type(in_path) in (list, tuple):
         strings = in_path
     elif in_path:
+        if verbose:
+            print('Reading file %s.' % in_path)
         with open(in_path) as f:
             strings = f.read().splitlines()
+        if verbose:
+            print('Read file %s' % in_path)
     else:
+        if verbose:
+            print('Ingesting strings')
         strings = [s.strip() for s in sys.stdin.readlines()]
         if strings and type(strings[0]) == bytes_type:
             strings = [s.decode('UTF-8') for s in strings]
+        if verbose:
+            print('Ingested strings.')
     if skip_header:
         strings = strings[1:]
+    if verbose:
+        print('Extracting strings')
     patterns = extract(strings, **kwargs)
+    if verbose:
+         print('Extracted strings')
     if quote:
         patterns = [dquote(p) for p in patterns]
     if out_path is False:
         return patterns
     elif out_path:
+        if verbose:
+            print('Writing results to %s.' % out_path)
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
+        if verbose:
+            print('Written results to %s.' % out_path)
     else:
         for p in patterns:
             print(p)
@@ -2306,13 +2465,47 @@ def escape(s, full=False):
     if full:
         return re.escape(s)
     else:
-        unescapes = ' '
-        return ''.join((c if c in unescapes else re.escape(c)) for c in s)
+        return ''.join((c if c in UNESCAPES else re.escape(c)) for c in s)
 
 
-def u_alpha_numeric_re(inc, exc, digits=True):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escape(exc))
-    i = '[%s]' % escape(inc) if len(inc) == 2 else escape(inc)
+def escaped_bracket(chars, dialect=None, inner=False):
+    """
+    Construct a regular expression Bracket (character class),
+    obeying the special regex rules for escaping these:
+
+      - Characters do not, in general need to be escaped
+      - If there is a close bracket ("]") it mst be the first character
+      - If there is a hyphen ("-") it must be the last character
+      - If there is a carat ("^"), it must not be the first character
+      - If there is a backslash, it's probably best to escape it.
+        Some implementations don't require this, but it will rarely
+        do any harm, and most implementation understand at least some
+        escape sequences ("\w", "\W", "\d", "\s" etc.), so escaping
+        seems prudent.
+
+    However, javascript and ruby do not follow the unescaped "]" as the
+    first character rule, so if either of these dialects is specified,
+    the "]" will be escaped (but still placed in the first position.
+
+    If inner is set to True, the result is returned without brackets.
+    """
+    opener, closer = ('', '') if inner else ('[', ']')
+    if dialect in ('javascript', 'ruby'):
+        prefix = '\]' if ']' in chars else ''
+    else:
+        prefix = ']' if ']' in chars else ''
+    suffix = ((r'\\' if '\\' in chars else '')
+              + ('^' if '^' in chars else '')
+              + ('-' if '-' in chars else ''))
+    specials = r']\-^'
+    mains = ''.join(c for c in chars if c not in specials)
+    return '%s%s%s%s%s' % (opener, prefix, mains, suffix, closer)
+
+
+def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
+    r = '[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
+                       dialect=dialect, inner=True))
+    i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 
 
@@ -2371,7 +2564,6 @@ def usage_error():
 def main():
     params = get_params(sys.argv[1:])
     rexpy_streams(**params)
-
 
 if __name__ == '__main__':
     main()

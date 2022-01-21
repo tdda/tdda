@@ -39,8 +39,8 @@ try:
 except ImportError:
     from io import StringIO
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 try:
     from pmmif import featherpmm
@@ -84,6 +84,7 @@ else:
 isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
+RE_FLAGS = re.UNICODE | re.DOTALL
 
 
 class PandasConstraintCalculator(BaseConstraintCalculator):
@@ -190,7 +191,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         if rexes is None:      # a null value is not considered
             return None        # to be an active constraint,
                                # so is always satisfied
-        rexes = [re.compile(r) for r in rexes]
+        rexes = [re.compile(r, RE_FLAGS) for r in rexes]
         strings = [native_definite(s)
                    for s in self.df[colname].dropna().unique()]
 
@@ -220,7 +221,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
     def __init__(self, df):
         self.df = df
         if df is not None:
-            self.date_cols = list(df.select_dtypes(include=[pd.np.datetime64]))
+            self.date_cols = list(df.select_dtypes(include=[np.datetime64]))
             index = df.index.copy()
             if not index.name:
                 index.name = 'Index'
@@ -465,7 +466,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
             try:
                 ctype = constraints[c]['type'].value
                 dtype = ser.dtype
-                if ctype == 'string' and dtype != pd.np.dtype('O'):
+                if ctype == 'string' and dtype != np.dtype('O'):
                     is_numeric = True
                     is_real = False
                     for limit in ('min', 'max'):
@@ -482,14 +483,12 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                             is_real = self.calc_non_integer_values_count(c) > 0
                         self.df.loc[ser.notnull(), c] = ser.astype(str)
                         if not is_real:
-                            self.df[c] = self.df[c].str.replace('.0', '')
-                elif ctype == 'bool' and dtype == pd.np.dtype('int64'):
-                    self.df[c] = ser.astype(bool)
-                elif ctype == 'bool' and dtype == pd.np.dtype('int32'):
+                            self.df[c] = self.df[c].str.replace('.0', '',
+                                                                regex=False)
+                elif ctype == 'bool' and str(dtype).lower().startswith('int'):
                     self.df[c] = ser.astype(bool)
             except Exception as e:
                 print('%s: %s' % (e.__class__.__name__, str(e)))
-                pass
 
 
 class PandasVerification(Verification):
@@ -504,7 +503,7 @@ class PandasVerification(Verification):
 
     - ``True``       --- if the constraint was satified for the column
     - ``False``      --- if column failed to satisfy the constraint
-    - ``pd.np.NaN``  --- if there was no constraint of this kind
+    - ``np.NaN``  --- if there was no constraint of this kind
 
     This Pandas-specific implementation of constraint verification also
     provides methods :py:meth:`to_frame` to get the overall verification
@@ -621,7 +620,7 @@ def pandas_tdda_type(x):
     if dt == np.dtype('O'):
         # objects could be either strings or booleans-with-nulls or dates
         for v in x:
-            if type(v) in (bool, np.bool, np.bool_):
+            if type(v) in (bool, np.bool_):
                 return 'bool'
             elif type(v) in (unicode_string, byte_string):
                 return 'string'
@@ -631,7 +630,7 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    dts = str(dt)
+    dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
         return 'bool'
     if type(x) in (int, long_type) or 'int' in dts:
@@ -755,7 +754,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
         This object has attributes:
 
-        - *passes*      --- Number of passing constriants
+        - *passes*      --- Number of passing constraints
         - *failures*    --- Number of failing constraints
 
         It also has a :py:meth:`~tdda.constraints.pd.constraints.PandasVerification.to_frame()` method for
@@ -768,8 +767,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         import pandas as pd
         from tdda.constraints import verify_df
 
-        df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
-                           'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
+        df = pd.DataFrame({'a': [0, 1, 2, 10, np.NaN],
+                           'b': ['one', 'one', 'two', 'three', np.NaN]})
         v = verify_df(df, 'example_constraints.tdda')
 
         print('Constraints passing: %d\\n' % v.passes)
@@ -956,8 +955,8 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         import pandas as pd
         from tdda.constraints import detect_df
 
-        df = pd.DataFrame({'a': [0, 1, 2, 10, pd.np.NaN],
-                           'b': ['one', 'one', 'two', 'three', pd.np.NaN]})
+        df = pd.DataFrame({'a': [0, 1, 2, 10, np.NaN],
+                           'b': ['one', 'one', 'two', 'three', np.NaN]})
         v = detect_df(df, 'example_constraints.tdda')
         detection_df = v.detected()
         print(detection_df.to_string())
@@ -1098,7 +1097,7 @@ def discover_df(df, inc_rex=False, df_path=None):
         import pandas as pd
         from tdda.constraints import discover_df
 
-        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', pd.np.NaN]})
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', np.NaN]})
         constraints = discover_df(df)
         with open('example_constraints.tdda', 'w') as f:
             f.write(constraints.to_json())
@@ -1185,11 +1184,11 @@ def convert_output_types(df, boolean_ints):
     newdf = pd.DataFrame(index=df.index)
     trueval = '1' if boolean_ints else 'true'
     falseval = '0' if boolean_ints else 'false'
-    pandas_true_values = (True, pd.np.bool(True), pd.np.bool_(True))
-    pandas_false_values = (True, pd.np.bool(False), pd.np.bool_(False))
+    pandas_true_values = (True, np.bool_(True))
+    pandas_false_values = (True, np.bool_(False))
     for col in list(df):
         c = df[col]
-        if c.dtype in (pd.np.dtype('O'), pd.np.dtype(bool)):
+        if c.dtype in (np.dtype('O'), np.dtype(bool)):
             newdf[col] = [(trueval if v in pandas_true_values
                            else falseval if v in pandas_false_values
                            else v) for v in c]
@@ -1208,7 +1207,9 @@ def is_pd_index_trivial(df):
         return False
     if df.index.has_duplicates:
         return False
-    if df.index._start != 0:
+    if hasattr(df.index, 'start') and df.index.start != 0:
+        # not clear why start can be missing with modern pandas;
+        # but sometimes it seem to be
         return False
     return True
 
