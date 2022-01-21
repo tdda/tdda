@@ -2090,10 +2090,11 @@ def pdextract(cols, seed=None):
 
     Example use::
 
+        import numpy as np
         import pandas as pd
         from tdda.rexpy import pdextract
 
-        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+        df = pd.DataFrame({'a3': ["one", "two", np.NaN],
                            'a45': ['three', 'four', 'five']})
 
         re3 = pdextract(df['a3'])

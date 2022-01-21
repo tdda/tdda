@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2017
+Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
 from __future__ import absolute_import
@@ -55,7 +55,7 @@ def copy(srcdir, destination):
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
             copy(fullname, outdir)
-        elif name.endswith('.pyc'):
+        elif name.endswith('.pyc') or name.endswith('~'):
             continue
         elif name == ('accounts.zip'):
             copy_accounts_data_unzipped(destination)

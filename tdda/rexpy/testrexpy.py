@@ -220,6 +220,7 @@ try:
 except:
     pandas = None
 pd = pandas
+import numpy as np
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -1424,17 +1425,17 @@ class TestExtraction(ReferenceTestCase):
         x = Extractor(self.urls2, variableLengthFrags=False)
         od = x.full_incremental_coverage()
         expected = OrderedDict((
-            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+            (r'^[a-z]{4,5}://www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
@@ -1442,17 +1443,17 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(x.n_examples(), 16)
 
         expected_dd = OrderedDict((
-            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+            (r'^[a-z]{4,5}://www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=3)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=4)),
         ))
 
@@ -1462,17 +1463,17 @@ class TestExtraction(ReferenceTestCase):
 
         x = Extractor(self.urls2 * 2, variableLengthFrags=False)
         doubled = OrderedDict((
-            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+            (r'^[a-z]{4,5}://www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         od = x.full_incremental_coverage()
@@ -1482,17 +1483,17 @@ class TestExtraction(ReferenceTestCase):
         od = x.full_incremental_coverage(dedup=True)
 
         expected_doubled_dd = OrderedDict((
-            (u'^[a-z]{4,5}://www\.[a-z]+\.com$',
+            (r'^[a-z]{4,5}://www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=3)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=5)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=4)),
         ))
         self.assertEqual(od, expected_doubled_dd)
@@ -1502,33 +1503,33 @@ class TestExtraction(ReferenceTestCase):
         x = Extractor(self.urls2, variableLengthFrags=True)
         od = x.full_incremental_coverage()
         expected = OrderedDict((
-            (u'^https?://www\.[a-z]+\.com$',
+            (r'^https?://www\.[a-z]+\.com$',
              Coverage(n=4, n_uniq=4, incr=4, incr_uniq=4, index=4)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=3, n_uniq=2, incr=3, incr_uniq=2, index=1)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=3, n_uniq=3, incr=3, incr_uniq=3, index=5)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=2, n_uniq=2, incr=2, incr_uniq=2, index=3))
         ))
 
         x = Extractor(self.urls2 * 2, variableLengthFrags=True)
         doubled = OrderedDict((
-            (u'^https?://www\.[a-z]+\.com$',
+            (r'^https?://www\.[a-z]+\.com$',
              Coverage(n=8, n_uniq=4, incr=8, incr_uniq=4, index=5)),
-            (u'^[a-z]+\.com/$',
+            (r'^[a-z]+\.com/$',
              Coverage(n=6, n_uniq=2, incr=6, incr_uniq=2, index=1)),
-            (u'^http://www\.[a-z]+\.co\.uk/$',
+            (r'^http://www\.[a-z]+\.co\.uk/$',
              Coverage(n=6, n_uniq=3, incr=6, incr_uniq=3, index=4)),
-            (u'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
+            (r'^[a-z]{3,4}[./:]{1,3}[a-z]+\.[a-z]{3}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=2)),
-            (u'^[a-z]{3,4}\.[a-z]{2,4}$',
+            (r'^[a-z]{3,4}\.[a-z]{2,4}$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=0)),
-            (u'^http://www\.[a-z]{6,8}\.com/$',
+            (r'^http://www\.[a-z]{6,8}\.com/$',
              Coverage(n=4, n_uniq=2, incr=4, incr_uniq=2, index=3)),
         ))
         od = x.full_incremental_coverage()
@@ -1808,7 +1809,7 @@ class TestExtraction(ReferenceTestCase):
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract(self):
-        df = pd.DataFrame({'a3': ["one", "two", pd.np.NaN],
+        df = pd.DataFrame({'a3': ["one", "two", np.NaN],
                            'a45': ['three', 'four', 'five']})
 
         re3 = pdextract(df['a3'])
@@ -1821,7 +1822,7 @@ class TestExtraction(ReferenceTestCase):
 
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract2(self):
-        df = pd.DataFrame({'ab': ["one", True, pd.np.NaN]})
+        df = pd.DataFrame({'ab': ["one", True, np.NaN]})
         self.assertRaisesRegex(ValueError, 'Non-null, non-string',
                                pdextract, df['ab'])
 

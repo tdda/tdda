@@ -311,6 +311,32 @@ Fixed problem with the 'tdda test' command. It was failing with:
 Also simplified the list of characters to NOT be specially escaped for rexpy,
 so it's now just the same across all python versions.
 
+25.10.2019 1.0.31
+Constraint verify/detect of regular expressions now handles '.' better.
+
+It wasn't set to allow newlines to match '.', meaning that regular expressions
+matching text with newlines in it wasn't always matching as you might expect.
+
+Reftest Exercises added.
+
+20.05.2020 1.0.32
+Replaced deprecated uses of pandas.np (pd.np) with np.
+
+19.10.2021 1.0.33
+Updates for recent numpy and pandas deprecations and warnings.
+
+Removed used of np.int (now int), np.float (now float) and np.bool (now bool).
+
+Removed used of RangeIndex._start (now RangeIndex.start).
+
+Added regex=False to Series.str.replace, which will be the new default
+and which the code (implicitly) assumed was the default previously.
+
+19.10.2021 1.0.34
+Bump requirements on numpy/pandas; pandas update.
+
+Pandas update now (starts to) add recognition of Integer Series type.
+
 -------------------------- rexless branch ---------------------------
 Use sampling and fewer regexes to speed up rexpy.
 
@@ -371,9 +397,4 @@ strings. (Probably fixed some edge-case bugs in the coverage code
 at the same time.)
 ------------------------- end of dev branch -------------------------
 
-###
-Constraint verify/detect of regular expressions now handles '.' better.
-
-It wasn't set to allow newlines to match '.', meaning that regular expressions
-matching text with newlines in it wasn't always matching as you might expect.
 """

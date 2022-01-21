@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2018
+Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
 from __future__ import absolute_import
@@ -233,9 +233,9 @@ class PandasComparison(BaseComparison):
         s = self.sample(values, start, stop)
         r = ', '.join(['null' if pd.isnull(v)
                        else str('%d' % v)
-                              if type(v) in (np.int, np.int32, np.int64)
+                              if type(v) in (int, np.int32, np.int64)
                        else str('%.*f' % (precision, v))
-                              if type(v) in (np.float, np.float32, np.float64)
+                              if type(v) in (float, np.float32, np.float64)
                        else str('"%s"' % v) if values.dtype == object
                        else str(v)
                        for v in s])
@@ -433,10 +433,10 @@ def default_csv_loader(csvfile, **kwargs):
     if options.get('infer_datetime_format'):
         colnames = df.columns.tolist()
         for c in colnames:
-            if df[c].dtype == pd.np.dtype('O'):
+            if df[c].dtype == np.dtype('O'):
                 try:
                     datecol = pd.to_datetime(df[c])
-                    if datecol.dtype == pd.np.dtype('datetime64[ns]'):
+                    if datecol.dtype == np.dtype('datetime64[ns]'):
                         df[c] = datecol
                 except Exception as e:
                     pass

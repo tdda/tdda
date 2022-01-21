@@ -95,6 +95,7 @@ Resources on these topics include:
 
   * TDDA Blog: http://www.tdda.info
   * Quick Reference Guide ("Cheatsheet"): http://www.tdda.info/pdf/tdda-quickref.pdf
+  * 1-page summary: https://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf
   * Full documentation: http://tdda.readthedocs.io
   * General Notes on Constraints and Assertions: http://www.tdda.info/constraints-and-assertions
   * Notes on using the Pandas constraints library:
