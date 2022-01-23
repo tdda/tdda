@@ -254,3 +254,11 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 .wy-body-for-nav a:hover {
 
 }
+
+.wy-menu-vertical li.current {
+    background:#b0b0b0;
+}
+
+.wy-menu-vertical li.current a:hover {
+    background:#808080;
+}
