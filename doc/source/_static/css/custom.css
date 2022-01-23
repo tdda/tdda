@@ -245,8 +245,12 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 
 .wy-side-nav-search a,
 .wy-side-nav-search a:visited,
-.wy-side-nav-search a:hover,
-.wy-body-for-nav a,
-.wy-body-for-nav a:hover {
+.wy-side-nav-search a:hover {
     color: #FFFFFF;
+}
+
+.wy-body-for-nav a,
+.wy-body-for-nav a:visited,
+.wy-body-for-nav a:hover {
+    
 }
