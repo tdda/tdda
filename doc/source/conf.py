@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'tdda'
-copyright = u'2016-2018, Stochastic Solutions Limited'
+copyright = u'2016-2022, Stochastic Solutions Limited'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -123,7 +123,7 @@ html_theme = 'default'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+cus html_logo = '_static/tdda-logo400x400-TDDA.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -265,4 +265,4 @@ texinfo_documents = [
 
 
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
