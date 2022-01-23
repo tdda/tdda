@@ -17,7 +17,6 @@ body {
 }
 
 div.document {
-    background-color: #606060;
 }
 
 div.documentwrapper {
@@ -116,13 +115,14 @@ div.sphinxsidebar input {
 
 /* -- body styles ----------------------------------------------------------- */
 
-a,a:visited {
-    color: #700000;
+a, a:visited {
+    color: #400000;
     text-decoration: none;
 }
 
 a:hover {
     text-decoration: underline;
+    color: #800000;
 }
 
 div.body p, div.body dd, div.body li {
@@ -139,7 +139,7 @@ div.body h6 {
     font-family: 'Trebuchet MS', sans-serif;
     background-color: #f2f2f2;
     font-weight: normal;
-    color: #800000;
+    color: #600000;
     border-bottom: 1px solid #ccc;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 10px;
@@ -239,6 +239,14 @@ div.sphinxsidebar.current.toctree-l1.current.current {
     background-color: #404040;
 }
 
-.wy-side-nav-search {
+.wy-side-nav-search, .wy-body-for-nav {
     background-color: #272525;
+}
+
+.wy-side-nav-search a,
+.wy-side-nav-search a:visited,
+.wy-side-nav-search a:hover,
+.wy-body-for-nav a,
+.wy-body-for-nav a:hover {
+    color: #FFFFFF;
 }
