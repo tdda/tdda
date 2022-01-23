@@ -6,16 +6,17 @@ of DB-API (PEP-0249) compliant databases, and also for a number of other
 
 The top-level functions are:
 
-    :py:func:`~tdda.constraints.discover_db_table`:
+    :py:func:`tdda.constraints.discover_db_table`:
         Discover constraints from a single database table.
 
-    :py:func:`~tdda.constraints.verify_db_table`:
+    :py:func:`tdda.constraints.verify_db_table`:
         Verify (check) a single database table, against a set of previously
         discovered constraints.
 
-    :py:func:`~tdda.constraints.detect_db_table`:
+    :py:func:`tdda.constraints.detect_db_table`:
         For detection of failing records in a single database table,
         but not yet implemented for databases.
+
 """
 from __future__ import division
 from __future__ import print_function
