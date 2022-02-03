@@ -1,0 +1,10 @@
+TDDA's API for Rexpy
+====================
+
+``tdda.rexpy``
+--------------
+
+.. automodule:: tdda.rexpy.rexpy
+    :members:
+
+.. _rexpy_examples:

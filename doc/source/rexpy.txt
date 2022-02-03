@@ -1,20 +1,108 @@
 Rexpy
 =====
 
-.. automodule:: tdda.rexpy
-    :members:
+..
+  KEEP IN SYNC WITH DOC IN rexpy.py
+..
 
-.. _rexpy_command_line_tool:
+The ``rexpy`` command
+---------------------
 
-Command-line Tool
------------------
+::
 
-.. automodule:: tdda.rexpy.rexpy
-    :members:
+    rexpy [FLAGS] [inputfile [outputfile]]
 
-.. _rexpy_examples:
+If ``inputfile`` is provided, it should contain one string per line;
+otherwise lines will be read from standard input.
 
-Examples
---------
+If ``outputfile`` is provided, regular expressions found will be written
+to that (one per line); otherwise they will be printed.
+
+``FLAGS`` are optional flags. Currently:
+
+  ``-h``, ``--header``
+    Discard first line, as a header.
+
+  ``-?``, ``--help``
+    Print this usage information and exit (without error)
+
+  ``-g``, ``--group``
+    Generate capture groups for each variable fragment
+    of each regular expression generated, i.e. surround
+    variable components with parentheses, e.g.
+
+        ``^[A-Z]+\-[0-9]+$``
+
+    becomes
+
+        ``^([A-Z]+)\-([0-9]+)$``
+
+  ``-q``, ``--quote``
+    Display the resulting regular expressions as
+    double-quoted, escaped strings, in a form broadly
+    suitable for use in Unix shells, JSON, and string
+    literals in many programming languages. e.g.
+
+        ``^[A-Z]+\-[0-9]+$``
+
+    becomes
+
+        ``"^[A-Z]+\\-[0-9]+$"``
+
+  ``--portable``
+     Product maximally portable regular expressions
+     (e.g. [0-9] rather than \d). (This is the default.)
+
+  ``--grep``
+     Same as ``--portable``
+
+  ``--java``
+    Produce Java-style regular expressions (e.g. ``\p{Digit}``)
+
+  ``--posix``
+    Produce posix-compilant regular expressions
+    (e.g. ``[[:digit:]]`` rather than ``\d``).
+
+  ``--perl``
+    Produce Perl-style regular expressions (e.g. ``\d``)
+
+  ``-u`` ,  ``--underscore``  Allow underscore to be treated as a letter.
+    Mostly useful for matching identifiers
+    Also allow ``-_``.
+
+  ``-d``, ``--dot``
+    Allow dot to be treated as a letter.
+    Mostly useful for matching identifiers.
+    Also ``-.`` and ``--period``.
+
+  ``-m``, ``--minus``
+    Allow minus to be treated as a letter.
+    Mostly useful for matching identifiers.
+    Also ``--hyphen`` or ``--dash``.
+
+  ``-v``, ``--version``
+    Print the version number.
+
+  ``-V``, ``--verbose``
+    Set verbosity level to 1
+
+  ``-VV``, ``--Verbose``
+    Set verbosity level to 2
+
+  ``-vlf``, ``--variable``
+    Use variable length fragments
+
+  ``-flf``, ``--fixed``
+    Use fixed length fragments
+
+..
+  KEEP IN SYNC WITH DOC IN rexpy.py
+..
+
+
+Rexpy Examples
+--------------
 .. automodule:: tdda.rexpy.examples
     :members:
+
+

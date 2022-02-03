@@ -1,0 +1,132 @@
+Installation of tdda
+====================
+
+If you don't need source, the simplest way to install the tdda library is
+to do a normal pip install::
+
+    pip install tdda
+
+If you have multiple Python installations and want to make sure you use the
+right one, use::
+
+    python -m pip install tdda
+
+replacing ``python`` with whatever you need to use to run your target
+version of python.
+
+If you want it installed for all users and don't have write access to
+your Python's site packages, you should either change the permissions
+so that you can write it, or log in as a user who does have permission,
+or add ``sudo`` before the ``pip`` or ``python`` command.
+
+Upgrading
+---------
+
+Add ``--upgrade`` or ``-U`` after ``install`` in the commands above
+to upgrade an existing installation.
+This is true, in general, for pip::
+
+    pip install -U tdda
+
+or::
+
+    python -m pip install -U tdda
+
+Source installation
+-------------------
+
+The `tdda <https://github.com/tdda/tdda>`_ project is hosted on Github at
+`github.com/tdda/tdda <https://github.com/tdda/tdda>`_.
+
+If you want to do a source installation, that's probably all you need to know,
+but::
+
+    git clone git@github.com:tdda/tdda.git
+
+or::
+
+    git clone https://github.com/tdda/tdda.git
+
+is the command to get it.
+
+Then::
+
+    python setup.py install
+
+should install it.
+
+Checking the installation
+-------------------------
+
+If all has gone well, you should be able to type::
+
+   tdda
+
+and it will show you some help.
+
+You should also be able to use::
+
+    >>> import tdda
+    >>> tdda.__version__
+
+from your Python successfully.
+
+Finally, you should be able to run the tests with no failures, like this
+for example::
+
+    cd tdda/tdda
+    python testtdda.py
+    Skipping Postgres tests (no driver library)
+    Skipping MySQL tests (no driver library)
+    ......................................................................................................ssssssssss..................................................................sssss..............................
+    ----------------------------------------------------------------------
+    Ran 213 tests in 18.421s
+
+    OK (skipped=15)
+
+
+Some tests will be skipped if you don't have various libraries and haven't
+(yet) told TDDA about any databases you might want to use.
+
+
+.. _optional_installations:
+
+Optional Installations for using Databases, Feather Files, Pandas
+-----------------------------------------------------------------
+
+Extra libraries are required to access some of the constraint generation
+and verification functionality, depending on the data sources that you
+wish to use.
+
+* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
+* :py:mod:`feather-format` (required for :py:mod:`feather` files)
+* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
+* :py:mod:`pygresql` (required for PostgreSQL database tables)
+* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
+* :py:mod:`sqlite3` (required for SQLite database tables)
+* :py:mod:`pymongo` (required for MongoDB document collections)
+
+
+These can be installed with (some/all of)::
+
+    pip install pandas
+    pip install feather-format
+    pip install pmmif
+    pip install pygresql
+    pip install sqlite3
+    pip install pymongo
+
+and, for MySQL, **one** of::
+
+    pip install MySQL-python
+    pip install mysqlclient
+    pip install mysql-connector-python
+
+
+The :py:mod:`sqlite3` module is sometimes provided by default as part of the
+standard Python libraries.
+
+To install :py:mod:`feather-format` on Windows, you will need to install
+:py:mod:`cython` as a prerequisite, which might also require you to install
+the Microsoft Visual C++ compiler for python, from http://aka.ms/vcpython27.
+

@@ -8,7 +8,7 @@
 /* -- page layout ----------------------------------------------------------- */
 
 body {
-    font-family: Palatino, "Palatino Linotype", Serif;
+    font-family: Palatino, "Palatino Linotype", Garamond, Baskerville, Serif;
     font-size: 100%;
     background-color: #283038;
     color: #000;
@@ -136,11 +136,11 @@ div.body h3,
 div.body h4,
 div.body h5,
 div.body h6 {
-    font-family: 'Trebuchet MS', sans-serif;
-    background-color: #f2f2f2;
+    font-family: Palatino, "Palatino Linotype", 'Trebuchet MS', sans-serif;
+    background-color: #FFFFFF;
     font-weight: normal;
     color: #800000;
-    border-bottom: 1px solid #ccc;
+    border-bottom: none;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 10px;
 }
@@ -202,19 +202,34 @@ p.admonition-title:after {
 
 pre {
     padding: 5px;
-    background-color: #D4D8DC;
+    background-color: none;
     color: #333333;
     line-height: 120%;
-    border: 1px solid #ac9;
+    border: none;
     border-left: none;
     border-right: none;
+    font-size: 1.2em;
+}
+
+span.pre {
+    background-color: none;
+    font-weight: bold;
 }
 
 tt {
     background-color: #ecf0f3;
     padding: 0 1px 0 1px;
-    font-size: 0.95em;
+    /* font-size: 0.95em; */
+    font-size: 1.2em;
 }
+
+code {
+    background-color: #ffffff;
+    padding: 0 1px 0 1px;
+    font-size: 1.2em;
+}
+
+
 
 /* MODIFIED BY HAND */
 
@@ -242,3 +257,4 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 .wy-side-nav-search {
     background-color: #272525;
 }
+

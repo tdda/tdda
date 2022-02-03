@@ -1,17 +1,54 @@
 # -*- coding: utf-8 -*-
+"""
+Python API
+----------
+
+The :py:mod:`tdda.rexpy.rexpy` module provides a Python API, to allow
+discovery of regular expressions to be incorporated into other Python
+programs.
 
 """
-Usage::
 
-    rexpy [FLAGS] [input file [output file]]
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-If input file is provided, it should contain one string per line;
+import random
+import re
+import string
+import sys
+
+from array import array
+from collections import Counter, defaultdict, namedtuple, OrderedDict
+from pprint import pprint
+
+from tdda import __version__
+
+isPython2 = sys.version_info[0] < 3
+str_type = unicode if isPython2 else str
+bytes_type = str if isPython2 else bytes
+INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
+UNESCAPES = '''!"%',/:;<=>@_` '''
+
+
+########################################
+#
+# KEEP IN SYNC WITH rexpy.txt in doc dir
+#
+########################################
+
+USAGE = '''Usage:
+
+    rexpy [FLAGS] [INPUTFILE [OUTPUTFILE]]
+
+If INPUTFILE is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
 
-If output file is provided, regular expressions found will be written
+If OUTPUTFILE is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
 
-FLAGS are optional flags. Currently::
+FLAGS are optional flags. Currently:
 
   -h, --header      Discard first line, as a header.
 
@@ -20,8 +57,8 @@ FLAGS are optional flags. Currently::
   -g, --group       Generate capture groups for each variable fragment
                     of each regular expression generated, i.e. surround
                     variable components with parentheses
-                        e.g.     '^([A-Z]+)\-([0-9]+)$'
-                        becomes  '^[A-Z]+\-[0-9]+$'
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  ^([A-Z]+)\-([0-9]+)$
 
   -q, --quote       Display the resulting regular expressions as
                     double-quoted, escaped strings, in a form broadly
@@ -63,40 +100,12 @@ FLAGS are optional flags. Currently::
   -vlf, --variable  Use variable length fragments
 
   -flf, --fixed     Use fixed length fragments
-
-Python API
-----------
-
-The :py:mod:`tdda.rexpy.rexpy` module also provides a Python API, to allow
-discovery of regular expressions to be incorporated into other Python
-programs.
-
-"""
-
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-import random
-import re
-import string
-import sys
-
-from array import array
-from collections import Counter, defaultdict, namedtuple, OrderedDict
-from pprint import pprint
-
-from tdda import __version__
-
-isPython2 = sys.version_info[0] < 3
-str_type = unicode if isPython2 else str
-bytes_type = str if isPython2 else bytes
-INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
-UNESCAPES = '''!"%',/:;<=>@_` '''
-
-
-USAGE = re.sub(r'^(.*)Python API.*$', '', __doc__.replace('Usage::', 'Usage:'))
+'''
+########################################
+#
+# KEEP IN SYNC WITH rexpy.txt in doc dir
+#
+########################################
 
 MIN_MERGE_SIMILARITY = 0.5
 TERMINATE = True  # False

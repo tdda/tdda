@@ -1,9 +1,9 @@
-Constraints
-===========
+Automatic Constraint Generation, Verification & Anomaly Detection
+=================================================================
 
-The :py:mod:`~tdda.constraints` module provides support for
-constraint generation, verification and anomaly detection for datasets,
-including CSV files and Pandas DataFrames.
+The TDDA library provides support for constraint generation,
+verification and anomaly detection for datasets, including CSV files
+and Pandas DataFrames.
 
 The module includes:
 
@@ -23,50 +23,16 @@ The module includes:
   - SQLite database tables (``sqlite:``)
   - MongoDB document collections (``mongodb:``)
 
-Python Prerequisites
---------------------
-
-Extra libraries are required to access some of the constraint generation
-and verification functionality, depending on the data sources that you
-wish to use.
-
-* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
-* :py:mod:`feather-format` (required for :py:mod:`feather` files)
-* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
-* :py:mod:`pygresql` (required for PostgreSQL database tables)
-* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
-* :py:mod:`sqlite3` (required for SQLite database tables)
-* :py:mod:`pymongo` (required for MongoDB document collections)
-
-
-These can be installed with (some/all of)::
-
-    pip install pandas
-    pip install feather-format
-    pip install pmmif
-    pip install pygresql
-    pip install sqlite3
-    pip install pymongo
-
-and, for MySQL, **one** of::
-
-    pip install MySQL-python
-    pip install mysqlclient
-    pip install mysql-connector-python
-
-
-The :py:mod:`sqlite3` module is sometimes provided by default as part of the
-standard Python libraries.
-
-To install :py:mod:`feather-format` on Windows, you will need to install
-:py:mod:`cython` as a prerequisite, which might also require you to install
-the Microsoft Visual C++ compiler for python, from http://aka.ms/vcpython27.
+.. note::
+   To use databases, pandas, feather files etc. you may need
+   to install extra optional packages.
+   See :ref:`optional_installations`.
 
 
 .. _tdda_command_line_tool:
 
-Command-line Tool
------------------
+The ``tdda`` Command-line Tool
+------------------------------
 
 The ``tdda`` command-line utility provides a tool for discovering constraints
 in data and saving them as a ``.tdda`` file using the
@@ -92,8 +58,8 @@ used to test that the package is installed and configured correctly.
 
 .. _tdda_discover_tool:
 
-*tdda discover*
-~~~~~~~~~~~~~~~
+``tdda discover``
+-----------------
 
 Discover TDDA constraints for data from various sources, and save the
 generated constraints as a :ref:`tdda_json_file_format` file.
@@ -130,8 +96,8 @@ See :ref:`tdda_db_table` for details of how database tables are accessed.
 
 .. _tdda_verify_tool:
 
-*tdda verify*
-~~~~~~~~~~~~~
+``tdda verify``
+---------------
 
 Verify data from various sources, against constraints from a
 :ref:`tdda_json_file_format` constraints file.
@@ -181,8 +147,8 @@ See :ref:`tdda_db_table` for details of how database tables are accessed.
 
 .. _tdda_detect_tool:
 
-*tdda detect*
-~~~~~~~~~~~~~
+``tdda detect``
+---------------
 
 Detect anomalies on data from various sources, by checking against
 constraints from a :ref:`tdda_json_file_format` constraints file.
@@ -242,7 +208,7 @@ Optional flags are:
     automatically included if no output fields are specified. Rows are
     usually numbered from 1, unless the (feather) input file already has
     an index.
-  
+
 If no records fail any of the constraints, then no output file is
 created (and if the output file already exists, it is deleted).
 
@@ -255,12 +221,6 @@ See :ref:`tdda_db_table` for details of how database tables are accessed.
 
 Constraints for CSV Files and Pandas DataFrames
 -----------------------------------------------
-
-.. automodule:: tdda.constraints
-    :members: discover_df, verify_df, detect_df
-
-.. automodule:: tdda.constraints.pd.constraints
-    :members: PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection
 
 If a CSV file is used with the ``tdda`` command-line tool, it will be
 processed by the standard Pandas CSV file reader with the following settings:
@@ -393,33 +353,6 @@ Some additional notes:
   filename is not otherwise commonly used on Windows.
 
 
-API
-~~~
-
-.. automodule:: tdda.constraints
-    :members: discover_db_table, verify_db_table, detect_db_table
-
-.. automodule:: tdda.constraints.db.constraints
-    :members: DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
-
-Extension Framework
--------------------
-
-.. automodule:: tdda.constraints.extension
-    :members:
-
-Constraints API
----------------
-
-.. automodule:: tdda.constraints.baseconstraints
-    :members:
-
-Underlying API Classes
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: tdda.constraints.base
-    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, RexConstraint, Verification
-
 
 .. _tdda_json_file_format:
 
@@ -454,7 +387,7 @@ each included constraint::
 
 .. _constraint_examples:
 
-Examples
---------
+Constraints Examples
+--------------------
 .. automodule:: tdda.constraints.examples
     :members:

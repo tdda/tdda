@@ -23,7 +23,7 @@ Methods and Functions
 
 .. _reference_test_examples:
 
-Examples
---------
+Reference Test Examples
+-----------------------
 .. automodule:: tdda.referencetest.examples
     :members:

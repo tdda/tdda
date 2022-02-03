@@ -1,0 +1,36 @@
+TDDA's Constraints API
+======================
+
+``tdda.constraints``
+--------------------
+
+.. automodule:: tdda.constraints
+    :members: discover_df, verify_df, detect_df
+
+.. automodule:: tdda.constraints.pd.constraints
+    :members: PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection
+
+.. automodule:: tdda.constraints
+    :members: discover_db_table, verify_db_table, detect_db_table
+
+.. automodule:: tdda.constraints.db.constraints
+    :members: DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
+
+Extension Framework
+-------------------
+
+.. automodule:: tdda.constraints.extension
+    :members:
+
+Constraints API
+---------------
+
+.. automodule:: tdda.constraints.baseconstraints
+    :members:
+
+Underlying API Classes
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: tdda.constraints.base
+    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, RexConstraint, Verification
+

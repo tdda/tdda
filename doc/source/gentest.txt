@@ -1,0 +1,26 @@
+Gentest: Automatic Test Generation for Unix & Linux Commands/Scripts
+====================================================================
+
+Gentest is experimental functionality to generate tests automatically
+for any shell command from Linux- and Unix-type systems.
+(This functionality is not tested on Windows, and probably does not work.)
+
+``tdda gentest``
+----------------
+
+To run the gentest wizard (recommended in most cases), use::
+
+    tdda gentest
+
+Alternatively, you can supply parameters directly on the command line::
+
+    tdda gentest  'quoted shell command' [test_outputfile.py] [reference files]]
+
+You can use ``STDOUT`` and ``STDERR`` (with any capitalization) to
+those streams, which will by default not be checked. You can also add
+``NONZEROEXIT`` to the command line indicate that a non-zero exit code
+is expected, so should not prevent test generation.
+
+.. note::
+   THIS FUNCTIONALITY IS CURRENTLY EXPERIMENTAL (IN BETA).
+

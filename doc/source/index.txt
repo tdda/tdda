@@ -6,7 +6,54 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
-Version |version|
+Version |version|. (`Installation <installation>`_)
+
+
+
+The TDDA module helps with testing of data and code that manipulates data,
+as a concrete implementation of the ideas discussed on the
+`test-driven data analysis <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_ blog.
+When installed, the module offers a suite of command-line tools that
+can be used with any data from any source (i.e. not just Python) and
+enhanced test methods for Python code.
+There is also a full Python API.
+
+*Test-driven Data Analysis* is closely related to the ideas of
+`reproducible research`, but with more of a focus on automated
+testing. It is best seen as overlapping and partly complementary
+to reproducible research.
+
+.. image:: image/tdda-machines-light.png
+
+
+
+* **Automatic Constraints Generation and Verification:** The package includes command-line tools (and API access) for
+
+  - `discovery` of constraints that are satisified by (example)
+    data --- ``tdda discover``;
+  - `verification` that a dataset satisfies a set of constraints.
+    The constraints can have been generated automatically or manually
+    --- ``tdda verify``;
+  - `detection` of records, fields and values that fail to satisify
+    constraints (anomaly detection) --- ``tdda detect``.
+
+* **Reference Testing:** The TDDA library offers extensions to
+  ``unittest`` and ``pytest`` for managing testing of data analysis
+  pipelines, where the results are typically much larger, and more
+  complex, than single numerical values.
+
+* **Automatic Generation of Regular Expressions from Examples:** There
+  is command-line tool (and API) for automatically inferring regular
+  expressions from (structured) textual data --- ``rexpy``. (This is
+  used as part of constraint generation, but has wider utility.)
+
+* **Experimental Automatic Test Generation:** From version 2.0 on, the
+  ``tdda`` library also includes experimental features for
+  automatically generating tests (in Python) for almost any
+  command-line based program or script. The script can be a shell
+  script or any other command-line code, written in any language or
+  mix of languages.
+
 
 **CONTENTS**
 
@@ -14,18 +61,36 @@ Version |version|
    :maxdepth: 2
 
    overview.txt
-   cmdline.txt
-   referencetest.txt
+   installation.txt
    constraints.txt
    rexpy.txt
+   gentest.txt
+   referencetest.txt
+   constraints-api.txt
+   rexpy-api.txt
    windows.txt
    tests.txt
    examples.txt
    changes.txt
 
+**RESOURCES**
 
-Indices and tables
-==================
+* `Talks & Filmed Tutorials about TDDA etc (Nick Radcliffe) <https://stochasticsolutions.com/talks/>`_
+* `TDDA Library (PyCon DE, Eberhard Hansis, 2019) <https://www.youtube.com/watch?v=ADEBxja8vw4>`_
+* `Tutorial Video Screencasts on Exercises <http://www.tdda.info/exercises>`_
+* `Tutorials YouTube Channel <https://www.youtube.com/channel/UCAwK_xYqaEL3lEOz4YUZmZw>`_
+* `Paper: Automatic Constraint Generation and Verification <http://www.tdda.info/pdf/tdda-constraint-generation-and-verification.pdf>`_
+* `1-page summary of ideas <http://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf>`_
+* `Quick-reference Guide / Cheat Sheet <http://www.tdda.info/pdf/tdda-quickref.pdf>`_
+* `TDDA Blog <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_
+* `Twitter tdda0 <https://twitter.com/tdda0>`_
+* `Slack <https://tdda.slack.com>`_ (mail/DM on twitter for invitation)
+* `Source Repository (Github) <https://github.com/tdda/tdda>`_
+
+
+
+
+**INDICES AND TABLES**
 
 * :ref:`genindex`
 * :ref:`modindex`
