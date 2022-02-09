@@ -1378,7 +1378,7 @@ def gentest(shellcommand, output_script, reference_files,
     if shellcommand is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
         sys.exit(1)
-    if not output_script:
+    if not output_script or output_script == '-':
         output_script = 'test_' + sanitize_string(shellcommand)
     lcrefs = [f.lower() for f in reference_files]
     if 'stdout' in lcrefs:

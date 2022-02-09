@@ -1,9 +1,118 @@
 Gentest: Automatic Test Generation for Unix & Linux Commands/Scripts
 ====================================================================
 
-Gentest is experimental functionality to generate tests automatically
-for any shell command from Linux- and Unix-type systems.
-(This functionality is not tested on Windows, and probably does not work.)
+Gentest automatically generates tests for shell
+scripts and command-line programs on Unix and Linux.
+
+It can currently test
+ * files created
+ * screen output (to `stdout` and `stderr`)
+ * exit codes
+and has some ability to handle run-to-run variation that occur
+in correctly running code.
+
+The general model is shown below:
+
+.. image:: image/gentest-IO.png
+   :width: 66.7%
+   :align: center
+   :alt: gentest takes some_script.sh as input and generates
+         test_somescript_sh.py and ref_somescript_sh as outputs
+
+As shown, in simple cases, gentest simply takes a command as input,
+and generates a Python test program, together with any required
+reference outputs in a subdirectory. The test script runs
+the command and executes a number of tests to see if it behaves
+as expected.
+
+Example 1: Hey, cats!
+---------------------
+
+Here's a very simple example of using gentest to generate a test
+for a using the `cat` command to show the contents of a file:
+
+.. code-block:: sh
+
+    $ echo 'Hi, cats!' > foo                                      ❶
+    $ tdda gentest                                                ❷
+    Enter shell command to be tested: cat foo                     ❸
+    Enter name for test script [test_cat_foo]: 
+    Check all files written under $(pwd)?: [y]: 
+    Check all files written under (gentest's) $TMPDIR?: [y]: 
+    Enter other files to be checked, one per line, then blank line:
+
+    Check stdout?: [y]: 
+    Check stderr?: [y]: 
+    Exit code should be zero?: [y]: 
+    Number of times to run script?: [2]: 
+
+    Running command 'cat foo' to generate output (run 1 of 2).    ❹
+    Saved (non-empty) output to stdout to /Users/njr/python/tdda/doc/ref/cat_foo/STDOUT.
+    Saved (empty) output to stderr to /Users/njr/python/tdda/doc/ref/cat_foo/STDERR.
+
+
+    Running command 'cat foo' to generate output (run 2 of 2).
+    Saved (non-empty) output to stdout to /Users/njr/python/tdda/doc/ref/cat_foo/2/STDOUT.
+    Saved (empty) output to stderr to /Users/njr/python/tdda/doc/ref/cat_foo/2/STDERR.
+
+    Test script written as /Users/njr/python/tdda/doc/test_cat_foo.py
+
+    Command execution took: 0.0086s
+
+    SUMMARY:                                                      ❺
+
+    Directory to run in:   /Users/njr/python/tdda/doc
+    Shell command:         cat foo
+    Test script generated: test_cat_foo
+    Reference files:       [None]
+    Check stdout:          yes (was 'Hey, cats!\n')
+    Check stderr:          yes (was empty)
+    Expected exit code:    0
+
+    $ python test_cat_foo.py                                      ❻
+    ....
+    ----------------------------------------------------------------------
+    Ran 4 tests in 0.008s
+
+    OK
+
+❶ For the example, we first create the file `foo` containing the text
+``Hey, cats!``, which we will use to as the output for the code we
+want to run.
+
+❷ We run ``tdda gentest`` to generate the test. Running ``gentest``
+with no extra parameters on the command line causes the wizard to be
+invoked.
+
+❸ The one thing we must always tell the wizard is the command for which
+we want it to generate tests---in this case ``cat foo``.
+We accept the defaults it offers in all other cases by hitting
+RETURN until the prompts stop (eight more times, in this case).
+
+❹ Gentest then runs the command we specified a number of times.
+The default number of times (which we can change in the wizard)
+is 2.
+
+❺ Gentest finishes by displaying a summary of what it did.
+
+❻ Finally, we run the test script generated, and in this case
+it reports that it has run four tests, all of which passed.
+In this case, the four tests were:
+
+  - check that the output written to the screen on ``stdout`` was
+    as expected (``Hey, cats!``)
+  - check that there was no output written to ``stderr``, since
+    no output was written to ``stderr`` when it ran the code
+    to generate the tests
+  - check that the exit code returned by the command was `0`,
+    as it was when run when the tests were generated.
+    (On Unix and Linux systems, programs return a numeric code,
+    which should be zero if the program completes normally,
+    and a (small) non-zero number if it finishes abnormally,
+    with different codes indicating different issues.
+  - check that the program did not crash.
+
+
 
 ``tdda gentest``
 ----------------

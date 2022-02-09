@@ -2089,7 +2089,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
                   min_diff_strings_per_pattern = min_diff_strings_per_pattern,
                   min_strings_per_pattern = min_strings_per_pattern,
                   size=size, seed=seed, dialect=dialect, verbose=verbose)
-    return r if as_object else r.results.rex
+    return r if as_object else r.results.rex if r.results else []
 
 
 def pdextract(cols, seed=None):
