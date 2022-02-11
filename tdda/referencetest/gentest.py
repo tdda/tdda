@@ -36,7 +36,7 @@ USAGE = '''tdda gentest
 
 or
 
-tdda gentest  'quoted shell command' [test_outputfile.py [reference files]]
+tdda gentest  'quoted shell command' [FLAGS] [test_outputfile.py [reference files]]
 
 You can use STDOUT and STDERR (with any capitalization) to those
 streams, which will by default not be checked. You can also add
@@ -192,7 +192,7 @@ class TestGenerator:
         for run in range(1, N + 1):
             iteration = (' (run %d of %d)' % (run, N)) if N > 1 else ''
             if self.verbose:
-                print('\nRunning command %s to generate output%s.\n'
+                print('\nRunning command %s to generate output%s.'
                       % (repr(self.command), iteration))
             if run == 1:
                 self.start_time = datetime.datetime.now()
@@ -452,13 +452,13 @@ class TestGenerator:
         stderr_output = r.err
         if self.check_stdout:
             self.write_expected_output(stdout_output, self.stdout_path(run))
-            print('Saved (%sempty) output to stdout to %s.\n'
+            print('Saved (%sempty) output to stdout to %s.'
                   % (('non-' if stdout_output else ''),
                      self.abs_or_rel(self.stdout_path(run))))
 
         if self.check_stderr:
             self.write_expected_output(stderr_output, self.stderr_path(run))
-            print('Saved (%sempty) output to stderr to %s.\n'
+            print('Saved (%sempty) output to stderr to %s.'
                   % (('non-' if stderr_output else ''),
                      self.abs_or_rel(self.stderr_path(run))))
 
@@ -772,30 +772,27 @@ class TestGenerator:
         reference_files = self.reference_files[1]
         if inc_timings:
             lines = [
-                '',
-                '',
                 'Command execution took: %s' % format_time(r.duration)
             ]
         lines += [
             '',
-            '',
             'SUMMARY:',
             '',
-            'Directory to run in:   %s' % ('.' if self.relative_paths
-                                               else self.cwd),
-            'Shell command:         %s' % self.command,
-            'Test script generated: %s' % self.raw_script,
-            'Reference files:       %s' % ('' if reference_files
-                                              else '[None]'),
+            'Directory to run in:    %s' % ('.' if self.relative_paths
+                                                else self.cwd),
+            'Shell command:          %s' % self.command,
+            'Test script generated:  %s' % ensure_py(self.raw_script),
+            'Reference files%s:' % ('' if reference_files
+                                       else ' (none)'),
         ] + [
             '    %s' % self.path_repr(f) for f in reference_files
 
         ] + [
-            'Check stdout:          %s' % stream_desc(self.check_stdout,
-                                                      r.out),
-            'Check stderr:          %s' % stream_desc(self.check_stderr,
-                                                      r.err),
-            'Expected exit code:    %d' % r.exit_code,
+            'Check stdout:           %s' % stream_desc(self.check_stdout,
+                                                       r.out),
+            'Check stderr:           %s' % stream_desc(self.check_stderr,
+                                                       r.err),
+            'Expected exit code:     %d' % r.exit_code,
             '',
         ]
         return '\n'.join(lines)
@@ -1269,6 +1266,10 @@ def is_windows():
     return os.name == 'nt'
 
 
+def ensure_py(name):
+    return name if name.endswith('.py') else name + '.py'
+
+
 def format_time(duration):
     """
     Format time in seconds, with at least two significant figures
@@ -1320,6 +1321,12 @@ def gentest_parser(usage=''):
                         help='show relative paths wherever possible')
     parser.add_argument('-n', '--iterations', type=int,
                         help='number of times to run the command (default 2)')
+    parser.add_argument('-O', '--no-stdout', action='store_true',
+                        help='do not check stdout')
+    parser.add_argument('-E', '--no-stderr', action='store_true',
+                        help='do not check stderr')
+    parser.add_argument('-Z', '--nonzeroexit', action='store_true',
+                        help='do not require exit status to be 0')
     return parser
 
 
@@ -1331,6 +1338,12 @@ def gentest_flags(parser, args, params):
         params['relative_paths'] = True
     if flags.iterations:  # None and zero both get default (2)
         params['iterations'] = flags.iterations
+    if flags.no_stdout:
+        params['no_stdout'] = True
+    if flags.no_stderr:
+        params['no_stderr'] = True
+    if flags.nonzeroexit:
+        params['nonzeroexit'] = True
     return flags, more
 
 
@@ -1351,7 +1364,8 @@ def gentest_wrapper(args):
 
 def gentest(shellcommand, output_script, reference_files,
             max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False,
-            iterations=2, tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR):
+            iterations=2, tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR,
+            no_stdout=False, no_stderr=False, nonzeroexit=False):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -1371,9 +1385,9 @@ def gentest(shellcommand, output_script, reference_files,
          iterations,
          tmp_dir_shell_var) = wizard(iterations)
     else:
-        check_stdout = False
-        check_stderr = False
-        require_zero_exit_code = True
+        check_stdout = not no_stdout
+        check_stderr = not no_stderr
+        require_zero_exit_code = not nonzeroexit
     cwd = os.getcwd()
     if shellcommand is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
@@ -1381,13 +1395,14 @@ def gentest(shellcommand, output_script, reference_files,
     if not output_script or output_script == '-':
         output_script = 'test_' + sanitize_string(shellcommand)
     lcrefs = [f.lower() for f in reference_files]
-    if 'stdout' in lcrefs:
-        check_stdout = True
-    if 'stderr' in lcrefs:
-        check_stderr = True
-    if 'nonzeroexit' in lcrefs:
-        require_zero_exit_code = False
-    if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
+    # if 'stdout' in lcrefs:
+    #     check_stdout = True
+    # if 'stderr' in lcrefs:
+    #     check_stderr = True
+    # if 'nonzeroexit' in lcrefs:
+    #     require_zero_exit_code = False
+    # if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
+    if not lcrefs:
         reference_files = reference_files + ['.',]
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code,

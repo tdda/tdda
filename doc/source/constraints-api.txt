@@ -6,6 +6,7 @@ TDDA's Constraints API
 
 .. automodule:: tdda.constraints
     :members: discover_df, verify_df, detect_df
+    :noindex:
 
 .. automodule:: tdda.constraints.pd.constraints
     :members: PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection

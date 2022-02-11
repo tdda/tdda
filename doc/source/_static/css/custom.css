@@ -12,17 +12,19 @@ body {
     font-size: 100%;
     background-color: #283038;
     color: #000;
-    margin: 0;
+    margin: 0 auto 0 auto;
     padding: 0;
 }
 
 div.document {
     background-color: #606060;
+    margin: 0;
 }
 
 div.documentwrapper {
     float: left;
-    width: 100%;
+    /* width: 100%; */
+    margin: 0;
 }
 
 div.bodywrapper {
