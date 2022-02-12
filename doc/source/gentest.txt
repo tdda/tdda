@@ -1,3 +1,7 @@
+.. |br| raw:: html
+
+   <br/>
+
 Gentest: Automatic Test Generation for Unix & Linux Commands/Scripts
 ====================================================================
 
@@ -8,7 +12,7 @@ It can currently test
 
 * files created
 * screen output (to `stdout` and `stderr`)
-* exit codes
+* exit codes and error states
 
 and has some ability to handle run-to-run variation that occur
 in correctly running code.
@@ -21,110 +25,636 @@ The general model is shown below:
    :alt: gentest takes some_script.sh as input and generates
          test_somescript_sh.py and ref_somescript_sh as outputs
 
-As shown, in simple cases, gentest simply takes a command as input,
+As shown, in simple cases, Gentest simply takes a command as input,
 and generates a Python test program, together with any required
 reference outputs in a subdirectory. The test script runs
 the command and executes a number of tests to see if it behaves
 as expected.
 
+.. note:: **THE BIG IDEA**
+
+   The key assumption Gentest makes is that the code you give it is
+   running correctly when you run the ``tdda gentest`` command. The
+   tests Gentest creates don't really test that code is *correct*;
+   merely that it its behaviour is consistent and doesn't generate
+   error states. This is what we mean when we talk about *reference
+   tests*: test that processes with known, believed correct
+   *reference* outputs continue to operate as expected.
+
+   "Consistent" doesn't need to mean *identical every time*.
+   Gentest runs code more than once, and tries to cater for
+   variations it sees and things that look like non-portable
+   aspects of your environment.
+
+Running Gentest
+---------------
+
+The simplest way to run Gentest is to use the wizard, which will prompt
+you with a series of questions::
+
+    $ tdda gentest
+
+In simple cases, where you want the default behaviour (see below)
+you can add the command that you want to test to skip the wizard::
+
+    $ tdda gentest 'command to test'
+
+The command can be anything that you can run from the command line---a
+simple Unix command, a shell script, or a compiled or interpreted
+program, optionally with parameters.
+
+The full syntax (which is mostly used programmatically, or by copying
+what Gentest writes into its output files, when you want to regenerate
+a set of tests after changing the code) is::
+
+    $ tdda gentest [FLAGS] 'command to test' [test_output_file.py [FILES]]
+
+See `Gentest Options`_ for full details of available flags and parameters.
+
+
+
+.. _example1:
+
 Example 1: Hey, cats! (not using Wizard)
 ----------------------------------------
 
-We start with a very simple example of using *gentest* to generate a test
-for a using the `cat` command to show the contents of a file.
-In most cases, you will in fact want to use the wizard,
-for easier control, but in the simplest cases it's not needed::
+We start with a purely illustrative example---using
+Gentest to create a test that checks the behaviour of
+the ``cat`` command on a known file::
 
-    $ echo 'Hi, cats!' > foo                                      ❶
-    $ tdda gentest 'cat foo'                                      ❷
+    $ echo 'Hey, cats!' > hey                                     ❶
+    $ tdda gentest 'cat hey'                                      ❷
 
-    Running command 'cat foo' to generate output (run 1 of 2).
-    Saved (non-empty) output to stdout to /Users/njr/tmp/ref/cat_foo/STDOUT.
-    Saved (empty) output to stderr to /Users/njr/tmp/ref/cat_foo/STDERR.
+    Running command 'cat hey' to generate output (run 1 of 2).    ❸
+    Saved (non-empty) output to stdout to /home/tdda/tmp/ref/cat_hey/STDOUT.
+    Saved (empty) output to stderr to /home/tdda/tmp/ref/cat_hey/STDERR.
 
-    Running command 'cat foo' to generate output (run 2 of 2).
-    Saved (non-empty) output to stdout to /Users/njr/tmp/ref/cat_foo/2/STDOUT.
-    Saved (empty) output to stderr to /Users/njr/tmp/ref/cat_foo/2/STDERR.
+    Running command 'cat hey' to generate output (run 2 of 2).
+    Saved (non-empty) output to stdout to /home/tdda/tmp/ref/cat_hey/2/STDOUT.
+    Saved (empty) output to stderr to /home/tdda/tmp/ref/cat_hey/2/STDERR.
 
-    Test script written as /Users/njr/tmp/test_cat_foo.py
-    Command execution took: 0.0072s
+    Test script written as /home/tdda/tmp/test_cat_hey.py
+    Command execution took: 0.012s
 
-    SUMMARY:
+    SUMMARY:                                                      ❹
 
-    Directory to run in:    /Users/njr/tmp
-    Shell command:          cat foo
-    Test script generated:  test_cat_foo.py
+    Directory to run in:    /home/tdda/tmp
+    Shell command:          cat hey
+    Test script generated:  test_cat_hey.py
     Reference files (none):
-    Check stdout:           yes (was 'Hi, cats!\n')
+    Check stdout:           yes (was 'Hey, cats!\n')
     Check stderr:           yes (was empty)
     Expected exit code:     0
 
-    $ python test_cat_foo.py                                      ❻
+    $ python test_cat_hey.py                                      ❺
     ....
     ----------------------------------------------------------------------
     Ran 4 tests in 0.008s
 
     OK
 
-❶ For the example, we first create the file `foo` containing the text
-``Hey, cats!``, which we will use to as the output for the code we
-want to run.
+❶ For this illustration, we first create a file called ``hey`` containing
+the text ``Hey, cats!``, which we will feed to the ``cat`` command (to
+display it in the terminal).
 
-❷ We run ``tdda gentest 'cat foo'`` to generate the test. The command
-to be tested can be omitted, in which case the `wizard_` is invoked.
-When passing in a command, it is always safest to quote it with single
-quotes, and this is necessary if it includes spaces or special characters.
-If the command involves single quotes, normal shell rules apply and they
-need to be escaped. (It's generally easier to use the wizard in such
-cases.)
+❷ We run ``tdda gentest 'cat hey'`` to generate the test. It is a good
+idea to enclose the command in single quotes, and this may be
+necessary if it includes spaces or special characters. If
+the command itself uses single quotes, normal shell rules apply and
+they will need to be escaped. (It's generally easier to use the wizard
+in such cases.)
 
-
-❸ Gentest then runs the command we specified a number of times.
-The default number of times (which we can change in the wizard,
-or with `--iterations N`) is 2.
-
+❸ Gentest then runs the command we specified a number of times---2 by default.
 
 ❹ Gentest finishes by displaying a summary of what it did.
-The name of the script, by default, is ``test_<command>.py``
-where ``<command>`` is a sanitized version of the command used.
-You can override this by adding a second parameter, after the
-test command, as the name you'd like for the test script.
+It names the script automatically, based on
+a sanitized version of the command---in this case ``test_hey_cats.py``
 
 ❺ Finally, we run the test script generated, and in this case
 it reports that it has run four tests, all of which passed.
-In this case, the four tests were:
+In this case, the four tests (which you can obviously see by
+looking in the test script) are:
 
-  - check that the output written to the screen on ``stdout`` was
-    as expected (``Hey, cats!``)
-  - check that there was no output written to ``stderr``, since
-    no output was written to ``stderr`` when it ran the code
-    to generate the tests
-  - check that the exit code returned by the command was `0`.
-    (On Unix and Linux systems, programs return a numeric code,
-    which should be zero if the program completes normally,
-    and a (small) non-zero number if it finishes abnormally,
-    with different codes indicating different issues.
-  - check that the program did not crash.
+* check that the output written to the screen ``Hey, cats!``
+  (on ``stdout``) was as expected.
+* check that there was no output written to ``stderr``, since
+  no output was written to ``stderr`` when it ran the code
+  to generate the tests
+* check that the exit code returned by the command was ``0``.
+  (On Unix and Linux systems, programs return a numeric code,
+  which should be zero if the program completes normally,
+  and a (small) non-zero number if it finishes abnormally,
+  with different codes indicating different issues.
+* check that the program did not crash.
+
+The Generated Test Code
+-----------------------
+
+We'll walk through the core of the generated test code briefly.
+Obviously, you can look at all of it: it's right there in
+``test_hey_cats.py``, but won't bother with the boilerplate.
+
+The core of the generated code is a test class (subclassing
+``tdda.ReferenceTestCase``, which inherits from ``unittest.TestCase),
+with a ``setUpClass`` class method that runs the command
+and assigns class attributes for the ``output`` to ``stdout``,
+the ``error`` output to ``stderr``, any exeception (``exc``)
+that occurred, the exit code (``exit_code``) from the command
+and the wall-clock time it took to run (``duration``, in seconds)::
+
+    @classmethod
+    def setUpClass(cls):
+
+        (cls.output,
+         cls.error,
+         cls.exception,
+         cls.exit_code,
+         cls.duration) = exec_command(cls.command, cls.cwd)
+
+When the code doesn't generate any files that need to be checked,
+there's then a single test for each of the four checks mentioned
+above:
+
+* First, there was no exception (in which case, ``self.exc`` will be ``None``)::
+
+      def test_no_exception(self):
+          self.assertIsNone(self.exception)
+
+* Then comes the check that the exit code was zero::
+
+    def test_exit_code(self):
+        self.assertEqual(self.exit_code, 0)
+
+* After this, there's a test to check the normal output to ``sys.stdout``.
+  The reference output has been saved to ``./ref/cat_hey/STDOUT``,
+  and ``self.refdir`` is set (further up in the script) to
+  ``./ref/cat_hey/`` (conceptually)::
+
+    def test_stdout(self):
+        self.assertStringCorrect(self.output,
+                                   os.path.join(self.refdir, 'STDOUT'))
+
+  The ``assertStringCorrect`` method, with no extra parameters,
+  compares the first value (the output, stored in self.output, as a
+  literal string, in this case) with the reference output, in the file.
+  But the method does more than that, including accepting extra parameters
+  to control the comparison, capturing output to file when the strings
+  don't match, and re-writing the reference if so instructed.
+
+* The last is the counterpart the ``stdout`` check, this time
+  instead checking ``stderr``. Since there was no output to
+  stderr, in this case it's actually just checking that there
+  was no output::
+
+    def test_stderr(self):
+        self.assertStringCorrect(self.error,
+                                 os.path.join(self.refdir, 'STDERR'))
 
 
+Test Failures
+-------------
+
+Let's look at what happens in a few error and test cases.
+Using the same test code as before, let's change the output
+by changing what's in the file ``hey``::
+
+    $ echo 'Ho, cats!' > hey
+    $ python test_cat_hey.py
+    ...    1 line is different, starting at line 1
+    Expected file /home/tdda/tmp/ref/cat_hey/STDOUT
+    Compare raw with:
+        diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/tdda/tmp/ref/cat_hey/STDOUT
+
+    Compare post-processed with:
+        diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-STDOUT /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/expected-STDOUT
+
+    F
+    ======================================================================
+    FAIL: test_stdout (__main__.TestCAT_)
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "test_cat_hey.py", line 48, in test_stdout
+        os.path.join(self.refdir, 'STDOUT'))
+    AssertionError: False is not true : 1 line is different, starting at line 1
+    Expected file /home/tdda/tmp/ref/cat_hey/STDOUT           ❶
+    Compare raw with:                                         ❷
+        diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/tdda/tmp/ref/cat_hey/STDOUT
+
+    Compare post-processed with:                              ❸
+        diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-STDOUT /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/expected-STDOUT
 
 
-``tdda gentest``
-----------------
+    ----------------------------------------------------------------------
+    Ran 4 tests in 0.010s
 
-To run the gentest wizard (recommended in most cases), use::
+    FAILED (failures=1)
+
+The output is a bit verbose, and when there are failures, these tend to
+be shown twice (as here), but the main things to note are:
+
+❶ The failure that has occured is with ``STDOUT``, i.e. the messages
+sent to the screen on the normal output stream (as opposed to the
+error stream).
+
+❷ Gentest tells you how to examine the differences between the actual
+output and the output it expected with using a ``diff`` command. The actual
+output has been saved to a file called ``actual-raw-STDOUT`` in a
+temporary directory, and Gentest stored the output it expected for
+``STDOUT`` in ``ref/cat_hey/STDOUT``. If you have a visual diff tool
+(such as ``opendiff`` on the Mac, or ``meld``on Linux, or ``vdiff``
+on Unix, you can probably just replace ``diff`` with your preferred tool).
+
+If we run the command suggested, we get::
+
+   $ diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/tdda/tmp/ref/cat_hey/STDOUT
+   1c1
+   < Ho, cats!
+   ---
+   > Hey, cats!
+
+Here we can see that the change from Hey to Ho has been picked up.
+(You may see a claim that one of the files doesn't end with a newline;
+that's a bug.)
+
+❸ Gentest also suggests a command for comparing post-processed versions of
+output. This isn't relevant in this case, but in cases later (when Gentest
+decides that the output is not completely fixed) where this is useful.
+
+Updating the reference outputs if the new behaviour is correct
+--------------------------------------------------------------
+
+If the new behaviour is in fact correct, there are several ways to
+update the test with the new results.
+
+* You can copy the first ``diff command`` (the one for the raw
+  output) and replace the ``diff`` with ``cp``. This overwrites
+  the reference output and should all the failing test to pass::
+
+      $ cp /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/tdda/tmp/ref/cat_hey/STDOUT
+      $ python test_cat_hey.py
+       ....
+      ----------------------------------------------------------------------
+      Ran 4 tests in 0.010s
+
+      OK
+
+* Alternatively, you can re-run the test script, adding ``--write-all``
+  This will rewrite *all* reference outputs with whatever the script
+  produces. If you only want to update a single test, you can use the
+  ``@tag`` decorator to tag it and the use the ``-1`` flag::
+
+      $ python test_cat_hey.py --write-all
+      ..Written /home/tdda/tmp/ref/cat_hey/STDERR
+      .Written /home/tdda/tmp/ref/cat_hey/STDOUT
+      .
+      ----------------------------------------------------------------------
+      Ran 4 tests in 0.010s
+
+      OK
+      $ python test_cat_hey.py
+      ....
+      ----------------------------------------------------------------------
+      Ran 4 tests in 0.008s
+
+      OK
+
+* Finally, of course, you can simply rerun ``tdda gentest`` to completely
+  regenerate the entire test script and reference outputs.
+  Test files generated by gentest contain the command needed to regenerate
+  the the same way as before, near the top, even if the Wizard was
+  originally used. For example, the top of `test_cat_hey.py` is::
+
+      """
+      test_cat_hey.py: Automatically generated test code from tdda gentest.
+
+      Generation command:
+
+        tdda gentest 'cat hey' 'test_cat_hey.py' '.'
+      """
+
+    In this case, this is the same we used, except that this is explicitly
+    specifying the name of the test script and that `Gentest` should look
+    to see whether any files are created in the current directory `.`
+    when it runs.
+
+
+The Gentest Wizard
+------------------
+
+To run Gentest's wizard (recommended in most cases), use::
 
     tdda gentest
 
-Alternatively, you can supply parameters directly on the command line::
+You will then be prompted with a series of questions/directions.
+Most questions have suggested default answers, which you can
+accept by just typing RETURN (ENTER). The questions will be:
 
-    tdda gentest  'quoted shell command' [test_outputfile.py] [reference files]]
+* ``Enter shell command to be tested:`` |br|
+  Here is when you give the full command you want tested,
+  e.g. ``sh example2.sh``. You don't need to quote the command,
+  even if it has spaces or special characters, which makes it
+  easier if you need quotes in the command or its parameters.
+* ``Enter name for test script [test_sh_example2_sh]:`` |br|
+  The default name is a sanitized version of your command, and
+  may become long if your command is complicated, so you might
+  wish to choose a shorter name.
+  Normally, you should start the name with ``test`` and give it
+  a ``.py`` extension.
+  Note: any existing file of the chosen name will be silently
+  overwritten unless you use the ``--noclobber`` flag.
+* ``Check all files written under $(pwd)?: [y]:`` |br|
+  Ordinarily, Gentest will watch to see whether your code
+  writes any files in the current directory, or its subdirectories,
+  and will use those as *reference* outputs, i.e. treat them
+  as files to be checked. Answer ``n``) if you don't
+  want this to be done.
+* ``Check all files written under (gentest's) $TMPDIR?: [y]:`` |br|
+  Also by default, gentest will look for any files written to
+  ``$TMPDIR``, if that shell variable is set, or the to the
+  system's temporary directory (usually, ``/tmp``), if it is not.
+  Say ``n`` if you don't want gentest to look at
+  files written to the temporary directory.
+* ``Enter other files/directories to be checked, one per line, then a blank line:`` |br|
+  You can specify other locations gentest should watch for files.
+  It's best not to make this a very high level directory (especially
+  not ``/``, as this will be very slow), but if there's a location
+  your code is writing to, tell Gentest if you would like those files
+  checked.
+* ``Check stdout?: [y]:`` |br|
+  Gentest normally captures output to the screen, and checks that.
+  On Unix and Linux systems, this output is split between ordinary
+  output, which goes to ``stdout`` (file descriptor ``1``)
+  and ``stderr`` (file descriptor ``2``),
+  which is normally reserved for errors and warnings.
+  If you don't want Gentest to check ``stdout``, say ``n``.
+* ``Check stderr?: [y]:`` |br|
+  Again, if you don't want the standard error stream to be checked,
+  say no to this question.
+* ``Exit code should be zero?: [y]:`` |br|
+  All programs on Unix and Linux return an exit status, which is
+  a numeric value between 0 and 255.
+  Well-behaved programs return a ``0`` exit status to indicate
+  success or normal functioning, and non-zero exit statuses
+  to indicate different error conditions.
+  Gentest normally includes a test of the exit status that fails
+  if it is non-zero, and declines to generate tests if a non-zero
+  exit status is returned when it is running the command for
+  initial test generation.
+  You can override this behaviour by sauing ``n`` to   to this question.
+* ``Number of times to run script?: [2]:`` |br|
+  As noted above, Gentest does not require that commands behave
+  identically every time. While its capabilities are necessarily
+  limited (as a minimally artificially intelligent™ system)
+  Gentest attempts to recognize a limited range of correct
+  behaviours by virtue of:
 
-You can use ``STDOUT`` and ``STDERR`` (with any capitalization) to
-those streams, which will by default not be checked. You can also add
-``NONZEROEXIT`` to the command line indicate that a non-zero exit code
-is expected, so should not prevent test generation.
+  - running tests multiple times
+  - noting various aspects of the environment that may affect results.
 
-.. note::
-   THIS FUNCTIONALITY IS CURRENTLY EXPERIMENTAL (IN BETA).
+  By default, Gentest runs scripts just twice, to gauge run-to-run
+  variation, but results can sometimes be made more robust by increasing
+  this number.
+
+Example 2: Using the Gentest Wizard
+-----------------------------------
+
+For this example, we'll use Gentest with the following shell script.
+``example2.sh``, in the current directory::
+
+    echo "Hey, cats!"
+    echo
+    echo "This is gentest, running on `hostname`"
+    echo
+    echo "I have to say, the weather was better in Münich!"
+    echo
+    echo "Today, `date` it's proper dreich here."
+    echo
+    echo "Let's have a file as well." > FILE1
+    echo "Have a number: $RANDOM" >> FILE1
+    echo "Random number written to $PWD/FILE1"
+
+You can get this script by typing ``tdda examples``. This will
+generate a few directories in the directory you are in, including
+``gentest`` which contains this script. Either change to that
+directory or copy ``example2.sh`` up a level.
+
+We'll use the Gentest wizard, accepting the defaults suggestions after specifying ``sh example2.sh`` as the command to be tested, except that we'll
+ask gentest to run the script ``10`` times (for reasons we'll see below)::
+
+    $ tdda gentest
+    Enter shell command to be tested: sh example2.sh
+    Enter name for test script [test_sh_example2_sh]:
+    Check all files written under $(pwd)?: [y]:
+    Check all files written under (gentest's) $TMPDIR?: [y]:
+    Enter other files/directories to be checked, one per line, then a blank line:
+
+    Check stdout?: [y]:
+    Check stderr?: [y]:
+    Exit code should be zero?: [y]:
+    Number of times to run script?: [2]: 10
+
+    Running command 'sh example2.sh' to generate output (run 1 of 10).
+    Saved (non-empty) output to stdout to /home/tdda/tmp/ref/sh_example2_sh/STDOUT.
+    Saved (empty) output to stderr to /home/tdda/tmp/ref/sh_example2_sh/STDERR.
+    Copied $(pwd)/FILE1 to $(pwd)/ref/sh_example2_sh/FILE1
+
+    Running command 'sh example2.sh' to generate output (run 2 of 10).
+    Saved (non-empty) output to stdout to /home/tdda/tmp/ref/sh_example2_sh/2/STDOUT.
+    Saved (empty) output to stderr to /home/tdda/tmp/ref/sh_example2_sh/2/STDERR.
+    Copied $(pwd)/FILE1 to $(pwd)/ref/sh_example2_sh/2/FILE1
+      •
+      •
+      •
+    Running command 'sh example2.sh' to generate output (run 10 of 10).
+    Saved (non-empty) output to stdout to /home/tdda/tmp/ref/sh_example2_sh/STDOUT.
+    Saved (empty) output to stderr to /home/tdda/tmp/ref/sh_example2_sh/STDERR.
+
+    Copied $(pwd)/FILE1 to $(pwd)/ref/sh_example2_sh/10/FILE1
+
+    Test script written as /home/tdda/tmp/test_sh_example2_sh.py
+    Command execution took: 0.021s
+
+    SUMMARY:
+
+    Directory to run in:    /home/tdda/tmp
+    Shell command:          sh example2.sh
+    Test script generated:  test_sh_example2_sh.py
+    Reference files:
+        $(pwd)/FILE1                                     ❶
+    Check stdout:           yes (was 9 lines)            ❷
+    Check stderr:           yes (was empty)
+    Expected exit code:     0
+
+Notice that in this case:
+
+❶ Gentest noticed that ``FILE1`` was written, in the current working directory
+
+❷ Gentest reports that 9 lines were written to stdout when the coe was run.
+
+If we run the tests, we it's most likely all five tests will pass, 
+(though probably necessarily always, for reasons we'll discuss below)::
+
+    $ python test_sh_example2_sh.py
+    .....
+    ----------------------------------------------------------------------
+    Ran 5 tests in 0.015s
+
+    OK
+
+This time there is one more test than
+`Example 1 <example1_>`_, because the script wrote a file (``FILE1``),
+for which there's now a reference test.
+Additionally, some of tests are more complex, to account for
+run-to-run variation and dependencies.
+
+If you look at the tests generated, three of them should identical to
+the ones in `Example 1 <example1_>`_ (``test_no_exception``,
+``test_exit_code`` and ``test_stderr``).
+The other two are more interesting.
+
+Exclusions from Comparisons
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When generating this documentation, the test for `stdout` came out
+like this::
+
+    def test_stdout(self):
+        substrings = [
+            '/home/tdda/tmp',
+            '11 Feb 2022 16:47:37',
+            'tdda.local',
+        ]
+        self.assertStringCorrect(self.output,
+                                 os.path.join(self.refdir, 'STDOUT'),
+                                 ignore_substrings=substrings)
+
+A list of ``substrings`` has been generated and these have been
+passed into ``self.assertStringCorrect`` as ``ignore_substrings``.
+The effect of this is that any lines in the reference file
+(``ref/sh_example2_sh/STDOUT``) containing any of these three strings
+are not compared to the corresponding lines in the actual output
+from the command.
+
+* The first line is considered a poor choice for comparison, not
+  because different from run-to-run, but because the test was running
+  in the directory ``/home/tdda/tmp``. While not certain, it seems
+  likely (to ``Gentest``; or in less anthropomorphic terms,
+  to Gentest's authors) that this line is in going to reflect the
+  directory in which the code was run, rather than being a hard-wired
+  output that is always ``/home/tdda/tmp``. If you were using
+  Gentest for real, and saw that, and knew that in fact this *is*
+  a non-varying path, or that the code will only work in that particular
+  directory, it would be sensible to remove it from list of substrings
+  for exclusion.
+* The second line, ``11 Feb 2022 16:47:37`` is ignored for on two
+  grounds. First, depending on how long Gentest took to run, it may
+  have been different for different runs among the 10.
+  But even if it wasn't, this is a time within the window of times
+  when the test was run. Again, Gentest "assumes" that this is a current
+  timestamp, that will be different if the test is run at different times,
+  and indeed, that this time will probably never occur again.
+  Of course, this maybe wrong. It could be that the code contains
+  that hard-wired string, perhaps marking the solomn occasion on
+  which this every documentation was generated. And again, if you
+  inspect the code Gentest has generated and see an excluded
+  timestamp, or datestamp, that you think should be checked, you
+  should of course remove it to force the check.
+* Finally, ``tdda.local`` is excluded from checking because the
+  machine the code was running on reports its hostname as
+  ``tdda.local``, so again, Gentest "considers it likely"
+  that this string is host-dependent, rather than fixed.
+
+Variable Text Comparisons
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The last test is the one that might be thought to justify the
+claim that Gentest is *minimally artificially intelligent*::
+
+    def test_FILE1(self):
+        patterns = [
+            r'^Have a number: [0-9]{4,5}$',
+        ]
+        self.assertFileCorrect(os.path.join(self.cwd, 'FILE1'),
+                               os.path.join(self.refdir, 'FILE1'),
+                               ignore_patterns=patterns)
+
+You probably noticed that the script we were testing uses the
+variable ``$RANDOM``, which generates a pseudo-random number
+in the range 0 to 32,767.
+This generates two challenges, one of which Gentest rose to fully
+in this case, and the other of which it only partially matched.
+
+The first challenge is simply that output isn't consistent.
+Gentest noticed that, and characterized the line using
+a regular expression that describes the line.
+Unlike ``ignore_lines``, which ignores whole lines
+containing a given string, ``ignore_patterns`` is more precise:
+it still drops the line from comparison, but only if both the
+actual and the expected output lines match the regular expression.
+
+Gentest uses `Rexpy`_ to generate the patterns for lines that
+vary between runs.
+
+In this case, the regular expression generated specified that the
+pattern is four or 5 digits; this is pretty good, and most of the
+numbers generated by ``$RANDOM`` are 4-or 5 digits———about 97\%
+of them in fact. But, if we run the test enough times, it will
+fail, when a number under 1,000 is generated.
+Similarly, when you run the code, you might not get ``[0-9]{4,5}``
+as the regular expression.
+If you're unlucky, you might get
+``[0-9]{5}`` (about 2.6% chance if run it 10 times,
+but about a 48% chance if you use the default value of 2).
+Conversely, if you're very lucky, you might get ``[0-9]{1,5}``,
+in which case it should always pass.
+
+In any case, this illustrates that Gentest's minimal artificial
+intelligence only goes so far, and it's a good idea to look at
+the generated tests, and in this case, ideally adapt the
+regular expression to ``[0-9]{1,5}``.
+
+If you write this to ``fail.sh`` (it's also in the gentest examples
+directory, if you run ``tdda examples``)::
+
+    #!/bin/bash
+    e=0
+    while [ $e -eq 0 ]
+    do
+        python test_sh_example2_sh.py
+        e=$?
+    done
+
+Eventually, this will produce something like::
+
+    ======================================================================
+    FAIL: test_FILE1 (__main__.TestSH_EXAMPLE2)
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "test_sh_example2_sh.py", line 64, in test_FILE1
+        ignore_patterns=patterns)
+    AssertionError: False is not true : 1 line is different, starting at line 2
+    Compare with:
+        diff /Users/njr/tmp/FILE1 /Users/njr/tmp/ref/sh_example2_sh/FILE1
+
+    Note exclusions:
+        ignore_patterns:
+            ^Have a number: [0-9]{4,5}$
+
+    ----------------------------------------------------------------------
+    Ran 5 tests in 0.017s
+
+Notice how it's highlighting the ``ignore_pattern``. And here's the diff
+(for the run for the documentation):
+
+    $ diff /Users/njr/tmp/FILE1 /Users/njr/tmp/ref/sh_example2_sh/FILE1
+    2c2
+    < Have a number: 748
+    ---
+    > Have a number: 29047
+
+
+
+Gentest Options
+---------------
+
 

@@ -649,7 +649,7 @@ class TestGenerator:
             self.tmpdir_used = True
         if self.tmpdir_used:
             set_tmpdir = ('\n    '.join([
-                          'orig_tmpdir = %s' % repr(TMPDIR),
+                          '    orig_tmpdir = %s' % repr(TMPDIR),
                           "if not os.environ.get('TMPDIR_SET_BY_GENTEST'):",
                           '    tmpdir = tempfile.mkdtemp()',
                           "    os.environ['%s'] = tmpdir"
@@ -723,7 +723,7 @@ class TestGenerator:
         """
         paths = self.generated_file_paths(in_cls=True)
         if paths:
-            return ('generated_files = [\n        %s\n    ]'
+            return ('    generated_files = [\n        %s\n    ]'
                     % (',\n    '.join(paths)))
         else:
             return ''
@@ -1293,7 +1293,7 @@ def wizard(iterations):
     tmp_dir_shell_var = DEFAULT_TMP_DIR_SHELL_VAR if check_tmpdir else None
     if check_cwd:
         reference_files.append('.')
-    print('Enter other files to be checked, one per line, then blank line:')
+    print('Enter other files/directories to be checked, one per line, then a blank line:')
     ref = getline()
     while ref:
         reference_files.append(ref)

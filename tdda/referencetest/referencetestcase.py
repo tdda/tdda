@@ -145,7 +145,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         ReferenceTest.__init__(self, self.assertTrue)
 
     @staticmethod
-    def main(module=None, argv=None):
+    def main(module=None, argv=None, **kw):
         """
         Wrapper around the :py:func:`unittest.main()` entry point.
 
@@ -155,10 +155,10 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         that single class on its own.
         """
         argv, tagged, check = _set_flags_from_argv(argv)
-        _run_tests(module=module, argv=argv, tagged=tagged, check=check)
+        _run_tests(module=module, argv=argv, tagged=tagged, check=check, **kw)
 
 
-def _run_tests(module=None, argv=None, tagged=False, check=False):
+def _run_tests(module=None, argv=None, tagged=False, check=False, **kw):
     """
     Run tests
     """
@@ -167,9 +167,9 @@ def _run_tests(module=None, argv=None, tagged=False, check=False):
     loader = (TaggedTestLoader(check) if tagged or check
               else unittest.defaultTestLoader)
     if module is None:
-        unittest.main(argv=argv, testLoader=loader)
+        unittest.main(argv=argv, testLoader=loader, **kw)
     else:
-        unittest.main(module=module, argv=argv, testLoader=loader)
+        unittest.main(module=module, argv=argv, testLoader=loader, **kw)
 
 
 def _set_flags_from_argv(argv=None):

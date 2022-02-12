@@ -23,7 +23,7 @@ div.document {
 
 div.documentwrapper {
     float: left;
-    /* width: 100%; */
+    width: 100%;
     margin: 0;
 }
 
@@ -219,16 +219,22 @@ span.pre {
 }
 
 tt {
-    background-color: #ecf0f3;
+    background-color: none;
     padding: 0 1px 0 1px;
     /* font-size: 0.95em; */
     font-size: 1.2em;
 }
 
 code {
-    background-color: #ffffff;
+    background: none;
+    background-color: none;
     padding: 0 1px 0 1px;
     font-size: 1.2em;
+}
+
+.note code {
+    background-color: none;
+    background: none;
 }
 
 
