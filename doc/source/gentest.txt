@@ -719,7 +719,7 @@ The ``FLAGS`` (switches, options) available are:
     Do not require exit status to be 0
 
   ``-C``, ``--no-clobber``
-    Do not overwrite existing test and reference files
+    Do not overwrite existing test script or reference directory
 
 
 

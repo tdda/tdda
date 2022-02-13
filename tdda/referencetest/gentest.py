@@ -1330,8 +1330,8 @@ def gentest_parser(usage=''):
     parser.add_argument('-Z', '--nonzeroexit', action='store_true',
                         help='Do not require exit status to be 0')
     parser.add_argument('-C', '--no-clobber', action='store_true',
-                        help='Do not overwrite existing test and reference'
-                             ' files')
+                        help='Do not overwrite existing test script or '
+                             'reference directory')
     return parser
 
 
