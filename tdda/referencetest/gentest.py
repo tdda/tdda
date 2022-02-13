@@ -1314,19 +1314,24 @@ def gentest_parser(usage=''):
                                      epilog=usage + GENTEST_HELP,
                                      formatter_class=formatter)
     parser.add_argument('-?', '--?', action='help',
-                        help='same as -h or --help')
+                        help='Same as -h or --help')
     parser.add_argument('-m', '--max-files', type=int,
-                        help='max files to track')
+                        help='Max files to track')
     parser.add_argument('-r', '--relative-paths', action='store_true',
-                        help='show relative paths wherever possible')
+                        help='Show relative paths wherever possible')
     parser.add_argument('-n', '--iterations', type=int,
-                        help='number of times to run the command (default 2)')
+                        help='Number of times to run the command (default 2)')
     parser.add_argument('-O', '--no-stdout', action='store_true',
-                        help='do not check stdout')
+                        help='Do not generate a test checking output'
+                             ' to STDOUT')
     parser.add_argument('-E', '--no-stderr', action='store_true',
-                        help='do not check stderr')
+                        help='Do not generate a test checking output'
+                             ' to STDERR')
     parser.add_argument('-Z', '--nonzeroexit', action='store_true',
-                        help='do not require exit status to be 0')
+                        help='Do not require exit status to be 0')
+    parser.add_argument('-C', '--no-clobber', action='store_true',
+                        help='Do not overwrite existing test and reference'
+                             ' files')
     return parser
 
 

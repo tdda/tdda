@@ -31,20 +31,21 @@ reference outputs in a subdirectory. The test script runs
 the command and executes a number of tests to see if it behaves
 as expected.
 
-.. note:: **THE BIG IDEA**
+The Big Idea
+------------
 
-   The key assumption Gentest makes is that the code you give it is
-   running correctly when you run the ``tdda gentest`` command. The
-   tests Gentest creates don't really test that code is *correct*;
-   merely that it its behaviour is consistent and doesn't generate
-   error states. This is what we mean when we talk about *reference
-   tests*: test that processes with known, believed correct
-   *reference* outputs continue to operate as expected.
+The key assumption Gentest makes is that the code you give it is
+running correctly when you run the ``tdda gentest`` command. The
+tests Gentest creates don't really test that code is *correct*;
+merely that it its behaviour is consistent and doesn't generate
+error states. This is what we mean when we talk about *reference
+tests*: test that processes with known, believed correct
+*reference* outputs continue to operate as expected.
 
-   "Consistent" doesn't need to mean *identical every time*.
-   Gentest runs code more than once, and tries to cater for
-   variations it sees and things that look like non-portable
-   aspects of your environment.
+"Consistent" doesn't need to mean *identical every time*.
+Gentest runs code more than once, and tries to cater for
+variations it sees and things that look like non-portable
+aspects of your environment.
 
 Running Gentest
 ---------------
@@ -69,7 +70,7 @@ a set of tests after changing the code) is::
 
     $ tdda gentest [FLAGS] 'command to test' [test_output_file.py [FILES]]
 
-See `Gentest Options`_ for full details of available flags and parameters.
+See `Gentest Parameters and Options`_ for full details of available flags and parameters.
 
 
 
@@ -644,7 +645,7 @@ Eventually, this will produce something like::
     Ran 5 tests in 0.017s
 
 Notice how it's highlighting the ``ignore_pattern``. And here's the diff
-(for the run for the documentation):
+(for the run for the documentation)::
 
     $ diff /Users/njr/tmp/FILE1 /Users/njr/tmp/ref/sh_example2_sh/FILE1
     2c2
@@ -653,8 +654,73 @@ Notice how it's highlighting the ``ignore_pattern``. And here's the diff
     > Have a number: 29047
 
 
+Gentest Parameters and Options
+------------------------------
 
-Gentest Options
----------------
+The full syntax for gentest is::
+
+  tdda gentest [FLAGS] 'command to test' [testfile.py [directories and files]]
+
+where
+
+* ``command to test`` is a runnable shell command.
+  It is normally sensible to enclose it in single quotes, which will
+  prevent most shell expansion (wildcard _globbing_ etc.) from happening,
+  protect spaces etc. If you need single quotes in the comman you
+  want to run, you either need to escape those carefully or use
+  the wizard instead. Commands can be almost anything, including
+
+  - plain shell command such as ``cat hey``
+  - compiled programs such as ``someprogram param1 param2``
+  - interpreted programs such as ``python script param1 param2 param3``
+  - shell scripts such as ``sh foo.sh`` or ``. foo.sh``
+  - pipelines such as ``grep pattern file | sort | uniq``
+  - ``make clean all``  (Plain ``make`` would rarely be a good choice
+    if the ``Makefile`` contains dependency checking, because most of
+    the point of ``make`` is run different things different times,
+    though if you use ``--no-stdout --no-stderr`` (see below)
+    to suppress checking screen output, it might be reasonable.)
+* ``testfile.py`` is the name of the Python test script to write.
+  If not specified, or specified as ``-``, a name of the general
+  form ``test_sanitized_command.py`` will be used, where
+  santized command is derived from the command, removing problematical
+  characters. |br|
+  **NOTE:** Unless you use ``--no-clobber``, no checking is done: new
+  files will simply overwrite old ones. If you use Gentest twice in
+  same directory with commands that Gentest santizes the same way,
+  the second will overwrite the first.
+* ``directories and files`` is a list of directories and files to be
+  monitored for changes while the script it run. By default, the
+  twodirectories checked are the current directory ``.`` and the
+  system temporary directory, as specified by ``TMPDIR``, if set,
+  failing which ``/tmp``.
+
+The ``FLAGS`` (switches, options) available are:
+
+  ``-?``, ``--?``, ``-h``, ``--help``
+    Show Gentest's help message
+
+  ``-m MAX_FILES``, ``--maxfiles MAX_FILES``
+    Maximum number of files for Gentest to track.
+
+  ``-r``, ``--relative-paths``
+    Show relative paths wherever possible'
+
+  ``-n ITERATIONS``, ``--iterations``
+    Number of times to run the command (default 2)
+
+  ``-O``, ``--no-stdout``
+    Do not generate a test checking output to ``stdout``
+
+  ``-E``, ``--no-stderr``
+    Do not generate a test checking output to ``stderr``
+
+  ``-Z``, ``--nonzeroexit``
+    Do not require exit status to be 0
+
+  ``-C``, ``--no-clobber``
+    Do not overwrite existing test and reference files
+
+
 
 
