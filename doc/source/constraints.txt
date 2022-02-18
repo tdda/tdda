@@ -1,5 +1,5 @@
-Automatic Constraint Generation, Verification & Anomaly Detection
-=================================================================
+Automatic Constraint Generation, Data Verification & Anomaly Detection
+======================================================================
 
 The TDDA library provides support for constraint generation,
 verification and anomaly detection for datasets, including CSV files
@@ -7,10 +7,10 @@ and Pandas DataFrames.
 
 The module includes:
 
-* A :ref:`tdda_command_line_tool` for discovering constraints in data
+* :ref:`tdda_command_line_tool` for discovering constraints in data
   from various sources, and for verifying data against those constraints,
-  using the ``.tdda`` :ref:`tdda_json_file_format`.
-* A Python library :py:mod:`~tdda.constraints` containing classes that
+  using the :ref:`tdda_json_file_format` (``.tdda`` files).
+* A Python :py:mod:`~tdda.constraints` library containing classes that
   implement constraint discovery and validation, for use from within
   other Python programs.
 * Python implementations of constraint discovery, verification and
@@ -24,7 +24,7 @@ The module includes:
   - MongoDB document collections (``mongodb:``)
 
 .. note::
-   To use databases, pandas, feather files etc. you may need
+   To use databases, ``pandas``, ``.feather`` files etc. you may need
    to install extra optional packages.
    See :ref:`optional_installations`.
 
