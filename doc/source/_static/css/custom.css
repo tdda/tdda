@@ -8,20 +8,23 @@
 /* -- page layout ----------------------------------------------------------- */
 
 body {
-    font-family: Palatino, "Palatino Linotype", Georgia, Serif;
+    font-family: Palatino, "Palatino Linotype", Georgia, Garamond, Baskerville, Serif;
     font-size: 100%;
     background-color: #283038;
     color: #000;
-    margin: 0;
+    margin: 0 auto 0 auto;
     padding: 0;
 }
 
 div.document {
+    background-color: #606060;
+    margin: 0;
 }
 
 div.documentwrapper {
     float: left;
     width: 100%;
+    margin: 0;
 }
 
 div.bodywrapper {
@@ -115,14 +118,13 @@ div.sphinxsidebar input {
 
 /* -- body styles ----------------------------------------------------------- */
 
-a, a:visited {
-    color: #400000;
+a,a:visited {
+    color: #700000;
     text-decoration: none;
 }
 
 a:hover {
     text-decoration: underline;
-    color: #800000;
 }
 
 div.body p, div.body dd, div.body li {
@@ -136,11 +138,11 @@ div.body h3,
 div.body h4,
 div.body h5,
 div.body h6 {
-    font-family: 'Trebuchet MS', sans-serif;
-    background-color: /* #f2f2f2; */ #d0d0d0;
+    font-family: Palatino, "Palatino Linotype", Georgia, sans-serif;
+    background-color: #FFFFFF;
     font-weight: normal;
-    color: #600000;
-    border-bottom: 1px solid #ccc;
+    color: #800000;
+    border-bottom: none;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 10px;
 }
@@ -202,19 +204,40 @@ p.admonition-title:after {
 
 pre {
     padding: 5px;
-    background-color: #D4D8DC;
+    background-color: none;
     color: #333333;
     line-height: 120%;
-    border: 1px solid #ac9;
+    border: none;
     border-left: none;
     border-right: none;
+    font-size: 1.2em;
+}
+
+span.pre {
+    background-color: none;
+    font-weight: bold;
 }
 
 tt {
-    background-color: #ecf0f3;
+    background-color: none;
     padding: 0 1px 0 1px;
-    font-size: 0.95em;
+    /* font-size: 0.95em; */
+    font-size: 1.2em;
 }
+
+code {
+    background: none;
+    background-color: none;
+    padding: 0 1px 0 1px;
+    font-size: 1.2em;
+}
+
+.note code {
+    background-color: none;
+    background: none;
+}
+
+
 
 /* MODIFIED BY HAND */
 
@@ -239,30 +262,7 @@ div.sphinxsidebar.current.toctree-l1.current.current {
     background-color: #404040;
 }
 
-.wy-side-nav-search, .wy-body-for-nav {
+.wy-side-nav-search {
     background-color: #272525;
 }
 
-.wy-side-nav-search a,
-.wy-side-nav-search a:visited,
-.wy-side-nav-search a:hover {
-    color: #FFFFFF;
-}
-
-.wy-body-for-nav a,
-.wy-body-for-nav a:visited,
-.wy-body-for-nav a:hover {
-
-}
-
-.wy-menu-vertical li.current {
-    background:#b0b0b0;
-}
-
-.wy-menu-vertical li.current a:hover {
-    background:#808080;
-}
-
-.wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
-    background:#989898;
-}
