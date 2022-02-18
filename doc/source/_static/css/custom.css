@@ -8,7 +8,7 @@
 /* -- page layout ----------------------------------------------------------- */
 
 body {
-    font-family: Palatino, "Palatino Linotype", Garamond, Baskerville, Serif;
+    font-family: Palatino, "Palatino Linotype", Georgia, Garamond, Baskerville, Serif;
     font-size: 100%;
     background-color: #283038;
     color: #000;
@@ -138,7 +138,7 @@ div.body h3,
 div.body h4,
 div.body h5,
 div.body h6 {
-    font-family: Palatino, "Palatino Linotype", 'Trebuchet MS', sans-serif;
+    font-family: Palatino, "Palatino Linotype", Georgia, sans-serif;
     background-color: #FFFFFF;
     font-weight: normal;
     color: #800000;
