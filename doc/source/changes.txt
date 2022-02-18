@@ -31,7 +31,7 @@ This Version
 * **2.0** Rexpy can now generate many different flavours
   of regular expressions.
 
-* **2.0. Advance Warning of Deprecation**
+* **2.0. Planned Deprecation**
   We plan to move from using ``.feather`` files to ``.parquet`` files
   in the 2.1 release, ad which point ``.feather`` files will immediately
   be deprecated.

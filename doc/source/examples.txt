@@ -5,8 +5,11 @@ Examples
 
 The TDDA package includes embedded examples of code and data.
 
-To copy these examples to a directory of your choice (or, if you don't
-specify a location, then to the current directory), run::
+To copy these examples, run::
 
-    tdda examples [mydirectory]
+    tdda examples
+
+which will create a number of subdirectories of the current directory,
+currently ``constraints_examples``, ``rexpy_examples`` and
+``referencetest_examples``.
 

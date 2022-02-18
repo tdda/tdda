@@ -18,7 +18,7 @@ otherwise lines will be read from standard input.
 If ``outputfile`` is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
 
-``FLAGS`` are optional flags. Currently:
+Optional ``FLAGS`` may be used to modify Rexpy's behaviour:
 
   ``-h``, ``--header``
     Discard first line, as a header.
@@ -51,7 +51,7 @@ to that (one per line); otherwise they will be printed.
 
   ``--portable``
      Product maximally portable regular expressions
-     (e.g. [0-9] rather than \d). (This is the default.)
+     (e.g. ``[0-9]`` rather than ``\d``). (This is the default.)
 
   ``--grep``
      Same as ``--portable``
@@ -60,25 +60,23 @@ to that (one per line); otherwise they will be printed.
     Produce Java-style regular expressions (e.g. ``\p{Digit}``)
 
   ``--posix``
-    Produce posix-compilant regular expressions
+    Produce POSIX-compilant regular expressions
     (e.g. ``[[:digit:]]`` rather than ``\d``).
 
   ``--perl``
     Produce Perl-style regular expressions (e.g. ``\d``)
 
-  ``-u`` ,  ``--underscore``  Allow underscore to be treated as a letter.
-    Mostly useful for matching identifiers
-    Also allow ``-_``.
+  ``-u`` ,  ``--underscore``, ``-_``
+    Allow underscore to be treated as a letter.
+    Mostly useful for matching identifiers.
 
-  ``-d``, ``--dot``
+  ``-d``, ``--dot``, ``-.``, ``--period``
     Allow dot to be treated as a letter.
     Mostly useful for matching identifiers.
-    Also ``-.`` and ``--period``.
 
-  ``-m``, ``--minus``
+  ``-m``, ``--minus``, ``--hyphen``, ``--dash``
     Allow minus to be treated as a letter.
     Mostly useful for matching identifiers.
-    Also ``--hyphen`` or ``--dash``.
 
   ``-v``, ``--version``
     Print the version number.
@@ -99,6 +97,9 @@ to that (one per line); otherwise they will be printed.
   KEEP IN SYNC WITH DOC IN rexpy.py
 ..
 
+..
+  http://www.tdda.info/introducing-rexpy-automatic-discovery-of-regular-expressions
+..
 
 Rexpy Examples
 --------------

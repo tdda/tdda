@@ -224,8 +224,8 @@ class ReferenceTest(object):
         """
         Declare the filesystem location for reference files of a
         particular kind. Typically you would subclass
-        `ReferenceTestCase` and pass in these locations though its
-        __init__ method when constructing an instance of
+        ``ReferenceTestCase`` and pass in these locations though its
+        ``__init__`` method when constructing an instance of
         ReferenceTestCase as a superclass.
 
         If calls to :py:meth:`assertTextFileCorrect()` (etc) are made for
@@ -235,7 +235,7 @@ class ReferenceTest(object):
         the ``None`` *kind* and this default **must** be specified.
 
         This method overrides any global defaults set from calls to the
-        :py:meth:`ReferenceeTest.set_default_data_location()` class-method.
+        :py:meth:`ReferenceTest.set_default_data_location()` class-method.
 
         If you haven't even defined the ``None`` default, and you make calls
         to :py:meth:`assertTextFileCorrect()` (etc) using relative pathnames

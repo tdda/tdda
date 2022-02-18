@@ -48,7 +48,7 @@ otherwise lines will be read from standard input.
 If OUTPUTFILE is provided, regular expressions found will be written
 to that (one per line); otherwise they will be printed.
 
-FLAGS are optional flags. Currently:
+Optional FLAGS may be used to modify Rexpy's behaviour:
 
   -h, --header      Discard first line, as a header.
 
@@ -74,7 +74,7 @@ FLAGS are optional flags. Currently:
 
   --java            Produce Java-style regular expressions (e.g. \p{Digit})
 
-  --posix           Produce posix-compilant regular expressions
+  --posix           Produce POSIX-compilant regular expressions
                     (e.g. [[:digit:]] rather than \d).
 
   --perl            Produce Perl-style regular expressions (e.g. \d)

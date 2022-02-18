@@ -52,8 +52,8 @@ The main features are:
 Prerequisites
 -------------
 
- - :py:mod:`pandas` optional, required for CSV file support, see http://pandas.pydata.org.
- - :py:mod:`pytest` optional, required for tests based on pytest rather than unittest, see http://docs.pytest.org.
+ - :py:mod:`pandas` optional, required for CSV file support, see https://pandas.pydata.org.
+ - :py:mod:`pytest` optional, required for tests based on pytest rather than ``unittest``, see https://docs.pytest.org.
 
 These can be installed with::
 

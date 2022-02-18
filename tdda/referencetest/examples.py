@@ -3,16 +3,17 @@
 The :py:mod:`tdda.referencetest` module includes a set of examples,
 for both :py:mod:`unittest` and :py:mod:`pytest`.
 
-To copy these examples to your own *referencetest-examples* subdirectory
-(or to a location of your choice), run the command::
+To copy these examples, run the command::
 
-    tdda examples referencetest [mydirectory]
+    tdda examples referencetest [directory]
+
+If ``directory`` is not supplied ``referencetest-examples`` will be used.
 
 Alternatively, you can copy all examples using the following command::
 
     tdda examples
 
-which will create three separate sub-directories.
+which will create a number of separate subdirectories.
 """
 from __future__ import absolute_import
 

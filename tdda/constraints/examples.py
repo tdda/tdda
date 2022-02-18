@@ -2,11 +2,17 @@
 """
 The :py:mod:`tdda.constraints` module includes a set of examples.
 
-To copy these examples to your own *constraints_examples* subdirectory
-(or to a location of your choice), run the command::
+To copy these constraints examples, run the command::
 
-    tdda examples constraints [mydirectory]
+    tdda examples constraints [directory]
 
+If ``directory`` is not supplied, ``constraints_examples`` will be used.
+
+Alternatively, you can copy all examples using the following command::
+
+    tdda examples
+
+which will create a number of separate subdirectories.
 """
 from __future__ import absolute_import
 

@@ -2,11 +2,17 @@
 """
 TDDA rexpy is supplied with a set of examples.
 
-To copy these examples to your own *rexpy-examples* subdirectory
-(or to a location of your choice), run the command::
+To copy the rexpy examples, run the command::
 
-    tdda examples rexpy [mydirectory]
+    tdda examples rexpy [directory]
 
+If ``directory`` is not supplied, ``rexpy_examples`` will be used.
+
+Alternatively, you can copy all examples using the following command::
+
+    tdda examples
+
+which will create a number of separate subdirectories.
 """
 from __future__ import absolute_import
 
