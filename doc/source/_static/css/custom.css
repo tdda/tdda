@@ -122,11 +122,11 @@ div.sphinxsidebar input {
 
 .wy-menu-vertical li.current a:visited, .wy-menu-vertical li.current a:link,
 {
-    background: #666666;
+    background: #484545;
 }
 
 .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
-    background:#666666;
+    background: #484545;
 }
 
 .wy-body-for-nav {
@@ -139,8 +139,10 @@ div.sphinxsidebar input {
 .wy-dropdown-menu>dd.call-to-action:hover{
     background:#8a8a8a;
 }
+/* Open section of menu*/
+
 .wy-menu-vertical li.current{
-    background:#8b8b8b;
+    background:#403c3c;
 }
 
 .wy-dropdown-menu{
@@ -152,7 +154,7 @@ div.sphinxsidebar input {
 }
 
 .wy-menu-vertical li.current>a,.wy-menu-vertical li.on a{
-    background:#8f8f8f;
+    background:#3F3939;
     border:none;
     padding:.4045em 1.618em
 }
