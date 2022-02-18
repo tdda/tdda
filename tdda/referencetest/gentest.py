@@ -32,16 +32,11 @@ from tdda.referencetest.gentest_boilerplate import HEADER, TAIL
 from tdda.referencetest.diffrex import find_diff_lines
 from tdda.rexpy import extract
 
-USAGE = '''tdda gentest
+USAGE = '''tdda gentest        (to run wizard)
 
 or
 
-tdda gentest  'quoted shell command' [FLAGS] [test_outputfile.py [reference files]]
-
-You can use STDOUT and STDERR (with any capitalization) to those
-streams, which will by default not be checked. You can also add
-NONZEROEXIT to the commandline to indicate that a non-zero exit code
-is expected, so should not prevent test generation.
+tdda gentest 'shell command' [FLAGS] [test_output.py [reference files]]
 
 THIS FUNCTIONALITY IS CURRENTLY EXPERIMENTAL / (IN BETA).
 '''
@@ -128,7 +123,7 @@ class Specifics:
 class TestGenerator:
     def __init__(self, cwd, command, script, reference_files,
                  check_stdout, check_stderr=True, require_zero_exit_code=True,
-                 max_snapshot_files=MAX_SNAPSHOT_FILES,
+                 no_clobber=False, max_snapshot_files=MAX_SNAPSHOT_FILES,
                  relative_paths=False, with_time_log=True, iterations=2,
                  tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR, verbose=True):
         self.cwd = cwd
@@ -142,9 +137,7 @@ class TestGenerator:
         self.raw_script = script  # as specified by user
         self.script = force_start(canonicalize(script, '.py'), 'test', 'test_')
 
-        self.raw_files = [f for f in reference_files
-                          if f.lower() not in ('stdout', 'stderr',
-                                               'nonzeroexit')]
+        self.raw_files = reference_files.copy()
         self.verbose = verbose
         reference_files = set(canonicalize(f) for f in self.raw_files)
         self.reference_files = {}
@@ -153,6 +146,7 @@ class TestGenerator:
 
         self.check_stdout = check_stdout
         self.check_stderr = check_stderr
+        self.no_clobber = no_clobber
         self.require_zero_exit_code = require_zero_exit_code
         self.max_snapshot_files = max_snapshot_files
         self.relative_paths = relative_paths
@@ -174,6 +168,9 @@ class TestGenerator:
         self.test_names = set()
         self.test_qualifier = 1
 
+        if self.no_clobber:
+            self.check_for_clobbering()
+
         if iterations > 0:
             self.create_or_empty_ref_dir()
             self.snapshot_filesystem()
@@ -185,6 +182,20 @@ class TestGenerator:
             if self.verbose:
                 print(self.summary())
         self.remove_extra_reference_files()
+
+    def check_for_clobbering(self):
+        rest = 'No-clobber is set.\nRemove or run without --no-clobber (-C).'
+        if os.path.exists(self.script):
+            if os.path.exists(self.refdir):
+                self.fail('Target test script %s\n'
+                          'and reference directory %s exist.\n%s'
+                          % (self.script, self.refdir, rest))
+            else:
+                self.fail('Target test script %s exist.\n%s'
+                          % (self.script, rest))
+        elif os.path.exists(self.refdir):
+            self.fail('Reference directory %s exists.\n%s'
+                      % (self.refdir, rest))
 
     def run_command(self):
         self.results = {}
@@ -753,16 +764,21 @@ class TestGenerator:
         exclusions = set([self.tmpdir]) if self.tmp_dir_shell_var else set()
         files += ' '.join(repr(f) for f in self.raw_files
                           if not f in exclusions)
-        if self.check_stdout:
-            files += ' STDOUT'
-        if self.check_stderr:
-            files += ' STDERR'
+        flags = []
+        if not self.check_stdout:
+            flags.append('--no-stdout')
+        if not self.check_stderr:
+            flags.append('--no-stderr')
         if zec is None:
             zec = self.require_zero_exit_code
         if not zec:
-            files += ' NONZEROEXIT'
-        return ('tdda gentest %s %s'
-                % (repr(self.command),
+            flags.append('--non-zero-exit')
+        if self.no_clobber:
+            flags.append('--no-clobber')
+        flags_string = ' '.join(flags + ['']) if flags else ''
+        return ('tdda gentest %s%s %s'
+                % (flags_string,
+                   repr(self.command),
                    repr(os.path.basename(self.script)))
                 + (files if files.strip() else ''))
 
@@ -892,6 +908,10 @@ class TestGenerator:
                                     in_cls=in_cls)
             else:
                 return as_join_repr(path, self.cwd, in_cls=in_cls)
+
+    def fail(self, msg):
+        print('FAILURE: ' + msg, file=sys.stderr)
+        sys.exit(1)
 
 
 class ExecuteCommand:
@@ -1301,10 +1321,11 @@ def wizard(iterations):
     check_stdout = yes_no('Check stdout')
     check_stderr = yes_no('Check stderr')
     require_zero_exit_code = yes_no('Exit code should be zero')
+    no_clobber = not(yes_no('Overwrite previous test script (if it exists)'))
     n_iterations = get_int('Number of times to run script', iterations,
                            2, None)
     return (shellcommand, output_script, reference_files,
-            check_stdout, check_stderr, require_zero_exit_code,
+            check_stdout, check_stderr, require_zero_exit_code, no_clobber,
             n_iterations, tmp_dir_shell_var)
 
 
@@ -1327,7 +1348,7 @@ def gentest_parser(usage=''):
     parser.add_argument('-E', '--no-stderr', action='store_true',
                         help='Do not generate a test checking output'
                              ' to STDERR')
-    parser.add_argument('-Z', '--nonzeroexit', action='store_true',
+    parser.add_argument('-Z', '--non-zero-exit', action='store_true',
                         help='Do not require exit status to be 0')
     parser.add_argument('-C', '--no-clobber', action='store_true',
                         help='Do not overwrite existing test script or '
@@ -1347,8 +1368,10 @@ def gentest_flags(parser, args, params):
         params['no_stdout'] = True
     if flags.no_stderr:
         params['no_stderr'] = True
-    if flags.nonzeroexit:
-        params['nonzeroexit'] = True
+    if flags.non_zero_exit:
+        params['non_zero_exit'] = True
+    if flags.no_clobber:
+        params['no_clobber'] = True
     return flags, more
 
 
@@ -1370,7 +1393,8 @@ def gentest_wrapper(args):
 def gentest(shellcommand, output_script, reference_files,
             max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False,
             iterations=2, tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR,
-            no_stdout=False, no_stderr=False, nonzeroexit=False):
+            no_stdout=False, no_stderr=False, non_zero_exit=False,
+            no_clobber=False):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -1387,12 +1411,13 @@ def gentest(shellcommand, output_script, reference_files,
          check_stdout,
          check_stderr,
          require_zero_exit_code,
+         no_clobber,
          iterations,
          tmp_dir_shell_var) = wizard(iterations)
     else:
         check_stdout = not no_stdout
         check_stderr = not no_stderr
-        require_zero_exit_code = not nonzeroexit
+        require_zero_exit_code = not non_zero_exit
     cwd = os.getcwd()
     if shellcommand is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
@@ -1400,18 +1425,11 @@ def gentest(shellcommand, output_script, reference_files,
     if not output_script or output_script == '-':
         output_script = 'test_' + sanitize_string(shellcommand)
     lcrefs = [f.lower() for f in reference_files]
-    # if 'stdout' in lcrefs:
-    #     check_stdout = True
-    # if 'stderr' in lcrefs:
-    #     check_stderr = True
-    # if 'nonzeroexit' in lcrefs:
-    #     require_zero_exit_code = False
-    # if not (set(lcrefs) - set(['stdout', 'stderr', 'nonzeroexit'])):
     if not lcrefs:
         reference_files = reference_files + ['.',]
     TestGenerator(cwd, shellcommand, output_script, reference_files,
                   check_stdout, check_stderr, require_zero_exit_code,
-                  max_snapshot_files=max_snapshot_files,
+                  no_clobber, max_snapshot_files=max_snapshot_files,
                   relative_paths=relative_paths, iterations=iterations,
                   tmp_dir_shell_var=tmp_dir_shell_var)
 

@@ -68,7 +68,7 @@ The full syntax (which is mostly used programmatically, or by copying
 what Gentest writes into its output files, when you want to regenerate
 a set of tests after changing the code) is::
 
-    $ tdda gentest [FLAGS] 'command to test' [test_output_file.py [FILES]]
+    $ tdda gentest [FLAGS] 'command to test' [test_output.py [FILES]]
 
 See `Gentest Parameters and Options`_ for full details of available flags and parameters.
 
@@ -83,10 +83,10 @@ We start with a purely illustrative example---using
 Gentest to create a test that checks the behaviour of
 the ``cat`` command on a known file::
 
-    $ echo 'Hey, cats!' > hey                                     ❶
-    $ tdda gentest 'cat hey'                                      ❷
+    $ echo 'Hey, cats!' > hey                                     ①
+    $ tdda gentest 'cat hey'                                      ②
 
-    Running command 'cat hey' to generate output (run 1 of 2).    ❸
+    Running command 'cat hey' to generate output (run 1 of 2).    ③
     Saved (non-empty) output to stdout to /home/tdda/tmp/ref/cat_hey/STDOUT.
     Saved (empty) output to stderr to /home/tdda/tmp/ref/cat_hey/STDERR.
 
@@ -97,7 +97,7 @@ the ``cat`` command on a known file::
     Test script written as /home/tdda/tmp/test_cat_hey.py
     Command execution took: 0.012s
 
-    SUMMARY:                                                      ❹
+    SUMMARY:                                                      ④
 
     Directory to run in:    /home/tdda/tmp
     Shell command:          cat hey
@@ -107,31 +107,31 @@ the ``cat`` command on a known file::
     Check stderr:           yes (was empty)
     Expected exit code:     0
 
-    $ python test_cat_hey.py                                      ❺
+    $ python test_cat_hey.py                                      ⑤
     ....
     ----------------------------------------------------------------------
     Ran 4 tests in 0.008s
 
     OK
 
-❶ For this illustration, we first create a file called ``hey`` containing
+``①`` For this illustration, we first create a file called ``hey`` containing
 the text ``Hey, cats!``, which we will feed to the ``cat`` command (to
 display it in the terminal).
 
-❷ We run ``tdda gentest 'cat hey'`` to generate the test. It is a good
+``②`` We run ``tdda gentest 'cat hey'`` to generate the test. It is a good
 idea to enclose the command in single quotes, and this may be
 necessary if it includes spaces or special characters. If
 the command itself uses single quotes, normal shell rules apply and
 they will need to be escaped. (It's generally easier to use the wizard
 in such cases.)
 
-❸ Gentest then runs the command we specified a number of times---2 by default.
+``③`` Gentest then runs the command we specified a number of times---2 by default.
 
-❹ Gentest finishes by displaying a summary of what it did.
+``④`` Gentest finishes by displaying a summary of what it did.
 It names the script automatically, based on
 a sanitized version of the command---in this case ``test_hey_cats.py``
 
-❺ Finally, we run the test script generated, and in this case
+``⑤`` Finally, we run the test script generated, and in this case
 it reports that it has run four tests, all of which passed.
 In this case, the four tests (which you can obviously see by
 looking in the test script) are:
@@ -156,7 +156,7 @@ Obviously, you can look at all of it: it's right there in
 ``test_hey_cats.py``, but won't bother with the boilerplate.
 
 The core of the generated code is a test class (subclassing
-``tdda.ReferenceTestCase``, which inherits from ``unittest.TestCase),
+``tdda.ReferenceTestCase``, which inherits from ``unittest.TestCase``),
 with a ``setUpClass`` class method that runs the command
 and assigns class attributes for the ``output`` to ``stdout``,
 the ``error`` output to ``stderr``, any exeception (``exc``)
@@ -237,11 +237,11 @@ by changing what's in the file ``hey``::
       File "test_cat_hey.py", line 48, in test_stdout
         os.path.join(self.refdir, 'STDOUT'))
     AssertionError: False is not true : 1 line is different, starting at line 1
-    Expected file /home/tdda/tmp/ref/cat_hey/STDOUT           ❶
-    Compare raw with:                                         ❷
+    Expected file /home/tdda/tmp/ref/cat_hey/STDOUT           ①
+    Compare raw with:                                         ②
         diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/tdda/tmp/ref/cat_hey/STDOUT
 
-    Compare post-processed with:                              ❸
+    Compare post-processed with:                              ③
         diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-STDOUT /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/expected-STDOUT
 
 
@@ -253,17 +253,17 @@ by changing what's in the file ``hey``::
 The output is a bit verbose, and when there are failures, these tend to
 be shown twice (as here), but the main things to note are:
 
-❶ The failure that has occured is with ``STDOUT``, i.e. the messages
+``①`` The failure that has occured is with ``STDOUT``, i.e. the messages
 sent to the screen on the normal output stream (as opposed to the
 error stream).
 
-❷ Gentest tells you how to examine the differences between the actual
+``②`` Gentest tells you how to examine the differences between the actual
 output and the output it expected with using a ``diff`` command. The actual
 output has been saved to a file called ``actual-raw-STDOUT`` in a
 temporary directory, and Gentest stored the output it expected for
 ``STDOUT`` in ``ref/cat_hey/STDOUT``. If you have a visual diff tool
-(such as ``opendiff`` on the Mac, or ``meld``on Linux, or ``vdiff``
-on Unix, you can probably just replace ``diff`` with your preferred tool).
+(such as ``opendiff`` on the Mac, or ``meld`` on Linux, or ``vdiff``
+on Unix), you can probably just replace ``diff`` with your preferred tool.
 
 If we run the command suggested, we get::
 
@@ -277,7 +277,7 @@ Here we can see that the change from Hey to Ho has been picked up.
 (You may see a claim that one of the files doesn't end with a newline;
 that's a bug.)
 
-❸ Gentest also suggests a command for comparing post-processed versions of
+③ Gentest also suggests a command for comparing post-processed versions of
 output. This isn't relevant in this case, but in cases later (when Gentest
 decides that the output is not completely fixed) where this is useful.
 
@@ -323,7 +323,7 @@ update the test with the new results.
   regenerate the entire test script and reference outputs.
   Test files generated by gentest contain the command needed to regenerate
   the the same way as before, near the top, even if the Wizard was
-  originally used. For example, the top of `test_cat_hey.py` is::
+  originally used. For example, the top of ``test_cat_hey.py`` is::
 
       """
       test_cat_hey.py: Automatically generated test code from tdda gentest.
@@ -348,7 +348,7 @@ To run Gentest's wizard (recommended in most cases), use::
 
 You will then be prompted with a series of questions/directions.
 Most questions have suggested default answers, which you can
-accept by just typing RETURN (ENTER). The questions will be:
+accept by just hitting the ``RETURN`` (enter) key. The questions will be:
 
 * ``Enter shell command to be tested:`` |br|
   Here is when you give the full command you want tested,
@@ -402,6 +402,11 @@ accept by just typing RETURN (ENTER). The questions will be:
   exit status is returned when it is running the command for
   initial test generation.
   You can override this behaviour by sauing ``n`` to   to this question.
+* ``Overwrite previous test script (if exists)?: [y]:``
+  By default, Gentest will overwrite any previous test script (of the
+  same name) and corresponding reference outputs when run.
+  If you say ``n``, it will fail if the test script or reference
+  directory already exist.
 * ``Number of times to run script?: [2]:`` |br|
   As noted above, Gentest does not require that commands behave
   identically every time. While its capabilities are necessarily
@@ -481,18 +486,18 @@ ask gentest to run the script ``10`` times (for reasons we'll see below)::
     Shell command:          sh example2.sh
     Test script generated:  test_sh_example2_sh.py
     Reference files:
-        $(pwd)/FILE1                                     ❶
-    Check stdout:           yes (was 9 lines)            ❷
+        $(pwd)/FILE1                                     ①
+    Check stdout:           yes (was 9 lines)            ②
     Check stderr:           yes (was empty)
     Expected exit code:     0
 
 Notice that in this case:
 
-❶ Gentest noticed that ``FILE1`` was written, in the current working directory
+``①`` Gentest noticed that ``FILE1`` was written, in the current working directory
 
-❷ Gentest reports that 9 lines were written to stdout when the coe was run.
+``②`` Gentest reports that nine lines were written to stdout when the code was run.
 
-If we run the tests, we it's most likely all five tests will pass, 
+If we run the tests, we it's most likely all five tests will pass,
 (though probably necessarily always, for reasons we'll discuss below)::
 
     $ python test_sh_example2_sh.py
@@ -593,7 +598,7 @@ containing a given string, ``ignore_patterns`` is more precise:
 it still drops the line from comparison, but only if both the
 actual and the expected output lines match the regular expression.
 
-Gentest uses `Rexpy`_ to generate the patterns for lines that
+Gentest uses `Rexpy <rexpy.html>`_ to generate the patterns for lines that
 vary between runs.
 
 In this case, the regular expression generated specified that the

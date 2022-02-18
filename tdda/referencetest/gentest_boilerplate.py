@@ -1,11 +1,10 @@
 HEADER = '''# -*- coding: utf-8 -*-
-
 """
 %(SCRIPT)s: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-  %(GEN_COMMAND)s
+%(GEN_COMMAND)s
 """
 
 import os
