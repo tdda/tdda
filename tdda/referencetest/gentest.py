@@ -794,21 +794,24 @@ class TestGenerator:
             '',
             'SUMMARY:',
             '',
-            'Directory to run in:    %s' % ('.' if self.relative_paths
-                                                else self.cwd),
-            'Shell command:          %s' % self.command,
-            'Test script generated:  %s' % ensure_py(self.raw_script),
-            'Reference files%s:' % ('' if reference_files
+            'Directory to run in:        %s' % ('.' if self.relative_paths
+                                                       else self.cwd),
+            'Shell command:              %s' % self.command,
+            'Test script generated:      %s' % ensure_py(self.raw_script),
+            'Reference files:%s' % ('' if reference_files
                                        else ' (none)'),
         ] + [
             '    %s' % self.path_repr(f) for f in reference_files
 
         ] + [
-            'Check stdout:           %s' % stream_desc(self.check_stdout,
-                                                       r.out),
-            'Check stderr:           %s' % stream_desc(self.check_stderr,
-                                                       r.err),
-            'Expected exit code:     %d' % r.exit_code,
+            'Check stdout:               %s'
+            % stream_desc(self.check_stdout, r.out),
+            'Check stderr:               %s'
+            % stream_desc(self.check_stderr, r.err),
+            'Expected exit code:         %d' % r.exit_code,
+            'Clobbering permitted:       %s'
+            % ('no' if self.no_clobber else 'yes'),
+            'Number of times script ran: %d' % self.iterations,
             '',
         ]
         return '\n'.join(lines)
@@ -1321,12 +1324,13 @@ def wizard(iterations):
     check_stdout = yes_no('Check stdout')
     check_stderr = yes_no('Check stderr')
     require_zero_exit_code = yes_no('Exit code should be zero')
-    no_clobber = not(yes_no('Overwrite previous test script (if it exists)'))
-    n_iterations = get_int('Number of times to run script', iterations,
-                           2, None)
+    no_clobber = not(yes_no('Clobber (overwrite) previous outputs '
+                            '(if they exist)'))
+    iterations = get_int('Number of times to run script', iterations,
+                         2, None)
     return (shellcommand, output_script, reference_files,
             check_stdout, check_stderr, require_zero_exit_code, no_clobber,
-            n_iterations, tmp_dir_shell_var)
+            iterations, tmp_dir_shell_var)
 
 
 def gentest_parser(usage=''):

@@ -99,13 +99,15 @@ the ``cat`` command on a known file::
 
     SUMMARY:                                                      ④
 
-    Directory to run in:    /home/tdda/tmp
-    Shell command:          cat hey
-    Test script generated:  test_cat_hey.py
+    Directory to run in:        /home/tdda/tmp
+    Shell command:              cat hey
+    Test script generated:      test_cat_hey.py
     Reference files (none):
-    Check stdout:           yes (was 'Hey, cats!\n')
-    Check stderr:           yes (was empty)
-    Expected exit code:     0
+    Check stdout:               yes (was 'Hey, cats!\n')
+    Check stderr:               yes (was empty)
+    Expected exit code:         0
+    Clobbering permitted:       yes
+    Number of times script ran: 2
 
     $ python test_cat_hey.py                                      ⑤
     ....
@@ -402,10 +404,10 @@ accept by just hitting the ``RETURN`` (enter) key. The questions will be:
   exit status is returned when it is running the command for
   initial test generation.
   You can override this behaviour by sauing ``n`` to   to this question.
-* ``Overwrite previous test script (if exists)?: [y]:``
+* ``Clobber (overwrite) previous outputs (if they exists)?: [y]:``
   By default, Gentest will overwrite any previous test script (of the
   same name) and corresponding reference outputs when run.
-  If you say ``n``, it will fail if the test script or reference
+  If you say ``n``, it will fail if the output test script or reference
   directory already exist.
 * ``Number of times to run script?: [2]:`` |br|
   As noted above, Gentest does not require that commands behave
@@ -457,6 +459,7 @@ ask gentest to run the script ``10`` times (for reasons we'll see below)::
     Check stdout?: [y]:
     Check stderr?: [y]:
     Exit code should be zero?: [y]:
+    Clobber (overwrite) previous outputs (if they exist)?: [y]:
     Number of times to run script?: [2]: 10
 
     Running command 'sh example2.sh' to generate output (run 1 of 10).
@@ -482,14 +485,16 @@ ask gentest to run the script ``10`` times (for reasons we'll see below)::
 
     SUMMARY:
 
-    Directory to run in:    /home/tdda/tmp
-    Shell command:          sh example2.sh
-    Test script generated:  test_sh_example2_sh.py
+    Directory to run in:        /home/tdda/tmp
+    Shell command:              sh example2.sh
+    Test script generated:      test_sh_example2_sh.py
     Reference files:
-        $(pwd)/FILE1                                     ①
-    Check stdout:           yes (was 9 lines)            ②
-    Check stderr:           yes (was empty)
-    Expected exit code:     0
+        $(pwd)/FILE1
+    Check stdout:               yes (was 9 lines)
+    Check stderr:               yes (was empty)
+    Expected exit code:         0
+    Clobbering permitted:       yes
+    Number of times script ran: 10
 
 Notice that in this case:
 
