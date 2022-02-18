@@ -320,12 +320,14 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 .rst-content code.literal, .rst-content tt.literal {
     color: #202030;
     font-size: 85%;
+    padding: 0;
 }
 
 .rst-content code, .rst-content tt, code {
     background: none;
     border: none;
     font-size: 85%;
+    padding: 0;
 }
 
 /* API Code headers */

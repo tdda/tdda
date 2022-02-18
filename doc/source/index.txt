@@ -6,56 +6,72 @@
 Test-Driven Data Analysis (Python TDDA library)
 ===============================================
 
-Version |version|. (`Installation <installation>`_)
+Version |version|. (`Installation <installation.html>`_)
 
 
 
-The TDDA module helps with testing of data and code that manipulates data,
-as a concrete implementation of the ideas discussed on the
-`test-driven data analysis <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_ blog.
-When installed, the module offers a suite of command-line tools that
-can be used with any data from any source (i.e. not just Python) and
-enhanced test methods for Python code.
-There is also a full Python API.
+The TDDA module helps with the testing of data and of code that
+manipulates data. It serves as a concrete implementation of the ideas
+discussed on the `test-driven data analysis
+<http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_
+blog.  When installed, the module offers a suite of command-line tools
+that can be used with data from any source, not just Python.  It also
+provideds enhanced test methods for Python code, and the new
+*Gentest* functionality enables automatic generation of
+test programs for arbitrary code (not just Python code).  There is
+also a full Python API for all functionality.
 
-*Test-driven Data Analysis* is closely related to the ideas of
-`reproducible research`, but with more of a focus on automated
+*Test-driven data analysis* is closely related to
+`reproducible research <https://en.wikipedia.org/wiki/Reproducibility>`_,
+but with more of a focus on automated
 testing. It is best seen as overlapping and partly complementary
 to reproducible research.
 
+The major components of the TDDA module are:
+
 .. image:: image/tdda-machines-light.png
+  :alt: Machines illustrating the constraint discovering functionality,
+        which takes data in and produces constraints as output;
+        rexpy, which takes strings in and produces regular expressions
+        as output, and gentest, which takes code in and produces
+        tests as output.
 
 
 
-* **Automatic Constraints Generation and Verification:** The package includes command-line tools (and API access) for
+* **Automatic Constraint Generation and Verification:** The package includes command-line tools and API calls for
 
-  - `discovery` of constraints that are satisified by (example)
+  - *discovery* of constraints that are satisified by (example)
     data --- ``tdda discover``;
-  - `verification` that a dataset satisfies a set of constraints.
-    The constraints can have been generated automatically or manually
-    --- ``tdda verify``;
-  - `detection` of records, fields and values that fail to satisify
+  - *verification* that a dataset satisfies a set of constraints.
+    The constraints can have been generated automatically,
+    constructed manually, or (most commonly) consist of
+    generated constraints that have been
+    subsequently refined by hand --- ``tdda verify``;
+  - *detection* of records, fields and values that fail to satisify
     constraints (anomaly detection) --- ``tdda detect``.
 
 * **Reference Testing:** The TDDA library offers extensions to
-  ``unittest`` and ``pytest`` for managing testing of data analysis
+  ``unittest`` and ``pytest`` for managing the testing of data analysis
   pipelines, where the results are typically much larger, and more
-  complex, than single numerical values.
+  complex, and more variable than for many other sorts of programs.
 
 * **Automatic Generation of Regular Expressions from Examples:** There
-  is command-line tool (and API) for automatically inferring regular
-  expressions from (structured) textual data --- ``rexpy``. (This is
-  used as part of constraint generation, but has wider utility.)
+  is command-line tool (and API) for automatically inferring
+  `regular expressions <https://en.wikipedia.org/wiki/Regular_expression>`_
+  from (structured) textual data --- ``rexpy``. This was developed
+  as part of constraint generation, but has broader utility.
 
-* **Experimental Automatic Test Generation:** From version 2.0 on, the
-  ``tdda`` library also includes experimental features for
-  automatically generating tests (in Python) for almost any
-  command-line based program or script. The script can be a shell
-  script or any other command-line code, written in any language or
-  mix of languages.
+* **Automatic Test Generation (Experimental):** From version 2.0 on,
+  the TDDA library also includes experimental features for
+  automatically generating tests for almost any command-line based
+  program or script. The code to be tested can take the form of a
+  shell script or any other command-line code, and can be written
+  in any language or mix of languages.
 
 
-**CONTENTS**
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
@@ -73,7 +89,8 @@ to reproducible research.
    examples.txt
    changes.txt
 
-**RESOURCES**
+Resources
+=========
 
 * `Talks & Filmed Tutorials about TDDA etc (Nick Radcliffe) <https://stochasticsolutions.com/talks/>`_
 * `TDDA Library (PyCon DE, Eberhard Hansis, 2019) <https://www.youtube.com/watch?v=ADEBxja8vw4>`_
@@ -90,7 +107,8 @@ to reproducible research.
 
 
 
-**INDICES AND TABLES**
+Indexes and Search
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -6,10 +6,41 @@ Recent Changes
 This Version
 ------------
 
-Reference test exercises added.
+* **2.0** Addition of Gentest---functionality for automatically
+  generating Python test code for any command-line program
+
+* **2.0** Major overhaul of documentation.
+
+  - More descriptive documentation
+  - Better (though incomplete) separation between user code
+    (particularly the command-line utilities ``tdda gentest``,
+    ``tdda discover``, ``tdda verify``, ``tdda detect`` and ``rexpy``).
+  - Add more external links to resources and fix those that
+    had rusted
+  - Improve the CSS to make the documentation render better
+    on `tdda.readthedocs.io <https://tdda.readthedocs.io>`_
+  - Adopt a customized version of the readthedocs theme
+    for the documentation everywhere, so that what you see
+    if you build the documentation locally should be more
+    similar to what you see at
+    `tdda.readthedocs.io <https://tdda.readthedocs.io>`_
+
+* **2.0** Significant changes to the algorithm used by Rexpy.
+  Should now be faster, but potentially more stochastic.
+
+* **2.0** Rexpy can now generate many different flavours
+  of regular expressions.
+
+* **2.0. Advance Warning of Deprecation**
+  We plan to move from using ``.feather`` files to ``.parquet`` files
+  in the 2.1 release, ad which point ``.feather`` files will immediately
+  be deprecated.
+
 
 Older Versions
 --------------
+
+* Reference test exercises added.
 
 * Escaping of special characters for regular expressions is now done
   in a way that is uniform across Python2, Python pre-3.7, and Python 3.7+.
@@ -33,7 +64,7 @@ Older Versions
   :py:mod:`tdda.referencetest` when the *actual* results do not match the
   *expected* file contents.
   Now fully takes account of the ``ignore`` and ``remove`` parameters.
-  
+
 * The ``ignore_patterns`` parameter in
   :py:meth:`~tdda.referencetest.referencetest.ReferenceTest.assertTextFileCorrect()` (and others)
   in :py:mod:`tdda.referencetest` now causes only the portion of a line that
