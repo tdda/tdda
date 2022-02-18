@@ -339,6 +339,12 @@ html.writer-html4 .rst-content dl:not(.docutils)>dt,html.writer-html5 .rst-conte
     border-top:3px solid #1a5e30;
 }
 
+.rst-content dl:not(.docutils) dt {
+    background:#edf3ef;
+    color:#193f1f;
+    border-top:3px solid #1a5e30;
+}
+
 
 /* Headings */
 .rst-content .toctree-wrapper>p.caption,h1,h2,h3,h4,h5,h6,legend{
@@ -367,3 +373,15 @@ html.writer-html4 .rst-content dl:not(.docutils)>dt,html.writer-html5 .rst-conte
     background:#1a4028;
 }
 
+/* Search box border */
+.wy-side-nav-search input[type=text]{
+    border-color:#402020;
+}
+
+.wy-side-nav-search .wy-dropdown > a img.logo, .wy-side-nav-search > a img.logo {
+    background: #272525;
+}
+
+.wy-side-nav-search .wy-dropdown > a:hover, .wy-side-nav-search > a:hover {
+    background: #272525;
+}

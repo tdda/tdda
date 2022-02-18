@@ -1,21 +1,21 @@
-Installation of tdda
-====================
+Installation
+============
 
-If you don't need source, the simplest way to install the tdda library is
-to do a normal pip install::
+If you don't need source, the simplest way to install the TDDA library is
+to do a normal ``pip`` install::
 
     pip install tdda
 
-If you have multiple Python installations and want to make sure you use the
+If you have multiple Python installations and want to ensure you use the
 right one, use::
 
     python -m pip install tdda
 
 replacing ``python`` with whatever you need to use to run your target
-version of python.
+version of Python.
 
 If you want it installed for all users and don't have write access to
-your Python's site packages, you should either change the permissions
+your Python's site packages, you should change the permissions
 so that you can write it, or log in as a user who does have permission,
 or add ``sudo`` before the ``pip`` or ``python`` command.
 
@@ -24,7 +24,7 @@ Upgrading
 
 Add ``--upgrade`` or ``-U`` after ``install`` in the commands above
 to upgrade an existing installation.
-This is true, in general, for pip::
+This is a general pattern for ``pip``::
 
     pip install -U tdda
 
@@ -85,8 +85,8 @@ for example::
     OK (skipped=15)
 
 
-Some tests will be skipped if you don't have various libraries and haven't
-(yet) told TDDA about any databases you might want to use.
+Some tests will be skipped (``s``) if you don't have various libraries
+or haven't (yet) told TDDA about any databases you might want to use.
 
 
 .. _optional_installations:
@@ -94,7 +94,7 @@ Some tests will be skipped if you don't have various libraries and haven't
 Optional Installations for using Databases, Feather Files, Pandas
 -----------------------------------------------------------------
 
-Extra libraries are required to access some of the constraint generation
+Extra libraries are required to access some of the constraint-generation
 and verification functionality, depending on the data sources that you
 wish to use.
 
@@ -103,7 +103,6 @@ wish to use.
 * :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
 * :py:mod:`pygresql` (required for PostgreSQL database tables)
 * :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
-* :py:mod:`sqlite3` (required for SQLite database tables)
 * :py:mod:`pymongo` (required for MongoDB document collections)
 
 
@@ -113,7 +112,6 @@ These can be installed with (some/all of)::
     pip install feather-format
     pip install pmmif
     pip install pygresql
-    pip install sqlite3
     pip install pymongo
 
 and, for MySQL, **one** of::
@@ -123,10 +121,6 @@ and, for MySQL, **one** of::
     pip install mysql-connector-python
 
 
-The :py:mod:`sqlite3` module is sometimes provided by default as part of the
-standard Python libraries.
-
 To install :py:mod:`feather-format` on Windows, you will need to install
 :py:mod:`cython` as a prerequisite, which might also require you to install
-the Microsoft Visual C++ compiler for python, from http://aka.ms/vcpython27.
-
+the Microsoft Visual C++ compiler for Python.
