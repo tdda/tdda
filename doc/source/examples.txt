@@ -4,12 +4,15 @@ Examples
 ========
 
 The TDDA package includes embedded examples of code and data.
-
 To copy these examples, run::
 
     tdda examples
 
 which will create a number of subdirectories of the current directory,
-currently ``constraints_examples``, ``rexpy_examples`` and
-``referencetest_examples``.
+currently:
+
+* ``constraints_examples``
+* ``rexpy_examples``
+* ``referencetest_examples``
+* ``gentest_examples``
 

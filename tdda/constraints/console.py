@@ -178,12 +178,12 @@ def main_with_argv(argv, verbose=True):
         no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
         item = argv[2] if len(argv) > 2 else '.'
-        if item in ('referencetest', 'constraints', 'rexpy'):
+        if item in ('referencetest', 'constraints', 'rexpy', 'gentest'):
             dest = argv[3] if len(argv) > 3 else '.'
             copy_examples(item, destination=dest, verbose=verbose)
         else:
             dest = argv[2] if len(argv) > 2 else '.'
-            for item in ('referencetest', 'constraints', 'rexpy'):
+            for item in ('referencetest', 'constraints', 'rexpy', 'gentest'):
                 copy_examples(item, destination=dest, verbose=verbose)
     elif name == 'gentest':
         gentest_wrapper(argv[2:])
