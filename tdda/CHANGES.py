@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
 """1.0.02
 Improved documentation to use shorter import forms.
 

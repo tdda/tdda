@@ -15,8 +15,6 @@ environment variable, if these are loadable using the normal Python module
 loading rules.
 """
 
-from __future__ import print_function
-
 import importlib
 import os
 import sys

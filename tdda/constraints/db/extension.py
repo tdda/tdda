@@ -4,8 +4,6 @@
 Extensions to the ``tdda`` command line tool, to support databases.
 """
 
-from __future__ import print_function
-
 import sys
 
 from tdda.constraints.extension import ExtensionBase

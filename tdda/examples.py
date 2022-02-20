@@ -10,10 +10,6 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import os
 import shutil
 import sys

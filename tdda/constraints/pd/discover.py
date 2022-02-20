@@ -7,9 +7,6 @@ Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
 as feather files, and save the generated constraints as a .tdda JSON file.
 """
 
-from __future__ import division
-from __future__ import print_function
-
 USAGE = '''
 
 Parameters:

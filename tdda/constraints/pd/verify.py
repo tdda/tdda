@@ -7,9 +7,6 @@ Verify constraints using CSV files, or Pandas or R DataFrames saved as
 feather files, against a constraints from .tdda JSON constraints file.
 """
 
-from __future__ import division
-from __future__ import print_function
-
 USAGE = '''
 
 Parameters:

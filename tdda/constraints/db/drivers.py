@@ -4,9 +4,6 @@
 Common database library support
 """
 
-from __future__ import division
-from __future__ import print_function
-
 import datetime
 import getpass
 import json

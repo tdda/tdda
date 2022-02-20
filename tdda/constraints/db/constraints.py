@@ -18,10 +18,6 @@ The top-level functions are:
         but not yet implemented for databases.
 
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
 import sys
 
 from tdda.constraints.base import (

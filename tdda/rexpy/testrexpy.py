@@ -203,11 +203,6 @@ Goal:
  +  d{1,2}        s       d{2,3}  s     d{3,4}  s  d{4}
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import os
 import random
 import sys

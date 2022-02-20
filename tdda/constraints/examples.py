@@ -14,7 +14,6 @@ Alternatively, you can copy all examples using the following command::
 
 which will create a number of separate subdirectories.
 """
-from __future__ import absolute_import
 
 from tdda import examples
 

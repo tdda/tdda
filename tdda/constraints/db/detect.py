@@ -4,9 +4,6 @@
 Support for database constraint detection from the command-line tool
 """
 
-from __future__ import division
-from __future__ import print_function
-
 USAGE = '''
 
 Parameters:
