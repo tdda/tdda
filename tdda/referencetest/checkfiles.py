@@ -10,18 +10,14 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-# from __future__ import unicode_literals
-
 import os
 import re
 import sys
 import tempfile
 from collections import namedtuple
 
-from tdda.referencetest.basecomparison import BaseComparison, Diffs, copycmd
+from tdda.referencetest.basecomparison import (BaseComparison, Diffs, copycmd,
+                                               get_encoding)
 
 
 BinaryInfo = namedtuple('BinaryInfo',
@@ -36,7 +32,8 @@ class FilesComparison(BaseComparison):
                       ignore_substrings=None, ignore_patterns=None,
                       remove_lines=None,
                       preprocess=None, max_permutation_cases=0,
-                      create_temporaries=True, msgs=None):
+                      create_temporaries=True, msgs=None,
+                      encoding=None):
         """
         Compare two lists of strings (actual and expected), one-by-one.
 
@@ -70,9 +67,10 @@ class FilesComparison(BaseComparison):
                                 of these regular expressions. The expressions
                                 should only include explicit anchors if they
                                 need refer to the whole line.
-                                Only the matched expression within the line is ignored;
-                                any text to the left or right of the matched expression
-                                must either be the same or be ignorable.
+                                Only the matched expression within the line
+                                is ignored; any text to the left or right
+                                of the matched expression must either be
+                                the same or be ignorable.
             *remove_lines*
                                 is an optional list of substrings; lines
                                 containing any of these substrings will be
@@ -97,12 +95,18 @@ class FilesComparison(BaseComparison):
                                 about differences will be appended; if not
                                 specified, a new object will be created and
                                 returned.
+            *encoding*
+                                is a valid Python encoding, or None,
+                                for the the reference file.
+                                If none, and encoding will be guessed,
+                                based on the file extension (currently).
 
         Returns a tuple (failures, msgs), where failures is 1 if the lists
         differ and 0 if they are the same. The returned msgs is a list
         containing information about how they differed.
         """
 
+        enc = get_encoding(expected_path, encoding)
         if msgs is None:
             msgs = Diffs()
 
@@ -212,7 +216,8 @@ class FilesComparison(BaseComparison):
                               remove_lines=remove_lines,
                               actual=actual, expected=expected,
                               preprocess=preprocess,
-                              create_temporaries=create_temporaries)
+                              create_temporaries=create_temporaries,
+                              encoding=enc)
         return (1 if ndiffs > 0 else 0, msgs)
 
     def wrong_content(self, diffs, actual, expected,
@@ -344,7 +349,8 @@ class FilesComparison(BaseComparison):
         It expects the patterns to be in one of the following anchored forms:
             - a one-group pattern like ^(xxx)$
             - a two-group pattern like ^(.*)(xxx)$ or ^(xxx)(.*)$
-            - a three-or-more-group pattern like ^(.*)(xxx)(.*)$ or ^(.*)(xxx)(yyy)(.*)$
+            - a three-or-more-group pattern like ^(.*)(xxx)(.*)$
+              or ^(.*)(xxx)(yyy)(.*)$
 
         For a one-group pattern, it just needs to fully match both lines.
 
@@ -378,10 +384,13 @@ class FilesComparison(BaseComparison):
                     expected_left = mExpected.group(1)
                     actual_right = mActual.group(pattern.groups)
                     expected_right = mExpected.group(pattern.groups)
-                    if (self.check_patterns(compiled_patterns, actual_left, expected_left)
+                    if (self.check_patterns(compiled_patterns, actual_left,
+                                            expected_left)
                             and self.check_patterns(compiled_patterns,
-                                                    actual_right, expected_right)):
-                        # the .* groups at start and end of both lines both match up, so
+                                                    actual_right,
+                                                    expected_right)):
+                        # the .* groups at start and end of both lines
+                        #  both match up, so
                         # this pair of lines can be ignored
                         return True
         return False
@@ -496,7 +505,8 @@ class FilesComparison(BaseComparison):
                                   ignore_patterns=None,
                                   remove_lines=None,
                                   preprocess=None, max_permutation_cases=0,
-                                  create_temporaries=True, msgs=None):
+                                  create_temporaries=True, msgs=None,
+                                  encoding=None):
         """
         Check a string (or list of strings) against the contents of a
         reference file.
@@ -510,10 +520,11 @@ class FilesComparison(BaseComparison):
         actual string originally came from (if it came from a file at all;
         if not, it should be None).
         """
+        enc = get_encoding(expected_path, encoding)
         if msgs is None:
             msgs = Diffs()
         try:
-            with open(expected_path) as f:
+            with open(expected_path, encoding=enc) as f:
                 content = f.read()
                 expected_ends_with_newline = content.endswith('\n')
                 expected = content.splitlines()
@@ -539,7 +550,7 @@ class FilesComparison(BaseComparison):
                                           preprocess=preprocess,
                                           max_permutation_cases=mpc,
                                           create_temporaries=create_temporaries,
-                                          msgs=msgs)
+                                          msgs=msgs, encoding=encoding)
         #if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
         #    if actual_ends_with_newline:
@@ -552,9 +563,10 @@ class FilesComparison(BaseComparison):
                    lstrip=False, rstrip=False,
                    ignore_substrings=None, ignore_patterns=None,
                    remove_lines=None,
-                   preprocess=None, max_permutation_cases=0, msgs=None):
+                   preprocess=None, max_permutation_cases=0, msgs=None,
+                   encoding=None):
         """
-        Check a pair of files, line by line, with optional
+        Check a pair of text files, line by line, with optional
         ignore patterns (substrings) and optionally left-
         and/or right-stripping the contents of both files.
 
@@ -563,12 +575,12 @@ class FilesComparison(BaseComparison):
         in explicitly.
 
         Other parameters are the same as for :py:meth:`check_strings()`.
-
         """
+        enc = get_encoding(expected_path, encoding)
         if msgs is None:
             msgs = Diffs()
         try:
-            with open(expected_path) as f:
+            with open(expected_path, encoding=enc) as f:
                 content = f.read()
                 expected_ends_with_newline = content.endswith('\n')
                 expected = content.splitlines()
@@ -579,7 +591,7 @@ class FilesComparison(BaseComparison):
                       % (copycmd(), actual_path, expected_path))
             return (1, msgs)
         try:
-            with open(actual_path) as f:
+            with open(actual_path, encoding=enc) as f:
                 content = f.read()
                 actual_ends_with_newline = content.endswith('\n')
                 actuals = content.splitlines()
@@ -598,7 +610,7 @@ class FilesComparison(BaseComparison):
                                           preprocess=preprocess,
                                           max_permutation_cases=
                                               max_permutation_cases,
-                                          msgs=msgs)
+                                          msgs=msgs, encoding=enc)
         #if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
         #    if actual_ends_with_newline:
@@ -611,7 +623,8 @@ class FilesComparison(BaseComparison):
                     lstrip=False, rstrip=False,
                     ignore_substrings=None, ignore_patterns=None,
                     remove_lines=None,
-                    preprocess=None, max_permutation_cases=0, msgs=None):
+                    preprocess=None, max_permutation_cases=0, msgs=None,
+                    encodings=None):
         """
         Compare a list of files against a list of reference files.
 
@@ -621,12 +634,15 @@ class FilesComparison(BaseComparison):
         as the first difference is found.
 
         Other parameters are the same as for :py:meth:`check_strings()`.
-
         """
         failures = 0
         if msgs is None:
             msgs = Diffs()
-        for (actual_path, expected_path) in zip(actual_paths, expected_paths):
+        if not encodings:
+            encodings = [None] * len(actual_paths)
+        for (actual_path, expected_path, enc) in zip(actual_paths,
+                                                     expected_paths,
+                                                     encodings):
             try:
                 r = self.check_file(actual_path, expected_path,
                                     ignore_substrings=ignore_substrings,
@@ -635,7 +651,7 @@ class FilesComparison(BaseComparison):
                                     preprocess=preprocess,
                                     lstrip=lstrip, rstrip=rstrip,
                                     max_permutation_cases=max_permutation_cases,
-                                    msgs=msgs)
+                                    msgs=msgs, encoding=enc)
                 (n, msgs) = r
                 failures += n
             except Exception as e:
@@ -723,13 +739,15 @@ class FilesComparison(BaseComparison):
                      ignore_substrings=None, ignore_patterns=None,
                      remove_lines=None,
                      preprocess=None, actual=None, expected=None,
-                     binaryinfo=None, create_temporaries=True):
+                     binaryinfo=None, create_temporaries=True,
+                     encoding=None):
         """
         Build a list of messages describing the way in which two files are
         different, and construct an appropriate 'diff' command.
         """
         binary = binaryinfo is not None
         assert not (binary and reconstruction)
+        enc = get_encoding(expected_path, encoding)
 
         commonname = None
         differ = None
@@ -749,7 +767,8 @@ class FilesComparison(BaseComparison):
                 if expected is not None and not raw_expected_path:
                     # no raw expected file, so write it
                     tmpExpectedPath = os.path.join(self.tmp_dir,
-                                                   'expected-raw-' + commonname)
+                                                   'expected-raw-'
+                                                   + commonname)
                     raw_expected_path = tmpExpectedPath
                     self.write_file(raw_expected_path, expected)
                 if actual is not None and not raw_actual_path:
@@ -815,17 +834,18 @@ class FilesComparison(BaseComparison):
             self.info(msgs, 'First difference at byte offset %d, %s.'
                       % (binaryinfo.byteoffset, lengthinfo))
 
-    def write_file(self, filename, contents, guide=None):
+    def write_file(self, filename, contents, guide=None, encoding=None):
         """
         Write contents out to a file, optionally taking guidance from an
         existing file as to whether to a newline at the end or not.
         """
+        enc = get_encoding(filename, encoding)
         if type(contents) in (list, tuple):
             contents = '\n'.join(contents)
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding=enc) as f:
             f.write(contents)
             if guide:
-                with open(guide) as fg:
+                with open(guide, encoding=enc) as fg:
                     lastline = None
                     for line in fg.read():
                         lastline = line
@@ -850,5 +870,3 @@ class Reconstruction(object):
 
     def expected_lines(self):
         return '\n'.join(self.diff_expected)
-
-

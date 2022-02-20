@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 __unittest = True
 
 
@@ -92,8 +88,7 @@ class ReferenceTest(object):
             *print_fn*: Sets the print function globally, to specify
                 the function to use to display information while
                 running tests.  The function have the same signature
-                as Python3's standard print function (the
-                ``__future__`` print function in Python2), a default
+                as Python3's standard print function, a default
                 print function is used which writes unbuffered to
                 ``sys.stdout``.
 

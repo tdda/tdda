@@ -10,11 +10,6 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-# from __future__ import unicode_literals
-
 import os
 import re
 import sys
@@ -32,7 +27,7 @@ class BaseComparison(object):
         The optional print_fn parameter is a function to be used to
         display information while comparison operations are running.
         If specified, it should be a function with the same signature
-        as python's builtin (__future__) print function.
+        as python's builtin print function.
         """
         self.print_fn = print_fn
         self.verbose = verbose
@@ -115,3 +110,21 @@ def diffcmd():
 def copycmd():
     return 'copy' if os.name and os.name != 'posix' else 'cp'
 
+
+def guess_encoding(path):
+    ext = os.path.splitext(path)[1].lower() if path else ''
+    if ext == '.pdf':
+        return 'iso-8859-1'
+    return 'utf-8'
+
+
+def normalize_encoding(encoding):
+    lc = encoding.lower()
+    return 'utf-8' if lc == 'utf8' else lc
+
+
+def get_encoding(path, encoding=None):
+    if encoding is None:
+        return guess_encoding(path)
+    else:
+        return normalize_encoding(encoding)
