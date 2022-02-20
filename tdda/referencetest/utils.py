@@ -3,7 +3,7 @@ import sys
 
 class FileType:
     BINARY_IMAGES = ('png', 'jpeg', 'jpg', 'gif', 'ps', 'eps', 'eps')
-    TEXT_IMAGES = ('ps', 'eps', 'pdf')  # pdf isn't, strictly, but...
+    TEXT_IMAGES = ('svg', 'ps', 'eps', 'pdf')  # pdf isn't, strictly, but...
     TEXT_FLAT_FILES = ('csv', 'tsv', 'psv')
     OTHER_TEXTS = ('txt',  'tex',
                    'md', 'markdown', 'rst', 'tex'
