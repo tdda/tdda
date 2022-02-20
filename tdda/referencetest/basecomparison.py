@@ -109,22 +109,3 @@ def diffcmd():
 
 def copycmd():
     return 'copy' if os.name and os.name != 'posix' else 'cp'
-
-
-def guess_encoding(path):
-    ext = os.path.splitext(path)[1].lower() if path else ''
-    if ext == '.pdf':
-        return 'iso-8859-1'
-    return 'utf-8'
-
-
-def normalize_encoding(encoding):
-    lc = encoding.lower()
-    return 'utf-8' if lc == 'utf8' else lc
-
-
-def get_encoding(path, encoding=None):
-    if encoding is None:
-        return guess_encoding(path)
-    else:
-        return normalize_encoding(encoding)

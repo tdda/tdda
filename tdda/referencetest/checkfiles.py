@@ -16,8 +16,8 @@ import sys
 import tempfile
 from collections import namedtuple
 
-from tdda.referencetest.basecomparison import (BaseComparison, Diffs, copycmd,
-                                               get_encoding)
+from tdda.referencetest.basecomparison import BaseComparison, Diffs, copycmd
+from tdda.referencetest.utils import get_encoding, FileType
 
 
 BinaryInfo = namedtuple('BinaryInfo',

@@ -609,7 +609,8 @@ class ReferenceTest(object):
                               lstrip=False, rstrip=False,
                               ignore_substrings=None, ignore_patterns=None,
                               remove_lines=None, ignore_lines=None,
-                              preprocess=None, max_permutation_cases=0):
+                              preprocess=None, max_permutation_cases=0,
+                              encoding=None):
         """
         Check that a text file matches the contents from a reference text file.
 
@@ -650,7 +651,8 @@ class ReferenceTest(object):
                                       ignore_patterns=ignore_patterns,
                                       remove_lines=rl,
                                       preprocess=preprocess,
-                                      max_permutation_cases=mpc)
+                                      max_permutation_cases=mpc,
+                                      encoding=encoding)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
@@ -658,7 +660,8 @@ class ReferenceTest(object):
                                lstrip=False, rstrip=False,
                                ignore_substrings=None, ignore_patterns=None,
                                remove_lines=None, ignore_lines=None,
-                               preprocess=None, max_permutation_cases=0):
+                               preprocess=None, max_permutation_cases=0,
+                               encodings=None):
         """
         Check that a collection of text files matche the contents from
         matching collection of reference text files.
@@ -697,7 +700,8 @@ class ReferenceTest(object):
                                        ignore_patterns=ignore_patterns,
                                        remove_lines=rl,
                                        preprocess=preprocess,
-                                       max_permutation_cases=mpc)
+                                       max_permutation_cases=mpc,
+                                       encodings=encodings)
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 

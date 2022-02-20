@@ -25,7 +25,8 @@ actual_input = input if is_python3 else raw_input
 from tdda.referencetest.gentest_boilerplate import HEADER, TAIL
 
 from tdda.referencetest.diffrex import find_diff_lines
-from tdda.referencetest.checkfiles import get_encoding
+from tdda.referencetest.utils import (FileType, get_encoding,
+                                      protected_readlines)
 from tdda.rexpy import extract
 
 USAGE = '''tdda gentest        (to run wizard)
@@ -235,17 +236,22 @@ class TestGenerator:
         based on analysing differences between the two runs
         and searching for strings that look to be over-specific
         to the machine/time etc. that the command was run.
+
+        Sets self.filetypes and self.exclusions
         """
         self.exclusions = {}
+        self.filetypes = {}
         if self.iterations < 2:  # though could still do specifics...
             return
         ref_files = [r for r in os.listdir(self.refdir)
                        if not os.path.isdir(self.ref_path(r))]
         for name in ref_files:
-            exc = self.generate_exclusions_for_file(name)
-            self.update_exclusions_with_specifics(name, exc)
+            filetype, exc = self.generate_exclusions_for_file(name)
+            self.filetypes[name] = filetype
+            if exc is not None:
+                self.update_exclusions_with_specifics(name, exc)
 
-    def generate_exclusions_for_file(self, name, encoding=None):
+    def generate_exclusions_for_file(self, name):
         """
         Generate exclusion patterns needed for the specific named
         (reference) file.
@@ -255,13 +261,21 @@ class TestGenerator:
           2. searching for strings that look to be over-specific
              to the machine/time etc. that the command was run.
         Files passed in should not be directories.
+
+        Exclusions are return as 3-tuples in self.exclusions, keyed
+        on name.
+
+        Return value is (filetype, exclusions)
         """
         common = []       # similar but different content from both sides
         removals = []     # lines to be removed (present only on one side)
 
         first = self.ref_path(name)
-
-        specifics = self.check_for_specific_references(first)
+        filetype = FileType(first)
+        lines = protected_readlines(first, filetype)
+        if lines is None:
+            return filetype, None
+        specifics = self.check_for_specific_references(first, filetype)
 
         for run in range(2, self.iterations + 1):
             later = self.ref_path(name, run)
@@ -269,7 +283,7 @@ class TestGenerator:
                 if self.verbose:
                     print('%s does not exist' % later)
                 continue
-            pairs = find_diff_lines(first, later)
+            pairs = find_diff_lines(first, later, filetype)
             for p in pairs:
                 if p.left_line_num and p.right_line_num:  # present in both
                     common.append(p.left_content)
@@ -279,7 +293,7 @@ class TestGenerator:
                 elif p.right_line_num:    # right only
                     removals.append(p.right_content)
                 self.update_specifics(specifics, p)
-        return specifics, common, removals
+        return filetype, (specifics, common, removals)
 
     def update_specifics(self, specifics, p):
         """
@@ -379,7 +393,7 @@ class TestGenerator:
            print('OUT:\n  rexes: %s\nremoves: %s\nsubstrings: %s\n'
                  % (rexes, removals, substrings))
 
-    def check_for_specific_references(self, path):
+    def check_for_specific_references(self, path, filetype):
         """
         Finds references in the file at path that look to be
         over-specific to the details of the machine, user and time
@@ -390,11 +404,8 @@ class TestGenerator:
         were found on that line (only for affected lines).
         """
         specifics = OrderedDict()
-        enc = get_encoding(path)
-        print(111, path)
-        print(222, enc)
-        with open(path, encoding=enc) as f:
-            lines = f.readlines()
+        lines = protected_readlines(path, filetype)
+        if lines:
             for i, line in enumerate(lines, 1):
                 datelike = self.is_date_like(line, plausible=True)
                 dtlike = False
@@ -711,11 +722,19 @@ class TestGenerator:
                 actual_path = as_join_repr(path, self.cwd, self.ref_subdir(),
                                            inc_tmpdir=True)
                 exc = self.exclusions.get(short_path)
-                (patterns, removals, substrings) = (exc if exc else (None,
-                                                                     None,
-                                                                     None))
-                f.write(test_def(testname, actual_path, 'File', ref_path,
-                                 patterns, removals, substrings))
+                filetype = (self.filetypes.get(short_path)
+                                or FileType(short_path))
+                if filetype.text:
+                    if exc:
+                        (patterns, removals, substrings) = exc
+                    else:
+                         patterns = removals = substrings = None
+                    f.write(test_def(testname, actual_path, 'TextFile',
+                                     ref_path, patterns, removals, substrings,
+                                     encoding=filetype.encoding))
+                else:
+                    f.write(test_def(testname, actual_path, 'BinaryFile',
+                                     ref_path))
 
             f.write(TAIL)
         print('\nTest script written as %s' % self.abs_or_rel(self.script))
@@ -1133,14 +1152,14 @@ def istmpfile(path):
     return path.startswith(TERM_TMPDIR)
 
 
-def test_def(name, actual, kind, ref_file_path, patterns, removals,
-             substrings):
+def test_def(name, actual, kind, ref_file_path, patterns=None, removals=None,
+             substrings=None, encoding=None):
     """
     returns a ReferenceTestCase-style test as a string.
     """
     lines = ['', 'def test_%s(self):' % name]
     extras = []
-    assert kind in ('File', 'String')
+    assert kind in ('TextFile', 'String', 'BinaryFile')
     assert_fn = 'self.assert%sCorrect' % kind
     spc = ' ' * (len(assert_fn) + 5)
     if patterns:
@@ -1165,11 +1184,15 @@ def test_def(name, actual, kind, ref_file_path, patterns, removals,
         lines.append('    ]')
         rspc = '' if extras else spc
         extras.append(rspc + 'remove_lines=removals')
+    if encoding is not None and kind == 'TextFile':
+        rspc = '' if extras else spc
+        extras.append(rspc + "encoding='%s'" % encoding)
     ref_file_line = spc + ref_file_path + (',' if extras else ')')
     lines.extend(['    %s(%s,' % (assert_fn, actual), ref_file_line])
     if extras:
         joint = ',\n' + spc + (' ' * 4)
         lines.append(joint.join(extras) + ')')
+
     return '\n    '.join(lines) + '\n'
 
 
