@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import difflib
 import re
 import sys
@@ -7,6 +5,7 @@ import sys
 from collections import defaultdict, namedtuple
 
 from tdda.rexpy import extract
+from tdda.referencetest.basecomparison import get_encoding
 
 LINE_NUMBER_RE = re.compile(r'^@@\s+\-(\d+)(,\d+)?\s+\+(\d+)(,\d+)?\s+@@$')
 TOGETHER = True
@@ -16,19 +15,20 @@ Pair = namedtuple('Pair',
                   'left_content right_content left_line_num right_line_num')
 
 
-def diffs(left_path, right_path):
-    with open(left_path) as f:
+def diffs(left_path, right_path, encoding=None):
+    enc = get_encoding(left_path, encoding)
+    with open(left_path, encoding=enc) as f:
         left_lines = f.readlines()
-    with open(right_path) as f:
+    with open(right_path, encoding=enc) as f:
         right_lines = f.readlines()
     return difflib.unified_diff(left_lines, right_lines, left_path, right_path)
 
 
-def find_diff_lines(left_path, right_path):
+def find_diff_lines(left_path, right_path, encoding=None):
     pairs, L, R = [], [], []
     offset = 0
     left_num = right_num = None
-    for i, line in enumerate(diffs(left_path, right_path)):
+    for i, line in enumerate(diffs(left_path, right_path, encoding)):
         if i < 2:
             continue
         line_source = line[:1]

@@ -73,6 +73,31 @@ a set of tests after changing the code) is::
 See `Gentest Parameters and Options`_ for full details of available flags and parameters.
 
 
+Gentest Examples
+----------------
+
+TDDA gentest is supplied with a set of examples.
+
+To copy the gentest examples, run the command::
+
+    tdda examples gentest [directory]
+
+If ``directory`` is not supplied, ``gentest_examples`` will be used.
+
+Alternatively, you can copy all examples using the following command::
+
+    tdda examples
+
+which will create a number of separate subdirectories.
+
+
+The first few examples are rather trivial. Go straight to the worked
+Python Examples or R Examples if you want more excitement and realism
+straight away.
+
+
+
+
 
 .. _example1:
 
@@ -732,19 +757,3 @@ The ``FLAGS`` (switches, options) available are:
     Do not overwrite existing test script or reference directory
 
 
-Gentest Examples
-----------------
-
-TDDA gentest is supplied with a set of examples.
-
-To copy the gentest examples, run the command::
-
-    tdda examples gentest [directory]
-
-If ``directory`` is not supplied, ``gentest_examples`` will be used.
-
-Alternatively, you can copy all examples using the following command::
-
-    tdda examples
-
-which will create a number of separate subdirectories.
