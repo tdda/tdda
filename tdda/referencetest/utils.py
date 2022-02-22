@@ -7,7 +7,7 @@ class FileType:
     TEXT_FLAT_FILES = ('csv', 'tsv', 'psv')
     OTHER_TEXTS = ('txt',  'tex',
                    'md', 'markdown', 'rst', 'tex'
-                   'html', 'htm',
+                   'html', 'htm', 'css', 'js',
                    'json', 'xml', 'yaml',
                    'sh', 'py', 'R', 'sql')
     TEXT_FILES = TEXT_IMAGES + TEXT_FLAT_FILES + OTHER_TEXTS
