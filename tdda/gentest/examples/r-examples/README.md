@@ -30,7 +30,7 @@ R EXAMPLE 1: EPA Weighted Averages
     tdda gentest 'Rscript 1-compute-weighted-average-tolerance-values.R' one
 
 * This generates a test for running the script
-  1-compute-weighted-average-tolerance-values.R,
+  `1-compute-weighted-average-tolerance-values.R`,
   This script computes weighted average tolerances for three taxas
   and prints them to the screen.
 
@@ -58,7 +58,7 @@ R EXAMPLE 1: EPA Weighted Averages
 
       OK
 
-* You should now have a directory ref/one, which will contain two files.
+* You should now have a directory `ref/one`, which will contain two files.
   STDOUT should contain the output that R produces to the screen, which
   includes a lot of startup chatter, the commands it ran, and the output.
 
@@ -66,7 +66,7 @@ R EXAMPLE 1: EPA Weighted Averages
 R EXAMPLE 2: A PDF Plot
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The second script from the EPA generates a tritych of graphs.
+The second script from the EPA generates a triptych of graphs.
 The code on the website displays the graphs as a pop-up, but we've
 modifed the code to write the graphs out as a PDF, which is rather
 easier to test.
@@ -158,7 +158,7 @@ if you are careful. In fact, the sort of thing they contain is this:
     /CreationDate (D:20220220134310)
     /ModDate (D:20220220134310)
 
-Fairly obviously these are date stamps: 2022-20-22 12:43:10, written as a
+Fairly obviously these are date stamps: `2022-20-22T12:43:10`, written as a
 14-digit string.
 
 In the better version of the test, which Gentest generates if its trial runs
