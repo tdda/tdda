@@ -35,7 +35,7 @@ or
 
 tdda gentest 'shell command' [FLAGS] [test_output.py [reference files]]
 
-THIS FUNCTIONALITY IS CURRENTLY EXPERIMENTAL / (IN BETA).
+Gentest writes tests, so you don't have to.™
 '''
 
 MAX_SNAPSHOT_FILES = 10000
@@ -805,6 +805,10 @@ class TestGenerator:
         lines = ['']
         r = self.results[1]  # first run used as base copy to write
         reference_files = self.reference_files[1]
+        n_tests = (len(reference_files)
+                   + int(self.check_stdout)
+                   + int(self.check_stderr)
+                   + 2)  # exit code and no error
         if inc_timings:
             lines = [
                 'Command execution took: %s' % format_time(r.duration)
@@ -816,7 +820,7 @@ class TestGenerator:
             'Directory to run in:        %s' % ('.' if self.relative_paths
                                                        else self.cwd),
             'Shell command:              %s' % self.command,
-            'Test script generated:      %s' % ensure_py(self.raw_script),
+            'Test script generated:      %s' % self.script,
             'Reference files:%s' % ('' if reference_files
                                        else ' (none)'),
         ] + [
@@ -831,6 +835,7 @@ class TestGenerator:
             'Clobbering permitted:       %s'
             % ('no' if self.no_clobber else 'yes'),
             'Number of times script ran: %d' % self.iterations,
+            'Number of tests written:    %d' % n_tests,
             '',
         ]
         return '\n'.join(lines)
