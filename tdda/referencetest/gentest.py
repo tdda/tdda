@@ -1355,7 +1355,7 @@ def wizard(iterations):
     no_clobber = not(yes_no('Clobber (overwrite) previous outputs '
                             '(if they exist)'))
     iterations = get_int('Number of times to run script', iterations,
-                         2, None)
+                         1, None)
     return (shellcommand, output_script, reference_files,
             check_stdout, check_stderr, require_zero_exit_code, no_clobber,
             iterations, tmp_dir_shell_var)
