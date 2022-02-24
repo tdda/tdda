@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""1.0.02
+"""2.0.01
+Allow iterations=1 in wizard
+
+2.0.0
+Release gentest
+
+1.0.02
 Improved documentation to use shorter import forms.
 
 Also bumped version number.
