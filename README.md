@@ -22,7 +22,7 @@ the overall process of data analysis, through the following tools:
    more-or-less any command that can be run from a command line,
    whether it be Python code, R code, a shell script, a shell
    command, a `Makefile` or a multi-language pipeline involving
-   compiled code. _"Gentest writes tests, so you don't have to."™
+   compiled code. _"Gentest writes tests, so you don't have to."_™
 
 <img width="100%" src="doc/source/image/tdda-machines-light.png"/>
 
