@@ -345,6 +345,12 @@ html.writer-html4 .rst-content dl:not(.docutils)>dt,html.writer-html5 .rst-conte
     border-top:3px solid #1a5e30;
 }
 
+span.pre{
+   font-style:normal;
+   font-family:Consolas, Courier, monospace;
+}
+
+
 
 /* Headings */
 .rst-content .toctree-wrapper>p.caption,h1,h2,h3,h4,h5,h6,legend{
