@@ -15,8 +15,16 @@ the overall process of data analysis, through the following tools:
  - **Constraints**: tools (and API) for discovery of constraints from data,
    for validation of constraints on new data, and for anomaly detection.
 
- - **Finding Regular Expressions**: tools (and API) for automatically
+ - **Finding Regular Expressions (Rexpy)**: tools (and API) for automatically
    inferring regular expressions from text data.
+
+ - **Automatic Test Generation (Gentest)**: TDDA can generate tests for
+   more-or-less any command that can be run from a command line,
+   whether it be Python code, R code, a shell script, a shell
+   command, a `Makefile` or a multi-language pipeline involving
+   compiled code. _"Gentest writes tests, so you don't have to."™
+
+<img width="100%" src="doc/source/image/tdda-machines-light.png"/>
 
 Documentation
 -------------
