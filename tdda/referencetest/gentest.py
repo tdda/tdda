@@ -417,7 +417,7 @@ class TestGenerator:
                     if dtlike:
                         datelike = False
                 host = self.host in line
-                ip = (self.ip_address in line) if ip else False
+                ip = (self.ip_address in line) if self.ip_address else False
                 cwd = self.cwd in line
                 homedir = self.homedir in line
                 tmpdir = self.tmp_dir_shell_var and TMPDIR in line

@@ -532,4 +532,7 @@ Now catch this and just don't check IP address.
 
 conf.py had a bad path manipulation to get the version;
 should be fixed now.
+
+###
+*Actually* fix the IPv6 etc. issue
 """
