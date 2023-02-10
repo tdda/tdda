@@ -523,7 +523,7 @@ Add .readthedocs.yaml
 10.02.2023 2.0.07
 Fixes to .readthedocs.yaml
 
-###
+10.02.2023 2.0.08
 Fix doc/source/conf.py; gentest on IPv6
 
 On some systems (including, probably, ones using IPv6),
