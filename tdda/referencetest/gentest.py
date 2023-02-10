@@ -152,7 +152,10 @@ class TestGenerator:
         self.warnings = []
 
         self.host = socket.gethostname()
-        self.ip_address = socket.gethostbyname(self.host)
+        try:
+            self.ip_address = socket.gethostbyname(self.host)
+        except:  # 
+            self.ip_address = None
         self.homedir = home_dir()
         self.user = getpass.getuser()
         self.user_in_home = self.user in self.homedir
@@ -414,7 +417,7 @@ class TestGenerator:
                     if dtlike:
                         datelike = False
                 host = self.host in line
-                ip = self.ip_address in line
+                ip = (self.ip_address in line) if ip else False
                 cwd = self.cwd in line
                 homedir = self.homedir in line
                 tmpdir = self.tmp_dir_shell_var and TMPDIR in line

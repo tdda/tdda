@@ -522,4 +522,14 @@ Add .readthedocs.yaml
 
 10.02.2023 2.0.07
 Fixes to .readthedocs.yaml
+
+###
+Fix doc/source/conf.py; gentest on IPv6
+
+On some systems (including, probably, ones using IPv6),
+the IP address lookup in gentest was failing.
+Now catch this and just don't check IP address.
+
+conf.py had a bad path manipulation to get the version;
+should be fixed now.
 """
