@@ -520,6 +520,6 @@ Add __init__.py to gentest
 10.02.2023 2.0.06
 Add .readthedocs.yaml
 
-###
+10.02.2023 2.0.07
 Fixes to .readthedocs.yaml
 """
