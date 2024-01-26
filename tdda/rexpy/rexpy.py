@@ -107,13 +107,13 @@ TERMINATE = True  # False
 
 N_ALIGNMENT_LEVELS = 1
 
-MAX_GROUPS = 99   # re library fails with AssertionError:
-                  # sorry, but this version only supports 100 named groups
-                  # if you have too many groups.
-                  # Looks like actual limit might be 99, not 100...
+MAX_GROUPS = 99  # re library fails with AssertionError:
+# sorry, but this version only supports 100 named groups
+# if you have too many groups.
+# Looks like actual limit might be 99, not 100...
 
 MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
-                    # x{m,n} when n - m ≤ 2
+# x{m,n} when n - m ≤ 2
 
 VARIABLE_LENGTH_FRAGS = False
 VERBOSITY = 0
@@ -131,39 +131,43 @@ DIALECTS = ['perl']
 
 DO_ALL_SIZE = 100000000
 
+
 class Size(object):
     def __init__(self, **kwargs):
-        self.use_sampling = nvl(kwargs.get('use_sampling', USE_SAMPLING),
-                                USE_SAMPLING)
+        self.use_sampling = nvl(
+            kwargs.get('use_sampling', USE_SAMPLING), USE_SAMPLING
+        )
         do_all = kwargs.get('do_all')
         if do_all is None:
             if self.use_sampling:
-                do_all = 100             # Use all examples up to this many
+                do_all = 100  # Use all examples up to this many
             else:
-                do_all = DO_ALL_SIZE     # Use all examples up to this many
+                do_all = DO_ALL_SIZE  # Use all examples up to this many
         self.do_all = do_all
-        self.do_all_exceptions = 4000    # Add in all failures up to this many
-        self.n_per_length = 64           # When sampling, use this many
-                                         # of each length
-        self.max_sampled_attempts = 2    # Give up and use all after this many
-                                         # sampled attempts
+        self.do_all_exceptions = 4000  # Add in all failures up to this many
+        self.n_per_length = 64  # When sampling, use this many
+        # of each length
+        self.max_sampled_attempts = 2  # Give up and use all after this many
+        # sampled attempts
 
         self.max_punc_in_group = 5
         self.max_strings_in_group = 10
         for (k, v) in kwargs.items():
             if k in self.__dict__:
                 if v is None and k not in ('use_sampling', 'do_all'):
-                    raise Exception('Bad null value for parameter %s to Size.'
-                                    % k)
+                    raise Exception(
+                        'Bad null value for parameter %s to Size.' % k
+                    )
                 else:
                     self.__dict__[k] = v
             else:
                 raise Exception('Unknown parameter to Size: "%s" % k')
 
 
-
 nCalls = 0
 memo = {}
+
+
 def cre(rex):
     """
     Compiled regular expression
@@ -191,6 +195,7 @@ if TERMINATE:
     poss_term_cre = terminated_cre
     poss_term_re = terminated_re
 else:
+
     def poss_term_re(expr):
         return expr
 
@@ -232,11 +237,13 @@ DEFAULT_DIALECT = 'portable'
 
 class Categories(object):
     escapableCodes = '.*?'
+
     def __init__(self, extra_letters=None, full_escape=False, dialect=None):
         if extra_letters:
-            assert all(L in '_.-' for L in extra_letters)   # For now
-            extra_letters = ''.join(e for e in '_.-'
-                                    if e in extra_letters)  # Force '-' to end
+            assert all(L in '_.-' for L in extra_letters)  # For now
+            extra_letters = ''.join(
+                e for e in '_.-' if e in extra_letters
+            )  # Force '-' to end
             el_re = extra_letters
             el_re_exc = '' if '_' in extra_letters else '_'
         else:
@@ -258,13 +265,14 @@ class Categories(object):
             if extra_letters == '_':
                 self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9]')
             else:
-                p = u_alpha_numeric_re(el_re_inc, el_re_exc, digits=False,
-                                       dialect=dialect)
+                p = u_alpha_numeric_re(
+                    el_re_inc, el_re_exc, digits=False, dialect=dialect
+                )
                 self.ULetter_ = Category('ULetter_', 'Ṃ', p)
 
             ExtraLetterGroups = ['LETTER_', 'letter_', 'Letter_'] + (
-                                    ['ULetter_'] if  UNICHRS else []
-                                )
+                ['ULetter_'] if UNICHRS else []
+            )
         else:
             self.ULetter_ = Category('ULetter_', 'Ṃ', r'[^\W0-9_]')
             ExtraLetterGroups = []
@@ -274,43 +282,57 @@ class Categories(object):
         self.Hex = Category('Hex', 'X', '[0-9a-fA-F]')
         self.ALPHANUMERIC = Category('ALPHANUMERIC', 'N', '[A-Z0-9%s]' % el_re)
         self.alphanumeric = Category('alphanumeric', 'n', '[a-z0-9%s]' % el_re)
-        self.AlphaNumeric = Category('AlphaNumeric', 'C',
-                                     '[A-Za-z0-9%s]' % el_re)
-        self.UAlphaNumeric = Category('UAlphaNumeric', 'Ḉ',
-                                      u_alpha_numeric_re(el_re_inc, el_re_exc,
-                                                         dialect=dialect))
+        self.AlphaNumeric = Category(
+            'AlphaNumeric', 'C', '[A-Za-z0-9%s]' % el_re
+        )
+        self.UAlphaNumeric = Category(
+            'UAlphaNumeric',
+            'Ḉ',
+            u_alpha_numeric_re(el_re_inc, el_re_exc, dialect=dialect),
+        )
         self.Whitespace = Category('Whitespace', ' ', r'\s')
-        self.Punctuation = Category('Punctuation', CODE.PUNC,
-                                    escaped_bracket(punctuation,
-                                                    dialect=dialect))
+        self.Punctuation = Category(
+            'Punctuation',
+            CODE.PUNC,
+            escaped_bracket(punctuation, dialect=dialect),
+        )
 
         self.Other = Category('Other', '*', r'[^!-~\s]')
         self.Any = Category('Any', CODE.ANY, '.')
 
-        self.SpecificCoarseCats = [self.UAlphaNumeric if UNICHRS
-                                                      else self.AlphaNumeric,
-                                   self.Whitespace,
-                                   self.Punctuation]
+        self.SpecificCoarseCats = [
+            self.UAlphaNumeric if UNICHRS else self.AlphaNumeric,
+            self.Whitespace,
+            self.Punctuation,
+        ]
         self.AllCoarseCats = self.SpecificCoarseCats + [self.Other]
-        self.IncreasinglyGeneralAlphanumerics = [
-            'Digit',
-            'LETTER', 'letter', 'Letter',
-        ] + (
-            ['ULetter'] if UNICHRS else []
-        ) + ExtraLetterGroups + [
-            'HEX', 'hex', 'Hex',
-            'ALPHANUMERIC', 'alphanumeric', 'AlphaNumeric',
-        ] + (
-            ['UAlphaNumeric'] if UNICHRS else []
-
+        self.IncreasinglyGeneralAlphanumerics = (
+            [
+                'Digit',
+                'LETTER',
+                'letter',
+                'Letter',
+            ]
+            + (['ULetter'] if UNICHRS else [])
+            + ExtraLetterGroups
+            + [
+                'HEX',
+                'hex',
+                'Hex',
+                'ALPHANUMERIC',
+                'alphanumeric',
+                'AlphaNumeric',
+            ]
+            + (['UAlphaNumeric'] if UNICHRS else [])
         )
         if dialect and dialect != 'perl':
             self.adapt_for_output(dialect, el_re)
 
     def PunctuationChars(self, el_re):
         specials = re.compile(r'[A-Za-z0-9\s%s]' % el_re, RE_FLAGS)
-        return [chr(c) for c in range(32, 127) if not re.match(specials,
-                                                               chr(c))]
+        return [
+            chr(c) for c in range(32, 127) if not re.match(specials, chr(c))
+        ]
 
     def build_cat_map(self):
         """
@@ -388,7 +410,6 @@ class Categories(object):
             raise Exception('Unknown dialect: %s' % dialect)
 
 
-
 class Fragment(namedtuple('Fragment', 're group')):
     """
     Container for a fragment.
@@ -398,6 +419,7 @@ class Fragment(namedtuple('Fragment', 're group')):
       * ``re``: the regular expression for the fragment
       * ``group``: True if it forms a capture group (i.e. is not constant)
     """
+
 
 class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
     """
@@ -422,7 +444,7 @@ class Examples(object):
     def __init__(self, strings, freqs=None):
         self.strings = strings
         self.freqs = freqs if freqs is not None else [1] * len(strings)
-        assert(len(self.strings) == len(set(self.strings)))
+        assert len(self.strings) == len(set(self.strings))
         self.update()
 
     def update(self):
@@ -460,16 +482,26 @@ class Extractor(object):
     extra output, and to higher numbers for even more verbose output.
     The highest level currently used is 2.
     """
-    def __init__(self, examples, extract=True, tag=False, extra_letters=None,
-                 full_escape=False,
-                 remove_empties=False, strip=False,
-                 variableLengthFrags=VARIABLE_LENGTH_FRAGS,
-                 specialize=False,
-                 max_patterns=MAX_PATTERNS,
-                 min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-                 min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
-                 size=None, seed=None, dialect=DEFAULT_DIALECT,
-                 verbose=VERBOSITY):
+
+    def __init__(
+        self,
+        examples,
+        extract=True,
+        tag=False,
+        extra_letters=None,
+        full_escape=False,
+        remove_empties=False,
+        strip=False,
+        variableLengthFrags=VARIABLE_LENGTH_FRAGS,
+        specialize=False,
+        max_patterns=MAX_PATTERNS,
+        min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
+        min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+        size=None,
+        seed=None,
+        dialect=DEFAULT_DIALECT,
+        verbose=VERBOSITY,
+    ):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
@@ -477,15 +509,15 @@ class Extractor(object):
         self.verbose = verbose
         self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
-            self.by_length = Tree()         # Also store examples by length
-        self.n_stripped = 0                 # Number that required stripping
-        self.n_empties = 0                  # Number of empty string found
-        self.n_nulls = 0                    # Number of nulls found
+            self.by_length = Tree()  # Also store examples by length
+        self.n_stripped = 0  # Number that required stripping
+        self.n_empties = 0  # Number of empty string found
+        self.n_nulls = 0  # Number of nulls found
         self.remove_empties = remove_empties
         self.strip = strip
         self.variableLengthFrags = variableLengthFrags
         self.specialize = specialize
-        self.tag = tag                      # Returned tagged (grouped) RE
+        self.tag = tag  # Returned tagged (grouped) RE
         # self.examples = self.clean(examples)  !!!
         if callable(examples):
             self.check_fn = examples
@@ -498,15 +530,18 @@ class Extractor(object):
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
-        self.Cats = Categories(self.thin_extras(extra_letters),
-                               full_escape=full_escape)  # no dialect
+        self.Cats = Categories(
+            self.thin_extras(extra_letters), full_escape=full_escape
+        )  # no dialect
         if dialect == 'perl':
             dialect = None
         self.dialect = dialect
         if dialect is not None:
-            self.OutCats = Categories(self.thin_extras(extra_letters),
-                                      full_escape=full_escape,
-                                      dialect=dialect)  # output dialect
+            self.OutCats = Categories(
+                self.thin_extras(extra_letters),
+                full_escape=full_escape,
+                dialect=dialect,
+            )  # output dialect
         self.full_escape = full_escape
         self.max_patterns = max_patterns
         self.min_diff_strings_per_pattern = min_diff_strings_per_pattern
@@ -515,7 +550,7 @@ class Extractor(object):
         self.seed = seed
 
         if extract:
-            self.extract()                  # Stores results
+            self.extract()  # Stores results
 
     def extract(self):
         """
@@ -531,38 +566,49 @@ class Extractor(object):
             attempt = 1
             failures = []
             while attempt <= size.max_sampled_attempts + 1:
-#                print('!!!')
-#                print(self.examples.strings)
+                #                print('!!!')
+                #                print(self.examples.strings)
                 if self.verbose:
                     strings = self.examples.strings
-                    print('\n*** Pass %d (%s strings)'
-                          % (attempt, len(strings)))
+                    print(
+                        '\n*** Pass %d (%s strings)' % (attempt, len(strings))
+                    )
                     if self.verbose > 1:
-                        print('Examples: %s ... %s' % (strings[:5],
-                                                       strings[-5:]))
+                        print(
+                            'Examples: %s ... %s' % (strings[:5], strings[-5:])
+                        )
                 self.results = self.batch_extract()
-                maxN = (None if attempt > size.max_sampled_attempts
-                             else size.do_all_exceptions)
+                maxN = (
+                    None
+                    if attempt > size.max_sampled_attempts
+                    else size.do_all_exceptions
+                )
                 failex, re_freqs = self.check_fn(self.results.rex, maxN)
                 failex = self.clean(failex)
                 if self.verbose:
                     print('%s REs:' % len(self.results.rex))
                     for r in self.results.rex:
                         print('    %s' % r)
-                    print('\nFailures (%d): %s' % (len(failex.strings),
-                                                   failex.strings[:5]))
+                    print(
+                        '\nFailures (%d): %s'
+                        % (len(failex.strings), failex.strings[:5])
+                    )
                 if len(failex.strings) == 0:
                     break
-                elif (len(failex.strings) <= size.do_all_exceptions
-                      or attempt > size.max_sampled_attempts):
+                elif (
+                    len(failex.strings) <= size.do_all_exceptions
+                    or attempt > size.max_sampled_attempts
+                ):
                     if self.verbose:
                         print('\n\n\n*** Now doing all failures...')
                     self.examples.strings.extend(failex.strings)
                     self.examples.freqs.extend(failex.freqs)
                     self.examples.update()
                     if self.verbose:
-                        print('\n\n\n*** Total strings = %s'
-                              % len(failex.strings))
+                        print(
+                            '\n\n\n*** Total strings = %s'
+                            % len(failex.strings)
+                        )
                 else:
                     z = list(zip(failex.strings, failex.freqs))
                     if len(z) > size.do_all_exceptions:
@@ -603,22 +649,27 @@ class Extractor(object):
         M = self.max_patterns
         deletions = set()
         if M is not None and len(freqs) > self.max_patterns:
-            deletions = set(list(sorted(range(len(freqs)),
-                                        key=lambda k: -freqs[k]))[M:])
+            deletions = set(
+                list(sorted(range(len(freqs)), key=lambda k: -freqs[k]))[M:]
+            )
 
         m = self.min_strings_per_pattern
         if m > 1:
-            deletions = deletions.union({i for (i, v) in enumerate(freqs)
-                                           if v < m})
+            deletions = deletions.union(
+                {i for (i, v) in enumerate(freqs) if v < m}
+            )
         return deletions
-
 
     def add_warnings(self):
         if self.n_too_many_groups:
-            self.warnings.append('%d string%s assigned to .{m,n} for needing '
-                                 '"too many" groups.'
-                                 % (self.n_too_many_groups,
-                                    's' if self.n_too_many_groups > 1 else ''))
+            self.warnings.append(
+                '%d string%s assigned to .{m,n} for needing '
+                '"too many" groups.'
+                % (
+                    self.n_too_many_groups,
+                    's' if self.n_too_many_groups > 1 else '',
+                )
+            )
 
     def thin_extras(self, extra_letters):
         if not extra_letters or len(extra_letters) == 1:
@@ -639,8 +690,13 @@ class Extractor(object):
         counter = Counter()
         items = examples.strings if isExamples else examples
         for i, s in enumerate(items):
-            n = (examples[s] if isdict else examples.freqs[i] if isExamples
-                                       else 1)
+            n = (
+                examples[s]
+                if isdict
+                else examples.freqs[i]
+                if isExamples
+                else 1
+            )
             if s is None:
                 self.n_nulls += n
             elif n == 0:
@@ -654,7 +710,6 @@ class Extractor(object):
                     counter[stripped] += n
                     if len(stripped) != len(s):
                         self.n_stripped += n
-
 
         if self.verbose > 1:
             print('Examples:')
@@ -676,7 +731,7 @@ class Extractor(object):
         r_id2v_id = {}
         for i, rle in enumerate(rles):
             r_id = rle_freqs.add(rle, freqs[i])
-            example2r_id[i] = r_id    # r_ids are the ids of rles
+            example2r_id[i] = r_id  # r_ids are the ids of rles
 
         # Then convert these RLEs to VRLEs (variable-run-length-encoded seqs)
         example2v_id = ilist([1]) * len(examples)  # same length as rles
@@ -692,7 +747,7 @@ class Extractor(object):
                 vrle_freqs.counter[v_id] += rle_freqs.counter[r_id]
                 # This adds in the freq for each rle in the vrle
             vrle_freqs.counter[v_id] -= 1  # Take off the "extra" one we
-                                           # initially added
+            # initially added
             # Note, these totals include repeats.
 
         # For each example, record the id of the VRLE to which it belongs
@@ -700,14 +755,14 @@ class Extractor(object):
         for i, r_id in enumerate(example2r_id):
             example2v_id[i] = r_id2v_id[r_id]
         self.examples.example2v_id = example2v_id
-#        self.examples.example2r_id = example2r_id  # probably don't need
+        #        self.examples.example2r_id = example2r_id  # probably don't need
 
         # Refine the fragments in the VRLEs
         for vrle in vrles:
             grouped = self.refine_fragments(vrle, vrle_freqs.ids[vrle])
             refined.append(grouped)
 
-#        self.examples.rle_freqs = rle_freqs  # probably don't need
+        #        self.examples.rle_freqs = rle_freqs  # probably don't need
         self.examples.vrle_freqs = vrle_freqs
 
         merged = self.merge_patterns(refined)
@@ -715,9 +770,16 @@ class Extractor(object):
             merged = self.specialize_patterns(merged)
         mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
         mergedfrags = [self.vrle2refrags(m) for m in merged]
-        return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
-                              merged, mergedrex, mergedfrags,
-                              extractor=self)
+        return ResultsSummary(
+            rles,
+            rle_freqs,
+            vrles,
+            vrle_freqs,
+            merged,
+            mergedrex,
+            mergedfrags,
+            extractor=self,
+        )
 
     def convert_rex_to_dialect(self):
         self.results.convert_to_dialect(self)
@@ -763,7 +825,7 @@ class Extractor(object):
         patterns = self.sort_by_length(patterns)
         level = 0
         parts = [patterns]  # Start off with each whole pattern
-                            # as a single part
+        # as a single part
         n_parts = len(parts)
         DO_ALIGNMENT = True
         while level < N_ALIGNMENT_LEVELS and DO_ALIGNMENT:
@@ -818,7 +880,7 @@ class Extractor(object):
         if not frags:
             return [patterns]
 
-        leftPos = {frag: Counter() for frag in frags}   # pos of frag from left
+        leftPos = {frag: Counter() for frag in frags}  # pos of frag from left
         rightPos = {frag: Counter() for frag in frags}  # ... and from right
         for pattern in patterns:
             n = len(pattern)
@@ -833,8 +895,9 @@ class Extractor(object):
 
         if leftFixed:
             return left_parts(patterns, leftFixed)
-        rightFixed = get_omnipresent_at_pos(rightPos, nPatterns,
-                                            verbose=self.verbose)
+        rightFixed = get_omnipresent_at_pos(
+            rightPos, nPatterns, verbose=self.verbose
+        )
         if rightFixed:
             return right_parts(patterns, rightFixed)
         return [patterns]
@@ -858,7 +921,7 @@ class Extractor(object):
         if not frags:
             return [patterns]
 
-        leftPos = {frag: Counter() for frag in frags}   # pos of frag from left
+        leftPos = {frag: Counter() for frag in frags}  # pos of frag from left
         rightPos = {frag: Counter() for frag in frags}  # ... and from right
         for pattern in patterns:
             n = len(pattern)
@@ -894,9 +957,9 @@ class Extractor(object):
 
     def sort_by_length(self, patterns):
         if patterns:
-             M = max(len(p) for p in patterns if p is not None) + 1
-             f = lambda p: len(p) if p is not None else M
-             return list(sorted(patterns, key=f))
+            M = max(len(p) for p in patterns if p is not None) + 1
+            f = lambda p: len(p) if p is not None else M
+            return list(sorted(patterns, key=f))
         else:
             return []
 
@@ -932,8 +995,10 @@ class Extractor(object):
         """
         indices = list(range(len(examples.strings)))
         sample_indices = random.sample(indices, n)
-        return ([examples.strings[i] for i in sample_indices],
-                [examples.freqs[i] for i in sample_indices])
+        return (
+            [examples.strings[i] for i in sample_indices],
+            [examples.freqs[i] for i in sample_indices],
+        )
 
     def sample_non_matches(self, rexes, maxN=None):
         failures, freqs, re_freqs = self.find_non_matches(rexes)
@@ -1019,7 +1084,7 @@ class Extractor(object):
         frag_strings = [set([]) for i in range(n_frags)]
 
         frag_rlefcs = [None] * n_frags  # Start as None; end as False or VRLE
-        frag_rlecs = [None] * n_frags   # Start as None; end as False or VRLE
+        frag_rlecs = [None] * n_frags  # Start as None; end as False or VRLE
 
         n_strings = [0] * n_frags
         strings = examples.strings
@@ -1042,10 +1107,9 @@ class Extractor(object):
                         frag_strings[i].add(g)
                         n_strings[i] = len(frag_strings[i])
                     frag_chars[i] = frag_chars[i].union(set(list(g)))
-                    (frag_rlefcs[i],
-                     frag_rlecs[i]) = self.rle_fc_c(g, frag,
-                                                     frag_rlefcs[i],
-                                                     frag_rlecs[i])
+                    (frag_rlefcs[i], frag_rlecs[i]) = self.rle_fc_c(
+                        g, frag, frag_rlefcs[i], frag_rlecs[i]
+                    )
         if self.verbose >= 2:
             print('Fine Class VRLE:', frag_rlefcs)
             print('      Char VRLE:', frag_rlecs)
@@ -1068,11 +1132,11 @@ class Extractor(object):
             char_str = ''.join(sorted(chars))
             fixed = False
             refined = None
-            if len(strings) == 1:   # Same string for whole group
+            if len(strings) == 1:  # Same string for whole group
                 refined = self.Cats.escape(list(strings)[0])
                 m = M = 1
                 fixed = True
-            elif len(chars) == 1:   # Same character, possibly repeated
+            elif len(chars) == 1:  # Same character, possibly repeated
                 refined = self.Cats.escape(list(chars)[0])
                 fixed = True
             elif c == COARSEST_ALPHANUMERIC_CODE:  # Alphanumeric
@@ -1098,8 +1162,9 @@ class Extractor(object):
                         break  # <-- continue?
                 else:
                     refined = c
-            elif (c == CODE.PUNC
-                  and len(chars) <= size.max_punc_in_group):  # Punctuation
+            elif (
+                c == CODE.PUNC and len(chars) <= size.max_punc_in_group
+            ):  # Punctuation
                 refined = escaped_bracket(char_str, dialect=self.Cats.dialect)
                 fixed = True
             else:
@@ -1135,16 +1200,17 @@ class Extractor(object):
             a possibly expanded VRLE, if it does match, or would match
             if expanded (by allowing more of fewer repetitions).
         """
-        if (pattern[0] != COARSEST_ALPHANUMERIC_CODE
-                or (rlefc_in == False and rlec_in == False)):
+        if pattern[0] != COARSEST_ALPHANUMERIC_CODE or (
+            rlefc_in == False and rlec_in == False
+        ):
             return (False, False)  # Indicates, neither applies
-                                   # Either 'cos not coarse class C
-                                   # Or because previously found wanting...
+            # Either 'cos not coarse class C
+            # Or because previously found wanting...
 
-        rlefc = []      # run-length encoded list of fine classes
-        rlec = []       # run-length encoded list of characters
+        rlefc = []  # run-length encoded list of fine classes
+        rlec = []  # run-length encoded list of characters
         last_fc = None  # last fine class
-        last_c = None   # last character
+        last_c = None  # last character
 
         for c in s:
             fc = self.fine_class(c)
@@ -1167,10 +1233,12 @@ class Extractor(object):
             rlec.append((last_c, nc))
 
         v = self.variableLengthFrags
-        return (expand_or_falsify_vrle(rlefc, rlefc_in, variableLength=v),
-                expand_or_falsify_vrle(rlec, rlec_in, fixed=True,
-                                       variableLength=v))
-
+        return (
+            expand_or_falsify_vrle(rlefc, rlefc_in, variableLength=v),
+            expand_or_falsify_vrle(
+                rlec, rlec_in, fixed=True, variableLength=v
+            ),
+        )
 
     def fine_class(self, c):
         """
@@ -1220,15 +1288,15 @@ class Extractor(object):
         If output is set, this is for final output, and should be in the
         specified dialect (if any).
         """
-        parts = [self.fragment2re(frag, tagged=tagged, as_re=as_re,
-                                  output=output)
-                 for frag in vrles]
+        parts = [
+            self.fragment2re(frag, tagged=tagged, as_re=as_re, output=output)
+            for frag in vrles
+        ]
         if self.n_stripped > 0:
             Cats = self.OutCats if output and self.dialect else self.Cats
             ws = [r'%s*' % Cats.Whitespace.re_string]
             parts = ws + parts + ws
         return poss_term_re(''.join(parts))
-
 
     def vrle2refrags(self, vrles, output=False):
         """
@@ -1237,18 +1305,30 @@ class Extractor(object):
         """
         if self.n_stripped > 0:
             ws = r'\s*'
-            return ([Fragment(ws, True)]
-                    + [Fragment(self.fragment2re(frag, tagged=False,
-                                                 as_re=True, output=output),
-                              len(frag) < 4)
-                       for frag in vrles]
-                     + [Fragment(ws, True)])
+            return (
+                [Fragment(ws, True)]
+                + [
+                    Fragment(
+                        self.fragment2re(
+                            frag, tagged=False, as_re=True, output=output
+                        ),
+                        len(frag) < 4,
+                    )
+                    for frag in vrles
+                ]
+                + [Fragment(ws, True)]
+            )
 
         else:
-            return [Fragment(self.fragment2re(frag, tagged=False, as_re=True,
-                                              output=output),
-                             len(frag) < 4)
-                    for frag in vrles]
+            return [
+                Fragment(
+                    self.fragment2re(
+                        frag, tagged=False, as_re=True, output=output
+                    ),
+                    len(frag) < 4,
+                )
+                for frag in vrles
+            ]
 
     def rle2re(self, rles, tagged=False, as_re=True):
         """
@@ -1261,7 +1341,6 @@ class Extractor(object):
             part = desc + ('{%d}' % freq if freq > 1 else '')
             parts.append(('(%s)' % part) if tagged else part)
         return poss_term_re(''.join(parts))
-
 
     def humanish_frag(self, frag):
         as_re = self.fragment2re(frag)
@@ -1292,14 +1371,15 @@ class Extractor(object):
                 widths.append(w)
             if stats.max_length:
                 seps[-1] = '|'
-        header = '|' + ''.join((ndigits(w, i) + seps[i - 1])
-                               for i, w in enumerate(widths, 1))
+        header = '|' + ''.join(
+            (ndigits(w, i) + seps[i - 1]) for i, w in enumerate(widths, 1)
+        )
         fmts = ['%%%ds' % w for w in widths]
-        body = '\n '.join(' '.join(fmt % frag
-                                   for (fmt, frag) in zip(fmts, line))
-                          for line in lines)
+        body = '\n '.join(
+            ' '.join(fmt % frag for (fmt, frag) in zip(fmts, line))
+            for line in lines
+        )
         return '\n'.join([header, ' ' + body])
-
 
     def coverage(self, dedup=False):
         """
@@ -1323,8 +1403,9 @@ class Extractor(object):
 
         If ``dedup`` is set to ``True``, frequencies are ignored.
         """
-        return rex_incremental_coverage(self.results.rex, self.examples,
-                                        dedup, debug=debug)
+        return rex_incremental_coverage(
+            self.results.rex, self.examples, dedup, debug=debug
+        )
 
     def full_incremental_coverage(self, dedup=False, debug=False):
         """
@@ -1354,9 +1435,9 @@ class Extractor(object):
                 excluding duplicates
 
         """
-        return rex_full_incremental_coverage(self.results.rex, self.examples,
-                                             sort_on_deduped=dedup,
-                                             debug=debug)
+        return rex_full_incremental_coverage(
+            self.results.rex, self.examples, sort_on_deduped=dedup, debug=debug
+        )
 
     def n_examples(self, dedup=False):
         """
@@ -1388,8 +1469,6 @@ class Extractor(object):
                 else:
                     self.add_freqs_to_tree(v)
 
-
-
     def build_tree_inner(self, vrles, fulls=None):
         """
         Turn the VRLEs into a tree based on the different initial fragments.
@@ -1400,8 +1479,10 @@ class Extractor(object):
                 key, entry = self.vrle_entry(partial, full)
                 tree[key].append(entry)
         for key, entries in tree.items():
-            v = self.build_tree_inner([e[0] for e in entries if e[0]],
-                                      [e[1] for e in entries if e[0]])
+            v = self.build_tree_inner(
+                [e[0] for e in entries if e[0]],
+                [e[1] for e in entries if e[0]],
+            )
             if v is not None:
                 tree[key] = [v]
                 for e in entries:
@@ -1412,8 +1493,10 @@ class Extractor(object):
         return tree if len(tree) > 0 else None
 
     def vrle_entry(self, partial, full):
-        return (self.vrle_key(partial[0]),
-                (partial[1:] if len(partial) > 1 else None, full))
+        return (
+            self.vrle_key(partial[0]),
+            (partial[1:] if len(partial) > 1 else None, full),
+        )
 
     def vrle_key(self, vrle):
         (c, m, M) = vrle[:3]
@@ -1460,16 +1543,18 @@ class Extractor(object):
                 if item is None:  # leaf
                     L = len(existing)
                     if L >= 3 and L % 2 == 1:
-                        if all(existing[i] == existing[i % 2]
-                                   for i in range(3, L)):
-                            results.append([existing[0], existing[1],
-                                            existing[0]])
+                        if all(
+                            existing[i] == existing[i % 2] for i in range(3, L)
+                        ):
+                            results.append(
+                                [existing[0], existing[1], existing[0]]
+                            )
                             v[j] = results
                 else:
                     newpat = existing + [k]
-                    results, _ = self.find_frag_sep_frag_repeated(item,
-                                                                  newpat,
-                                                                  results)
+                    results, _ = self.find_frag_sep_frag_repeated(
+                        item, newpat, results
+                    )
         return results, tree
 
 
@@ -1525,11 +1610,11 @@ def example_check_function(rexes, maxN=None):
             for i, r in enumerate(patterns):
                 if re.match(r, u):
                     re_freqs[i] += 1  # record the fact that this rex matched
-                    break             # don't try later patterns
-            else:   # Record strings that don't match any rex
+                    break  # don't try later patterns
+            else:  # Record strings that don't match any rex
                 failures.append(u)
     else:
-        failures = STRINGS     # If there are no rexes, all strings fail
+        failures = STRINGS  # If there are no rexes, all strings fail
     if maxN is not None and len(failures) > maxN:
         failures = random.sample(failures, maxN)
     return Examples(failures), re_freqs
@@ -1546,24 +1631,30 @@ def rex_coverage(patterns, examples, dedup=False):
     """
     results = []
     for p in patterns:
-        p = '%s%s%s' % ('' if p.startswith('^') else '^',
-                        p,
-                        '' if p.endswith('$') else '$')
+        p = '%s%s%s' % (
+            '' if p.startswith('^') else '^',
+            p,
+            '' if p.endswith('$') else '$',
+        )
         r = re.compile(p, RE_FLAGS)
         if dedup:
             strings = examples.strings
-            results.append(sum(1 if re.match(r, k) else 0
-                               for k in strings))
+            results.append(sum(1 if re.match(r, k) else 0 for k in strings))
         else:
             strings = examples.strings
             freqs = examples.freqs
-            results.append(sum(n if re.match(r, k) else 0
-                           for (k, n) in zip(strings, freqs)))
+            results.append(
+                sum(
+                    n if re.match(r, k) else 0
+                    for (k, n) in zip(strings, freqs)
+                )
+            )
     return results
 
 
-def rex_full_incremental_coverage(patterns, examples, sort_on_deduped=False,
-                                  debug=False):
+def rex_full_incremental_coverage(
+    patterns, examples, sort_on_deduped=False, debug=False
+):
     """
     Returns an ordered dictionary containing, keyed on terminated
     regular expressions, from patterns, sorted in decreasing order
@@ -1593,9 +1684,14 @@ def rex_full_incremental_coverage(patterns, examples, sort_on_deduped=False,
     """
     patterns, indexes = terminate_patterns_and_sort(patterns)
     matrix, deduped = coverage_matrices(patterns, examples)
-    return matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                         examples,
-                                         sort_on_deduped=sort_on_deduped)
+    return matrices2incremental_coverage(
+        patterns,
+        matrix,
+        deduped,
+        indexes,
+        examples,
+        sort_on_deduped=sort_on_deduped,
+    )
 
 
 def terminate_patterns_and_sort(patterns):
@@ -1604,17 +1700,19 @@ def terminate_patterns_and_sort(patterns):
     not and returns them in sorted order.
     Also returns a list of the original indexes of the results.
     """
-    results = ['%s%s%s' % ('' if p.startswith('^') else '^',
-                        p,
-                        '' if p.endswith('$') else '$')
-                for p in patterns]
+    results = [
+        '%s%s%s'
+        % ('' if p.startswith('^') else '^', p, '' if p.endswith('$') else '$')
+        for p in patterns
+    ]
     z = list(zip(results, range(len(results))))
     z.sort()  # Sort to fix the order of tiebreaks
     return [r[0] for r in z], [r[1] for r in z]
 
 
-def rex_incremental_coverage(patterns, examples, sort_on_deduped=False,
-                             debug=False):
+def rex_incremental_coverage(
+    patterns, examples, sort_on_deduped=False, debug=False
+):
     """
     Given a list of regular expressions and a dictionary of examples
     and their frequencies, this computes their incremental coverage,
@@ -1681,9 +1779,9 @@ def rex_incremental_coverage(patterns, examples, sort_on_deduped=False,
         )
 
     """
-    results = rex_full_incremental_coverage(patterns, examples,
-                                            sort_on_deduped=sort_on_deduped,
-                                            debug=False)
+    results = rex_full_incremental_coverage(
+        patterns, examples, sort_on_deduped=sort_on_deduped, debug=False
+    )
     if sort_on_deduped:
         return OrderedDict((k, v.incr_uniq) for (k, v) in results.items())
     else:
@@ -1707,8 +1805,9 @@ def coverage_matrices(patterns, examples):
     return matrix, deduped
 
 
-def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
-                                  examples, sort_on_deduped=False):
+def matrices2incremental_coverage(
+    patterns, matrix, deduped, indexes, examples, sort_on_deduped=False
+):
     """
     Find patterns, in (descending) order of # of matches, and pull out freqs.
 
@@ -1722,10 +1821,12 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
     np = len(patterns)
     zeros = [0] * np
     strings = examples.strings
-    pattern_freqs = [sum(matrix[i][r] for i, x in enumerate(strings))
-                     for r in range(np)]
-    pattern_uniqs = [sum(deduped[i][r] for i, x in enumerate(strings))
-                     for r in range(np)]
+    pattern_freqs = [
+        sum(matrix[i][r] for i, x in enumerate(strings)) for r in range(np)
+    ]
+    pattern_uniqs = [
+        sum(deduped[i][r] for i, x in enumerate(strings)) for r in range(np)
+    ]
     some_left = True
     while some_left and len(results) < np:
         totals = [sum(row[i] for row in matrix) for i in range(np)]
@@ -1752,11 +1853,13 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
                         matrix[i] = zeros
                         deduped[i] = zeros
                         zeroed = True
-                results[rex] = Coverage(n=pattern_freqs[p],
-                                        n_uniq=pattern_uniqs[p],
-                                        incr=totals[p],
-                                        incr_uniq=uniq_totals[p],
-                                        index=indexes[p])
+                results[rex] = Coverage(
+                    n=pattern_freqs[p],
+                    n_uniq=pattern_uniqs[p],
+                    incr=totals[p],
+                    incr_uniq=uniq_totals[p],
+                    index=indexes[p],
+                )
         else:
             some_left = False
 
@@ -1764,10 +1867,13 @@ def matrices2incremental_coverage(patterns, matrix, deduped, indexes,
         for p in range(np):
             rex = patterns[p]
             if rex not in results:
-                results[rex] = Coverage(n=pattern_freqs[p],
-                                        n_uniq=pattern_uniqs[p],
-                                        incr=0, incr_uniq=0,
-                                        index=indexes[p])
+                results[rex] = Coverage(
+                    n=pattern_freqs[p],
+                    n_uniq=pattern_uniqs[p],
+                    incr=0,
+                    incr_uniq=0,
+                    index=indexes[p],
+                )
     return results
 
 
@@ -1829,14 +1935,18 @@ def to_vrles(rles):
         cats = list(sig)
         mins = [min(r[i][1] for r in rles) for i in range(nCats)]
         maxes = [max(r[i][1] for r in rles) for i in range(nCats)]
-        vrles.append(tuple([(cat, m, M)
-                            for (cat, m, M) in zip(cats, mins, maxes)]))
+        vrles.append(
+            tuple([(cat, m, M) for (cat, m, M) in zip(cats, mins, maxes)])
+        )
 
     if MAX_VRLE_RANGE is not None:
-        vrles2 = [tuple(((cat, m, M) if (M - m) <= MAX_VRLE_RANGE
-                                    else (cat, 1, None))
-                       for (cat, m, M) in pattern)
-                 for pattern in vrles]
+        vrles2 = [
+            tuple(
+                ((cat, m, M) if (M - m) <= MAX_VRLE_RANGE else (cat, 1, None))
+                for (cat, m, M) in pattern
+            )
+            for pattern in vrles
+        ]
         vrles = list(set(vrles2))
         vrles.sort(key=none_to_m1)
     vrle_by_sig = {signature(vrle): vrle for vrle in vrles}
@@ -1844,8 +1954,7 @@ def to_vrles(rles):
 
 
 def none_to_m1(vrle):
-    return tuple(tuple((-1 if t is None else t) for t in tup)
-                 for tup in vrle)
+    return tuple(tuple((-1 if t is None else t) for t in tup) for tup in vrle)
 
 
 def ndigits(n, d):
@@ -1880,6 +1989,7 @@ class IDCounter(object):
 
     Get the key's ID with .ids[key] or .keys.get(key).
     """
+
     def __init__(self):
         self.counter = Counter()
         self.ids = OrderedDict()
@@ -1889,6 +1999,7 @@ class IDCounter(object):
         """Gets the count for the key"""
         id_ = self.ids.get(key)
         return self.counter[id_] if id_ else 0
+
     getitem = __getitem__
 
     def add(self, key, freq=1):
@@ -1922,8 +2033,17 @@ class IDCounter(object):
 
 
 class ResultsSummary(object):
-    def __init__(self, rles, rle_freqs, vrles,
-                 vrle_freqs, refined_vrles, rex, refrags, extractor=None):
+    def __init__(
+        self,
+        rles,
+        rle_freqs,
+        vrles,
+        vrle_freqs,
+        refined_vrles,
+        rex,
+        refrags,
+        extractor=None,
+    ):
         self.rles = rles
         self.rle_freqs = rle_freqs
         self.vrles = vrles
@@ -1933,59 +2053,83 @@ class ResultsSummary(object):
         self.refrags = refrags
         self.extractor = extractor
 
-    def to_string(self, rles=False, rle_freqs=False, vrles=False,
-                  vrle_freqs=False, refined_vrles=False, rex=False,
-                  fmt='code'):
+    def to_string(
+        self,
+        rles=False,
+        rle_freqs=False,
+        vrles=False,
+        vrle_freqs=False,
+        refined_vrles=False,
+        rex=False,
+        fmt='code',
+    ):
         assert fmt in ('code', 're', 'raw')
         as_re = fmt == 're'
         short = fmt in ('re', 'code')
-        allFalse = not any((rles, rle_freqs, vrles,
-                            vrle_freqs, refined_vrles, rex))
+        allFalse = not any(
+            (rles, rle_freqs, vrles, vrle_freqs, refined_vrles, rex)
+        )
         out = []
         if rles or allFalse:
             out.append('Run-length encoded patterns (rles):')
             for i, rle in enumerate(self.rles, 1):
-                out.append('%2d: %s'
-                           % (i, self.to_re(rle, as_re=as_re) if short
-                              else str(rle)))
+                out.append(
+                    '%2d: %s'
+                    % (i, self.to_re(rle, as_re=as_re) if short else str(rle))
+                )
             out.append('')
 
         if rle_freqs or allFalse:
             out.append('Run-length encoded pattern freqencies (rle_freqs):')
             for i, (rle, freq) in enumerate(self.rle_freqs.items(), 1):
-                out.append('%2d: %s: %d'
-                           % (i,
-                              self.to_re(rle, as_re=as_re) if short
-                                                           else str(rle),
-                              freq))
+                out.append(
+                    '%2d: %s: %d'
+                    % (
+                        i,
+                        self.to_re(rle, as_re=as_re) if short else str(rle),
+                        freq,
+                    )
+                )
             out.append('')
 
         if vrles or allFalse:
             out.append('Variable run-length encoded patterns (vrles):')
             for i, vrle in enumerate(self.vrle_freqs, 1):
-                out.append('%2d: %s'
-                           % (i, self.to_re(vrle, as_re=as_re) if short
-                                                               else str(vrle)))
+                out.append(
+                    '%2d: %s'
+                    % (
+                        i,
+                        self.to_re(vrle, as_re=as_re) if short else str(vrle),
+                    )
+                )
             out.append('')
 
         if vrle_freqs or allFalse:
-            out.append('Variable run-length encoded pattern freqencies '
-                       '(vrle_freqs):')
+            out.append(
+                'Variable run-length encoded pattern freqencies '
+                '(vrle_freqs):'
+            )
             for i, (vrle, freq) in enumerate(self.vrle_freqs.items(), 1):
-                out.append('%2d: %s: %d'
-                           % (i,
-                              self.to_re(vrle, as_re=as_re) if short
-                                                            else str(vrle),
-                              freq))
+                out.append(
+                    '%2d: %s: %d'
+                    % (
+                        i,
+                        self.to_re(vrle, as_re=as_re) if short else str(vrle),
+                        freq,
+                    )
+                )
             out.append('')
 
         if refined_vrles or allFalse:
-            out.append('Refined variable run-length encoded patterns '
-                       '(refined_vrles):')
+            out.append(
+                'Refined variable run-length encoded patterns '
+                '(refined_vrles):'
+            )
             for i, p in enumerate(self.refined_vrles, 1):
-                out.append('%2d: %s'
-                           % (i, self.to_re(p, as_re=as_re) if short
-                                                            else str(p)))
+                out.append(
+                    '%2d: %s'
+                    % (i, self.to_re(p, as_re=as_re) if short else str(p))
+                )
             out.append('')
 
         if rex or allFalse:
@@ -1996,8 +2140,11 @@ class ResultsSummary(object):
         return '\n'.join(out)
 
     def to_re(self, patterns, grouped=False, as_re=True):
-        f = (self.extractor.rle2re if not patterns or len(patterns[0]) == 2
-                                   else self.extractor.vrle2re)
+        f = (
+            self.extractor.rle2re
+            if not patterns or len(patterns[0]) == 2
+            else self.extractor.vrle2re
+        )
         return f(patterns, tagged=grouped, as_re=as_re)
 
     def remove(self, indexes, add_dot_star=False):
@@ -2023,12 +2170,14 @@ class ResultsSummary(object):
 
     def convert_to_dialect(self, x):
         if not x.dialect:
-            return          # No dialect set, so nothing to do
-        self.rex = [x.vrle2re(m, tagged=x.tag, output=True)
-                        for m in self.refined_vrles]
+            return  # No dialect set, so nothing to do
+        self.rex = [
+            x.vrle2re(m, tagged=x.tag, output=True) for m in self.refined_vrles
+        ]
 
-        self.refrags = [x.vrle2refrags(m, output=True)
-                        for m in self.refined_vrles]
+        self.refrags = [
+            x.vrle2refrags(m, output=True) for m in self.refined_vrles
+        ]
 
     def __str__(self):
         return self.to_string()
@@ -2051,14 +2200,24 @@ class PRNGState:
             random.setstate(self.saved)
 
 
-def extract(examples, tag=False, encoding=None, as_object=False,
-            extra_letters=None, full_escape=False,
-            remove_empties=False, strip=False,
-            variableLengthFrags=VARIABLE_LENGTH_FRAGS,
-            max_patterns=MAX_PATTERNS,
-            min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
-            min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            seed=None, dialect=DEFAULT_DIALECT, verbose=VERBOSITY):
+def extract(
+    examples,
+    tag=False,
+    encoding=None,
+    as_object=False,
+    extra_letters=None,
+    full_escape=False,
+    remove_empties=False,
+    strip=False,
+    variableLengthFrags=VARIABLE_LENGTH_FRAGS,
+    max_patterns=MAX_PATTERNS,
+    min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
+    min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
+    size=None,
+    seed=None,
+    dialect=DEFAULT_DIALECT,
+    verbose=VERBOSITY,
+):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -2074,16 +2233,25 @@ def extract(examples, tag=False, encoding=None, as_object=False,
     """
     if encoding and not callable(examples):
         if isinstance(examples, dict):
-            examples ={x.decode(encoding): n for (x, n) in examples.items()}
+            examples = {x.decode(encoding): n for (x, n) in examples.items()}
         else:
             examples = [x.decode(encoding) for x in examples]
-    r = Extractor(examples, tag=tag, extra_letters=extra_letters,
-                  full_escape=full_escape, remove_empties=remove_empties,
-                  strip=strip, variableLengthFrags=variableLengthFrags,
-                  max_patterns = max_patterns,
-                  min_diff_strings_per_pattern = min_diff_strings_per_pattern,
-                  min_strings_per_pattern = min_strings_per_pattern,
-                  size=size, seed=seed, dialect=dialect, verbose=verbose)
+    r = Extractor(
+        examples,
+        tag=tag,
+        extra_letters=extra_letters,
+        full_escape=full_escape,
+        remove_empties=remove_empties,
+        strip=strip,
+        variableLengthFrags=variableLengthFrags,
+        max_patterns=max_patterns,
+        min_diff_strings_per_pattern=min_diff_strings_per_pattern,
+        min_strings_per_pattern=min_strings_per_pattern,
+        size=size,
+        seed=seed,
+        dialect=dialect,
+        verbose=verbose,
+    )
     return r if as_object else r.results.rex if r.results else []
 
 
@@ -2222,12 +2390,12 @@ def left_parts(patterns, fixed):
     lstats = length_stats(patterns)
     for (frag, pos) in fixed:
         if pos > 0:  # Nothing to the left if it's position 0
-            out.append([p[lastPos + 1:pos] for p in patterns])
-#        out.append([p[pos:pos + 1] for p in patterns])  # the fixed bit
+            out.append([p[lastPos + 1 : pos] for p in patterns])
+        #        out.append([p[pos:pos + 1] for p in patterns])  # the fixed bit
         out.append([[p[pos]] for p in patterns])  # the fixed bit
         lastPos = pos
     if lastPos < lstats.max_length - 1:  # the end, if there's anything left
-        out.append([p[lastPos + 1:] for p in patterns])
+        out.append([p[lastPos + 1 :] for p in patterns])
     return out
 
 
@@ -2253,7 +2421,7 @@ def right_parts(patterns, fixed):
     lastPos = -lstats.max_length  # will be reversed in use
     for (frag, pos) in fixed:
         if pos > 1:  # Nothing the right if it's position -1
-            out.append([p[-pos + 1:-lastPos] for p in patterns])
+            out.append([p[-pos + 1 : -lastPos] for p in patterns])
         out.append([[p[-pos]] for p in patterns])  # the fixed bit
         lastPos = pos
     if lastPos < lstats.max_length:  # the start, if there's anything left
@@ -2282,8 +2450,9 @@ def get_nCalls():
     return nCalls
 
 
-def rexpy_streams(in_path=None, out_path=None, skip_header=False,
-                  quote=False, **kwargs):
+def rexpy_streams(
+    in_path=None, out_path=None, skip_header=False, quote=False, **kwargs
+):
     """
     in_path is
         None:             to read inputs from stdin
@@ -2319,7 +2488,7 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False,
         print('Extracting strings')
     patterns = extract(strings, **kwargs)
     if verbose:
-         print('Extracted strings')
+        print('Extracted strings')
     if quote:
         patterns = [dquote(p) for p in patterns]
     if out_path is False:
@@ -2388,10 +2557,10 @@ def get_params(args):
             params['out_path'] = a
         else:
             raise Exception(USAGE)
-    params['in_path'] = params['in_path']  or None  # replace '' with None
+    params['in_path'] = params['in_path'] or None  # replace '' with None
     extras = params['extra_letters']
     if extras:
-        params['extra_letters'] =  ''.join(sorted([c for c in extras]))
+        params['extra_letters'] = ''.join(sorted([c for c in extras]))
         # Order always, for consistency
     return params
 
@@ -2421,8 +2590,10 @@ def expand_or_falsify_vrle(rle, vrle, fixed=False, variableLength=False):
     if vrle == False:
         return False
     elif vrle is None:
-        return [((r[0], r[1], r[1], 'fixed') if fixed else (r[0], r[1], r[1]))
-                for r in rle]  # Just accept the new one
+        return [
+            ((r[0], r[1], r[1], 'fixed') if fixed else (r[0], r[1], r[1]))
+            for r in rle
+        ]  # Just accept the new one
 
     out = []
     lr, lv = len(rle), len(vrle)
@@ -2501,17 +2672,21 @@ def escaped_bracket(chars, dialect=None, inner=False):
         prefix = '\]' if ']' in chars else ''
     else:
         prefix = ']' if ']' in chars else ''
-    suffix = ((r'\\' if '\\' in chars else '')
-              + ('^' if '^' in chars else '')
-              + ('-' if '-' in chars else ''))
+    suffix = (
+        (r'\\' if '\\' in chars else '')
+        + ('^' if '^' in chars else '')
+        + ('-' if '-' in chars else '')
+    )
     specials = r']\-^'
     mains = ''.join(c for c in chars if c not in specials)
     return '%s%s%s%s%s' % (opener, prefix, mains, suffix, closer)
 
 
 def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
-                       dialect=dialect, inner=True))
+    r = '[^\W%s%s]' % (
+        '' if digits else '0-9',
+        escaped_bracket(exc, dialect=dialect, inner=True),
+    )
     i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 
@@ -2541,8 +2716,9 @@ def group_map_function(m, n_groups):
 
 def is_outer_group(m, i):
     N = len(m.groups())
-    return not any(m.start(g) <= m.start(i) and m.end(g) >= m.end(i)
-                   for g in range(1, i))
+    return not any(
+        m.start(g) <= m.start(i) and m.end(g) >= m.end(i) for g in range(1, i)
+    )
 
 
 def ilist(L=None):
@@ -2550,8 +2726,9 @@ def ilist(L=None):
 
 
 def dquote(string):
-    parts = [p.replace('\\', r'\\').replace('\n', r'\n')
-             for p in string.split('"')]
+    parts = [
+        p.replace('\\', r'\\').replace('\n', r'\n') for p in string.split('"')
+    ]
     quoted = ('\\"').join(parts)
     return '"%s"' % quoted
 
@@ -2572,6 +2749,6 @@ def main():
     params = get_params(sys.argv[1:])
     rexpy_streams(**params)
 
+
 if __name__ == '__main__':
     main()
-
