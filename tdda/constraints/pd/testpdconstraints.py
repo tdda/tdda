@@ -8,6 +8,7 @@ import datetime
 import json
 import math
 import os
+import re
 import time
 import shutil
 import subprocess
@@ -15,7 +16,7 @@ import sys
 import tempfile
 import unittest
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from distutils.spawn import find_executable
 
 import pandas as pd
@@ -59,9 +60,16 @@ from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file#, detect_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
 
+
 from tdda.examples import copy_accounts_data_unzipped
 
 from tdda.referencetest import ReferenceTestCase, tag
+from tdda.referencetest.pddates import (
+    infer_date_format,
+    DateRE,
+    Separators,
+    get_date_separators
+)
 
 isPython2 = sys.version_info[0] < 3
 
@@ -1379,7 +1387,6 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
-    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 
@@ -1654,6 +1661,148 @@ class TestUtilityFunctions(ReferenceTestCase):
                      'a_min_ok68',
                      'a_transform_ok'):
             self.assertFalse(pdc.is_ver_field(name, 'a'))
+
+
+class TestUtilityFunctions(ReferenceTestCase):
+
+    @tag
+    def testDateInferrer(self):
+        df = pd.DataFrame({
+            'isod': ['2024-01-01', None, '2024-01-20', None],
+            'isodt': ['2024-01-01T12:34:56', None, '2024-01-20T21:22:23', None],
+            'eurod': ['01-01-2024', None, '20-01-2024', None],
+            'eurodt': ['01-01-2024:12:34:56', None, '20-01-2024:21:22:23',
+                       None],
+            'usd': ['01-01-2024', None, '01-20-2024', None],
+            'usdt': ['01-01-2024:12:34:56', None, '01-20-2024:21:22:23',
+                     None],
+            'nodate': ['foo', None, 'bar', None]
+        })
+        expected_fmt = {
+            'isod': '%Y-%m-%d',
+            'isodt': 'ISO8601',
+            'eurod': '%d-%m-%Y',
+            'eurodt': '%d-%m-%Y:%H:%M:%S',
+            'usd': '%m-%d-%Y',
+            'usdt': '%m-%d-%Y:%H:%M:%S',
+            'nodate': None
+        }
+
+        dtdt = datetime.datetime
+        date_col = [dtdt(2024, 1, 1), None, dtdt(2024, 1, 20), None]
+        dt_col = [dtdt(2024, 1, 1, 12, 34, 56), None,
+                  dtdt(2024, 1, 20, 21, 22, 23), None]
+
+        expected_df = pd.DataFrame({
+            'isod': date_col,
+            'isodt': dt_col,
+            'eurod': date_col,
+            'eurodt': dt_col,
+            'usd': date_col,
+            'usdt': dt_col,
+            'nodate': df['nodate'],
+        })
+
+        for k in df:
+            f = infer_date_format(df[k])
+            if f is None:
+                self.assertIs(f, expected_fmt[k])
+            else:
+                self.assertEqual((k, f), (k, expected_fmt[k]))
+                c = pd.to_datetime(df[k], format=f)
+                same = (c.dropna() == expected_df[k].dropna()).sum()
+                if same != 2:
+                    print(k)
+                    print(c.dropna())
+                    print(expected_df[k].dropna())
+                    print()
+                self.assertEqual(same, 2)
+                self.assertEqual(c.dtype, expected_df[k].dtype)
+
+    def testDateRE(self):
+        R = DateRE
+        dates = {
+            '2024-01-20': R.ISO_DATEISH,
+            '2024/01/20': R.ISO_DATEISH,
+
+            '2024-01-20T12:34:56': R.ISO_DATETIMEISH,
+            '2024-01-20 12:34:56.12345': R.ISO_DATETIMEISH,
+            '2024/01/20T12:34:56': R.ISO_DATETIMEISH,
+            '2024/01/20 12:34:56.12345': R.ISO_DATETIMEISH,
+
+
+            '20-01-2024': R.DATEISH4Y,
+            '20/01/2024': R.DATEISH4Y,
+
+            '01-20-2024': R.DATEISH4Y,
+            '01/20/2024': R.DATEISH4Y,
+
+            '20-01-2024': R.DATEISH4Y,
+            '20/01/2024': R.DATEISH4Y,
+
+            '01-20-2024': R.DATEISH4Y,
+            '01/20/2024': R.DATEISH4Y,
+
+            '20-01-2024T12:34:56': R.DATEISH4Y,
+            '20-01-2024T12:34:56.123456': R.DATEISH4Y,
+
+
+            '20-01-24': R.DATEISH2Y,
+            '20/01/24': R.DATEISH2Y,
+
+            '01-20-24': R.DATEISH2Y,
+            '01/20/24': R.DATEISH2Y,
+
+            '20-01-24': R.DATEISH2Y,
+            '20/01/24': R.DATEISH2Y,
+
+            '01-20-24': R.DATEISH2Y,
+            '01/20/24': R.DATEISH2Y,
+
+            '20-01-24T12:34:56': R.DATEISH2Y,
+            '20-01-24T12:34:56.123456': R.DATEISH2Y,
+
+        }
+
+        for k, r in dates.items():
+            m = re.match(r, k)
+            if not m:
+                print(f'Failing: {k} {r.pattern}')
+            self.assertIsNotNone(m)
+
+            m = re.match(R.DATEISH, k)
+            if not m:
+                print(f'Failing: {k} (not DATEISH)')
+            self.assertIsNotNone(m)
+
+        sep_dates = {
+            '20-01-2024': (
+                R.SEPS4Y,
+                Separators('-', None, None, False, False, '')
+            ),
+            '20-01-2024T12:34:56': (
+                R.SEPS4Y,
+                Separators('-', 'T', ':', True, False, 'T%H:%M:%S')
+            ),
+
+            '20-01-2024T12:34:56.123': (
+                R.SEPS4Y,
+                Separators('-', 'T', ':', True, True, 'T%H:%M:%S.%f')
+            ),
+            '20/01/2024 12.34.56.123': (
+                R.SEPS4Y,
+                Separators('/', ' ', '.', True, True, ' %H.%M.%S.%f')
+            ),
+        }
+        for k, (r, expected) in sep_dates.items():
+            actual = get_date_separators(r, k)
+            if actual != expected:
+                print('-->   actual', actual)
+                print('--> expected', expected)
+                print()
+            self.assertEqual(actual, expected)
+
+
 
 
 TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATA_DIR)

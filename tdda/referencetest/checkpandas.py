@@ -17,6 +17,7 @@ import sys
 from collections import OrderedDict
 
 from tdda.referencetest.basecomparison import BaseComparison, Diffs
+from tdda.referencetest.pddates import infer_date_format
 
 try:
     import pandas as pd
@@ -405,7 +406,6 @@ def default_csv_loader(csvfile, **kwargs):
     """
     options = {
         'index_col': None,
-        'infer_datetime_format': True,
         'quotechar': '"',
         'quoting': csv.QUOTE_MINIMAL,
         'escapechar': '\\',
@@ -413,6 +413,9 @@ def default_csv_loader(csvfile, **kwargs):
         'keep_default_na': False,
     }
     options.update(kwargs)
+    if 'infer_datetime_format' in options:  # don't let pandas do it.
+        del options['infer_datetime_format']
+    infer_datetimes = kwargs.get('infer_datetime_format', True)
 
     try:
         df = pd.read_csv(csvfile, **options)
@@ -422,25 +425,25 @@ def default_csv_loader(csvfile, **kwargs):
         del options['escapechar']
         df = pd.read_csv(csvfile, **options)
 
-    # the reader won't have inferred any datetime columns (even though we
-    # told it to), because we didn't explicitly tell it the column names
-    # in advance. so.... we'll do it by hand (looking at string columns, and
-    # seeing if we can convert them safely to datetimes).
-    if options.get('infer_datetime_format'):
+    if infer_datetimes:  # We do it ourselves, now, instead of lettings
+                         # pandas do it.
         colnames = df.columns.tolist()
         for c in colnames:
             if df[c].dtype == np.dtype('O'):
-                try:
-                    datecol = pd.to_datetime(df[c])
-                    if datecol.dtype == np.dtype('datetime64[ns]'):
-                        df[c] = datecol
-                except Exception as e:
-                    pass
+                fmt = infer_date_format(df[c])
+                if fmt:
+                    try:
+                        datecol = pd.to_datetime(df[c], format=fmt)
+                        if datecol.dtype == np.dtype('datetime64[ns]'):
+                            df[c] = datecol
+                    except Exception as e:
+                        pass
         ndf = pd.DataFrame()
         for c in colnames:
             ndf[c] = df[c]
-
-    return ndf
+        return ndf
+    else:
+        return df
 
 
 def default_csv_writer(df, csvfile, **kwargs):

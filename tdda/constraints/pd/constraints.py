@@ -477,7 +477,9 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
                     if is_numeric:
                         if is_real:
                             is_real = self.calc_non_integer_values_count(c) > 0
-                        self.df.loc[ser.notnull(), c] = ser.astype(str)
+                        self.df[c] = np.where(ser.notnull(),
+                                              ser.astype(str),
+                                              np.nan)
                         if not is_real:
                             self.df[c] = self.df[c].str.replace('.0', '',
                                                                 regex=False)
