@@ -14,14 +14,16 @@ Parameters:
   * input is one of:
 
       - a csv file
-      - a feather file containing a Pandas or R DataFrame
+      - a .parquet file
+      - a feather file containing a Pandas or R DataFrame (deprecated(
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
 
-  * name of output file (.csv or .feather) where detection results
-    are to be written. Can be - (or missing) to write to standard output.
+  * name of output file (.csv,  .parqet or .feather (deprecated))
+    where detection results are to be written.
+    Can be - (or missing) to write to standard output.
 
 '''
 
@@ -54,17 +56,16 @@ def detect_df_from_file(df_path, constraints_path, outpath,
                         verbose=True, **kwargs):
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())
-    if constraints_path is None:
-        if not isinstance(df_path, StringIO):
-            split = os.path.splitext(df_path)
-            if split[1] in ('.csv', '.feather'):
-                constraints_path = split[0] + '.tdda'
         if constraints_path is None:
             print('No constraints file specified.', file=sys.stderr)
             sys.exit(1)
+    elif constraints_path is None:
+        (stem, ext) = os.path.splitext(df_path)
+        constraints_path = stem + '.tdda'
+
+    from_feather = file_format(df_path) == 'feather'
 
     df = load_df(df_path)
-    from_feather = file_format(df_path) == 'feather'
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=from_feather, **kwargs)
     if verbose and outpath is not None and outpath != '-':
@@ -74,7 +75,7 @@ def detect_df_from_file(df_path, constraints_path, outpath,
 
 def pd_detect_parser():
     parser = detect_parser(USAGE)
-    parser.add_argument('input', help='CSV or feather file')
+    parser.add_argument('input', help='CSV, parquet or feather file')
     parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     parser.add_argument('outpath', nargs='?',

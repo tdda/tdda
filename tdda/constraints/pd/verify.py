@@ -14,7 +14,8 @@ Parameters:
   * input is one of:
 
       - a csv file. Can be - to read from standard input.
-      - a feather file containing a Pandas or R DataFrame.
+      - a parquet file
+      - a feather file containing a Pandas or R DataFrame (deprecated).
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
@@ -53,14 +54,12 @@ from tdda.constraints.pd.constraints import verify_df, load_df
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())
-    if constraints_path is None:
-        if not isinstance(df_path, StringIO):
-            split = os.path.splitext(df_path)
-            if split[1] in ('.csv', '.feather'):
-                constraints_path = split[0] + '.tdda'
         if constraints_path is None:
             print('No constraints file specified.', file=sys.stderr)
             sys.exit(1)
+    if constraints_path is None:
+        stem, ext = os.path.splitext(df_path)
+        constraints_path = stem + '.tdda'
 
     df = load_df(df_path)
     v = verify_df(df, constraints_path, **kwargs)
@@ -71,7 +70,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def pd_verify_parser():
     parser = verify_parser(USAGE)
-    parser.add_argument('input', nargs=1, help='CSV or feather file')
+    parser.add_argument('input', nargs=1, help='CSV, parquet, or feather file')
     parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     return parser

@@ -14,7 +14,8 @@ Parameters:
   * input is one of:
 
     - a csv file
-    - a .feather file containing a saved Pandas or R DataFrame
+    - a .parquet file
+    - a .feather file containing a saved Pandas or R DataFrame (deprecated)
     - any of the other supported data sources
 
   * constraints.tdda, if provided, specifies the name of a file to
@@ -67,7 +68,8 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def pd_discover_parser():
     parser = discover_parser(USAGE)
-    parser.add_argument('input', nargs=1, help='CSV or feather file')
+    parser.add_argument('input', nargs=1,
+                        help='CSV, parquet (or feather, deprecated) file')
     parser.add_argument('constraints', nargs='?',
                         help='name of constraints file to create')
     return parser

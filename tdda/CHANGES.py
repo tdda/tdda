@@ -538,4 +538,25 @@ should be fixed now.
 
 26.01.2024 2.0.10
 Remove leading zeros in gentest test
+
+----------------------------- pandas2 branch -----------------------------
+
+12-02-2024
+Pandas 2 doesn't like inferring dates, so we now do this ourselves
+when reading CSVs. Obviously, this isn't ideal, and in time we'll
+encourage people to specify formats in metadata files.
+
+Pandas 2 also doesn't like old version of pyarrow, so we're adding
+a requirement for a more modern version.
+
+19-02-2024
+Added support for reading and writin parquet and started to deprecate
+feather.
+
+Also started adding support for using csvmetadata, csvw metadata
+and frictionless metadata, but incomplete. Currently it is just
+assuming the csvmetadata library is around; before release that
+will need to be made a proper dependency or partly moved under
+this project or something.
+
 """

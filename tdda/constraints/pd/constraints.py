@@ -71,6 +71,13 @@ from tdda.referencetest.checkpandas import (default_csv_loader,
                                             default_csv_writer)
 from tdda import rexpy
 
+from csvmetadata.reader import load_metadata
+from csvmetadata.utils import (
+    find_associated_metadata_file,
+    find_metadata_type_from_path
+)
+from csvmetadata.cli import to_pandas_read_csv_args
+
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
     pandas_Timestamp = pd.Timestamp
@@ -332,6 +339,10 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if self.out_df is None:
             return None
         orig_fields = list(self.df)
+        output_is_typed = (
+            detect_outpath
+            and file_format(detect_outpath) in ('parquet', 'feather')
+        )
         output_is_feather = (detect_outpath
                              and file_format(detect_outpath) == 'feather')
 
@@ -373,7 +384,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
         if detect_outpath:
             index_is_trivial = is_pd_index_trivial(out_df)
-            if output_is_feather:
+            if output_is_typed:
                 df_to_save = out_df
             else:
                 df_to_save = convert_output_types(out_df, boolean_ints)
@@ -387,7 +398,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 #       pmmif's featherpmm, and if featherpmm were able to
                 #       transparently retain indexes, then we wouldn't need
                 #       to do that in this case (when featherpmm is set, and
-                #       output_is_feather).
+                #       output_is_typed).
                 indexes = []
                 if output_is_feather or rownumber_is_index:
                     stem = 'Index' if rownumber_is_index else 'RowNumber'
@@ -870,7 +881,8 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         *outpath*:
                             This specifies that the verification process
                             should detect records that violate any constraints,
-                            and write them out to this CSV (or feather) file.
+                            and write them out to this CSV, parquet
+                            or feather file.
 
                             By default, only failing records are written out
                             to file, but this can be overridden with the
@@ -1117,30 +1129,97 @@ def file_format(path):
     if isinstance(path, StringIO):
         return 'csv'
     else:
-        parts = os.path.splitext(path)
-        return ('feather' if len(parts) > 1 and parts[1] == '.feather'
-                          else 'csv')
+        (stem, ext) = os.path.splitext(path)
+        return ext[1:] if ext else 'csv'
 
 
-def load_df(path):
-    if file_format(path) != 'feather':
+def load_df(path, mdpath=None, ignore_apparent_metadata=False,
+            infer_metadata=True):
+    """
+    Loads a pandas DataFrame from a path or stream.
+
+    Args:
+        path is usually a file path to be read, but can be a stream
+
+        mdpath is an optional path to an associated metadata file to use
+
+        ignore_apparent_metadata  Ordinarily, if a CSV file is provided
+                                  as path, and there is "next to it"
+                                  a file that looks likes a metadata file
+                                  (same stem name with an extension fitting
+                                  a recommended pattern for csvw, csvmetadata
+                                  or frictionless), that metadata will be read
+                                   and used.
+                                  Setting this to True prevents that.
+
+        infer_metadata  If a CSV file ('.csv', '.psv', '.tsv' or '.txt' file)
+                        is given and no metadata file is provided, this
+                        function will ordinarily try to infer the file
+                        format using the csvmetadata library.
+                        Setting this to False overrides that behaviour,
+                        forcing the default Pandas CSV reader to be used
+                        with few TDDA's default arguments for it.
+    """
+    if isinstance(path, StringIO):  # stream
         return default_csv_loader(path)
-    elif featherpmm and feather:
-        ds = featherpmm.read_dataframe(path)
-        return ds.df
-    elif feather:
-        return feather.read_dataframe(path)
-    else:
-        raise Exception('The Python feather module is not installed.\n'
-                        'Use:\n    pip install feather-format\n'
-                        'to add capability.\n')
+    exists = os.path.exists(os.path.expanduser(path))
+    stem, ext = os.path.splitext(path)
+    lcstem, ext = stem.lower(), ext.lower()
+
+    if ext == '.parquet':
+        return pd.read_parquet(path)
+    elif ext == '.feather':
+        if featherpmm and feather:
+            ds = featherpmm.read_dataframe(path)
+            return ds.df
+        elif feather:
+            return feather.read_dataframe(path)
+        else:
+            raise Exception('The Python feather module is not installed.\n'
+                            'Use:\n    pip install feather-format\n'
+                            'to add capability.\n')
+
+    if mdpath is None:
+        md_type, _ = find_metadata_type_from_path(path)
+        if md_type:
+            # path is a metadata file of a known type
+            # load the metadata from it and get the file path, if any
+            # from the metadata file
+            metadata = csvmetadata.load_metadata(path)
+            if metadata and metadata.path:
+                kw = to_pandas_read_csv_args(metadata)
+                return defaultcsv_loader(metadata.path, **kw)
+
+        if not ignore_apparent_metadata:
+            # no explicit metadata path provided
+            mdpath = find_associated_metadata_file(path)
+            if mdpath:
+                metadata = load_metadata(path)
+                kw = to_pandas_read_csv_args(metadata)
+                return defaultcsv_loader(path, **kw)
+            elif infer_metadata:
+                # infer metadata
+                pass
+        # Told not to look for apparent metadata or infer metadata
+        return default_csv_loader(path)
+
+    else:  # explicit metadatapath provided
+        metadata = csvmetadata.load_metadata(path)
+        kw = to_pandas_read_csv_args(metadata)
+        return defaultcsv_loader(path, **kw)
 
 
 def save_df(df, path, index=False):
     if path == '-' or path is None:
         print(default_csv_writer(df, None, index=index))
-    elif file_format(path) != 'feather':
+    else:
+        fmt = file_format(path)
+    if fmt == 'parquet':
+        df.to_parquet(path=path, index=False)
+    elif fmt in ('csv', 'psv', 'tsv', 'txt'):
         default_csv_writer(df, path, index=index)
+    elif fmt != 'feather':
+        raise Exception(f'Unknown output format: {fmt}')
     elif featherpmm and feather:
         featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
                                    path)

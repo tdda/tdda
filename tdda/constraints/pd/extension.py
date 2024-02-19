@@ -5,6 +5,7 @@ Extensions to the ``tdda`` command line tool, to support Pandas dataframes
 and CSV files.
 """
 
+import os
 import sys
 
 from tdda.constraints.extension import ExtensionBase
@@ -20,7 +21,11 @@ class TDDAPandasExtension(ExtensionBase):
 
     def applicable(self):
         for a in self.argv:
-            if a.endswith('.csv') or a.endswith('.feather') or a == '-':
+            if a == '-':
+                return True
+            (stem, ext) = os.path.splitext(a)
+            if (ext in ('.csv', '.psv', '.tsv', '.parquet', '.feather'
+                        '.json', '.yaml')):
                 return True
         return False
 
