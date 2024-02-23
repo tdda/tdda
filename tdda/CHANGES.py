@@ -559,4 +559,8 @@ assuming the csvmetadata library is around; before release that
 will need to be made a proper dependency or partly moved under
 this project or something.
 
+23-02-2024
+Update data frame comparisons and difference reporting.
+Changes test to reflect new reporting.
+changed test to use assertStringCorrect.
 """

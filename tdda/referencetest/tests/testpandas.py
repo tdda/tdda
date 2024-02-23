@@ -18,13 +18,14 @@ except ImportError:
 
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import diffcmd
+from tdda.referencetest import tag, ReferenceTestCase
 
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
 @unittest.skipIf(pd is None, 'no pandas')
-class TestPandasDataFrames(unittest.TestCase):
+class TestPandasDataFrames(ReferenceTestCase):
 
     def test_frames_ok(self):
         compare = PandasComparison()
@@ -50,26 +51,30 @@ class TestPandasDataFrames(unittest.TestCase):
                             'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002]})
         df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
                             'b': [1, 2, 3, 4, 5]})
-        fromrow12 = ('From row 1: [1.000100, 2.000100, 3.000100, '
-                     '4.000100, 5.000100] != [1.000200, 2.000200, '
-                     '3.000200, 4.000200, 5.000200]')
+        fromrow12 = ('Differences: '
+                     '[0: 1.0001, 1: 2.0001, 2: 3.0001, 3: 4.0001, 4: 5.0001] '
+                     '!= [0: 1.0002, 1: 2.0002, 2: 3.0002, 3: 4.0002, 4: 5.0002')
         fromrow13 = ('From row 1: [1.000100, 2.000100, 3.000100, '
                      '4.000100, 5.000100] != [1, 2, 3, 4, 5]')
         self.assertEqual(compare.check_dataframe(df1, df2, precision=3),
                          (0, []))
-        self.assertEqual(compare.check_dataframe(df1, df2, precision=6),
-                         (1, ['Contents check failed.',
-                              'Column values differ: b',
-                              fromrow12]))
-        self.assertEqual(compare.check_dataframe(df1, df3, check_types=['a'],
-                                                 precision=3),
-                         (1, ['Contents check failed.',
-                              'Column values differ: b',
-                              'Different types']))
-        self.assertEqual(compare.check_dataframe(df1, df3, check_types=['a']),
-                         (1, ['Contents check failed.',
-                              'Column values differ: b',
-                              fromrow13]))
+
+        n1, s1 = compare.check_dataframe(df1, df2, precision=6)
+        self.assertEqual(n1, 1)
+        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'))
+
+        n2, s2 = compare.check_dataframe(df1, df3, check_types=['a'],
+                                         precision=3)
+        self.assertEqual(n2, 1)
+        self.assertStringCorrect('\n'.join(s2), refloc('frames_fail2.txt'))
+                         # (1, ['Contents check failed.',
+                         #      'Column values differ: b',
+                         #      'Different types']))
+
+        n3, s3 = compare.check_dataframe(df1, df2, precision=6)
+        self.assertEqual(n3, 1)
+        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail3.txt'))
+
         self.assertEqual(compare.check_dataframe(df1, df3, check_data=['a']),
                          (1,
                           ['Column check failed.',
@@ -100,4 +105,4 @@ class TestPandasDataFrames(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    ReferenceTestCase.main()

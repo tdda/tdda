@@ -65,7 +65,7 @@ class PandasComparison(BaseComparison):
                             Path for file where expected dataframe originated,
                             used for error messages.
             *check_types*
-                            Option to specify fields to use to compare typees.
+                            Option to specify fields to use to compare types.
             *check_order*
                             Option to specify fields to use to compare field
                             order.
@@ -196,8 +196,14 @@ class PandasComparison(BaseComparison):
                         if not rounded[c].equals(ref_rounded[c]):
                             diffs = self.differences(c, rounded[c],
                                                      ref_rounded[c], precision)
-                            self.info(msgs, 'Column values differ: %s' % c)
-                            self.info(msgs, diffs)
+                            if diffs:
+                                self.info(msgs, 'Column values differ: %s' % c)
+                                self.info(msgs, diffs)
+                            else:
+                                self.info(msgs, 'Colum types differ: %s' % c)
+                                self.info(msgs, '*%s vs. %s'
+                                                 % (rounded[c].dtype,
+                                                    ref_rounded[c].dtype))
 
         same = same and not any((missing_cols, extra_cols, wrong_types,
                                  wrong_ordering))
@@ -205,18 +211,36 @@ class PandasComparison(BaseComparison):
 
     def differences(self, name, values, ref_values, precision):
         """
+        Args:
+            name        is the name of the columns
+            values      is the left-hand series
+            ref_values    is the rish-hand series
+            precision
+
         Returns a short summary of where values differ, for two columns.
         """
         for i, val in enumerate(values):
             refval = ref_values[i]
-            if val != refval and not (pd.isnull(val) and pd.isnull(refval)):
-                stop = self.ndifferences(values, ref_values, i)
-                summary_vals = self.sample_format(values, i, stop, precision)
-                summary_ref_vals = self.sample_format(ref_values, i, stop,
-                                                      precision)
-                return 'From row %d: [%s] != [%s]' % (i+1,
-                                                      summary_vals,
-                                                      summary_ref_vals)
+            valnull = values.isnull()
+            refnull = ref_values.isnull()
+            bothnull = valnull & refnull
+            n_both_null = bothnull.sum()
+            assert bothnull.sum() < len(values)  # Shouldn't have got here
+            (L, R) = (values, ref_values) if n_both_null == 0 else (
+                values[np.logical_not(bothnull)],
+                ref_values[np.logical_not(bothnull)]
+            )
+            same = L.eq(R)
+            L = L[np.logical_not(same)][:10]
+            R = R[np.logical_not(same)][:10]
+            summary_vals = sample_format2(L, precision)
+            summary_ref_vals = sample_format2(R, precision)
+            n = len(L)
+            if n == 0:
+                return ''
+            s = ('First 10 differences' if n > 10 else
+                 ('Difference%s' % ('s' if n > 1 else '')))
+            return '%s: [%s] != [%s]' % (s, summary_vals, summary_ref_vals)
         if values.dtype != ref_values.dtype:
             return 'Different types'
         else:
@@ -498,7 +522,7 @@ def resolve_option_flag(flag, df):
 
        ``None`` or ``True``:
                 use all columns in the dataframe
-       ``None``:
+       ``False``:
                 use no columns
        list of columns
                 use these columns
@@ -513,3 +537,7 @@ def resolve_option_flag(flag, df):
     else:
         return flag
 
+
+def sample_format2(values, precision=None):
+    return (', '.join('%d: %s' % (values.index[i], values.iloc[i])
+            for i in range(min(len(values), 10))))

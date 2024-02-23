@@ -1,0 +1,3 @@
+Contents check failed.
+Colum types differ: b
+*float64 vs. int64
