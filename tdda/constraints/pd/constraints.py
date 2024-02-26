@@ -1187,6 +1187,9 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
             # from the metadata file
             metadata = csvmetadata.load_metadata(path)
             if metadata and metadata.path:
+                print('** Using metadata %s.  '
+                      'Use --no-csv-metadata to override.' % path,
+                      file=sys.stderr)
                 kw = to_pandas_read_csv_args(metadata)
                 return defaultcsv_loader(metadata.path, **kw)
 

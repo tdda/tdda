@@ -39,6 +39,11 @@ def infer_date_format(col, n=100):
         return None             # All null
 
     strings = nonnulls[:n].to_list()  # first n non-null strings
+    if not strings:
+        return None
+    if type(strings[0]) != str:
+        return None
+
     if not all(re.match(DateRE.DATEISH, s) for s in strings):
         return None    # Don't look like dates at all
 
