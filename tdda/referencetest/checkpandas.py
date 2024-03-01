@@ -26,6 +26,35 @@ except ImportError:
     pd = None
 
 
+def loosen_type(t):
+    name = ''.join(c for c in t if not c.isdigit()).lower()
+    p = name.find('[')
+    name = name[:p] if p > -1 else name
+    return 'bool' if name == 'boolean' else name
+
+
+def types_match(t1, t2, level=None):
+    assert level is None or level in ('strict', 'medium', 'permissive')
+    if level is None or level == 'strict' or t1.name == t2.name:
+        return t1.name == t2.name
+
+    t1loose = loosen_type(t1.name)
+    t2loose = loosen_type(t2.name)
+    object_types = ('string', 'boolean', 'datetime', 'bool')
+    if (t1loose == t2loose
+            or t1loose == 'object' and t2loose in object_types
+            or t2loose == 'object' and t1loose in object_types):
+        return True
+
+    numeric_types = ('bool', 'boolean', 'int', 'float')
+    if (level == 'permissive'
+            and t1loose in numeric_types
+            and t2loose in numeric_types):
+        return True
+    return False
+
+
+
 class PandasNotImplemented(object):
     """
     Null implementation of PandasComparison, used when pandas not available.
@@ -50,7 +79,8 @@ class PandasComparison(BaseComparison):
     def check_dataframe(self, df, ref_df, actual_path=None, expected_path=None,
                         check_data=None, check_types=None, check_order=None,
                         check_extra_cols=None, sortby=None,
-                        condition=None, precision=None, msgs=None):
+                        condition=None, precision=None, msgs=None,
+                        type_matching=None):
         """
         Compare two pandas dataframes.
 
@@ -90,6 +120,9 @@ class PandasComparison(BaseComparison):
             *msgs*
                             Optional Diffs object.
 
+            *type_matching* 'strict', 'medium', 'permissive'.
+                            None is same as strict.
+
         Returns a tuple (failures, msgs), containing the number of failures,
         and a Diffs object containing error messages.
 
@@ -101,8 +134,7 @@ class PandasComparison(BaseComparison):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
         """
-
-        same = True
+        type_matching = type_matching or 'strict'
         if msgs is None:
             msgs = Diffs()
 
@@ -119,17 +151,16 @@ class PandasComparison(BaseComparison):
         for c in check_types:
             if c not in list(df):
                 missing_cols.append(c)
-            elif df[c].dtype != ref_df[c].dtype:
+            elif not(types_match(df[c].dtype, ref_df[c].dtype, type_matching)):
                 wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
         if check_extra_cols:
-        # todo: shouldn't check_extra_cols be a boolean?
-        #       ... and set(check_extra_cols) be set(list(df))
             extra_cols = set(check_extra_cols) - set(list(ref_df))
         if check_order != False and not missing_cols:
             check_order = resolve_option_flag(check_order, ref_df)
             c1 = [c for c in list(df) if c in check_order]
             c2 = [c for c in list(ref_df) if c in check_order]
             wrong_ordering = (list(df[c1]) != list(ref_df[c2]))
+
         same = not any((missing_cols, extra_cols, wrong_types, wrong_ordering))
 
         if not same:
@@ -169,13 +200,14 @@ class PandasComparison(BaseComparison):
             df = df[condition(df)].reindex()
             ref_df = ref_df[condition(ref_df)].reindex()
 
-        same = len(df) == len(ref_df)
-        if not same:
+        same_len = (len(df) == len(ref_df))
+        if not same_len:
             self.failure(msgs, 'Length check failed.',
                          actual_path, expected_path)
             self.info(msgs, 'Found %d records, expected %d'
                             % (len(df), len(ref_df)))
-        else:
+            same = False
+        elif same:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
                 check_data = [c for c in check_data if c not in missing_cols]
@@ -188,22 +220,25 @@ class PandasComparison(BaseComparison):
                 else:
                     rounded = df
                     ref_rounded = ref_df
-                same = rounded.equals(ref_rounded)
-                if not same:
-                    self.failure(msgs, 'Contents check failed.',
-                                 actual_path, expected_path)
+                same_content = rounded.equals(ref_rounded)
+                if not same_content:
+                    failures = []
                     for c in list(ref_rounded):
                         if not rounded[c].equals(ref_rounded[c]):
                             diffs = self.differences(c, rounded[c],
-                                                     ref_rounded[c], precision)
+                                                     ref_rounded[c],
+                                                     precision)
                             if diffs:
-                                self.info(msgs, 'Column values differ: %s' % c)
-                                self.info(msgs, diffs)
-                            else:
-                                self.info(msgs, 'Colum types differ: %s' % c)
-                                self.info(msgs, '*%s vs. %s'
-                                                 % (rounded[c].dtype,
-                                                    ref_rounded[c].dtype))
+                                failures.append('Column values differ: %s' % c)
+                                failures.append('%s\nvs.\n%s\n'
+                                                % (rounded[c],
+                                                   ref_rounded[c]))
+                    if failures:
+                        self.failure(msgs, 'Contents check failed.',
+                                     actual_path, expected_path)
+                        for f in failures:
+                            self.info(msgs, f)
+                        same = False
 
         same = same and not any((missing_cols, extra_cols, wrong_types,
                                  wrong_ordering))

@@ -1,3 +1,2 @@
-Contents check failed.
-Column values differ: b
-Differences: [0: 1.0001, 1: 2.0001, 2: 3.0001, 3: 4.0001, 4: 5.0001] != [0: 1.0002, 1: 2.0002, 2: 3.0002, 3: 4.0002, 4: 5.0002]
+Column check failed.
+Wrong column type b (float64, expected int64)

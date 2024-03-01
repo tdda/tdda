@@ -241,7 +241,7 @@ class ReferenceTest(object):
                               actual_path=None, expected_path=None,
                               check_data=None, check_types=None,
                               check_order=None, condition=None, sortby=None,
-                              precision=None):
+                              precision=None, type_matching=None):
         """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
 
@@ -312,6 +312,8 @@ class ReferenceTest(object):
                 floating-point comparisons.  Default is not to perform
                 rounding.
 
+            *type_matching*  'strict', 'medium', 'permissive'
+
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
@@ -323,7 +325,8 @@ class ReferenceTest(object):
                                         check_order=check_order,
                                         condition=condition,
                                         sortby=sortby,
-                                        precision=precision)
+                                        precision=precision,
+                                        type_matching=type_matching)
         (failures, msgs) = r
         self._check_failures(failures, msgs)
 
