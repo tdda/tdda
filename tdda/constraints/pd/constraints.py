@@ -71,7 +71,7 @@ from tdda.referencetest.checkpandas import (default_csv_loader,
                                             default_csv_writer)
 from tdda import rexpy
 
-from csvmetadata.reader import load_metadata
+from tdda.serial.reader import load_metadata
 from csvmetadata.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
@@ -404,7 +404,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     stem = 'Index' if rownumber_is_index else 'RowNumber'
                     if isinstance(df_to_save.index, pd.MultiIndex):
                         for i, level in enumerate(df_to_save.index.levels):
-                            name = (df.index.names[i] if df.index.names
+                            name = (df_to_save.index.names[i]
+                                    if df_to_save.index.names
                                     else '%s_%d' % (stem, (i+1)))
                             pair = (unique_column_name(df_to_save, name),
                                     df_to_save.index.get_level_values(i))
@@ -1185,13 +1186,13 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
             # path is a metadata file of a known type
             # load the metadata from it and get the file path, if any
             # from the metadata file
-            metadata = csvmetadata.load_metadata(path)
+            metadata = load_metadata(path)
             if metadata and metadata.path:
                 print('** Using metadata %s.  '
                       'Use --no-csv-metadata to override.' % path,
                       file=sys.stderr)
                 kw = to_pandas_read_csv_args(metadata)
-                return defaultcsv_loader(metadata.path, **kw)
+                return default_csv_loader(metadata.path, **kw)
 
         if not ignore_apparent_metadata:
             # no explicit metadata path provided
@@ -1199,7 +1200,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
             if mdpath:
                 metadata = load_metadata(path)
                 kw = to_pandas_read_csv_args(metadata)
-                return defaultcsv_loader(path, **kw)
+                return default_csv_loader(path, **kw)
             elif infer_metadata:
                 # infer metadata
                 pass
@@ -1207,9 +1208,9 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
         return default_csv_loader(path)
 
     else:  # explicit metadatapath provided
-        metadata = csvmetadata.load_metadata(path)
+        metadata = load_metadata(path)
         kw = to_pandas_read_csv_args(metadata)
-        return defaultcsv_loader(path, **kw)
+        return default_csv_loader(path, **kw)
 
 
 def save_df(df, path, index=False):

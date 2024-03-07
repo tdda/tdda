@@ -754,6 +754,9 @@ tdda.serial.  Commit history:
 
         Add missing test files
 
+Change ...pd.constraints.py to use tdda.serial
+
+... rather than csvmetadata and fix a few problems pyflakes found.
 
 --------------------- end of serial metdata branch -----------------------
 
