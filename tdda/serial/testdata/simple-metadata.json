@@ -1,0 +1,42 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:replaces": "{\"resources\": [{\"name\": \"simple\", \"type\": \"table\", \"path\": \"testdata/simple.csv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"utf-8\", \"schema\": {\"fields\": [{\"name\": \"Index\", \"type\": \"integer\"}, {\"name\": \"Odd\", \"type\": \"boolean\"}, {\"name\": \"Even\", \"type\": \"boolean\"}, {\"name\": \"Real\", \"type\": \"number\"}, {\"name\": \"Name\", \"type\": \"string\"}, {\"name\": \"LastInFeb\", \"type\": \"date\"}, {\"name\": \"LastIn2024\", \"type\": \"datetime\"}]}}], \"profile\": \"data-package\"}",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "Index"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "Odd"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "Even"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "Real"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "Name"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "LastInFeb"
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "LastIn2024"
+                    }
+                ]
+            },
+            "url": "testdata/simple.csv"
+        }
+    ]
+}

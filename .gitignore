@@ -68,3 +68,6 @@ target/
 *.swp
 
 *~
+
+privatedata
+

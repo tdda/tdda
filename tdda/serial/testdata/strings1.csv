@@ -1,0 +1,31 @@
+row,s,n,r,d
+1,A,1,1.5,1999-12-30
+2,"","","",""
+3," "," "," "," "
+4,"#N/A","#N/A","#N/A","#N/A"
+5,"#N/A N/A","#N/A N/A","#N/A N/A","#N/A N/A"
+6,"#NA","#NA","#NA","#NA"
+7,"-1.#IND","-1.#IND","-1.#IND","-1.#IND"
+8,"-1.#QNAN","-1.#QNAN","-1.#QNAN","-1.#QNAN"
+9,"-NaN","-NaN","-NaN","-NaN"
+10,"-nan","-nan","-nan","-nan"
+11,"1.#IND","1.#IND","1.#IND","1.#IND"
+12,"1.#QNAN","1.#QNAN","1.#QNAN","1.#QNAN"
+13,"<NA>","<NA>","<NA>","<NA>"
+14,"N/A","N/A","N/A","N/A"
+15,"NA","NA","NA","NA"
+16,"NULL","NULL","NULL","NULL"
+17,"NaN","NaN","NaN","NaN"
+18,"None","None","None","None"
+19,"n/a","n/a","n/a","n/a"
+20,"nan","nan","nan","nan"
+21,"null","null","null","null"
+22,"null ","null ","null ","null "
+23,"Null",23,23.5,1999-12-31
+24,"na",24,24.5,2000-01-01
+25,"Na",25,25.5,25,2000-01-02
+26,"NaT",25,25.5,25,2000-01-02
+
+
+
+

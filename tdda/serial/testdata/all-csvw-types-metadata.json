@@ -1,0 +1,201 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dialect": {
+        "delimiter": ","
+    },
+    "null": "",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "boolean",
+                        "name": "boolean"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "integer"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "string"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "number"
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "datetime"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "date"
+                    },
+                    {
+                        "datatype": "double",
+                        "name": "double"
+                    },
+                    {
+                        "datatype": "decimal",
+                        "name": "decimal"
+                    },
+                    {
+                        "datatype": "float",
+                        "name": "float"
+                    },
+                    {
+                        "datatype": "long",
+                        "name": "long"
+                    },
+                    {
+                        "datatype": "int",
+                        "name": "int"
+                    },
+                    {
+                        "datatype": "short",
+                        "name": "short"
+                    },
+                    {
+                        "datatype": "byte",
+                        "name": "byte"
+                    },
+                    {
+                        "datatype": "unsignedLong",
+                        "name": "unsignedLong"
+                    },
+                    {
+                        "datatype": "unsignedInt",
+                        "name": "unsignedInt"
+                    },
+                    {
+                        "datatype": "unsignedShort",
+                        "name": "unsignedShort"
+                    },
+                    {
+                        "datatype": "unsignedByte",
+                        "name": "unsignedByte"
+                    },
+                    {
+                        "datatype": "nonNegativeInteger",
+                        "name": "nonNegativeInteger"
+                    },
+                    {
+                        "datatype": "nonPositiveInteger",
+                        "name": "nonPositiveInteger"
+                    },
+                    {
+                        "datatype": "negativeInteger",
+                        "name": "negativeInteger"
+                    },
+                    {
+                        "datatype": "positiveInteger",
+                        "name": "positiveInteger"
+                    },
+                    {
+                        "datatype": "normalizedString",
+                        "name": "normalizedString"
+                    },
+                    {
+                        "datatype": "anyURI",
+                        "name": "anyURI"
+                    },
+                    {
+                        "datatype": "token",
+                        "name": "token"
+                    },
+                    {
+                        "datatype": "language",
+                        "name": "language"
+                    },
+                    {
+                        "datatype": "Name",
+                        "name": "Name"
+                    },
+                    {
+                        "datatype": "NMTOKEN",
+                        "name": "NMTOKEN"
+                    },
+                    {
+                        "datatype": "xml",
+                        "name": "xml"
+                    },
+                    {
+                        "datatype": "html",
+                        "name": "html"
+                    },
+                    {
+                        "datatype": "json",
+                        "name": "json"
+                    },
+                    {
+                        "datatype": "dateTime",
+                        "name": "dateTime"
+                    },
+                    {
+                        "datatype": "base64Binary",
+                        "name": "base64Binary"
+                    },
+                    {
+                        "datatype": "binary",
+                        "name": "binary"
+                    },
+                    {
+                        "datatype": "hexBinary",
+                        "name": "hexBinary"
+                    },
+                    {
+                        "datatype": "anyAtomicType",
+                        "name": "anyAtomicType"
+                    },
+                    {
+                        "datatype": "dateTimeStamp",
+                        "name": "dateTimeStamp"
+                    },
+                    {
+                        "datatype": "duration",
+                        "name": "duration"
+                    },
+                    {
+                        "datatype": "dayTimeDuration",
+                        "name": "dayTimeDuration"
+                    },
+                    {
+                        "datatype": "yearMonthDuration",
+                        "name": "yearMonthDuration"
+                    },
+                    {
+                        "datatype": "time",
+                        "name": "time"
+                    },
+                    {
+                        "datatype": "QName",
+                        "name": "QName"
+                    },
+                    {
+                        "datatype": "gDay",
+                        "name": "gDay"
+                    },
+                    {
+                        "datatype": "gMonth",
+                        "name": "gMonth"
+                    },
+                    {
+                        "datatype": "gMonthDay",
+                        "name": "gMonthDay"
+                    },
+                    {
+                        "datatype": "gYear",
+                        "name": "gYear"
+                    },
+                    {
+                        "datatype": "gYearMonth",
+                        "name": "gYearMonth"
+                    }
+                ]
+            },
+            "url": "all-csvw-types.csv"
+        }
+    ]
+}

@@ -563,4 +563,198 @@ this project or something.
 Update data frame comparisons and difference reporting.
 Changes test to reflect new reporting.
 changed test to use assertStringCorrect.
+
+------------------------- end of pandas2 branch --------------------------
+
+------------------------- serial metdata branch --------------------------
+
+Imported work previously in different csvmetadata repo as
+tdda.serial.  Commit history:
+
+    commit c0e29f2920312d1567b0b9f1471320335d815739
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Jan 29 18:25:54 2024 +0000
+
+        Initial commit
+
+    commit 7eeee6d1fd0dc6d2e7a33037e75957ac92dfb96a
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Jan 29 18:35:12 2024 +0000
+
+        Initial commit
+
+    commit 337a41a15b506430bd7584ebb719ccac657970da
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Jan 29 18:37:39 2024 +0000
+
+        Update README.md
+
+    commit d8599934ecda556414a1e8e4c867a18ce551e296
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Thu Feb 1 09:10:03 2024 +0000
+
+        Add embryonic csvmetadata.py
+
+    commit 7457ec89bb9c35bbedfef5d1d59305b582f5c4be
+    Merge: d859993 337a41a
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Thu Feb 1 09:10:20 2024 +0000
+
+        Merge branch 'main' of github.com:njr0/csvw2pd
+
+    commit 99dbcc015b933c479e11dd7d1478f50672bd425f
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Thu Feb 1 21:11:52 2024 +0000
+
+        Generalized by using intermediate Metadata object
+
+    commit b21f084d110427e88453ae1560de12adff6df4be
+    Author: overskilling <neil.skilling@overskilling.com>
+    Date:   Sat Feb 3 17:13:40 2024 +0000
+
+        Working with pytest
+
+        I had to make some modifications to make this work out of the
+        box with a fresh environment and pytest. You probably have
+        some stuff installed globally.
+
+        __init__.py was preventing pytest loading the functions it
+        needed as this is not a module csvw2pd.py was referencing
+        outpath when it meant inpath Added requirements.in - pip
+        install pip-tools and then run pip-compile to get the
+        requirements.txt file
+
+    commit 8173ea4bccc1964e354fddda44ca07d831c3cb0e
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sat Feb 3 17:19:01 2024 +0000
+
+        Add __str__ to CSVMetadata
+
+    commit 562882fb28111a850c406a9d98d177c5ff774d7a
+    Merge: 99dbcc0 b21f084
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sat Feb 3 17:31:30 2024 +0000
+
+        Merge pull request #1 from njr0/pytest
+
+        Working with pytest
+
+    commit e725da17fd07b7015251dc4e2607e9031e28f661
+    Merge: 8173ea4 562882f
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sat Feb 3 17:32:45 2024 +0000
+
+        Merge branch 'main' of github.com:njr0/csvw2pd
+
+    commit 4852a0acd1d2dfcd105a75e4bb4c173f2aca00f3
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sat Feb 3 17:48:15 2024 +0000
+
+        Add missing test (result) file.
+
+    commit 803142996f207ee0d4c315e4dce7d7796c14ab8b
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sun Feb 4 15:14:55 2024 +0000
+
+        Moved CSVW reading into CSVWMetadata class.
+
+        This subclasses CSVMetadata and stores CSVW-specifi
+        information in various _prefixed attributes.
+
+        There's probably too much stuff allowed in CSVW to read/check it all,
+        but it is now reading the @context and @url, which are both mandatory
+        in CSVW (though it is supposed to be relative to the CSVW -metadata.json
+        file) and there is some suggestion it might be permitted to be null.
+
+
+    commit 30e0ad6f46dc95bf958b81d515d2aee5922534dc
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sun Feb 4 19:27:14 2024 +0000
+
+        Read more properties from CSVW
+
+    commit 6499df06d2151da398e4d73212022d748d4a2842
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 5 11:38:24 2024 +0000
+
+        Renamed from csvw2pd to csvmetadata.
+
+        Also moved everything down a level (as will be needed for release)
+        and renamed csvmetadata.py to base.py and csvw2pd.py to cli.py.
+
+        Will add command line tools before too long.
+
+    commit 16027647bb2755a3df7a31b004582cb6bded7f65
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 5 11:57:49 2024 +0000
+
+        Add pyproject.toml and __init__.py
+
+    commit dd1b945aae798f72f6df2d92467c31673bf1f3e6
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Tue Feb 6 08:35:32 2024 +0000
+
+        Refactor
+
+    commit eec40aa48459eb22f9f2b03d40deb130c8d631e5
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Tue Feb 6 08:43:22 2024 +0000
+
+        Change fields from dictionary to list.
+
+    commit a6e4071a3117a7d600fbaef9f02fd359f4bc7db7
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 19 17:50:22 2024 +0000
+
+        Checkpoint.
+
+        Various changes for use by tdda library etc.
+        (only partly used so far). This is mainly
+        in the area of trying to find and identify
+        metadata files.
+
+        Have also broken some functionality into new files.
+
+    commit 86a7f7eac2edf5424e02eacbd59c073a3ce74d29
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Fri Feb 23 22:30:58 2024 +0000
+
+        Add csv2pandas
+
+        ...and add a single test for this (for now)
+        and fix a bunch of things to make this all work.
+
+    commit 8167b3c1e300598e6db013548680039de064237e
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 26 08:46:15 2024 +0000
+
+        Add test files (unused)
+
+    commit d08654fb4d20c4a56be06d2c93e847d8af77c484
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 26 08:48:44 2024 +0000
+
+        Add dev dir with utils
+
+    commit 0d78a5be8bb7879427efdfac487267f82608367e
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Mon Feb 26 19:30:25 2024 +0000
+
+        Add some tests for encodings
+
+    commit 8d70e9cf5f39b6303adf5cc8cc72e14954b1c8ee
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Fri Mar 1 22:42:56 2024 +0000
+
+        Lots more tests and some code fixes
+
+    commit 47c481d146e40c9048a31a80c4db910c3bee0859
+    Author: Nick Radcliffe <njr@StochasticSolutions.com>
+    Date:   Sat Mar 2 08:22:55 2024 +0000
+
+        Add missing test files
+
+
+--------------------- end of serial metdata branch -----------------------
+
 """

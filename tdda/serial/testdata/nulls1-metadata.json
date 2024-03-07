@@ -1,0 +1,33 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "row"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "s"
+                    },
+                    {
+                        "datatype": "int",
+                        "name": "n"
+                    },
+                    {
+                        "datatype": "float",
+                        "name": "r"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "d"
+                    }
+                ]
+            },
+            "url": "nulls1.csv"
+        }
+    ]
+}

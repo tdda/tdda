@@ -1,0 +1,84 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dialect": {
+        "delimiter": ","
+    },
+    "null": "",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "i1"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "i2"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "i3"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "f1"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "f2"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "b1"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "b2"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "s1"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "s2"
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "dti",
+                        "format": "yyyy-MM-ddTHH:mm:ss"
+
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "dte",
+                        "format": "dd-MM-yyyy HH:mm:ss"
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "dtu",
+                        "format": "MM-dd-yyyy HH:mm:ss"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "di",
+                        "format": "yyyy-MM-dd"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "de",
+                        "format": "dd-MM-yyyy"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "du",
+                        "format": "MM-dd-yyyy"
+                    }
+                ]
+            },
+            "url": "small.csv"
+        }
+    ]
+}

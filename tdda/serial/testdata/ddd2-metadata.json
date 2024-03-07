@@ -1,0 +1,70 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:replaces": "{\"resources\": [{\"name\": \"ddd2\", \"type\": \"table\", \"path\": \"testdata/ddd2.csv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"utf-8\", \"schema\": {\"fields\": [{\"name\": \"index\", \"type\": \"integer\"}, {\"name\": \"evennulls\", \"type\": \"integer\"}, {\"name\": \"oddnulls\", \"type\": \"boolean\"}, {\"name\": \"evens\", \"type\": \"integer\"}, {\"name\": \"odds\", \"type\": \"integer\"}, {\"name\": \"evenreals\", \"type\": \"number\"}, {\"name\": \"oddreals\", \"type\": \"number\"}, {\"name\": \"evenstr\", \"type\": \"string\"}, {\"name\": \"oddstr\", \"type\": \"string\"}, {\"name\": \"elevens\", \"type\": \"string\"}, {\"name\": \"binnedindex\", \"type\": \"integer\"}, {\"name\": \"binnedodds\", \"type\": \"integer\"}, {\"name\": \"basedate\", \"type\": \"string\"}, {\"name\": \"evendates\", \"type\": \"string\"}]}}], \"profile\": \"data-package\"}",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "index"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "evennulls"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "oddnulls"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "evens"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "odds"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "evenreals"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "oddreals"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "evenstr"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "oddstr"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "elevens"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "binnedindex"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "binnedodds"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "basedate"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "evendates"
+                    }
+                ]
+            },
+            "url": "testdata/ddd2.csv"
+        }
+    ]
+}

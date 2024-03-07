@@ -1,0 +1,6 @@
+row,EuroAmount,YenAmount,WideYenAmount,GBPAmount,DashKind,Dash,DQuoteKind,DQuote,SingleQuoteKind,SingleQuote
+1,€1,¥1,￥2,£1,hyphen,-,Straight Double Quote,"\"",Apostrophe,'
+2,€2,¥2,￥2,£2,en-hyphen,–,Left Double Quote,“,Left Single Quote,‘
+3,€3,¥3,￥3,£3,em-hyphen,—,Right Double Quote,”,Right Single Quote,’
+4,€4,¥4,￥4,£4,,minus sign,−,,Reversed Nine Single Quote,‛
+5,€5,¥5,￥5,£5,,,,,Nine Single Quote,‛

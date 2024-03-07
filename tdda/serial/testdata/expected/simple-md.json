@@ -1,0 +1,40 @@
+{
+    "@context": "http://tdda.info/ns/tddametadata",
+    "fields": [
+        {
+            "name": "Index",
+            "mtype": "int"
+        },
+        {
+            "name": "Odd",
+            "mtype": "bool"
+        },
+        {
+            "name": "Even",
+            "mtype": "bool"
+        },
+        {
+            "name": "Real",
+            "mtype": "number"
+        },
+        {
+            "name": "Name",
+            "mtype": "string"
+        },
+        {
+            "name": "LastInFeb",
+            "mtype": "date",
+            "format": "ISO8601"
+        },
+        {
+            "name": "LastIn2024",
+            "mtype": "datetime",
+            "format": "ISO8601"
+        }
+    ],
+    "encoding": "utf-8",
+    "metadata_source": "http://www.w3.org/ns/csvw",
+    "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/simple-metadata.json",
+    "valid": true,
+    "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata"
+}

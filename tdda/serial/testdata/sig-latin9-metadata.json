@@ -1,0 +1,33 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:replaces": "{\"resources\": [{\"name\": \"sig-latin9\", \"type\": \"table\", \"path\": \"sig-latin9.csv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"iso8859-15\", \"schema\": {\"fields\": [{\"name\": \"encoding\", \"type\": \"string\"}, {\"name\": \"altname\", \"type\": \"string\"}, {\"name\": \"hello\", \"type\": \"string\"}, {\"name\": \"sig\", \"type\": \"string\"}]}}], \"profile\": \"data-package\"}",
+    "tables": [
+        {
+            "dialect": {
+                "encoding": "iso8859-15"
+            },
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "name": "encoding"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "altname"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "hello"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "sig"
+                    }
+                ]
+            },
+            "url": "sig-latin9.csv"
+        }
+    ]
+}

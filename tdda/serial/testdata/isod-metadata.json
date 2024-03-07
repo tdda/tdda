@@ -1,0 +1,22 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:replaces": "{\"resources\": [{\"name\": \"isod\", \"type\": \"table\", \"path\": \"testdata/isod.csv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"utf-8\", \"schema\": {\"fields\": [{\"name\": \"row\", \"type\": \"integer\"}, {\"name\": \"date\", \"type\": \"date\"}]}}], \"profile\": \"data-package\"}",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "row"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "date"
+                    }
+                ]
+            },
+            "url": "isod.csv"
+        }
+    ]
+}

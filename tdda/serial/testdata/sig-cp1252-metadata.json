@@ -1,0 +1,32 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dialect": {
+       "encoding": "cp1252"
+    },
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "name": "encoding"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "altname"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "hello"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "sig"
+                    }
+                ]
+            },
+            "url": "sig-cp1252.csv"
+        }
+    ]
+}

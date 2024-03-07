@@ -1,0 +1,36 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dialect": {
+        "encoding": "utf-8"
+    },
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "name": "encoding"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "hello"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "latin1"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "latin9"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "cp1252"
+                    }
+                ]
+            },
+            "url": "sig-equiv-utf8.csv"
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dialect": {
+        "encoding": "iso8859-1"
+    },
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "string",
+                        "name": "encoding"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "altname"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "hello"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "sig"
+                    }
+                ]
+            },
+            "url": "sig-latin1.csv"
+        }
+    ]
+}
