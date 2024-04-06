@@ -111,6 +111,7 @@ Resources on these topics include:
   * PyCon UK Talk on TDDA:
       - Video: https://www.youtube.com/watch?v=FIw_7aUuY50
       - Slides and Rough Transcript:   http://www.tdda.info/slides-and-rough-transcript-of-tdda-talk-from-pycon-uk-2016
+  * <a rel="me" href="https://mathstodon.xyz/@tdda">Mastodon</a>
 
 All examples, tests and code run under Python 2.7, Python 3.5 and Python 3.6.
 
