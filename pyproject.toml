@@ -11,9 +11,8 @@ authors = [
         email = "njr@stochasticsolutions.com"
     },
     {
-        name = "Simon Brown",
-    },
-
+        name = "Simon Brown"
+    }
 ]
 
 
