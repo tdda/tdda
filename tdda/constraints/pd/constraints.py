@@ -76,7 +76,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
-from csvmetadata.cli import to_pandas_read_csv_args
+from tdda.serial.pandasio import to_pandas_read_csv_args
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
