@@ -2,5 +2,6 @@
 pytest
 pandas >= 2.0
 pyarrow >= 15.0
+pyyaml >= 6.0
 
 

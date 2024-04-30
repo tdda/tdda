@@ -3,4 +3,5 @@ pytest
 pandas
 cython
 sphinx-rtd-theme
+pyyaml
 
