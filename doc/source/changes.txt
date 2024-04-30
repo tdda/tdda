@@ -6,6 +6,28 @@ Recent Changes
 This Version
 ------------
 
+* **2.1** Upgrade pandas dependency to 2.0 and significantly
+  improve compatibility with Pandas 2.0+.
+
+* **2.1** Add support for parquet files for input and output data,
+  (particularly for constraint generation, verification, and detection).
+  New dependency on `pyarrow` to support this.
+
+* **2.1** Deprecate use of `.feather` files. Support will be removed
+  in a future version, no earlier than 2.2.
+
+* **2.1** Inference of date formats: the TDDA library now uses its
+  own methods to infer date formats, as Pandas no longer supports this.
+
+* **2.1** Experimental support for CSV metadata specification files.
+  This is unstable, not fully documented, and subject to change.
+
+
+Previous Versions
+-----------------
+
+* **2.0.8 and 2.0.9** Fixed to IP address lookup in `gentest`.
+
 * **2.0** Addition of Gentest---functionality for automatically
   generating Python test code for any command-line program
 
