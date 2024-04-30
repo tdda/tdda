@@ -72,7 +72,7 @@ from tdda.referencetest.checkpandas import (default_csv_loader,
 from tdda import rexpy
 
 from tdda.serial.reader import load_metadata
-from csvmetadata.utils import (
+from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
