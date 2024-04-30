@@ -6,9 +6,8 @@ build-backend = "setuptools.build_meta"
 requires-python = ">=3.8"
 name = "Test-Driven Data Analysis (tdda)"
 authors = [
-    {   name = "Nick Radcliffe",
-        email = "njr@stochasticsolutions.com" },
-    {   name = "Simon Brown" },
+    { name = "Nick Radcliffe", email = "njr@stochasticsolutions.com" },
+    { name = "Simon Brown" },
 ]
 
 
