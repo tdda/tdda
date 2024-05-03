@@ -4,7 +4,7 @@
 Support for Pandas constraint discovery from the command-line tool
 
 Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
-as feather files, and save the generated constraints as a .tdda JSON file.
+as parquetfiles, and save the generated constraints as a .tdda JSON file.
 """
 
 USAGE = '''
@@ -15,7 +15,6 @@ Parameters:
 
     - a csv file
     - a .parquet file
-    - a .feather file containing a saved Pandas or R DataFrame (deprecated)
     - any of the other supported data sources
 
   * constraints.tdda, if provided, specifies the name of a file to
@@ -26,15 +25,6 @@ Parameters:
 
 import os
 import sys
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
 
 try:
     from StringIO import StringIO
@@ -69,7 +59,7 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 def pd_discover_parser():
     parser = discover_parser(USAGE)
     parser.add_argument('input', nargs=1,
-                        help='CSV, parquet (or feather, deprecated) file')
+                        help='CSV or parquet file')
     parser.add_argument('constraints', nargs='?',
                         help='name of constraints file to create')
     return parser

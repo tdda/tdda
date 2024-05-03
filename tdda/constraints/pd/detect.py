@@ -4,7 +4,7 @@
 Support for Pandas constraint detection from the command-line tool
 
 Detect constraints using CSV files, or Pandas or R DataFrames saved as
-feather files, against a constraints from .tdda JSON constraints file.
+parquet files, against a constraints from .tdda JSON constraints file.
 """
 
 USAGE = '''
@@ -15,13 +15,12 @@ Parameters:
 
       - a csv file
       - a .parquet file
-      - a feather file containing a Pandas or R DataFrame (deprecated(
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
 
-  * name of output file (.csv,  .parqet or .feather (deprecated))
+  * name of output file (.csv, .parqet)
     where detection results are to be written.
     Can be - (or missing) to write to standard output.
 
@@ -37,15 +36,6 @@ except ImportError:
 
 import pandas as pd
 import numpy as np
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
 
 from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
@@ -75,7 +65,7 @@ def detect_df_from_file(df_path, constraints_path, outpath,
 
 def pd_detect_parser():
     parser = detect_parser(USAGE)
-    parser.add_argument('input', help='CSV, parquet or feather file')
+    parser.add_argument('input', help='CSV, parquet')
     parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     parser.add_argument('outpath', nargs='?',

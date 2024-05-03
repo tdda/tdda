@@ -61,7 +61,7 @@ Optional flags are:
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
-      specified. Rows are usually numbered from 1, unless the (feather)
+      specified. Rows are usually numbered from 1, unless the
       input file already has an index.
 
 '''

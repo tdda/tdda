@@ -4,7 +4,7 @@
 Support for Pandas constraint verification from the command-line tool
 
 Verify constraints using CSV files, or Pandas or R DataFrames saved as
-feather files, against a constraints from .tdda JSON constraints file.
+parquet files, against a constraints from .tdda JSON constraints file.
 """
 
 USAGE = '''
@@ -15,7 +15,6 @@ Parameters:
 
       - a csv file. Can be - to read from standard input.
       - a parquet file
-      - a feather file containing a Pandas or R DataFrame (deprecated).
       - any of the other supported data sources
 
   * constraints.tdda, if provided, is a JSON .tdda file constaining
@@ -36,15 +35,6 @@ except ImportError:
 
 import pandas as pd
 import numpy as np
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-    try:
-        import feather as feather
-    except ImportError:
-        feather = None
 
 from tdda import __version__
 from tdda.constraints.flags import verify_parser, verify_flags
@@ -70,7 +60,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
 
 def pd_verify_parser():
     parser = verify_parser(USAGE)
-    parser.add_argument('input', nargs=1, help='CSV, parquet, or feather file')
+    parser.add_argument('input', nargs=1, help='CSV or parquet file')
     parser.add_argument('constraints', nargs='?',
                         help='constraints file to verify against')
     return parser

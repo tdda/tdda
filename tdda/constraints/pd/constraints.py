@@ -30,6 +30,8 @@ import sys
 
 from collections import OrderedDict
 
+from tdda.deprecated.featherfiles import read_feather_file, write_feather_file
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -37,16 +39,6 @@ except ImportError:
 
 import numpy as np
 import pandas as pd
-
-try:
-    from pmmif import featherpmm
-except ImportError:
-    featherpmm = None
-
-try:
-    import feather as feather
-except ImportError:
-    feather = None
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
@@ -1170,15 +1162,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
     if ext == '.parquet':
         return pd.read_parquet(path)
     elif ext == '.feather':
-        if featherpmm and feather:
-            ds = featherpmm.read_dataframe(path)
-            return ds.df
-        elif feather:
-            return feather.read_dataframe(path)
-        else:
-            raise Exception('The Python feather module is not installed.\n'
-                            'Use:\n    pip install feather-format\n'
-                            'to add capability.\n')
+        return read_feather_file(path)
 
     if mdpath is None:
         md_type, _ = find_metadata_type_from_path(path)
@@ -1222,17 +1206,10 @@ def save_df(df, path, index=False):
         df.to_parquet(path=path, index=False)
     elif fmt in ('csv', 'psv', 'tsv', 'txt'):
         default_csv_writer(df, path, index=index)
-    elif fmt != 'feather':
-        raise Exception(f'Unknown output format: {fmt}')
-    elif featherpmm and feather:
-        featherpmm.write_dataframe(featherpmm.Dataset(df, name='verification'),
-                                   path)
-    elif feather:
-        feather.write_dataframe(df, path)
+    elif fmt == 'feather':
+        write_feather_file(df, path, name='verification')
     else:
-        raise Exception('The Python feather module is not installed.\n'
-                        'Use:\n    pip install feather-format\n'
-                        'to add capability.\n')
+        raise Exception(f'Unknown output format: {fmt}')
 
 
 def unique_column_name(df, name):

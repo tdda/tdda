@@ -31,10 +31,10 @@ class TDDAPandasExtension(ExtensionBase):
 
     def help(self, stream=sys.stdout):
         print('  - Flat files (filename.csv)', file=stream)
-        print('  - Pandas DataFrames (filename.feather)', file=stream)
+        print('  - Pandas DataFrames (filename.parquet)', file=stream)
 
     def spec(self):
-        return 'a CSV file or a .feather file'
+        return 'a CSV file or a .parquet file'
 
     def discover(self):
         return PandasDiscoverer(self.argv, verbose=self.verbose).discover()

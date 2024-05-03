@@ -25,6 +25,7 @@ else:
 
 
 def testall(module=None, argv=None):
+    os.environ['TDDA_TESTING'] = 'TRUE'
     ReferenceTestCase.main(module=module, argv=argv)
 
 
