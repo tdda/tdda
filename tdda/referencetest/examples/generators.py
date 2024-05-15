@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 generators.py: Trivial result generation functions for illustrating
                tdda.referencetest
@@ -7,14 +6,11 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016
+Copyright (c) Stochastic Solutions Limited 2016-2024
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import datetime
 import math
+
 
 def generate_string():
     """
@@ -28,7 +24,7 @@ def generate_string():
           reference file includes.
     """
     version = '1.0.0'
-    copyright_year = '2016'
+    copyright_year = str(datetime.date.today().year)
     inc_gendate = False
     date = datetime.datetime.now().strftime('    %Y-%m-%dT%H:%M:%S')
     generation_date = date if inc_gendate else ''
@@ -69,11 +65,12 @@ def generate_string():
 
 
 def generate_file(path):
+    year = str(datetime.date.today().year)
     html = '''<!DOCTYPE html>
 <html>
   <head>
     <!--
-    Copyright (c) Stochastic Solutions, 2016
+    Copyright (c) Stochastic Solutions, %s
     Version 1.0.0
     -->
     <meta charset="UTF-8"/>
@@ -113,7 +110,7 @@ def generate_file(path):
   </div>
 </body>
 </html>
-'''
+''' % year
     with open(path, 'w') as f:
         f.write(html)
 

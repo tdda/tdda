@@ -67,6 +67,8 @@ def protected_readlines(path, filetype):
     try:
         with open(path, encoding=enc) as f:
             return f.readlines()
+        if filetype.is_unknown():
+            filetype.text = True
     except UnicodeDecodeError:
         if filetype.text:  # really was expecting text
             try:

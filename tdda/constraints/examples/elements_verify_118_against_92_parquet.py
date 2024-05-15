@@ -1,11 +1,10 @@
-# elements_verify_118_against_92_feather.py
+# elements_verify_118_against_92_parquet.py
 
-from __future__ import print_function
 import pandas as pd
 
 from tdda.constraints.pd.constraints import verify_df
 
-df = pd.read_csv('testdata/elements118.csv')
+df = pd.read_parquet('testdata/elements118.parquet')
 verification = verify_df(df, 'testdata/elements92.tdda')
 
 print('Basic Verification:')
