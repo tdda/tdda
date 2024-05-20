@@ -103,7 +103,7 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
 
        upgrade_types   If True (the default), this will upgrade
                        some columns read_csv will create as object
-                       (dtype='O') to stricter types.
+                       (dtype object) to stricter types.
 
        **kw     These keyword arguments are passed to pandas.read_csv,
                 and can be used to override values from the

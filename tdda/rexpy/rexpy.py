@@ -2092,8 +2092,8 @@ def pdextract(cols, seed=None):
     Extract regular expression(s) from the Pandas column (``Series``) object
     or list of Pandas columns given.
 
-    All columns provided should be string columns (i.e. of type np.dtype('O'),
-    possibly including null values, which will be ignored.
+    All columns provided should be string columns (i.e. of type object
+    or categorical) possibly including null values, which will be ignored.
 
     Example use::
 

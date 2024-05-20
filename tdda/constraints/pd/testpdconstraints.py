@@ -70,6 +70,8 @@ from tdda.referencetest.pddates import (
     Separators,
     get_date_separators
 )
+from tdda.referencetest.checkpandas import default_csv_loader
+
 
 isPython2 = sys.version_info[0] < 3
 
@@ -1214,10 +1216,36 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
                                        '"tddafile":',
                                    ])
 
+    def testDiscover1k_parquet(self):
+        pq_path = os.path.join(TESTDATA_DIR, 'accounts1k.parquet')
+        tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        c = discover_df_from_file(pq_path, constraints_path=tddafile1k,
+                                  verbose=False)
+        self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
+                                   ignore_lines=[
+                                       '"local_time":',
+                                       '"utc_time":',
+                                       '"creator":',
+                                       '"source":',
+                                       '"host":',
+                                       '"user":',
+                                       '"tddafile":',
+                                       '"dataset":'
+                                   ])
+
     def testVerify1k(self):
         csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
         reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
         v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
+                                verbose=False)
+        self.assertEqual(v.passes, 72)
+        self.assertEqual(v.failures, 0)
+
+    def testVerify1k_parquet(self):
+        pq_path = os.path.join(TESTDATA_DIR, 'accounts1k.parquet')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
                                 verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
@@ -1238,6 +1266,27 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
         self.assertEqual(expected, (53, 19), "NUMBERS DIFFER FROM README!")
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    def testVerify25kAgainst1k_parquet(self):
+        pq_path = os.path.join(TESTDATA_DIR, 'accounts25k.parquet')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
+                                verbose=False)
+
+        # These are one different from CSV version because
+        # the CSV reader reads the empty strings in account_type
+        # as None values, whereas in the parquet file they are
+        # empty strings. There's a philosophical question as to
+        # which is "right", but the tests are checking the the
+        # data as read by the CSV and Parquet readers is validated
+        # correctly by TDDA.
+
+        passingConstraints = 53
+        failingConstraints = 19
+        expected = (passingConstraints, failingConstraints)
+
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
 
     def testDetect25kAgainst1k(self):
         csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
@@ -1263,6 +1312,39 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         self.assertTextFileCorrect(outfile, refpath)
+
+    def testDetect25kAgainst1k_parquet(self):
+        pq_path = os.path.join(TESTDATA_DIR, 'accounts25k.parquet')
+        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        refpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.parquet')
+        refcsvpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.txt')
+        outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.parquet')
+        v = detect_df_from_file(pq_path, constraints_path=reftddafile1k,
+                                outpath=outfile, verbose=False)
+        passingConstraints = 53
+        failingConstraints = 19
+        passingRecords = 24883
+        failingRecords = 117
+        expected = (passingConstraints, failingConstraints,
+                    passingRecords, failingRecords)
+        self.assertEqual(v.passes, passingConstraints)
+        self.assertEqual(v.failures, failingConstraints)
+        self.assertEqual(v.detection.n_passing_records,  passingRecords)
+        self.assertEqual(v.detection.n_failing_records, failingRecords)
+
+
+        actual_df = pd.read_parquet(outfile)
+        expected_df = pd.read_parquet(refpath)
+
+        # Check against saved reference parquet file
+        self.assertDataFramesEqual(actual_df, expected_df, outfile, refpath)
+
+        # Also check that's the same as the CSV equivalent,
+        # appropriately read!
+        from_csv_df = default_csv_loader(refcsvpath)
+        self.assertDataFramesEqual(expected_df, from_csv_df,
+                                   outfile, refcsvpath)
+
 
     def testDiscover25k(self):
         csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
@@ -1665,7 +1747,6 @@ class TestUtilityFunctions(ReferenceTestCase):
 
 class TestUtilityFunctions(ReferenceTestCase):
 
-    @tag
     def testDateInferrer(self):
         df = pd.DataFrame({
             'isod': ['2024-01-01', None, '2024-01-20', None],

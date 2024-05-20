@@ -760,4 +760,21 @@ Change ...pd.constraints.py to use tdda.serial
 
 --------------------- end of serial metdata branch -----------------------
 
+###
+Fix parquet problem etc:
+
+tdda discover was ignoring categorical fields in parquet files.
+This is now fixed.
+
+Also:
+
+  - Added deprecation warning when using feather files
+  - Added parquet files to examples
+  - Added versions of tdda constraints tests using parquet files
+  - Added scripts for creating parquet files from CSVs
+     - buildutils/create_parquet_examples.py
+     - The parquet files are created by reading the CSV files using
+       tdda.referencetest.checkpandas import default_csv_loader,
+       which gaurantees that the DataFrame is the same as the one
+       created by the CSV loader.
 """

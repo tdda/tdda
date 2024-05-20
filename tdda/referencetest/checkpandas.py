@@ -18,6 +18,8 @@ from collections import OrderedDict
 
 from tdda.referencetest.basecomparison import BaseComparison, Diffs
 from tdda.referencetest.pddates import infer_date_format
+from tdda.pd.utils import is_string_col
+
 
 try:
     import pandas as pd
@@ -488,7 +490,7 @@ def default_csv_loader(csvfile, **kwargs):
                          # pandas do it.
         colnames = df.columns.tolist()
         for c in colnames:
-            if df[c].dtype == np.dtype('O'):
+            if is_string_col(df[c]):
                 fmt = infer_date_format(df[c])
                 if fmt:
                     try:
@@ -530,7 +532,7 @@ def default_csv_writer(df, csvfile, **kwargs):
 def find_bytes_cols(df):
     bytes_cols = []
     for c in list(df):
-        if df[c].dtype == 'O':
+        if is_string_col(df[c]):
             nonnulls = df[df[c].notnull()].reset_index()[c]
             if len(nonnulls) > 0 and type(nonnulls[0]) is bytes:
                 bytes_cols.append(c)

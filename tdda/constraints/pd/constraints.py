@@ -58,6 +58,7 @@ from tdda.constraints.baseconstraints import (
     MAX_CATEGORIES,
     unicode_string, byte_string, long_type
 )
+from tdda.pd.utils import is_string_col, is_string_dtype, is_categorical_dtype
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
                                             default_csv_writer)
@@ -106,7 +107,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return pandas_types_compatible(x, y, colname=colname)
 
     def calc_min(self, colname):
-        if self.df[colname].dtype == np.dtype('O'):
+        if is_string_col(self.df[colname]):
             m = self.df[colname].dropna().min()  # Otherwise -inf!
         else:
             m = self.df[colname].min()
@@ -117,7 +118,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return m
 
     def calc_max(self, colname):
-        if self.df[colname].dtype == np.dtype('O'):
+        if is_string_col(self.df[colname]):
             M = self.df[colname].dropna().max()
         else:
             M = self.df[colname].max()
@@ -412,6 +413,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     indexes.append(pair)
                 for name, index in reversed(indexes):
                     df_to_save.insert(0, name, index)
+
             if not detect_write_all:
                 df_to_save = df_to_save[df_to_save[nfailname] > 0]
             save_df(df_to_save, detect_outpath, index=False)
@@ -466,7 +468,7 @@ class PandasConstraintVerifier(PandasConstraintCalculator,
             try:
                 ctype = constraints[c]['type'].value
                 dtype = ser.dtype
-                if ctype == 'string' and dtype != np.dtype('O'):
+                if ctype == 'string' and not is_string_col(ser):
                     is_numeric = True
                     is_real = False
                     for limit in ('min', 'max'):
@@ -631,6 +633,8 @@ def pandas_tdda_type(x):
             elif isinstance(v, datetime.date):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
+        return 'string'
+    if is_categorical_dtype(dt):
         return 'string'
     dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
@@ -1228,9 +1232,13 @@ def detection_field(column, expr, default=None):
     """
     Construct a field for a detection result
     """
-    default_value = (np.nan if default is None
-                            else (np.ones(len(column)) * default))
-    return np.where(pd.isnull(column), default_value, expr.astype('O'))
+    if column.isnull().sum() == 0:
+        return expr.astype(bool)
+    else:
+        null = np.nan if default is None else default # np.nan  # pd.NA
+        return np.where(pd.isnull(column), null, expr.astype('O'))
+
+
 
 
 def convert_output_types(df, boolean_ints):
