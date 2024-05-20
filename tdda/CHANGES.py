@@ -760,7 +760,7 @@ Change ...pd.constraints.py to use tdda.serial
 
 --------------------- end of serial metdata branch -----------------------
 
-###
+20.05.2024 2.1.06
 Fix parquet problem etc:
 
 tdda discover was ignoring categorical fields in parquet files.
