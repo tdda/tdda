@@ -4,4 +4,5 @@ pandas
 cython
 sphinx-rtd-theme
 pyyaml
+chardet >= 5.2
 

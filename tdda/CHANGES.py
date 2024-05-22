@@ -782,4 +782,7 @@ Also:
 Add chardet as dependency; improve gentest
 
 gentest now uses chardet to guess the encoding of possible text files.
+
+###
+Add chardet to rtdrequirements.
 """
