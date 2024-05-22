@@ -783,6 +783,6 @@ Add chardet as dependency; improve gentest
 
 gentest now uses chardet to guess the encoding of possible text files.
 
-###
+22.05.2024 2.1.08
 Add chardet to rtdrequirements.
 """
