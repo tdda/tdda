@@ -778,7 +778,7 @@ Also:
        which gaurantees that the DataFrame is the same as the one
        created by the CSV loader.
 
-###
+22.05.2024 2.1.07
 Add chardet as dependency; improve gentest
 
 gentest now uses chardet to guess the encoding of possible text files.
