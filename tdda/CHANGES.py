@@ -777,4 +777,9 @@ Also:
        tdda.referencetest.checkpandas import default_csv_loader,
        which gaurantees that the DataFrame is the same as the one
        created by the CSV loader.
+
+###
+Add chardet as dependency; improve gentest
+
+gentest now uses chardet to guess the encoding of possible text files.
 """

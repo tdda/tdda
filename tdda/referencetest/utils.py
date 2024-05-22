@@ -1,6 +1,10 @@
 import os
 import sys
 
+import chardet
+
+MIN_CHARDET_CONFIDENCE=0.5
+
 class FileType:
     BINARY_IMAGES = ('png', 'jpeg', 'jpg', 'gif', 'ps', 'eps', 'eps')
     TEXT_IMAGES = ('svg', 'ps', 'eps', 'pdf')  # pdf isn't, strictly, but...
@@ -22,6 +26,22 @@ class FileType:
         self.text   = self.ext in self.TEXT_FILES or name == 'Makefile'
         self.image  = self.ext in self.IMAGE_FILES
         self.encoding = 'iso-8859-1' if self.ext == 'pdf' else None
+        if not self.image and not self.binary:
+            if self.ext == PDF:
+                self.encoding = 'iso-8859-1'
+            else:
+                detector = chardet.UniversalDetector()
+                for line in open(path, 'rb'):
+                    detector.feed(line)
+                    if detector.done:
+                        break
+                detector.close()
+                confidence = detector.result.get('confidence', 0.0)
+                if confidence  > MIN_CHARDET_CONFIDENCE:
+                    self.encoding = detector.result.get('encoding')
+                    self.text = True
+                else:
+                    self.binary = True
         self.orig_encoding = self.encoding  # encoding might be modified
 
     def is_unknown(self):
