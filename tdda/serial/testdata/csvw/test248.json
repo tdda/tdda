@@ -1,0 +1,35 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test248.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test248.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "characters": "Å",
+              "codepoints": "212B",
+              "nfc": "00C5",
+              "description": "a-with-ring"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test248.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "characters": "ḍ̇",
+              "codepoints": "1E0B 0323",
+              "nfc": "1E0D 0307",
+              "description": "combining marks"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "No Unicode normalization (as specified in [[UAX15]]) is applied to these string values.",
+      "rdfs:label": "Unicode in non-Normalized form"
+    }
+  ]
+}

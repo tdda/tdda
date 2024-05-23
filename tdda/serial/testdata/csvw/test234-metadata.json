@@ -1,0 +1,13 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Validators MUST raise errors if there is more than one row with the same primary key.",
+  "rdfs:label": "multiple column primaryKey violation",
+  "url": "test234.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": "PK1", "titles": "PK1"},
+      {"name": "PK2", "titles": "PK2"}
+    ],
+    "primaryKey": ["PK1", "PK2"]
+  }
+}

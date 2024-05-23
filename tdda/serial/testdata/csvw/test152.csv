@@ -1,0 +1,2 @@
+string1,string2,string3,anyUri,normalizedString,NMTOKEN
+AaAaA,GED,"foo bar",http://example.org,bar,foobar

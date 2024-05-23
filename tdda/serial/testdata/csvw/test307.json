@@ -1,0 +1,45 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test307.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test307.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test307.csv#about",
+              "http://www.w3.org/2013/csvw/tests/test307.csv#value": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ]
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test307.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test307.csv#about",
+              "http://www.w3.org/2013/csvw/tests/test307.csv#value": [
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f"
+              ]
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "multiple values with same subject and property (ordered and unordered)",
+      "rdfs:comment": "Values in separate columns using the same propertyUrl are kept in proper relative order."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "rdfs:label": "This metadata is used",
+  "rdfs:comment": "User-specified metadata does not need to reference the starting CSV",
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test121-ref.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test121-ref.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "countryCode": "YE",
+              "latitude": 15.0,
+              "longitude": 48.0,
+              "name": "Yemen"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test121-ref.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "countryCode": "ZM",
+              "latitude": -15.0,
+              "longitude": 30.0,
+              "name": "Zambia"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test121-ref.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "countryCode": "ZW",
+              "latitude": -20.0,
+              "longitude": 30.0,
+              "name": "Zimbabwe"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

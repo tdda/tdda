@@ -1,0 +1,28 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the column required annotation is true, add an error to the list of errors for the cell.",
+  "tables": [{
+    "url": "test125.csv",
+    "tableSchema": {
+      "columns": [{
+        "titles": "countryCode",
+        "required": true
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number",
+        "required": true
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number",
+        "required": true
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string",
+        "required": true
+      }]
+    }
+  }]
+}

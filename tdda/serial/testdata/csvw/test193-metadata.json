@@ -1,0 +1,13 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the datatype base is a duration type, the datatype format annotation provides a regular expression for the string values.",
+  "rdfs:label": "duration format (valid combinations)",
+  "url": "test193.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "duration",          "datatype": {"base": "duration", "format": "^-?P.*$"}},
+      {"titles": "dayTimeDuration",   "datatype": {"base": "dayTimeDuration", "format": "^-?P.DT.*$"}},
+      {"titles": "yearMonthDuration", "datatype": {"base": "yearMonthDuration", "format": "^-?P.Y20M$"}}
+    ]
+  }
+}

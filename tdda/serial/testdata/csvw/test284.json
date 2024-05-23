@@ -1,0 +1,79 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test284.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test284.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "###0.#####": 1.0,
+              "###0.0000#": 1.2345,
+              "00000.0000": 12345.6789,
+              "#,##,##0": 1,
+              "#,##,#00": 12,
+              "#,##,000": 123,
+              "#,#0,000": 1234,
+              "#,00,000": 12345,
+              "0,00,000": 123456
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test284.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "###0.#####": 12.3,
+              "###0.0000#": 12.34567,
+              "00000.0000": 12345.6789,
+              "#,##,##0": 123,
+              "#,##,#00": 123,
+              "#,##,000": 123,
+              "#,#0,000": 1234,
+              "#,00,000": 12345,
+              "0,00,000": 123456
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test284.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "###0.#####": 123.45,
+              "###0.0000#": 12.34567,
+              "00000.0000": 12345.6789,
+              "#,##,##0": 12345,
+              "#,##,#00": 12345,
+              "#,##,000": 12345,
+              "#,#0,000": 12345,
+              "#,00,000": 12345,
+              "0,00,000": 123456
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test284.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "###0.#####": 1.23456,
+              "###0.0000#": 12.34567,
+              "00000.0000": 12345.6789,
+              "#,##,##0": 123456,
+              "#,##,#00": 123456,
+              "#,##,000": 123456,
+              "#,#0,000": 123456,
+              "#,00,000": 12345,
+              "0,00,000": 123456
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "valid number patterns (grouping)",
+      "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`."
+    }
+  ]
+}

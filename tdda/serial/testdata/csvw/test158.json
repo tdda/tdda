@@ -1,0 +1,35 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test158.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test158.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "integer": 0,
+              "decimal": 0.1,
+              "double": 0.0,
+              "decimal1": 10000.1
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test158.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "integer": 10,
+              "decimal": 10.1,
+              "double": 101.0,
+              "decimal1": 1.1
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Numeric dataype with object format.",
+      "rdfs:label": "number format (valid combinations)"
+    }
+  ]
+}

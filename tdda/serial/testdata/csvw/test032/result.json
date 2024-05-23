@@ -1,0 +1,55 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#event-1",
+              "schema:name": "B.B. King",
+              "schema:startDate": "2014-04-12T19:30:00",
+              "@type": "schema:MusicEvent",
+              "schema:location": {
+                "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#place-1",
+                "schema:name": "Lupo’s Heartbreak Hotel",
+                "schema:address": "79 Washington St., Providence, RI",
+                "@type": "schema:Place"
+              },
+              "schema:offers": {
+                "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#offer-1",
+                "schema:url": "https://www.etix.com/ticket/1771656",
+                "@type": "schema:Offer"
+              }
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#event-2",
+              "schema:name": "B.B. King",
+              "schema:startDate": "2014-04-13T20:00:00",
+              "@type": "schema:MusicEvent",
+              "schema:location": {
+                "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#place-2",
+                "schema:name": "Lynn Auditorium",
+                "schema:address": "Lynn, MA, 01901",
+                "@type": "schema:Place"
+              },
+              "schema:offers": {
+                "@id": "http://www.w3.org/2013/csvw/tests/test032/events-listing.csv#offer-2",
+                "schema:url": "http://frontgatetickets.com/venue.php?id=11766",
+                "@type": "schema:Offer"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

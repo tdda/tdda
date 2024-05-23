@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test281.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test281.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "yearMonthDuration": "Foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "yearMonthDuration not matching xsd pattern",
+      "rdfs:comment": "Value MUST be a valid xsd:yearMonthDuration.."
+    }
+  ]
+}

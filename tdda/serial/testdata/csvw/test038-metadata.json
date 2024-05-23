@@ -1,0 +1,39 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "null": "foo",
+  "datatype": "string",
+  "separator": null,
+  "tables": [{
+    "url": "test038.csv",
+    "aboutUrl": "#modelrow={_row}",
+    "tableSchema": {
+      "textDirection": "ltr",
+      "propertyUrl": "#col={_name}",
+      "columns": [{
+        "titles": "null"
+      }, {
+        "lang": "en",
+        "titles": "lang"
+      }, {
+        "titles": "textDirection"
+      }, {
+        "titles": "separator"
+      }, {
+        "ordered": true,
+        "titles": "ordered"
+      }, {
+        "titles": "default",
+        "default": "bar"
+      }, {
+        "titles": "datatype"
+      }, {
+        "titles": "aboutUrl"
+      }, {
+        "titles": "propertyUrl"
+      }, {
+        "titles": "valueUrl",
+        "valueUrl": "schema:about"
+      }]
+    }
+  }]
+}

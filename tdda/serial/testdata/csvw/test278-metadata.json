@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "CSV has more headers than there are columns in the metadata",
+  "rdfs:comment": "Two schemas are compatible if they have the same number of non-virtual column descriptions, and the non-virtual column descriptions at the same index within each are compatible with each other.",
+  "tables": [{
+    "url": "tree-ops.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "GID",
+        "titles": "GID"
+      }]
+    }
+  }]
+}

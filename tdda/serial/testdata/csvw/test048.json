@@ -1,0 +1,29 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test048.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test048.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "http://www.w3.org/2013/csvw/tests/test048.csv": [
+                "empty",
+                "en",
+                "ltr",
+                "-",
+                "true",
+                "def",
+                "string",
+                "about",
+                "prop",
+                "value"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

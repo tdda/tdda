@@ -1,0 +1,22 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test161.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test161.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "integer": "10.1",
+              "decimal": "10.10e1",
+              "double": "foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell if the string being parsed.",
+      "rdfs:label": "number format (not matching values without pattern)"
+    }
+  ]
+}

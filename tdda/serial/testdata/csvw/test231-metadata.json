@@ -1,0 +1,10 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "As defined in [tabular-data-model], validators must check that each row has a unique combination of values of cells in the indicated columns.",
+  "rdfs:label": "single column primaryKey success",
+  "url": "test231.csv",
+  "tableSchema": {
+    "columns": [{"name": "PK", "titles": "PK"}],
+    "primaryKey": "PK"
+  }
+}

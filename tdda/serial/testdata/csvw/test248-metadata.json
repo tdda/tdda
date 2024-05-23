@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "No Unicode normalization (as specified in [[UAX15]]) is applied to these string values.",
+  "rdfs:label": "Unicode in non-Normalized form",
+  "url": "test248.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "characters"},
+      {"titles": "codepoints"},
+      {"titles": "nfc"},
+      {"titles": "description"}
+    ]
+  }
+}

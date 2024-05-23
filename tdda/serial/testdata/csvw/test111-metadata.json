@@ -1,0 +1,23 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "titles with invalid value is ignored",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": 1
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date"
+    }]
+  }
+}

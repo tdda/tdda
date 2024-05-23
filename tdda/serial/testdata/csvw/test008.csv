@@ -1,0 +1,4 @@
+Book1,Book2,Path
+1,7680,"http://dbpedia.org/ontology/language,http://dbpedia.org/resource/English_language,http://dbpedia.org/ontology/language"
+1,2,"http://dbpedia.org/ontology/author,http://dbpedia.org/resource/Diana_Gabaldon,http://dbpedia.org/ontology/author"
+1,2,"http://dbpedia.org/ontology/country,http://dbpedia.org/resource/United_States,http://dbpedia.org/ontology/country"

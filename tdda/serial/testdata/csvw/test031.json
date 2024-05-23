@@ -1,0 +1,38 @@
+[
+  {
+    "@id": "http://example.org/countries.csv#AD",
+    "http://www.geonames.org/ontology#countryCode": "AD",
+    "schema:latitude": 42.546245,
+    "schema:longitude": 1.601554,
+    "schema:name": "Andorra"
+  },
+  {
+    "@id": "http://example.org/countries.csv#AE",
+    "http://www.geonames.org/ontology#countryCode": "AE",
+    "schema:latitude": 23.424076,
+    "schema:longitude": 53.847818,
+    "schema:name": "United Arab Emirates"
+  },
+  {
+    "@id": "http://example.org/countries.csv#AF",
+    "http://www.geonames.org/ontology#countryCode": "AF",
+    "schema:latitude": 33.93911,
+    "schema:longitude": 67.709953,
+    "schema:name": "Afghanistan"
+  },
+  {
+    "countryRef": "http://example.org/countries.csv#AF",
+    "year": "1960",
+    "population": 9616353
+  },
+  {
+    "countryRef": "http://example.org/countries.csv#AF",
+    "year": "1961",
+    "population": 9799379
+  },
+  {
+    "countryRef": "http://example.org/countries.csv#AF",
+    "year": "1962",
+    "population": 9989846
+  }
+]

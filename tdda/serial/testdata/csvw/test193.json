@@ -1,0 +1,110 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test193.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "duration": "PT130S",
+              "dayTimeDuration": "P1DT2H",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "duration": "PT130M",
+              "dayTimeDuration": "P1DT2H3M",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "duration": "PT130H",
+              "dayTimeDuration": "P1DT2H3S",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "duration": "P130D",
+              "dayTimeDuration": "P1DT2M",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "duration": "P130M",
+              "dayTimeDuration": "P1DT2S",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=7",
+          "rownum": 6,
+          "describes": [
+            {
+              "duration": "P130Y",
+              "dayTimeDuration": "P1DT2H",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=8",
+          "rownum": 7,
+          "describes": [
+            {
+              "duration": "PT2M10S",
+              "dayTimeDuration": "P1DT2H",
+              "yearMonthDuration": "P0Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=9",
+          "rownum": 8,
+          "describes": [
+            {
+              "duration": "P0Y20M0D",
+              "dayTimeDuration": "P0DT2H",
+              "yearMonthDuration": "P1Y20M"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test193.csv#row=10",
+          "rownum": 9,
+          "describes": [
+            {
+              "duration": "-P60D",
+              "dayTimeDuration": "-P1DT2H",
+              "yearMonthDuration": "-P0Y20M"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype base is a duration type, the datatype format annotation provides a regular expression for the string values.",
+      "rdfs:label": "duration format (valid combinations)"
+    }
+  ]
+}

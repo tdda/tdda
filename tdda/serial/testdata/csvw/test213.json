@@ -1,0 +1,25 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test213.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test213.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "minimum": "2015-06-05",
+              "maximum": "2015-06-05",
+              "minInclusive": "2015-06-05",
+              "maxInclusive": "2015-06-06",
+              "minExclusive": "2015-06-06",
+              "maxExclusive": "2015-06-04"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell",
+      "rdfs:label": "date value constraint not matching maxInclusive"
+    }
+  ]
+}

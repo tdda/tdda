@@ -1,0 +1,47 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "null": "foo",
+  "lang": "en",
+  "textDirection": "ltr",
+  "separator": null,
+  "ordered": true,
+  "default": "bar",
+  "datatype": "string",
+  "aboutUrl": "#row={_row}",
+  "propertyUrl": "#col={_name}",
+  "tables": [{
+    "url": "test039.csv",
+    "tableSchema": {
+      "columns": [{
+        "null": "foo",
+        "titles": "null"
+      }, {
+        "lang": "en-US",
+        "titles": "lang"
+      }, {
+        "titles": "textDirection"
+      }, {
+        "separator": null,
+        "titles": "separator"
+      }, {
+        "ordered": true,
+        "titles": "ordered"
+      }, {
+        "default": "bar",
+        "titles": "default"
+      }, {
+        "datatype": "normalizedString",
+        "titles": "datatype"
+      }, {
+        "aboutUrl": "#modelrow={_row}",
+        "titles": "aboutUrl"
+      }, {
+        "propertyUrl": "#COL={_name}",
+        "titles": "propertyUrl"
+      }, {
+        "valueUrl": "rdf:value",
+        "titles": "valueUrl"
+      }]
+    }
+  }]
+}

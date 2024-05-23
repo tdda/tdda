@@ -1,0 +1,28 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "property acceptable on table appears on column",
+  "rdfs:comment": "Column may only use defined properties.",
+  "tables": [{
+    "url": "tree-ops.csv",
+    "tableSchema": {
+      "columns": [{
+        "url": "http://example.org/inappropriate-here",
+        "name": "GID",
+        "titles": "GID"
+      }, {
+        "name": "on_street",
+        "titles": "On Street"
+      }, {
+        "name": "species",
+        "titles": "Species"
+      }, {
+        "name": "trim_cycle",
+        "titles": "Trim Cycle"
+      }, {
+        "name": "inventory_date",
+        "titles": "Inventory Date",
+        "datatype": {"base": "date", "format": "M/d/yyyy"}
+      }]
+    }
+  }]
+}

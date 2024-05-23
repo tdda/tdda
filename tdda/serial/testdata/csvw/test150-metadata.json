@@ -1,0 +1,15 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the value of this property is a string, it MUST be one of the built-in datatypes",
+  "rdfs:label": "non-builtin datatype (datatype value)",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID", "datatype": "foo"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

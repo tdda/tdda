@@ -1,0 +1,89 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test001.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "Surname": "Homer",
+              "FamilyName": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "Surname": "Marge",
+              "FamilyName": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "Surname": "Bart",
+              "FamilyName": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "Surname": "Lisa",
+              "FamilyName": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "Surname": "Maggie",
+              "FamilyName": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=7",
+          "rownum": 6,
+          "describes": [
+            {
+              "Surname": "Ned",
+              "FamilyName": "Flanders"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=8",
+          "rownum": 7,
+          "describes": [
+            {
+              "Surname": "Krusty",
+              "FamilyName": "the Clown"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test001.csv#row=9",
+          "rownum": 8,
+          "describes": [
+            {
+              "Surname": "Waylon",
+              "FamilyName": "Smithers"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

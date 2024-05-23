@@ -1,0 +1,37 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "gid": "1",
+              "on street": "ADDISON AV",
+              "species": "Celtis australis",
+              "trim cycle": "Large Tree Routine Prune",
+              "inventory date": "10/18/2010"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "gid": "2",
+              "on street": "EMERSON ST",
+              "species": "Liquidambar styraciflua",
+              "trim cycle": "Large Tree Routine Prune",
+              "inventory date": "6/2/2010"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If there is a non-empty case-sensitive intersection between the titles values, where matches must have a matching language; und matches any language, and languages match if they are equal when truncated, as defined in [BCP47], to the length of the shortest language tag.",
+      "rdfs:label": "title incompatible with title on case"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "@id": "organizations.json",
+  "@context": "http://www.w3.org/ns/csvw",
+  "columns": [{
+    "name": "ref",
+    "titles": "Organization Unique Reference",
+    "datatype": "string",
+    "required": true,
+    "propertyUrl": "dc:identifier"
+  }, {
+    "name": "name",
+    "titles": "Organization Name",
+    "datatype": "string",
+    "propertyUrl": "foaf:name"
+  }, {
+    "name": "department",
+    "titles": "Department Reference",
+    "datatype": "string",
+    "null": "xx",
+    "propertyUrl": "org:subOrganizationOf",
+    "valueUrl": "http://example.org/organization/{ref}"
+  }],
+  "primaryKey": "ref",
+  "aboutUrl": "http://example.org/organization/{ref}",
+  "foreignKeys": [{
+    "columnReference": "department",
+    "reference": {
+      "schemaReference": "organizations.json",
+      "columnReference": "ref"
+    }
+  }]
+}

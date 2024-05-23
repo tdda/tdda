@@ -8,6 +8,7 @@ from tdda.serial.base import (
     MISSING,
     RE_ISO8601
 )
+from tdda.serial.utils import nvl
 
 
 # From https://w3c.github.io/csvw/primer/#datatypes
@@ -147,19 +148,30 @@ class CSVWMetadata(Metadata):
         Sets _schema and _columns from CSVW
         """
         try:
-            self._table = self._csvw['tables'][0]
-            self._schema = self._table['tableSchema']
-        except:
+            tables = self._csvw.get('tables')
+            if tables:
+                table = tables[0]
+                self._table = table
+                self._schema = self._table.get('tableSchema')
+                n = len(self._csvw['tables'])
+            else:
+                self._table = None
+                self._schema = self._csvw.get('tableSchema')
+                n = 1
+        except KeyError:
             raise Exception('Could not find schema information in CSVW file\n'
                             "at ['tables'][0]['tableSchema'].")
-        try:
-            self._columns = self._schema['columns']
-        except:
-            raise KeyError('Could not find columns information in CSVW file\n'
-                            "at ['tables'][0]['tableSchema']['columns'].")
-        n = len(self._csvw['tables'])
-        if n > 1:
-            self.warn(f'Only processing first table of {n}.')
+        if self._schema:
+            try:
+                self._columns = self._schema['columns']
+            except:
+                raise KeyError('Could not find columns information in CSVW'
+                               ' file\n'
+                               "at ['tables'][0]['tableSchema']['columns'].")
+            if n > 1:
+                self.warn(f'Only processing first table of {n}.')
+        else:
+            self._columns = []
 
     def get_context(self):
         """
@@ -278,10 +290,12 @@ class CSVWMetadata(Metadata):
         self.line_terminators = self.get_val(dialect, 'lineTerminators')
         self.quote_char = self.get_val(dialect, 'quoteChar')
         self.skip_blank_rows = self.get_val(dialect, 'skipRows')
+        self.skip_rows = self.get_val(dialect, 'skipRows')
         self.skip_initial_space = self.get_val(dialect, 'skipInitialSpace')
         self.skip_columns = self.get_val(dialect, 'skipCols')
-        self.skip_rows = self.get_val(dialect, 'skipRows')
-
+        header_rows = self.get_val(dialect, 'headerRowCount')
+        header = self.get_val(dialect, 'headerRowCount')
+        self.header_rows = 0 if header == False else nvl(header_rows, 1)
 
         # Allowed to be a boolean or string value. If string:
         # string value: true false, start, end
@@ -312,11 +326,20 @@ class CSVWMetadata(Metadata):
 
             field = FieldMetadata(name)
             fields.append(field)
-            datatype = field.get_val(f, 'datatype', missing=MISSING.ERROR)
+            datatype = field.get_val(f, 'datatype')  #, missing=MISSING.ERROR)
+
+            fmt = None
             if datatype:
-                mtype = CSVW_TYPE_TO_MTYPE.get(datatype)
+                if isinstance(datatype, dict):
+                    fmt = datatype.get('format')
+                    mtype = datatype.get('base')
+                else:
+                    mtype = CSVW_TYPE_TO_MTYPE.get(datatype)
                 field.mtype = mtype
-            fmt = field.get_val(f, 'format')
+            else:
+                mtype = None
+            if not fmt:
+                fmt = field.get_val(f, 'format')
             if fmt:
                 if mtype.startswith('date'):
                     fmt = csvw_date_format_to_md_date_format(
@@ -324,8 +347,22 @@ class CSVWMetadata(Metadata):
                         extensions=self._extensions
                     )
                     field.format = fmt
-            elif mtype.startswith('date'):
+            elif mtype and mtype.startswith('date'):
                 field.format = 'ISO8601'  # too pandas specific
+
+
+            titles = field.get_val(f, 'titles')
+            if titles:
+                if isinstance(titles, list):
+                    field.altnames = titles
+                elif isinstance(titles, dict):
+                    field.altnames = titles
+                elif type(titles) is str:
+                    field.altnames = [titles]
+                else:
+                    self.warn(f'Did not understand value "{titles}"'
+                              f'of type "{type(titles)}" '
+                              f'for titles of column {name}; ignoring.')
 
 
 def csvw_date_format_to_md_date_format(fmt, extensions=False):

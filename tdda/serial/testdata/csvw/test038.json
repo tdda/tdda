@@ -1,0 +1,28 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test038.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test038.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test038.csv#modelrow=1",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=null": "empty",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=lang": "en",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=textDirection": "ltr",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=separator": "-",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=ordered": "true",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=default": "def",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=datatype": "string",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=aboutUrl": "about",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=propertyUrl": "prop",
+              "http://www.w3.org/2013/csvw/tests/test038.csv#col=valueUrl": "http://schema.org/about"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

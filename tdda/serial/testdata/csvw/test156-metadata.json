@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string.",
+  "rdfs:label": "number format (bad format string)",
+  "url": "test156.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "integer", "datatype": {"base": "integer", "format": "["}}
+    ]
+  }
+}

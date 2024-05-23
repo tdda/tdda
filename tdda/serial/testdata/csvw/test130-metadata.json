@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "column names are restricted as defined in Variables in [URI-TEMPLATE] ",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": "G I D", "titles": "GID"},
+      {"name": "on street", "titles": "On Street"},
+      {"name": "s p e c i e s", "titles": "Species"},
+      {"name": "trim cycle", "titles": "Trim Cycle"},
+      {"name": "inventory date", "titles": "Inventory Date"}
+    ]
+  }
+}

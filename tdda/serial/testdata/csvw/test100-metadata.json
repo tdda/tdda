@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "columns takes an array of columns, not a single column",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": {
+      "name": "GID",
+      "titles": "GID"
+    }
+  }
+}

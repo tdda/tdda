@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test297.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test297.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "#0.#": "1,234.5"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "invalid #0.# 1,234.5",
+      "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`."
+    }
+  ]
+}

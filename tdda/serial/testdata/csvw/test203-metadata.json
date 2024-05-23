@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell",
+  "rdfs:label": "float value constraint not matching minimum",
+  "url": "test203.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "minimum",      "datatype": {"base": "float", "minimum": 5}},
+      {"titles": "maximum",      "datatype": {"base": "float", "maximum": 5}},
+      {"titles": "minInclusive", "datatype": {"base": "float", "minInclusive": 5}},
+      {"titles": "maxInclusive", "datatype": {"base": "float", "maxInclusive": 5}},
+      {"titles": "minExclusive", "datatype": {"base": "float", "minExclusive": 5}},
+      {"titles": "maxExclusive", "datatype": {"base": "float", "maxExclusive": 5}}
+    ]
+  }
+}

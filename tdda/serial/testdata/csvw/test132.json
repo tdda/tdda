@@ -1,0 +1,36 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "GID": "1",
+              "On Street": "ADDISON AV",
+              "Species": "Celtis australis",
+              "Trim Cycle": "Large Tree Routine Prune",
+              "Inventory Date": "10/18/2010"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "GID": "2",
+              "On Street": "EMERSON ST",
+              "Species": "Liquidambar styraciflua",
+              "Trim Cycle": "Large Tree Routine Prune",
+              "Inventory Date": "6/2/2010"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If there is no name property defined on this column, the first titles value having the same language tag as default language, or und or if no default language is specified, becomes the name annotation for the described column. This annotation MUST be percent-encoded as necessary to conform to the syntactic requirements defined in [RFC3986]"
+    }
+  ]
+}

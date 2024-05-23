@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "duration not matching xsd pattern",
+  "rdfs:comment": "Value MUST be a valid xsd:duration.",
+  "url": "test279.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "duration", "datatype": "duration"}
+    ]
+  }
+}

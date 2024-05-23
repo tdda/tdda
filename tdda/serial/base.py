@@ -1,5 +1,7 @@
 import json
 
+from tdda.serial.utils import nvl
+
 class MISSING:
     ERROR = 2
     WARNING = 1
@@ -67,12 +69,12 @@ class FieldMetadata:
 
 
     """
-    def __init__(self, name, mtype=None, csvname=None,
+    def __init__(self, name, mtype=None,
                  format=None, nullmarkers=None,
                  allow_extras=False, **kw):
         self.name = name
         self.mtype = mtype
-        self.csvname = csvname
+        self.altnames = None
 
         self.delimiter = None
         self.encoding = None
@@ -133,6 +135,7 @@ class Metadata:
         stutter_quotes=None,
         date_format=None,
         null_indicators=None,
+        header_rows=0,
     ):
         self.fields = fields or []
         self.path = path
@@ -149,6 +152,7 @@ class Metadata:
         self.metadata_source = None
         self.metadata_source_path = None
         self.valid = None
+        self.header_rows = header_rows
 
 #        self.metametadata = {
 #            'creationhash': ''

@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.",
+  "rdfs:label": "values with wrong length",
+  "url": "test196.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "NMTOKEN", "datatype": {"base": "NMTOKEN", "length": 4}}
+    ]
+  }
+}

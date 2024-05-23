@@ -1,0 +1,31 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "foreign key includes an invalid property (eg `dc:description`)",
+  "rdfs:comment": "A foreign key definition is a JSON object that must contain only the following properties. . .",
+  "tables": [{
+    "url": "test271.csv",
+    "tableSchema": {
+      "columns": [
+        {"name": "countryCode", "titles": "countryCode"}
+      ],
+      "foreignKeys": [{
+        "dc:description": "I don't belong here.",
+        "columnReference": "countryCode",
+        "reference": {
+          "resource": "countries.csv",
+          "columnReference": "countryCode"
+        }
+      }]
+    }
+  }, {
+    "url": "countries.csv",
+    "tableSchema": {
+      "columns": [
+        {"name": "countryCode", "titles": "countryCode"},
+        {"titles": "latitude"},
+        {"titles": "longitude"},
+        {"titles": "name"}
+      ]
+    }
+  }]
+}

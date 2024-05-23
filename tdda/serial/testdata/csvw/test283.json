@@ -1,0 +1,56 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test283.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test283.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "+0": 1.0,
+              "-0": -1.0,
+              "%000": 1.23,
+              "‰000": 0.123,
+              "000%": 1.23,
+              "000‰": 0.123,
+              "000.0%": 1.234
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test283.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "+0": 1.0,
+              "-0": -1.0,
+              "%000": 1.23,
+              "‰000": 0.123,
+              "000%": 1.23,
+              "000‰": 0.123,
+              "000.0%": 1.234
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test283.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "+0": 1.0,
+              "-0": -1.0,
+              "%000": -1.23,
+              "‰000": -0.123,
+              "000%": -1.23,
+              "000‰": -0.123,
+              "000.0%": -1.234
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "valid number patterns (signs and percent/permille)",
+      "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`."
+    }
+  ]
+}

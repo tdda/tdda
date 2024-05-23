@@ -1,0 +1,87 @@
+{
+  "rdfs:comment": "foreignKeys takes an array, not a single foreignKey",
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/countries.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/countries.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://example.org/countries.csv#AD",
+              "http://www.geonames.org/ontology#countryCode": "AD",
+              "schema:latitude": 42.546245,
+              "schema:longitude": 1.601554,
+              "schema:name": "Andorra"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/countries.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "@id": "http://example.org/countries.csv#AE",
+              "http://www.geonames.org/ontology#countryCode": "AE",
+              "schema:latitude": 23.424076,
+              "schema:longitude": 53.847818,
+              "schema:name": "United Arab Emirates"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/countries.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "@id": "http://example.org/countries.csv#AF",
+              "http://www.geonames.org/ontology#countryCode": "AF",
+              "schema:latitude": 33.93911,
+              "schema:longitude": 67.709953,
+              "schema:name": "Afghanistan"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/country_slice.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/country_slice.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "countryRef": "http://example.org/countries.csv#AF",
+              "year": "1960",
+              "population": 9616353
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/country_slice.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "countryRef": "http://example.org/countries.csv#AF",
+              "year": "1961",
+              "population": 9799379
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/country_slice.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "countryRef": "http://example.org/countries.csv#AF",
+              "year": "1962",
+              "population": 9989846
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

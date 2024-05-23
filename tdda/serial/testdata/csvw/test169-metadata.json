@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above.",
+  "rdfs:label": "invalid decimal",
+  "url": "test169.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "decimal", "datatype": {"base": "decimal"}}
+    ]
+  }
+}

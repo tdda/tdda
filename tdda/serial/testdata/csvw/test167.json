@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test167.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test167.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "decimal": "-INF"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell contains an exponent, is one of the special values NaN, INF, or -INF, if the datatype base is decimal or one of its sub-values.",
+      "rdfs:label": "decimal type with -INF"
+    }
+  ]
+}

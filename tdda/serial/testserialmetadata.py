@@ -1,4 +1,6 @@
 import datetime
+import inspect
+import json
 import os
 import re
 
@@ -10,7 +12,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.serial.base import RE_ISO8601
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import gen_pandas_kwargs
-from tdda.serial.reader import csv2pandas
+from tdda.serial.reader import csv2pandas, poss_upgrade_to_int
 
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
@@ -220,7 +222,7 @@ class TestConversion(ReferenceTestCase):
     def test_eurodate2pd(self):
         mdpath = os.path.join(TESTDATADIR, 'eurod-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'eurod.csv')
-
+        kw = gen_pandas_kwargs(mdpath)
         df = pd.read_csv(csvpath, **gen_pandas_kwargs(mdpath))
 
         expected = pd.DataFrame({
@@ -425,6 +427,309 @@ class TestPandasLoad(ReferenceTestCase):
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
 
+@tag
+class TestCSVWTests(ReferenceTestCase):
+    csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
+
+    def fullpath(self, path):
+        return os.path.join(self.csvw_d, path)
+
+    def csv_json_paths(self, stem):
+        return (
+            os.path.join(self.csvw_d, stem + '.csv'),
+            os.path.join(self.csvw_d, stem + '.json')
+        )
+
+    def test001(self):
+        self._test_csv_json('test001')
+
+    def test002(self):
+        pass
+
+    def test003(self):
+        pass
+
+    def test004(self):
+        pass
+
+    def test005(self):
+
+        # csvw expects the IDs to be read as strings
+        # But pandas reads id as int and child_id as float,
+        # because it has nulls
+
+        # Clearly pandas behaviour is better, and there is not CSVW
+        # involved. But we might like csv2pandas to coerce types
+
+        # By using upgrade_possible_ints, we get int64 for id
+        # (with no nulls) and Int64 for child_id.
+
+        # And by forcing the string fields in ref_df to ints,
+        # we match that.
+
+        # So this test is _radically_ diffferent from the corresponding
+        # CSVW test. But useful.
+
+        self._test_csv_json('test005', upgrade_possible_ints=True,
+                            to_ints=['id', 'child_id'])
+
+    def test006(self):
+        self._test_csv_json('test006')
+
+    def test007(self):
+        self._test_csv_json('test007')
+
+    def test008(self):
+        self._test_csv_json('test008', to_ints=['Book1', 'Book2'])
+
+    def test009(self):
+        self._test_csv_json('test009', to_ints=['GID'])
+
+    def test010(self):
+        self._test_csv_json('test010')
+
+    def test011(self):
+        test = inspect.stack()[0][3]  # function name
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        jsonpath = self.fullpath(f'{test}/result.json')
+        df = csv2pandas(csvpath, findmd=True)
+        string_to_int(df, 'GID')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test012(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/csv-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath('test012/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test013(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}-user-metadata.json')
+        jsonpath = self.fullpath(f'{test}.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath('tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] =  pd.Series([datetime.date(2010, 10, 18),
+                                               datetime.date(2010, 6, 2)],
+                                               dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test014(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/linked-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test015(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/csv-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test016(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/csv-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test017(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/csv-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test018(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
+        jsonpath = self.fullpath(f'{test}/result.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        string_to_int(df, 'GID')
+        csvpath = self.fullpath(f'{test}/tree-ops.csv')
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+
+
+        # The string dates are a problem because the date and month
+        # are not zero-padded.
+        # Just correct here:
+        ref_df['inventory_date'] = pd.Series([datetime.date(2010, 10, 18),
+                                              datetime.date(2010, 6, 2)],
+                                              dtype='datetime64[ns]')
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test019(self):
+        pass
+
+    def test020(self):
+        pass
+
+    def test021(self):
+        pass
+
+    def test022(self):
+        pass
+
+    def test023(self):
+        test = inspect.stack()[0][3]  # function name
+        mdpath = self.fullpath(f'{test}-user-metadata.json')
+        jsonpath = self.fullpath(f'{test}.json')
+
+        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        self.assertEqual(list(df), [0, 1, 2, 3, 4])
+        # ^^^ This is what Pandas does
+        # CSVW wants _col.1 to _col.5 apparently.
+        fields = df.columns = [f'_col.{i + 1}' for i in range(len(df.columns))]
+        ref_df = csvw_json_to_df(jsonpath, fields)
+
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+
+
+    def _test_csv_json(self, stem, upgrade_possible_ints=False,
+                       to_ints=None):
+        csvpath, jsonpath = self.csv_json_paths(stem)
+        df = csv2pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
+        fields = fields_from(csvpath)
+        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=to_ints)
+        self.assertDataFramesEqual(df, ref_df)
+
+
+def csvw_json_to_df(path, fields, to_ints=None):
+    with open(path) as f:
+        d = json.load(f)
+    rows = d['tables'][0]['row']
+    df = pd.DataFrame({
+            field: [r['describes'][0].get(field, None) for r in rows]
+            for field in fields
+    })
+    for k in (to_ints or []):
+        string_to_int(df, k)
+    return df
+
+
+def string_to_int(df, k):
+    if sum(df[k].isnull()) > 0:
+        df[k] = df[k].astype(pd.Int64Dtype())
+    else:
+        df[k] = df[k].astype('int')
+
+
+def fields_from(csvpath):
+    with open(csvpath) as f:
+        return f.readline().strip().split(',')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,36 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "GID1": "1",
+              "on_street1": "ADDISON AV",
+              "species1": "Celtis australis",
+              "trim_cycle1": "Large Tree Routine Prune",
+              "inventory_date1": "10/18/2010"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "GID1": "2",
+              "on_street1": "EMERSON ST",
+              "species1": "Liquidambar styraciflua",
+              "trim_cycle1": "Large Tree Routine Prune",
+              "inventory_date1": "6/2/2010"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If not validating, and one schema has a name property but not a titles property, and the other has a titles property but not a name property."
+    }
+  ]
+}

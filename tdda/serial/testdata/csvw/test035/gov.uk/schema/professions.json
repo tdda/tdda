@@ -1,0 +1,11 @@
+{
+  "@id": "professions.json",
+  "@context": "http://www.w3.org/ns/csvw",
+  "columns": [{
+    "name": "name",
+    "titles": "Profession",
+    "datatype": "string",
+    "required": true
+  }],
+  "primaryKey": "name"
+}

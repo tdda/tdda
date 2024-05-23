@@ -1,0 +1,93 @@
+{
+  "tables": [
+    {
+      "@id": "http://example.org/tree-ops-ext",
+      "url": "http://www.w3.org/2013/csvw/tests/test036/tree-ops-ext.csv",
+      "dc:title": "Tree Operations",
+      "dcat:keyword": [
+        "tree",
+        "street",
+        "maintenance"
+      ],
+      "dc:publisher": [
+        {
+          "schema:name": "Example Municipality",
+          "schema:url": "http://example.org"
+        }
+      ],
+      "dc:license": "http://opendefinition.org/licenses/cc-by/",
+      "dc:modified": "2010-12-31",
+      "notes": [
+        {
+          "@type": "oa:Annotation",
+          "oa:hasTarget": "http://example.org/tree-ops-ext",
+          "oa:hasBody": {
+            "@type": "oa:EmbeddedContent",
+            "rdf:value": "This is a very interesting comment about the table; it's a table!",
+            "dc:format": "text/plain"
+          }
+        }
+      ],
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test036/tree-ops-ext.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://example.org/tree-ops-ext#gid-1",
+              "on_street": "ADDISON AV",
+              "species": "Celtis australis",
+              "trim_cycle": "Large Tree Routine Prune",
+              "dbh": 11,
+              "inventory_date": "2010-10-18",
+              "protected": false,
+              "kml": "<Point><coordinates>-122.156485,37.440963</coordinates></Point>"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test036/tree-ops-ext.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "@id": "http://example.org/tree-ops-ext#gid-2",
+              "on_street": "EMERSON ST",
+              "species": "Liquidambar styraciflua",
+              "trim_cycle": "Large Tree Routine Prune",
+              "dbh": 11,
+              "inventory_date": "2010-06-02",
+              "protected": false,
+              "kml": "<Point><coordinates>-122.156749,37.440958</coordinates></Point>"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test036/tree-ops-ext.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "@id": "http://example.org/tree-ops-ext#gid-6",
+              "on_street": "ADDISON AV",
+              "species": "Robinia pseudoacacia",
+              "trim_cycle": "Large Tree Routine Prune",
+              "dbh": 29,
+              "inventory_date": "2010-06-01",
+              "comments": [
+                "cavity or decay",
+                "trunk decay",
+                "codominant leaders",
+                "included bark",
+                "large leader or limb decay",
+                "previous failure root damage",
+                "root decay",
+                "beware of BEES"
+              ],
+              "protected": true,
+              "kml": "<Point><coordinates>-122.156299,37.441151</coordinates></Point>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

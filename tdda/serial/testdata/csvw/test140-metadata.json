@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The value of any member of @type MUST be either a term defined in [csvw-context], a prefixed name where the prefix is a term defined in [csvw-context], or an absolute URL.",
+  "rdfs:label": "@type out of range (as node type) - integer",
+  "rdfs:value": {"@type": 1},
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

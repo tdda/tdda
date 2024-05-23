@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the value is a list, the constraint applies to each element of the list.",
+  "rdfs:label": "matching minLength with separator",
+  "url": "test229.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "list", "separator": " ", "datatype": {"base": "NMTOKEN", "minLength": 1}}
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "rdfs:label": "property acceptable on column appears on table group",
+  "rdfs:comment": "Table Group may only use defined properties.",
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "GID": "1",
+              "on_street": "ADDISON AV",
+              "species": "Celtis australis",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-10-18"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "GID": "2",
+              "on_street": "EMERSON ST",
+              "species": "Liquidambar styraciflua",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-06-02"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

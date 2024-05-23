@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test238.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test238.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "string": "foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the value of this property is a string, it MUST be one of the built-in datatypes defined in section 5.11.1 Built-in Datatypes or an absolute URL.",
+      "rdfs:label": "datatype value an absolute URL that does not resolve"
+    }
+  ]
+}

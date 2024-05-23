@@ -1,0 +1,21 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test245.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test245.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "HH:mm:ss.S": "15:02:37.1",
+              "HH:mm:ss.SS": "15:02:37.14"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+      "rdfs:label": "date format (valid time combinations with formats and milliseconds)"
+    }
+  ]
+}

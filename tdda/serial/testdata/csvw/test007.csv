@@ -1,0 +1,7 @@
+foaf_id,Surname,FamilyName,childFoaf,childName
+http://example/homer,Homer,Simpson,http://example/bart,Bart
+http://example/homer,Homer,Simpson,http://example/lisa,Lisa
+http://example/homer,Homer,Simpson,http://example/maggie,Maggie
+http://example/marge,Marge,Simpson,http://example/bart,Bart
+http://example/marge,Marge,Simpson,http://example/lisa,Lisa
+http://example/marge,Marge,Simpson,http://example/maggie,Maggie

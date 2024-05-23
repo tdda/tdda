@@ -1,0 +1,29 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test231.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test231.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "PK": "1"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test231.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "PK": "2"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "As defined in [tabular-data-model], validators must check that each row has a unique combination of values of cells in the indicated columns.",
+      "rdfs:label": "single column primaryKey success"
+    }
+  ]
+}

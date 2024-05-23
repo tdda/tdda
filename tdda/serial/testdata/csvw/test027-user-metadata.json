@@ -1,0 +1,43 @@
+{
+  "@context": ["http://www.w3.org/ns/csvw", {"@language": "en"}],
+  "url": "tree-ops.csv",
+  "dc:title": "Tree Operations",
+  "dcat:keyword": ["tree", "street", "maintenance"],
+  "dc:publisher": {
+    "schema:name": "Example Municipality",
+    "schema:url": {"@id": "http://example.org"}
+  },
+  "dc:license": {"@id": "http://opendefinition.org/licenses/cc-by/"},
+  "dc:modified": {"@value": "2010-12-31", "@type": "xsd:date"},
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": ["GID", "Generic Identifier"],
+      "dc:description": "An identifier for the operation on a tree.",
+      "datatype": "string",
+      "required": true
+    }, {
+      "name": "on_street",
+      "titles": "On Street",
+      "dc:description": "The street that the tree is on.",
+      "datatype": "string"
+    }, {
+      "name": "species",
+      "titles": "Species",
+      "dc:description": "The species of the tree.",
+      "datatype": "string"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle",
+      "dc:description": "The operation performed on the tree.",
+      "datatype": "string"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "dc:description": "The date of the operation that was performed.",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }],
+    "primaryKey": "GID",
+    "aboutUrl": "#gid-{GID}"
+  }
+}

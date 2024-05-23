@@ -1,0 +1,19 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "A @language property MUST NOT be used on an object unless it also has a @value property.",
+  "rdfs:label": "@language outside of @value",
+  "rdf:value": {
+    "@language": "en",
+    "schema:name": "foo"
+  },
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

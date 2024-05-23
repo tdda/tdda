@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test280.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test280.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "dayTimeDuration": "Foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "dayTimeDuration not matching xsd pattern",
+      "rdfs:comment": "Value MUST be a valid xsd:dayTimeDuration."
+    }
+  ]
+}

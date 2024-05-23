@@ -1,0 +1,60 @@
+{
+  "rdfs:comment": "if TM is not compatible with EM validators MUST raise an error, other processors MUST generate a warning and continue processing",
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test127.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test127.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "Surname": "Homer",
+              "Family Name": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test127.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "Surname": "Marge",
+              "Family Name": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test127.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "Surname": "Bart",
+              "Family Name": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test127.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "Surname": "Lisa",
+              "Family Name": "Simpson"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test127.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "Surname": "Maggie",
+              "Family Name": "Simpson"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

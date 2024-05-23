@@ -1,0 +1,35 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test188.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test188.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "yyyy-MM-dd": "2015-03-22",
+              "yyyyMMdd": "2015-03-22",
+              "dd-MM-yyyy": "2015-03-22",
+              "d-M-yyyy": "2015-03-22",
+              "MM-dd-yyyy": "2015-03-22",
+              "M-d-yyyy": "2015-03-22",
+              "dd/MM/yyyy": "2015-03-22",
+              "d/M/yyyy": "2015-03-22",
+              "MM/dd/yyyy": "2015-03-22",
+              "M/d/yyyy": "2015-03-22",
+              "dd.MM.yyyy": "2015-03-22",
+              "d.M.yyyy": "2015-03-22",
+              "MM.dd.yyyy": "2015-03-22",
+              "M.d.yyyy": "2015-03-22",
+              "yyyy-MM-ddX": "2015-03-22Z",
+              "dd.MM.yyyy XXX": "2015-03-22Z"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+      "rdfs:label": "date format (valid date combinations with formats)"
+    }
+  ]
+}

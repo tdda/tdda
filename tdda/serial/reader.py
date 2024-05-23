@@ -11,9 +11,12 @@ from tdda.serial.pandasio import to_pandas_read_csv_args
 
 from tdda.serial.utils import (
     find_associated_metadata_file,
-    find_metadata_type_from_path,
+    find_metadata_type_from_path
 )
 
+
+class CSVMetadataError(Exception):
+    pass
 
 
 def load_metadata(path, mdtype=None):
@@ -48,6 +51,8 @@ def load_metadata(path, mdtype=None):
                 raise CSVMetadataError(
                     f'Unrecognized metadata content in {path}'
                 )
+            if kind == 'csvw':
+                md = CSVWMetadata(path)
 
 
     elif ext == '.yaml':
@@ -64,7 +69,8 @@ def load_metadata(path, mdtype=None):
 
 
 def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
-               upgrade_types=True,  **kw):
+               upgrade_types=True, upgrade_possible_ints=False,
+               return_md=False, **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -104,6 +110,12 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
        upgrade_types   If True (the default), this will upgrade
                        some columns read_csv will create as object
                        (dtype object) to stricter types.
+
+       upgrade_possible_ints   If True (not the default), any float
+                               columns with nulls but with no fractional
+                               components will be upgraded to Ints.
+
+       return_md   If true, returns metadata and DataFrame (as tuple)
 
        **kw     These keyword arguments are passed to pandas.read_csv,
                 and can be used to override values from the
@@ -149,4 +161,27 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                 df[k] = df[k].astype(specified_type)
             elif k in dates:
                 df[k] = df[k].astype('datetime64[ns]')
-    return df
+    if upgrade_possible_ints:
+        for k in df:
+            if not k in (specified_types or []):
+                poss_upgrade_to_int(df, k)
+    return (df, md) if return_md else df
+
+
+def poss_upgrade_to_int(df, name):
+    field = df[name]
+    if str(field.dtype).startswith('float'):
+        n_nulls = sum(field.isnull())
+        if n_nulls > 0:
+            # Could be float as result of nulls
+            int_col = field.astype(pd.Int64Dtype())
+            n_same = sum(int_col.dropna() == field.dropna())
+            if n_same + n_nulls == field.shape[0]:
+                # no floats have fractional parts
+                df[name] = int_col
+        else:
+            int_col = field.astype('int')
+            n_same = sum(int_col== field)
+            if n_same == field.shape[0]:
+                # no floats have fractional parts
+                df[name] = int_col

@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test191.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test191.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "date": "15-06-05"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+      "rdfs:label": "date format (bad format string)"
+    }
+  ]
+}

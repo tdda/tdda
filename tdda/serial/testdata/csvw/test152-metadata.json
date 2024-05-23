@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values",
+  "rdfs:label": "string format (valid combinations)",
+  "url": "test152.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "string1", "datatype": {"base": "string", "format": "[Aa]+"}},
+      {"titles": "string2", "datatype": {"base": "string", "format": "GED"}},
+      {"titles": "string3", "datatype": {"base": "string", "format": ".*"}},
+      {"titles": "anyUri", "datatype": {"base": "anyURI", "format": ".*"}},
+      {"titles": "normalizedString", "datatype": {"base": "normalizedString", "format": ".*"}},
+      {"titles": "NMTOKEN", "datatype": {"base": "NMTOKEN", "format": ".*"}}
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "A referenced column MUST have a `name` property",
+  "tables": [{
+    "url": "countries.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryCode",
+        "datatype": "string",
+        "propertyUrl": "http://www.geonames.org/ontology{#_name}"
+      }, {
+        "name": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "datatype": "string"
+      }],
+      "aboutUrl": "http://example.org/countries.csv{#countryCode}",
+      "propertyUrl": "http://schema.org/{_name}",
+      "primaryKey": "countryCode"
+    }
+  }, {
+    "url": "country_slice.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryRef",
+        "valueUrl": "http://example.org/countries.csv{#countryRef}"
+      }, {
+        "name": "year",
+        "datatype": "gYear"
+      }, {
+        "name": "population",
+        "datatype": "integer"
+      }],
+      "foreignKeys": [{
+        "columnReference": "countryRef",
+        "reference": 1
+      }]
+    }
+  }]
+}

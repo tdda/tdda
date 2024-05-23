@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "valid number patterns (grouping)",
+  "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`.",
+  "url": "test285.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "0.0##,###", "datatype": {"base": "decimal", "format": {"pattern": "0.0##,###"}}},
+      {"titles": "0.00#,###", "datatype": {"base": "decimal", "format": {"pattern": "0.00#,###"}}},
+      {"titles": "0.000,###", "datatype": {"base": "decimal", "format": {"pattern": "0.000,###"}}},
+      {"titles": "0.000,0##", "datatype": {"base": "decimal", "format": {"pattern": "0.000,0##"}}},
+      {"titles": "0.000,00#", "datatype": {"base": "decimal", "format": {"pattern": "0.000,00#"}}},
+      {"titles": "0.000,000", "datatype": {"base": "decimal", "format": {"pattern": "0.000,000"}}}
+    ]
+  }
+}

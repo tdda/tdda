@@ -1,0 +1,26 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "`base` missing on datatype (defaults to string)",
+  "rdfs:comment": "An atomic property that contains a single string: the name of one of the built-in datatypes, as listed above (and which are defined as terms in the default context). Its default is string.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": "GID",
+      "datatype": {"format": "^\\d$"}
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }]
+  }
+}

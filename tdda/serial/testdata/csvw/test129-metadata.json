@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "This (name) MUST be a string and this property has no default value, which means it MUST be ignored if the supplied value is not a string.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": 1, "titles": "GID"},
+      {"name": 2, "titles": "On Street"},
+      {"name": 3, "titles": "Species"},
+      {"name": 4, "titles": "Trim Cycle"},
+      {"name": 5, "titles": "Inventory Date"}
+    ]
+  }
+}

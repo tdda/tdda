@@ -1,0 +1,22 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test157.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test157.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "integer": "10.1",
+              "decimal": "10.10",
+              "double": "10.10e10"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string.",
+      "rdfs:label": "number format (value not matching format)"
+    }
+  ]
+}

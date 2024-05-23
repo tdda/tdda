@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test185.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test185.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "boolean": "true"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by `|`..",
+      "rdfs:label": "boolean format (value not matching format)"
+    }
+  ]
+}

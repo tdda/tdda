@@ -1,0 +1,4312 @@
+manifest-json#test001: Simple table
+The simplest possible table without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test001.csv
+result
+test001.json
+options
+noProv: true
+manifest-json#test005: Identifier references
+A table with entity identifiers and references to other entities without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test005.csv
+result
+test005.json
+options
+noProv: true
+manifest-json#test006: No identifiers
+Records contain two entities with relationships which are duplicated without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test006.csv
+result
+test006.json
+options
+noProv: true
+manifest-json#test007: Joined table with unique identifiers
+Joined data with identified records without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test007.csv
+result
+test007.json
+options
+noProv: true
+manifest-json#test008: Microsyntax - internal field separator
+One field has comma-separated values without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test008.csv
+result
+test008.json
+options
+noProv: true
+manifest-json#test009: Microsyntax - formatted time
+Field with parseable human formatted time without metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test009.csv
+result
+test009.json
+options
+noProv: true
+manifest-json#test010: Country-codes-and-names example
+Country-codes-and-names example
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test010.csv
+result
+test010.json
+options
+noProv: true
+manifest-json#test011: tree-ops example with metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test011/tree-ops.csv
+result
+test011/result.json
+Implicit
+test011/tree-ops.csv-metadata.json
+options
+noProv: true
+manifest-json#test012: tree-ops example with directory metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test012/tree-ops.csv
+result
+test012/result.json
+Implicit
+test012/csv-metadata.json
+options
+noProv: true
+manifest-json#test013: tree-ops example from user metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+tree-ops.csv
+result
+test013.json
+Implicit
+test013-user-metadata.json
+options
+noProv: true user metadata: test013-user-metadata.json
+manifest-json#test014: tree-ops example with linked metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test014/tree-ops.csv
+result
+test014/result.json
+Link Header
+<linked-metadata.json>; rel="describedby"; type="application/csvm+json"
+Implicit
+test014/linked-metadata.json
+options
+noProv: true
+manifest-json#test015: tree-ops example with user and directory metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test015/tree-ops.csv
+result
+test015/result.json
+Implicit
+test015/csv-metadata.json test015/user-metadata.json
+options
+noProv: true user metadata: test015/user-metadata.json
+manifest-json#test016: tree-ops example with linked and directory metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test016/tree-ops.csv
+result
+test016/result.json
+Link Header
+<linked-metadata.json>; rel="describedby"; type="application/csvm+json"
+Implicit
+test016/csv-metadata.json test016/linked-metadata.json
+options
+noProv: true
+manifest-json#test017: tree-ops example with file and directory metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test017/tree-ops.csv
+result
+test017/result.json
+Implicit
+test017/tree-ops.csv-metadata.json test017/csv-metadata.json
+options
+noProv: true
+manifest-json#test018: tree-ops example with user, file and directory metadata
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test018/tree-ops.csv
+result
+test018/result.json
+Implicit
+test018/tree-ops.csv-metadata.json test018/csv-metadata.json test018/user-metadata.json
+options
+noProv: true user metadata: test018/user-metadata.json
+manifest-json#test023: dialect: header=false
+If true, sets the header row count flag to 1, and if false to 0, unless headerRowCount is provided, in which case the value provided for the header property is ignored.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+tree-ops.csv
+result
+test023.json
+Implicit
+test023-user-metadata.json
+options
+noProv: true user metadata: test023-user-metadata.json
+manifest-json#test027: tree-ops minimal output
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+tree-ops.csv
+result
+test027.json
+Implicit
+test027-user-metadata.json
+options
+noProv: true minimal: true user metadata: test027-user-metadata.json
+manifest-json#test028: countries.csv example
+If no metadata is supplied or found, processors must use embedded metadata.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+countries.csv
+result
+test028.json
+options
+noProv: true
+manifest-json#test029: countries.csv minimal
+If no metadata is supplied or found, processors must use embedded metadata.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+countries.csv
+result
+test029.json
+options
+noProv: true minimal: true
+manifest-json#test030: countries.json example
+countries.json from metadata
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+countries.json
+result
+test030.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test031: countries.json example minimal output
+countries.json from metadata minimal output
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+countries.json
+result
+test031.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true minimal: true
+manifest-json#test032: events-listing.csv example
+events-listing example from metadata, virtual columns and multiple subjects per row
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test032/csv-metadata.json
+result
+test032/result.json
+Implicit
+test032/events-listing.csv
+options
+noProv: true
+manifest-json#test033: events-listing.csv minimal output
+events-listing example from metadata, virtual columns and multiple subjects per row; minimal output
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test033/csv-metadata.json
+result
+test033/result.json
+Implicit
+test033/events-listing.csv
+options
+noProv: true minimal: true
+manifest-json#test034: roles example
+Public Sector Roles example with referenced schemas. Validation fails because organization.csv intentionally contains an invalid reference.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test034/csv-metadata.json
+result
+test034/result.json
+Implicit
+test034/senior-roles.csv test034/junior-roles.csv test034/gov.uk/data/organizations.csv test034/gov.uk/data/professions.csv test034/gov.uk/schema/junior-roles.json test034/gov.uk/schema/senior-roles.json test034/gov.uk/schema/organizations.json test034/gov.uk/schema/professions.json
+options
+noProv: true
+manifest-json#test035: roles minimal
+Public Sector Roles example with referenced schemas; minimal output. Validation fails because organization.csv intentionally contains an invalid reference.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test035/csv-metadata.json
+result
+test035/result.json
+Implicit
+test035/senior-roles.csv test035/junior-roles.csv test035/gov.uk/data/organizations.csv test035/gov.uk/data/professions.csv test035/gov.uk/schema/junior-roles.json test035/gov.uk/schema/senior-roles.json test035/gov.uk/schema/organizations.json test035/gov.uk/schema/professions.json
+options
+noProv: true minimal: true
+manifest-json#test036: tree-ops-ext example
+tree-ops extended example
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test036/tree-ops-ext.csv
+result
+test036/result.json
+Implicit
+test036/tree-ops-ext.csv-metadata.json
+options
+noProv: true
+manifest-json#test037: tree-ops-ext minimal
+tree-ops extended example; minimal output
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test037/tree-ops-ext.csv
+result
+test037/result.json
+Implicit
+test037/tree-ops-ext.csv-metadata.json
+options
+noProv: true minimal: true
+manifest-json#test038: inherited properties propagation
+Setting inherited properties at different levels inherit to cell
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test038-metadata.json
+result
+test038.json
+Implicit
+test038.csv
+options
+noProv: true
+manifest-json#test039: valid inherited properties
+Different combinations of valid inherited properties
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test039-metadata.json
+result
+test039.json
+Implicit
+test039.csv
+options
+noProv: true
+manifest-json#test040: invalid null
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test040-metadata.json
+result
+test040.json
+Implicit
+test040.csv
+options
+noProv: true
+manifest-json#test041: invalid lang
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test041-metadata.json
+result
+test041.json
+Implicit
+test041.csv
+options
+noProv: true
+manifest-json#test042: invalid textDirection
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test042-metadata.json
+result
+test042.json
+Implicit
+test042.csv
+options
+noProv: true
+manifest-json#test043: invalid separator
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test043-metadata.json
+result
+test043.json
+Implicit
+test043.csv
+options
+noProv: true
+manifest-json#test044: invalid ordered
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test044-metadata.json
+result
+test044.json
+Implicit
+test044.csv
+options
+noProv: true
+manifest-json#test045: invalid default
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test045-metadata.json
+result
+test045.json
+Implicit
+test045.csv
+options
+noProv: true
+manifest-json#test046: invalid dataype
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test046-metadata.json
+result
+test046.json
+Implicit
+test046.csv
+options
+noProv: true
+manifest-json#test047: invalid aboutUrl
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test047-metadata.json
+result
+test047.json
+Implicit
+test047.csv
+options
+noProv: true
+manifest-json#test048: invalid propertyUrl
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test048-metadata.json
+result
+test048.json
+Implicit
+test048.csv
+options
+noProv: true
+manifest-json#test049: invalid valueUrl
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test049-metadata.json
+result
+test049.json
+Implicit
+test049.csv
+options
+noProv: true
+manifest-json#test059: dialect: invalid commentPrefix
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test059-metadata.json
+result
+test059.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test060: dialect: invalid delimiter
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test060-metadata.json
+result
+test060.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test061: dialect: invalid doubleQuote
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test061-metadata.json
+result
+test061.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test062: dialect: invalid encoding
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test062-metadata.json
+result
+test062.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test063: dialect: invalid header
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test063-metadata.json
+result
+test063.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test065: dialect: invalid headerRowCount
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test065-metadata.json
+result
+test065.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test066: dialect: invalid lineTerminators
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test066-metadata.json
+result
+test066.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test067: dialect: invalid quoteChar
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test067-metadata.json
+result
+test067.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test068: dialect: invalid skipBlankRows
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test068-metadata.json
+result
+test068.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test069: dialect: invalid skipColumns
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test069-metadata.json
+result
+test069.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test070: dialect: invalid skipInitialSpace
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test070-metadata.json
+result
+test070.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test071: dialect: invalid skipRows
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test071-metadata.json
+result
+test071.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test072: dialect: invalid trim
+If a property has a value that is not permitted by this specification, then if a default value is provided for that property, compliant applications must use that default value and must generate a warning. If no default value is provided for that property, compliant applications must generate a warning and behave as if the property had not been specified.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test072-metadata.json
+result
+test072.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test073: invalid @language
+The value of @language must be a valid BCP47 language code
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test073-metadata.json
+result
+test073.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test074: empty tables
+Compliant application must raise an error if this array does not contain one or more table descriptions.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test074-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test075: invalid tableGroup tableDirection
+An atomic property that must have a single string value that is one of "rtl", "ltr" or "auto".
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test075-metadata.json
+result
+test075.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test076: invalid table tableDirection
+An atomic property that must have a single string value that is one of "rtl", "ltr" or "auto".
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test076-metadata.json
+result
+test076.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test077: invalid tableGroup @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test077-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test078: invalid table @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test078-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test079: invalid schema @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test079-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test080: invalid column @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test080-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test081: invalid dialect @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test081-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test082: invalid template @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test082-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test083: invalid tableGroup @type
+If included @type must be TableGroup
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test083-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test084: invalid table @type
+If included @type must be TableGroup
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test084-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test085: invalid schema @type
+If included @type must be TableGroup
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test085-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test086: invalid column @type
+If included @type must be TableGroup
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test086-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test087: invalid dialect @type
+If included @type must be Dialect
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test087-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test088: invalid transformation @type
+If included @type must be Template
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test088-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test089: missing tables in TableGroup
+The tables property is required in a TableGroup
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test089-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test090: missing url in Table
+The url property is required in a Table
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test090-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test093: undefined properties
+Compliant applications must ignore properties (aside from common properties) which are not defined in this specification and must generate a warning when they are encoutered
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test093-metadata.json
+result
+test093.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test095: inconsistent array values: transformations
+Any items within an array that are not valid objects of the type expected are ignored
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test095-metadata.json
+result
+test095.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test097: inconsistent array values: foreignKeys
+Any items within an array that are not valid objects of the type expected are ignored
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test097-metadata.json
+result
+test097.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test098: inconsistent array values: tables
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array. Compliant application must raise an error if this array does not contain one or more table descriptions.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test098-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test099: inconsistent array values: transformations
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test099-metadata.json
+result
+test099.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test100: inconsistent array values: columns
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test100-metadata.json
+result
+test100.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test101: inconsistent array values: foreignKeys
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test101-metadata.json
+result
+test101.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test102: inconsistent link values: @id
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test102-metadata.json
+result
+test102.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test103: inconsistent link values: url
+If the supplied value of an array property is not an array (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been supplied with an empty array
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test103-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test104: invalid columnReference
+The referenced description object must have a name property
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test104-metadata.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test105: invalid primaryKey
+The referenced description object must have a name property
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test105-metadata.json
+result
+test105.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test106: invalid dialect
+If the supplied value of an object property is not a string or object (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been specified as an object with no properties.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test106-metadata.json
+result
+test106.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test107: invalid tableSchema
+If the supplied value of an object property is not a string or object (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been specified as an object with no properties.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test107-metadata.json
+result
+test107.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test108: invalid reference
+If the supplied value of an object property is not a string or object (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been specified as an object with no properties.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test108-metadata.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test109: titles with invalid language
+Natural Language properties may be objects whose properties must be language codes as defined by [BCP47] and whose values are either strings or arrays, providing natural language strings in that language. Validation fails because without a title, the metadata is incompatible with the CSV, which isn't a problem when not validating.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test109-metadata.json
+result
+test109.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test110: titles with non-string values
+Natural Language properties may be objects whose properties must be language codes as defined by [BCP47] and whose values are either strings or arrays, providing natural language strings in that language
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test110-metadata.json
+result
+test110.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test111: titles with invalid value
+If the supplied value of a natural language property is not a string, array or object (eg if it is an integer), compliant applications must issue a warning and proceed as if the property had been specified as an empty array. Validation fails because without a title, the metadata is incompatible with the CSV, which isn't a problem when not validating.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test111-metadata.json
+result
+test111.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test112: titles with non-string array values
+If the supplied value is an array, any items in that array that are not strings must be ignored
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test112-metadata.json
+result
+test112.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test113: invalid suppressOutput
+Atomic properties: Processors must issue a warning if a property is set to an invalid value type
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test113-metadata.json
+result
+test113.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test114: invalid name
+Atomic properties: Processors must issue a warning if a property is set to an invalid value type
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test114-metadata.json
+result
+test114.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test115: invalid virtual
+Atomic properties: Processors must issue a warning if a property is set to an invalid value type
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test115-metadata.json
+result
+test115.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test116: file-metadata with query component not found
+processors must attempt to locate a metadata documents through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test116.csv
+result
+test116.json
+Implicit
+test116.csv-metadata.json
+options
+noProv: true
+manifest-json#test117: file-metadata not referencing file
+If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it must be ignored.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test117.csv
+result
+test117.json
+Implicit
+test117.csv-metadata.json
+options
+noProv: true
+manifest-json#test118: directory-metadata with query component
+processors must attempt to locate a metadata documents through site-wide configuration. component.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test118/action.csv
+result
+test118/result.json
+Implicit
+test118/csv-metadata.json
+options
+noProv: true
+manifest-json#test119: directory-metadata not referencing file
+If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it must be ignored.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test119/action.csv
+result
+test119/result.json
+Implicit
+test119/csv-metadata.json
+options
+noProv: true
+manifest-json#test120: link-metadata not referencing file
+If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it must be ignored.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test120.csv
+result
+test120.json
+Link Header
+<test120-linked-metadata.json>; rel="describedby"; type="application/csvm+json"
+Implicit
+test120-linked-metadata.json
+options
+noProv: true
+manifest-json#test121: user-metadata not referencing file
+User-specified metadata does not need to reference the starting CSV
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test121.csv
+result
+test121.json
+Implicit
+test121-ref.csv test121-user-metadata.json
+options
+noProv: true user metadata: test121-user-metadata.json
+manifest-json#test122: link-metadata not describing file uses file-metadata
+If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it must be ignored.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test122.csv
+result
+test122.json
+Link Header
+<test122-linked-metadata.json>; rel="describedby"; type="application/csvm+json"
+Implicit
+test122.csv-metadata.json test122-linked-metadata.json
+options
+noProv: true
+manifest-json#test123: file-metadata not describing file uses directory-metadata
+If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it must be ignored.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test123/action.csv
+result
+test123/result.json
+Implicit
+test123/action.csv-metadata.json test123/csv-metadata.json
+options
+noProv: true
+manifest-json#test124: metadata with columns not matching csv titles
+If not validating, and one schema has a name property but not a titles property, and the other has a titles property but not a name property.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+tree-ops.csv
+result
+test124.json
+Implicit
+test124-user-metadata.json
+options
+noProv: true user metadata: test124-user-metadata.json
+manifest-json#test125: required column with empty cell
+If the column required annotation is true, add an error to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test125-metadata.json
+result
+test125.json
+Implicit
+test125.csv
+options
+noProv: true
+manifest-json#test126: required column with cell matching null
+if the string is the same as any one of the values of the column null annotation, then the resulting value is null. If the column separator annotation is null and the column required annotation is true, add an error to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test126-metadata.json
+result
+test126.json
+Implicit
+test126.csv
+options
+noProv: true
+manifest-json#test127: incompatible table
+if TM is not compatible with EM validators must raise an error, other processors must generate a warning and continue processing
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test127-metadata.json
+result
+test127.json
+Implicit
+test127.csv
+options
+noProv: true
+manifest-json#test128: duplicate column names
+The name properties of the column descriptions must be unique within a given table description.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test128-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test129: columnn name as integer
+This (name) must be a string and this property has no default value, which means it must be ignored if the supplied value is not a string.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test129-metadata.json
+result
+test129.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test130: invalid column name
+column names are restricted as defined in Variables in [URI-TEMPLATE]
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test130-metadata.json
+result
+test130.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test131: invalid column name
+column names are restricted ... names beginning with '_' are reserved by this specification and must NOT be used within metadata documents.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test131-metadata.json
+result
+test131.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test132: name annotation from title percent encoded
+If there is no name property defined on this column, the first titles value having the same language tag as default language, or und or if no default language is specified, becomes the name annotation for the described column. This annotation must be percent-encoded as necessary to conform to the syntactic requirements defined in [RFC3986]
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test132-metadata.json
+result
+test132.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test133: virtual before non-virtual
+If present, a virtual column must appear after all other non-virtual column definitions.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test133-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test134: context in common property
+A metadata document must NOT add a new context
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test134-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test135: @list value
+Values must NOT use list objects or set objects.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test135-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test136: @set value
+Values must NOT use list objects or set objects.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test136-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test137: @type out of range (as datatype)
+The value of any @id or @type contained within a metadata document must NOT be a blank node.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test137-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test138: @type out of range (as node type)
+The value of any @id or @type contained within a metadata document must NOT be a blank node.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test138-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test139: @type out of range (as node type) - string
+The value of any member of @type must be either a term defined in [csvw-context], a prefixed name where the prefix is a term defined in [csvw-context], or an absolute URL.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test139-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test140: @type out of range (as node type) - integer
+The value of any member of @type must be either a term defined in [csvw-context], a prefixed name where the prefix is a term defined in [csvw-context], or an absolute URL.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test140-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test141: @id out of range (as node type) - bnode
+The value of any @id or @type contained within a metadata document must NOT be a blank node.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test141-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test142: @value with @language and @type
+If a @value property is used on an object, that object must NOT have any other properties aside from either @type or @language, and must NOT have both @type and @language as properties. The value of the @value property must be a string, number, or boolean value.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test142-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test143: @value with extra properties
+If a @value property is used on an object, that object must NOT have any other properties aside from either @type or @language, and must NOT have both @type and @language as properties. The value of the @value property must be a string, number, or boolean value.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test143-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test144: @language outside of @value
+A @language property must NOT be used on an object unless it also has a @value property.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test144-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test146: Invalid faux-keyword
+Aside from @value, @type, @language, and @id, the properties used on an object must NOT start with @.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test146-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test147: title incompatible with title on case
+If there is a non-empty case-sensitive intersection between the titles values, where matches must have a matching language; und matches any language, and languages match if they are equal when truncated, as defined in [BCP47], to the length of the shortest language tag.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test147-metadata.json
+result
+test147.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test148: title incompatible with title on language
+If there is a non-empty case-sensitive intersection between the titles values, where matches must have a matching language; und matches any language, and languages match if they are equal when truncated, as defined in [BCP47], to the length of the shortest language tag.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test148-metadata.json
+result
+test148.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test149: title compatible with title on less specific language
+If there is a non-empty case-sensitive intersection between the titles values, where matches must have a matching language; und matches any language, and languages match if they are equal when truncated, as defined in [BCP47], to the length of the shortest language tag.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test149-metadata.json
+result
+test149.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test150: non-builtin datatype (datatype value)
+If the value of this property is a string, it must be one of the built-in datatypes defined in section 5.11.1 Built-in Datatypes or an absolute URL
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test150-metadata.json
+result
+test150.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test151: non-builtin datatype (base value)
+If the value of this property is a string, it must be one of the built-in datatypes
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test151-metadata.json
+result
+test151.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test152: string format (valid combinations)
+If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test152-metadata.json
+result
+test152.json
+Implicit
+test152.csv
+options
+noProv: true
+manifest-json#test153: string format (bad format string)
+If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test153-metadata.json
+result
+test153.json
+Implicit
+test153.csv
+options
+noProv: true
+manifest-json#test154: string format (value not matching format)
+If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test154-metadata.json
+result
+test154.json
+Implicit
+test154.csv
+options
+noProv: true
+manifest-json#test155: number format (valid combinations)
+If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test155-metadata.json
+result
+test155.json
+Implicit
+test155.csv
+options
+noProv: true
+manifest-json#test156: number format (bad format string)
+If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test156-metadata.json
+result
+test156.json
+Implicit
+test156.csv
+options
+noProv: true
+manifest-json#test157: number format (value not matching format)
+If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test157-metadata.json
+result
+test157.json
+Implicit
+test157.csv
+options
+noProv: true
+manifest-json#test158: number format (valid combinations)
+Numeric dataype with object format
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test158-metadata.json
+result
+test158.json
+Implicit
+test158.csv
+options
+noProv: true
+manifest-json#test159: number format (bad pattern format string)
+If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test159-metadata.json
+result
+test159.json
+Implicit
+test159.csv
+options
+noProv: true
+manifest-json#test160: number format (not matching values with pattern)
+Implementations must add a validation error to the errors annotation for the cell if the string being parsed
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test160-metadata.json
+result
+test160.json
+Implicit
+test160.csv
+options
+noProv: true
+manifest-json#test161: number format (not matching values without pattern)
+Implementations must add a validation error to the errors annotation for the cell if the string being parsed
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test161-metadata.json
+result
+test161.json
+Implicit
+test161.csv
+options
+noProv: true
+manifest-json#test162: numeric format (consecutive groupChar)
+Implementations must add a validation error to the errors annotation for the cell if the string being parsed contains two consecutive groupChar strings
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test162-metadata.json
+result
+test162.json
+Implicit
+test162.csv
+options
+noProv: true
+manifest-json#test163: integer datatype with decimalChar
+Implementations must add a validation error to the errors annotation for the cell if the string being parsed contains the decimalChar, if the datatype base is integer or one of its sub-values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test163-metadata.json
+result
+test163.json
+Implicit
+test163.csv
+options
+noProv: true
+manifest-json#test164: decimal datatype with exponent
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, if the datatype base is decimal or one of its sub-values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test164-metadata.json
+result
+test164.json
+Implicit
+test164.csv
+options
+noProv: true
+manifest-json#test165: decimal type with NaN
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, is one of the special values NaN, INF, or -INF, if the datatype base is decimal or one of its sub-values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test165-metadata.json
+result
+test165.json
+Implicit
+test165.csv
+options
+noProv: true
+manifest-json#test166: decimal type with INF
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, is one of the special values NaN, INF, or -INF, if the datatype base is decimal or one of its sub-values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test166-metadata.json
+result
+test166.json
+Implicit
+test166.csv
+options
+noProv: true
+manifest-json#test167: decimal type with -INF
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, is one of the special values NaN, INF, or -INF, if the datatype base is decimal or one of its sub-values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test167-metadata.json
+result
+test167.json
+Implicit
+test167.csv
+options
+noProv: true
+manifest-json#test168: decimal with implicit groupChar
+When parsing the string value of a cell against this format specification, implementations must recognise and parse numbers
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test168-metadata.json
+result
+test168.json
+Implicit
+test168.csv
+options
+noProv: true
+manifest-json#test169: invalid decimal
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test169-metadata.json
+result
+test169.json
+Implicit
+test169.csv
+options
+noProv: true
+manifest-json#test170: decimal with percent
+Implementations must use the sign, exponent, percent, and per-mille signs when parsing the string value of a cell to provide the value of the cell
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test170-metadata.json
+result
+test170.json
+Implicit
+test170.csv
+options
+noProv: true
+manifest-json#test171: decimal with per-mille
+Implementations must use the sign, exponent, percent, and per-mille signs when parsing the string value of a cell to provide the value of the cell
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test171-metadata.json
+result
+test171.json
+Implicit
+test171.csv
+options
+noProv: true
+manifest-json#test172: invalid byte
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test172-metadata.json
+result
+test172.json
+Implicit
+test172.csv
+options
+noProv: true
+manifest-json#test173: invald unsignedLong
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test173-metadata.json
+result
+test173.json
+Implicit
+test173.csv
+options
+noProv: true
+manifest-json#test174: invalid unsignedShort
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test174-metadata.json
+result
+test174.json
+Implicit
+test174.csv
+options
+noProv: true
+manifest-json#test175: invalid unsignedByte
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test175-metadata.json
+result
+test175.json
+Implicit
+test175.csv
+options
+noProv: true
+manifest-json#test176: invalid positiveInteger
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test176-metadata.json
+result
+test176.json
+Implicit
+test176.csv
+options
+noProv: true
+manifest-json#test177: invalid negativeInteger
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test177-metadata.json
+result
+test177.json
+Implicit
+test177.csv
+options
+noProv: true
+manifest-json#test178: invalid nonPositiveInteger
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test178-metadata.json
+result
+test178.json
+Implicit
+test178.csv
+options
+noProv: true
+manifest-json#test179: invalid nonNegativeInteger
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test179-metadata.json
+result
+test179.json
+Implicit
+test179.csv
+options
+noProv: true
+manifest-json#test180: invalid double
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test180-metadata.json
+result
+test180.json
+Implicit
+test180.csv
+options
+noProv: true
+manifest-json#test181: invalid number
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test181-metadata.json
+result
+test181.json
+Implicit
+test181.csv
+options
+noProv: true
+manifest-json#test182: invalid float
+Implementations must add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test182-metadata.json
+result
+test182.json
+Implicit
+test182.csv
+options
+noProv: true
+manifest-json#test183: boolean format (valid combinations)
+If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by |.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test183-metadata.json
+result
+test183.json
+Implicit
+test183.csv
+options
+noProv: true
+manifest-json#test184: boolean format (bad format string)
+If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by |.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test184-metadata.json
+result
+test184.json
+Implicit
+test184.csv
+options
+noProv: true
+manifest-json#test185: boolean format (value not matching format)
+If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by |.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test185-metadata.json
+result
+test185.json
+Implicit
+test185.csv
+options
+noProv: true
+manifest-json#test186: boolean format (not matching datatype)
+Implementations must add a validation error to the errors annotation for the cell if the string being parsed
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test186-metadata.json
+result
+test186.json
+Implicit
+test186.csv
+options
+noProv: true
+manifest-json#test187: date format (valid native combinations)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test187-metadata.json
+result
+test187.json
+Implicit
+test187.csv
+options
+noProv: true
+manifest-json#test188: date format (valid date combinations with formats)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test188-metadata.json
+result
+test188.json
+Implicit
+test188.csv
+options
+noProv: true
+manifest-json#test189: date format (valid time combinations with formats)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test189-metadata.json
+result
+test189.json
+Implicit
+test189.csv
+options
+noProv: true
+manifest-json#test190: date format (valid dateTime combinations with formats)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test190-metadata.json
+result
+test190.json
+Implicit
+test190.csv
+options
+noProv: true
+manifest-json#test191: date format (bad format string)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test191-metadata.json
+result
+test191.json
+Implicit
+test191.csv
+options
+noProv: true
+manifest-json#test192: date format (value not matching format)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test192-metadata.json
+result
+test192.json
+Implicit
+test192.csv
+options
+noProv: true
+manifest-json#test193: duration format (valid combinations)
+If the datatype base is a duration type, the datatype format annotation provides a regular expression for the string values
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test193-metadata.json
+result
+test193.json
+Implicit
+test193.csv
+options
+noProv: true
+manifest-json#test194: duration format (value not matching format)
+If the datatype base is a duration type, the datatype format annotation provides a regular expression for the string values
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test194-metadata.json
+result
+test194.json
+Implicit
+test194.csv
+options
+noProv: true
+manifest-json#test195: values with matching length
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test195-metadata.json
+result
+test195.json
+Implicit
+test195.csv
+options
+noProv: true
+manifest-json#test196: values with wrong length
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test196-metadata.json
+result
+test196.json
+Implicit
+test196.csv
+options
+noProv: true
+manifest-json#test197: values with wrong maxLength
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test197-metadata.json
+result
+test197.json
+Implicit
+test197.csv
+options
+noProv: true
+manifest-json#test198: values with wrong minLength
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test198-metadata.json
+result
+test198.json
+Implicit
+test198.csv
+options
+noProv: true
+manifest-json#test199: length < minLength
+Applications must raise an error if both length and minLength are specified and length is less than minLength.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test199-metadata.json
+Implicit
+test199.csv
+options
+noProv: true
+manifest-json#test200: length > maxLength
+Applications must raise an error if both length and maxLength are specified and length is greater than maxLength.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test200-metadata.json
+Implicit
+test200.csv
+options
+noProv: true
+manifest-json#test201: length on date
+Applications must raise an error if length, maxLength, or minLength are specified and the base datatype is not string or one of its subtypes, or a binary type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test201-metadata.json
+Implicit
+test201.csv
+options
+noProv: true
+manifest-json#test202: float matching constraints
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test202-metadata.json
+result
+test202.json
+Implicit
+test202.csv
+options
+noProv: true
+manifest-json#test203: float value constraint not matching minimum
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test203-metadata.json
+result
+test203.json
+Implicit
+test203.csv
+options
+noProv: true
+manifest-json#test204: float value constraint not matching maximum
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test204-metadata.json
+result
+test204.json
+Implicit
+test204.csv
+options
+noProv: true
+manifest-json#test205: float value constraint not matching minInclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test205-metadata.json
+result
+test205.json
+Implicit
+test205.csv
+options
+noProv: true
+manifest-json#test206: float value constraint not matching minExclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test206-metadata.json
+result
+test206.json
+Implicit
+test206.csv
+options
+noProv: true
+manifest-json#test207: float value constraint not matching maxInclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test207-metadata.json
+result
+test207.json
+Implicit
+test207.csv
+options
+noProv: true
+manifest-json#test208: float value constraint not matching maxExclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test208-metadata.json
+result
+test208.json
+Implicit
+test208.csv
+options
+noProv: true
+manifest-json#test209: date matching constraints
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test209-metadata.json
+result
+test209.json
+Implicit
+test209.csv
+options
+noProv: true
+manifest-json#test210: date value constraint not matching minimum
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test210-metadata.json
+result
+test210.json
+Implicit
+test210.csv
+options
+noProv: true
+manifest-json#test211: date value constraint not matching maximum
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test211-metadata.json
+result
+test211.json
+Implicit
+test211.csv
+options
+noProv: true
+manifest-json#test212: date value constraint not matching minInclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test212-metadata.json
+result
+test212.json
+Implicit
+test212.csv
+options
+noProv: true
+manifest-json#test213: date value constraint not matching minExclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test213-metadata.json
+result
+test213.json
+Implicit
+test213.csv
+options
+noProv: true
+manifest-json#test214: date value constraint not matching maxInclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test214-metadata.json
+result
+test214.json
+Implicit
+test214.csv
+options
+noProv: true
+manifest-json#test215: date value constraint not matching maxExclusive
+validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test215-metadata.json
+result
+test215.json
+Implicit
+test215.csv
+options
+noProv: true
+manifest-json#test216: minInclusive and minExclusive
+Applications must raise an error if both minInclusive and minExclusive are specified, or if both maxInclusive and maxExclusive are specified.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test216-metadata.json
+Implicit
+test216.csv
+options
+noProv: true
+manifest-json#test217: maxInclusive and maxExclusive
+Applications must raise an error if both minInclusive and minExclusive are specified, or if both maxInclusive and maxExclusive are specified.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test217-metadata.json
+Implicit
+test217.csv
+options
+noProv: true
+manifest-json#test218: maxInclusive < minInclusive
+Applications must raise an error if both minInclusive and maxInclusive are specified and maxInclusive is less than minInclusive, or if both minInclusive and maxExclusive are specified and maxExclusive is less than or equal to minInclusive.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test218-metadata.json
+Implicit
+test218.csv
+options
+noProv: true
+manifest-json#test219: maxExclusive = minInclusive
+Applications must raise an error if both minInclusive and maxInclusive are specified and maxInclusive is less than minInclusive, or if both minInclusive and maxExclusive are specified and maxExclusive is less than or equal to minInclusive.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test219-metadata.json
+Implicit
+test219.csv
+options
+noProv: true
+manifest-json#test220: maxExclusive < minExclusive
+Applications must raise an error if both minExclusive and maxExclusive are specified and maxExclusive is less than minExclusive, or if both minExclusive and maxInclusive are specified and maxInclusive is less than or equal to minExclusive.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test220-metadata.json
+Implicit
+test220.csv
+options
+noProv: true
+manifest-json#test221: maxInclusive = minExclusive
+Applications must raise an error if both minExclusive and maxExclusive are specified and maxExclusive is less than minExclusive, or if both minExclusive and maxInclusive are specified and maxInclusive is less than or equal to minExclusive.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test221-metadata.json
+Implicit
+test221.csv
+options
+noProv: true
+manifest-json#test222: string datatype with minimum
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test222-metadata.json
+Implicit
+test222.csv
+options
+noProv: true
+manifest-json#test223: string datatype with maxium
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test223-metadata.json
+Implicit
+test223.csv
+options
+noProv: true
+manifest-json#test224: string datatype with minInclusive
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test224-metadata.json
+Implicit
+test224.csv
+options
+noProv: true
+manifest-json#test225: string datatype with maxInclusive
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test225-metadata.json
+Implicit
+test225.csv
+options
+noProv: true
+manifest-json#test226: string datatype with minExclusive
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test226-metadata.json
+Implicit
+test226.csv
+options
+noProv: true
+manifest-json#test227: string datatype with maxExclusive
+Applications must raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test227-metadata.json
+Implicit
+test227.csv
+options
+noProv: true
+manifest-json#test228: length with separator
+If the value is a list, the constraint applies to each element of the list.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test228-metadata.json
+result
+test228.json
+Implicit
+test228.csv
+options
+noProv: true
+manifest-json#test229: matching minLength with separator
+If the value is a list, the constraint applies to each element of the list.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test229-metadata.json
+result
+test229.json
+Implicit
+test229.csv
+options
+noProv: true
+manifest-json#test230: failing minLength with separator
+If the value is a list, the constraint applies to each element of the list.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test230-metadata.json
+result
+test230.json
+Implicit
+test230.csv
+options
+noProv: true
+manifest-json#test231: single column primaryKey success
+As defined in [tabular-data-model], validators must check that each row has a unique combination of values of cells in the indicated columns.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test231-metadata.json
+result
+test231.json
+Implicit
+test231.csv
+options
+noProv: true
+manifest-json#test232: single column primaryKey violation
+Validators must raise errors if there is more than one row with the same primary key
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test232-metadata.json
+result
+test232.json
+Implicit
+test232.csv
+options
+noProv: true
+manifest-json#test233: multiple column primaryKey success
+As defined in [tabular-data-model], validators must check that each row has a unique combination of values of cells in the indicated columns.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test233-metadata.json
+result
+test233.json
+Implicit
+test233.csv
+options
+noProv: true
+manifest-json#test234: multiple column primaryKey violation
+Validators must raise errors if there is more than one row with the same primary key
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test234-metadata.json
+result
+test234.json
+Implicit
+test234.csv
+options
+noProv: true
+manifest-json#test235: rowTitles on one column
+if row titles is not null, insert any titles specified for the row. For each value, tv, of the row titles annotation
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test235-metadata.json
+result
+test235.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test236: rowTitles on multiple columns
+if row titles is not null, insert any titles specified for the row. For each value, tv, of the row titles annotation
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test236-metadata.json
+result
+test236.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test237: rowTitles on one column (minimal)
+if row titles is not null, insert any titles specified for the row. For each value, tv, of the row titles annotation
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test237-metadata.json
+result
+test237.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true minimal: true
+manifest-json#test238: datatype value an absolute URL
+it must be the name of one of the built-in datatypes defined in section 5.11.1 Built-in Datatypes
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test238-metadata.json
+result
+test238.json
+Implicit
+test238.csv
+options
+noProv: true
+manifest-json#test242: datatype @id an absolute URL
+If included, @id is a link property that identifies the datatype described by this datatype description.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test242-metadata.json
+result
+test242.json
+Implicit
+test242.csv
+options
+noProv: true
+manifest-json#test243: invalid datatype @id
+It must NOT start with _:.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test243-metadata.json
+Implicit
+test243.csv
+options
+noProv: true
+manifest-json#test244: invalid datatype @id
+It must NOT be the URL of a built-in datatype.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test244-metadata.json
+Implicit
+test244.csv
+options
+noProv: true
+manifest-json#test245: date format (valid time combinations with formats and milliseconds)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test245-metadata.json
+result
+test245.json
+Implicit
+test245.csv
+options
+noProv: true
+manifest-json#test246: date format (valid dateTime combinations with formats and milliseconds)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test246-metadata.json
+result
+test246.json
+Implicit
+test246.csv
+options
+noProv: true
+manifest-json#test247: date format (extra milliseconds)
+The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and must be interpreted by implementations as defined in that specification.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test247-metadata.json
+result
+test247.json
+Implicit
+test247.csv
+options
+noProv: true
+manifest-json#test248: Unicode in non-Normalized form
+No Unicode normalization (as specified in [UAX15]) is applied to these string values
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test248-metadata.json
+result
+test248.json
+Implicit
+test248.csv
+options
+noProv: true
+manifest-json#test251: missing source reference
+As defined in [tabular-data-model], validators must check that, for each row, the combination of cells in the referencing columns references a unique row within the referenced table through a combination of cells in the referenced columns.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test251-metadata.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test252: missing destination reference column
+As defined in [tabular-data-model], validators must check that, for each row, the combination of cells in the referencing columns references a unique row within the referenced table through a combination of cells in the referenced columns.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test252-metadata.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test253: missing destination table
+As defined in [tabular-data-model], validators must check that, for each row, the combination of cells in the referencing columns references a unique row within the referenced table through a combination of cells in the referenced columns.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test253-metadata.json
+Implicit
+countries.csv country_slice.csv
+options
+noProv: true
+manifest-json#test259: tree-ops example with csvm.json (w3.org/.well-known/csvm)
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test259/tree-ops.csv
+result
+test259/result.json
+Implicit
+test259/csvm.json
+options
+noProv: true
+manifest-json#test260: tree-ops example with {+url}.json (w3.org/.well-known/csvm)
+Processors must use the first metadata found for processing a tabular data file by using overriding metadata, if provided. Otherwise processors must attempt to locate the first metadata document from the Link header or the metadata located through site-wide configuration.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test260/tree-ops.csv
+result
+test260/result.json
+Implicit
+test260/tree-ops.csv.json
+options
+noProv: true
+manifest-json#test261: maxLength < minLength
+Applications must raise an error if both minLength and maxLength are specified and minLength is greater than maxLength.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test261-metadata.json
+Implicit
+test261.csv
+options
+noProv: true
+manifest-json#test263: @type on a common property can be a built-in type
+The value of any member of @type must be either a term defined in [csvw-context], a prefixed name where the prefix is a term defined in [csvw-context], or an absolute URL.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test263-metadata.json
+result
+test263.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test264: @type on a common property can be a CURIE if the prefix is one of the built-in ones
+The value of any member of @type must be either a term defined in [csvw-context], a prefixed name where the prefix is a term defined in [csvw-context], or an absolute URL.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test264-metadata.json
+result
+test264.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test266: `null` contains an array of (valid) string & (invalid) numeric values
+Processors must issue a warning if a property is set to an invalid value type
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test266-metadata.json
+result
+test266.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test267: @id on datatype is invalid (eg starts with _:)
+It must NOT start with _: and it must NOT be the URL of a built-in datatype.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test267-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test268: `base` missing on datatype (defaults to string)
+An atomic property that contains a single string: the name of one of the built-in datatypes, as listed above (and which are defined as terms in the default context). Its default is string.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test268-metadata.json
+result
+test268.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test269: `format` for a boolean datatype is a string but in the wrong form (eg YN)
+If the datatype base for a cell is boolean, the datatype format annotation provides the true value followed by the false value, separated by |. If the format does not follow this syntax, implementations must issue a warning and proceed as if no format had been provided.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test269-metadata.json
+result
+test269.json
+Implicit
+test269.csv
+options
+noProv: true
+manifest-json#test270: transformation includes an invalid property (eg foo)
+All terms used within a metadata document must be defined in [csvw-context] defined for this specification
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test270-metadata.json
+result
+test270.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test271: foreign key includes an invalid property (eg `dc:description`)
+A foreign key definition is a JSON object that must contain only the following properties. . .
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test271-metadata.json
+Implicit
+test271.csv countries.csv
+options
+noProv: true
+manifest-json#test272: foreign key reference includes an invalid property (eg `dc:description`)
+A foreign key definition is a JSON object that must contain only the following properties. . .
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test272-metadata.json
+Implicit
+test272.csv countries.csv
+options
+noProv: true
+manifest-json#test273: `@base` set in `@context` overriding eg CSV location
+If present, its value must be a string that is interpreted as a URL which is resolved against the location of the metadata document to provide the base URL for other URLs in the metadata document.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test273-metadata.json
+result
+test273.json
+Implicit
+test273/action.csv
+options
+noProv: true
+manifest-json#test274: `@context` object includes properties other than `@base` and `@language`
+The @context must have one of the following values: An array composed of a string followed by an object, where the string is http://www.w3.org/ns/csvw and the object represents a local context definition, which is restricted to contain either or both of the following members.
+
+Negative Test
+
+type
+csvt:NegativeJsonTest
+approval
+rdft:Approved
+action
+test274-metadata.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test275: property acceptable on column appears on table group
+Table Group may only use defined properties.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test275-metadata.json
+result
+test275.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test276: property acceptable on column appears on table
+Table may only use defined properties.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test276-metadata.json
+result
+test276.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test277: property acceptable on table appears on column
+Column may only use defined properties.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test277-metadata.json
+result
+test277.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test278: CSV has more headers than there are columns in the metadata
+Two schemas are compatible if they have the same number of non-virtual column descriptions, and the non-virtual column descriptions at the same index within each are compatible with each other.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test278-metadata.json
+result
+test278.json
+Implicit
+tree-ops.csv
+options
+noProv: true
+manifest-json#test279: duration not matching xsd pattern
+Value must be a valid xsd:duration.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test279-metadata.json
+result
+test279.json
+Implicit
+test279.csv
+options
+noProv: true
+manifest-json#test280: dayTimeDuration not matching xsd pattern
+Value must be a valid xsd:dayTimeDuration.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test280-metadata.json
+result
+test280.json
+Implicit
+test280.csv
+options
+noProv: true
+manifest-json#test281: yearMonthDuration not matching xsd pattern
+Value must be a valid xsd:yearMonthDuration.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test281-metadata.json
+result
+test281.json
+Implicit
+test281.csv
+options
+noProv: true
+manifest-json#test282: valid number patterns
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test282-metadata.json
+result
+test282.json
+Implicit
+test282.csv
+options
+noProv: true
+manifest-json#test283: valid number patterns (signs and percent/permille)
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test283-metadata.json
+result
+test283.json
+Implicit
+test283.csv
+options
+noProv: true
+manifest-json#test284: valid number patterns (grouping)
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test284-metadata.json
+result
+test284.json
+Implicit
+test284.csv
+options
+noProv: true
+manifest-json#test285: valid number patterns (fractional grouping)
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test285-metadata.json
+result
+test285.json
+Implicit
+test285.csv
+options
+noProv: true
+manifest-json#test286: invalid ##0 1,234
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test286-metadata.json
+result
+test286.json
+Implicit
+test286.csv
+options
+noProv: true
+manifest-json#test287: invalid ##0 123.4
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test287-metadata.json
+result
+test287.json
+Implicit
+test287.csv
+options
+noProv: true
+manifest-json#test288: invalid #,#00 1
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test288-metadata.json
+result
+test288.json
+Implicit
+test288.csv
+options
+noProv: true
+manifest-json#test289: invalid #,#00 1234
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test289-metadata.json
+result
+test289.json
+Implicit
+test289.csv
+options
+noProv: true
+manifest-json#test290: invalid #,#00 12,34
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test290-metadata.json
+result
+test290.json
+Implicit
+test290.csv
+options
+noProv: true
+manifest-json#test291: invalid #,#00 12,34,567
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test291-metadata.json
+result
+test291.json
+Implicit
+test291.csv
+options
+noProv: true
+manifest-json#test292: invalid #,##,#00 1
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test292-metadata.json
+result
+test292.json
+Implicit
+test292.csv
+options
+noProv: true
+manifest-json#test293: invalid #,##,#00 1234
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test293-metadata.json
+result
+test293.json
+Implicit
+test293.csv
+options
+noProv: true
+manifest-json#test294: invalid #,##,#00 12,34
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test294-metadata.json
+result
+test294.json
+Implicit
+test294.csv
+options
+noProv: true
+manifest-json#test295: invalid #,##,#00 1,234,567
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test295-metadata.json
+result
+test295.json
+Implicit
+test295.csv
+options
+noProv: true
+manifest-json#test296: invalid #0.# 12.34
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test296-metadata.json
+result
+test296.json
+Implicit
+test296.csv
+options
+noProv: true
+manifest-json#test297: invalid #0.# 1,234.5
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test297-metadata.json
+result
+test297.json
+Implicit
+test297.csv
+options
+noProv: true
+manifest-json#test298: invalid #0.0 1
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test298-metadata.json
+result
+test298.json
+Implicit
+test298.csv
+options
+noProv: true
+manifest-json#test299: invalid #0.0 12.34
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test299-metadata.json
+result
+test299.json
+Implicit
+test299.csv
+options
+noProv: true
+manifest-json#test300: invalid #0.0# 1
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test300-metadata.json
+result
+test300.json
+Implicit
+test300.csv
+options
+noProv: true
+manifest-json#test301: invalid #0.0# 12.345
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test301-metadata.json
+result
+test301.json
+Implicit
+test301.csv
+options
+noProv: true
+manifest-json#test302: invalid #0.0#,# 1
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test302-metadata.json
+result
+test302.json
+Implicit
+test302.csv
+options
+noProv: true
+manifest-json#test303: invalid #0.0#,# 12.345
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test303-metadata.json
+result
+test303.json
+Implicit
+test303.csv
+options
+noProv: true
+manifest-json#test304: invalid #0.0#,# 12.34,567
+A number format pattern as defined in [UAX35]. Implementations must recognise number format patterns containing the symbols 0, #, the specified decimalChar (or . if unspecified), the specified groupChar (or , if unspecified), E, +, % and &permil;.
+
+Expects Warnings
+
+type
+csvt:ToJsonTestWithWarnings
+approval
+rdft:Approved
+action
+test304-metadata.json
+result
+test304.json
+Implicit
+test304.csv
+options
+noProv: true
+manifest-json#test305: multiple values with same subject and property (unordered)
+Values in separate columns using the same propertyUrl are kept in proper relative order.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test305-metadata.json
+result
+test305.json
+Implicit
+test305.csv
+options
+noProv: true
+manifest-json#test306: multiple values with same subject and property (ordered)
+Values in separate columns using the same propertyUrl are kept in proper relative order.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test306-metadata.json
+result
+test306.json
+Implicit
+test306.csv
+options
+noProv: true
+manifest-json#test307: multiple values with same subject and property (ordered and unordered)
+Values in separate columns using the same propertyUrl are kept in proper relative order.
+
+type
+csvt:ToJsonTest
+approval
+rdft:Approved
+action
+test307-metadata.json
+result
+test307.json
+Implicit
+test307.csv
+options
+noProv: true

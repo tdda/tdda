@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If a @value property is used on an object, that object MUST NOT have any other properties aside from either @type or @language, and MUST NOT have both @type and @language as properties. The value of the @value property MUST be a string, number, or boolean value.",
+  "rdfs:label": "@value with @language and @type",
+  "rdf:value": {"@value": "foo", "@language": "en", "@type": "xsd:string"},
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

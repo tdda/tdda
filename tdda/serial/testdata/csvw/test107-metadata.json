@@ -1,0 +1,6 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "tableSchema with invalid value MUST act as if it was an empty object",
+  "url": "tree-ops.csv",
+  "tableSchema": 1
+}

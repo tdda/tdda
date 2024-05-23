@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell if the string being parsed contains two consecutive groupChar strings.",
+  "rdfs:label": "numeric format (consecutive groupChar)",
+  "url": "test162.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "decimal", "datatype": {"base": "decimal", "format": { "groupChar": "," }}}
+    ]
+  }
+}

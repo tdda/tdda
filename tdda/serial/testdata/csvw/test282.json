@@ -1,0 +1,71 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test282.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test282.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "##0": 1,
+              "#,#00": 12,
+              "#,##,#00": 12,
+              "#0.#": 1.0,
+              "#0.0": 1.2,
+              "#0.0#": 1.2,
+              "#0.0#,#": 12.3
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test282.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "##0": 12,
+              "#,#00": 123,
+              "#,##,#00": 123,
+              "#0.#": 1.2,
+              "#0.0": 12.3,
+              "#0.0#": 1.23,
+              "#0.0#,#": 12.34
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test282.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "##0": 123,
+              "#,#00": 1234,
+              "#,##,#00": 1234,
+              "#0.#": 1234.5,
+              "#0.0": 1234.5,
+              "#0.0#": 12.3,
+              "#0.0#,#": 12.245
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test282.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "##0": 1234,
+              "#,#00": 1234567,
+              "#,##,#00": 1234567,
+              "#0.#": 1234.5,
+              "#0.0": 1234.5,
+              "#0.0#": 12.34,
+              "#0.0#,#": 12.245
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "valid number patterns",
+      "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`."
+    }
+  ]
+}

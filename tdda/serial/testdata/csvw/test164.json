@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test164.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test164.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "decimal": "123.456E7"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell contains an exponent, if the datatype base is decimal or one of its sub-values.",
+      "rdfs:label": "decimal datatype with exponent"
+    }
+  ]
+}

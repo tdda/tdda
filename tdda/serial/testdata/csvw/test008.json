@@ -1,0 +1,42 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test008.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test008.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "Book1": "1",
+              "Book2": "7680",
+              "Path": "http://dbpedia.org/ontology/language,http://dbpedia.org/resource/English_language,http://dbpedia.org/ontology/language"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test008.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "Book1": "1",
+              "Book2": "2",
+              "Path": "http://dbpedia.org/ontology/author,http://dbpedia.org/resource/Diana_Gabaldon,http://dbpedia.org/ontology/author"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test008.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "Book1": "1",
+              "Book2": "2",
+              "Path": "http://dbpedia.org/ontology/country,http://dbpedia.org/resource/United_States,http://dbpedia.org/ontology/country"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

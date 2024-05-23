@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The value of any @id or @type contained within a metadata document MUST NOT be a blank node.",
+  "rdfs:label": "@id out of range (as node type) - bnode",
+  "rdfs:value": {"@id": "_:foo"},
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the value of this property is a string, it MUST be one of the built-in datatypes defined in section 5.11.1 Built-in Datatypes or an absolute URL.",
+  "rdfs:label": "datatype value an absolute URL that does not resolve",
+  "url": "test238.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "string", "datatype": "http://example.org/datatype"}
+    ]
+  }
+}

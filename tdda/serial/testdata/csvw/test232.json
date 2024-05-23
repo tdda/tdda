@@ -1,0 +1,29 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test232.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test232.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "PK": "1"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test232.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "PK": "1"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Validators MUST raise errors if there is more than one row with the same primary key.",
+      "rdfs:label": "single column primaryKey violation"
+    }
+  ]
+}

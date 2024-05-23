@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test242.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test242.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "string": "foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If included, @id is a link property that identifies the datatype described by this datatype description.",
+      "rdfs:label": "datatype @id an absolute URL that does not resolve"
+    }
+  ]
+}

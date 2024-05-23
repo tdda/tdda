@@ -1,0 +1,13 @@
+id,Surname,FamilyName,child_id
+1,Homer,Simpson,3
+1,Homer,Simpson,4
+1,Homer,Simpson,5
+2,Marge,Simpson,3
+2,Marge,Simpson,4
+2,Marge,Simpson,5
+3,Bart,Simpson,
+4,Lisa,Simpson,
+5,Maggie,Simpson,
+6,Ned,Flanders,
+7,Krusty,the Clown,
+8,Waylon,Smithers,

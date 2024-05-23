@@ -1,0 +1,37 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "GID": "1",
+              "on_street": "ADDISON AV",
+              "species": "Celtis australis",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-10-18"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "GID": "2",
+              "on_street": "EMERSON ST",
+              "species": "Liquidambar styraciflua",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-06-02"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "`null` contains an array of (valid) string & (invalid) numeric values",
+      "rdfs:comment": "Processors MUST issue a warning if a property is set to an invalid value type."
+    }
+  ]
+}

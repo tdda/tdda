@@ -1,0 +1,18 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "A metadata document MUST NOT add a new context",
+  "rdf:value": {
+    "@context": "http://schema.org/",
+    "name": "context in common property"
+  },
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

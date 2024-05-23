@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Implementations MUST use the sign, exponent, percent, and per-mille signs when parsing the string value of a cell to provide the value of the cell.",
+  "rdfs:label": "decimal with per-mille",
+  "url": "test171.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "decimal", "datatype": {"base": "decimal", "format": { "groupChar": "," }}}
+    ]
+  }
+}

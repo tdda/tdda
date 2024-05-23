@@ -1,0 +1,72 @@
+{
+  "@id": "senior-roles.json",
+  "@context": "http://www.w3.org/ns/csvw",
+  "columns": [{
+    "name": "ref",
+    "titles": "Post Unique Reference",
+    "datatype": "string",
+    "required": true,
+    "propertyUrl": "dc:identifier"
+  }, {
+    "name": "name",
+    "titles": "Name",
+    "datatype": "string",
+    "aboutUrl": "http://example.org/organization/{organizationRef}/person/{_row}",
+    "propertyUrl": "foaf:name"
+  }, {
+    "name": "grade",
+    "titles": "Grade",
+    "datatype": "string",
+    "propertyUrl": "http://example.org/gov.uk/def/grade"
+  }, {
+    "name": "job",
+    "titles": "Job Title",
+    "datatype": "string",
+    "propertyUrl": "http://example.org/gov.uk/def/job"
+  }, {
+    "name": "reportsTo",
+    "titles": "Reports to Senior Post",
+    "datatype": "string",
+    "null": "xx",
+    "propertyUrl": "org:reportsTo",
+    "valueUrl": "http://example.org/organization/{organizationRef}/post/{reportsTo}"
+  }, {
+    "name": "profession",
+    "titles": "Profession",
+    "datatype": "string",
+    "propertyUrl": "http://example.org/gov.uk/def/profession"
+  }, {
+    "name": "organizationRef",
+    "titles": "Organization Reference",
+    "datatype": "string",
+    "propertyUrl": "org:postIn",
+    "valueUrl": "http://example.org/organization/{organizationRef}",
+    "required": true
+  }, {
+    "name": "post_holder",
+    "virtual": true,
+    "propertyUrl": "org:heldBy",
+    "valueUrl": "http://example.org/organization/{organizationRef}/person/{_row}"
+  }],
+  "primaryKey": "ref",
+  "aboutUrl": "http://example.org/organization/{organizationRef}/post/{ref}",
+  "foreignKeys": [{
+    "columnReference": "reportsTo",
+    "reference": {
+      "schemaReference": "senior-roles.json",
+      "columnReference": "ref"
+    }
+  }, {
+    "columnReference": "profession",
+    "reference": {
+      "schemaReference": "professions.json",
+      "columnReference": "name"
+    }
+  }, {
+    "columnReference": "organizationRef",
+    "reference": {
+      "schemaReference": "organizations.json",
+      "columnReference": "ref"
+    }
+  }]
+}

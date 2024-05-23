@@ -1,0 +1,36 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "rdfs:comment": "tableSchema with invalid value MUST act as if it was an empty object",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "_col.1": "1",
+              "_col.2": "ADDISON AV",
+              "_col.3": "Celtis australis",
+              "_col.4": "Large Tree Routine Prune",
+              "_col.5": "10/18/2010"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "_col.1": "2",
+              "_col.2": "EMERSON ST",
+              "_col.3": "Liquidambar styraciflua",
+              "_col.4": "Large Tree Routine Prune",
+              "_col.5": "6/2/2010"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

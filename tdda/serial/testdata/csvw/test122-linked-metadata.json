@@ -1,0 +1,25 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "This metadata is skipped",
+  "rdfs:comment": "If the metadata file found at this location does not explicitly include a reference to the requested tabular data file then it MUST be ignored.",
+  "tables": [{
+    "url": "test122-ref.csv",
+    "tableSchema": {
+      "columns": [{
+        "titles": "countryCode"
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string"
+      }]
+    }
+  }]
+}

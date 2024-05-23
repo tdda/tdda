@@ -1,0 +1,25 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test152.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test152.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "string1": "AaAaA",
+              "string2": "GED",
+              "string3": "foo bar",
+              "anyUri": "http://example.org",
+              "normalizedString": "bar",
+              "NMTOKEN": "foobar"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values",
+      "rdfs:label": "string format (valid combinations)"
+    }
+  ]
+}

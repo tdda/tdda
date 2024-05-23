@@ -1,0 +1,65 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test187.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test187.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "date": "2015-03-22",
+              "time": "15:02:37",
+              "dateTime": "2015-03-15T15:02:37",
+              "datetime": "2015-03-15T15:02:37",
+              "dateTimeStamp": "2015-03-15T15:02:37Z",
+              "gDay": "---31",
+              "gMonth": "--02",
+              "gMonthDay": "--02-21",
+              "gYear": "9999",
+              "gYearMonth": "1999-05"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test187.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "date": "2015-03-22Z",
+              "time": "15:02:37Z",
+              "dateTime": "2015-03-15T15:02:37Z",
+              "datetime": "2015-03-15T15:02:37Z",
+              "dateTimeStamp": "2015-03-15T15:02:37Z",
+              "gDay": "---31Z",
+              "gMonth": "--02Z",
+              "gMonthDay": "--02-21Z",
+              "gYear": "9999Z",
+              "gYearMonth": "1999-05Z"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test187.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "date": "2015-03-22-08:00",
+              "time": "15:02:37-08:00",
+              "dateTime": "2015-03-15T15:02:37-08:00",
+              "datetime": "2015-03-15T15:02:37-08:00",
+              "dateTimeStamp": "2015-03-15T15:02:37-08:00",
+              "gDay": "---31-08:00",
+              "gMonth": "--02-08:00",
+              "gMonthDay": "--02-21-08:00",
+              "gYear": "9999-08:00",
+              "gYearMonth": "1999-05-08:00"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+      "rdfs:label": "date format (valid native combinations)"
+    }
+  ]
+}

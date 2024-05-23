@@ -1,0 +1,19 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+  "rdfs:label": "date format (value not matching format)",
+  "url": "test192.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "yyyy-MM-ddTHH:mm:ss",   "datatype": {"base": "dateTime", "format": "yyyy-MM-ddTHH:mm:ss"}},
+      {"titles": "yyyy-MM-dd HH:mm:ss",   "datatype": {"base": "dateTime", "format": "yyyy-MM-dd HH:mm:ss"}},
+      {"titles": "yyyyMMdd HHmmss",       "datatype": {"base": "dateTime", "format": "yyyyMMdd HHmmss"}},
+      {"titles": "dd-MM-yyyy HH:mm",      "datatype": {"base": "dateTime", "format": "dd-MM-yyyy HH:mm"}},
+      {"titles": "d-M-yyyy HHmm",         "datatype": {"base": "dateTime", "format": "d-M-yyyy HHmm"}},
+      {"titles": "yyyy-MM-ddTHH:mm",      "datatype": {"base": "dateTime", "format": "yyyy-MM-ddTHH:mm"}},
+      {"titles": "d-M-yyyy HHmm X",       "datatype": {"base": "dateTime", "format": "d-M-yyyy HHmm X"}},
+      {"titles": "yyyy-MM-ddTHH:mm:ssXXX","datatype": {"base": "dateTime", "format": "yyyy-MM-ddTHH:mm:ssXXX"}},
+      {"titles": "yyyy-MM-dd HH:mm:ss X", "datatype": {"base": "dateTimeStamp", "format": "yyyy-MM-dd HH:mm:ss X"}}
+    ]
+  }
+}

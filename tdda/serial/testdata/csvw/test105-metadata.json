@@ -1,0 +1,23 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "A primaryKey referenced column MUST have a `name` property",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [{
+      "titles": "GID"
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date"
+    }],
+    "primaryKey": "GID"
+  }
+}

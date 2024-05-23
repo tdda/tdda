@@ -1,0 +1,15 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If there is a non-empty case-sensitive intersection between the titles values, where matches must have a matching language; und matches any language, and languages match if they are equal when truncated, as defined in [BCP47], to the length of the shortest language tag.",
+  "rdfs:label": "title incompatible with title on case",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "gid"},
+      {"titles": "on street"},
+      {"titles": "species"},
+      {"titles": "trim cycle"},
+      {"titles": "inventory date"}
+    ]
+  }
+}

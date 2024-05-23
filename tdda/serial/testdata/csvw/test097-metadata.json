@@ -1,0 +1,54 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "foreignKeys with FK and reference body is invalid",
+  "tables": [{
+    "url": "countries.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryCode",
+        "titles": "countryCode",
+        "datatype": "string",
+        "propertyUrl": "http://www.geonames.org/ontology{#_name}"
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string"
+      }],
+      "aboutUrl": "http://example.org/countries.csv{#countryCode}",
+      "propertyUrl": "http://schema.org/{_name}",
+      "primaryKey": "countryCode"
+    }
+  }, {
+    "url": "country_slice.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryRef",
+        "titles": "countryRef",
+        "valueUrl": "http://example.org/countries.csv{#countryRef}"
+      }, {
+        "name": "year",
+        "titles": "year",
+        "datatype": "gYear"
+      }, {
+        "name": "population",
+        "titles": "population",
+        "datatype": "integer"
+      }],
+      "foreignKeys": [{
+        "columnReference": "countryRef",
+        "reference": {
+          "resource": "countries.csv",
+          "columnReference": "countryCode"
+        }
+      }, 1]
+    }
+  }]
+}

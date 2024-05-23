@@ -1,0 +1,28 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test047.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test047.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test047.csv",
+              "null": "empty",
+              "lang": "en",
+              "textDirection": "ltr",
+              "separator": "-",
+              "ordered": "true",
+              "default": "def",
+              "datatype": "string",
+              "aboutUrl": "about",
+              "propertyUrl": "prop",
+              "valueUrl": "value"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

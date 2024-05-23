@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+  "rdfs:label": "date format (valid time combinations with formats)",
+  "url": "test189.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "HH:mm:ss", "datatype": {"base": "time", "format": "HH:mm:ss"}},
+      {"titles": "HHmmss",   "datatype": {"base": "time", "format": "HHmmss"}},
+      {"titles": "HH:mm",    "datatype": {"base": "time", "format": "HH:mm"}},
+      {"titles": "HHmm",     "datatype": {"base": "time", "format": "HHmm"}},
+      {"titles": "HH:mm:ssX","datatype": {"base": "time", "format": "HH:mm:ssX"}},
+      {"titles": "HHmm XX",  "datatype": {"base": "time", "format": "HHmm XX"}}
+    ]
+  }
+}

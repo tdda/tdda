@@ -1,0 +1,40 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "GID": "1",
+              "on_street": "ADDISON AV",
+              "species": "Celtis australis",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-10-18"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "GID": "2",
+              "on_street": "EMERSON ST",
+              "species": "Liquidambar styraciflua",
+              "trim_cycle": "Large Tree Routine Prune",
+              "inventory_date": "2010-06-02"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "@type on a common property can be a CURIE if the prefix is one of the built-in ones",
+      "rdfs:comment": "The value of any member of `@type` MUST be either a _term_ defined in [csvw-context], a _prefixed name_ where the prefix is a term defined in [csvw-context], or an absolute URL.",
+      "dc:relation": {
+        "@type": "schema:Thing"
+      }
+    }
+  ]
+}

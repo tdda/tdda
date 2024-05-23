@@ -1,0 +1,19 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "valid number patterns (grouping)",
+  "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`.",
+  "url": "test284.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "###0.#####", "datatype": {"base": "decimal", "format": {"pattern": "###0.#####"}}},
+      {"titles": "###0.0000#", "datatype": {"base": "decimal", "format": {"pattern": "###0.0000#"}}},
+      {"titles": "00000.0000", "datatype": {"base": "decimal", "format": {"pattern": "00000.0000"}}},
+      {"titles": "#,##,##0", "datatype": {"base": "integer", "format": {"pattern": "#,##,##0"}}},
+      {"titles": "#,##,#00", "datatype": {"base": "integer", "format": {"pattern": "#,##,#00"}}},
+      {"titles": "#,##,000", "datatype": {"base": "integer", "format": {"pattern": "#,##,000"}}},
+      {"titles": "#,#0,000", "datatype": {"base": "integer", "format": {"pattern": "#,#0,000"}}},
+      {"titles": "#,00,000", "datatype": {"base": "integer", "format": {"pattern": "#,00,000"}}},
+      {"titles": "0,00,000", "datatype": {"base": "integer", "format": {"pattern": "0,00,000"}}}
+    ]
+  }
+}

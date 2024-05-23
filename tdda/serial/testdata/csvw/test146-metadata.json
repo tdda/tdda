@@ -1,0 +1,16 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Aside from @value, @type, @language, and @id, the properties used on an object MUST NOT start with @.",
+  "rdfs:label": "Invalid faux-keyword",
+  "rdf:value": {"@faux": "bar"},
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

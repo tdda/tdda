@@ -1,0 +1,13 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell if the string being parsed.",
+  "rdfs:label": "number format (not matching values without pattern)",
+  "url": "test161.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "integer", "datatype": {"base": "integer"}},
+      {"titles": "decimal", "datatype": {"base": "decimal"}},
+      {"titles": "double", "datatype": {"base": "double"}}
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "column names are restricted ... names beginning with '_' are reserved by this specification and MUST NOT be used within metadata documents.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": "_GID", "titles": "GID"},
+      {"name": "_on_street", "titles": "On Street"},
+      {"name": "_species", "titles": "Species"},
+      {"name": "_trim_cycle", "titles": "Trim Cycle"},
+      {"name": "_inventory_date", "titles": "Inventory Date"}
+    ]
+  }
+}

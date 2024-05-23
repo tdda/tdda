@@ -1,0 +1,31 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "transformations are an array of Transformation",
+  "url": "tree-ops.csv",
+  "transformations": [{
+    "url": "templates/ical.txt",
+    "titles": "iCalendar",
+    "targetFormat": "http://www.iana.org/assignments/media-types/text/calendar",
+    "scriptFormat": "https://mustache.github.io/",
+    "source": "json"
+  }, 1],
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": "GID"
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }]
+  }
+}

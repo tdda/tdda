@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test154.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test154.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "string1": "AaAaA"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype base is not numeric, boolean, a date/time type, or a duration type, the datatype format annotation provides a regular expression for the string values.",
+      "rdfs:label": "string format (value not matching format)"
+    }
+  ]
+}

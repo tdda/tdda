@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Applications MUST raise an error if minimum, minInclusive, maximum, maxInclusive, minExclusive, or maxExclusive are specified and the base datatype is not a numeric, date/time, or duration type.",
+  "rdfs:label": "string datatype with minimum",
+  "url": "test222.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "string", "datatype": {"base": "string", "minimum": 1}}
+    ]
+  }
+}

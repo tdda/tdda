@@ -1,0 +1,51 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test183.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test183.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "boolean": true,
+              "boolean1": true
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test183.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "boolean": false,
+              "boolean1": false
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test183.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "boolean": true,
+              "boolean1": true
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test183.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "boolean": false,
+              "boolean1": false
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by `|`..",
+      "rdfs:label": "boolean format (valid combinations)"
+    }
+  ]
+}

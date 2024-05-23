@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "invalid ##0 1,234",
+  "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`.",
+  "url": "test286.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "##0", "datatype": {"base": "integer", "format": {"pattern": "##0"}}}
+    ]
+  }
+}

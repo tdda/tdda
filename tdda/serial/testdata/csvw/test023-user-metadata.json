@@ -1,0 +1,21 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "tables": [{"url": "tree-ops.csv"}],
+  "dialect": {
+    "commentPrefix": "#",
+    "delimiter": ",",
+    "doubleQuote": true,
+    "encoding": "utf-8",
+    "header": false,
+    "headerRowCount": 0,
+    "lineTerminators": ["\r\n", "\n"],
+    "quoteChar": "\"",
+    "skipBlankRows": false,
+    "skipColumns": 0,
+    "skipInitialSpace": false,
+    "skipRows": 0,
+    "trim": true,
+    "@id": "http://example.org/no-header-csv",
+    "@type": "Dialect"
+  }
+}

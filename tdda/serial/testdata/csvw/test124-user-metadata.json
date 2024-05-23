@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If not validating, and one schema has a name property but not a titles property, and the other has a titles property but not a name property.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": "GID1"},
+      {"name": "on_street1"},
+      {"name": "species1"},
+      {"name": "trim_cycle1"},
+      {"name": "inventory_date1"}
+    ]
+  }
+}

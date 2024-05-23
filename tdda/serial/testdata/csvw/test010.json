@@ -1,0 +1,49 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test010.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test010.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "country": "AD",
+              "name": "Andorra"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test010.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "country": "AF",
+              "name": "Afghanistan"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test010.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "country": "AI",
+              "name": "Anguilla"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test010.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "country": "AL",
+              "name": "Albania"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

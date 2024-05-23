@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Applications MUST raise an error if both length and minLength are specified and length is less than minLength.",
+  "rdfs:label": "length < minLength",
+  "url": "test199.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "NMTOKEN", "datatype": {"base": "NMTOKEN", "length": 5, "minLength": 6}, "null": "NULL"}
+    ]
+  }
+}

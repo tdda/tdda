@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "yearMonthDuration not matching xsd pattern",
+  "rdfs:comment": "Value MUST be a valid xsd:yearMonthDuration..",
+  "url": "test281.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "yearMonthDuration", "datatype": "yearMonthDuration"}
+    ]
+  }
+}

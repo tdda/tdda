@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Applications MUST raise an error if both minInclusive and minExclusive are specified, or if both maxInclusive and maxExclusive are specified.",
+  "rdfs:label": "maxInclusive and maxExclusive",
+  "url": "test217.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "date", "datatype": {"base": "date", "maxInclusive": "2015-06-05", "maxExclusive": "2015-06-05"}, "null": "NULL"}
+    ]
+  }
+}

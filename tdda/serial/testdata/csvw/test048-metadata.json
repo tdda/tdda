@@ -1,0 +1,30 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "propertyUrl": true,
+  "tables": [{
+    "url": "test048.csv",
+    "tableSchema": {
+      "columns": [{
+        "titles": "null"
+      }, {
+        "titles": "lang"
+      }, {
+        "titles": "textDirection"
+      }, {
+        "titles": "separator"
+      }, {
+        "titles": "ordered"
+      }, {
+        "titles": "default"
+      }, {
+        "titles": "datatype"
+      }, {
+        "titles": "aboutUrl"
+      }, {
+        "titles": "propertyUrl"
+      }, {
+        "titles": "valueUrl"
+      }]
+    }
+  }]
+}

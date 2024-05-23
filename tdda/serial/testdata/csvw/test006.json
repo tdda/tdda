@@ -1,0 +1,75 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test006.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "Surname": "Homer",
+              "FamilyName": "Simpson",
+              "childName": "Bart"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "Surname": "Homer",
+              "FamilyName": "Simpson",
+              "childName": "Lisa"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "Surname": "Homer",
+              "FamilyName": "Simpson",
+              "childName": "Maggie"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "Surname": "Marge",
+              "FamilyName": "Simpson",
+              "childName": "Bart"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "Surname": "Marge",
+              "FamilyName": "Simpson",
+              "childName": "Lisa"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test006.csv#row=7",
+          "rownum": 6,
+          "describes": [
+            {
+              "Surname": "Marge",
+              "FamilyName": "Simpson",
+              "childName": "Maggie"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

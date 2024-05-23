@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+  "rdfs:label": "date format (bad format string)",
+  "url": "test191.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "date", "datatype": {"base": "date", "format": {"pattern": "yy-MM-dd"}}}
+    ]
+  }
+}

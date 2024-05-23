@@ -1,0 +1,18 @@
+[
+  {
+    "@id": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#gid-1",
+    "GID": "1",
+    "on_street": "ADDISON AV",
+    "species": "Celtis australis",
+    "trim_cycle": "Large Tree Routine Prune",
+    "inventory_date": "2010-10-18"
+  },
+  {
+    "@id": "http://www.w3.org/2013/csvw/tests/tree-ops.csv#gid-2",
+    "GID": "2",
+    "on_street": "EMERSON ST",
+    "species": "Liquidambar styraciflua",
+    "trim_cycle": "Large Tree Routine Prune",
+    "inventory_date": "2010-06-02"
+  }
+]

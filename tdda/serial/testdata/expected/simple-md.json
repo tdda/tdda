@@ -36,5 +36,6 @@
     "metadata_source": "http://www.w3.org/ns/csvw",
     "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/simple-metadata.json",
     "valid": true,
+    "header_rows": 1,
     "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata"
 }

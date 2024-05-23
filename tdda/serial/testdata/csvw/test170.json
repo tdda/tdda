@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test170.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test170.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "decimal": 1234.56789
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST use the sign, exponent, percent, and per-mille signs when parsing the string value of a cell to provide the value of the cell.",
+      "rdfs:label": "decimal with percent"
+    }
+  ]
+}

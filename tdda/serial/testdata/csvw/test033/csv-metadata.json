@@ -1,0 +1,68 @@
+{
+  "@context": ["http://www.w3.org/ns/csvw", {"@language": "en"}],
+  "url": "events-listing.csv",
+  "dialect": {"trim": true},
+  "tableSchema": {
+    "columns": [{
+      "name": "name",
+      "titles": "Name",
+      "aboutUrl": "#event-{_row}",
+      "propertyUrl": "schema:name"
+    }, {
+      "name": "start_date",
+      "titles": "Start Date",
+      "datatype": {
+        "base": "datetime",
+        "format": "yyyy-MM-ddTHH:mm"
+      },
+      "aboutUrl": "#event-{_row}",
+      "propertyUrl": "schema:startDate"
+    }, {
+      "name": "location_name",
+      "titles": "Location Name",
+      "aboutUrl": "#place-{_row}",
+      "propertyUrl": "schema:name"
+    }, {
+      "name": "location_address",
+      "titles": "Location Address",
+      "aboutUrl": "#place-{_row}",
+      "propertyUrl": "schema:address"
+    }, {
+      "name": "ticket_url",
+      "titles": "Ticket Url",
+      "datatype": "anyURI",
+      "aboutUrl": "#offer-{_row}",
+      "propertyUrl": "schema:url"
+    }, {
+      "name": "type_event",
+      "virtual": true,
+      "aboutUrl": "#event-{_row}",
+      "propertyUrl": "rdf:type",
+      "valueUrl": "schema:MusicEvent"
+    }, {
+      "name": "type_place",
+      "virtual": true,
+      "aboutUrl": "#place-{_row}",
+      "propertyUrl": "rdf:type",
+      "valueUrl": "schema:Place"
+    }, {
+      "name": "type_offer",
+      "virtual": true,
+      "aboutUrl": "#offer-{_row}",
+      "propertyUrl": "rdf:type",
+      "valueUrl": "schema:Offer"
+    }, {
+      "name": "location",
+      "virtual": true,
+      "aboutUrl": "#event-{_row}",
+      "propertyUrl": "schema:location",
+      "valueUrl": "#place-{_row}"
+    }, {
+      "name": "offers",
+      "virtual": true,
+      "aboutUrl": "#event-{_row}",
+      "propertyUrl": "schema:offers",
+      "valueUrl": "#offer-{_row}"
+    }]
+  }
+}

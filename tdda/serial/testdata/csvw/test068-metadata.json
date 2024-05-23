@@ -1,0 +1,24 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "url": "tree-ops.csv",
+  "dialect": {"skipBlankRows": 1},
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": "GID"
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }]
+  }
+}

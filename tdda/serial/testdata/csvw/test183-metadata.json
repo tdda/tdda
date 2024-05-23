@@ -1,0 +1,12 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If the datatype base for a cell is boolean, the datatype format annotation provides the true and false values expected, separated by `|`..",
+  "rdfs:label": "boolean format (valid combinations)",
+  "url": "test183.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "boolean", "datatype": {"base": "boolean"}},
+      {"titles": "boolean1", "datatype": {"base": "boolean", "format": "Y|N"}}
+    ]
+  }
+}

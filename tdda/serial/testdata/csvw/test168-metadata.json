@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "When parsing the string value of a cell against this format specification, implementations MUST recognise and parse numbers.",
+  "rdfs:label": "decimal with implicit groupChar",
+  "url": "test168.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "decimal", "datatype": {"base": "decimal", "format": { "groupChar": "," }}}
+    ]
+  }
+}

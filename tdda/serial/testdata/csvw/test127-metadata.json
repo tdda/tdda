@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "if TM is not compatible with EM validators MUST raise an error, other processors MUST generate a warning and continue processing",
+  "tables": [{
+    "url": "test127.csv",
+    "tableSchema": {
+      "columns": [{
+        "titles": "Surname"
+      }, {
+        "titles": "Family Name"
+      }]
+    }
+  }]
+}

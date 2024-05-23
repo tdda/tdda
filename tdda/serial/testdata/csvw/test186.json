@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test186.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test186.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "boolean": "100"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell if the string being parsed.",
+      "rdfs:label": "boolean format (not matching datatype)"
+    }
+  ]
+}

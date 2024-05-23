@@ -1,0 +1,24 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Uses directory metadata",
+  "tables": [{
+    "url": "action.csv?query",
+    "tableSchema": {
+      "columns": [{
+        "titles": "countryCode"
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string"
+      }]
+    }
+  }]
+}

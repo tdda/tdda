@@ -1,0 +1,25 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "This metadata is used",
+  "rdfs:comment": "User-specified metadata does not need to reference the starting CSV",
+  "tables": [{
+    "url": "test121-ref.csv",
+    "tableSchema": {
+      "columns": [{
+        "titles": "countryCode"
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string"
+      }]
+    }
+  }]
+}

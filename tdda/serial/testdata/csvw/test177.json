@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test177.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test177.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "negativeInteger": "123"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above.",
+      "rdfs:label": "invalid negativeInteger"
+    }
+  ]
+}

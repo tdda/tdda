@@ -1,0 +1,15 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "multiple values with same subject and property (unordered)",
+  "rdfs:comment": "Values in separate columns using the same propertyUrl are kept in proper relative order.",
+  "url": "test305.csv",
+  "separator": ";",
+  "aboutUrl": "#about",
+  "propertyUrl": "#value",
+  "tableSchema": {
+    "columns": [
+      {"titles": "col1"},
+      {"titles": "col2"}
+    ]
+  }
+}

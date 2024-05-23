@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "It MUST NOT start with `_:`.",
+  "rdfs:label": "invalid datatype @id",
+  "url": "test243.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "string", "datatype": {"@id": "_:foo", "base": "string"}}
+    ]
+  }
+}

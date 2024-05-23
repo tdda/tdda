@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Numeric dataype with object format.",
+  "rdfs:label": "number format (valid combinations)",
+  "url": "test158.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "integer", "datatype": {"base": "integer", "format": {"pattern": "#0"}}},
+      {"titles": "decimal", "datatype": {"base": "decimal", "format": {"pattern": "#0.###"}}},
+      {"titles": "double", "datatype": {"base": "double", "format": {"pattern": "#0.###E#0"}}},
+      {"titles": "decimal1", "datatype": {"base": "decimal", "format": {"decimalChar": ",", "groupChar": "."}}}
+    ]
+  }
+}

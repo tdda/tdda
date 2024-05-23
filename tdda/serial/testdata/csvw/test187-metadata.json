@@ -1,0 +1,20 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The supported date and time formats listed here are expressed in terms of the date field symbols defined in [UAX35] and MUST be interpreted by implementations as defined in that specification.",
+  "rdfs:label": "date format (valid native combinations)",
+  "url": "test187.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "date", "datatype": {"base": "date"}},
+      {"titles": "time", "datatype": {"base": "time"}},
+      {"titles": "dateTime", "datatype": {"base": "dateTime"}},
+      {"titles": "datetime", "datatype": {"base": "datetime"}},
+      {"titles": "dateTimeStamp", "datatype": {"base": "dateTimeStamp"}},
+      {"titles": "gDay", "datatype": {"base": "gDay"}},
+      {"titles": "gMonth", "datatype": {"base": "gMonth"}},
+      {"titles": "gMonthDay", "datatype": {"base": "gMonthDay"}},
+      {"titles": "gYear", "datatype": {"base": "gYear"}},
+      {"titles": "gYearMonth", "datatype": {"base": "gYearMonth"}}
+    ]
+  }
+}

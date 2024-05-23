@@ -1,0 +1,34 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "`null` contains an array of (valid) string & (invalid) numeric values",
+  "rdfs:comment": "Processors MUST issue a warning if a property is set to an invalid value type.",
+  "url": "tree-ops.csv",
+  "transformations": [{
+    "@type": "Template",
+    "url": "templates/ical.txt",
+    "titles": "iCalendar",
+    "targetFormat": "http://www.iana.org/assignments/media-types/text/calendar",
+    "scriptFormat": "https://mustache.github.io/",
+    "source": "json",
+    "foo": "bar"
+  }],
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": "GID"
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }]
+  }
+}

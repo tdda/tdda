@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:label": "dayTimeDuration not matching xsd pattern",
+  "rdfs:comment": "Value MUST be a valid xsd:dayTimeDuration.",
+  "url": "test280.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "dayTimeDuration", "datatype": "dayTimeDuration"}
+    ]
+  }
+}

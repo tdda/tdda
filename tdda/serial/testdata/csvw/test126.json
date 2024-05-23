@@ -1,0 +1,45 @@
+{
+  "rdfs:comment": "if the string is the same as any one of the values of the column null annotation, then the resulting value is null. If the column separator annotation is null and the column required annotation is true, add an error to the list of errors for the cell.",
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test126.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test126.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "countryCode": "AD",
+              "latitude": 42.546245,
+              "longitude": 1.601554,
+              "name": "Andorra"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test126.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "countryCode": "AE",
+              "latitude": 23.424076,
+              "longitude": 53.847818,
+              "name": "United Arab Emirates"
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test126.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "countryCode": "AF",
+              "longitude": 67.709953,
+              "name": "Afghanistan"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

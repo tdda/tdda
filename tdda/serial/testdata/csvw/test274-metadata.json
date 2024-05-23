@@ -1,0 +1,25 @@
+{
+  "@context": ["http://www.w3.org/ns/csvw",  {"foo": "http://example.org/"}],
+  "rdfs:label": "`@context` object includes properties other than `@base` and `@language`",
+  "rdfs:comment": "The `@context` MUST have one of the following values: An array composed of a string followed by an object, where the string is `http://www.w3.org/ns/csvw` and the object represents a local context definition, which is restricted to contain either or both of the following members.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [{
+      "name": "GID",
+      "titles": "GID"
+    }, {
+      "name": "on_street",
+      "titles": "On Street"
+    }, {
+      "name": "species",
+      "titles": "Species"
+    }, {
+      "name": "trim_cycle",
+      "titles": "Trim Cycle"
+    }, {
+      "name": "inventory_date",
+      "titles": "Inventory Date",
+      "datatype": {"base": "date", "format": "M/d/yyyy"}
+    }]
+  }
+}

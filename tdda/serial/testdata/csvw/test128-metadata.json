@@ -1,0 +1,14 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "The name properties of the column descriptions MUST be unique within a given table description.",
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"name": "GID", "titles": "GID"},
+      {"name": "GID", "titles": "On Street"},
+      {"name": "GID", "titles": "Species"},
+      {"name": "GID", "titles": "Trim Cycle"},
+      {"name": "GID", "titles": "Inventory Date"}
+    ]
+  }
+}

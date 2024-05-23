@@ -1,0 +1,31 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test039.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test039.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test039.csv#row=1",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=null": "empty",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=lang": "en",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=textDirection": "ltr",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=separator": "-",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=ordered": "true",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=default": "def",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=datatype": "string",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#COL=propertyUrl": "prop",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=valueUrl": "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
+            },
+            {
+              "@id": "http://www.w3.org/2013/csvw/tests/test039.csv#modelrow=1",
+              "http://www.w3.org/2013/csvw/tests/test039.csv#col=aboutUrl": "about"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

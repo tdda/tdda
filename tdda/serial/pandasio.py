@@ -1,3 +1,4 @@
+import sys
 from tdda.serial.csvw import CSVWMetadata
 
 
@@ -35,21 +36,32 @@ def gen_pandas_kwargs(spec, extensions=False):
 def to_pandas_read_csv_args(md):
     kw = {}
     date_fields = {
-        f.name: f for f in md.fields if f.mtype.startswith('date')
+        f.name: f for f in md.fields
+                if f.mtype and f.mtype.startswith('date')
     }
     kw['dtype'] = {
         f.name: MTYPE_TO_PANDAS_DTYPE.get(f.mtype)
         for f in md.fields
         if f.name not in date_fields
-    }
+        and MTYPE_TO_PANDAS_DTYPE.get(f.mtype) is not None
+    } or None
     if any(v.format for v in date_fields):
         kw['date_format'] = {name: f.format for name, f in date_fields.items()}
     if date_fields:
         kw['parse_dates'] = list(date_fields)
+
+    if any(v.altnames for v in md.fields):
+        kw['names'] = [v.name for v in md.fields]
+        kw['header'] = 0
 
 
     if md.delimiter:
         kw['sep'] = md.delimiter
     if md.encoding:
         kw['encoding'] = md.encoding
+
+    if md.header_rows == 0:
+        kw['header'] = None
+
+
     return kw

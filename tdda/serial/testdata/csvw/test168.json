@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test168.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test168.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "decimal": 123456.789
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "When parsing the string value of a cell against this format specification, implementations MUST recognise and parse numbers.",
+      "rdfs:label": "decimal with implicit groupChar"
+    }
+  ]
+}

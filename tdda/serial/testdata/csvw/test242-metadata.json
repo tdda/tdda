@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "If included, @id is a link property that identifies the datatype described by this datatype description.",
+  "rdfs:label": "datatype @id an absolute URL that does not resolve",
+  "url": "test242.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "string", "datatype": {"@id": "http://example.org/datatpe", "base": "string"}}
+    ]
+  }
+}

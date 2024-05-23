@@ -1,0 +1,24 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test228.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test228.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "list": [
+                "a",
+                "b",
+                "c"
+              ]
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the value is a list, the constraint applies to each element of the list.",
+      "rdfs:label": "length with separator"
+    }
+  ]
+}

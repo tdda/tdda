@@ -1,0 +1,27 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test049.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test049.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "null": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "lang": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "textDirection": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "separator": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "ordered": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "default": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "datatype": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "aboutUrl": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "propertyUrl": "http://www.w3.org/2013/csvw/tests/test049.csv",
+              "valueUrl": "http://www.w3.org/2013/csvw/tests/test049.csv"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

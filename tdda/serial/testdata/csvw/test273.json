@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test273/action.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test273/action.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "name": "Foo"
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "`@base` set in `@context` overriding eg CSV location",
+      "rdfs:comment": "If present, its value MUST be a string that is interpreted as a URL which is resolved against the location of the metadata document to provide the **base URL** for other URLs in the metadata document."
+    }
+  ]
+}

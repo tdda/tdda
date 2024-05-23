@@ -1,0 +1,20 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test173.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test173.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "unsignedLong": "-1234"
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell contains an exponent, does not meet the numeric format defined above.",
+      "rdfs:label": "invald unsignedLong"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[{
+  "@id": "http://example.org/organization/hefce.ac.uk/post/90115",
+  "dc:identifier": "90115",
+  "org:heldBy": {
+    "@id": "http://example.org/organization/hefce.ac.uk/person/1",
+    "foaf:name": "Steve Egan"
+  },
+  "http://example.org/gov.uk/def/grade": "SCS1A",
+  "http://example.org/gov.uk/def/job": "Deputy Chief Executive",
+  "org:reportsTo": "http://example.org/organization/hefce.ac.uk/post/90334",
+  "http://example.org/gov.uk/def/profession": "Finance",
+  "org:postIn": "http://example.org/organization/hefce.ac.uk"
+}, {
+  "@id": "http://example.org/organization/hefce.ac.uk/post/90334",
+  "dc:identifier": "90334",
+  "org:heldBy": {
+    "@id": "http://example.org/organization/hefce.ac.uk/person/2",
+    "foaf:name": "Sir Alan Langlands"
+  },
+  "http://example.org/gov.uk/def/grade": "SCS4",
+  "http://example.org/gov.uk/def/job": "Chief Executive",
+  "http://example.org/gov.uk/def/profession": "Policy",
+  "org:postIn": "http://example.org/organization/hefce.ac.uk"
+}, {
+  "org:reportsTo": "http://example.org/organization/hefce.ac.uk/post/90115",
+  "http://example.org/gov.uk/def/grade": "4",
+  "http://example.org/gov.uk/def/min_pay": 17426,
+  "http://example.org/gov.uk/def/max_pay": 20002,
+  "http://example.org/gov.uk/def/job": "Administrator",
+  "http://example.org/gov.uk/def/number_of_posts": 8.67,
+  "http://example.org/gov.uk/def/profession": "Operational Delivery",
+  "org:postIn": "http://example.org/organization/hefce.ac.uk"
+}, {
+  "org:reportsTo": "http://example.org/organization/hefce.ac.uk/post/90115",
+  "http://example.org/gov.uk/def/grade": "5",
+  "http://example.org/gov.uk/def/min_pay": 19546,
+  "http://example.org/gov.uk/def/max_pay": 22478,
+  "http://example.org/gov.uk/def/job": "Administrator",
+  "http://example.org/gov.uk/def/number_of_posts": 0.5,
+  "http://example.org/gov.uk/def/profession": "Operational Delivery",
+  "org:postIn": "http://example.org/organization/hefce.ac.uk"
+}]

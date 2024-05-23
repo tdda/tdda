@@ -1,0 +1,54 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "As defined in [tabular-data-model], validators MUST check that, for each row, the combination of cells in the referencing columns references a unique row within the referenced table through a combination of cells in the referenced columns.",
+  "rdfs:label": "missing destination reference column",
+  "tables": [{
+    "url": "countries.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryCode",
+        "titles": "countryCode",
+        "datatype": "string",
+        "propertyUrl": "http://www.geonames.org/ontology{#_name}"
+      }, {
+        "name": "latitude",
+        "titles": "latitude",
+        "datatype": "number"
+      }, {
+        "name": "longitude",
+        "titles": "longitude",
+        "datatype": "number"
+      }, {
+        "name": "name",
+        "titles": "name",
+        "datatype": "string"
+      }],
+      "aboutUrl": "countries.csv{#countryCode}",
+      "propertyUrl": "http://schema.org/{_name}"
+    }
+  }, {
+    "url": "country_slice.csv",
+    "tableSchema": {
+      "columns": [{
+        "name": "countryRef",
+        "titles": "countryRef",
+        "valueUrl": "countries.csv{#countryRef}"
+      }, {
+        "name": "year",
+        "titles": "year",
+        "datatype": "gYear"
+      }, {
+        "name": "population",
+        "titles": "population",
+        "datatype": "integer"
+      }],
+      "foreignKeys": [{
+        "columnReference": "countryRef",
+        "reference": {
+          "resource": "countries.csv",
+          "columnReference": "not_here"
+        }
+      }]
+    }
+  }]
+}

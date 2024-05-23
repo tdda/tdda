@@ -1,0 +1,136 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test155.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test155.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "integer": 0,
+              "decimal": 0.1,
+              "double": 0.0,
+              "float": 0.0,
+              "number": 0.0,
+              "long": -10,
+              "int": -10,
+              "short": -10,
+              "byte": -10,
+              "nonNegativeInteger": 1,
+              "positiveInteger": 1,
+              "unsignedLong": 1,
+              "unsignedInt": 1,
+              "unsignedShort": 1,
+              "unsignedByte": 1,
+              "nonPositiveInteger": 0,
+              "negativeInteger": -1
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test155.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "integer": 10,
+              "decimal": 10.1,
+              "double": 101.0,
+              "float": 101.0,
+              "number": 101.0,
+              "long": 1234,
+              "int": 1234,
+              "short": 1234,
+              "byte": 123,
+              "nonNegativeInteger": 123,
+              "positiveInteger": 123,
+              "unsignedLong": 1234,
+              "unsignedInt": 1234,
+              "unsignedShort": 1234,
+              "unsignedByte": 123,
+              "nonPositiveInteger": -123,
+              "negativeInteger": -123
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test155.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "integer": 10,
+              "decimal": 10.1,
+              "double": "NaN",
+              "float": "NaN",
+              "number": "NaN",
+              "long": 1234,
+              "int": 1234,
+              "short": 1234,
+              "byte": 123,
+              "nonNegativeInteger": 123,
+              "positiveInteger": 123,
+              "unsignedLong": 1234,
+              "unsignedInt": 1234,
+              "unsignedShort": 1234,
+              "unsignedByte": 123,
+              "nonPositiveInteger": -123,
+              "negativeInteger": -123
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test155.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "integer": 10,
+              "decimal": 10.1,
+              "double": "INF",
+              "float": "INF",
+              "number": "INF",
+              "long": 1234,
+              "int": 1234,
+              "short": 1234,
+              "byte": 123,
+              "nonNegativeInteger": 123,
+              "positiveInteger": 123,
+              "unsignedLong": 1234,
+              "unsignedInt": 1234,
+              "unsignedShort": 1234,
+              "unsignedByte": 123,
+              "nonPositiveInteger": -123,
+              "negativeInteger": -123
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test155.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "integer": 10,
+              "decimal": 10.1,
+              "double": "-INF",
+              "float": "-INF",
+              "number": "-INF",
+              "long": 1234,
+              "int": 1234,
+              "short": 1234,
+              "byte": 123,
+              "nonNegativeInteger": 123,
+              "positiveInteger": 123,
+              "unsignedLong": 1234,
+              "unsignedInt": 1234,
+              "unsignedShort": 1234,
+              "unsignedByte": 123,
+              "nonPositiveInteger": -123,
+              "negativeInteger": -123
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "If the datatype format annotation is a single string, this is interpreted in the same way as if it were an object with a pattern property whose value is that string.",
+      "rdfs:label": "number format (valid combinations)"
+    }
+  ]
+}

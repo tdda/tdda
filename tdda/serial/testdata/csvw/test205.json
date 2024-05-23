@@ -1,0 +1,25 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test205.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test205.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "minimum": 5.0,
+              "maximum": 5.0,
+              "minInclusive": "4",
+              "maxInclusive": 5.0,
+              "minExclusive": 6.0,
+              "maxExclusive": 4.0
+            }
+          ]
+        }
+      ],
+      "rdfs:comment": "validate the value based on the length constraints described in section 4.6.1 Length Constraints, the value constraints described in section 4.6.2 Value Constraints and the datatype format annotation if one is specified, as described below. If there are any errors, add them to the list of errors for the cell",
+      "rdfs:label": "float value constraint not matching minInclusive"
+    }
+  ]
+}

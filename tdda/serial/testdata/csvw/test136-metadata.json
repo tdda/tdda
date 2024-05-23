@@ -1,0 +1,15 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Values MUST NOT use list objects or set objects.",
+  "rdf:value": {"@set": [1, 2, 3]},
+  "url": "tree-ops.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "GID"},
+      {"titles": "On Street"},
+      {"titles": "Species"},
+      {"titles": "Trim Cycle"},
+      {"titles": "Inventory Date"}
+    ]
+  }
+}

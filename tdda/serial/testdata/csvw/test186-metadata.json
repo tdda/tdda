@@ -1,0 +1,11 @@
+{
+  "@context": "http://www.w3.org/ns/csvw",
+  "rdfs:comment": "Implementations MUST add a validation error to the errors annotation for the cell if the string being parsed.",
+  "rdfs:label": "boolean format (not matching datatype)",
+  "url": "test186.csv",
+  "tableSchema": {
+    "columns": [
+      {"titles": "boolean", "datatype": {"base": "boolean"}}
+    ]
+  }
+}

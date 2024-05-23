@@ -8,7 +8,12 @@ METADATA_STYLE_MAP = {
 }
 
 METADATA_STYLES = (
-    (('-metadata', '-csvmetadata'), ('json',)),
+    (('-metadata',
+      '-csvmetadata',
+      '-csv-metadata',
+      '.csvmetadata',
+      '.csv-metadata',),
+     ('.json',)),
     (('.schema', '.resource', '.package'), ('.json', '.yaml'))
 )
 
@@ -42,10 +47,18 @@ def find_associated_metadata_file(path):
     Returns None if no associated metadata is found.
     """
     base = os.path.expanduser(path)
+    pathstem = os.path.splitext(base)[0]
     for (suffixes, exts) in METADATA_STYLES:
         for suffix in suffixes:
             for ext in exts:
-                mdpath = base + suffix + ext
+                mdpath = pathstem + suffix + ext
                 if os.path.exists(mdpath):
                     return mdpath
     return None
+
+
+def nvl(v, w):
+    """
+    This function is used as syntactic sugar for replacing null values.
+    """
+    return w if v is None else v

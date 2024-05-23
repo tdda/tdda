@@ -1,0 +1,6 @@
+integer,decimal,double,float,number,long,int,short,byte,nonNegativeInteger,positiveInteger,unsignedLong,unsignedInt,unsignedShort,unsignedByte,nonPositiveInteger,negativeInteger
+0,0.1,0.0e0,0.0e0,0.0e0,-10,-10,-10,-10,1,1,1,1,1,1,0,-1
+10,10.1,10.10e1,10.10e1,10.10e1,1234,1234,1234,123,123,123,1234,1234,1234,123,-123,-123
+10,10.1,NaN,NaN,NaN,1234,1234,1234,123,123,123,1234,1234,1234,123,-123,-123
+10,10.1,INF,INF,INF,1234,1234,1234,123,123,123,1234,1234,1234,123,-123,-123
+10,10.1,-INF,-INF,-INF,1234,1234,1234,123,123,123,1234,1234,1234,123,-123,-123

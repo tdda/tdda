@@ -1,0 +1,95 @@
+{
+  "tables": [
+    {
+      "url": "http://www.w3.org/2013/csvw/tests/test285.csv",
+      "row": [
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=2",
+          "rownum": 1,
+          "describes": [
+            {
+              "0.0##,###": 1.1,
+              "0.00#,###": 1.19,
+              "0.000,###": 1.199,
+              "0.000,0##": 1.1999,
+              "0.000,00#": 1.19999,
+              "0.000,000": 1.199999
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=3",
+          "rownum": 2,
+          "describes": [
+            {
+              "0.0##,###": 1.12,
+              "0.00#,###": 1.12,
+              "0.000,###": 1.129,
+              "0.000,0##": 1.1299,
+              "0.000,00#": 1.12999,
+              "0.000,000": 1.129999
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=4",
+          "rownum": 3,
+          "describes": [
+            {
+              "0.0##,###": 1.123,
+              "0.00#,###": 1.123,
+              "0.000,###": 1.123,
+              "0.000,0##": 1.1239,
+              "0.000,00#": 1.12399,
+              "0.000,000": 1.123999
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=5",
+          "rownum": 4,
+          "describes": [
+            {
+              "0.0##,###": 1.1234,
+              "0.00#,###": 1.1234,
+              "0.000,###": 1.1234,
+              "0.000,0##": 1.1234,
+              "0.000,00#": 1.12349,
+              "0.000,000": 1.123499
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=6",
+          "rownum": 5,
+          "describes": [
+            {
+              "0.0##,###": 1.12345,
+              "0.00#,###": 1.12345,
+              "0.000,###": 1.12345,
+              "0.000,0##": 1.12345,
+              "0.000,00#": 1.12345,
+              "0.000,000": 1.123459
+            }
+          ]
+        },
+        {
+          "url": "http://www.w3.org/2013/csvw/tests/test285.csv#row=7",
+          "rownum": 6,
+          "describes": [
+            {
+              "0.0##,###": 1.123456,
+              "0.00#,###": 1.123456,
+              "0.000,###": 1.123456,
+              "0.000,0##": 1.123456,
+              "0.000,00#": 1.123456,
+              "0.000,000": 1.123456
+            }
+          ]
+        }
+      ],
+      "rdfs:label": "valid number patterns (grouping)",
+      "rdfs:comment": "A number format pattern as defined in [UAX35]. Implementations MUST recognise number format patterns containing the symbols `0`, `#`, the specified decimalChar (or `.` if unspecified), the specified groupChar (or `,` if unspecified), `E`, `+`, `%` and `&permil;`."
+    }
+  ]
+}

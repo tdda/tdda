@@ -1,0 +1,42 @@
+[
+  {
+    "@id": "http://example.org/tree-ops-ext#gid-1",
+    "on_street": "ADDISON AV",
+    "species": "Celtis australis",
+    "trim_cycle": "Large Tree Routine Prune",
+    "dbh": 11,
+    "inventory_date": "2010-10-18",
+    "protected": false,
+    "kml": "<Point><coordinates>-122.156485,37.440963</coordinates></Point>"
+  },
+  {
+    "@id": "http://example.org/tree-ops-ext#gid-2",
+    "on_street": "EMERSON ST",
+    "species": "Liquidambar styraciflua",
+    "trim_cycle": "Large Tree Routine Prune",
+    "dbh": 11,
+    "inventory_date": "2010-06-02",
+    "protected": false,
+    "kml": "<Point><coordinates>-122.156749,37.440958</coordinates></Point>"
+  },
+  {
+    "@id": "http://example.org/tree-ops-ext#gid-6",
+    "on_street": "ADDISON AV",
+    "species": "Robinia pseudoacacia",
+    "trim_cycle": "Large Tree Routine Prune",
+    "dbh": 29,
+    "inventory_date": "2010-06-01",
+    "comments": [
+      "cavity or decay",
+      "trunk decay",
+      "codominant leaders",
+      "included bark",
+      "large leader or limb decay",
+      "previous failure root damage",
+      "root decay",
+      "beware of BEES"
+    ],
+    "protected": true,
+    "kml": "<Point><coordinates>-122.156299,37.441151</coordinates></Point>"
+  }
+]
