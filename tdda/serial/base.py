@@ -1,4 +1,5 @@
 import json
+import sys
 
 from tdda.serial.utils import nvl
 
@@ -38,6 +39,8 @@ class URI:
 
 CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
+
+VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 
 MTYPES = tuple(FieldType.__dict__.values())
 
@@ -136,6 +139,7 @@ class Metadata:
         date_format=None,
         null_indicators=None,
         header_rows=0,
+        verbosity=VERBOSITY
     ):
         self.fields = fields or []
         self.path = path
@@ -153,6 +157,7 @@ class Metadata:
         self.metadata_source_path = None
         self.valid = None
         self.header_rows = header_rows
+        self._verbosity = verbosity
 
 #        self.metametadata = {
 #            'creationhash': ''
@@ -178,19 +183,21 @@ class Metadata:
 
     def validate(self):
         valid = True
-        for msg in self.errors:
-            print(f'** FATAL ERROR: {msg}')
-            valid = False
-        for field in self.fields:
-            field.validate()
-            for msg in field.errors:
-                print(f'** FATAL ERROR: {msg}')
+        if self._verbosity > 0:
+            for msg in self.errors:
+                print(f'** FATAL ERROR: {msg}', file=sys.stderr)
                 valid = False
-        for msg in self.warnings:
-            print(f'** WARNING: {msg}')
-        for field in self.fields:
-            for msg in field.warnings:
-                print(f'** WARNING: {msg}')
+            for field in self.fields:
+                field.validate()
+                for msg in field.errors:
+                    print(f'** FATAL ERROR: {msg}', file=sys.stderr)
+                    valid = False
+        if self._verbosity > 1:
+            for msg in self.warnings:
+                print(f'** WARNING: {msg}', file=sys.stderr)
+            for field in self.fields:
+                for msg in field.warnings:
+                    print(f'** WARNING: {msg}', file=sys.stderr)
 
         self.valid = valid
 

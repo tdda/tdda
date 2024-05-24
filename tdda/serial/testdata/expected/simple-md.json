@@ -37,5 +37,7 @@
     "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/simple-metadata.json",
     "valid": true,
     "header_rows": 1,
-    "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata"
+    "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata",
+    "table_number": 0,
+    "n_tables": 1
 }

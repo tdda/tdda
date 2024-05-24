@@ -427,12 +427,12 @@ class TestPandasLoad(ReferenceTestCase):
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
 
-@tag
+#@tag
 class TestCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
 
     def fullpath(self, path):
-        return os.path.join(self.csvw_d, path)
+        return os.path.normpath(os.path.join(self.csvw_d, path))
 
     def csv_json_paths(self, stem):
         return (
@@ -489,14 +489,14 @@ class TestCSVWTests(ReferenceTestCase):
         self._test_csv_json('test010')
 
     def test011(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
         df = csv2pandas(csvpath, findmd=True)
         string_to_int(df, 'GID')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
         # The string dates are a problem because the date and month
         # are not zero-padded.
@@ -509,9 +509,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test012(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
@@ -520,7 +520,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -533,9 +533,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test013(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}-user-metadata.json')
-        jsonpath = self.fullpath(f'{test}.json')
+        resultspath = self.fullpath(f'{test}.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -543,7 +543,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
         # The string dates are a problem because the date and month
         # are not zero-padded.
@@ -555,9 +555,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test014(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/linked-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -565,7 +565,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -578,9 +578,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test015(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -588,7 +588,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -601,9 +601,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test016(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -611,7 +611,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -624,9 +624,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test017(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -634,7 +634,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -647,9 +647,9 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test018(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()  # function name
         mdpath = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
-        jsonpath = self.fullpath(f'{test}/result.json')
+        resultspath = self.fullpath(f'{test}/result.json')
 
         df, md = csv2pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
@@ -657,7 +657,7 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
 
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=['GID'])
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
 
 
         # The string dates are a problem because the date and month
@@ -682,37 +682,149 @@ class TestCSVWTests(ReferenceTestCase):
         pass
 
     def test023(self):
-        test = inspect.stack()[0][3]  # function name
+        test = this_function_name()
         mdpath = self.fullpath(f'{test}-user-metadata.json')
-        jsonpath = self.fullpath(f'{test}.json')
+        resultspath = self.fullpath(f'{test}.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df = csv2pandas(mdpath=mdpath)
         self.assertEqual(list(df), [0, 1, 2, 3, 4])
-        # ^^^ This is what Pandas does
+        # This is what Pandas does:  ^^^
         # CSVW wants _col.1 to _col.5 apparently.
+
         fields = df.columns = [f'_col.{i + 1}' for i in range(len(df.columns))]
-        ref_df = csvw_json_to_df(jsonpath, fields)
+        ref_df = csvw_json_to_df(resultspath, fields)
 
         # medium because of object/string comparisons
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
+    def test024(self):
+        pass
+
+    def test025(self):
+        pass
+
+    def test026(self):
+        pass
+
+
+    def test027(self):
+        test = this_function_name()
+        mdpath = self.fullpath(f'{test}-user-metadata.json')
+        resultspath = self.fullpath(f'{test}.json')
+
+        df = csv2pandas(mdpath=mdpath)
+        fields = ['GID', 'on_street', 'species', 'trim_cycle',
+                  'inventory_date']
+        ref_df = csvw_bare_json_to_df(resultspath, fields)
+
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+    def test028(self):
+        test = this_function_name()
+        csvpath = self.fullpath(f'countries.csv')
+        resultspath = self.fullpath(f'{test}.json')
+
+        df = csv2pandas(csvpath)
+        fields = fields_from(csvpath)
+        ref_df = csvw_json_to_df(resultspath, fields)
+        string_to_float(ref_df, 'latitude')
+        string_to_float(ref_df, 'longitude')
+
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df)
+
+    def test029(self):
+        test = this_function_name()
+        csvpath = self.fullpath(f'countries.csv')
+        resultspath = self.fullpath(f'{test}.json')
+
+        df = csv2pandas(csvpath)
+        fields = fields_from(csvpath)
+        ref_df = csvw_bare_json_to_df(resultspath, fields)
+        string_to_float(ref_df, 'latitude')
+        string_to_float(ref_df, 'longitude')
+
+        # medium because of object/string comparisons
+        self.assertDataFramesEqual(df, ref_df)
+
+    def test030(self):
+        test = this_function_name()
+        csvpath = self.fullpath(f'countries.csv')
+        mdpath = self.fullpath(f'countries.json')
+        resultspath = self.fullpath(f'{test}.json')  # contains two tables
+
+        df = csv2pandas(csvpath, mdpath, table_number=0)
+        fields = fields_from(csvpath)
+        ref_fields = [
+            'http://www.geonames.org/ontology#countryCode',
+            "schema:latitude",
+            "schema:longitude",
+            "schema:name",
+        ]
+
+        ref_df = csvw_json_to_df(resultspath, ref_fields, table_number=0)
+        ref_df.columns = fields
+        string_to_float(ref_df, 'latitude')
+        string_to_float(ref_df, 'longitude')
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
+
+        slice_csvpath = self.fullpath(f'country_slice.csv')
+        df2 = csv2pandas(slice_csvpath, mdpath, table_number=1)
+        slice_fields = fields_from(slice_csvpath)
+        ref_df2 = csvw_json_to_df(resultspath, slice_fields, table_number=1)
+        ref_df2['countryRef'] = (
+            ref_df2['countryRef'].apply(lambda s: s.split('#')[-1])
+        )
+        self.assertDataFramesEqual(df2, ref_df2, type_matching='medium')
+
+    def test031(self):
+        # single json output with different kinds of records
+        # not really appropriate for what tdda.serial is trying to do
+        pass
+    @tag
+    def test032(self):
+        test = this_function_name()
+        csvpath = self.fullpath(f'{test}/events-listing.csv')
+        resultspath = self.fullpath(f'../csvw-{test}-result.parquet')
+        mdpath = self.fullpath(f'{test}/csv-metadata.json')
+
+        df, md = csv2pandas(csvpath, mdpath, return_md=True, verbosity=1)
+        self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
+        ref_df = pd.read_parquet(resultspath)
+
+        # Compare against known correct result (not from csvw project)
+        self.assertDataFramesEqual(df, ref_df)
 
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False,
                        to_ints=None):
-        csvpath, jsonpath = self.csv_json_paths(stem)
+        csvpath, resultspath = self.csv_json_paths(stem)
         df = csv2pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
         fields = fields_from(csvpath)
-        ref_df = csvw_json_to_df(jsonpath, fields, to_ints=to_ints)
-        self.assertDataFramesEqual(df, ref_df)
+        ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
+        #elf.assertDataFramesEqual(df, ref_df)
 
 
-def csvw_json_to_df(path, fields, to_ints=None):
+def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
     with open(path) as f:
         d = json.load(f)
-    rows = d['tables'][0]['row']
+    rows = d['tables'][table_number]['row']
     df = pd.DataFrame({
             field: [r['describes'][0].get(field, None) for r in rows]
+            for field in fields
+    })
+    for k in (to_ints or []):
+        string_to_int(df, k)
+    return df
+
+
+def csvw_bare_json_to_df(path, fields, to_ints=None):
+    with open(path) as f:
+        d = json.load(f)
+    rows = d
+    df = pd.DataFrame({
+            field: [r.get(field, None) for r in rows]
             for field in fields
     })
     for k in (to_ints or []):
@@ -727,9 +839,20 @@ def string_to_int(df, k):
         df[k] = df[k].astype('int')
 
 
+def string_to_float(df, k):
+    df[k] = df[k].astype('float')
+
+
 def fields_from(csvpath):
     with open(csvpath) as f:
         return f.readline().strip().split(',')
+
+
+def this_function_name():
+    """
+    Returns the name of the function (or method) from which this was called
+    """
+    return inspect.stack()[1][3]
 
 
 if __name__ == '__main__':

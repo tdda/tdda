@@ -102,14 +102,17 @@ class CSVWMetadata(Metadata):
                        while reading the CSVW information
 
     """
-    def __init__(self, spec, extensions=False):
-        super().__init__()
+    def __init__(self, spec, extensions=False, table_number=None,
+                 for_table_name=None, verbosity=2):
+        super().__init__(verbosity=verbosity)
         self._url = None
         self._csvw_base_url = None
         self._csvw_language = None
         self._extensions = extensions
         self._fullpath = None
         self.metadata_source_dir = None
+        self.table_number = table_number
+        self.for_table_name = for_table_name
 
         self.read(spec)
         self.get_schema_and_columns()
@@ -150,14 +153,22 @@ class CSVWMetadata(Metadata):
         try:
             tables = self._csvw.get('tables')
             if tables:
-                table = tables[0]
+                N = self.n_tables = len(tables)
+                if N > 1 and self.table_number is None:
+                    self.warn(f'Only processing first table of {N}.')
+                n = self.table_number = nvl(self.table_number, 0)
+                if len(tables) > n:
+                    table = tables[n]
+                else:
+                    self.n_tables = 0
+                    loc = self.metadata_source_path
+                    sloc = f' in {loc}' if loc else ''
+                    raise Exception(f'No table {n} found{sloc}.')
                 self._table = table
                 self._schema = self._table.get('tableSchema')
-                n = len(self._csvw['tables'])
             else:
                 self._table = None
                 self._schema = self._csvw.get('tableSchema')
-                n = 1
         except KeyError:
             raise Exception('Could not find schema information in CSVW file\n'
                             "at ['tables'][0]['tableSchema'].")
@@ -168,8 +179,6 @@ class CSVWMetadata(Metadata):
                 raise KeyError('Could not find columns information in CSVW'
                                ' file\n'
                                "at ['tables'][0]['tableSchema']['columns'].")
-            if n > 1:
-                self.warn(f'Only processing first table of {n}.')
         else:
             self._columns = []
 
@@ -317,6 +326,10 @@ class CSVWMetadata(Metadata):
         fields = self.fields  # empty dict
         for i, f in enumerate(self._columns, 1):
             name = f.get('name')
+            virtual = f.get('virtual')
+            if virtual:
+                self.warn(f'Skipping virtual column for field {name}.')
+                continue
             if not name:
                 self.error(f'No name for field {i}; skipping.')
                 continue
@@ -363,6 +376,19 @@ class CSVWMetadata(Metadata):
                     self.warn(f'Did not understand value "{titles}"'
                               f'of type "{type(titles)}" '
                               f'for titles of column {name}; ignoring.')
+
+
+class CSVWMultiMetadata:
+    def __init__(self, spec, extensions=False):
+        table = CSVWMetadata(spec, extensions)
+        self.tables = [table]
+        n_tables = table.n_tables
+        if n_tables > 1:
+            self.tables.extend([
+                CSVWMetadata(spec, extensions, table_number=i)
+                for i in range(1, n_tables + 1)
+            ])
+
 
 
 def csvw_date_format_to_md_date_format(fmt, extensions=False):
