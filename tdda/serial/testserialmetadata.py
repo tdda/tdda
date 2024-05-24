@@ -430,9 +430,17 @@ class TestPandasLoad(ReferenceTestCase):
 #@tag
 class TestCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
+    parquet_d = os.path.join(os.path.dirname(__file__),
+                             'testdata/csvw-parquet')
 
     def fullpath(self, path):
         return os.path.normpath(os.path.join(self.csvw_d, path))
+
+    def parquet_path(self, path):
+        """
+        Full path to parquet result for CSVW tests
+        """
+        return os.path.normpath(os.path.join(self.parquet_d, path))
 
     def csv_json_paths(self, stem):
         return (
@@ -782,11 +790,11 @@ class TestCSVWTests(ReferenceTestCase):
         # single json output with different kinds of records
         # not really appropriate for what tdda.serial is trying to do
         pass
-    @tag
+
     def test032(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/events-listing.csv')
-        resultspath = self.fullpath(f'../csvw-{test}-result.parquet')
+        resultspath = self.parquet_path(f'{test}-result.parquet')
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
 
         df, md = csv2pandas(csvpath, mdpath, return_md=True, verbosity=1)
@@ -795,6 +803,50 @@ class TestCSVWTests(ReferenceTestCase):
 
         # Compare against known correct result (not from csvw project)
         self.assertDataFramesEqual(df, ref_df)
+
+    def test033(self):
+        pass  # same as 32 for our purposes
+
+    def test034(self):
+        test = this_function_name()
+        f = self.fullpath
+        pqp = self.parquet_path
+        mdpath = f(f'{test}/csv-metadata.json')
+        sdf, md = csv2pandas(
+            f(f'{test}/senior-roles.csv'),
+            mdpath,
+            use_table_name=True,
+            upgrade_possible_ints=True,
+            return_md=True,
+            verbosity=1,
+        )
+        self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'))
+        jdf = csv2pandas(
+            f(f'{test}/junior-roles.csv'),
+            mdpath,
+            use_table_name=True,
+            upgrade_possible_ints=True,
+            verbosity=1,
+        )
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'))
+
+        pdf = csv2pandas(
+            f(f'{test}/gov.uk/data/professions.csv'),
+            mdpath,
+            use_table_name=True,
+            upgrade_possible_ints=True,
+            verbosity=1,
+        )
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-professions.parquet'))
+
+        odf = csv2pandas(
+            f(f'{test}/gov.uk/data/organizations.csv'),
+            mdpath,
+            use_table_name=True,
+            upgrade_possible_ints=True,
+            verbosity=1,
+        )
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-organizations.parquet'))
 
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False,

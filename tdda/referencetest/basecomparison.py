@@ -57,6 +57,9 @@ class BaseComparison(object):
             cmd = copycmd()
         return msg % (qualifier, cmd, actual, expected)
 
+    def tmp_path_for(self, path, prefix='actual-'):
+        return os.path.join(self.tmp_dir, prefix + os.path.basename(path))
+
 
 class Diffs(object):
     """

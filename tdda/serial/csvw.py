@@ -128,7 +128,6 @@ class CSVWMetadata(Metadata):
 
         self.validate()
 
-
     def read(self, spec):
         """
         Reads the CSVW spec from the file if spec is a path to a file
@@ -154,9 +153,21 @@ class CSVWMetadata(Metadata):
             tables = self._csvw.get('tables')
             if tables:
                 N = self.n_tables = len(tables)
-                if N > 1 and self.table_number is None:
+                if (N > 1
+                        and self.table_number is None
+                        and not self.for_table_name):
                     self.warn(f'Only processing first table of {N}.')
-                n = self.table_number = nvl(self.table_number, 0)
+                name = self.for_table_name
+                if name:
+                    L = len(name)
+                    for i, t in enumerate(tables):
+                        if t.get('url', '')[-L:] == name:
+                            n = self.table_number = i
+                            break
+                    else:
+                        raise KeyError(f'No table for {name} found.')
+                else:
+                    n = self.table_number = nvl(self.table_number, 0)
                 if len(tables) > n:
                     table = tables[n]
                 else:
@@ -169,16 +180,24 @@ class CSVWMetadata(Metadata):
             else:
                 self._table = None
                 self._schema = self._csvw.get('tableSchema')
+                n = 0
         except KeyError:
             raise Exception('Could not find schema information in CSVW file\n'
-                            "at ['tables'][0]['tableSchema'].")
+                            "at ['tables'][{n}]['tableSchema'].")
+
+        if type(self._schema) is str:
+            path = os.path.join(nvl(self.metadata_source_dir, ''),
+                                 self._schema)
+            with open(path) as f:
+                self._schema = json.load(f)
+
         if self._schema:
             try:
                 self._columns = self._schema['columns']
             except:
                 raise KeyError('Could not find columns information in CSVW'
-                               ' file\n'
-                               "at ['tables'][0]['tableSchema']['columns'].")
+                               ' file at '
+                               "['tables'][0]['tableSchema']['columns'].")
         else:
             self._columns = []
 
@@ -221,7 +240,9 @@ class CSVWMetadata(Metadata):
 
 
     def get_url(self):
-        self._url = self._csvw.get('url') or self._table.get('url')
+        self._url = self._csvw.get('url') or (
+            self._table.get('url') if self._table else None
+        )
         if not self._url:
             self.warn('Mandatory property "url" not found in CSVW file.')
         if (getattr(self, 'metadata_source_dir', None)

@@ -19,7 +19,7 @@ class CSVMetadataError(Exception):
     pass
 
 
-def load_metadata(path, mdtype=None, table_number=None, by_table_name=False,
+def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
                   verbosity=VERBOSITY):
     """
     Attempt to load metadata from path given.
@@ -36,9 +36,10 @@ def load_metadata(path, mdtype=None, table_number=None, by_table_name=False,
       table_number  If specified, use the nth table from a CSVW file.
                     Raise an error if not present, (indexed from zero)
 
-      by_table_name  If specified, use choose the metadata from
-                     a metadata file describing multiple tables
-                     by matching on (the end of) path.
+      for_table_name  If specified, use choose the metadata from
+                      a metadata file describing multiple tables
+                      by matching the (end of the) url in the metadata
+                      to this table name
 
       verbosity:   2: errors and warnings to stderr
                    1: warnings to stderr
@@ -55,6 +56,7 @@ def load_metadata(path, mdtype=None, table_number=None, by_table_name=False,
         elif context == URI.CSVW:
             kind = 'csvw'
             md = CSVWMetadata(path, table_number=table_number,
+                              for_table_name=for_table_name,
                               verbosity=verbosity)
         else:
             kind, _ = find_metadata_type_from_path(path)
@@ -63,7 +65,9 @@ def load_metadata(path, mdtype=None, table_number=None, by_table_name=False,
                     f'Unrecognized metadata content in {path}'
                 )
             if kind == 'csvw':
-                md = CSVWMetadata(path, verbosity=verbosity)
+                md = CSVWMetadata(path, table_number=table_number,
+                                  for_table_name=for_table_name,
+                                  verbosity=verbosity)
 
     elif ext == '.yaml':
         with open(path) as f:
@@ -80,7 +84,8 @@ def load_metadata(path, mdtype=None, table_number=None, by_table_name=False,
 
 def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                upgrade_types=True, upgrade_possible_ints=False,
-               return_md=False, table_number=None, verbosity=VERBOSITY,
+               return_md=False, table_number=None, use_table_name=False,
+               verbosity=VERBOSITY,
                **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
@@ -138,12 +143,17 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                 metadata file.
     """
     md = None
+    for_table_name = None
+    if use_table_name:
+        assert path is not None
+        for_table_name = os.path.basename(path)
     if path is None:
         if mdpath is None:
             raise CSVMetadataError('Must provide path or mdpath')
         else:
             md = load_metadata(mdpath, mdtype=mdtype,
-                               table_number=table_number)
+                               table_number=table_number,
+                               for_table_name=for_table_name)
             path = md._fullpath
             if path is None:
                 raise CSVMetadataError('No data specified.')
@@ -157,7 +167,7 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
 
     if md is None and mdpath is not None:
         md = load_metadata(mdpath, mdtype=mdtype, table_number=table_number,
-                           verbosity=verbosity)
+                           for_table_name=for_table_name, verbosity=verbosity)
 
     if md:
         md_kw = to_pandas_read_csv_args(md)
@@ -166,7 +176,6 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
         kw = md_kw
     elif md:
         kw = md_kw
-
     df = pd.read_csv(path, **kw)
 
     specified_types = kw.get('dtype')

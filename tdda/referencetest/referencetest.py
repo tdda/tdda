@@ -334,7 +334,7 @@ class ReferenceTest(object):
                                kind='csv', csv_read_fn=None,
                                check_data=None, check_types=None,
                                check_order=None, condition=None, sortby=None,
-                               precision=None, **kwargs):
+                               precision=None, type_matching=None, **kwargs):
         """
         Check that an in-memory Pandas DataFrame matches a reference one
         from a saved reference CSV file.
@@ -343,7 +343,8 @@ class ReferenceTest(object):
                 Actual DataFrame.
 
             *ref_csv*:
-                Name of reference CSV file. The location of the
+                Name of reference CSV file, which can in fact
+                now be a .parquet file. The location of the
                 reference file is determined by the configuration
                 via :py:meth:`set_data_location()`.
 
@@ -369,7 +370,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                      and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
         It also accepts the ``check_data``, ``check_types``, ``check_order``,
@@ -379,11 +381,14 @@ class ReferenceTest(object):
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
-        expected_path = self._resolve_reference_path(ref_csv, kind=kind)
+        ref_path = ref_csv
+        expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_dataset(df, expected_path)
+            self.pandas._write_reference_dataframe(df, expected_path)
         else:
-            ref_df = self.pandas.load_csv(expected_path, loader=csv_read_fn)
+            ref_df = self.pandas._load_reference_dataframe(expected_path,
+                                                           actual_df=df,
+                                                           loader=csv_read_fn)
             self.assertDataFramesEqual(df, ref_df,
                                        actual_path=actual_path,
                                        expected_path=expected_path,
@@ -392,7 +397,8 @@ class ReferenceTest(object):
                                        check_order=check_order,
                                        condition=condition,
                                        sortby=sortby,
-                                       precision=precision)
+                                       precision=precision,
+                                       type_matching=type_matching)
 
     def assertCSVFileCorrect(self, actual_path, ref_csv,
                              kind='csv', csv_read_fn=None,
@@ -426,7 +432,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                       and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
             *\*\*kwargs*:
@@ -791,7 +798,7 @@ class ReferenceTest(object):
         """
         Internal method for regenerating reference data for a Pandas dataset
         """
-        self.pandas.write_csv(df, reference_path)
+        self.pandas._write_reference_dataframe(df, reference_path)
 
     def _write_reference_result(self, result, reference_path, binary=False,
                                 lstrip=False, rstrip=False):

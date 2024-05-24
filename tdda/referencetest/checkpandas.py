@@ -440,6 +440,25 @@ class PandasComparison(BaseComparison):
             loader = default_csv_loader
         return loader(csvfile, **kwargs)
 
+    def _load_reference_dataframe(self, path, actual_df=None, loader=None,
+                                 **kwargs):
+        """
+        Function for constructing a pandas dataframe from a CSV file.
+        """
+        ext = os.path.splitext(path)[1].lower()
+        if ext == '.parquet':
+            try:
+                return pd.read_parquet(path)
+            except FileNotFoundError:
+                if actual_df is not None:
+                    tmp_path = self.tmp_path_for(path)
+                    self.write_ref_dataframe(actual_df, tmp_path)
+                    print(f'\n*** Expected parquet file {path} not found.\n')
+                    print(self.compare_with(tmp_path, path))
+                raise
+        else:
+            return load_csv(path, loader, **kwargs)
+
     def write_csv(self, df, csvfile, writer=None, **kwargs):
         """
         Function for saving a Pandas DataFrame to a CSV file.
@@ -448,6 +467,17 @@ class PandasComparison(BaseComparison):
         if writer is None:
             writer = default_csv_writer
         writer(df, csvfile, **kwargs)
+
+    def _write_reference_dataframe(self, df, path, writer=None, **kwargs):
+        """
+        Function for saving a Pandas DataFrame to a CSV file.
+        Used when regenerating DataFrame reference results.
+        """
+        ext = os.path.splitext(path)[1].lower()
+        if ext == '.parquet':
+            df.to_parquet(path)
+        else:
+            write_csv(path, writer, **kwargs)
 
 
 def default_csv_loader(csvfile, **kwargs):
