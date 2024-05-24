@@ -12,7 +12,9 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.serial.base import RE_ISO8601
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import gen_pandas_kwargs
-from tdda.serial.reader import csv2pandas, poss_upgrade_to_int
+from tdda.serial.reader import (
+    csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args
+)
 
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
@@ -427,6 +429,7 @@ class TestPandasLoad(ReferenceTestCase):
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
 
+
 #@tag
 class TestCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
@@ -799,10 +802,9 @@ class TestCSVWTests(ReferenceTestCase):
 
         df, md = csv2pandas(csvpath, mdpath, return_md=True, verbosity=1)
         self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
-        ref_df = pd.read_parquet(resultspath)
 
         # Compare against known correct result (not from csvw project)
-        self.assertDataFramesEqual(df, ref_df)
+        self.assertDataFrameCorrect(df, resultspath)
 
     def test033(self):
         pass  # same as 32 for our purposes
@@ -847,6 +849,18 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(jdf, pqp(f'{test}-organizations.parquet'))
+
+    def test035(self):
+        pass  # same as 34 for our purposes
+
+    def test036(self):
+        test = this_function_name()
+        csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')
+        resultspath = self.parquet_path(f'{test}-result.parquet')
+        md = load_metadata(self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json'))
+        df = csv2pandas(csvpath, findmd=True)
+        self.assertDataFrameCorrect(df, resultspath)
+
 
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False,

@@ -366,7 +366,7 @@ class CSVWMetadata(Metadata):
             if datatype:
                 if isinstance(datatype, dict):
                     fmt = datatype.get('format')
-                    mtype = datatype.get('base')
+                    mtype = CSVW_TYPE_TO_MTYPE.get(datatype.get('base'))
                 else:
                     mtype = CSVW_TYPE_TO_MTYPE.get(datatype)
                 field.mtype = mtype
@@ -380,7 +380,7 @@ class CSVWMetadata(Metadata):
                         fmt,
                         extensions=self._extensions
                     )
-                    field.format = fmt
+                field.format = fmt
             elif mtype and mtype.startswith('date'):
                 field.format = 'ISO8601'  # too pandas specific
 
@@ -397,6 +397,9 @@ class CSVWMetadata(Metadata):
                     self.warn(f'Did not understand value "{titles}"'
                               f'of type "{type(titles)}" '
                               f'for titles of column {name}; ignoring.')
+            description = field.get_val(f, 'dc:description')
+            if description:
+                field.description = description
 
 
 class CSVWMultiMetadata:

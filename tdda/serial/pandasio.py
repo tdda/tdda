@@ -54,7 +54,6 @@ def to_pandas_read_csv_args(md):
         kw['names'] = [v.name for v in md.fields]
         kw['header'] = 0
 
-
     if md.delimiter:
         kw['sep'] = md.delimiter
     if md.encoding:
@@ -63,5 +62,24 @@ def to_pandas_read_csv_args(md):
     if md.header_rows == 0:
         kw['header'] = None
 
-
+    booleans = [
+        f.format
+        for f in md.fields
+        if getattr(f, 'format', None) and f.mtype == 'bool'
+    ]
+    if booleans:
+        trues, falses = set(), set()
+        for b in booleans:
+            parts = b.split('|')
+            if len(parts) == 2:
+                trues.add(parts[0])
+                falses.add(parts[1])
+            else:
+                print(f'*** Warning: Boolean specification {b} not understood;'
+                       ' ignoring')
+            if trues.intersection(falses):
+                print(f'*** Conflicting values for booleans.')
+            else:
+                kw['true_values'] = list(trues)
+                kw['false_values'] = list(falses)
     return kw
