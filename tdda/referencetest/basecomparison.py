@@ -15,6 +15,11 @@ import re
 import sys
 import tempfile
 
+from collections import namedtuple
+
+FailureDiffs = namedtuple('FailureDiffs', 'failures msgs')
+
+
 
 class BaseComparison(object):
     """
@@ -105,6 +110,15 @@ class Diffs(object):
         # iterating over a Diffs object is the same as iterating over
         # its internal messages; used in tests.
         return iter(self.lines)
+
+
+class DataFrameDiff:
+    """
+    Container for summary information about differences
+    between two DataFrames.
+    """
+    def __init__(self):
+        pass
 
 
 def diffcmd():

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 checkpandas.py: comparison mechanism for pandas dataframes (and CSV files)
 
@@ -7,7 +5,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2022
+Copyright (c) Stochastic Solutions Limited 2016-2024
 """
 
 import csv
@@ -16,66 +14,21 @@ import sys
 
 from collections import OrderedDict
 
-from tdda.referencetest.basecomparison import BaseComparison, Diffs
+from tdda.referencetest.basecomparison import (
+    BaseComparison, Diffs, FailureDiffs
+)
 from tdda.referencetest.pddates import infer_date_format
 from tdda.pd.utils import is_string_col
 
 
-try:
-    import pandas as pd
-    import numpy as np
-except ImportError:
-    pd = None
+import pandas as pd
+import numpy as np
+
+
 
 
 # TDDA_DIFF = 'tdda diff'
 TDDA_DIFF = 'diff'
-
-
-def loosen_type(t):
-    name = ''.join(c for c in t if not c.isdigit()).lower()
-    p = name.find('[')
-    name = name[:p] if p > -1 else name
-    return 'bool' if name == 'boolean' else name
-
-
-def types_match(t1, t2, level=None):
-    assert level is None or level in ('strict', 'medium', 'permissive')
-    if level is None or level == 'strict' or t1.name == t2.name:
-        return t1.name == t2.name
-
-    t1loose = loosen_type(t1.name)
-    t2loose = loosen_type(t2.name)
-    object_types = ('string', 'boolean', 'datetime', 'bool')
-    if (
-        t1loose == t2loose
-        or t1loose == 'object'
-        and t2loose in object_types
-        or t2loose == 'object'
-        and t1loose in object_types
-    ):
-        return True
-
-    numeric_types = ('bool', 'boolean', 'int', 'float')
-    if (
-        level == 'permissive'
-        and t1loose in numeric_types
-        and t2loose in numeric_types
-    ):
-        return True
-    return False
-
-
-class PandasNotImplemented(object):
-    """
-    Null implementation of PandasComparison, used when pandas not available.
-    """
-
-    def __getattr__(self, name):
-        return lambda *args, **kwargs: self.method(name, *args, **kwargs)
-
-    def method(self, name, *args, **kwargs):
-        raise NotImplementedError('%s: Pandas not available.' % name)
 
 
 class PandasComparison(BaseComparison):
@@ -114,6 +67,8 @@ class PandasComparison(BaseComparison):
     ):
         """
         Compare two pandas dataframes.
+
+        Args:
 
             *df*
                             Actual dataframe
@@ -158,10 +113,13 @@ class PandasComparison(BaseComparison):
                                   the actual result in the dataframe will be
                                   written to disk (usually as parquet).
 
-        Returns a tuple (failures, msgs), containing the number of failures,
-        and a Diffs object containing error messages.
+        Returns:
 
-        the comparison 'Option' flags can be of any of the following:
+            A FailureDiffs named tuple with:
+              .failures     the number of failures
+              .msgs         a Diffs object with messages for each failure
+
+        All of the 'Option' parameters can be of any of the following:
 
             - ``None`` (to apply that kind of comparison to all fields)
             - ``False`` (to skip that kind of comparison completely)
@@ -296,7 +254,7 @@ class PandasComparison(BaseComparison):
             self.write_temporaries(
                 df, ref_df, actual_path, expected_path, msgs
             )
-        return (0 if same else 1, msgs)
+        return FailureDiffs(failures=0 if same else 1, msgs=msgs)
 
     def write_temporaries(
         self, actual, expected, actual_path, expected_path, msgs
@@ -636,6 +594,19 @@ class PandasComparison(BaseComparison):
             print(f'*** Written {path}.')
 
 
+class PandasNotImplemented(object):
+    """
+    Null implementation of PandasComparison, used when pandas not available.
+    """
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: self.method(name, *args, **kwargs)
+
+    def method(self, name, *args, **kwargs):
+        raise NotImplementedError('%s: Pandas not available.' % name)
+
+
+
 def default_csv_loader(csvfile, **kwargs):
     """
     Default function for reading a csv file.
@@ -766,3 +737,39 @@ def sample_format2(values, precision=None):
         '%d: %s' % (values.index[i], values.iloc[i])
         for i in range(min(len(values), 10))
     )
+
+
+def loosen_type(t):
+    name = ''.join(c for c in t if not c.isdigit()).lower()
+    p = name.find('[')
+    name = name[:p] if p > -1 else name
+    return 'bool' if name == 'boolean' else name
+
+
+def types_match(t1, t2, level=None):
+    assert level is None or level in ('strict', 'medium', 'permissive')
+    if level is None or level == 'strict' or t1.name == t2.name:
+        return t1.name == t2.name
+
+    t1loose = loosen_type(t1.name)
+    t2loose = loosen_type(t2.name)
+    object_types = ('string', 'boolean', 'datetime', 'bool')
+    if (
+        t1loose == t2loose
+        or t1loose == 'object'
+        and t2loose in object_types
+        or t2loose == 'object'
+        and t1loose in object_types
+    ):
+        return True
+
+    numeric_types = ('bool', 'boolean', 'int', 'float')
+    if (
+        level == 'permissive'
+        and t1loose in numeric_types
+        and t2loose in numeric_types
+    ):
+        return True
+    return False
+
+

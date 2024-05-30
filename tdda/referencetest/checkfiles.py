@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2022
+Copyright (c) Stochastic Solutions Limited 2016-2024
 """
 
 import os
