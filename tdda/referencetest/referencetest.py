@@ -494,7 +494,8 @@ class ReferenceTest(object):
                     - ``quotechar`` is ``"``
                     - ``quoting`` is :py:const:`csv.QUOTE_MINIMAL`
                     - ``escapechar`` is ``\\`` (backslash)
-                    - ``na_values`` are the empty string, ``"NaN"``, and ``"NULL"``
+                    - ``na_values`` are the empty string, ``"NaN"``,
+                      and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
             *\*\*kwargs*:

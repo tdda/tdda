@@ -44,14 +44,15 @@ class BaseComparison(object):
                 self.print_fn(s)
 
     @staticmethod
-    def compare_with(actual, expected, qualifier=None, binary=False):
+    def compare_with(actual, expected, qualifier=None, binary=False,
+                     custom_diff_cmd=''):
         qualifier = '' if not qualifier else (qualifier + ' ')
         if os.path.exists(expected):
             if binary:
                 return None
             else:
                 msg = 'Compare %swith:\n    %s %s %s\n'
-                cmd = diffcmd()
+                cmd = custom_diff_cmd or diffcmd()
         else:
             msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
             cmd = copycmd()

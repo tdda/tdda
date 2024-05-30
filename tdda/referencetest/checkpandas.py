@@ -28,6 +28,10 @@ except ImportError:
     pd = None
 
 
+#TDDA_DIFF = 'tdda diff'
+TDDA_DIFF = 'diff'
+
+
 def loosen_type(t):
     name = ''.join(c for c in t if not c.isdigit()).lower()
     p = name.find('[')
@@ -56,7 +60,6 @@ def types_match(t1, t2, level=None):
     return False
 
 
-
 class PandasNotImplemented(object):
     """
     Null implementation of PandasComparison, used when pandas not available.
@@ -73,6 +76,13 @@ class PandasComparison(BaseComparison):
     Comparison class for pandas dataframes (and CSV files).
     """
 
+    tmp_file_counter = 0   # used to number otherwise-nameless temp files
+
+    def get_temp_filename(self, ext=None):
+        self.tmp_file_counter += 1
+        ext = ext or '.parquet'
+        return f'df{self.tmp_file_counter:03}{ext}'
+
     def __new__(cls, *args, **kwargs):
         if pd is None:
             return PandasNotImplemented()
@@ -82,7 +92,7 @@ class PandasComparison(BaseComparison):
                         check_data=None, check_types=None, check_order=None,
                         check_extra_cols=None, sortby=None,
                         condition=None, precision=None, msgs=None,
-                        type_matching=None):
+                        type_matching=None, create_temporaries=True):
         """
         Compare two pandas dataframes.
 
@@ -124,6 +134,10 @@ class PandasComparison(BaseComparison):
 
             *type_matching* 'strict', 'medium', 'permissive'.
                             None is same as strict.
+
+            *create_temporaries*  If True (the default), if the check fails,
+                                  the actual result in the dataframe will be
+                                  written to disk (usually as parquet).
 
         Returns a tuple (failures, msgs), containing the number of failures,
         and a Diffs object containing error messages.
@@ -244,7 +258,54 @@ class PandasComparison(BaseComparison):
 
         same = same and not any((missing_cols, extra_cols, wrong_types,
                                  wrong_ordering))
+
+        if not same and create_temporaries:
+            self.write_temporaries(df, ref_df, actual_path, expected_path, msgs)
         return (0 if same else 1, msgs)
+
+    def write_temporaries(self, actual, expected, actual_path, expected_path,
+                          msgs):
+        differ = None
+        if actual_path and expected_path:
+            commonname = os.path.split(actual_path)[1]
+            differ = self.compare_with(actual_path, expected_path)
+
+        else:
+            if actual_path:
+                commonname = os.path.split(actual_path)[1]
+            elif expected_path:
+                commonname = os.path.split(expected_path)[1]
+            else:
+                commonname = self.get_temp_filename()
+            if expected is not None and not expected_path:
+                # no expected file, so write it
+                tmpExpectedPath = os.path.join(self.tmp_dir,
+                                               'expected-' + commonname)
+                expected_path = tmpExpectedPath
+                self._write_reference_dataframe(expected,
+                                                tmpExpectedPath)
+                if actual_path:
+                    differ = self.compare_with(actual_path, tmpExpectedPath,
+                                               custom_diff_cmd=TDDA_DIFF)
+            if actual is not None and not actual_path:
+                # no actual file, so write it
+                tmpActualPath = os.path.join(self.tmp_dir,
+                                             'actual-' + commonname)
+                self._write_reference_dataframe(actual, tmpActualPath)
+                if expected_path:
+                    differ = self.compare_with(tmpActualPath, expected_path,
+                                               custom_diff_cmd=TDDA_DIFF)
+
+        if differ:
+            self.info(msgs, differ)
+
+        # if not actual_path or not expected_path:
+        #     if expected_path:
+        #         self.info(msgs, 'Expected file %s' % expected_path)
+        #     elif actual_path:
+        #         self.info(msgs,
+        #                   'Actual file %s' % os.path.normpath(actual_path))
+
 
     def differences(self, name, values, ref_values, precision):
         """
@@ -452,7 +513,7 @@ class PandasComparison(BaseComparison):
             except FileNotFoundError:
                 if actual_df is not None:
                     tmp_path = self.tmp_path_for(path)
-                    self.write_ref_dataframe(actual_df, tmp_path)
+                    self._write_reference_dataframe(actual_df, tmp_path)
                     print(f'\n*** Expected parquet file {path} not found.\n')
                     print(self.compare_with(tmp_path, path))
                 raise
@@ -468,7 +529,8 @@ class PandasComparison(BaseComparison):
             writer = default_csv_writer
         writer(df, csvfile, **kwargs)
 
-    def _write_reference_dataframe(self, df, path, writer=None, **kwargs):
+    def _write_reference_dataframe(self, df, path, writer=None, verbose=False,
+                                   **kwargs):
         """
         Function for saving a Pandas DataFrame to a CSV file.
         Used when regenerating DataFrame reference results.
@@ -477,7 +539,9 @@ class PandasComparison(BaseComparison):
         if ext == '.parquet':
             df.to_parquet(path)
         else:
-            write_csv(path, writer, **kwargs)
+            self.write_csv(path, writer, **kwargs)
+        if verbose:
+            print(f'*** Written {path}.')
 
 
 def default_csv_loader(csvfile, **kwargs):

@@ -744,6 +744,9 @@ class FilesComparison(BaseComparison):
         """
         Build a list of messages describing the way in which two files are
         different, and construct an appropriate 'diff' command.
+
+        Also writes both raw actual and processed actual and expected
+        if appropriate.
         """
         binary = binaryinfo is not None
         assert not (binary and reconstruction)

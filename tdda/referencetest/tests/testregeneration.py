@@ -47,13 +47,15 @@ class TestRegenerate(unittest.TestCase):
         txtfile = os.path.join(self.tmpdir, txtname)
         csvfile = os.path.join(self.tmpdir, csvname)
         with self.assertRaises(Exception):
-            ref.assertStringCorrect('End\nMiddle\nStart\n', txtname,
-                                     kind='txt')
+            ref.assertStringCorrect(
+                'End\nMiddle\nStart\n', txtname, kind='txt'
+            )
         ref.assertStringCorrect('Start\nMiddle\nEnd\n', csvname, kind='csv')
         with open(csvfile) as f:
             self.assertEqual(f.read(), 'Start\nMiddle\nEnd\n')
-        ref.assertStringCorrect('Completely different content', csvname,
-                                kind='csv')
+        ref.assertStringCorrect(
+            'Completely different content', csvname, kind='csv'
+        )
         with open(csvfile) as f:
             self.assertEqual(f.read(), 'Completely different content')
 

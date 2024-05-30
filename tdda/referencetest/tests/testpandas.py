@@ -29,71 +29,104 @@ from tdda.referencetest.checkpandas import (
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest import tag, ReferenceTestCase
 
+
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
 @unittest.skipIf(pd is None, 'no pandas')
 class TestPandasDataFrames(ReferenceTestCase):
-
     def test_frames_ok(self):
         compare = PandasComparison()
-        df1 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001]})
-        df2 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002]})
-        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1, 2, 3, 4, 5]})
+        df1 = pd.DataFrame(
+            {
+                'a': [1, 2, 3, 4, 5],
+                'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001],
+            }
+        )
+        df2 = pd.DataFrame(
+            {
+                'a': [1, 2, 3, 4, 5],
+                'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002],
+            }
+        )
+        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
         self.assertEqual(compare.check_dataframe(df1, df1), (0, []))
-        self.assertEqual(compare.check_dataframe(df1, df2, precision=3),
-                         (0, []))
-        self.assertEqual(compare.check_dataframe(df1, df3,
-                                                 check_types=['a'],
-                                                 check_data=['a']),
-                         (0, []))
+        self.assertEqual(
+            compare.check_dataframe(df1, df2, precision=3), (0, [])
+        )
+        self.assertEqual(
+            compare.check_dataframe(
+                df1, df3, check_types=['a'], check_data=['a']
+            ),
+            (0, []),
+        )
 
     def test_frames_fail(self):
         compare = PandasComparison()
-        df1 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001]})
-        df2 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002]})
-        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5],
-                            'b': [1, 2, 3, 4, 5]})
+        df1 = pd.DataFrame(
+            {
+                'a': [1, 2, 3, 4, 5],
+                'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001],
+            }
+        )
+        df2 = pd.DataFrame(
+            {
+                'a': [1, 2, 3, 4, 5],
+                'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002],
+            }
+        )
+        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
 
-        self.assertEqual(compare.check_dataframe(df1, df2, precision=3),
-                         (0, []))
+        self.assertEqual(
+            compare.check_dataframe(df1, df2, precision=3), (0, [])
+        )
 
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
         self.assertEqual(n1, 1)
-        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'))
+        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'),
+                                 ignore_lines=['diff'])
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
-        self.assertStringCorrect('\n'.join(s3), refloc('frames_fail3.txt'))
+        self.assertStringCorrect('\n'.join(s3), refloc('frames_fail3.txt'),
+                                 ignore_lines=['diff'])
 
     def test_pandas_csv_ok(self):
         compare = PandasComparison()
-        r = compare.check_csv_file(refloc('colours.txt'),
-                                   refloc('colours.txt'))
+        r = compare.check_csv_file(
+            refloc('colours.txt'), refloc('colours.txt')
+        )
         self.assertEqual(r, (0, []))
 
     def test_pandas_csv_fail(self):
         compare = PandasComparison()
-        (code, errs) = compare.check_csv_file(refloc('single.txt'),
-                                              refloc('colours.txt'))
-        errs = [e for e in errs if not e.startswith('Compare with:')
-                                   and not e.startswith('    ' + diffcmd())]
+        (code, errs) = compare.check_csv_file(
+            refloc('single.txt'), refloc('colours.txt')
+        )
+        errs = [
+            e
+            for e in errs
+            if not e.startswith('Compare with:')
+            and not e.startswith('    ' + diffcmd())
+        ]
         self.assertEqual(code, 1)
-        self.assertEqual(errs,
-                         ['Column check failed.',
-                          'Missing columns: [%s]'
-                              % ', '.join(["'%s'" % s for s in
-                                           ['Name', 'RGB', 'Hue',
-                                            'Saturation', 'Value']]),
-                          'Extra columns: [\'a single line\']',
-                          'Length check failed.',
-                          'Found 0 records, expected 147'])
+        self.assertEqual(
+            errs,
+            [
+                'Column check failed.',
+                'Missing columns: [%s]'
+                % ', '.join(
+                    [
+                        "'%s'" % s
+                        for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']
+                    ]
+                ),
+                'Extra columns: [\'a single line\']',
+                'Length check failed.',
+                'Found 0 records, expected 147',
+            ],
+        )
 
     def test_types_match(self):
         b = np.dtype('bool')
@@ -113,20 +146,22 @@ class TestPandasDataFrames(ReferenceTestCase):
 
         o = np.dtype('O')
 
+        dtypes = (i64, i32, I, f64, f32, dms, dns, b, B, S, o)
+        ltypes = (
+            'int',
+            'int',
+            'int',
+            'float',
+            'float',
+            'datetime',
+            'datetime',
+            'bool',
+            'bool',
+            'string',
+            'object',
+        )
 
-        dtypes = (i64, i32, I,
-                  f64, f32,
-                  dms, dns,
-                  b, B,
-                  S,
-                  o)
-        ltypes = ('int', 'int', 'int',
-                  'float', 'float',
-                  'datetime', 'datetime',
-                  'bool', 'bool',
-                  'string', 'object')
-
-        for (d, L) in zip(dtypes, ltypes):
+        for d, L in zip(dtypes, ltypes):
             self.assertEqual(loosen_type(d.name), L)
 
         for level in ('strict', 'medium', 'permissive'):
@@ -155,7 +190,6 @@ class TestPandasDataFrames(ReferenceTestCase):
             self.assertTrue(types_match(B, b, level))
             self.assertTrue(types_match(dms, dns, level))
             self.assertTrue(types_match(dns, dms, level))
-
 
         # medium
         for t1 in (I, i64, i32):

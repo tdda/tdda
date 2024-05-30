@@ -16,4 +16,3 @@ from tdda.referencetest.tests.testregeneration import *
 
 if __name__ == '__main__':
     unittest.main()
-
