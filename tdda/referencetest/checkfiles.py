@@ -16,7 +16,9 @@ import sys
 import tempfile
 from collections import namedtuple
 
-from tdda.referencetest.basecomparison import BaseComparison, Diffs, copycmd
+from tdda.referencetest.basecomparison import (
+    BaseComparison, Diffs, copycmd, FailureDiffs
+)
 from tdda.referencetest.utils import get_encoding, FileType
 
 
@@ -45,6 +47,8 @@ class FilesComparison(BaseComparison):
     ):
         """
         Compare two lists of strings (actual and expected), one-by-one.
+
+        Args:
 
             *actual*
                                 is a list of strings.
@@ -99,6 +103,9 @@ class FilesComparison(BaseComparison):
                                 the number of such permutations does not
                                 exceed this limit, then the two are considered
                                 to be identical.
+            *create_temporaries*
+                                controls whether failures cause temporary
+                                files to be written.
             *msgs*
                                 is an optional Diffs object, where information
                                 about differences will be appended; if not
@@ -110,9 +117,11 @@ class FilesComparison(BaseComparison):
                                 If none, and encoding will be guessed,
                                 based on the file extension (currently).
 
-        Returns a tuple (failures, msgs), where failures is 1 if the lists
-        differ and 0 if they are the same. The returned msgs is a list
-        containing information about how they differed.
+        Returns:
+
+            A FailureDiffs named tuple with:
+              .failures     the number of failures
+              .msgs         a Diffs object with messages for each failure
         """
 
         enc = get_encoding(expected_path, encoding)
@@ -270,7 +279,7 @@ class FilesComparison(BaseComparison):
                 create_temporaries=create_temporaries,
                 encoding=enc,
             )
-        return (1 if ndiffs > 0 else 0, msgs)
+        return FailureDiffs(failures=1 if ndiffs > 0 else 0, msgs=msgs)
 
     def wrong_content(
         self,
