@@ -28,7 +28,7 @@ except ImportError:
     pd = None
 
 
-#TDDA_DIFF = 'tdda diff'
+# TDDA_DIFF = 'tdda diff'
 TDDA_DIFF = 'diff'
 
 
@@ -47,15 +47,21 @@ def types_match(t1, t2, level=None):
     t1loose = loosen_type(t1.name)
     t2loose = loosen_type(t2.name)
     object_types = ('string', 'boolean', 'datetime', 'bool')
-    if (t1loose == t2loose
-            or t1loose == 'object' and t2loose in object_types
-            or t2loose == 'object' and t1loose in object_types):
+    if (
+        t1loose == t2loose
+        or t1loose == 'object'
+        and t2loose in object_types
+        or t2loose == 'object'
+        and t1loose in object_types
+    ):
         return True
 
     numeric_types = ('bool', 'boolean', 'int', 'float')
-    if (level == 'permissive'
-            and t1loose in numeric_types
-            and t2loose in numeric_types):
+    if (
+        level == 'permissive'
+        and t1loose in numeric_types
+        and t2loose in numeric_types
+    ):
         return True
     return False
 
@@ -64,6 +70,7 @@ class PandasNotImplemented(object):
     """
     Null implementation of PandasComparison, used when pandas not available.
     """
+
     def __getattr__(self, name):
         return lambda *args, **kwargs: self.method(name, *args, **kwargs)
 
@@ -76,7 +83,7 @@ class PandasComparison(BaseComparison):
     Comparison class for pandas dataframes (and CSV files).
     """
 
-    tmp_file_counter = 0   # used to number otherwise-nameless temp files
+    tmp_file_counter = 0  # used to number otherwise-nameless temp files
 
     def get_temp_filename(self, ext=None):
         self.tmp_file_counter += 1
@@ -88,11 +95,23 @@ class PandasComparison(BaseComparison):
             return PandasNotImplemented()
         return super(PandasComparison, cls).__new__(cls)
 
-    def check_dataframe(self, df, ref_df, actual_path=None, expected_path=None,
-                        check_data=None, check_types=None, check_order=None,
-                        check_extra_cols=None, sortby=None,
-                        condition=None, precision=None, msgs=None,
-                        type_matching=None, create_temporaries=True):
+    def check_dataframe(
+        self,
+        df,
+        ref_df,
+        actual_path=None,
+        expected_path=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        check_extra_cols=None,
+        sortby=None,
+        condition=None,
+        precision=None,
+        msgs=None,
+        type_matching=None,
+        create_temporaries=True,
+    ):
         """
         Compare two pandas dataframes.
 
@@ -167,7 +186,9 @@ class PandasComparison(BaseComparison):
         for c in check_types:
             if c not in list(df):
                 missing_cols.append(c)
-            elif not(types_match(df[c].dtype, ref_df[c].dtype, type_matching)):
+            elif not (
+                types_match(df[c].dtype, ref_df[c].dtype, type_matching)
+            ):
                 wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
         if check_extra_cols:
             extra_cols = set(check_extra_cols) - set(list(ref_df))
@@ -175,22 +196,25 @@ class PandasComparison(BaseComparison):
             check_order = resolve_option_flag(check_order, ref_df)
             c1 = [c for c in list(df) if c in check_order]
             c2 = [c for c in list(ref_df) if c in check_order]
-            wrong_ordering = (list(df[c1]) != list(ref_df[c2]))
+            wrong_ordering = list(df[c1]) != list(ref_df[c2])
 
         same = not any((missing_cols, extra_cols, wrong_types, wrong_ordering))
 
         if not same:
-            self.failure(msgs, 'Column check failed.',
-                         actual_path, expected_path)
+            self.failure(
+                msgs, 'Column check failed.', actual_path, expected_path
+            )
             if missing_cols:
                 self.info(msgs, 'Missing columns: %s' % missing_cols)
             if extra_cols:
                 self.info(msgs, 'Extra columns: %s' % list(extra_cols))
             if wrong_types:
-                for (c, dtype, ref_dtype) in wrong_types:
-                    self.info(msgs,
-                              'Wrong column type %s (%s, expected %s)'
-                              % (c, dtype, ref_dtype))
+                for c, dtype, ref_dtype in wrong_types:
+                    self.info(
+                        msgs,
+                        'Wrong column type %s (%s, expected %s)'
+                        % (c, dtype, ref_dtype),
+                    )
             if wrong_ordering:
                 c1 = [c for c in list(df) if c in check_types]
                 c2 = [c for c in list(ref_df) if c in check_types]
@@ -200,7 +224,7 @@ class PandasComparison(BaseComparison):
                         ordermsg = 'not enough columns'
                         break
                     elif c != c2[i]:
-                        ordermsg = ('found %s, expected %s' % (c, c2[i]))
+                        ordermsg = 'found %s, expected %s' % (c, c2[i])
                         break
                 self.info(msgs, 'Wrong column ordering: %s' % ordermsg)
 
@@ -216,12 +240,14 @@ class PandasComparison(BaseComparison):
             df = df[condition(df)].reindex()
             ref_df = ref_df[condition(ref_df)].reindex()
 
-        same_len = (len(df) == len(ref_df))
+        same_len = len(df) == len(ref_df)
         if not same_len:
-            self.failure(msgs, 'Length check failed.',
-                         actual_path, expected_path)
-            self.info(msgs, 'Found %d records, expected %d'
-                            % (len(df), len(ref_df)))
+            self.failure(
+                msgs, 'Length check failed.', actual_path, expected_path
+            )
+            self.info(
+                msgs, 'Found %d records, expected %d' % (len(df), len(ref_df))
+            )
             same = False
         elif same:
             check_data = resolve_option_flag(check_data, ref_df)
@@ -231,8 +257,9 @@ class PandasComparison(BaseComparison):
                 ref_df = ref_df[check_data]
                 if precision is not None:
                     rounded = df.round(precision).reset_index(drop=True)
-                    ref_rounded = (ref_df.round(precision)
-                                         .reset_index(drop=True))
+                    ref_rounded = ref_df.round(precision).reset_index(
+                        drop=True
+                    )
                 else:
                     rounded = df
                     ref_rounded = ref_df
@@ -241,30 +268,39 @@ class PandasComparison(BaseComparison):
                     failures = []
                     for c in list(ref_rounded):
                         if not rounded[c].equals(ref_rounded[c]):
-                            diffs = self.differences(c, rounded[c],
-                                                     ref_rounded[c],
-                                                     precision)
+                            diffs = self.differences(
+                                c, rounded[c], ref_rounded[c], precision
+                            )
                             if diffs:
                                 failures.append('Column values differ: %s' % c)
-                                failures.append('%s\nvs.\n%s\n'
-                                                % (rounded[c],
-                                                   ref_rounded[c]))
+                                failures.append(
+                                    '%s\nvs.\n%s\n'
+                                    % (rounded[c], ref_rounded[c])
+                                )
                     if failures:
-                        self.failure(msgs, 'Contents check failed.',
-                                     actual_path, expected_path)
+                        self.failure(
+                            msgs,
+                            'Contents check failed.',
+                            actual_path,
+                            expected_path,
+                        )
                         for f in failures:
                             self.info(msgs, f)
                         same = False
 
-        same = same and not any((missing_cols, extra_cols, wrong_types,
-                                 wrong_ordering))
+        same = same and not any(
+            (missing_cols, extra_cols, wrong_types, wrong_ordering)
+        )
 
         if not same and create_temporaries:
-            self.write_temporaries(df, ref_df, actual_path, expected_path, msgs)
+            self.write_temporaries(
+                df, ref_df, actual_path, expected_path, msgs
+            )
         return (0 if same else 1, msgs)
 
-    def write_temporaries(self, actual, expected, actual_path, expected_path,
-                          msgs):
+    def write_temporaries(
+        self, actual, expected, actual_path, expected_path, msgs
+    ):
         differ = None
         if actual_path and expected_path:
             commonname = os.path.split(actual_path)[1]
@@ -279,22 +315,25 @@ class PandasComparison(BaseComparison):
                 commonname = self.get_temp_filename()
             if expected is not None and not expected_path:
                 # no expected file, so write it
-                tmpExpectedPath = os.path.join(self.tmp_dir,
-                                               'expected-' + commonname)
+                tmpExpectedPath = os.path.join(
+                    self.tmp_dir, 'expected-' + commonname
+                )
                 expected_path = tmpExpectedPath
-                self._write_reference_dataframe(expected,
-                                                tmpExpectedPath)
+                self._write_reference_dataframe(expected, tmpExpectedPath)
                 if actual_path:
-                    differ = self.compare_with(actual_path, tmpExpectedPath,
-                                               custom_diff_cmd=TDDA_DIFF)
+                    differ = self.compare_with(
+                        actual_path, tmpExpectedPath, custom_diff_cmd=TDDA_DIFF
+                    )
             if actual is not None and not actual_path:
                 # no actual file, so write it
-                tmpActualPath = os.path.join(self.tmp_dir,
-                                             'actual-' + commonname)
+                tmpActualPath = os.path.join(
+                    self.tmp_dir, 'actual-' + commonname
+                )
                 self._write_reference_dataframe(actual, tmpActualPath)
                 if expected_path:
-                    differ = self.compare_with(tmpActualPath, expected_path,
-                                               custom_diff_cmd=TDDA_DIFF)
+                    differ = self.compare_with(
+                        tmpActualPath, expected_path, custom_diff_cmd=TDDA_DIFF
+                    )
 
         if differ:
             self.info(msgs, differ)
@@ -305,7 +344,6 @@ class PandasComparison(BaseComparison):
         #     elif actual_path:
         #         self.info(msgs,
         #                   'Actual file %s' % os.path.normpath(actual_path))
-
 
     def differences(self, name, values, ref_values, precision):
         """
@@ -324,9 +362,13 @@ class PandasComparison(BaseComparison):
             bothnull = valnull & refnull
             n_both_null = bothnull.sum()
             assert bothnull.sum() < len(values)  # Shouldn't have got here
-            (L, R) = (values, ref_values) if n_both_null == 0 else (
-                values[np.logical_not(bothnull)],
-                ref_values[np.logical_not(bothnull)]
+            (L, R) = (
+                (values, ref_values)
+                if n_both_null == 0
+                else (
+                    values[np.logical_not(bothnull)],
+                    ref_values[np.logical_not(bothnull)],
+                )
             )
             same = L.eq(R)
             L = L[np.logical_not(same)][:10]
@@ -336,8 +378,11 @@ class PandasComparison(BaseComparison):
             n = len(L)
             if n == 0:
                 return ''
-            s = ('First 10 differences' if n > 10 else
-                 ('Difference%s' % ('s' if n > 1 else '')))
+            s = (
+                'First 10 differences'
+                if n > 10
+                else ('Difference%s' % ('s' if n > 1 else ''))
+            )
             return '%s: [%s] != [%s]' % (s, summary_vals, summary_ref_vals)
         if values.dtype != ref_values.dtype:
             return 'Different types'
@@ -345,25 +390,33 @@ class PandasComparison(BaseComparison):
             return 'But mysteriously appear to be identical!'
 
     def sample(self, values, start, stop):
-        return [None if pd.isnull(values[i]) else values[i]
-                for i in range(start, stop)]
+        return [
+            None if pd.isnull(values[i]) else values[i]
+            for i in range(start, stop)
+        ]
 
     def sample_format(self, values, start, stop, precision):
         s = self.sample(values, start, stop)
-        r = ', '.join(['null' if pd.isnull(v)
-                       else str('%d' % v)
-                              if type(v) in (int, np.int32, np.int64)
-                       else str('%.*f' % (precision, v))
-                              if type(v) in (float, np.float32, np.float64)
-                       else str('"%s"' % v) if values.dtype == object
-                       else str(v)
-                       for v in s])
+        r = ', '.join(
+            [
+                'null'
+                if pd.isnull(v)
+                else str('%d' % v)
+                if type(v) in (int, np.int32, np.int64)
+                else str('%.*f' % (precision, v))
+                if type(v) in (float, np.float32, np.float64)
+                else str('"%s"' % v)
+                if values.dtype == object
+                else str(v)
+                for v in s
+            ]
+        )
         if len(s) < stop - start:
             r += ' ...'
         return r
 
     def ndifferences(self, values1, values2, start, limit=10):
-        stop = min(start+limit, len(values1))
+        stop = min(start + limit, len(values1))
         for i in range(start, stop):
             v1 = values1[i]
             v2 = values2[i]
@@ -371,10 +424,20 @@ class PandasComparison(BaseComparison):
                 return i
         return stop
 
-    def check_csv_file(self, actual_path, expected_path, loader=None,
-                       check_data=None, check_types=None, check_order=None,
-                       condition=None, sortby=None, precision=6, msgs=None,
-                       **kwargs):
+    def check_csv_file(
+        self,
+        actual_path,
+        expected_path,
+        loader=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=6,
+        msgs=None,
+        **kwargs,
+    ):
         """
         Checks two CSV files are the same, by comparing them as dataframes.
 
@@ -398,19 +461,32 @@ class PandasComparison(BaseComparison):
         """
         ref_df = self.load_csv(expected_path, loader=loader, **kwargs)
         df = self.load_csv(actual_path, loader=loader, **kwargs)
-        return self.check_dataframe(df, ref_df,
-                                    actual_path=actual_path,
-                                    expected_path=expected_path,
-                                    check_data=check_data,
-                                    check_types=check_types,
-                                    check_order=check_order,
-                                    condition=condition, sortby=sortby,
-                                    precision=precision,
-                                    msgs=msgs)
+        return self.check_dataframe(
+            df,
+            ref_df,
+            actual_path=actual_path,
+            expected_path=expected_path,
+            check_data=check_data,
+            check_types=check_types,
+            check_order=check_order,
+            condition=condition,
+            sortby=sortby,
+            precision=precision,
+            msgs=msgs,
+        )
 
-    def check_csv_files(self, actual_paths, expected_paths,
-                        check_data=None, check_types=None, check_order=None,
-                        condition=None, sortby=None, msgs=None, **kwargs):
+    def check_csv_files(
+        self,
+        actual_paths,
+        expected_paths,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        msgs=None,
+        **kwargs,
+    ):
         """
         Wrapper around the check_csv_file() method, used to compare
         collections of actual and expected CSV files.
@@ -447,22 +523,32 @@ class PandasComparison(BaseComparison):
         if msgs is None:
             msgs = Diffs()
         failures = 0
-        for (actual_path, expected_path) in zip(actual_paths, expected_paths):
+        for actual_path, expected_path in zip(actual_paths, expected_paths):
             try:
-                r = self.check_csv_file(actual_path, expected_path,
-                                        check_data=check_data,
-                                        check_types=check_types,
-                                        check_order=check_order,
-                                        sortby=sortby,
-                                        condition=condition, msgs=msgs,
-                                        **kwargs)
+                r = self.check_csv_file(
+                    actual_path,
+                    expected_path,
+                    check_data=check_data,
+                    check_types=check_types,
+                    check_order=check_order,
+                    sortby=sortby,
+                    condition=condition,
+                    msgs=msgs,
+                    **kwargs,
+                )
                 (n, msgs) = r
                 failures += n
             except Exception as e:
-                self.info(msgs, 'Error comparing %s and %s (%s %s)'
-                                % (os.path.normpath(actual_path),
-                                   expected_path,
-                                   e.__class__.__name__, str(e)))
+                self.info(
+                    msgs,
+                    'Error comparing %s and %s (%s %s)'
+                    % (
+                        os.path.normpath(actual_path),
+                        expected_path,
+                        e.__class__.__name__,
+                        str(e),
+                    ),
+                )
                 failures += 1
         return (failures, msgs)
 
@@ -473,8 +559,12 @@ class PandasComparison(BaseComparison):
         involved.
         """
         if actual_path and expected_path:
-            self.info(msgs, self.compare_with(os.path.normpath(actual_path),
-                                              expected_path))
+            self.info(
+                msgs,
+                self.compare_with(
+                    os.path.normpath(actual_path), expected_path
+                ),
+            )
         elif expected_path:
             self.info(msgs, 'Expected file %s' % expected_path)
         elif actual_path:
@@ -501,8 +591,9 @@ class PandasComparison(BaseComparison):
             loader = default_csv_loader
         return loader(csvfile, **kwargs)
 
-    def _load_reference_dataframe(self, path, actual_df=None, loader=None,
-                                 **kwargs):
+    def _load_reference_dataframe(
+        self, path, actual_df=None, loader=None, **kwargs
+    ):
         """
         Function for constructing a pandas dataframe from a CSV file.
         """
@@ -529,8 +620,9 @@ class PandasComparison(BaseComparison):
             writer = default_csv_writer
         writer(df, csvfile, **kwargs)
 
-    def _write_reference_dataframe(self, df, path, writer=None, verbose=False,
-                                   **kwargs):
+    def _write_reference_dataframe(
+        self, df, path, writer=None, verbose=False, **kwargs
+    ):
         """
         Function for saving a Pandas DataFrame to a CSV file.
         Used when regenerating DataFrame reference results.
@@ -581,7 +673,7 @@ def default_csv_loader(csvfile, **kwargs):
         df = pd.read_csv(csvfile, **options)
 
     if infer_datetimes:  # We do it ourselves, now, instead of lettings
-                         # pandas do it.
+        # pandas do it.
         colnames = df.columns.tolist()
         for c in colnames:
             if is_string_col(df[c]):
@@ -664,11 +756,13 @@ def resolve_option_flag(flag, df):
     elif flag is False:
         return []
     elif hasattr(flag, '__call__'):
-         return flag(df)
+        return flag(df)
     else:
         return flag
 
 
 def sample_format2(values, precision=None):
-    return (', '.join('%d: %s' % (values.index[i], values.iloc[i])
-            for i in range(min(len(values), 10))))
+    return ', '.join(
+        '%d: %s' % (values.index[i], values.iloc[i])
+        for i in range(min(len(values), 10))
+    )
