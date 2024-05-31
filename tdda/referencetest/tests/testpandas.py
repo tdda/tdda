@@ -74,12 +74,12 @@ class TestPandasDataFrames(ReferenceTestCase):
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
         self.assertEqual(n1, 1)
         self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'),
-                                 ignore_lines=['diff'])
+                                 ignore_lines=['diff '])
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
         self.assertStringCorrect('\n'.join(s3), refloc('frames_fail3.txt'),
-                                 ignore_lines=['diff'])
+                                 ignore_lines=['diff '])
 
     def test_pandas_csv_ok(self):
         compare = PandasComparison()
@@ -103,7 +103,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         self.assertEqual(
             errs,
             [
-                'Column check failed.',
+                'Data frames have different column structure.',
                 'Missing columns: [%s]'
                 % ', '.join(
                     [
@@ -112,8 +112,8 @@ class TestPandasDataFrames(ReferenceTestCase):
                     ]
                 ),
                 'Extra columns: [\'a single line\']',
-                'Length check failed.',
-                'Found 0 records, expected 147',
+                'Data frames have different numbers of rows.',
+                'Actual records: 0; Expected records: 147',
             ],
         )
 

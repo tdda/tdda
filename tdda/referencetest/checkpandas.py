@@ -128,9 +128,10 @@ class PandasComparison(BaseComparison):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
         """
+        diffs = msgs
         type_matching = type_matching or 'strict'
-        if msgs is None:
-            msgs = Diffs()
+        if diffs is None:
+            diffs = Diffs()
 
         if precision is None:
             precision = 6
@@ -153,39 +154,22 @@ class PandasComparison(BaseComparison):
             extra_cols = set(check_extra_cols) - set(list(ref_df))
         if check_order != False and not missing_cols:
             check_order = resolve_option_flag(check_order, ref_df)
-            c1 = [c for c in list(df) if c in check_order]
-            c2 = [c for c in list(ref_df) if c in check_order]
-            wrong_ordering = list(df[c1]) != list(ref_df[c2])
+            order1 = [c for c in list(df) if c in check_order if c in ref_df]
+            order2 = [c for c in list(ref_df) if c in check_order if c in df]
+            wrong_ordering = order1 != order2
 
-        same = not any((missing_cols, extra_cols, wrong_types, wrong_ordering))
-
-        if not same:
-            self.failure(
-                msgs, 'Column check failed.', actual_path, expected_path
-            )
-            if missing_cols:
-                self.info(msgs, 'Missing columns: %s' % missing_cols)
-            if extra_cols:
-                self.info(msgs, 'Extra columns: %s' % list(extra_cols))
+        same = not any(
+            (missing_cols, extra_cols, wrong_types, wrong_ordering)
+        )
+        if not same:  # Just column structure, at this point
+            self.different_column_structure(diffs, actual_path, expected_path)
+            self.missing_columns_detected(diffs, missing_cols, ref_df)
+            self.extra_columns_found(diffs, extra_cols, df)
             if wrong_types:
                 for c, dtype, ref_dtype in wrong_types:
-                    self.info(
-                        msgs,
-                        'Wrong column type %s (%s, expected %s)'
-                        % (c, dtype, ref_dtype),
-                    )
+                    self.field_types_differ(diffs, c, dtype, ref_dtype)
             if wrong_ordering:
-                c1 = [c for c in list(df) if c in check_types]
-                c2 = [c for c in list(ref_df) if c in check_types]
-                ordermsg = 'mysterious difference, they appear to be the same!'
-                for i, c in enumerate(c1):
-                    if i >= len(c2):
-                        ordermsg = 'not enough columns'
-                        break
-                    elif c != c2[i]:
-                        ordermsg = 'found %s, expected %s' % (c, c2[i])
-                        break
-                self.info(msgs, 'Wrong column ordering: %s' % ordermsg)
+                self.different_column_orders(diffs, df, ref_df)
 
         if sortby:
             sortby = resolve_option_flag(sortby, ref_df)
@@ -202,10 +186,12 @@ class PandasComparison(BaseComparison):
         same_len = len(df) == len(ref_df)
         if not same_len:
             self.failure(
-                msgs, 'Length check failed.', actual_path, expected_path
+                diffs, 'Data frames have different numbers of rows.',
+                actual_path, expected_path
             )
+            na, nr = len(df), len(ref_df)
             self.info(
-                msgs, 'Found %d records, expected %d' % (len(df), len(ref_df))
+                diffs, f'Actual records: {na:,}; Expected records: {nr:,}'
             )
             same = False
         elif same:
@@ -227,10 +213,10 @@ class PandasComparison(BaseComparison):
                     failures = []
                     for c in list(ref_rounded):
                         if not rounded[c].equals(ref_rounded[c]):
-                            diffs = self.differences(
+                            pdiffs = self.differences(
                                 c, rounded[c], ref_rounded[c], precision
                             )
-                            if diffs:
+                            if pdiffs:
                                 failures.append('Column values differ: %s' % c)
                                 failures.append(
                                     '%s\nvs.\n%s\n'
@@ -238,13 +224,13 @@ class PandasComparison(BaseComparison):
                                 )
                     if failures:
                         self.failure(
-                            msgs,
+                            diffs,
                             'Contents check failed.',
                             actual_path,
                             expected_path,
                         )
                         for f in failures:
-                            self.info(msgs, f)
+                            self.info(diffs, f)
                         same = False
 
         same = same and not any(
@@ -253,9 +239,9 @@ class PandasComparison(BaseComparison):
 
         if not same and create_temporaries:
             self.write_temporaries(
-                df, ref_df, actual_path, expected_path, msgs
+                df, ref_df, actual_path, expected_path, diffs
             )
-        return FailureDiffs(failures=0 if same else 1, diffs=msgs)
+        return FailureDiffs(failures=0 if same else 1, diffs=diffs)
 
     def write_temporaries(
         self, actual, expected, actual_path, expected_path, msgs

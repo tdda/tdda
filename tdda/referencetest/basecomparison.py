@@ -10,6 +10,7 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
+import json
 import os
 import re
 import sys
@@ -18,6 +19,8 @@ import tempfile
 from collections import namedtuple
 
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
+
+FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
 
 
@@ -66,22 +69,85 @@ class BaseComparison(object):
     def tmp_path_for(self, path, prefix='actual-'):
         return os.path.join(self.tmp_dir, prefix + os.path.basename(path))
 
+    def field_types_differ(self, diffs, c, actual_dtype, ref_dtype):
+        """
+        Record the fact that there is type difference between matched
+        dataframe columns.
+        """
+        msg = ('Wrong column type for field %s actual: %s; expected: %s)'
+               % (c, actual_dtype, ref_dtype))
+        self.info(diffs, msg)
+        diffs.df.field_types[c] = FieldDiff(actual_dtype, ref_dtype)
+
+    def extra_columns_found(self, diffs, extra_cols, df):
+        """
+        Record the fact that there are extra columns df that aren't
+        present in ref_df
+        """
+        if extra_cols:
+            ordered = [
+                c for (i, c) in sorted(
+                    (df_col_pos(c, df), c)
+                    for c in extra_cols)
+            ]
+            self.info(diffs, 'Extra columns: %s' % list(ordered))
+            for c in ordered:
+                diffs.df.extra[c] = df[c].dtype
+
+    def missing_columns_detected(self, diffs, missing_cols, ref_df):
+        """
+        Record the fact that there are columns ref_df that aren't
+        present in df
+        """
+        if missing_cols:
+            ordered = [
+                c for (i, c) in sorted(
+                    (df_col_pos(c, ref_df), c)
+                    for c in missing_cols)
+            ]
+            self.info(diffs, 'Missing columns: %s' % list(ordered))
+            for c in ordered:
+                diffs.df.extra[c] = ref_df[c].dtype
+
+    def different_column_structure(self, diffs, actual_path, expected_path):
+            self.failure(
+                diffs,
+                'Data frames have different column structure.',
+                actual_path,
+                expected_path
+            )
+
+    def different_column_orders(self, diffs, df, ref_df):
+        self.info(diffs,
+           'Different column ordering between data frames.\n'
+           f'  Actual ordering: {" ".join(list(df))}\n'
+           f'Expected ordering: {" ".join(list(ref_df))}')
+        diffs.df.actual_order = list(df)
+        diffs.df.expected_order = list(ref_df)
+
+
+
 
 class Diffs(object):
     """
-    Class for representing a list of messages describing differences
+    Class for representing a list of differences
     resulting from applying comparisons to a set of pairs of actual/expected
-    files or strings.
+    objects. Objects can be strings or dataframes, which may be come
+    from files on disk or simply been in memory.
 
     The 'messages' are a stream of message-strings, whereas the
     'reconstructions' are a list of one-per-comparison objects.
 
     It doesn't (currently) try to tie up the messages to individual
     comparison operations.
+
+    When the objects are dataframes, the .df field contains a DDiffs
+    object with structured information on the dataframe differences.
     """
     def __init__(self, lines=None):
         self.lines = lines or []
         self.reconstructions = []
+        self.df = DataFrameDiffs()  # only used for DataFrames
 
     def append(self, line):
         self.lines.append(line)
@@ -114,9 +180,38 @@ class Diffs(object):
     __str__ = message
 
 
+class DataFrameDiffs:
+    def __init__(self):
+        self.field_types = {}      # keyed on name; value is FieldDiff
+        self.missing = {}          # keyed on name: value is dtype
+        self.extra = {}            # keyed on name: value is dtype
+        self.actual_order = []     # list of field names
+        self.expected_order = []   # list of field names
+        self.actual_length = None
+        self.expected_length = None
+
+    @property
+    def different_structure(self):
+        return any((self.field_types, self.missing, self.extra,
+                    self.actual_order, self.expected_order,
+                    self.actual_length is not None,
+                    self.expected_length is not None))
+
+    def __str__(self):
+        s = ',\n'.join(f'    {k}: {v}' for k, v in self.__dict__.items())
+        return f'DataFrameDiffs(\n{s}\n)'
+
+
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'
 
 
 def copycmd():
     return 'copy' if os.name and os.name != 'posix' else 'cp'
+
+
+def df_col_pos(c, df):
+    try:
+        return list(df).index(c)
+    except ValueError:
+        return None
