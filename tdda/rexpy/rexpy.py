@@ -19,6 +19,7 @@ from collections import Counter, defaultdict, namedtuple, OrderedDict
 from pprint import pprint
 
 from tdda import __version__
+from tdda.utils import nvl
 
 isPython2 = sys.version_info[0] < 3
 str_type = unicode if isPython2 else str
@@ -2554,13 +2555,6 @@ def dquote(string):
              for p in string.split('"')]
     quoted = ('\\"').join(parts)
     return '"%s"' % quoted
-
-
-def nvl(v, w):
-    """
-    This function is used as syntactic sugar for replacing null values.
-    """
-    return w if v is None else v
 
 
 def usage_error():

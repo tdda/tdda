@@ -21,6 +21,7 @@ from tdda.referencetest.basecomparison import (
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.pd.utils import is_string_col
+from tdda.utils import nvl
 
 
 import pandas as pd
@@ -44,8 +45,6 @@ class PandasComparison(BaseComparison):
         return f'df{self.tmp_file_counter:03}{ext}'
 
     def __new__(cls, *args, **kwargs):
-        if pd is None:
-            return PandasNotImplemented()
         return super(PandasComparison, cls).__new__(cls)
 
     def check_dataframe(
@@ -128,13 +127,14 @@ class PandasComparison(BaseComparison):
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
         """
-        diffs = msgs
-        type_matching = type_matching or 'strict'
-        if diffs is None:
-            diffs = Diffs()
+        diffs = msgs  # better name
 
-        if precision is None:
-            precision = 6
+        self.expected_path = expected_path
+        self.actual_path = actual_path
+
+        type_matching = type_matching or 'strict'
+        diffs = nvl(diffs, Diffs())
+        precision = nvl(precision, 6)
 
         check_types = resolve_option_flag(check_types, ref_df)
         check_extra_cols = resolve_option_flag(check_extra_cols, df)
@@ -162,7 +162,7 @@ class PandasComparison(BaseComparison):
             (missing_cols, extra_cols, wrong_types, wrong_ordering)
         )
         if not same:  # Just column structure, at this point
-            self.different_column_structure(diffs, actual_path, expected_path)
+            self.different_column_structure(diffs)
             self.missing_columns_detected(diffs, missing_cols, ref_df)
             self.extra_columns_found(diffs, extra_cols, df)
             if wrong_types:
@@ -183,18 +183,13 @@ class PandasComparison(BaseComparison):
             df = df[condition(df)].reindex()
             ref_df = ref_df[condition(ref_df)].reindex()
 
-        same_len = len(df) == len(ref_df)
+        na, nr = len(df), len(ref_df)
+        same_len = na == nr
         if not same_len:
-            self.failure(
-                diffs, 'Data frames have different numbers of rows.',
-                actual_path, expected_path
-            )
-            na, nr = len(df), len(ref_df)
-            self.info(
-                diffs, f'Actual records: {na:,}; Expected records: {nr:,}'
-            )
+            self.different_numbers_of_rows(diffs, na, nr)
             same = False
-        elif same:
+
+        if same:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
                 check_data = [c for c in check_data if c not in missing_cols]
@@ -223,12 +218,7 @@ class PandasComparison(BaseComparison):
                                     % (rounded[c], ref_rounded[c])
                                 )
                     if failures:
-                        self.failure(
-                            diffs,
-                            'Contents check failed.',
-                            actual_path,
-                            expected_path,
-                        )
+                        self.failure(diffs, 'Contents check failed.')
                         for f in failures:
                             self.info(diffs, f)
                         same = False
@@ -238,15 +228,13 @@ class PandasComparison(BaseComparison):
         )
 
         if not same and create_temporaries:
-            self.write_temporaries(
-                df, ref_df, actual_path, expected_path, diffs
-            )
+            self.write_temporaries(df, ref_df, diffs)
         return FailureDiffs(failures=0 if same else 1, diffs=diffs)
 
-    def write_temporaries(
-        self, actual, expected, actual_path, expected_path, msgs
-    ):
+    def write_temporaries(self, actual, expected, msgs):
         differ = None
+        actual_path = self.actual_path
+        expected_path = self.expected_path
         if actual_path and expected_path:
             commonname = os.path.split(actual_path)[1]
             differ = self.compare_with(actual_path, expected_path)
@@ -293,8 +281,8 @@ class PandasComparison(BaseComparison):
     def differences(self, name, values, ref_values, precision):
         """
         Args:
-            name        is the name of the columns
-            values      is the left-hand series
+            name          is the name of the columns
+            values        is the left-hand series
             ref_values    is the rish-hand series
             precision
 
@@ -559,23 +547,24 @@ class PandasComparison(BaseComparison):
 
     check_csv_files = check_serialized_dataframes
 
-    def failure(self, msgs, s, actual_path, expected_path):
+    def failure(self, msgs, s):
         """
         Add a failure to the list of messages, and also display it immediately
         if verbose is set. Also provide information about the two files
         involved.
         """
-        if actual_path and expected_path:
+        if self.actual_path and self.expected_path:
             self.info(
                 msgs,
                 self.compare_with(
-                    os.path.normpath(actual_path), expected_path
+                    os.path.normpath(self.actual_path), self.expected_path
                 ),
             )
-        elif expected_path:
-            self.info(msgs, 'Expected file %s' % expected_path)
-        elif actual_path:
-            self.info(msgs, 'Actual file %s' % os.path.normpath(actual_path))
+        elif self.expected_path:
+            self.info(msgs, 'Expected file %s' % self.expected_path)
+        elif self.actual_path:
+            self.info(msgs, 'Actual file %s'
+                          % os.path.normpath(self.actual_path))
         self.info(msgs, s)
 
     def all_fields_except(self, exclusions):

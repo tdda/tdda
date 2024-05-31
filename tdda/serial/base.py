@@ -1,8 +1,6 @@
 import json
 import sys
 
-from tdda.serial.utils import nvl
-
 class MISSING:
     ERROR = 2
     WARNING = 1

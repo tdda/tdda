@@ -55,10 +55,3 @@ def find_associated_metadata_file(path):
                 if os.path.exists(mdpath):
                     return mdpath
     return None
-
-
-def nvl(v, w):
-    """
-    This function is used as syntactic sugar for replacing null values.
-    """
-    return w if v is None else v

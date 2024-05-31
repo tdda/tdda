@@ -109,12 +109,10 @@ class BaseComparison(object):
             for c in ordered:
                 diffs.df.extra[c] = ref_df[c].dtype
 
-    def different_column_structure(self, diffs, actual_path, expected_path):
+    def different_column_structure(self, diffs):
             self.failure(
                 diffs,
                 'Data frames have different column structure.',
-                actual_path,
-                expected_path
             )
 
     def different_column_orders(self, diffs, df, ref_df):
@@ -125,6 +123,14 @@ class BaseComparison(object):
         diffs.df.actual_order = list(df)
         diffs.df.expected_order = list(ref_df)
 
+    def different_numbers_of_rows(self, diffs, na, nr):
+            self.failure(
+                diffs, 'Data frames have different numbers of rows.',
+            )
+            self.info(
+                diffs, f'Actual records: {na:,}; Expected records: {nr:,}'
+            )
+            same = False
 
 
 

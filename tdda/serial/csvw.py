@@ -8,7 +8,7 @@ from tdda.serial.base import (
     MISSING,
     RE_ISO8601
 )
-from tdda.serial.utils import nvl
+from tdda.utils import nvl
 
 
 # From https://w3c.github.io/csvw/primer/#datatypes
