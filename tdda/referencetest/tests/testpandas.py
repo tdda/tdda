@@ -4,22 +4,11 @@
 # Unit tests for functions from tdda.referencetest.checkpandas
 #
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import division
-
 import os
 import unittest
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
-
-try:
-    import numpy as np
-except ImportError:
-    np = None
+import numpy as np
+import pandas as pd
 
 from tdda.referencetest.checkpandas import (
     PandasComparison,

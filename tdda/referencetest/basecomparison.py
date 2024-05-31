@@ -17,7 +17,7 @@ import tempfile
 
 from collections import namedtuple
 
-FailureDiffs = namedtuple('FailureDiffs', 'failures msgs')
+FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
 
 
@@ -111,14 +111,7 @@ class Diffs(object):
         # its internal messages; used in tests.
         return iter(self.lines)
 
-
-class DataFrameDiff:
-    """
-    Container for summary information about differences
-    between two DataFrames.
-    """
-    def __init__(self):
-        pass
+    __str__ = message
 
 
 def diffcmd():

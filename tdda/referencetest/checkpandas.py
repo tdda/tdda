@@ -15,7 +15,9 @@ import sys
 from collections import OrderedDict
 
 from tdda.referencetest.basecomparison import (
-    BaseComparison, Diffs, FailureDiffs
+    BaseComparison,
+    Diffs,
+    FailureDiffs,
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.pd.utils import is_string_col
@@ -23,8 +25,6 @@ from tdda.pd.utils import is_string_col
 
 import pandas as pd
 import numpy as np
-
-
 
 
 # TDDA_DIFF = 'tdda diff'
@@ -117,7 +117,8 @@ class PandasComparison(BaseComparison):
 
             A FailureDiffs named tuple with:
               .failures     the number of failures
-              .msgs         a Diffs object with messages for each failure
+              .diffs        a Diffs object with information about
+                            the failures
 
         All of the 'Option' parameters can be of any of the following:
 
@@ -254,7 +255,7 @@ class PandasComparison(BaseComparison):
             self.write_temporaries(
                 df, ref_df, actual_path, expected_path, msgs
             )
-        return FailureDiffs(failures=0 if same else 1, msgs=msgs)
+        return FailureDiffs(failures=0 if same else 1, diffs=msgs)
 
     def write_temporaries(
         self, actual, expected, actual_path, expected_path, msgs
@@ -382,7 +383,7 @@ class PandasComparison(BaseComparison):
                 return i
         return stop
 
-    def check_csv_file(
+    def check_serialized_dataframe(
         self,
         actual_path,
         expected_path,
@@ -397,7 +398,10 @@ class PandasComparison(BaseComparison):
         **kwargs,
     ):
         """
-        Checks two CSV files are the same, by comparing them as dataframes.
+        Checks two data frames on disk files are the same,
+        by comparing them as dataframes.
+
+        Args:
 
             *actual_path*
                             Pathname for actual CSV file.
@@ -408,6 +412,31 @@ class PandasComparison(BaseComparison):
                             a pandas dataframe. If None, then a default CSV
                             loader is used, which takes the same parameters
                             as the standard pandas pd.read_csv() function.
+
+            *check_data*
+                            Option to specify fields to use to compare cell
+                            values.
+            *check_types*
+                            Option to specify fields to use to compare types.
+
+            *check_order*
+                            Option to specify fields to use to compare field
+                            order.
+
+            *condition*
+                            Filter to be applied to datasets before comparing.
+                            It can be ``None``, or can be a function that takes
+                            a DataFrame as its single parameter and returns
+                            a vector of booleans (to specify which rows should
+                            be compared).
+            *sortby*
+                            Option to specify fields to sort by before
+                            comparing.
+            *precision*
+                            Number of decimal places to compare float values.
+            *msgs*
+                            Optional Diffs object.
+
             *\*\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
@@ -417,8 +446,12 @@ class PandasComparison(BaseComparison):
         Returns a tuple (failures, msgs), containing the number of failures,
         and a Diffs object containing error messages.
         """
-        ref_df = self.load_csv(expected_path, loader=loader, **kwargs)
-        df = self.load_csv(actual_path, loader=loader, **kwargs)
+        ref_df = self.load_serialized_dataframe(
+            expected_path, loader=loader, **kwargs
+        )
+        df = self.load_serialized_dataframe(
+            actual_path, loader=loader, **kwargs
+        )
         return self.check_dataframe(
             df,
             ref_df,
@@ -433,7 +466,9 @@ class PandasComparison(BaseComparison):
             msgs=msgs,
         )
 
-    def check_csv_files(
+    check_csv_file = check_serialized_dataframe
+
+    def check_serialized_dataframes(
         self,
         actual_paths,
         expected_paths,
@@ -446,13 +481,15 @@ class PandasComparison(BaseComparison):
         **kwargs,
     ):
         """
-        Wrapper around the check_csv_file() method, used to compare
-        collections of actual and expected CSV files.
+        Wrapper around the check_serialized_dataframes() method,
+        used to compare collections of serialized data frames on disk
+        against reference counterparts
 
             *actual_paths*
-                            List of pathnames for actual CSV file.
+                            List of pathnames for actual serialized data frames
             *expected_paths*
-                            List of pathnames for expected CSV file.
+                            List of pathnames for expected serialized
+                            data frames.
             *loader*
                             A function to use to read a CSV file to obtain
                             a pandas dataframe. If None, then a default CSV
@@ -461,6 +498,30 @@ class PandasComparison(BaseComparison):
             *\*\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
+
+            *check_data*
+                            Option to specify fields to use to compare cell
+                            values.
+            *check_types*
+                            Option to specify fields to use to compare types.
+
+            *check_order*
+                            Option to specify fields to use to compare field
+                            order.
+
+            *condition*
+                            Filter to be applied to datasets before comparing.
+                            It can be ``None``, or can be a function that takes
+                            a DataFrame as its single parameter and returns
+                            a vector of booleans (to specify which rows should
+                            be compared).
+            *sortby*
+                            Option to specify fields to sort by before
+                            comparing.
+            *precision*
+                            Number of decimal places to compare float values.
+            *msgs*
+                            Optional Diffs object.
 
         The other parameters are the same as those used by
         :py:mod:`check_dataframe`.
@@ -483,7 +544,7 @@ class PandasComparison(BaseComparison):
         failures = 0
         for actual_path, expected_path in zip(actual_paths, expected_paths):
             try:
-                r = self.check_csv_file(
+                r = self.check_serialized_dataframe(
                     actual_path,
                     expected_path,
                     check_data=check_data,
@@ -509,6 +570,8 @@ class PandasComparison(BaseComparison):
                 )
                 failures += 1
         return (failures, msgs)
+
+    check_csv_files = check_serialized_dataframes
 
     def failure(self, msgs, s, actual_path, expected_path):
         """
@@ -549,11 +612,12 @@ class PandasComparison(BaseComparison):
             loader = default_csv_loader
         return loader(csvfile, **kwargs)
 
-    def _load_reference_dataframe(
+    def load_serialized_dataframe(
         self, path, actual_df=None, loader=None, **kwargs
     ):
         """
-        Function for constructing a pandas dataframe from a CSV file.
+        Function for constructing a pandas dataframe from a serialized
+        dataframe in a file (parquet or CSV)
         """
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
@@ -567,7 +631,7 @@ class PandasComparison(BaseComparison):
                     print(self.compare_with(tmp_path, path))
                 raise
         else:
-            return load_csv(path, loader, **kwargs)
+            return self.load_csv(path, loader, **kwargs)
 
     def write_csv(self, df, csvfile, writer=None, **kwargs):
         """
@@ -604,7 +668,6 @@ class PandasNotImplemented(object):
 
     def method(self, name, *args, **kwargs):
         raise NotImplementedError('%s: Pandas not available.' % name)
-
 
 
 def default_csv_loader(csvfile, **kwargs):
@@ -771,5 +834,3 @@ def types_match(t1, t2, level=None):
     ):
         return True
     return False
-
-

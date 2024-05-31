@@ -195,11 +195,14 @@ class ReferenceTest(object):
         """
         self.assert_fn = assert_fn
         self.reference_data_locations = self._cls_dataloc(self.__class__)
-        self.pandas = PandasComparison(print_fn=self.call_print_fn,
-                                       verbose=self.verbose)
-        self.files = FilesComparison(print_fn=self.call_print_fn,
-                                     verbose=self.verbose,
-                                     tmp_dir=self.tmp_dir)
+        self.pandas = PandasComparison(
+            print_fn=self.call_print_fn, verbose=self.verbose
+        )
+        self.files = FilesComparison(
+            print_fn=self.call_print_fn,
+            verbose=self.verbose,
+            tmp_dir=self.tmp_dir,
+        )
 
     def all_fields_except(self, exclusions):
         """
@@ -237,11 +240,20 @@ class ReferenceTest(object):
         """
         self.reference_data_locations[kind] = os.path.normpath(location)
 
-    def assertDataFramesEqual(self, df, ref_df,
-                              actual_path=None, expected_path=None,
-                              check_data=None, check_types=None,
-                              check_order=None, condition=None, sortby=None,
-                              precision=None, type_matching=None):
+    def assertDataFramesEqual(
+        self,
+        df,
+        ref_df,
+        actual_path=None,
+        expected_path=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        type_matching=None,
+    ):
         """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
 
@@ -317,36 +329,52 @@ class ReferenceTest(object):
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
-        r = self.pandas.check_dataframe(df, ref_df,
-                                        actual_path=actual_path,
-                                        expected_path=expected_path,
-                                        check_data=check_data,
-                                        check_types=check_types,
-                                        check_order=check_order,
-                                        condition=condition,
-                                        sortby=sortby,
-                                        precision=precision,
-                                        type_matching=type_matching)
+        r = self.pandas.check_dataframe(
+            df,
+            ref_df,
+            actual_path=actual_path,
+            expected_path=expected_path,
+            check_data=check_data,
+            check_types=check_types,
+            check_order=check_order,
+            condition=condition,
+            sortby=sortby,
+            precision=precision,
+            type_matching=type_matching,
+        )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
 
-    def assertDataFrameCorrect(self, df, ref_csv, actual_path=None,
-                               kind='csv', csv_read_fn=None,
-                               check_data=None, check_types=None,
-                               check_order=None, condition=None, sortby=None,
-                               precision=None, type_matching=None, **kwargs):
+    def assertDataFrameCorrect(
+        self,
+        df,
+        ref_path,
+        actual_path=None,
+        kind='csv',
+        csv_read_fn=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        type_matching=None,
+        **kwargs,
+    ):
         """
         Check that an in-memory Pandas DataFrame matches a reference one
-        from a saved reference CSV file.
+        from a save reference DataFrame on disk (parquet of CSV).
 
             *df*:
                 Actual DataFrame.
 
-            *ref_csv*:
-                Name of reference CSV file, which can in fact
-                now be a .parquet file. The location of the
+            *ref_path*:
+                Name of reference file, which can
+                be a .parquet file or a CSV file. The location of the
                 reference file is determined by the configuration
                 via :py:meth:`set_data_location()`.
+                **Renamed from csv_path in version 2.2**
+
 
             *actual_path*:
                 Optional parameter, giving path for file where
@@ -381,48 +409,64 @@ class ReferenceTest(object):
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
-        ref_path = ref_csv
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
             self.pandas._write_reference_dataframe(df, expected_path)
         else:
-            ref_df = self.pandas._load_reference_dataframe(expected_path,
-                                                           actual_df=df,
-                                                           loader=csv_read_fn)
-            self.assertDataFramesEqual(df, ref_df,
-                                       actual_path=actual_path,
-                                       expected_path=expected_path,
-                                       check_data=check_data,
-                                       check_types=check_types,
-                                       check_order=check_order,
-                                       condition=condition,
-                                       sortby=sortby,
-                                       precision=precision,
-                                       type_matching=type_matching)
+            ref_df = self.pandas.load_serialized_dataframe(
+                expected_path, actual_df=df, loader=csv_read_fn
+            )
+            self.assertDataFramesEqual(
+                df,
+                ref_df,
+                actual_path=actual_path,
+                expected_path=expected_path,
+                check_data=check_data,
+                check_types=check_types,
+                check_order=check_order,
+                condition=condition,
+                sortby=sortby,
+                precision=precision,
+                type_matching=type_matching,
+            )
 
-    def assertCSVFileCorrect(self, actual_path, ref_csv,
-                             kind='csv', csv_read_fn=None,
-                             check_data=None, check_types=None,
-                             check_order=None, condition=None, sortby=None,
-                             precision=None, **kwargs):
-        """Check that a CSV file matches a reference one.
+    def assertOnDiskDataFrameCorrect(
+        self,
+        actual_path,
+        ref_path,
+        kind='parquet',
+        csv_read_fn=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        **kwargs,
+    ):
+        """Check that a DataFrame on disk (as a parquet file,
+           or possible a CSV file, reference DataFrame, also on disk.
+
+           Args:
 
             *actual_path*:
-                Actual CSV file.
+                File containing actual serialized DataFrame
 
-            *ref_csv*:
-                Name of reference CSV file. The location of the
+            *ref_path*:
+                File containing reference serialized DataFrame.
+                The location of the
                 reference file is determined by the configuration
                 via :py:meth:`set_data_location()`.
 
             *kind*:
                 (Optional) reference kind (a string; see above), used to locate
-                the reference CSV file.
+                the reference file. CSV is used here, and applies, for now,
+                to parqet as well as CSV.
 
             *csv_read_fn*:
                 (Optional) function to read a CSV file to obtain
                 a pandas DataFrame. If ``None``, then a default
-                CSV loader is used.
+                CSV loader is used if it is a CSV file.
 
                 The default CSV loader function is a wrapper around Pandas
                 :py:func:`pd.read_csv()`, with default options as follows:
@@ -446,40 +490,88 @@ class ReferenceTest(object):
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
         """
-        expected_path = self._resolve_reference_path(ref_csv, kind=kind)
+        if kind == 'parquet':
+            kind = 'csv'  # it's just a key; can be parquet
+        expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_file(actual_path, expected_path)
         else:
-            r = self.pandas.check_csv_file(actual_path, expected_path,
-                                           check_data=check_data,
-                                           check_types=check_types,
-                                           check_order=check_order,
-                                           condition=condition,
-                                           sortby=sortby,
-                                           precision=precision,
-                                           loader=csv_read_fn,
-                                           **kwargs)
+            r = self.pandas.check_csv_file(
+                actual_path,
+                expected_path,
+                check_data=check_data,
+                check_types=check_types,
+                check_order=check_order,
+                condition=condition,
+                sortby=sortby,
+                precision=precision,
+                loader=csv_read_fn,
+                **kwargs,
+            )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertCSVFilesCorrect(self, actual_paths, ref_csvs,
-                              kind='csv', csv_read_fn=None,
-                              check_data=None, check_types=None,
-                              check_order=None, condition=None, sortby=None,
-                              precision=None, **kwargs):
-        """Check that a set of CSV files match corresponding reference ones.
+    def assertCSVFileCorrect(
+        self,
+        actual_path,
+        ref_csv,
+        kind='csv',
+        csv_read_fn=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        **kwargs,
+    ):
+        """
+        Legacy convenience method with second parameter called ref_csv.
+        Just calls assertOnDiskDataFrameCorrect.
+        """
+        return assertOnDiskDataFrameCorrect(
+            actual_path,
+            ref_csv,
+            kind='kind',
+            csv_read_fn=csv_read_fn,
+            check_data=check_data,
+            check_types=check_types,
+            check_order=check_order,
+            condition=condition,
+            sortby=sortby,
+            precision=precision,
+            **kwargs,
+        )
+
+    def assertOnDiskDataFramesCorrect(
+        self,
+        actual_paths,
+        ref_paths,
+        kind='csv',
+        csv_read_fn=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        **kwargs,
+    ):
+        """Check that a set of serialized datafames in files
+           match corresponding reference ones.
 
             *actual_paths*:
-                List of actual CSV files.
+                List of actual serialized data frames (Parquet or CSV)
 
-            *ref_csvs*:
-                List of names of matching reference CSV files. The
+            *ref_paths*:
+                List of names of matching reference serialized data frames
+                (Parquet or CSV). The
                 location of the reference files is determined by
                 the configuration via :py:meth:`set_data_location()`.
 
             *kind*:
                 (Optional) reference kind (a string; see above), used to locate
-                the reference CSV file.
+                the reference CSV or Paerquet file.
 
             *csv_read_fn*:
                 (Optional) function to read a CSV file to obtain
@@ -509,27 +601,73 @@ class ReferenceTest(object):
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
+        if kind == 'parquet':
+            kind = 'csv'  # it's just a key; can be parquet
+
         expected_paths = self._resolve_reference_paths(ref_csvs, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_files(actual_paths, expected_paths)
         else:
-            r = self.pandas.check_csv_files(actual_paths, expected_paths,
-                                            check_data=check_data,
-                                            check_types=check_types,
-                                            check_order=check_order,
-                                            condition=condition,
-                                            sortby=sortby,
-                                            precision=precision,
-                                            loader=csv_read_fn,
-                                            **kwargs)
+            r = self.pandas.check_csv_files(
+                actual_paths,
+                expected_paths,
+                check_data=check_data,
+                check_types=check_types,
+                check_order=check_order,
+                condition=condition,
+                sortby=sortby,
+                precision=precision,
+                loader=csv_read_fn,
+                **kwargs,
+            )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertStringCorrect(self, string, ref_path, kind=None,
-                            lstrip=False, rstrip=False,
-                            ignore_substrings=None, ignore_patterns=None,
-                            remove_lines=None, ignore_lines=None,
-                            preprocess=None, max_permutation_cases=0):
+    def assertCSVFilesCorrect(
+        self,
+        actual_paths,
+        ref_csvs,
+        kind='csv',
+        csv_read_fn=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        condition=None,
+        sortby=None,
+        precision=None,
+        **kwargs,
+    ):
+        """
+        Legacy method that just calls assertOnDiskDataFramesCorrect.
+        """
+        return assertOnDiskDataFramesCorrect(
+            actual_paths,
+            ref_csvs,
+            kind=kind,
+            csv_read_fn=csv_read_fn,
+            check_data=check_data,
+            check_types=check_types,
+            check_order=check_order,
+            condition=condition,
+            sortby=soryby,
+            precision=precision,
+            **kwargs,
+        )
+
+    def assertStringCorrect(
+        self,
+        string,
+        ref_path,
+        kind=None,
+        lstrip=False,
+        rstrip=False,
+        ignore_substrings=None,
+        ignore_patterns=None,
+        remove_lines=None,
+        ignore_lines=None,
+        preprocess=None,
+        max_permutation_cases=0,
+    ):
         """
         Check that an in-memory string matches the contents from a reference
         text file.
@@ -597,31 +735,44 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_result(string, expected_path,
-                                         lstrip=lstrip, rstrip=rstrip)
+            self._write_reference_result(
+                string, expected_path, lstrip=lstrip, rstrip=rstrip
+            )
         else:
             ilc = ignore_substrings
             ip = ignore_patterns
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
-            r = self.files.check_string_against_file(string, expected_path,
-                                                     actual_path=None,
-                                                     lstrip=lstrip,
-                                                     rstrip=rstrip,
-                                                     ignore_substrings=ilc,
-                                                     ignore_patterns=ip,
-                                                     remove_lines=rl,
-                                                     preprocess=preprocess,
-                                                     max_permutation_cases=mpc)
+            r = self.files.check_string_against_file(
+                string,
+                expected_path,
+                actual_path=None,
+                lstrip=lstrip,
+                rstrip=rstrip,
+                ignore_substrings=ilc,
+                ignore_patterns=ip,
+                remove_lines=rl,
+                preprocess=preprocess,
+                max_permutation_cases=mpc,
+            )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertTextFileCorrect(self, actual_path, ref_path, kind=None,
-                              lstrip=False, rstrip=False,
-                              ignore_substrings=None, ignore_patterns=None,
-                              remove_lines=None, ignore_lines=None,
-                              preprocess=None, max_permutation_cases=0,
-                              encoding=None):
+    def assertTextFileCorrect(
+        self,
+        actual_path,
+        ref_path,
+        kind=None,
+        lstrip=False,
+        rstrip=False,
+        ignore_substrings=None,
+        ignore_patterns=None,
+        remove_lines=None,
+        ignore_lines=None,
+        preprocess=None,
+        max_permutation_cases=0,
+        encoding=None,
+    ):
         """
         Check that a text file matches the contents from a reference text file.
 
@@ -640,7 +791,7 @@ class ReferenceTest(object):
         optional parameters described in :py:meth:`assertStringCorrect()`.
 
         This should be used for unstructured data such as logfiles, etc.
-        For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
+        For CSV files, use :py:meth:`assertOnDiskDataFramCorrect` instead.
 
         The *ignore_lines* parameter exists for backwards compatibility as
         an alias for *remove_lines*.
@@ -651,28 +802,42 @@ class ReferenceTest(object):
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path,
-                                       lstrip=lstrip, rstrip=rstrip)
+            self._write_reference_file(
+                actual_path, expected_path, lstrip=lstrip, rstrip=rstrip
+            )
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
-            r = self.files.check_file(actual_path, expected_path,
-                                      lstrip=lstrip, rstrip=rstrip,
-                                      ignore_substrings=ignore_substrings,
-                                      ignore_patterns=ignore_patterns,
-                                      remove_lines=rl,
-                                      preprocess=preprocess,
-                                      max_permutation_cases=mpc,
-                                      encoding=encoding)
+            r = self.files.check_file(
+                actual_path,
+                expected_path,
+                lstrip=lstrip,
+                rstrip=rstrip,
+                ignore_substrings=ignore_substrings,
+                ignore_patterns=ignore_patterns,
+                remove_lines=rl,
+                preprocess=preprocess,
+                max_permutation_cases=mpc,
+                encoding=encoding,
+            )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
-    def assertTextFilesCorrect(self, actual_paths, ref_paths, kind=None,
-                               lstrip=False, rstrip=False,
-                               ignore_substrings=None, ignore_patterns=None,
-                               remove_lines=None, ignore_lines=None,
-                               preprocess=None, max_permutation_cases=0,
-                               encodings=None):
+    def assertTextFilesCorrect(
+        self,
+        actual_paths,
+        ref_paths,
+        kind=None,
+        lstrip=False,
+        rstrip=False,
+        ignore_substrings=None,
+        ignore_patterns=None,
+        remove_lines=None,
+        ignore_lines=None,
+        preprocess=None,
+        max_permutation_cases=0,
+        encodings=None,
+    ):
         """
         Check that a collection of text files matche the contents from
         matching collection of reference text files.
@@ -687,7 +852,7 @@ class ReferenceTest(object):
                 :py:meth:`set_data_location()`.
 
         This should be used for unstructured data such as logfiles, etc.
-        For CSV files, use :py:meth:`assertCSVFileCorrect` instead.
+        For CSV files, use :py:meth:`assertOnDiskDataFramesCorrect` instead.
 
         It also accepts the ``kind``, ``lstrip``, ``rstrip``,
         ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,
@@ -700,19 +865,24 @@ class ReferenceTest(object):
         """
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_files(actual_paths, expected_paths,
-                                        lstrip=strip, rstrip=rstrip)
+            self._write_reference_files(
+                actual_paths, expected_paths, lstrip=strip, rstrip=rstrip
+            )
         else:
             mpc = max_permutation_cases
             rl = remove_lines or ignore_lines
-            r = self.files.check_files(actual_paths, expected_paths,
-                                       lstrip=lstrip, rstrip=rstrip,
-                                       ignore_substrings=ignore_substrings,
-                                       ignore_patterns=ignore_patterns,
-                                       remove_lines=rl,
-                                       preprocess=preprocess,
-                                       max_permutation_cases=mpc,
-                                       encodings=encodings)
+            r = self.files.check_files(
+                actual_paths,
+                expected_paths,
+                lstrip=lstrip,
+                rstrip=rstrip,
+                ignore_substrings=ignore_substrings,
+                ignore_patterns=ignore_patterns,
+                remove_lines=rl,
+                preprocess=preprocess,
+                max_permutation_cases=mpc,
+                encodings=encodings,
+            )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
@@ -775,8 +945,14 @@ class ReferenceTest(object):
             kind = None
         return kind in self.regenerate and self.regenerate[kind]
 
-    def _write_reference_file(self, actual_path, reference_path, binary=False,
-                              lstrip=False, rstrip=False):
+    def _write_reference_file(
+        self,
+        actual_path,
+        reference_path,
+        binary=False,
+        lstrip=False,
+        rstrip=False,
+    ):
         """
         Internal method for regenerating reference data.
         """
@@ -785,15 +961,17 @@ class ReferenceTest(object):
             actual = fin.read()
         self._write_reference_result(actual, reference_path, binary=binary)
 
-    def _write_reference_files(self, actual_paths, reference_paths,
-                               lstrip=False, rstrip=False):
+    def _write_reference_files(
+        self, actual_paths, reference_paths, lstrip=False, rstrip=False
+    ):
         """
         Internal method for regenerating reference data for a list of
         files.
         """
-        for (actual_path, expected_path) in zip(actual_paths, reference_paths):
-            self._write_reference_file(actual_path, expected_path,
-                                       lstrip=lstrip, rstrip=rstrip)
+        for actual_path, expected_path in zip(actual_paths, reference_paths):
+            self._write_reference_file(
+                actual_path, expected_path, lstrip=lstrip, rstrip=rstrip
+            )
 
     def _write_reference_dataset(self, df, reference_path):
         """
@@ -801,8 +979,9 @@ class ReferenceTest(object):
         """
         self.pandas._write_reference_dataframe(df, reference_path)
 
-    def _write_reference_result(self, result, reference_path, binary=False,
-                                lstrip=False, rstrip=False):
+    def _write_reference_result(
+        self, result, reference_path, binary=False, lstrip=False, rstrip=False
+    ):
         """
         Internal method for regenerating reference data from in-memory
         results.
@@ -840,4 +1019,3 @@ class ReferenceTest(object):
 # so that all of its methods can be made available as top-level functions,
 # to work will with frameworks like pytest.
 ReferenceTest.__all__ = dir(ReferenceTest)
-

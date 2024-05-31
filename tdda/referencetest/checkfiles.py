@@ -121,7 +121,7 @@ class FilesComparison(BaseComparison):
 
             A FailureDiffs named tuple with:
               .failures     the number of failures
-              .msgs         a Diffs object with messages for each failure
+              .diffs        a Diffs object with details of differences
         """
 
         enc = get_encoding(expected_path, encoding)
@@ -279,7 +279,7 @@ class FilesComparison(BaseComparison):
                 create_temporaries=create_temporaries,
                 encoding=enc,
             )
-        return FailureDiffs(failures=1 if ndiffs > 0 else 0, msgs=msgs)
+        return FailureDiffs(failures=1 if ndiffs > 0 else 0, diffs=msgs)
 
     def wrong_content(
         self,
