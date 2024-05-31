@@ -203,7 +203,9 @@ class PandasComparison(BaseComparison):
                 else:
                     rounded = df
                     ref_rounded = ref_df
-                same_content = rounded.equals(ref_rounded)
+
+                same_content = rounded.equals(ref_rounded)  # the check
+
                 if not same_content:
                     failures = []
                     for c in list(ref_rounded):
@@ -213,10 +215,7 @@ class PandasComparison(BaseComparison):
                             )
                             if pdiffs:
                                 failures.append('Column values differ: %s' % c)
-                                failures.append(
-                                    '%s\nvs.\n%s\n'
-                                    % (rounded[c], ref_rounded[c])
-                                )
+                                failures.append(pdiffs)
                     if failures:
                         self.failure(diffs, 'Contents check failed.')
                         for f in failures:
@@ -288,39 +287,31 @@ class PandasComparison(BaseComparison):
 
         Returns a short summary of where values differ, for two columns.
         """
-        for i, val in enumerate(values):
-            refval = ref_values[i]
-            valnull = values.isnull()
-            refnull = ref_values.isnull()
-            bothnull = valnull & refnull
-            n_both_null = bothnull.sum()
-            assert bothnull.sum() < len(values)  # Shouldn't have got here
-            (L, R) = (
-                (values, ref_values)
-                if n_both_null == 0
-                else (
-                    values[np.logical_not(bothnull)],
-                    ref_values[np.logical_not(bothnull)],
-                )
-            )
-            same = L.eq(R)
-            L = L[np.logical_not(same)][:10]
-            R = R[np.logical_not(same)][:10]
-            summary_vals = sample_format2(L, precision)
-            summary_ref_vals = sample_format2(R, precision)
-            n = len(L)
-            if n == 0:
-                return ''
-            s = (
-                'First 10 differences'
-                if n > 10
-                else ('Difference%s' % ('s' if n > 1 else ''))
-            )
-            return '%s: [%s] != [%s]' % (s, summary_vals, summary_ref_vals)
-        if values.dtype != ref_values.dtype:
-            return 'Different types'
+        valnull = values.isnull()
+        refnull = ref_values.isnull()
+        bothnull = valnull & refnull
+        n_both_null = bothnull.sum()
+        assert bothnull.sum() < len(values)  # Shouldn't have got here
+
+        if n_both_null == 0:
+            (L, R) = (values, ref_values)
         else:
-            return 'But mysteriously appear to be identical!'
+            not_both_null = np.logical_not(bothnull)
+            (L, R) = (values[not_both_null], ref_values[not_both_null])
+
+        same = L.eq(R)
+        L = L[np.logical_not(same)][:10]
+        R = R[np.logical_not(same)][:10]
+        n = len(L)
+        if n == 0:
+            return ''
+        s = (
+            'First 10 differences:\n'
+            if n > 10
+            else ('Difference%s:\n' % ('s' if n > 1 else ''))
+        )
+        return f'{s}{col_comparison(L, R)}\n'
+
 
     def sample(self, values, start, stop):
         return [
@@ -809,3 +800,17 @@ def types_match(t1, t2, level=None):
     ):
         return True
     return False
+
+
+def col_comparison(left, right):
+    n = min(len(left), 10)
+    indexes = [str(left.index[i]) for i in range(n)]
+    lefts = [repr(left.iloc[i]) for i in range(n)]
+    rights = [repr(right.iloc[i]) for i in range(n)]
+    df = pd.DataFrame({
+        'row': indexes,
+        'actual': lefts,
+        'expected': rights,
+    })
+    return df.to_string(index=False) if n > 0 else ''
+

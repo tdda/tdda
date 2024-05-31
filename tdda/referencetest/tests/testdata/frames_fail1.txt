@@ -1,18 +1,11 @@
 Contents check failed.
 Column values differ: b
-0    1.0001
-1    2.0001
-2    3.0001
-3    4.0001
-4    5.0001
-Name: b, dtype: float64
-vs.
-0    1.0002
-1    2.0002
-2    3.0002
-3    4.0002
-4    5.0002
-Name: b, dtype: float64
+Differences:
+row actual expected
+  0 1.0001   1.0002
+  1 2.0001   2.0002
+  2 3.0001   3.0002
+  3 4.0001   4.0002
+  4 5.0001   5.0002
 
 Compare with:
-    diff /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/actual-df001.parquet /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/expected-df001.parquet
