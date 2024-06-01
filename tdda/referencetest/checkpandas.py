@@ -134,7 +134,7 @@ class PandasComparison(BaseComparison):
 
         type_matching = type_matching or 'strict'
         diffs = nvl(diffs, Diffs())
-        precision = nvl(precision, 6)
+        self.precision = nvl(precision, 6)
 
         check_types = resolve_option_flag(check_types, ref_df)
         check_extra_cols = resolve_option_flag(check_extra_cols, df)
@@ -192,39 +192,9 @@ class PandasComparison(BaseComparison):
         if same:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
-                check_data = [c for c in check_data if c not in missing_cols]
-                df = df[check_data]
-                ref_df = ref_df[check_data]
-                if precision is not None:
-                    rounded = df.round(precision).reset_index(drop=True)
-                    ref_rounded = ref_df.round(precision).reset_index(
-                        drop=True
-                    )
-                else:
-                    rounded = df
-                    ref_rounded = ref_df
-
-                same_content = rounded.equals(ref_rounded)  # the check
-
-                if not same_content:
-                    failures = []
-                    for c in list(ref_rounded):
-                        if not rounded[c].equals(ref_rounded[c]):
-                            pdiffs = self.differences(
-                                c, rounded[c], ref_rounded[c], precision
-                            )
-                            if pdiffs:
-                                failures.append('Column values differ: %s' % c)
-                                failures.append(pdiffs)
-                    if failures:
-                        self.failure(diffs, 'Contents check failed.')
-                        for f in failures:
-                            self.info(diffs, f)
-                        same = False
-
-        same = same and not any(
-            (missing_cols, extra_cols, wrong_types, wrong_ordering)
-        )
+                cols = [c for c in check_data if c not in missing_cols]
+                nd = self.same_structure_ddiff(df[cols], ref_df[cols], diffs)
+                same = nd == 0
 
         if not same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs)
@@ -277,13 +247,79 @@ class PandasComparison(BaseComparison):
         #         self.info(msgs,
         #                   'Actual file %s' % os.path.normpath(actual_path))
 
-    def differences(self, name, values, ref_values, precision):
+
+    def same_structure_ddiff(self, df, ref_df, diffs):
+        """
+        Test two dataframes with the same structure for differences.
+
+        Datasets must be same shape (this should have been checked
+        before calling). Assertions check this at start.
+
+        Args:
+            df         Actual/LHS data frame
+            ref_df     Actual/RHS data frame
+            diffs      Diffs object for reporing
+
+        Returns:
+            number of different values
+        """
+        assert list(df) == list(ref_df)
+        assert df.shape == ref_df.shape
+
+        if self.precision is not None:
+            df = df.round(self.precision).reset_index(drop=True)
+            ref_df = ref_df.round(self.precision).reset_index(
+                drop=True
+            )
+
+        if df.equals(ref_df):  # the check
+            return 0
+        else:
+            return self.same_structure_summary_diffs(df, ref_df, diffs)
+
+    def same_structure_summary_diffs(self, df, ref_df, diffs):
+        """
+        Summarize differences between two dataframes with the same structure.
+
+        Datasets must be same shape (this should have been checked
+        before calling), and are assumed to have at least one difference.
+
+        (It's a problem if they aren't the same shape; it's just needlessly
+        slow (in the sense that there are faster ways to check this)
+        if there are differences.
+
+        Args:
+            df         Actual/LHS data frame
+            ref_df     Actual/RHS data frame
+            diffs      Diffs object for reporing
+
+        Returns:
+            number of different values
+        """
+
+        failures = []
+        for c in list(df):
+            if not df[c].equals(ref_df[c]):
+                pdiffs = self.single_col_differences(
+                    c, df[c], ref_df[c]
+                )
+                if pdiffs:
+                    failures.append('Column values differ: %s' % c)
+                    failures.append(pdiffs)
+        if failures:
+            self.failure(diffs, 'Contents check failed.')
+            for f in failures:
+                self.info(diffs, f)
+            return 1
+        else:
+            return 0
+
+    def single_col_differences(self, name, values, ref_values):
         """
         Args:
             name          is the name of the columns
             values        is the left-hand series
             ref_values    is the rish-hand series
-            precision
 
         Returns a short summary of where values differ, for two columns.
         """
