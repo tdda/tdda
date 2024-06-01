@@ -10,7 +10,7 @@ from tdda.referencetest.checkpandas import (
 
 import os
 
-TESTDATA = os.path.dirname(__file__)
+TESTDATA = os.path.join(os.path.dirname(__file__), 'testdata')
 PQ_REF4_PATH = os.path.join(TESTDATA, 'four-squares.parquet')
 CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
 
