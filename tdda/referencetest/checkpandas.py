@@ -314,39 +314,30 @@ class PandasComparison(BaseComparison):
         else:
             return 0
 
-    def single_col_differences(self, name, values, ref_values):
+    def single_col_differences(self, name, left, right):
         """
         Args:
-            name          is the name of the columns
-            values        is the left-hand series
-            ref_values    is the rish-hand series
+            name        is the name of the columns
+            left        is the left-hand series
+            right       is the rish-hand series
 
         Returns a short summary of where values differ, for two columns.
         """
-        valnull = values.isnull()
-        refnull = ref_values.isnull()
-        bothnull = valnull & refnull
-        n_both_null = bothnull.sum()
-        assert bothnull.sum() < len(values)  # Shouldn't have got here
 
-        if n_both_null == 0:
-            (L, R) = (values, ref_values)
-        else:
-            not_both_null = np.logical_not(bothnull)
-            (L, R) = (values[not_both_null], ref_values[not_both_null])
-
-        same = L.eq(R)
-        L = L[np.logical_not(same)][:10]
-        R = R[np.logical_not(same)][:10]
-        n = len(L)
+        different = ~(left.eq(right) | (left.isnull() & right.isnull()))
+        n = different.sum()  # number of differences
         if n == 0:
             return ''
+
+        l_vals = left[different][:10]
+        r_vals = right[different][:10]
+        n = len(l_vals)
         s = (
             'First 10 differences:\n'
             if n > 10
             else ('Difference%s:\n' % ('s' if n > 1 else ''))
         )
-        return f'{s}{col_comparison(L, R)}\n'
+        return f'{s}{col_comparison(l_vals, r_vals)}\n'
 
 
     def sample(self, values, start, stop):
