@@ -12,12 +12,14 @@ import csv
 import os
 import sys
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 from tdda.referencetest.basecomparison import (
     BaseComparison,
     Diffs,
     FailureDiffs,
+    ColDiff,
+    SameStructureDDiff
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.pd.utils import is_string_col
@@ -26,6 +28,7 @@ from tdda.utils import nvl
 
 import pandas as pd
 import numpy as np
+
 
 
 # TDDA_DIFF = 'tdda diff'
@@ -300,7 +303,7 @@ class PandasComparison(BaseComparison):
         failures = []
         for c in list(df):
             if not df[c].equals(ref_df[c]):
-                pdiffs = self.single_col_differences(
+                pdiffs = self.single_col_difference_summary(
                     c, df[c], ref_df[c]
                 )
                 if pdiffs:
@@ -314,7 +317,7 @@ class PandasComparison(BaseComparison):
         else:
             return 0
 
-    def single_col_differences(self, name, left, right):
+    def single_col_difference_summary(self, name, left, right):
         """
         Args:
             name        is the name of the columns
@@ -323,14 +326,12 @@ class PandasComparison(BaseComparison):
 
         Returns a short summary of where values differ, for two columns.
         """
-
-        different = ~(left.eq(right) | (left.isnull() & right.isnull()))
-        n = different.sum()  # number of differences
-        if n == 0:
+        cdiff = single_col_diffs(left, right)
+        if cdiff.n == 0:
             return ''
 
-        l_vals = left[different][:10]
-        r_vals = right[different][:10]
+        l_vals = left[cdiff.mask][:10]
+        r_vals = right[cdiff.mask][:10]
         n = len(l_vals)
         s = (
             'First 10 differences:\n'
@@ -829,6 +830,83 @@ def types_match(t1, t2, level=None):
     return False
 
 
+def diff_masks(df, ref_df, only_diffs=False):
+    """
+    Compares two data frames dictionary of ColDiff pairs keyed on column name
+
+    Args:
+        df           "left-hand" data frame
+        ref_df       "right-hand" column
+        only_diffs   If True, filter the dictionary to only those
+                     columns with differences
+
+    Returns:
+        (diffs,    boolean mask with 1's where there are differences
+         n)        number of differences
+    """
+    assert list(df) == list(ref_df)
+    diffs = {
+        k: single_col_diffs(df[k], ref_df[k])
+        for k in df
+    }
+    if only_diffs:
+        for k in list(diffs):
+            if diff[k].n == 0:
+                del[k]
+    return diffs
+
+
+def same_structure_dataframe_diffs(df, ref_df):
+    """
+    Compute differences between each pair of columns in two data frames.
+
+    The two data frames must have the same columns, the same lengths,
+    and compatible types.
+
+    Args:
+        df        "left" data frame  (typically "actual")
+        ref_df    "right" data frame (typically expected/reference)
+
+    Returns:
+        SameStructureDDiff  for df, ref_df
+    """
+    assert list(df) == list(ref_df)
+    d = {}
+    n_vals = 0   # total number of values with diffenrences
+    for c in list(df):
+        diffs = single_col_diff(df[c], ref_df[c])
+        if diffs.n > 0:
+            d[c] = diff
+            n_vals += diff.n
+    n_cols = len(d)  # number of columns with differences
+
+    if n_vals > 0:
+        if n_cols > 1:
+            d = create_row_diffs_mask(list(d.values()))
+            n_rows = d.sum().item()  # number of rows with differences
+            row_diffs = ColDiff(d, n_row)
+
+    return SameStructureDDiff(d, row_diffs, n_vals, n_cols, n_rows)
+
+
+def single_col_diffs(L, R):
+    """
+    Compares two columns and returns col indicating where they are different
+
+    Args:
+        L     "left-hand" column
+        R     "left-hand" column
+
+    Returns:
+        (diffs,    boolean mask with 1's where there are differences
+         n)        number of differences
+    """
+    different = ~(L.eq(R) | (L.isnull() & R.isnull()))
+    if different.dtype == pd.BooleanDtype():
+        different = different.fillna(True)
+    return ColDiff(different, different.sum().item())
+
+
 def col_comparison(left, right):
     n = min(len(left), 10)
     indexes = [str(left.index[i]) for i in range(n)]
@@ -841,3 +919,43 @@ def col_comparison(left, right):
     })
     return df.to_string(index=False) if n > 0 else ''
 
+
+def create_row_diffs_mask(masks):
+    """
+    Combine all column diff masks efficiently for mask
+    showing all rows with differences.
+
+    Args:
+        masks: list of bool columns indicating column difference
+
+    Return:
+        combined mask
+    """
+    while len(masks) > 1:
+        last = [masks[-1]] if len(masks) % 2 == 1 else []
+        masks = [
+            (masks[2 * i] | masks[2 * i + 1])
+            for i in range(len(masks) // 2)
+        ] + last
+    return masks[0]
+
+
+def create_row_diff_counts(masks):
+    """
+    Combine all column diff masks efficiently for col with
+    counts of number of differences for each row.
+
+    Args:
+        masks: list of bool columns indicating column difference
+
+    Return:
+        row_difference_col
+    """
+    counts = [m.astype(int) for m in masks]
+    while len(counts) > 1:
+        last = [counts[-1].astype(int)] if len(counts) % 2 == 1 else []
+        counts = [
+            (counts[2 * i] + counts[2 * i + 1])
+            for i in range(len(counts) // 2)
+        ] + last
+    return counts[0]

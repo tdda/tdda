@@ -22,6 +22,7 @@ FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
+ColDiff = namedtuple('ColDiff', 'mask n')
 
 
 class BaseComparison(object):
@@ -186,6 +187,20 @@ class Diffs(object):
     __str__ = message
 
 
+class SameStructureDDiff:
+    """
+    Container for information about differences betwee data frames
+    with the same structure.
+    """
+    def __init__(self, diff_masks, row_counts, n_vals, n_cols, n_rows):
+        self.n_diff_values = n_vals
+        self.n_diff_cols = n_cols
+        self.n_diff_rows = n_rows
+        self.diff_masks = diff_masks      # keyed on common column name
+        self.row_diff_counts = row_counts # mask for rows with any differences
+
+
+
 class DataFrameDiffs:
     def __init__(self):
         self.field_types = {}      # keyed on name; value is FieldDiff
@@ -195,6 +210,9 @@ class DataFrameDiffs:
         self.expected_order = []   # list of field names
         self.actual_length = None
         self.expected_length = None
+
+        self.diff = None           # SameStructureDDiff
+
 
     @property
     def different_structure(self):
@@ -221,3 +239,5 @@ def df_col_pos(c, df):
         return list(df).index(c)
     except ValueError:
         return None
+
+

@@ -6,7 +6,11 @@ from tdda.referencetest.checkpandas import (
     PandasComparison,
     types_match,
     loosen_type,
+    single_col_diffs,
+    create_row_diffs_mask,
+    create_row_diff_counts,
 )
+
 
 import os
 
@@ -78,6 +82,114 @@ class TestOne(ReferenceTestCase):
         self.assertEqual(r.failures, 1)
         print(r.diffs)
         print(r.diffs.df)
+
+    def testSingleColDiffs(self):
+        df = pd.DataFrame({
+            'a': pd.Series([0, 1, None, None], dtype=pd.Int64Dtype()),
+            'b': pd.Series([0, None, 2, None], dtype=pd.Int64Dtype()),
+            'A': [0, 1, None, None],
+            'B': [0, None, 2, None],
+            'm': [False, True, True, False],
+        })
+        diffs = single_col_diffs(df.A, df.B)
+        print(diffs)
+        print(diffs.mask.dtype)
+        self.assertTrue(diffs.mask.eq(df.m).all())
+        self.assertEqual(diffs.n, 2)
+
+
+        diffs = single_col_diffs(df.b, df.a)
+        print(diffs)
+        print(diffs.mask.dtype)
+        self.assertTrue(diffs.mask.eq(df.m).all())
+        self.assertEqual(diffs.n, 2)
+
+    @tag
+    def testCreateRowDiffsMaskAndCounts(self):
+        f, t = False, True
+
+        m10000000 = pd.Series([t, f, f, f, f, f, f, f])
+        m01000000 = pd.Series([f, t, f, f, f, f, f, f])
+        m00100000 = pd.Series([f, f, t, f, f, f, f, f])
+        m00010000 = pd.Series([f, f, f, t, f, f, f, f])
+        m00001000 = pd.Series([f, f, f, f, t, f, f, f])
+        m00000100 = pd.Series([f, f, f, f, f, t, f, f])
+        m00000010 = pd.Series([f, f, f, f, f, f, t, f])
+        m00000001 = pd.Series([f, f, f, f, f, f, f, t])
+
+        expected1 = pd.Series([t, f, f, f, f, f, f, f])
+        expected2 = pd.Series([t, t, f, f, f, f, f, f])
+        expected3 = pd.Series([t, t, t, f, f, f, f, f])
+        expected4 = pd.Series([t, t, t, t, f, f, f, f])
+        expected5 = pd.Series([t, t, t, t, t, f, f, f])
+        expected6 = pd.Series([t, t, t, t, t, t, f, f])
+        expected7 = pd.Series([t, t, t, t, t, t, t, f])
+        expected8 = pd.Series([t, t, t, t, t, t, t, t])
+
+        masks = [
+            m10000000, m01000000, m00100000, m00010000,
+            m00001000, m00000100, m00000010, m00000001
+        ]
+
+        combined = create_row_diffs_mask(masks[:1])
+        counts = create_row_diff_counts(masks[:1])
+        self.assertEqual(combined.eq(expected1).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] + [0] * 7)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:2])
+        counts = create_row_diff_counts(masks[:2])
+        self.assertEqual(combined.eq(expected2).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 2 + [0] * 6)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:3])
+        counts = create_row_diff_counts(masks[:3])
+        self.assertEqual(combined.eq(expected3).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 3 + [0] * 5)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:4])
+        counts = create_row_diff_counts(masks[:4])
+        self.assertEqual(combined.eq(expected4).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 4 + [0] * 4)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:5])
+        counts = create_row_diff_counts(masks[:5])
+        self.assertEqual(combined.eq(expected5).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 5 + [0] * 3)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:6])
+        counts = create_row_diff_counts(masks[:6])
+        self.assertEqual(combined.eq(expected6).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 6 + [0] * 2)).sum(), 8)
+
+        combined = create_row_diffs_mask(masks[:7])
+        counts = create_row_diff_counts(masks[:7])
+        self.assertEqual(combined.eq(expected7).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 7 + [0])).sum(), 8)
+
+        combined = create_row_diffs_mask(masks)
+        counts = create_row_diff_counts(masks)
+        self.assertEqual(combined.eq(expected8).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series([1] * 8)).sum(), 8)
+
+        expecteds = [
+            expected1, expected2, expected3, expected4,
+            expected5, expected6, expected7, expected8
+        ]
+        counts = create_row_diff_counts(expecteds)
+        c87654321 = pd.Series([8, 7, 6, 5, 4, 3, 2, 1])
+        self.assertEqual(counts.eq(c87654321).sum(), 8)
+
+        m_evens = pd.Series([t, f, t, f, t, f, t, f])
+        m_odds  = pd.Series([f, t, f, t, f, t, f, t])
+        m11111111 = pd.Series([t, t, t, t, t, t, t, t])
+        c11111111 = pd.Series([1] * 8)
+
+        odd_even = [m_odds, m_evens]
+        combined = create_row_diffs_mask(odd_even)
+        counts = create_row_diff_counts(odd_even)
+        self.assertEqual(combined.eq(m11111111).sum(), 8)
+        self.assertEqual(counts.eq(pd.Series(c11111111)).sum(), 8)
+
 
 def four_squares():
     return pd.DataFrame({
