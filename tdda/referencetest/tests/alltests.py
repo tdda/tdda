@@ -13,6 +13,7 @@ from tdda.referencetest.tests.teststrings import *
 from tdda.referencetest.tests.testfiles import *
 from tdda.referencetest.tests.testpandas import *
 from tdda.referencetest.tests.testregeneration import *
+from tdda.referencetest.tests.testdfcomparisons import *
 
 if __name__ == '__main__':
     unittest.main()

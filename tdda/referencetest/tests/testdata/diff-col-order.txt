@@ -1,0 +1,6 @@
+Data frames have different column structure.
+Different column ordering between data frames.
+  Actual ordering: squares row
+Expected ordering: row squares
+Compare with:
+    diff A/actual-df001.parquet B/expected-df001.parquet

@@ -10,6 +10,7 @@ from tdda.referencetest.checkpandas import (
     create_row_diffs_mask,
     create_row_diff_counts,
 )
+from tdda.referencetest.basecomparison import DataFrameDiffs
 
 
 import os
@@ -45,10 +46,14 @@ class TestOne(ReferenceTestCase):
         c = PandasComparison()
         ref = four_squares()
         actual = four_squares_and_ten()
+        c.verbose = False
         r = c.check_dataframe(actual, ref)
         self.assertEqual(r.failures, 1)
-        print(r.diffs)
-        print(r.diffs.df)
+        self.assertStringCorrect(str(r.diffs), fp('one-diff-in-mem.txt'),
+            ignore_patterns=[
+                r'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+            ])
+        self.assertEqual(str(r.diffs.df), str(DataFrameDiffs()))
 
     def testDiffColTypeInMemIntStr(self):
         c = PandasComparison()
@@ -57,8 +62,12 @@ class TestOne(ReferenceTestCase):
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
-        print(r.diffs)
-        print(r.diffs.df)
+        self.assertStringCorrect(str(r.diffs), fp('diff-col-types-int-str.txt'),
+            ignore_patterns=[
+                r'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+            ])
+        self.assertStringCorrect(str(r.diffs.df),
+            fp('ddiff-col-types-int-str.txt'))
 
     def testDiffColTypeInMemIntFloat(self):
         c = PandasComparison()
@@ -67,10 +76,19 @@ class TestOne(ReferenceTestCase):
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
-        print(r.diffs)
-        print(r.diffs.df)
+        self.assertStringCorrect(
+            str(r.diffs),
+            fp('diff-col-types-int-float.txt'),
+            ignore_patterns=[
+                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+            ]
+        )
+        self.assertStringCorrect(
+            str(r.diffs.df),
+            fp('ddiff-col-types-int-float.txt')
+        )
 
-    def testDiffColTypeInMemIntFloat(self):
+    def testDiffColOrderInMem(self):
         c = PandasComparison()
         ref = four_squares()
         actual = pd.DataFrame({
@@ -80,8 +98,18 @@ class TestOne(ReferenceTestCase):
         self.assertEqual(list(reversed(list(actual))), list(ref))
         r = c.check_dataframe(actual, ref)
         self.assertEqual(r.failures, 1)
-        print(r.diffs)
-        print(r.diffs.df)
+        self.assertStringCorrect(
+            str(r.diffs),
+            fp('diff-col-order.txt'),
+            ignore_patterns=[
+                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+            ]
+        )
+
+        self.assertStringCorrect(
+            str(r.diffs.df),
+            fp('ddiff-col-order.txt')
+        )
 
     def testSingleColDiffs(self):
         df = pd.DataFrame({
@@ -92,19 +120,14 @@ class TestOne(ReferenceTestCase):
             'm': [False, True, True, False],
         })
         diffs = single_col_diffs(df.A, df.B)
-        print(diffs)
-        print(diffs.mask.dtype)
         self.assertTrue(diffs.mask.eq(df.m).all())
         self.assertEqual(diffs.n, 2)
 
 
         diffs = single_col_diffs(df.b, df.a)
-        print(diffs)
-        print(diffs.mask.dtype)
         self.assertTrue(diffs.mask.eq(df.m).all())
         self.assertEqual(diffs.n, 2)
 
-    @tag
     def testCreateRowDiffsMaskAndCounts(self):
         f, t = False, True
 
@@ -209,6 +232,8 @@ def write_ref():
     df.to_parquet(PQ_REF4_PATH, index=False)
     df.to_csv(CSV_REF4_PATH, index=False)
 
+def fp(path):
+    return os.path.join(TESTDATA, path)
 
 
 if __name__ == '__main__':

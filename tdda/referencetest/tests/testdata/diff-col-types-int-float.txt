@@ -1,0 +1,4 @@
+Data frames have different column structure.
+Wrong column type for field squares actual: float64; expected: int64)
+Compare with:
+    diff A/actual-df001.parquet B/expected-df001.parquet

@@ -1,0 +1,10 @@
+DataFrameDiffs(
+    field_types: {},
+    missing: {},
+    extra: {},
+    actual_order: ['squares', 'row'],
+    expected_order: ['row', 'squares'],
+    actual_length: None,
+    expected_length: None,
+    diff: None
+)

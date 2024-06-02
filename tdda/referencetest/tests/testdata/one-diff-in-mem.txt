@@ -1,0 +1,8 @@
+Contents check failed.
+Column values differ: squares
+Difference:
+row actual expected
+  2     10        4
+
+Compare with:
+    diff A/actual-df001.parquet B/expected-df001.parquet

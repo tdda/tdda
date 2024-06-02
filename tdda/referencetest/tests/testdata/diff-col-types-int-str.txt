@@ -1,0 +1,4 @@
+Data frames have different column structure.
+Wrong column type for field squares actual: object; expected: int64)
+Compare with:
+    diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df001.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df001.parquet
