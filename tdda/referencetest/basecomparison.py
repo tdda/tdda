@@ -18,6 +18,8 @@ import tempfile
 
 from collections import namedtuple
 
+from rich.table import Table
+
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
@@ -37,7 +39,7 @@ class BaseComparison(object):
         The optional print_fn parameter is a function to be used to
         display information while comparison operations are running.
         If specified, it should be a function with the same signature
-        as python's builtin print function.
+        as python's builtin print fsunction.
         """
         self.print_fn = print_fn
         self.verbose = verbose
@@ -136,7 +138,7 @@ class BaseComparison(object):
 
 
 
-class Diffs(object):
+class Diffs:
     """
     Class for representing a list of differences
     resulting from applying comparisons to a set of pairs of actual/expected
@@ -193,12 +195,73 @@ class SameStructureDDiff:
     Container for information about differences betwee data frames
     with the same structure.
     """
-    def __init__(self, diff_df, row_counts, n_vals, n_cols, n_rows):
+    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows):
+        self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
-        self.diff_df = diff_df      # keyed on common column name
-        self.row_diff_counts = row_counts # mask for rows with any differences
+        self.diff_df = diff_df            # keyed on common column name
+        self.row_diff_counts = row_counts # count of diffs on each row
+
+    def __str__(self):
+        lines = [
+            'Difference summary. ',
+            'DataFrames have same structure, but different values.',
+        ]
+        tot_vals = self.shape[0] * self.shape[1]
+        prop_diffs = 100 * self.n_diff_values / tot_vals
+        lines.extend([
+
+            f'Total number of different values: {self.n_diff_values:,}'
+            f' of {tot_vals:,} ({prop_diffs:.2f}%).',
+
+            f'Total number of rows with differences: {self.n_diff_rows:,}',
+            f'Total number of columns with differences: {self.n_diff_cols:,}:',
+        ])
+        for c in self.diff_df:
+            n = self.diff_df[c].sum()
+            lines.append(f'  {n:10,}: {c}')
+
+        return '\n'.join(lines)
+
+    def details_table(self, df, ref_df, target_rows=10):
+        n = min(target_rows, self.n_diff_rows)
+        cols = list(self.diff_df)
+        m = len(cols)
+#        if self.n_diff_rows <= n:
+        if True:
+            # Extract small dataframes with diffs  n x m
+            L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
+            R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
+            table = Table(
+                'Value Differences [red]actual[/red] [green]expected[/green]'
+            )
+            indexes = L.index.to_list()
+            table.add_column('row', justify='right')
+            for col in cols:
+                table.add_column(col, justify='right')
+            for row in range(n):
+                l_vals = [L.iat[n, m].item() for c in range(m)]
+                r_vals = [R.iat[n, m].item() for c in range(m)]
+                lstr = [
+                    '[red]{left}[/red]' if left == right else str(left)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                rstr = [
+                    '[green]{right}[/green]' if left == right else str(right)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                table.add_row(indexes[row], *lstr)
+                table.add_row(indexes[row], *rstr)
+            return table
+        else:
+            pass
+            # find ones with most diffs (n=target-rows)
+            # see which cols are covered
+            # For the ones not covered
+            # Find the first one
+            # Get the indexes for all those
+            # Show them
 
 
 
@@ -282,7 +345,7 @@ class DataFrameDiffs:
             msgs.append('Dataframes have same length')
 
         if self.diff:
-            pass
+            msgs.append(str(self.diff))
 
         return'\n'.join(msgs)
 

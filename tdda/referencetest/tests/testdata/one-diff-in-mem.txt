@@ -1,8 +1,8 @@
-Contents check failed.
-Column values differ: squares
-Difference:
-row actual expected
-  2     10        4
-
+Difference summary. 
+DataFrames have same structure, but different values.
+Total number of different values: 1 of 8 (12.50%).
+Total number of rows with differences: 1
+Total number of columns with differences: 1:
+           1: squares
 Compare with:
-    diff A/actual-df001.parquet B/expected-df001.parquet
+    diff /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/actual-df001.parquet /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/expected-df001.parquet

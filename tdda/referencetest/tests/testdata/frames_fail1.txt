@@ -1,11 +1,7 @@
-Contents check failed.
-Column values differ: b
-Differences:
-row actual expected
-  0 1.0001   1.0002
-  1 2.0001   2.0002
-  2 3.0001   3.0002
-  3 4.0001   4.0002
-  4 5.0001   5.0002
-
+Difference summary. 
+DataFrames have same structure, but different values.
+Total number of different values: 5 of 10 (50.00%).
+Total number of rows with differences: 5
+Total number of columns with differences: 1:
+           5: b
 Compare with:

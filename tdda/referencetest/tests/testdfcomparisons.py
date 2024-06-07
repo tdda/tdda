@@ -1,4 +1,7 @@
+import os
+
 import pandas as pd
+from rich import print as rprint
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
@@ -14,7 +17,6 @@ from tdda.referencetest.checkpandas import (
 from tdda.referencetest.basecomparison import DataFrameDiffs
 
 
-import os
 
 TESTDATA = os.path.join(os.path.dirname(__file__), 'testdata')
 PQ_REF4_PATH = os.path.join(TESTDATA, 'four-squares.parquet')
@@ -81,7 +83,6 @@ class TestOne(ReferenceTestCase):
             ignore_patterns=[
                 r'diff .*/actual-df001.parquet .*/expected-df001.parquet'
             ])
-        self.assertEqual(str(r.diffs.df), str(DataFrameDiffs()))
 
     def testDiffColTypeInMemIntStr(self):
         c = PandasComparison()
@@ -352,6 +353,16 @@ class TestOne(ReferenceTestCase):
             'd': pd.Series([True, False, False]),
         })
         self.assertTrue(ddiff.diff_df.equals(expected))
+
+#    @tag
+    def atest_ddiff_values_output(self):
+        df = four_squares()
+        rdf = four_squares_and_ten()
+        diff = same_structure_dataframe_diffs(df, rdf)
+        rprint(diff)
+        rprint('\n\n\n')
+        rprint(diff.details_table(df, rdf))
+
 
 
 

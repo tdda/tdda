@@ -279,7 +279,12 @@ class PandasComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            return self.same_structure_summary_diffs(df, ref_df, diffs)
+            #return self.same_structure_summary_diffs(df, ref_df, diffs)
+            diffs.df.diff = same_structure_dataframe_diffs(df, ref_df)
+            n_diffs = diffs.df.diff.n_diff_values
+            if n_diffs:
+                diffs.append(str(diffs.df.diff))
+            return n_diffs
 
     def same_structure_summary_diffs(self, df, ref_df, diffs):
         """
@@ -882,12 +887,15 @@ def same_structure_dataframe_diffs(df, ref_df):
     n_cols = len(d)  # number of columns with differences
 
     if n_vals > 0:
-        if n_cols > 1:
-            D = create_row_diff_counts(list(d.values()))
-            n_rows = (D > 0).sum().item()  # number of rows with differences
-            row_diff_counts = DiffCounts(D, n_rows)
+        D = create_row_diff_counts(list(d.values()))
+        n_rows = (D > 0).sum().item()  # number of rows with differences
+        row_diff_counts = DiffCounts(D, n_rows)
+    else:
+        n_rows = 0
+        row_diff_counts = None
 
-    return SameStructureDDiff(pd.DataFrame(d), row_diff_counts,
+    return SameStructureDDiff(df.shape,
+                              pd.DataFrame(d), row_diff_counts,
                               n_vals, n_cols, n_rows)
 
 
