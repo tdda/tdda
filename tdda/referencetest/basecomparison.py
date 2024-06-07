@@ -23,6 +23,7 @@ FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
 ColDiff = namedtuple('ColDiff', 'mask n')
+DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 
 class BaseComparison(object):
@@ -192,17 +193,20 @@ class SameStructureDDiff:
     Container for information about differences betwee data frames
     with the same structure.
     """
-    def __init__(self, diff_masks, row_counts, n_vals, n_cols, n_rows):
+    def __init__(self, diff_df, row_counts, n_vals, n_cols, n_rows):
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
-        self.diff_masks = diff_masks      # keyed on common column name
+        self.diff_df = diff_df      # keyed on common column name
         self.row_diff_counts = row_counts # mask for rows with any differences
 
 
 
 class DataFrameDiffs:
-    def __init__(self):
+    def __init__(self, leftname='actual', rightname='expected',
+                 verbose=False):
+        self.leftname = leftname
+        self.rightname = rightname
         self.field_types = {}      # keyed on name; value is FieldDiff
         self.missing = {}          # keyed on name: value is dtype
         self.extra = {}            # keyed on name: value is dtype
@@ -210,6 +214,8 @@ class DataFrameDiffs:
         self.expected_order = []   # list of field names
         self.actual_length = None
         self.expected_length = None
+        self.type_matching = 'exact'
+        self.verbose = verbose
 
         self.diff = None           # SameStructureDDiff
 
@@ -222,9 +228,63 @@ class DataFrameDiffs:
                     self.expected_length is not None))
 
     def __str__(self):
-        s = ',\n'.join(f'    {k}: {v}' for k, v in self.__dict__.items())
-        return f'DataFrameDiffs(\n{s}\n)'
+        msgs = []
+        n = len(self.rightname) - len(self.leftname)
+        lpad = ' ' * (n if n > 0 else 0)
+        rpad = ' ' * (-n if n < 0 else 0)
+        lname = self.leftname
+        rname = self.rightname
 
+        if self.field_types:
+            msgs.append('Field types differ')
+            for c, v in self.field_types.items():
+                msgs.append(
+                    f'  {c}: {lname} {v.actual}; {rname} {v.expected}'
+                )
+            msgs.append('')
+        elif self.verbose:
+            msgs.append(
+                f'All Field types: match at level {self.typematching}.'
+            )
+
+        if self.extra or self.missing:
+            if self.extra:
+                msgs.append(f'Unexpected fields in {lname}:')
+                for c in extras:
+                    msgs.append(f'  {c}')
+            if self.extra:
+                msgs.append(f'Fields missing from {lname}:')
+                for c in missing:
+                    msgs.append(f'  {c}')
+        elif self.verbose:
+            msgs.append('Same fields in both dataframes.')
+
+        if self.actual_order or self.expected_order:  # could be and; should
+                                                      # both be empty or full
+            msgs.append('Different field orders.')
+            L = ', '.join(self.actual_order)
+            R = ', '.join(self.expected_order)
+            msgs.append(f'  {lpad}{lname}: {L}')
+            msgs.append(f'  {rpad}{rname}: {R}')
+        elif self.verbose:
+            msgs.append('Field order is same.')
+
+        if self.actual_length or self.expected_length:  # could be and; should
+                                                        # both be empty or full
+            delta = self.actual_length - self.expected_length
+            desc = 'more' if delta > 0 else 'fewer'
+            delta = abs(delta)
+            s = '' if delta == 1 else 's'
+            msgs.append(f'{lname} has {delta:,} {desc} row{s} than {rname}')
+            msgs.append(f'  {lname}: {self.actual_length}')
+            msgs.append(f'  {rname}: {self.expected_length}')
+        elif self.verbose:
+            msgs.append('Dataframes have same length')
+
+        if self.diff:
+            pass
+
+        return'\n'.join(msgs)
 
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'

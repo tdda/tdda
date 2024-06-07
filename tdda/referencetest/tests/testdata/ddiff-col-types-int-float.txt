@@ -1,10 +1,2 @@
-DataFrameDiffs(
-    field_types: {'squares': FieldDiff(actual=dtype('float64'), expected=dtype('int64'))},
-    missing: {},
-    extra: {},
-    actual_order: [],
-    expected_order: [],
-    actual_length: None,
-    expected_length: None,
-    diff: None
-)
+Field types differ
+  squares: actual float64; expected int64

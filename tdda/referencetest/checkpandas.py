@@ -19,6 +19,7 @@ from tdda.referencetest.basecomparison import (
     Diffs,
     FailureDiffs,
     ColDiff,
+    DiffCounts,
     SameStructureDDiff
 )
 from tdda.referencetest.pddates import infer_date_format
@@ -874,19 +875,20 @@ def same_structure_dataframe_diffs(df, ref_df):
     d = {}
     n_vals = 0   # total number of values with diffenrences
     for c in list(df):
-        diffs = single_col_diff(df[c], ref_df[c])
+        diffs = single_col_diffs(df[c], ref_df[c])
         if diffs.n > 0:
-            d[c] = diff
-            n_vals += diff.n
+            d[c] = diffs.mask
+            n_vals += diffs.n
     n_cols = len(d)  # number of columns with differences
 
     if n_vals > 0:
         if n_cols > 1:
-            d = create_row_diffs_mask(list(d.values()))
-            n_rows = d.sum().item()  # number of rows with differences
-            row_diffs = ColDiff(d, n_row)
+            D = create_row_diff_counts(list(d.values()))
+            n_rows = (D > 0).sum().item()  # number of rows with differences
+            row_diff_counts = DiffCounts(D, n_rows)
 
-    return SameStructureDDiff(d, row_diffs, n_vals, n_cols, n_rows)
+    return SameStructureDDiff(pd.DataFrame(d), row_diff_counts,
+                              n_vals, n_cols, n_rows)
 
 
 def single_col_diffs(L, R):
