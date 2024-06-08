@@ -5,5 +5,8 @@ pandas >= 2.0
 pyarrow >= 15.0
 pyyaml >= 6.0
 chardet >= 5.2
+rich >= 13.3
+
+
 
 

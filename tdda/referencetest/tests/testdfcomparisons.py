@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 from rich import print as rprint
+from rich.console import Console
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
@@ -354,14 +355,15 @@ class TestOne(ReferenceTestCase):
         })
         self.assertTrue(ddiff.diff_df.equals(expected))
 
-#    @tag
-    def atest_ddiff_values_output(self):
+    def test_ddiff_values_output(self):
         df = four_squares()
         rdf = four_squares_and_ten()
         diff = same_structure_dataframe_diffs(df, rdf)
-        rprint(diff)
-        rprint('\n\n\n')
-        rprint(diff.details_table(df, rdf))
+        table = diff.details_table(df, rdf)
+        result = rich_capture(table)
+        self.assertStringCorrect(str(diff), fp('ddiff-1-details.txt'))
+        self.assertStringCorrect(result, fp('ddiff-1-rich-table.txt'))
+
 
 
 
@@ -386,6 +388,14 @@ def write_ref():
 
 def fp(path):
     return os.path.join(TESTDATA, path)
+
+
+def rich_capture(content):
+    console = Console()
+    with console.capture() as capture:
+        console.print(content)
+    return capture.get()
+
 
 
 if __name__ == '__main__':

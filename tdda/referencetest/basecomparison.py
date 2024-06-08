@@ -13,6 +13,7 @@ Copyright (c) Stochastic Solutions Limited 2016-2022
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 
@@ -233,26 +234,48 @@ class SameStructureDDiff:
             # Extract small dataframes with diffs  n x m
             L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
-            table = Table(
-                'Value Differences [red]actual[/red] [green]expected[/green]'
-            )
-            indexes = L.index.to_list()
-            table.add_column('row', justify='right')
-            for col in cols:
-                table.add_column(col, justify='right')
-            for row in range(n):
-                l_vals = [L.iat[n, m].item() for c in range(m)]
-                r_vals = [R.iat[n, m].item() for c in range(m)]
+            indexes = [str(v) for v in L.index.to_list()]
+            rows = []
+            for r in range(n):
+                l_vals = [L.iat[r, c].item() for c in range(m)]
+                r_vals = [R.iat[r, c].item() for c in range(m)]
                 lstr = [
-                    '[red]{left}[/red]' if left == right else str(left)
+                    str(left) if left == right else f'[red]{left}[/red]'
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 rstr = [
-                    '[green]{right}[/green]' if left == right else str(right)
+                    str(right) if left == right else f'[green]{right}[/green]'
                     for (left, right) in zip(l_vals, r_vals)
                 ]
-                table.add_row(indexes[row], *lstr)
-                table.add_row(indexes[row], *rstr)
+                rows.append([indexes[r]] + lstr)
+                rows.append([indexes[r]] + rstr)
+            term_width = shutil.get_terminal_size((80, 20))[0]
+            widths = [
+                max(len(row[i]) for row in rows)
+                for i in range(n + 1)
+            ]
+            col_space = sum(widths)
+            table_width = col_space + m * 2
+            header_width = sum(len(name) for name in cols)
+            truncate = table_width > term_width and header_width > col_space
+            index_head = 'index'
+            if truncate:
+                if widths[0] < 3:
+                    index_head = ''
+                elif widths[0] < 5:
+                    index_head = 'idx'
+
+            truncated = ' (truncated)' if table_width > term_width else ''
+            table = Table(
+                title=f'Value Differences{truncated}',
+                title_style='bold'
+            )
+            table.add_column(index_head, justify='right')
+            for i, col in enumerate(cols, 1):
+                table.add_column(col, justify='right',
+                                 max_width=widths[i] if truncate else None)
+            for row in rows:
+                table.add_row(*row)
             return table
         else:
             pass
