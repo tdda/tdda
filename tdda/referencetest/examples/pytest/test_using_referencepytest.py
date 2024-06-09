@@ -71,6 +71,26 @@ def testExampleCSVGeneration(ref):
 
 
 @pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
+def testExampleParquetFileGeneration(ref):
+    """
+    This test uses generate_dataframe() from dataframes.py to
+    generate a simple Pandas dataframe, and then saves it to a parquet
+    file.
+
+    The test checks the generated parquet file is as expected,
+    in terms of both
+    data content (the values) and metadata (the types, order, etc)
+    of the columns.
+    """
+    outpath = os.path.join(ref.tmp_dir, 'dataframe_result.parquet')
+    df = generate_dataframe()
+    df.to_parquet(outpath, index=False)
+    columns = ref.all_fields_except(['random'])
+    ref.assertOnDiskDataFrameCorrect(outpath, 'dataframe_result.parquet',
+                                     check_data=columns,
+                                     check_types=columns)
+
+@pytest.mark.skipif(generate_dataframe is None, reason='Pandas tests skipped')
 def testExampleMultipleCSVGeneration(ref):
     """
     This test uses generate_dataframe() from dataframes.py to
@@ -91,6 +111,32 @@ def testExampleMultipleCSVGeneration(ref):
     ref.assertCSVFilesCorrect([outpath1, outpath2],
                               ['dataframe_result.csv', 'dataframe_result2.csv'],
                               check_data=columns)
+
+def testExampleMultipleParquetFileGeneration(ref):
+    """
+    This test uses generate_dataframe() from dataframes.py to
+    generate two simple Pandas dataframe, and then saves each to
+    a parquet file.
+
+    The test checks the generated parquet files are as expected,
+    in terms of both data content (the values) and metadata (the types,
+    order, etc) of the columns.
+
+    This test is tagged, so it will run if called with ``--tagged`` or
+    ``-1``.
+    """
+    df1 = generate_dataframe(nrows=10)
+    df2 = generate_dataframe(nrows=20)
+    outpath1 = os.path.join(ref.tmp_dir, 'dataframe_result1.parquet')
+    outpath2 = os.path.join(ref.tmp_dir, 'dataframe_result2.parquet')
+    df1.to_parquet(outpath1, index=False)
+    df2.to_parquet(outpath2, index=False)
+    columns = ref.all_fields_except(['random'])
+    ref.assertOnDiskDataFramesCorrect([outpath1, outpath2],
+                                       ['dataframe_result.parquet',
+                                        'dataframe_result2.parquet'],
+                                       check_data=columns)
+
 
 
 def testExampleStringGeneration(ref):

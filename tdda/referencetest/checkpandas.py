@@ -403,9 +403,9 @@ class PandasComparison(BaseComparison):
         Args:
 
             *actual_path*
-                            Pathname for actual CSV file.
+                            Pathname for actual CSV/Parquet file.
             *expected_path*
-                            Pathname for expected CSV file.
+                            Pathname for expected CSV/Parquet file.
             *loader*
                             A function to use to read a CSV file to obtain
                             a pandas dataframe. If None, then a default CSV
@@ -653,9 +653,34 @@ class PandasComparison(BaseComparison):
         if ext == '.parquet':
             df.to_parquet(path)
         else:
-            self.write_csv(path, writer, **kwargs)
+            self.write_csv(df, path, writer, **kwargs)
         if verbose:
             print(f'*** Written {path}.')
+
+    def _write_reference_dataframe_from_file(
+        self, actual_path, ref_path, writer=None, verbose=False, **kwargs
+    ):
+        """
+        Function for saving a Pandas DataFrame to a CSV file.
+        Used when regenerating DataFrame reference results.
+        """
+        df = self.load_serialized_dataframe(actual_path)
+        self._write_reference_dataframe(df, ref_path, writer=writer,
+                                        verbose=verbose, **kwargs)
+
+    def _write_reference_dataframes_from_files(
+        self, actual_path, ref_path, writer=None, verbose=False, **kwargs
+    ):
+        """
+        Function for saving a Pandas DataFrame to a CSV file.
+        Used when regenerating DataFrame reference results.
+        """
+        for (actual_path, ref_path) in zip(actual_paths, ref_paths):
+            df = self.load_serialized_dataframe(actual_path)
+            self._write_reference_dataframe_from_file(
+                actual_path, ref_path, writer=writer,
+                verbose=verbose, **kwargs
+            )
 
 
 class PandasNotImplemented(object):

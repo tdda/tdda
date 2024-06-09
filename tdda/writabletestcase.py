@@ -113,7 +113,7 @@ def report_failure(actual_path, expected_path, ignore_patterns):
     and expected files. Also notes any exclusions in the comparison.
     """
     print('\nFile check failed.')
-    print('Compare with "diff %s %s".\n' % (actual_path, expected_path))
+    print('Compare with "diff %s %s".\n' % (actual_path, expected_path)
     if ignore_patterns:
         print('Note exclusions:')
         for pattern in ignore_patterns:

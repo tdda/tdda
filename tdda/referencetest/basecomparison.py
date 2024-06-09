@@ -60,16 +60,17 @@ class BaseComparison(object):
     def compare_with(actual, expected, qualifier=None, binary=False,
                      custom_diff_cmd=''):
         qualifier = '' if not qualifier else (qualifier + ' ')
+        f = lambda p: os.path.normpath(os.path.abspath(p))
         if os.path.exists(expected):
-            if binary:
-                return None
-            else:
+#            if binary:
+#                return None
+#            else:
                 msg = 'Compare %swith:\n    %s %s %s\n'
                 cmd = custom_diff_cmd or diffcmd()
         else:
             msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
             cmd = copycmd()
-        return msg % (qualifier, cmd, actual, expected)
+        return msg % (qualifier, cmd, f(actual), f(expected))
 
     def tmp_path_for(self, path, prefix='actual-'):
         return os.path.join(self.tmp_dir, prefix + os.path.basename(path))

@@ -44,6 +44,7 @@ except ImportError:
 
 @unittest.skipIf(generate_dataframe is None, 'Pandas tests skipped')
 class TestStructuredDataExample(ReferenceTestCase):
+
     def testExampleDataFrameGeneration(self):
         """
         This test uses generate_dataframe() from dataframes.py to
@@ -67,12 +68,32 @@ class TestStructuredDataExample(ReferenceTestCase):
         data content (the values) and metadata (the types, order, etc)
         of the columns.
         """
-        outpath = os.path.join(self.tmp_dir, 'csv_result.csv')
+        outpath = os.path.join(self.tmp_dir, 'dataframe_result.csv')
         df = generate_dataframe()
         df.to_csv(outpath, index=False)
         columns = self.all_fields_except(['random'])
-        self.assertCSVFileCorrect(outpath, 'dataframe_result.csv',
-                                  check_data=columns, check_types=columns)
+        self.assertOnDiskDataFrameCorrect(outpath, 'dataframe_result.csv',
+                                          check_data=columns,
+                                          check_types=columns)
+
+    def testExampleParquetFileGeneration(self):
+        """
+        This test uses generate_dataframe() from dataframes.py to
+        generate a simple Pandas dataframe, and then saves it to a parquet
+        file.
+
+        The test checks the generated parquet file is as expected,
+        in terms of both
+        data content (the values) and metadata (the types, order, etc)
+        of the columns.
+        """
+        outpath = os.path.join(self.tmp_dir, 'dataframe_result.parquet')
+        df = generate_dataframe()
+        df.to_parquet(outpath, index=False)
+        columns = self.all_fields_except(['random'])
+        self.assertOnDiskDataFrameCorrect(outpath, 'dataframe_result.parquet',
+                                          check_data=columns,
+                                          check_types=columns)
 
     @tag
     def testExampleMultipleCSVGeneration(self):
@@ -90,8 +111,8 @@ class TestStructuredDataExample(ReferenceTestCase):
         """
         df1 = generate_dataframe(nrows=10)
         df2 = generate_dataframe(nrows=20)
-        outpath1 = os.path.join(self.tmp_dir, 'csv_result1.csv')
-        outpath2 = os.path.join(self.tmp_dir, 'csv_result2.csv')
+        outpath1 = os.path.join(self.tmp_dir, 'dataframe_result1.csv')
+        outpath2 = os.path.join(self.tmp_dir, 'dataframe_result2.csv')
         df1.to_csv(outpath1, index=False)
         df2.to_csv(outpath2, index=False)
         columns = self.all_fields_except(['random'])
@@ -99,6 +120,32 @@ class TestStructuredDataExample(ReferenceTestCase):
                                   ['dataframe_result.csv',
                                    'dataframe_result2.csv'],
                                   check_data=columns)
+
+    @tag
+    def testExampleMultipleParquetFileGeneration(self):
+        """
+        This test uses generate_dataframe() from dataframes.py to
+        generate two simple Pandas dataframe, and then saves each to
+        a parquet file.
+
+        The test checks the generated parquet files are as expected,
+        in terms of both data content (the values) and metadata (the types,
+        order, etc) of the columns.
+
+        This test is tagged, so it will run if called with ``--tagged`` or
+        ``-1``.
+        """
+        df1 = generate_dataframe(nrows=10)
+        df2 = generate_dataframe(nrows=20)
+        outpath1 = os.path.join(self.tmp_dir, 'dataframe_result1.parquet')
+        outpath2 = os.path.join(self.tmp_dir, 'dataframe_result2.parquet')
+        df1.to_parquet(outpath1, index=False)
+        df2.to_parquet(outpath2, index=False)
+        columns = self.all_fields_except(['random'])
+        self.assertOnDiskDataFramesCorrect([outpath1, outpath2],
+                                           ['dataframe_result.parquet',
+                                            'dataframe_result2.parquet'],
+                                           check_data=columns)
 
 
 @tag

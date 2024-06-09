@@ -206,8 +206,8 @@ class DatasetConstraints(object):
         now = datetime.datetime.now()
         utcnow = datetime.datetime.utcnow()
         self.as_at = as_at
-        self.local_time = now.strftime('%Y-%m-%d %H:%H:%S')
-        self.utc_time = utcnow.strftime('%Y-%m-%d %H:%H:%S')
+        self.local_time = now.isoformat(timespec='seconds')
+        self.utc_time = utcnow.isoformat(timespec='seconds')
         self.host = socket.gethostname()
         try:    # Issue 18: getuser() can fail under Docker with password
                 # files with no non-root users

@@ -494,9 +494,10 @@ class ReferenceTest(object):
             kind = 'csv'  # it's just a key; can be parquet
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_file(actual_path, expected_path)
+            self._write_reference_dataframe_from_file(actual_path,
+                                                      expected_path)
         else:
-            r = self.pandas.check_csv_file(
+            r = self.pandas.check_serialized_dataframe(
                 actual_path,
                 expected_path,
                 check_data=check_data,
@@ -529,7 +530,7 @@ class ReferenceTest(object):
         Legacy convenience method with second parameter called ref_csv.
         Just calls assertOnDiskDataFrameCorrect.
         """
-        return assertOnDiskDataFrameCorrect(
+        return self.assertOnDiskDataFrameCorrect(
             actual_path,
             ref_csv,
             kind='kind',
@@ -604,11 +605,12 @@ class ReferenceTest(object):
         if kind == 'parquet':
             kind = 'csv'  # it's just a key; can be parquet
 
-        expected_paths = self._resolve_reference_paths(ref_csvs, kind=kind)
+        expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_files(actual_paths, expected_paths)
+            self._write_reference_dataframes_from_files(actual_paths,
+                                                        expected_paths)
         else:
-            r = self.pandas.check_csv_files(
+            r = self.pandas.check_serialized_dataframes(
                 actual_paths,
                 expected_paths,
                 check_data=check_data,
@@ -640,7 +642,7 @@ class ReferenceTest(object):
         """
         Legacy method that just calls assertOnDiskDataFramesCorrect.
         """
-        return assertOnDiskDataFramesCorrect(
+        return self.assertOnDiskDataFramesCorrect(
             actual_paths,
             ref_csvs,
             kind=kind,
@@ -649,7 +651,7 @@ class ReferenceTest(object):
             check_types=check_types,
             check_order=check_order,
             condition=condition,
-            sortby=soryby,
+            sortby=sortby,
             precision=precision,
             **kwargs,
         )

@@ -30,7 +30,7 @@ def generate_string():
     version = '1.0.0'
     copyright_year = '2016'
     inc_gendate = False
-    date = datetime.datetime.now().strftime('    %Y-%m-%dT%H:%M:%S')
+    date = '    ' + datetime.datetime.now().isoformat(timespec='seconds')
     generation_date = date if inc_gendate else ''
     spiral = generate_spiral()
 
