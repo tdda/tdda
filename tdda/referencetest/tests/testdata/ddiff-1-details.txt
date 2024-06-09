@@ -1,4 +1,4 @@
-Difference summary. 
+Difference summary: 
 DataFrames have same structure, but different values.
 Total number of different values: 1 of 8 (12.50%).
 Total number of rows with differences: 1

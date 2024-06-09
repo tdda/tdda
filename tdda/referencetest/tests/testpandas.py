@@ -26,7 +26,7 @@ def refloc(filename):
 @unittest.skipIf(pd is None, 'no pandas')
 class TestPandasDataFrames(ReferenceTestCase):
     def test_frames_ok(self):
-        compare = PandasComparison()
+        compare = PandasComparison(verbose=False)
         df1 = pd.DataFrame(
             {
                 'a': [1, 2, 3, 4, 5],
@@ -52,7 +52,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         )
 
     def test_frames_fail(self):
-        compare = PandasComparison()
+        compare = PandasComparison(verbose=False)
         df1 = pd.DataFrame(
             {
                 'a': [1, 2, 3, 4, 5],
@@ -82,14 +82,14 @@ class TestPandasDataFrames(ReferenceTestCase):
                                  ignore_lines=['diff '])
 
     def test_pandas_csv_ok(self):
-        compare = PandasComparison()
+        compare = PandasComparison(verbose=False)
         r = compare.check_csv_file(
             refloc('colours.txt'), refloc('colours.txt')
         )
         self.assertEqual(r, (0, []))
 
     def test_pandas_csv_fail(self):
-        compare = PandasComparison()
+        compare = PandasComparison(verbose=False)
         (code, errs) = compare.check_csv_file(
             refloc('single.txt'), refloc('colours.txt')
         )

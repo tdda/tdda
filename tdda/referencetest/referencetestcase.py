@@ -215,12 +215,10 @@ def _set_flags_from_argv(argv=None):
                 elif flag == '0':
                     check = True
                     arg = arg.replace('0', '')
-            if arg == '-':
-                argv = argv[:i+1] + argv[i+2:]
-            else:
-                argv = argv[:i+1] + [arg] + argv[i+2:]
+            argv[i] = '' if arg == '-' else arg
         else:
             break
+    argv = [a for a in argv if a]
 
     for quietflag in ('-wquiet', '--wquiet'):
         if quietflag in argv:

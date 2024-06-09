@@ -74,7 +74,7 @@ class TestOne(ReferenceTestCase):
         self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, CSV_REF4_PATH)
 
     def testOneDiffInMem(self):
-        c = PandasComparison()
+        c = PandasComparison(verbose=False)
         ref = four_squares()
         actual = four_squares_and_ten()
         c.verbose = False
@@ -86,7 +86,7 @@ class TestOne(ReferenceTestCase):
             ])
 
     def testDiffColTypeInMemIntStr(self):
-        c = PandasComparison()
+        c = PandasComparison(verbose=False)
         actual = four_squares()
         actual['squares'] = [str(sq) for sq in actual['squares']]
         expected = four_squares()
@@ -100,7 +100,7 @@ class TestOne(ReferenceTestCase):
             fp('ddiff-col-types-int-str.txt'))
 
     def testDiffColTypeInMemIntFloat(self):
-        c = PandasComparison()
+        c = PandasComparison(verbose=False)
         actual = four_squares()
         actual['squares'] = [float(sq) for sq in actual['squares']]
         expected = four_squares()
@@ -119,7 +119,7 @@ class TestOne(ReferenceTestCase):
         )
 
     def testDiffColOrderInMem(self):
-        c = PandasComparison()
+        c = PandasComparison(verbose=False)
         ref = four_squares()
         actual = pd.DataFrame({
             'squares': ref['squares'],

@@ -207,7 +207,7 @@ class SameStructureDDiff:
 
     def __str__(self):
         lines = [
-            'Difference summary. ',
+            'Difference summary: ',
             'DataFrames have same structure, but different values.',
         ]
         tot_vals = self.shape[0] * self.shape[1]
@@ -237,9 +237,10 @@ class SameStructureDDiff:
             R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             indexes = [str(v) for v in L.index.to_list()]
             rows = []
+            plain_rows = []
             for r in range(n):
-                l_vals = [L.iat[r, c].item() for c in range(m)]
-                r_vals = [R.iat[r, c].item() for c in range(m)]
+                l_vals = [py_val(L.iat[r, c]) for c in range(m)]
+                r_vals = [py_val(R.iat[r, c]) for c in range(m)]
                 lstr = [
                     str(left) if left == right else f'[red]{left}[/red]'
                     for (left, right) in zip(l_vals, r_vals)
@@ -250,10 +251,18 @@ class SameStructureDDiff:
                 ]
                 rows.append([indexes[r]] + lstr)
                 rows.append([indexes[r]] + rstr)
+                plstr = [
+                    str(left) for left in l_vals
+                ]
+                prstr = [
+                    str(right) for right in r_vals
+                ]
+                plain_rows.append([indexes[r]] + plstr)
+                plain_rows.append([indexes[r]] + prstr)
             term_width = shutil.get_terminal_size((80, 20))[0]
             widths = [
-                max(len(row[i]) for row in rows)
-                for i in range(n + 1)
+                max(len(row[i]) for row in plain_rows)
+                for i in range(m + 1)
             ]
             col_space = sum(widths)
             table_width = col_space + m * 2
@@ -266,9 +275,16 @@ class SameStructureDDiff:
                 elif widths[0] < 5:
                     index_head = 'idx'
 
-            truncated = ' (truncated)' if table_width > term_width else ''
+            truncated = ', cols truncated' if table_width > term_width else ''
+            s = '' if n == 1 else 's'
+            rows_desc = (
+                'all rows'
+                 if self.n_diff_rows <= n
+                 else f'First {n:,} row{s}'
+            )
+            title = f'Value Differences ({rows_desc}{truncated})'
             table = Table(
-                title=f'Value Differences{truncated}',
+                title=title,
                 title_style='bold'
             )
             table.add_column(index_head, justify='right')
@@ -388,3 +404,8 @@ def df_col_pos(c, df):
         return None
 
 
+def py_val(x):
+    try:
+        return x.item()
+    except AttributeError:
+        return x

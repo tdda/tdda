@@ -147,6 +147,8 @@ class PandasComparison(BaseComparison):
         extra_cols = []
         wrong_types = []
         wrong_ordering = False
+        df = replace_cats(df)
+        ref_df = replace_cats(ref_df)
         for c in check_types:
             if c not in list(df):
                 missing_cols.append(c)
@@ -643,7 +645,7 @@ class PandasComparison(BaseComparison):
         writer(df, csvfile, **kwargs)
 
     def _write_reference_dataframe(
-        self, df, path, writer=None, verbose=False, **kwargs
+        self, df, path, writer=None, **kwargs
     ):
         """
         Function for saving a Pandas DataFrame to a CSV file.
@@ -654,22 +656,21 @@ class PandasComparison(BaseComparison):
             df.to_parquet(path)
         else:
             self.write_csv(df, path, writer, **kwargs)
-        if verbose:
+        if self.verbose:
             print(f'*** Written {path}.')
 
     def _write_reference_dataframe_from_file(
-        self, actual_path, ref_path, writer=None, verbose=False, **kwargs
+        self, actual_path, ref_path, writer=None, **kwargs
     ):
         """
         Function for saving a Pandas DataFrame to a CSV file.
         Used when regenerating DataFrame reference results.
         """
         df = self.load_serialized_dataframe(actual_path)
-        self._write_reference_dataframe(df, ref_path, writer=writer,
-                                        verbose=verbose, **kwargs)
+        self._write_reference_dataframe(df, ref_path, writer=writer, **kwargs)
 
     def _write_reference_dataframes_from_files(
-        self, actual_path, ref_path, writer=None, verbose=False, **kwargs
+        self, actual_paths, ref_paths, writer=None, **kwargs
     ):
         """
         Function for saving a Pandas DataFrame to a CSV file.
@@ -678,8 +679,7 @@ class PandasComparison(BaseComparison):
         for (actual_path, ref_path) in zip(actual_paths, ref_paths):
             df = self.load_serialized_dataframe(actual_path)
             self._write_reference_dataframe_from_file(
-                actual_path, ref_path, writer=writer,
-                verbose=verbose, **kwargs
+                actual_path, ref_path, writer=writer, **kwargs
             )
 
 
@@ -994,3 +994,13 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
+
+
+def replace_cats(df):
+    cats = [c for c in df if str(df[c].dtype) == 'category']
+    if cats:
+        df = pd.DataFrame({
+            c: df[c].astype('string') if c in cats else df[c]
+            for c in df
+        })
+    return df

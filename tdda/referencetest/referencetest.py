@@ -494,8 +494,8 @@ class ReferenceTest(object):
             kind = 'csv'  # it's just a key; can be parquet
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_dataframe_from_file(actual_path,
-                                                      expected_path)
+            self.pandas._write_reference_dataframe_from_file(actual_path,
+                                                             expected_path)
         else:
             r = self.pandas.check_serialized_dataframe(
                 actual_path,
@@ -607,8 +607,8 @@ class ReferenceTest(object):
 
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
-            self._write_reference_dataframes_from_files(actual_paths,
-                                                        expected_paths)
+            self.pandas._write_reference_dataframes_from_files(actual_paths,
+                                                               expected_paths)
         else:
             r = self.pandas.check_serialized_dataframes(
                 actual_paths,

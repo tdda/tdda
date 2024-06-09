@@ -39,7 +39,8 @@ HELP="""Use
     tdda version       to print the TDDA version number
     tdda help          to print this help
     tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
-    tdda test          to run the tdda library's tests."""
+    tdda test          to run the tdda library's tests.
+    tdda diff a b      to compare two parquet or CSV files (EXPERIMENTAL)"""
 
 
 STANDARD_EXTENSIONS = [
@@ -84,6 +85,16 @@ def help(extensions, cmd=None, stream=sys.stdout):
             print('\ntdda gentest  -- to run the wizard\n'
                   'tdda gentest \'quoted shell command\' test_outputfile.py '
                   '[reference files]\n', file=stream)
+        elif cmd == 'diff':
+            print(
+                '\ntdda diff a b  -- compare csv or parquet files a and b.\n\n'
+                'This is experimental functionality.\n'
+                'Currently, it will always show summary differences, but\n'
+                'will only should differences in values if the data frames\n'
+                'that results from loading the files have the same structure\n'
+                '(number of rows and columns, column names, loose column '
+                'types).\n'
+                '[reference files]\n', file=stream)
         else:
             print('\nNo help available for %s. Try one of the following:\n'
                   '    tdda help discover\n'
@@ -190,6 +201,9 @@ def main_with_argv(argv, verbose=True):
     elif name == 'test':
         from tdda import testtdda
         testtdda.testall(module=testtdda, argv=['python'])
+    elif name == 'diff':
+        from tdda.referencetest.ddiff import ddiff_helper
+        ddiff_helper(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
         help(extensions, cmd, stream=sys.stderr)

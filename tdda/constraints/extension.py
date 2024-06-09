@@ -3,7 +3,7 @@
 """
 The ``tdda`` command-line utility provides built-in support for constraint
 discovery and verification for tabular data stored in CSV files, Pandas
-DataFrames saved in ``.feather`` files, and for a tables in a variety of
+DataFrames saved in ``.parquet`` files, and for a tables in a variety of
 different databases.
 
 The utility can be extended to provide support for constraint discovery
