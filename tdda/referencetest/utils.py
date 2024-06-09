@@ -102,3 +102,7 @@ def protected_readlines(path, filetype):
                 filetype.encoding = None
                 print('Could not read %s as text file; treating as binary'
                       % path, file=sys.stderr)
+
+
+def normabspath(p):
+    return os.path.normpath(os.path.abspath(p))

@@ -13,6 +13,7 @@ import unittest
 
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.referencetest.basecomparison import diffcmd
+from tdda.referencetest.utils import normabspath
 
 
 def refloc(filename):
@@ -77,7 +78,8 @@ class TestFiles(unittest.TestCase):
                 ],
             ),
         )
-        diff = '%s %s %s' % (diffcmd(), 'wrong.txt', refloc('single.txt'))
+        diff = '%s %s %s' % (diffcmd(), normabspath('wrong.txt'),
+                             refloc('single.txt'))
         self.assertEqual(
             r5,
             (
@@ -208,6 +210,10 @@ class TestFiles(unittest.TestCase):
         )
         # single2.txt is deliberately not readable in text mode in python3
         self.assertEqual(r1, (0, []))
+        diff2 = '%s %s %s' % (diffcmd(), refloc('single.txt'), refloc('double.txt'))
+        diff3 = '%s %s %s' % (diffcmd(), refloc('double.txt'), refloc('single.txt'))
+        diff4 = '%s %s %s' % (diffcmd(), refloc('single.txt'), refloc('single2.txt'))
+
         if os.name != 'nt':
             # on Windows, the results will depend on hard-to-predict
             # factors such as how the sources were obtained from git,
@@ -218,8 +224,9 @@ class TestFiles(unittest.TestCase):
                 (
                     1,
                     [
+                        'Compare with:\n    %s\n' % diff2,
                         'First difference at byte offset 14, '
-                        'actual length 14, expected length 28.'
+                        'actual length 14, expected length 28.',
                     ],
                 ),
             )
@@ -228,8 +235,9 @@ class TestFiles(unittest.TestCase):
                 (
                     1,
                     [
+                        'Compare with:\n    %s\n' % diff3,
                         'First difference at byte offset 14, '
-                        'actual length 28, expected length 14.'
+                        'actual length 28, expected length 14.',
                     ],
                 ),
             )
@@ -238,8 +246,9 @@ class TestFiles(unittest.TestCase):
                 (
                     1,
                     [
+                        'Compare with:\n    %s\n' % diff4,
                         'First difference at byte offset 2, '
-                        'both files have length 14.'
+                        'both files have length 14.',
                     ],
                 ),
             )
