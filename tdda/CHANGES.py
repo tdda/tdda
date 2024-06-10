@@ -786,7 +786,7 @@ gentest now uses chardet to guess the encoding of possible text files.
 22.05.2024 2.1.08
 Add chardet to rtdrequirements.
 
-###
+10.06.2024 2.2.00
 2.2 release. Change notes:
 
 * **2.2** Improvements to parquet file handling.
