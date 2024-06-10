@@ -843,6 +843,6 @@ Add chardet to rtdrequirements.
   and methods names more consistent, and better suited to a wider
   variety of file formats and back-end implementations.
 
-###
+10.06.2024 2.2.01
 Add rich to pyproject.toml
 """
