@@ -6,6 +6,65 @@ Recent Changes
 This Version
 ------------
 
+* **2.2** Improvements to parquet file handling.
+
+* **2.2** Have not (as threatened) removed for feather files yet
+  but will shortly, possibly even before 2.3, but a deprecation
+  warning has been added that shows when feather files are used.
+
+* **2.2** Added parquet files to various of the examples that users
+  get with `tdda examples`
+
+* **2.2** Fixed problem with categorical strings from parquet.
+
+* **2.2** Now use chardet to figure out (infer/guess)  encodings in `gentest`
+
+* **2.2** Added partial support for CSVW metadata (for CSV files)
+  and some tests and test data in CSVW format.
+
+* **2.2** Extended support for writing temporary files when tests fails
+  from strings/text files to dataframes, CSV files and Parquet files.
+  This also means that the dataframe methods can now re-write reference
+  results using -W/--write-all etc.
+
+* **2.2** Renamed some methods and parameters for DataFrame assertions
+  and comparisons. In particular
+   - `assertOnDiskDataFrameCorrect` replaces assertCSVFileCorrect,
+     with the path name not being `ref_path` rather than `ref_csv`.
+     The old method remains, and calls the new method.
+     The new methods works with parquet files as well as with CSV files.
+   - `assertOnDiskDataFramesCorrect` replaces assertCSVFilesCorrect,
+     with the path name not being `ref_paths` rather than `ref_csvs`.
+     The old method remains, and calls the new method.
+     The new methods works with parquet files as well as with CSV files.
+
+* **2.2** Better reporting of differences between data frames when
+  tests fail or comparisons show differences.
+
+* **2.2** Added experimental `tdda diff` command for comparing data frames
+  serialized as parquiet or CSV files.
+
+* **2.2** Add rich dependency and use rich to format dataframe diffs.
+
+* **2.2** Fixed bug in flag parsing that prevented multiple
+  single-character flags to be used separately, rather than combined.
+  (So `-1W` worked byt -1 -W` did not.)
+
+* **2.2** Fixed bug in the metadata written in constraints files.
+  The local and utc times were supposed to be written in ISO8601
+  format, but repeated %H in the format string instead of using %M.
+  Switched to use `.isoformat()`, and accepted its default `T`
+  separator in the datestamps, rather than sticking with space.
+
+* **2.2** Quite a lot of internal refactoring, making parameters
+  and methods names more consistent, and better suited to a wider
+  variety of file formats and back-end implementations.
+
+
+
+Previous Versions
+-----------------
+
 * **2.1** Upgrade pandas dependency to 2.0 and significantly
   improve compatibility with Pandas 2.0+.
 
@@ -21,10 +80,6 @@ This Version
 
 * **2.1** Experimental support for CSV metadata specification files.
   This is unstable, not fully documented, and subject to change.
-
-
-Previous Versions
------------------
 
 * **2.0.8 and 2.0.9** Fixed to IP address lookup in `gentest`.
 
