@@ -845,4 +845,7 @@ Add chardet to rtdrequirements.
 
 10.06.2024 2.2.01
 Add rich to pyproject.toml
+
+###
+Commit ddiff.py --- implements tdda diff
 """
