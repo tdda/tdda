@@ -27,7 +27,7 @@ class FileType:
         self.image  = self.ext in self.IMAGE_FILES
         self.encoding = 'iso-8859-1' if self.ext == 'pdf' else None
         if not self.image and not self.binary:
-            if self.ext == PDF:
+            if self.ext == 'pdf':
                 self.encoding = 'iso-8859-1'
             else:
                 detector = chardet.UniversalDetector()

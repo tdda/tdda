@@ -848,4 +848,10 @@ Add rich to pyproject.toml
 
 11.06.2024 2.2.02
 Commit ddiff.py --- implements tdda diff
+
+###
+Fix gentest issue.
+
+Also remove hey from gentest examples.
+(Was committed in error.)
 """
