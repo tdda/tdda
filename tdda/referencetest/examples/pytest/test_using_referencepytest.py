@@ -10,10 +10,6 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import sys
 import os
 import tempfile
@@ -121,9 +117,6 @@ def testExampleMultipleParquetFileGeneration(ref):
     The test checks the generated parquet files are as expected,
     in terms of both data content (the values) and metadata (the types,
     order, etc) of the columns.
-
-    This test is tagged, so it will run if called with ``--tagged`` or
-    ``-1``.
     """
     df1 = generate_dataframe(nrows=10)
     df2 = generate_dataframe(nrows=20)
@@ -170,7 +163,6 @@ def testExampleStringGeneration(ref):
                             ignore_substrings=['Copyright', 'Version'])
 
 
-@tag
 def testExampleFileGeneration(ref):
     """
     This test uses generate_file() from generators.py to generate some
@@ -197,7 +189,6 @@ def testExampleFileGeneration(ref):
     and it should re-write the reference output to match your
     modified results.
 
-    This test is tagged, so it will run if called with ``--tagged`` or ``-1``.
     """
     outdir = ref.tmp_dir
     outpath = os.path.join(outdir, 'file_result.html')
@@ -206,18 +197,14 @@ def testExampleFileGeneration(ref):
                               ignore_substrings=['Copyright', 'Version'])
 
 
-@tag
 class TestExampleInClass:
     """
     A test in a separate class
-
-    This class is tagged, so all tests in it will run if called with
-    ``--tagged`` or ``-1``.
     """
 
     def testExample(self, ref):
         """
-        A very simple example of a test within a tagged class.
+        A very simple example of a test
         """
         assert 3 < 4
 

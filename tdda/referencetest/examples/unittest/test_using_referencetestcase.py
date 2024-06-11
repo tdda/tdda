@@ -10,10 +10,6 @@ License: MIT
 Copyright (c) Stochastic Solutions Limited 2016-2018
 """
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import sys
 import os
 import tempfile
@@ -95,7 +91,6 @@ class TestStructuredDataExample(ReferenceTestCase):
                                           check_data=columns,
                                           check_types=columns)
 
-    @tag
     def testExampleMultipleCSVGeneration(self):
         """
         This test uses generate_dataframe() from dataframes.py to
@@ -105,9 +100,6 @@ class TestStructuredDataExample(ReferenceTestCase):
         The test checks the generated CSV files are as expected, in terms of
         both data content (the values) and metadata (the types, order, etc)
         of the columns.
-
-        This test is tagged, so it will run if called with ``--tagged`` or
-        ``-1``.
         """
         df1 = generate_dataframe(nrows=10)
         df2 = generate_dataframe(nrows=20)
@@ -121,7 +113,6 @@ class TestStructuredDataExample(ReferenceTestCase):
                                    'dataframe_result2.csv'],
                                   check_data=columns)
 
-    @tag
     def testExampleMultipleParquetFileGeneration(self):
         """
         This test uses generate_dataframe() from dataframes.py to
@@ -131,9 +122,6 @@ class TestStructuredDataExample(ReferenceTestCase):
         The test checks the generated parquet files are as expected,
         in terms of both data content (the values) and metadata (the types,
         order, etc) of the columns.
-
-        This test is tagged, so it will run if called with ``--tagged`` or
-        ``-1``.
         """
         df1 = generate_dataframe(nrows=10)
         df2 = generate_dataframe(nrows=20)
@@ -148,13 +136,9 @@ class TestStructuredDataExample(ReferenceTestCase):
                                            check_data=columns)
 
 
-@tag
 class TestUnstructuredDataExample(ReferenceTestCase):
     """
     Test class for handling unstructured data.
-
-    This class is tagged, so all tests in it will run if called with
-    ``--tagged`` or ``-1``.
     """
 
     def testExampleStringGeneration(self):
