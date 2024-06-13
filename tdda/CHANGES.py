@@ -857,4 +857,7 @@ Also remove hey from gentest examples.
 
 11.06.2024 2.2.04
 Removed @tag from referencetest example files
+
+###
+Add more packages to setup.py dependencies
 """

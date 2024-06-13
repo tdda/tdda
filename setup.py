@@ -57,6 +57,14 @@ setup(
         ],
     },
     zip_safe=False,
-    install_requires=['numpy>=1.20.3', 'pandas>=1.5.2'],
+    install_requires=[
+        'numpy>=1.20.3',
+        'pandas>=1.5.2',
+        'pyarrow >= 15.0',
+        'pyyaml >= 6.0',
+        'pytest',
+        'chardet >= 5.2',
+        'rich >= 13.3',
+    ],
 )
 
