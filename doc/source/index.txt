@@ -16,7 +16,7 @@ discussed on the `test-driven data analysis
 <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_
 blog.  When installed, the module offers a suite of command-line tools
 that can be used with data from any source, not just Python.  It also
-provideds enhanced test methods for Python code, and the new
+provides enhanced test methods for Python code, and the new
 *Gentest* functionality enables automatic generation of
 test programs for arbitrary code (not just Python code).  There is
 also a full Python API for all functionality.
@@ -40,7 +40,7 @@ The major components of the TDDA module are:
 
 * **Automatic Constraint Generation and Verification:** The package includes command-line tools and API calls for
 
-  - *discovery* of constraints that are satisified by (example)
+  - *discovery* of constraints that are satisfied by (example)
     data --- ``tdda discover``;
   - *verification* that a dataset satisfies a set of constraints.
     The constraints can have been generated automatically,
@@ -56,7 +56,7 @@ The major components of the TDDA module are:
   complex, and more variable than for many other sorts of programs.
 
 * **Automatic Generation of Regular Expressions from Examples:** There
-  is command-line tool (and API) for automatically inferring
+  is a command-line tool (and API) for automatically inferring
   `regular expressions <https://en.wikipedia.org/wiki/Regular_expression>`_
   from (structured) textual data --- ``rexpy``. This was developed
   as part of constraint generation, but has broader utility.
