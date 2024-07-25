@@ -50,7 +50,7 @@ def ddiff_helper(args):
                 print(USAGE, file=sys.stderr)
         else:
             dps = 6
-        ddiff(*(args[:2]), n)
+        ddiff(*(args[:2]), n, dps)
 
 if __name__ == '__main__':
     ddiff_helper(sys.argv)
