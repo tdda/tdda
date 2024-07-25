@@ -21,12 +21,16 @@ from collections import namedtuple
 
 from rich.table import Table
 
+from tdda.utils import nvl
+
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
 ColDiff = namedtuple('ColDiff', 'mask n')
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
+
+DEFAULT_DIFF_ROWS = 10
 
 
 class BaseComparison(object):
@@ -202,8 +206,8 @@ class SameStructureDDiff:
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
-        self.diff_df = diff_df            # keyed on common column name
-        self.row_diff_counts = row_counts # count of diffs on each row
+        self.diff_df = diff_df             # keyed on common column name
+        self.row_diff_counts = row_counts  # count of diffs on each row
 
     def __str__(self):
         lines = [
@@ -226,7 +230,8 @@ class SameStructureDDiff:
 
         return '\n'.join(lines)
 
-    def details_table(self, df, ref_df, target_rows=10):
+    def details_table(self, df, ref_df, target_rows=None):
+        target_rows = nvl(target_rows, DEFAULT_DIFF_ROWS)
         n = min(target_rows, self.n_diff_rows)
         cols = list(self.diff_df)
         m = len(cols)
