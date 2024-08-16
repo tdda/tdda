@@ -426,7 +426,7 @@ def csvw_date_format_to_md_date_format(fmt, extensions=False):
            .replace('yyyy', '%Y')
            .replace('yy', '%y')
            .replace('HH', '%H')
-           .replace('mm', '%M')
+           .replace('mm', '%m')
            .replace('SSS', 'S')
            .replace('SS', 'S')
            .replace('S', '%f')

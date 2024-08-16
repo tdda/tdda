@@ -282,10 +282,12 @@ class PandasComparison(BaseComparison):
             return 0
         else:
             #return self.same_structure_summary_diffs(df, ref_df, diffs)
-            diffs.df.diff = same_structure_dataframe_diffs(df, ref_df)
-            n_diffs = diffs.df.diff.n_diff_values
+            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
+            n_diffs = diffs.dfd.diff.n_diff_values
             if n_diffs:
-                diffs.append(str(diffs.df.diff))
+                diffs.append(str(diffs.dfd.diff))
+            df.to_parquet('df3.parquet')
+            ref_df.to_parquet('ref3.parquet')
             return n_diffs
 
     def same_structure_summary_diffs(self, df, ref_df, diffs):
@@ -438,7 +440,7 @@ class PandasComparison(BaseComparison):
             *msgs*
                             Optional Diffs object.
 
-            *\*\*kwargs*
+            *\\*\\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
 
@@ -496,7 +498,7 @@ class PandasComparison(BaseComparison):
                             a pandas dataframe. If None, then a default CSV
                             loader is used, which takes the same parameters
                             as the standard pandas pd.read_csv() function.
-            *\*\*kwargs*
+            *\\*\\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
 
@@ -615,7 +617,7 @@ class PandasComparison(BaseComparison):
         return loader(csvfile, **kwargs)
 
     def load_serialized_dataframe(
-        self, path, actual_df=None, loader=None, **kwargs
+        self, path, actual_df=None, loader=None, reset_index=True, **kwargs
     ):
         """
         Function for constructing a pandas dataframe from a serialized
@@ -624,7 +626,10 @@ class PandasComparison(BaseComparison):
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:
-                return pd.read_parquet(path)
+                df = pd.read_parquet(path)
+                if reset_index and not df.index.is_monotonic_increasing:
+                    df.reset_index(drop=True, inplace=True)
+                return df
             except FileNotFoundError:
                 if actual_df is not None:
                     tmp_path = self.tmp_path_for(path)

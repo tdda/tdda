@@ -23,7 +23,7 @@ def ddiff(leftpath, rightpath, max_diffs=None, precision=6):
 
     if result.failures > 0:
         print(result.diffs)
-        diff = result.diffs.df.diff  # there if same structure
+        diff = result.diffs.dfd.diff  # there if same structure
         if diff:
             table = diff.details_table(dfL, dfR, max_diffs)
             print()

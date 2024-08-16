@@ -87,7 +87,7 @@ class BaseComparison(object):
         msg = ('Wrong column type for field %s actual: %s; expected: %s)'
                % (c, actual_dtype, ref_dtype))
         self.info(diffs, msg)
-        diffs.df.field_types[c] = FieldDiff(actual_dtype, ref_dtype)
+        diffs.dfd.field_types[c] = FieldDiff(actual_dtype, ref_dtype)
 
     def extra_columns_found(self, diffs, extra_cols, df):
         """
@@ -102,7 +102,7 @@ class BaseComparison(object):
             ]
             self.info(diffs, 'Extra columns: %s' % list(ordered))
             for c in ordered:
-                diffs.df.extra[c] = df[c].dtype
+                diffs.dfd.extra[c] = df[c].dtype
 
     def missing_columns_detected(self, diffs, missing_cols, ref_df):
         """
@@ -117,7 +117,7 @@ class BaseComparison(object):
             ]
             self.info(diffs, 'Missing columns: %s' % list(ordered))
             for c in ordered:
-                diffs.df.extra[c] = ref_df[c].dtype
+                diffs.dfd.extra[c] = ref_df[c].dtype
 
     def different_column_structure(self, diffs):
             self.failure(
@@ -130,8 +130,8 @@ class BaseComparison(object):
            'Different column ordering between data frames.\n'
            f'  Actual ordering: {" ".join(list(df))}\n'
            f'Expected ordering: {" ".join(list(ref_df))}')
-        diffs.df.actual_order = list(df)
-        diffs.df.expected_order = list(ref_df)
+        diffs.dfd.actual_order = list(df)
+        diffs.dfd.expected_order = list(ref_df)
 
     def different_numbers_of_rows(self, diffs, na, nr):
             self.failure(
@@ -157,13 +157,13 @@ class Diffs:
     It doesn't (currently) try to tie up the messages to individual
     comparison operations.
 
-    When the objects are dataframes, the .df field contains a DDiffs
+    When the objects are dataframes, the .dfd field contains a DataFrameDiffs
     object with structured information on the dataframe differences.
     """
     def __init__(self, lines=None):
         self.lines = lines or []
         self.reconstructions = []
-        self.df = DataFrameDiffs()  # only used for DataFrames
+        self.dfd = DataFrameDiffs()  # only used for DataFrames
 
     def append(self, line):
         self.lines.append(line)
