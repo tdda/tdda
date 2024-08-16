@@ -13,6 +13,7 @@ import sys
 
 from collections import OrderedDict
 
+from tdda.utils import swap_ext, dict_to_json, json_sanitize, strip_lines
 from tdda.version import version
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
@@ -252,8 +253,7 @@ class DatasetConstraints(object):
         Converts the constraints in this object to JSON.
         The resulting JSON is returned.
         """
-        return strip_lines(json.dumps(self.to_dict(tddafile=tddafile),
-                                      indent=4, ensure_ascii=False)) + '\n'
+        return dict_to_json(self.to_dict(tddafile=tddafile))
 
     def sort_fields(self, fields=None):
         """
@@ -663,6 +663,7 @@ class Verification(object):
                  detect_write_all=False, detect_per_constraint=False,
                  detect_output_fields=None, detect_index=False,
                  detect_in_place=False, **kwargs):
+        self.constraints = constraints
         self.fields = TDDAObject()
         self.failures = 0
         self.passes = 0
@@ -722,6 +723,36 @@ class Verification(object):
                     'Constraints failing: %d'
                     % (fields_part, self.passes, self.failures))
 
+    def write_json_detection(self, minimal=True):
+        if not self.detect_outpath:
+            return
+        outpath, _ = swap_ext(self.detect_outpath, '.json')
+        d = self.constraints.to_dict()
+        key_field = 'account_number'
+        for field in list(d['fields']):
+            constraints = d['fields'][field]
+            for constraint in list(constraints):
+                value = constraints[constraint]
+                c = constraints[constraint] = {
+                    'constraint_value': value
+                }
+                stats = self.get_constraint_stats(field, constraint)
+                if stats.n_failures == 0:
+                    if minimal:
+                        del constraints[constraint]
+                    else:
+                        c['n_failures'] = 0
+                else:
+                    c.update(stats.to_dict())
+                    failures = self.get_failure_values(field, constraint,
+                                                       key_field)
+                    c['failures'] = json_sanitize(list(failures))
+            if constraints == {}:
+                del d['fields'][field]
+        with open(outpath, 'w') as f:
+            f.write(dict_to_json(d))
+
+
 
 class Detection(object):
     """
@@ -762,17 +793,6 @@ def constraint_class(kind):
     This function maps the constraint kind to the class name using this rule.
     """
     return '%sConstraint' % ''.join(part.title() for part in kind.split('_'))
-
-
-def strip_lines(s):
-    """
-    Splits the given string into lines (at newlines), strips trailing
-    whitespace from each line before rejoining.
-
-    Is careful about last newline.
-    """
-    end = '\n' if s.endswith('\n') else ''
-    return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
 
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
@@ -853,7 +873,12 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect and detected_records_writer and results.failures > 0:
         results.detection = detected_records_writer(**kwargs)
+        if 1:
+            results.write_json_detection()
+
     return results
+
+
 
 
 def detect(constraints, fieldnames, verifiers, VerificationClass=None,
@@ -1063,3 +1088,5 @@ def sort_constraint_dict(d):
         for f, v in sorted(d['fields'].items())
     ))
     return OrderedDict((('fields', fields),))
+
+

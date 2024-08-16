@@ -70,6 +70,7 @@ from tdda.serial.utils import (
     find_metadata_type_from_path
 )
 from tdda.serial.pandasio import to_pandas_read_csv_args
+from tdda.utils import ok_field_name, pass_fail_stats
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
@@ -542,6 +543,27 @@ class PandasVerification(Verification):
         return df
 
     to_dataframe = to_frame
+
+    def get_failure_values(self, field, constraint, key_field):
+        ok_field = ok_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP)
+        exists = ok_field in self.detection.obj
+        if exists:
+            df = self.detection.obj.query(f'{ok_field} == 0')
+            return zip(df[key_field].to_list(), df[field].to_list())
+        else:
+            return None
+
+    def get_constraint_stats(self, field, constraint):
+        ok_field = ok_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP)
+        df = self.detection.obj
+        n_records = int(self.detection.n_passing_records
+                        + self.detection.n_failing_records)
+        if ok_field in df:
+            failures = int((df[ok_field] == 0).sum())
+            passes = n_records - failures
+            return pass_fail_stats(passes, failures, 'values')
+        else:
+            return pass_fail_stats(n_records, 0, 'values')
 
 
 class PandasDetection(PandasVerification):
