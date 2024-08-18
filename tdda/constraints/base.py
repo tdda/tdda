@@ -13,8 +13,14 @@ import sys
 
 from collections import OrderedDict
 
-from tdda.utils import swap_ext, dict_to_json, json_sanitize, strip_lines
+from tdda.utils import (
+    swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
+    json_sanitize, strip_lines, print_obj
+)
+from tdda.config import Config
 from tdda.version import version
+
+CONFIG = Config()
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
 
@@ -677,6 +683,8 @@ class Verification(object):
         self.detect_output_fields = detect_output_fields
         self.detect_index = detect_index
         self.detect_in_place = detect_in_place
+        self.detect_key = kwargs.get('key', [])
+        self.detect_report_formats = kwargs.get('report_formats', [])
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
@@ -723,12 +731,17 @@ class Verification(object):
                     'Constraints failing: %d'
                     % (fields_part, self.passes, self.failures))
 
-    def write_json_detection(self, minimal=True):
-        if not self.detect_outpath:
+    def write_detection_reports(self, minimal=True):
+        """
+        If any detection reports are specified (by the extension
+        of the output file, or -r / --report flags, or by
+        configuration, this writes the report or reports.
+        """
+        # print_obj(self, '(constraints|fields)', invert=True)
+        if not self.detect_outpath and self.detect_report_formats:
             return
-        outpath, _ = swap_ext(self.detect_outpath, '.json')
         d = self.constraints.to_dict()
-        key_field = 'account_number'
+        key_fields = self.detect_key
         for field in list(d['fields']):
             constraints = d['fields'][field]
             for constraint in list(constraints):
@@ -745,12 +758,27 @@ class Verification(object):
                 else:
                     c.update(stats.to_dict())
                     failures = self.get_failure_values(field, constraint,
-                                                       key_field)
+                                                       key_fields)
                     c['failures'] = json_sanitize(list(failures))
             if constraints == {}:
                 del d['fields'][field]
-        with open(outpath, 'w') as f:
-            f.write(dict_to_json(d))
+        for fmt in self.detect_report_formats:
+            outpath = swap_ext(self.detect_outpath, f'.{fmt}')
+            if fmt == 'json':
+                outpath = swap_ext(self.detect_outpath, '.json')
+                dict_to_json(d, outpath)
+            elif fmt == 'yaml':
+                outpath = swap_ext(self.detect_outpath, '.yaml')
+                dict_to_yaml(d, outpath)
+            elif fmt == 'toml':
+                outpath = swap_ext(self.detect_outpath, '.toml')
+                dict_to_toml(d, outpath)
+            elif fmt == 'txt':
+                outpath = swap_ext(self.detect_outpath, '.txt')
+                write_text_detect_report(d, outpath)
+            else:
+                print(f'Ignoring unknown output format "{fmt}".',
+                      file=sys.stderr)
 
 
 
@@ -873,8 +901,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect and detected_records_writer and results.failures > 0:
         results.detection = detected_records_writer(**kwargs)
-        if 1:
-            results.write_json_detection()
+        results.write_detection_reports()
 
     return results
 
@@ -1088,5 +1115,33 @@ def sort_constraint_dict(d):
         for f, v in sorted(d['fields'].items())
     ))
     return OrderedDict((('fields', fields),))
+
+
+def write_text_detect_report(d, outpath):
+    """
+    Writes a human-readable textual report on detection failures
+    """
+    indent = '  '
+    ffv = CONFIG.format_failure_values
+    with open(outpath, 'w') as f:
+        f.write('FIELDS:\n')
+        for field, constraints in d['fields'].items():
+            f.write(f'\nField: {field}\n')
+            for ic, (constraint, results) in enumerate(constraints.items()):
+                label = f'{indent}Constraint: {constraint}: '
+                value = results['constraint_value']
+                is_rex = constraint == 'rex'
+                fval = CONFIG.format_constraint_value(value, len(label), 4,
+                                                      rex=is_rex)
+                if fval.startswith('\n'):
+                    label = label[:-1]
+                nl = '\n' if ic > 0 else ''
+                f.write(f'{nl}{label}{fval}\n')
+                nf = results['n_failures']
+                n = nf + results['n_passes']
+                pc = results['failure_rate']
+                f.write(f'{indent * 2}Failures: {nf:,} / {n:,} ({pc})\n')
+                for failure in results['failures']:
+                    f.write(f'{indent * 3}{ffv(failure)}\n')
 
 

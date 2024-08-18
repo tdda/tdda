@@ -55,15 +55,21 @@ Optional flags are:
       original columns are written out, unless you use --output-fields.
   * --output-fields FIELD1 FIELD2 ...
       Specify original columns to write out.
+  * --key FIELD1 FIELD2 ...
+      Same as --output-fields
+  * --keys FIELD1 FIELD2 ...
+      Same as --output-fields
   * --interleave
       In the output, place the verification fields immediately after
       the original field to which they correspond.
+  * -r --report FORMAT1 FORMAT2 ...
+      Write reportsin the formats listed. Allowed formats
+      are txt json yaml toml md markdown html.
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
       specified. Rows are usually numbered from 1, unless the
       input file already has an index.
-
 '''
 
 def discover_parser(usage=''):
@@ -139,12 +145,18 @@ def detect_parser(usage=''):
                              'in addition to n_failures. Set by default.')
     parser.add_argument('--no-per-constraint', action='store_true',
                         help='Do not write out any per-constraint flag columns')
+    parser.add_argument('--no-original-fields', action='store_true',
+                        help='Do not write out original fields columns')
     parser.add_argument('--no-output-fields', action='store_true',
                         help='Do not write out any original fields in the '
                              'output. By default, all original columns will '
                              'be included.')
     parser.add_argument('--output-fields', nargs='*',
                         help='Specify original columns to write out.')
+    parser.add_argument('--key', nargs='*',
+                        help='Same key fields for output.')
+    parser.add_argument('-r', '--report', nargs='*',
+                        help='Report formats to write.')
     parser.add_argument('--interleave', action='store_true',
                         help='Interleave ok columns with original fields.')
     parser.add_argument('--index', action='store_true',
@@ -217,9 +229,22 @@ def detect_flags(parser, args, params):
     elif not flags.no_output_fields:
         params['output_fields'] = []
 
+    if flags.key is not None:
+        params['key'] = flags.key
+    else:
+        params['key'] = []
+
     if flags.interleave:
         params['interleave'] = True
     params['in_place'] = False  # Only applicable in API case
+
+    # Notice the confusing similarity of these parameters,
     params['report'] = 'records'
+    if flags.report is not None:
+        params['report_formats'] = flags.report
+    else:
+        params['report_formats'] = []
+
+
     return flags
 

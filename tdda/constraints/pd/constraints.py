@@ -544,12 +544,13 @@ class PandasVerification(Verification):
 
     to_dataframe = to_frame
 
-    def get_failure_values(self, field, constraint, key_field):
+    def get_failure_values(self, field, constraint, key_fields):
         ok_field = ok_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP)
         exists = ok_field in self.detection.obj
         if exists:
             df = self.detection.obj.query(f'{ok_field} == 0')
-            return zip(df[key_field].to_list(), df[field].to_list())
+            return zip(*(df[k].to_list() for k in key_fields),
+                       df[field].to_list())
         else:
             return None
 

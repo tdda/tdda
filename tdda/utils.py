@@ -1,6 +1,9 @@
 import json
 import math
 import os
+import re
+import yaml
+import tomli_w
 
 from collections import namedtuple
 
@@ -15,7 +18,7 @@ class PassFailStats:
         self.pass_rate = passes / denom
         self.failure_rate = failures / denom
 
-    def to_dict(self, pc=True, raw=False, total_values=False):
+    def to_dict(self, pc=True, total_values=False):
         d = {
             'n_passes': self.n_passes,
             'n_failures': self.n_failures,
@@ -23,15 +26,10 @@ class PassFailStats:
         if total_values:
             d[f'n_{self.items}'] = self.n_passes + self.n_failures,
 
-        if raw:
-            d.update({
-                'pass_rate': self.pass_rate,
-                'failure_rate': self.failure_rate
-            })
         if pc:
             d.update({
-                'pass_pc': to_pc(self.pass_rate),
-                'failure_pc': to_pc(self.failure_rate)
+                'pass_rate': to_pc(self.pass_rate),
+                'failure_rate': to_pc(self.failure_rate)
             })
         return d
 
@@ -45,17 +43,60 @@ def nvl(v, w):
 def swap_ext(path, new_ext):
     """
     Replaces the extension of path to new_ext
+    """
+    base, ext = os.path.splitext(path)
+    return base + new_ext
+
+
+def swap_ext_q(path, new_ext):
+    """
+    Replaces the extension of path to new_ext
 
     Return (new path, changed)
 
     where changed is True iff the old and new extensions are different
     """
-    base, ext = os.path.splitext(path)
-    return base + new_ext, new_ext != ext
+    outpath = swap_ext(path, new_ext)
+    _, ext = os.path.splitext(path)
+    _, new_ext = os.path.splitext(outpath)
+    return outpath, new_ext != ext
 
 
-def dict_to_json(d):
-    return strip_lines(json.dumps(d, indent=4, ensure_ascii=False)) + '\n'
+def dict_to_json(d, path=None):
+    """
+    Dumps appropriately formatted version of dictionary d to JSON.
+    If path is given, it goes there; otherwise, the JSON is returned.
+    """
+    json_text = strip_lines(json.dumps(d, indent=4, ensure_ascii=False)) + '\n'
+    if path:
+        with open(path, 'w') as f:
+            f.write(json_text)
+    else:
+        return json_text
+
+
+def dict_to_yaml(d, path=None):
+    """
+    Dumps appropriately formatted version of dictionary d to YAML.
+    If path is given, it goes there; otherwise, the YAML is returned.
+    """
+    if path:
+        with open(path, 'w') as f:
+            yaml.dump(d, f)
+    else:
+        return yaml.dump(d)
+
+
+def dict_to_toml(d, path=None):
+    """
+    Dumps appropriately formatted version of dictionary d to JSON.
+    If path is given, it goes there; otherwise, the JSON is returned.
+    """
+    if path:
+        with open(path, 'wb') as f:
+            tomli_w.dump(d, f)
+    else:
+        return tomli_w.dumps(d)
 
 
 def json_sanitize(v):
@@ -112,3 +153,40 @@ def to_pc(v, mindp=2):
         return f'{hi_fmt % pc}%'
     else:
         return f'{small}%'
+
+
+def print_obj(o, rex=None, invert=False, as_repr=False, keys_only=False):
+    """
+    Print the __dict__ from o in the form:
+
+        key (type(value)): value
+
+    If rex is provided, print only keys matching rex.
+
+    If invert is set to True, use rex to exclude rather than include keys.
+
+    If as_repr is set, use repr(.) instead of str(.) for formatting value.
+    """
+    if rex:
+        r = re.compile(rex) if rex else None
+        if invert:
+            for k, v in o.__dict__.items():
+                if not re.match(r, k):
+                    print_item(k, v, as_repr, keys_only)
+        else:
+            for k, v in o.__dict__.items():
+                if re.match(r, k):
+                    print_item(k, v, as_repr, keys_only)
+    else:
+        for k, v in o.__dict__.items():
+            print_item(k, v, as_repr, keys_only)
+
+
+def print_item(k, v, as_repr=False, keys_only=False):
+    f = repr if as_repr else lambda x: x
+    if keys_only:
+        print(f'{k} ({type(v)})')
+    else:
+        print(f'{k} ({type(v)}): {f(v)}')
+
+
