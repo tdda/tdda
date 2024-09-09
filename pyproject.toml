@@ -26,7 +26,13 @@ pythonpath = [
 ]
 
 testpaths = [
-    "serial",
+    "tdda/serial",
+]
+
+norecursedirs = [ 
+  "deprecated", 
+  "exercises-pytest", 
+  "exercises-unittest", 
 ]
 
 [tool.black]

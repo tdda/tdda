@@ -277,8 +277,8 @@ def tagged(config, items):
     It extends pytest to recognize the ``--tagged`` and ``--istagged``
     command-line flags, to restrict testing to tagged tests only.
     """
-    runtagged = config.getoption('--tagged')
-    showtagged = config.getoption('--istagged')
+    runtagged = config.getoption('--tagged', None)
+    showtagged = config.getoption('--istagged', None)
     shownclasses = set()
     if runtagged or showtagged:
         if showtagged:
