@@ -25,9 +25,9 @@ pythonpath = [
   ".", "tdda"
 ]
 
-#testpaths = [
-#    "serial",
-#]
+testpaths = [
+    "tdda/serial",
+]
 
 norecursedirs = [ 
   "deprecated", 
