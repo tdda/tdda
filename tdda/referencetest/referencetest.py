@@ -240,7 +240,7 @@ class ReferenceTest(object):
         """
         self.reference_data_locations[kind] = os.path.normpath(location)
 
-    def assertDataFramesEqual(
+    def assertDataFramesEquivalent(
         self,
         df,
         ref_df,
@@ -345,6 +345,8 @@ class ReferenceTest(object):
         (failures, msgs) = r
         self._check_failures(failures, msgs)
 
+    assertDataFramesEqual = assertDataFramesEquivalent
+
     def assertDataFrameCorrect(
         self,
         df,
@@ -430,7 +432,7 @@ class ReferenceTest(object):
                 type_matching=type_matching,
             )
 
-    def assertOnDiskDataFrameCorrect(
+    def assertStoredDataFrameCorrect(
         self,
         actual_path,
         ref_path,
@@ -511,6 +513,7 @@ class ReferenceTest(object):
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
+    assertOnDiskDataFrameCorrect = assertStoredDataFrameCorrect
 
     def assertCSVFileCorrect(
         self,
@@ -528,9 +531,9 @@ class ReferenceTest(object):
     ):
         """
         Legacy convenience method with second parameter called ref_csv.
-        Just calls assertOnDiskDataFrameCorrect.
+        Just calls assertOnStoredFrameCorrect.
         """
-        return self.assertOnDiskDataFrameCorrect(
+        return self.assertStoredDataFrameCorrect(
             actual_path,
             ref_csv,
             kind='kind',
@@ -544,7 +547,7 @@ class ReferenceTest(object):
             **kwargs,
         )
 
-    def assertOnDiskDataFramesCorrect(
+    def assertStoredDataFramesCorrect(
         self,
         actual_paths,
         ref_paths,
@@ -625,6 +628,8 @@ class ReferenceTest(object):
             (failures, msgs) = r
             self._check_failures(failures, msgs)
 
+    assertOnDiskDataFramesCorrect = assertStoredDataFramesCorrect
+
     def assertCSVFilesCorrect(
         self,
         actual_paths,
@@ -640,9 +645,9 @@ class ReferenceTest(object):
         **kwargs,
     ):
         """
-        Legacy method that just calls assertOnDiskDataFramesCorrect.
+        Legacy method that just calls assertStoredDataFramesCorrect.
         """
-        return self.assertOnDiskDataFramesCorrect(
+        return self.assertStoredDataFramesCorrect(
             actual_paths,
             ref_csvs,
             kind=kind,
@@ -793,7 +798,7 @@ class ReferenceTest(object):
         optional parameters described in :py:meth:`assertStringCorrect()`.
 
         This should be used for unstructured data such as logfiles, etc.
-        For CSV files, use :py:meth:`assertOnDiskDataFramCorrect` instead.
+        For CSV files, use :py:meth:`assertStoredDataFrameCorrect` instead.
 
         The *ignore_lines* parameter exists for backwards compatibility as
         an alias for *remove_lines*.
@@ -854,7 +859,7 @@ class ReferenceTest(object):
                 :py:meth:`set_data_location()`.
 
         This should be used for unstructured data such as logfiles, etc.
-        For CSV files, use :py:meth:`assertOnDiskDataFramesCorrect` instead.
+        For CSV files, use :py:meth:`assertStoredDataFramesCorrect` instead.
 
         It also accepts the ``kind``, ``lstrip``, ``rstrip``,
         ``ignore_substrings``, ``ignore_patterns``, ``remove_lines``,

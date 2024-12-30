@@ -198,12 +198,12 @@ def _set_flags_from_argv(argv=None):
     """
     if argv is None:
         argv = sys.argv
-
+    rest = argv[1:]
     tagged = False
     check = False
     regenerate = False
 
-    for i, arg in enumerate(argv[1:]):
+    for i, arg in enumerate(rest):
         if arg.startswith('-') and not arg.startswith('--'):
             for flag in arg[1:]:
                 if flag == 'W':
@@ -215,45 +215,45 @@ def _set_flags_from_argv(argv=None):
                 elif flag == '0':
                     check = True
                     arg = arg.replace('0', '')
-            argv[i] = '' if arg == '-' else arg
+            rest[i] = '' if arg == '-' else arg
         else:
             break
-    argv = [a for a in argv if a]
+    rest = [a for a in rest if a]
 
     for quietflag in ('-wquiet', '--wquiet'):
-        if quietflag in argv:
-            idx = argv.index(quietflag)
+        if quietflag in rest:
+            idx = rest.index(quietflag)
             ReferenceTestCase.set_defaults(verbose=False)
-            argv = argv[:idx] + argv[idx+1:]
+            rest = rest[:idx] + rest[idx+1:]
 
     for writeflag in ('--W', '--write-all'):
-        if writeflag in argv:
-            idx = argv.index(writeflag)
+        if writeflag in rest:
+            idx = rest.index(writeflag)
             if idx:
                 regenerate = True
-                argv = argv[:idx] + argv[idx+1:]
+                rest = rest[:idx] + rest[idx+1:]
                 break
 
     for writeflag in ('-w', '--w', '--write'):
-        if writeflag in argv:
-            idx = argv.index(writeflag)
+        if writeflag in rest:
+            idx = rest.index(writeflag)
             if idx:
-                if idx < len(argv) - 1:
-                    for r in argv[idx+1:]:
+                if idx < len(rest) - 1:
+                    for r in rest[idx+1:]:
                         for kind in r.split(','):
                             ReferenceTestCase.set_regeneration(kind)
                 else:
                     raise Exception('--write option requires parameters; '
                                     'use --write-all to regenerate all '
                                     'reference results')
-            argv = argv[:idx]
+            rest = rest[:idx]
             break
 
     for option in ('--tagged', '--istagged'):
-        if option in argv:
-            idx = argv.index(option)
+        if option in rest:
+            idx = rest.index(option)
             if idx:
-                argv = argv[:idx] + argv[idx+1:]
+                rest = rest[:idx] + rest[idx+1:]
                 if option in ('-0', '--istagged'):
                     check = True
                 else:
@@ -261,8 +261,7 @@ def _set_flags_from_argv(argv=None):
 
     if regenerate:
         ReferenceTestCase.set_regeneration()
-
-    return (argv, tagged, check)
+    return (argv[:1] + rest, tagged, check)
 
 
 class TaggedTestLoader(unittest.TestLoader):
