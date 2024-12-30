@@ -321,8 +321,7 @@ class ReferenceTest(object):
 
             *precision*:
                 (Optional) number of decimal places to use for
-                floating-point comparisons.  Default is not to perform
-                rounding.
+                floating-point comparisons.  Default is 7 decimal places.
 
             *type_matching*  'strict', 'medium', 'permissive'
 
