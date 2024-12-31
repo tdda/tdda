@@ -480,7 +480,7 @@ class ReferenceTest(object):
                        and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *\*\*kwargs*:
+            *\\*\\*kwargs*:
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
 
@@ -591,7 +591,7 @@ class ReferenceTest(object):
                       and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *\*\*kwargs*:
+            *\\*\\*kwargs*:
                 Any additional named parameters are passed straight
                 through to the *csv_read_fn* function.
 
@@ -687,14 +687,12 @@ class ReferenceTest(object):
                 The reference *kind*, used to locate the reference file.
 
             *lstrip*:
-                If set to ``True``, both strings are
-                left-stripped before the comparison is carried out.
-                Note: the stripping is on a per-line basis.
+                If set to ``True``, whitespace is stripped from the start
+                of each line of actual and reference strings before comparison.
 
             *rstrip*:
-                If set to ``True``, both strings are
-                right-stripped before the comparison is carried out.
-                Note: the stripping is on a per-line basis.
+                If set to ``True``, whitespace is stripped from the end
+                of each line of actual and reference strings before comparison.
 
             *ignore_substrings*:
                 An optional list of substrings; lines
@@ -708,16 +706,14 @@ class ReferenceTest(object):
                 one of these regular expressions.
                 The expressions should only include explicit anchors if they
                 need to refer to the whole line.
-                Only the matched expression within the line is ignored; any text
-                to the left or right of the matched expression must either be
-                **exactly** the same on both sides, or be ignorable.
+                Only the matched expression within the line is ignored;
+                any text to the left or right of the matched expression
+                must be identical in both strings.
 
             *remove_lines*
                 An optional list of substrings; lines
                 containing any of these substrings will be
-                completely removed before carrying out the
-                comparison. This is the means by which you
-                would exclude 'optional' content.
+                removed before carrying out the comparison.
 
             *preprocess*:
                 An optional function that takes a list of
@@ -728,7 +724,7 @@ class ReferenceTest(object):
                 An optional number specifying the maximum
                 number of permutations allowed; if the actual
                 and expected lists differ only in that their
-                lines are permutations of each other, and
+                lines are in different orders, and
                 the number of such permutations does not
                 exceed this limit, then the two are considered to be identical.
 

@@ -201,7 +201,10 @@ class TestUnstructuredDataExample(ReferenceTestCase):
         outpath = os.path.join(outdir, 'file_result.html')
         generate_file(outpath)
         self.assertTextFileCorrect(outpath, 'file_result.html',
-                                   ignore_substrings=['Copyright', 'Version'])
+                                   ignore_patterns=[
+            r'Copyright \(c\) Stochastic Solutions, [0-9]{4}',
+            r'Version [0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}'
+        ])
 
 
 TestStructuredDataExample.set_default_data_location(reference_data_dir)

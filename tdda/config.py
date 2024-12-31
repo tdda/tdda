@@ -14,7 +14,7 @@ class Config:
 
     def format_value(self, v):
         if isinstance(v, list) or isinstance(v, tuple):
-            return f'[{self.format_value(V) for V in v}]'
+            return f'[{(self.format_value(V) for V in v)}]'
         if v is None:
             return self.null_rep
         if type(v) is str:

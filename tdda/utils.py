@@ -2,6 +2,7 @@ import json
 import math
 import os
 import re
+import regex
 import yaml
 import tomli_w
 
@@ -189,4 +190,10 @@ def print_item(k, v, as_repr=False, keys_only=False):
     else:
         print(f'{k} ({type(v)}): {f(v)}')
 
+
+def n_glyphs(s):
+    """
+    Returns the number of glyphs in a string.
+    """
+    return len(regex.findall(r'\X', s))
 

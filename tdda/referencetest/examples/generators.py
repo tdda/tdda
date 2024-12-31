@@ -93,7 +93,7 @@ def generate_file(path):
     <style type="text/css">text { font-family: Helvetica, Verdana, Sans;}</style>
 
     <!-- TDDA Test Output Version 0.0.1
-         Copyright (c) Stochastic Solutions Limited 2016 -->
+         Copyright (c) Stochastic Solutions, 2016 -->
 
     <rect x="0" y="0" width="96" height="96" style="fill:#C08080"/>
     <rect x="105" y="0" width="96" height="96" style="fill:#F0C080"/>

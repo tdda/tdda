@@ -3,11 +3,11 @@
 """
 URLs1
 
- http\:\/\/[a-z]{3,4}\.[a-z]{3,4}
- http\:\/\/[a-z]{5,19}\.com\/
- [a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]{6,19}\.com
- http\:\/\/www\.[a-z]{6,19}\.com\/
- http\:\/\/www\.[a-z]{6,19}\.co\.uk\/
+ http://[a-z]{3,4}.[a-z]{3,4}
+ http://[a-z]{5,19}.com/
+ [a-z]{4,5}://[a-z]{3}.[a-z]{6,19}.com
+ http://www.[a-z]{6,19}.com/
+ http://www.[a-z]{6,19}.co.uk/
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -49,13 +49,13 @@ Goal:
 
 URLs 1 + 2:
 
- [a-z]{3,4}\.[a-z]{2,4}
- [a-z]{5,19}\.com\/
- [a-z]{3,4}[\.\/\:]{1,3}[a-z]{3,19}\.[a-z]{3,4}
- http\:\/\/[a-z]{5,19}\.com\/
- [a-z]{4,5}\:\/\/[a-z]{3}\.[a-z]{6,19}\.com
- http\:\/\/www\.[a-z]{6,19}\.com\/
- http\:\/\/www\.[a-z]{6,19}\.co\.uk\/
+ [a-z]{3,4}.[a-z]{2,4}
+ [a-z]{5,19}.com/
+ [a-z]{3,4}[./:]{1,3}[a-z]{3,19}.[a-z]{3,4}
+ http://[a-z]{5,19}.com/
+ [a-z]{4,5}://[a-z]{3}.[a-z]{6,19}.com
+ http://www.[a-z]{6,19}.com/
+ http://www.[a-z]{6,19}.co.uk/
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -83,8 +83,8 @@ Goal:
 
 TELEPHONES 2
 
- \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
- \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
+ ([0-9]{3,4}) [0-9]{3,4} [0-9]{4}
+ +[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -119,9 +119,9 @@ Goal
 TELEPHONES 5
 
  [0-9]{3} [0-9]{3} [0-9]{4}
- [0-9]{3}\-[0-9]{3}\-[0-9]{4}
+ [0-9]{3}-[0-9]{3}-[0-9]{4}
  1 [0-9]{3} [0-9]{3} [0-9]{4}
- \([0-9]{3}\) [0-9]{3} [0-9]{4}
+ ([0-9]{3}) [0-9]{3} [0-9]{4}
 
 ** With s replacing space and backslashes removed, spaced in groups:
 
@@ -177,10 +177,10 @@ Goal:
 TELS 1-5
 
  [0-9]{3} [0-9]{3} [0-9]{4}
- [0-9]{3,4}[\-\.][0-9]{3}[\-\.][0-9]{4}
+ [0-9]{3,4}[-.][0-9]{3}[-.][0-9]{4}
  1 [0-9]{3} [0-9]{3} [0-9]{4}
- \([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}
- \+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
+ ([0-9]{3,4}) [0-9]{3,4} [0-9]{4}
+ +[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}
 
 
 ** With s replacing space and backslashes removed, spaced in groups:
@@ -478,7 +478,7 @@ class TestHelperMethods(ReferenceTestCase):
             self.assertEqual(x.coarse_classify_char(c), ' ')
         for c in ' \t\r\n\f\v':
             self.assertEqual(x.coarse_classify_char(c), ' ')
-        for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[\]^_`{|}~':
+        for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + r':;<=>?@[\]^_`{|}~':
             self.assertEqual(x.coarse_classify_char(c), '.')
         for i in range(0, 0x1c):  # 1C to 1F are considered whitespace
                                   # in unicode
@@ -1257,7 +1257,7 @@ class TestExtraction(ReferenceTestCase):
         # But that's a bit general!
 
         # Really want:
-        #    '^https?\:\/\/([a-z]+\.)+[a-z]+\/?$'
+        #    '^https?://([a-z]+\.)+[a-z]+/?$'
         # Quite a way to go!
         #   - Small categoricals (http|https)
         #   - Related small categoricals (http|https) --> https?)
@@ -1705,7 +1705,7 @@ class TestExtraction(ReferenceTestCase):
 
     def testmflag(self):
         patterns = ('a.1', 'b_2', 'c-3')
-        R1 = '^c\-3$'
+        R1 = r'^c\-3$'
         R2 = r'^([a-z])([A-Z_.])([0-9])$'
         expected = [R1, R2]
         r = extract(patterns, tag=True, extra_letters='._')
@@ -1722,7 +1722,7 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(r, expected)
 
     def testFindOuterCaptureGroups(self):
-        r = re.compile('^(([A-Z]+) [1-5])([^\W_]+)$', re.U)
+        r = re.compile(r'^(([A-Z]+) [1-5])([^\W_]+)$', re.U)
         m = re.match(r, 'THIS 3aéAB')
         self.assertEqual(is_outer_group(m, 1), True)
         self.assertEqual(is_outer_group(m, 2), False)
@@ -1750,7 +1750,7 @@ class TestExtraction(ReferenceTestCase):
         self.assertRaises(KeyError, f, 5)
 
     def testFindHarderOuterCaptureGroups(self):
-        rex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
+        rex = r'^([\!\"\#\$\%\&\'\(\)\*\+\,\./:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~])(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)(\s)(([^\W\_]|\-)+)$'
         r = re.compile(rex, re.U)
         m = re.match(r, '!a b c')
         f = group_map_function(m, 2)

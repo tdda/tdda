@@ -27,6 +27,9 @@ BinaryInfo = namedtuple(
 )
 
 
+def perms_ok(n_permutations, max_permutations):
+    return max_permutations is None or n_permutations, max_permutations
+
 class FilesComparison(BaseComparison):
     def check_strings(
         self,
@@ -102,7 +105,8 @@ class FilesComparison(BaseComparison):
                                 lines are permutations of each other, and
                                 the number of such permutations does not
                                 exceed this limit, then the two are considered
-                                to be identical.
+                                to be identical. None to allow an
+                                unlimited number of permutations.
             *create_temporaries*
                                 controls whether failures cause temporary
                                 files to be written.
@@ -259,7 +263,8 @@ class FilesComparison(BaseComparison):
             )
             msgs.add_reconstruction(reconstruction)
 
-        if permutable and ndiffs > 0 and ndiffs <= max_permutation_cases:
+        if permutable and ndiffs > 0 and perms_ok(ndiffs,
+                                                  max_permutation_cases):
             ndiffs = self.check_for_permutation_failures(failure_cases)
 
         if ndiffs > 0:
@@ -322,7 +327,7 @@ class FilesComparison(BaseComparison):
                     # a difference that cannot be ignored
                     if first_error_line is None:
                         first_error_line = i + 1
-                    if len(failure_cases) < max_permutation_cases:
+                    if perms_ok(len(failure_cases), max_permutation_cases):
                         failure_cases.append((i, actual[i], expected[i]))
 
             if first_error_line is not None:
