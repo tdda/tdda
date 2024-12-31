@@ -138,7 +138,7 @@ class PandasComparison(BaseComparison):
 
         type_matching = type_matching or 'strict'
         diffs = nvl(diffs, Diffs())
-        self.precision = nvl(precision, 6)
+        self.precision = nvl(precision, 7)
 
         check_types = resolve_option_flag(check_types, ref_df)
         check_extra_cols = resolve_option_flag(check_extra_cols, df)

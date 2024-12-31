@@ -688,7 +688,7 @@ class TestGenerator:
         with open(self.script, 'w') as f:
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
-                'CLASSNAME': os.path.basename(self.raw_script[5:-3]).upper(),
+                'CLASSNAME': os.path.basename(self.raw_script[4:-3]).upper(),
                 'GEN_COMMAND': self.cli_command(),
                 'COMMAND': repr(self.command),
                 'CWD': repr(self.cwd),

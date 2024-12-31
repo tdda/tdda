@@ -1,5 +1,4 @@
-HEADER = '''# -*- coding: utf-8 -*-
-"""
+HEADER = '''"""
 %(SCRIPT)s: Automatically generated test code from tdda gentest.
 
 Generation command:
