@@ -6,12 +6,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
 
-import unittest
-
+from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
 
 
-class TestInternals(unittest.TestCase):
+class TestInternals(ReferenceTestCase):
     def test_diff_marker(self):
         compare = FilesComparison()
         self.assertEqual(compare.diff_marker("ABC", "XYZ"), "(ABC|XYZ)")
@@ -105,7 +104,7 @@ class TestInternals(unittest.TestCase):
         )
 
 
-class TestStrings(unittest.TestCase):
+class TestStrings(ReferenceTestCase):
     def test_strings_ok(self):
         compare = FilesComparison()
         self.assertEqual(compare.check_strings([], []), (0, []))
@@ -322,6 +321,7 @@ class TestStrings(unittest.TestCase):
             (0, []),
         )
 
+    @tag
     def test_permutations(self):
         compare = FilesComparison()
         self.assertEqual(
@@ -358,4 +358,4 @@ class TestStrings(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    ReferenceTestCase.main()

@@ -26,14 +26,29 @@ from tdda.referencetest.pddates import infer_date_format
 from tdda.pd.utils import is_string_col
 from tdda.utils import nvl
 
-
 import pandas as pd
 import numpy as np
 
 
 
-# TDDA_DIFF = 'tdda diff'
-TDDA_DIFF = 'diff'
+TDDA_DIFF = 'tdda diff'
+# TDDA_DIFF = 'diff'
+
+ESC_MAP = str.maketrans({
+    '\\': r'\\',
+    ' ': r'\ ',
+    "'": r'\'',
+})
+
+
+def escape(name):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return name.translate(ESC_MAP)
+
+
+def escaped_list(items):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return ','.join(item.translate(ESC_MAP) for item in items)
 
 
 class PandasComparison(BaseComparison):
@@ -60,7 +75,7 @@ class PandasComparison(BaseComparison):
         check_data=None,
         check_types=None,
         check_order=None,
-        check_extra_cols=None,
+        check_extra_cols=True,
         sortby=None,
         condition=None,
         precision=None,
@@ -92,9 +107,8 @@ class PandasComparison(BaseComparison):
                             Option to specify fields to use to compare cell
                             values.
             *check_extra_cols*
-                            Option to specify fields in the actual dataset
-                            to use to check that there are no unexpected
-                            extra columns.
+                            If set to False, columns present in df but not
+                            ref_df are ignored
             *sortby*
                             Option to specify fields to sort by before
                             comparing.
@@ -157,7 +171,7 @@ class PandasComparison(BaseComparison):
             ):
                 wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
         if check_extra_cols:
-            extra_cols = set(check_extra_cols) - set(list(ref_df))
+            extra_cols = sorted(set(df) - set(ref_df))
         if check_order != False and not missing_cols:
             check_order = resolve_option_flag(check_order, ref_df)
             order1 = [c for c in list(df) if c in check_order if c in ref_df]
@@ -195,6 +209,7 @@ class PandasComparison(BaseComparison):
             self.different_numbers_of_rows(diffs, na, nr)
             same = False
 
+        cols = list(df)
         if same:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
@@ -202,18 +217,29 @@ class PandasComparison(BaseComparison):
                 nd = self.same_structure_ddiff(df[cols], ref_df[cols], diffs)
                 same = nd == 0
 
+        switches = []
+        nc = len(cols)
+        nL = len(list(df))
+        if check_data and nc < nL:
+            if nc < nL - nc:
+                switches.append('--fields \'%s\'' % escaped_list(cols))
+            else:
+                rest = [f for f in df if f in (set(df) - set(cols))]
+                switches.append('--xfields \'%s\'' % escaped_list(rest))
         if not same and create_temporaries:
-            self.write_temporaries(df, ref_df, diffs)
+            self.write_temporaries(df, ref_df, diffs, switches=switches)
         return FailureDiffs(failures=0 if same else 1, diffs=diffs)
 
-    def write_temporaries(self, actual, expected, msgs):
-        differ = None
+    def write_temporaries(self, actual, expected, msgs, switches=None):
+        differ = tdda_differ = None
         actual_path = self.actual_path
         expected_path = self.expected_path
         if actual_path and expected_path:
             commonname = os.path.split(actual_path)[1]
             differ = self.compare_with(actual_path, expected_path)
-
+            tdda_differ = self.compare_with(actual_path, expected_path,
+                                            custom_diff_cmd=TDDA_DIFF,
+                                            switches=switches)
         else:
             if actual_path:
                 commonname = os.path.split(actual_path)[1]
@@ -229,9 +255,11 @@ class PandasComparison(BaseComparison):
                 expected_path = tmpExpectedPath
                 self._write_reference_dataframe(expected, tmpExpectedPath)
                 if actual_path:
-                    differ = self.compare_with(
-                        actual_path, tmpExpectedPath, custom_diff_cmd=TDDA_DIFF
-                    )
+                    differ = self.compare_with(actual_path, tmpExpectedPath)
+                    tdda_differ = self.compare_with(
+                        actual_path, tmpExpectedPath,
+                        custom_diff_cmd=TDDA_DIFF,
+                        switches=switches)
             if actual is not None and not actual_path:
                 # no actual file, so write it
                 tmpActualPath = os.path.join(
@@ -239,12 +267,15 @@ class PandasComparison(BaseComparison):
                 )
                 self._write_reference_dataframe(actual, tmpActualPath)
                 if expected_path:
-                    differ = self.compare_with(
-                        tmpActualPath, expected_path, custom_diff_cmd=TDDA_DIFF
-                    )
+                    differ = self.compare_with(tmpActualPath, expected_path)
+                    tdda_differ = self.compare_with(
+                        tmpActualPath, expected_path,
+                        custom_diff_cmd=TDDA_DIFF, switches=switches)
 
         if differ:
             self.info(msgs, differ)
+        if tdda_differ:
+            self.info(msgs, tdda_differ)
 
         # if not actual_path or not expected_path:
         #     if expected_path:
@@ -282,7 +313,8 @@ class PandasComparison(BaseComparison):
             return 0
         else:
             #return self.same_structure_summary_diffs(df, ref_df, diffs)
-            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
+            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df,
+                                                            params=self.params)
             n_diffs = diffs.dfd.diff.n_diff_values
             if n_diffs:
                 diffs.append(str(diffs.dfd.diff))
@@ -606,7 +638,7 @@ class PandasComparison(BaseComparison):
 
         *exclusions* is a list of field names.
         """
-        return lambda df: list(set(list(df)) - set(exclusions))
+        return lambda df: sorted(set(df) - set(exclusions))
 
     def load_csv(self, csvfile, loader=None, **kwargs):
         """
@@ -892,7 +924,7 @@ def diff_masks(df, ref_df, only_diffs=False):
     return diffs
 
 
-def same_structure_dataframe_diffs(df, ref_df):
+def same_structure_dataframe_diffs(df, ref_df, params=None):
     """
     Compute differences between each pair of columns in two data frames.
 
@@ -902,6 +934,7 @@ def same_structure_dataframe_diffs(df, ref_df):
     Args:
         df        "left" data frame  (typically "actual")
         ref_df    "right" data frame (typically expected/reference)
+        params    TDDAParams object
 
     Returns:
         SameStructureDDiff  for df, ref_df
@@ -923,10 +956,9 @@ def same_structure_dataframe_diffs(df, ref_df):
     else:
         n_rows = 0
         row_diff_counts = None
-
     return SameStructureDDiff(df.shape,
                               pd.DataFrame(d), row_diff_counts,
-                              n_vals, n_cols, n_rows)
+                              n_vals, n_cols, n_rows, params=params)
 
 
 def single_col_diffs(L, R):

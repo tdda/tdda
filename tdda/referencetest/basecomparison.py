@@ -18,10 +18,13 @@ import sys
 import tempfile
 
 from collections import namedtuple
+from itertools import chain
 
 from rich.table import Table
 
 from tdda.utils import nvl
+
+from tdda.params import TDDAParams
 
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
@@ -37,7 +40,8 @@ class BaseComparison(object):
     """
     Common base class for different implementations of comparisons.
     """
-    def __init__(self, print_fn=None, verbose=True, tmp_dir=None):
+    def __init__(self, print_fn=None, verbose=True, tmp_dir=None,
+                 params=None):
         """
         Constructor for an instance of the BaseComparison class.
 
@@ -49,6 +53,7 @@ class BaseComparison(object):
         self.print_fn = print_fn
         self.verbose = verbose
         self.tmp_dir = tmp_dir or tempfile.gettempdir()
+        self.params = params or TDDAParams()
 
     def info(self, msgs, s):
         """
@@ -62,19 +67,21 @@ class BaseComparison(object):
 
     @staticmethod
     def compare_with(actual, expected, qualifier=None, binary=False,
-                     custom_diff_cmd=''):
+                     custom_diff_cmd='', switches=None):
         qualifier = '' if not qualifier else (qualifier + ' ')
         f = lambda p: os.path.normpath(os.path.abspath(p))
         if os.path.exists(expected):
 #            if binary:
 #                return None
 #            else:
-                msg = 'Compare %swith:\n    %s %s %s\n'
+                msg = 'Compare %swith:\n    %s %s %s%s\n'
                 cmd = custom_diff_cmd or diffcmd()
+                suffix = ' '.join([''] + switches) if switches else ''
         else:
-            msg = 'Initialize %sfrom actual content with:\n    %s %s %s'
+            suffix = ''
+            msg = 'Initialize %sfrom actual content with:\n    %s %s %s%s'
             cmd = copycmd()
-        return msg % (qualifier, cmd, f(actual), f(expected))
+        return msg % (qualifier, cmd, f(actual), f(expected), suffix)
 
     def tmp_path_for(self, path, prefix='actual-'):
         return os.path.join(self.tmp_dir, prefix + os.path.basename(path))
@@ -201,13 +208,16 @@ class SameStructureDDiff:
     Container for information about differences betwee data frames
     with the same structure.
     """
-    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows):
+    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
+                 params=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
+        self.params = params or TDDAParams()
+
 
     def __str__(self):
         lines = [
@@ -235,35 +245,53 @@ class SameStructureDDiff:
         n = min(target_rows, self.n_diff_rows)
         cols = list(self.diff_df)
         m = len(cols)
+        p = self.params.referencetest
+        vertical = nvl(p.vertical, False)
+        prefix = vertical and (p.mono or p.bw)
 #        if self.n_diff_rows <= n:
         if True:
             # Extract small dataframes with diffs  n x m
             L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
-            indexes = [str(v) for v in L.index.to_list()]
+            indexes = [
+                p.common(v, dim_if_not_bw=True) for v in L.index.to_list()
+            ]
             rows = []
             plain_rows = []
             for r in range(n):
                 l_vals = [py_val(L.iat[r, c]) for c in range(m)]
                 r_vals = [py_val(R.iat[r, c]) for c in range(m)]
                 lstr = [
-                    str(left) if left == right else f'[red]{left}[/red]'
+                    p.common(left) if left == right
+                                    else p.left_diff(left, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 rstr = [
-                    str(right) if left == right else f'[green]{right}[/green]'
+                    p.common(right) if left == right
+                                    else p.right_diff(right, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
-                rows.append([indexes[r]] + lstr)
-                rows.append([indexes[r]] + rstr)
                 plstr = [
-                    str(left) for left in l_vals
+                    p.left_annotated(left, prefix) for left in l_vals
                 ]
                 prstr = [
-                    str(right) for right in r_vals
+                    p.right_annotated(right, prefix) for right in r_vals
                 ]
-                plain_rows.append([indexes[r]] + plstr)
-                plain_rows.append([indexes[r]] + prstr)
+                if vertical:
+                    rows.append([indexes[r]] + lstr)
+                    rows.append([indexes[r]] + rstr)
+                    plain_rows.append([indexes[r]] + plstr)
+                    plain_rows.append([indexes[r]] + prstr)
+                else:
+                    rows.append(
+                        [indexes[r]]
+                        + list(chain(*([L, R] for L, R in zip(lstr, rstr))))
+                    )
+                    plain_rows.append(
+                        [indexes[r]]
+                        + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
+                    )
+
             term_width = shutil.get_terminal_size((80, 20))[0]
             widths = [
                 max(len(row[i]) for row in plain_rows)
@@ -273,6 +301,7 @@ class SameStructureDDiff:
             table_width = col_space + m * 2
             header_width = sum(len(name) for name in cols)
             truncate = table_width > term_width and header_width > col_space
+            truncate = False
             index_head = 'index'
             if truncate:
                 if widths[0] < 3:
@@ -283,19 +312,26 @@ class SameStructureDDiff:
             truncated = ', cols truncated' if table_width > term_width else ''
             s = '' if n == 1 else 's'
             rows_desc = (
-                'all rows'
+                'all rows with differences'
                  if self.n_diff_rows <= n
-                 else f'First {n:,} row{s}'
+                 else f'First {n:,} row{s} with differences'
             )
             title = f'Value Differences ({rows_desc}{truncated})'
             table = Table(
                 title=title,
-                title_style='bold'
+                title_style='bold',
+#                width = table_width
             )
+            if not vertical:
+                index_head += '\n '
             table.add_column(index_head, justify='right')
             for i, col in enumerate(cols, 1):
-                table.add_column(col, justify='right',
-                                 max_width=widths[i] if truncate else None)
+                if vertical:
+                    table.add_column(col, justify='right', no_wrap=True)
+                else:
+                    pL, pR = p.stripped_prefixes()
+                    table.add_column(col + pL, justify='right', no_wrap=True)
+                    table.add_column(col + pR, justify='right', no_wrap=True)
             for row in rows:
                 table.add_row(*row)
             return table

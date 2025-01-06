@@ -90,7 +90,7 @@ def help(extensions, cmd=None, stream=sys.stdout):
                 '\ntdda diff a b  -- compare csv or parquet files a and b.\n\n'
                 'This is experimental functionality.\n'
                 'Currently, it will always show summary differences, but\n'
-                'will only should differences in values if the data frames\n'
+                'will only show differences in values if the data frames\n'
                 'that results from loading the files have the same structure\n'
                 '(number of rows and columns, column names, loose column '
                 'types).\n'

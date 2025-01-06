@@ -3,4 +3,7 @@ Different column ordering between data frames.
   Actual ordering: squares row
 Expected ordering: row squares
 Compare with:
-    diff A/actual-df001.parquet B/expected-df001.parquet
+    diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df001.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df001.parquet
+
+Compare with:
+    tdda diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df001.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df001.parquet

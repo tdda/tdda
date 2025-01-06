@@ -1,4 +1,7 @@
 Data frames have different column structure.
 Wrong column type for field b actual: float64; expected: int64)
 Compare with:
-    diff /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/actual-df002.parquet /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/expected-df002.parquet
+    diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df002.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df002.parquet
+
+Compare with:
+    tdda diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df002.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df002.parquet

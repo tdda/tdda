@@ -28,7 +28,7 @@ BinaryInfo = namedtuple(
 
 
 def perms_ok(n_permutations, max_permutations):
-    return max_permutations is None or n_permutations, max_permutations
+    return max_permutations is None or n_permutations <= max_permutations
 
 class FilesComparison(BaseComparison):
     def check_strings(

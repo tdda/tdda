@@ -19,8 +19,8 @@ import pandas as pd
 
 def generate_dataframe(nrows=10, precision=3):
     """
-    Generate a simple Pandas DataFrame with examples of integer, real and
-    string columns.
+    Generates a simple Pandas DataFrame with integer, real (float),
+    boolean, and string columns.
     """
     df = pd.DataFrame({'i': range(nrows)})
     df['r'] = df.i * (10/9)

@@ -41,7 +41,6 @@ class TestTDDAUtils(ReferenceTestCase):
             self.assertEqual((f'{a} / {b}', to_pc(a / b)),
                              (f'{a} / {b}', expected))
 
-
     def test_n_glyphs(self):
         for s in ('é', 'q̣̇'):
             d = normalize('NFC', s)
@@ -49,26 +48,30 @@ class TestTDDAUtils(ReferenceTestCase):
             self.assertEqual(n_glyphs(c), 1)  # natch
             self.assertEqual(n_glyphs(d), 1)  # less natch
 
-    smiley = chr(0x1F600)
-    okA = '\U0001F44C'
-    okB = '\U0001F44C\U0001F3FB'
-    okC = '\U0001F44C\U0001F3FC'
-    okD = '\U0001F44C\N{EMOJI MODIFIER FITZPATRICK TYPE-4}'
-    okE = '\U0001F44C\U0001F3FE'
-    okF = '\U0001F44C\U0001F3FF'
+        smiley = chr(0x1F600)
+        okA = '\U0001F44C'
+        okB = '\U0001F44C\U0001F3FB'
+        okC = '\U0001F44C\U0001F3FC'
+        okD = '\U0001F44C\N{EMOJI MODIFIER FITZPATRICK TYPE-4}'
+        okE = '\U0001F44C\U0001F3FE'
+        okF = '\U0001F44C\U0001F3FF'
 
-    mmh = ('👨' + chr(0x1F3FB) + chr(0x200D) + '🤝' + chr(0x200D)
-           + '👨' + chr(0x1F3FF))
-    mmh2 = '\U0001F468\U0001F3FB\u200D\U0001F91D\u200D\U0001F468\U0001F3FF'
+        mmh = ('👨' + chr(0x1F3FB) + chr(0x200D) + '🤝' + chr(0x200D)
+               + '👨' + chr(0x1F3FF))
+        mmh2 = '\U0001F468\U0001F3FB\u200D\U0001F91D\u200D\U0001F468\U0001F3FF'
 
 
-    thumbsup = '\U0001F44D\uFE0F'
-    bwthumbsup = '\U0001F44D\uFE0E'
-    for c in (smiley,
-              okA, okB, okC, okD, okE, okF,
-              mmh, mmh2,
-              thumbsup, bwthumbsup,):
-        print(c, len(c), n_glyphs(c))
+        thumbsup = '\U0001F44D\uFE0F'
+        bwthumbsup = '\U0001F44D\uFE0E'
+        glyphs = (smiley,
+                  okA, okB, okC, okD, okE, okF,
+                  mmh, mmh2,
+                  thumbsup, bwthumbsup,
+        )
+        actual = '\n'.join((f'''('{c}', {len(c)}, {n_glyphs(c)})''')
+                           for c in glyphs) + '\n'
+        testdir = os.path.join(os.path.dirname(__file__), 'testdata')
+        self.assertStringCorrect(actual, os.path.join(testdir, 'emoji.txt'))
 
 
 if __name__ == '__main__':
