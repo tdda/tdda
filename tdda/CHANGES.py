@@ -861,7 +861,7 @@ Removed @tag from referencetest example files
 13.06.2024 2.2.05
 Add more packages to setup.py dependencies
 
-###
+19.01.2025 2.2.06
 Fix missing parenthesis in writabletestcase.py
 
 (Thanks Hellseher.)
