@@ -31,7 +31,7 @@ class TestInternals(unittest.TestCase):
 
     def test_unanchored_patterns(self):
         compare = FilesComparison()
-        cpatterns = compare.compile_patterns(["A\d{2}B", "X[a-z]+Y"])
+        cpatterns = compare.compile_patterns([r"A\d{2}B", "X[a-z]+Y"])
         for actual, expected in [
             ("A22BC", "A99BC"),
             ("XappleY", "XtrafficY"),
