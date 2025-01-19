@@ -34,7 +34,7 @@ UNESCAPES = '''!"%',/:;<=>@_` '''
 #
 ########################################
 
-USAGE = '''Usage:
+USAGE = r'''Usage:
 
     rexpy [FLAGS] [INPUTFILE [OUTPUTFILE]]
 
@@ -379,10 +379,10 @@ class Categories(object):
             self.Hex.set(r'\p{XDigit}')
             self.Whitespace.set(r'\p{Space}')
             if el_re:
-                self.ALPHANUMERIC.set('[\p{Upper}\p{Digit}%s]' % el_re)
-                self.alphanumeric.set('[\p{Lower}\p{Digit}%s]' % el_re)
-                self.AlphaNumeric.set('[\p{Alnum}%s]' % el_re)
-                self.UAlphaNumeric.set('[\p{Alnum}%s]' % el_re)
+                self.ALPHANUMERIC.set(r'[\p{Upper}\p{Digit}%s]' % el_re)
+                self.alphanumeric.set(r'[\p{Lower}\p{Digit}%s]' % el_re)
+                self.AlphaNumeric.set(r'[\p{Alnum}%s]' % el_re)
+                self.UAlphaNumeric.set(r'[\p{Alnum}%s]' % el_re)
             else:
                 self.Punctuation.set(r'\p{Punct}')
         else:
@@ -1425,7 +1425,7 @@ class Extractor(object):
             return c
 
     def find_frag_sep_frag_repeated(self, tree, existing=None, results=None):
-        """
+        r"""
         This specifically looks for patterns in the tree constructed
         by self.build_tree of the general form
 
@@ -2477,7 +2477,7 @@ def escape(s, full=False):
 
 
 def escaped_bracket(chars, dialect=None, inner=False):
-    """
+    r"""
     Construct a regular expression Bracket (character class),
     obeying the special regex rules for escaping these:
 
@@ -2499,7 +2499,7 @@ def escaped_bracket(chars, dialect=None, inner=False):
     """
     opener, closer = ('', '') if inner else ('[', ']')
     if dialect in ('javascript', 'ruby'):
-        prefix = '\]' if ']' in chars else ''
+        prefix = r'\]' if ']' in chars else ''
     else:
         prefix = ']' if ']' in chars else ''
     suffix = ((r'\\' if '\\' in chars else '')
@@ -2511,8 +2511,8 @@ def escaped_bracket(chars, dialect=None, inner=False):
 
 
 def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
-    r = '[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
-                       dialect=dialect, inner=True))
+    r = r'[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
+                        dialect=dialect, inner=True))
     i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 

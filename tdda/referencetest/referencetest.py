@@ -444,7 +444,7 @@ class ReferenceTest(object):
         precision=None,
         **kwargs,
     ):
-        """Check that a DataFrame on disk (as a parquet file,
+        r"""Check that a DataFrame on disk (as a parquet file,
            or possible a CSV file, reference DataFrame, also on disk.
 
            Args:
@@ -558,7 +558,7 @@ class ReferenceTest(object):
         precision=None,
         **kwargs,
     ):
-        """Check that a set of serialized datafames in files
+        r"""Check that a set of serialized datafames in files
            match corresponding reference ones.
 
             *actual_paths*:
