@@ -860,4 +860,12 @@ Removed @tag from referencetest example files
 
 13.06.2024 2.2.05
 Add more packages to setup.py dependencies
+
+###
+Fix missing parenthesis in writabletestcase.py
+
+(Thanks Hellseher.)
+
+Also fixed some raw strings Python 3.12 doesn't like,
+and upgraded a utcnow to a non-naive version.
 """

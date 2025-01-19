@@ -204,7 +204,7 @@ class DatasetConstraints(object):
 
     def set_dates_user_host_creator(self, as_at=None):
         now = datetime.datetime.now()
-        utcnow = datetime.datetime.utcnow()
+        utcnow = datetime.datetime.now(datetime.UTC)
         self.as_at = as_at
         self.local_time = now.isoformat(timespec='seconds')
         self.utc_time = utcnow.isoformat(timespec='seconds')
