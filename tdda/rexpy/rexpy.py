@@ -34,7 +34,7 @@ UNESCAPES = '''!"%',/:;<=>@_` '''
 #
 ########################################
 
-USAGE = '''Usage:
+USAGE = r'''Usage:
 
     rexpy [FLAGS] [INPUTFILE [OUTPUTFILE]]
 
@@ -1425,7 +1425,7 @@ class Extractor(object):
             return c
 
     def find_frag_sep_frag_repeated(self, tree, existing=None, results=None):
-        """
+        r"""
         This specifically looks for patterns in the tree constructed
         by self.build_tree of the general form
 
@@ -2477,7 +2477,7 @@ def escape(s, full=False):
 
 
 def escaped_bracket(chars, dialect=None, inner=False):
-    """
+    r"""
     Construct a regular expression Bracket (character class),
     obeying the special regex rules for escaping these:
 
@@ -2512,7 +2512,7 @@ def escaped_bracket(chars, dialect=None, inner=False):
 
 def u_alpha_numeric_re(inc, exc, digits=True, dialect=None):
     r = r'[^\W%s%s]' % ('' if digits else '0-9', escaped_bracket(exc,
-                       dialect=dialect, inner=True))
+                        dialect=dialect, inner=True))
     i = escaped_bracket(inc, dialect=dialect) if len(inc) == 2 else escape(inc)
     return '(%s|%s)' % (r, i) if inc else r
 

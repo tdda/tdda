@@ -17,7 +17,7 @@ The scripts have been:
 * renamed with numbers to indicate the order in which to run them
 * modified to run the setup scripts `0-set-variables.R`, required
   for them to work
-* Scripts 3 and 4 have been modifed to write the plots they produce
+* Scripts 3 and 4 have been modified to write the plots they produce
   to PostScript files.
 
 
@@ -68,7 +68,7 @@ R EXAMPLE 2: A PDF Plot
 
 The second script from the EPA generates a triptych of graphs.
 The code on the website displays the graphs as a pop-up, but we've
-modifed the code to write the graphs out as a PDF, which is rather
+modified the code to write the graphs out as a PDF, which is rather
 easier to test.
 
 To run the second example, you can either follow a similar receipe to

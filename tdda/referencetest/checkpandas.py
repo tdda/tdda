@@ -432,7 +432,7 @@ class PandasComparison(BaseComparison):
         msgs=None,
         **kwargs,
     ):
-        """
+        r"""
         Checks two data frames on disk files are the same,
         by comparing them as dataframes.
 
@@ -515,7 +515,7 @@ class PandasComparison(BaseComparison):
         msgs=None,
         **kwargs,
     ):
-        """
+        r"""
         Wrapper around the check_serialized_dataframes() method,
         used to compare collections of serialized data frames on disk
         against reference counterparts
