@@ -3,7 +3,7 @@ import pandas as pd
 
 from tdda import rexpy
 
-df = pd.DataFrame({'a3': ["one", "two", np.NaN],
+df = pd.DataFrame({'a3': ["one", "two", np.nan],
                    'a45': ['three', 'four', 'five']})
 
 re3 = rexpy.pdextract(df['a3'])

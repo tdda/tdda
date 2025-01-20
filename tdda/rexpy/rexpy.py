@@ -2102,7 +2102,7 @@ def pdextract(cols, seed=None):
         import pandas as pd
         from tdda.rexpy import pdextract
 
-        df = pd.DataFrame({'a3': ["one", "two", np.NaN],
+        df = pd.DataFrame({'a3': ["one", "two", np.nan],
                            'a45': ['three', 'four', 'five']})
 
         re3 = pdextract(df['a3'])
