@@ -869,6 +869,6 @@ Fix missing parenthesis in writabletestcase.py
 Also fixed some raw strings Python 3.12 doesn't like,
 and upgraded a utcnow to a non-naive version.
 
-###
+20.01.2025 2.2.07
 Update some things for Python 3.12 and Numpy 2.0
 """
