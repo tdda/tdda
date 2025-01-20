@@ -10,7 +10,7 @@ from tdda.referencetest import ReferenceTestCase
 from tdda.constraints.testconstraints import *
 from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
-from tdda.serial.testserialmetadata import *
+# from tdda.serial.testserialmetadata import *
 
 # Set the enviroment variable TDDA_CONFIG_TESTS to something (e.g. 1)
 # to report on environment from within which tests are run

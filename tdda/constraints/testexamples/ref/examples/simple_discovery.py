@@ -15,6 +15,7 @@ from __future__ import print_function
 
 import os
 import sys
+import numpy as np
 import pandas as pd
 
 from tdda.constraints.pd.constraints import discover_df
@@ -24,7 +25,7 @@ OUTPATH = os.path.join(OUTDIR, 'example_constraints.tdda')
 
 def example_constraint_generation(path=OUTPATH):
 
-    df = pd.DataFrame({'a': [1, 2, 9], 'b': ['one', 'two', pd.np.NaN]})
+    df = pd.DataFrame({'a': [1, 2, 9], 'b': ['one', 'two', np.nan]})
     constraints = discover_df(df)
 
     if os.path.exists(path):

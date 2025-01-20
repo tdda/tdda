@@ -507,7 +507,7 @@ class PandasVerification(Verification):
 
     - ``True``       --- if the constraint was satified for the column
     - ``False``      --- if column failed to satisfy the constraint
-    - ``np.NaN``  --- if there was no constraint of this kind
+    - ``np.nan``  --- if there was no constraint of this kind
 
     This Pandas-specific implementation of constraint verification also
     provides methods :py:meth:`to_frame` to get the overall verification
@@ -773,8 +773,8 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         import pandas as pd
         from tdda.constraints import verify_df
 
-        df = pd.DataFrame({'a': [0, 1, 2, 10, np.NaN],
-                           'b': ['one', 'one', 'two', 'three', np.NaN]})
+        df = pd.DataFrame({'a': [0, 1, 2, 10, np.nan],
+                           'b': ['one', 'one', 'two', 'three', np.nan]})
         v = verify_df(df, 'example_constraints.tdda')
 
         print('Constraints passing: %d\\n' % v.passes)
@@ -962,8 +962,8 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         import pandas as pd
         from tdda.constraints import detect_df
 
-        df = pd.DataFrame({'a': [0, 1, 2, 10, np.NaN],
-                           'b': ['one', 'one', 'two', 'three', np.NaN]})
+        df = pd.DataFrame({'a': [0, 1, 2, 10, np.nan],
+                           'b': ['one', 'one', 'two', 'three', np.nan]})
         v = detect_df(df, 'example_constraints.tdda')
         detection_df = v.detected()
         print(detection_df.to_string())
@@ -1104,7 +1104,7 @@ def discover_df(df, inc_rex=False, df_path=None):
         import pandas as pd
         from tdda.constraints import discover_df
 
-        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', np.NaN]})
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', np.nan]})
         constraints = discover_df(df)
         with open('example_constraints.tdda', 'w') as f:
             f.write(constraints.to_json())
