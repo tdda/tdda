@@ -71,7 +71,7 @@ class ReferenceTest(object):
 
     @classmethod
     def set_defaults(cls, **kwargs):
-        """Set default parameters, at the class level. These defaults will
+        r"""Set default parameters, at the class level. These defaults will
         apply to all instances of the class.
 
         The following parameters can be set:
@@ -104,7 +104,7 @@ class ReferenceTest(object):
                 in the failure messages. If not explicitly set by
                 :py:meth:`set_defaults()`, the environment variable
                 *TDDA_FAIL_DIR* is used, or, if that is not defined,
-                it defaults to */tmp*, *c:\\temp* or whatever
+                it defaults to */tmp*, *c:\temp* or whatever
                 :py:func:`tempfile.gettempdir()` returns, as
                 appropriate.
         """
@@ -482,7 +482,7 @@ class ReferenceTest(object):
                        and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *\\*\\*kwargs*:
+            *\*\*kwargs*:
                 Any additional named parameters are passed
                 straight through to the *csv_read_fn* function.
 
@@ -594,7 +594,7 @@ class ReferenceTest(object):
                       and ``"NULL"``
                     - ``keep_default_na`` is ``False``
 
-            *\\*\\*kwargs*:
+            *\*\*kwargs*:
                 Any additional named parameters are passed straight
                 through to the *csv_read_fn* function.
 

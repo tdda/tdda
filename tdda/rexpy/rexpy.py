@@ -53,27 +53,27 @@ Optional FLAGS may be used to modify Rexpy's behaviour:
   -g, --group       Generate capture groups for each variable fragment
                     of each regular expression generated, i.e. surround
                     variable components with parentheses
-                        e.g.     ^[A-Z]+\\-[0-9]+$
-                        becomes  ^([A-Z]+)\\-([0-9]+)$
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  ^([A-Z]+)\-([0-9]+)$
 
   -q, --quote       Display the resulting regular expressions as
                     double-quoted, escaped strings, in a form broadly
                     suitable for use in Unix shells, JSON, and string
                     literals in many programming languages.
-                        e.g.     ^[A-Z]+\\-[0-9]+$
-                        becomes  "^[A-Z]+\\-[0-9]+$"
+                        e.g.     ^[A-Z]+\-[0-9]+$
+                        becomes  "^[A-Z]+\-[0-9]+$"
 
   --portable        Product maximally portable regular expressions
-                    (e.g. [0-9] rather than \\d). (This is the default.)
+                    (e.g. [0-9] rather than \d). (This is the default.)
 
   --grep            Same as --portable
 
-  --java            Produce Java-style regular expressions (e.g. \\p{Digit})
+  --java            Produce Java-style regular expressions (e.g. \p{Digit})
 
   --posix           Produce POSIX-compilant regular expressions
-                    (e.g. [[:digit:]] rather than \\d).
+                    (e.g. [[:digit:]] rather than \d).
 
-  --perl            Produce Perl-style regular expressions (e.g. \\d)
+  --perl            Produce Perl-style regular expressions (e.g. \d)
 
   -u, --underscore  Allow underscore to be treated as a letter.
                     Mostly useful for matching identifiers
@@ -1444,7 +1444,7 @@ class Extractor(object):
 
         all fit
 
-        [A-Z]{2}(\\-[A-Z])*
+        [A-Z]{2}(\-[A-Z])*
 
         which, as fragments, would be A = (C, 2, 2) and B = ('.', 1, 1).
 
@@ -2488,7 +2488,7 @@ def escaped_bracket(chars, dialect=None, inner=False):
       - If there is a backslash, it's probably best to escape it.
         Some implementations don't require this, but it will rarely
         do any harm, and most implementation understand at least some
-        escape sequences ("\\w", "\\W", "\\d", "\\s" etc.), so escaping
+        escape sequences ("\w", "\W", "\d", "\s" etc.), so escaping
         seems prudent.
 
     However, javascript and ruby do not follow the unescaped "]" as the

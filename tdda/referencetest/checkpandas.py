@@ -472,7 +472,7 @@ class PandasComparison(BaseComparison):
             *msgs*
                             Optional Diffs object.
 
-            *\\*\\*kwargs*
+            *\*\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
 
@@ -530,7 +530,7 @@ class PandasComparison(BaseComparison):
                             a pandas dataframe. If None, then a default CSV
                             loader is used, which takes the same parameters
                             as the standard pandas pd.read_csv() function.
-            *\\*\\*kwargs*
+            *\*\*kwargs*
                             Any additional named parameters are passed straight
                             through to the loader function.
 
