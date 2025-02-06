@@ -51,6 +51,7 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertIsNone(re.match(RE_ISO8601, '%Y-%M-%d'))
         self.assertIsNone(re.match(RE_ISO8601, 'yyyy-MM-dd'))
 
+    @tag
     def testDateFormatsMapping(self):
         map_date_format = csvw_date_format_to_md_date_format
         self.assertEqual(map_date_format('yyyy-MM-dd'), 'ISO8601')
@@ -323,6 +324,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertDataFramesEqual(df, self.default_read_csv_df,
                                    type_matching='medium')
 
+    #@tag
     def test_csvw_load_small(self):
         # Test loading of small.csv with correct CSVW associated
         # metadata. All types now come in correctly
@@ -410,6 +412,7 @@ class TestPandasLoad(ReferenceTestCase):
             df[c].isnull == pd.Series([False, True, False])
             rf[c].isnull == pd.Series([False, True, False])
 
+    #@tag
     def test_csvw_load_small2(self):
         # Test loading of small.csv with correct CSVW associated
         # metadata. All types now come in correctly
@@ -430,7 +433,6 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertDataFramesEqual(df, rf)
 
 
-#@tag
 class TestCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
     parquet_d = os.path.join(os.path.dirname(__file__),
@@ -794,6 +796,7 @@ class TestCSVWTests(ReferenceTestCase):
         # not really appropriate for what tdda.serial is trying to do
         pass
 
+    @tag
     def test032(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/events-listing.csv')
