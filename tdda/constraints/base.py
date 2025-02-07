@@ -738,8 +738,15 @@ class Verification(object):
         configuration, this writes the report or reports.
         """
         # print_obj(self, '(constraints|fields)', invert=True)
-        if not self.detect_outpath and self.detect_report_formats:
+        if not (self.detect_outpath and self.detect_report_formats):
             return
+
+        #
+        # TODO: If detection reports are no, and output_fields
+        # are specified and do not include fields with failures
+        # self.detect_failure_values below will fail.
+        #
+
         d = self.constraints.to_dict()
         key_fields = self.detect_key
         for field in list(d['fields']):

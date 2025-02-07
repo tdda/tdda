@@ -416,6 +416,10 @@ class CSVWMultiMetadata:
 
 
 def csvw_date_format_to_md_date_format(fmt, extensions=False):
+    """
+    Converts CSVW date formats to nearest equivalent Python
+    data format.
+    """
     if '%' in fmt:
         return fmt
     outfmt = (
@@ -426,7 +430,7 @@ def csvw_date_format_to_md_date_format(fmt, extensions=False):
            .replace('yyyy', '%Y')
            .replace('yy', '%y')
            .replace('HH', '%H')
-           .replace('mm', '%m')
+           .replace('mm', '%M')
            .replace('SSS', 'S')
            .replace('SS', 'S')
            .replace('S', '%f')

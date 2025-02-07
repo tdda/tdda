@@ -430,7 +430,6 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertDataFramesEqual(df, rf)
 
 
-#@tag
 class TestCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
     parquet_d = os.path.join(os.path.dirname(__file__),
