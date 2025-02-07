@@ -856,7 +856,9 @@ class TestCSVWTests(ReferenceTestCase):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')
         resultspath = self.parquet_path(f'{test}-result.parquet')
-        md = load_metadata(self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json'))
+        md = load_metadata(
+            self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
+        )
         df = csv2pandas(csvpath, findmd=True)
         self.assertDataFrameCorrect(df, resultspath)
 
