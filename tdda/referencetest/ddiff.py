@@ -204,7 +204,7 @@ class TDDADiff:
 
 def ddiff_helper(args):
     tddadiff = TDDADiff(args)
-    print(tddadiff.__dict__)
+    # print(tddadiff.__dict__)
     tddadiff.ddiff()
 
 

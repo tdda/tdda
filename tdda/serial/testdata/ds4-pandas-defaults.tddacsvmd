@@ -1,0 +1,22 @@
+{
+    "tdda.serial": "1.0",
+    "pandas": {
+        "sep": ",",
+        "quotechar": "\"",
+        "quoting": 0,
+        "escapechar": "\\",
+        "dtype": {
+            "row": "int64",
+            "i": "float64",
+            "I": "Int64",
+            "r": "float64"
+        },
+        "keep_default_na": false,
+        "na_values": "",
+        "parse_dates": [
+            "dt",
+            "d"
+        ],
+        "date_format": "ISO8601"
+    }
+}

@@ -872,7 +872,9 @@ def loosen_type(t):
 
 
 def types_match(t1, t2, level=None):
-    assert level is None or level in ('strict', 'medium', 'permissive')
+    if not (level is None or level in ('strict', 'medium', 'permissive')):
+        raise ValueError(f'Type match level must be one of strict, medium '
+                         f'or permissive, not {level}')
     if level is None or level == 'strict' or t1.name == t2.name:
         return t1.name == t2.name
 

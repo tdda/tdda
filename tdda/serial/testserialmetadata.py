@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 import re
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -16,13 +17,25 @@ from tdda.serial.reader import (
     csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args
 )
 
+from tdda.serial.simple import (
+    pandas_read_csv, pandas_write_csv, metadata_path
+)
+
+from tdda.referencetest.checkpandas import loosen_type, types_match
+
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
 TESTDATADIR = os.path.join(THISDIR, 'testdata')
 
+TMPDIR = tempfile.mkdtemp()
+
 
 def tdpath(path):
     return os.path.join(TESTDATADIR, path)
+
+
+def tmppath(name):
+    return os.path.join(TMPDIR, name)
 
 
 def dfEqual(self, df, exp):
@@ -870,7 +883,51 @@ class TestCSVWTests(ReferenceTestCase):
         df = csv2pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
         fields = fields_from(csvpath)
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
-        #elf.assertDataFramesEqual(df, ref_df)
+        #self.assertDataFramesEqual(df, ref_df)
+
+
+
+class TestPandasRoundTrips(ReferenceTestCase):
+    @tag
+    def testDefault(self):
+        df = testDataset4()
+        path = tmppath('ds4-pandas-defaults.csv')
+        pandas_write_csv(df, path)
+
+        md_path = metadata_path(path)
+        with open(md_path, 'r') as f:
+            md = f.read()
+        self.assertFileCorrect(md_path,
+                               tdpath('ds4-pandas-defaults.tddacsvmd'))
+        df2 = pandas_read_csv(path)
+        self.assertDataFramesEquivalent(df, df2, type_matching='medium')
+
+
+def testDataset4():
+    return pd.DataFrame({
+        'row': [1, 2, 3, 4, 5],
+        'b': [True, False, None, False, True],
+        'i': [-1, 0, 1, None, None],
+        'I': pd.Series([-1, 0, 1, None, None], dtype='Int64'),
+        'r': [-1.25e-37, -1, None, +1, 1.25e37],
+        's': [None, 'one', 'Nöel', '''(ΑΒΓΔ φχψω "❤️‍🩹" '✔' \n \\)''', ' '],
+        'nulllike': [None, 'NULL', 'NA', 'N/A', 'na'],
+        'd': [
+            datetime.date(1969, 12, 31),
+            datetime.date(1970, 1, 1),
+            datetime.date(2040, 2, 28),
+            datetime.date(2040, 2, 29),
+            None,
+        ],
+        'dt':  [
+            datetime.datetime(1969, 12, 31, 23, 59, 59),
+            datetime.datetime(1970, 1, 1, 0, 0, 0),
+            datetime.datetime(1999, 12, 31, 23, 59, 59),
+            datetime.datetime(2038, 12, 31, 23, 59, 59),
+            None,
+        ]
+    })
+
 
 
 def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
