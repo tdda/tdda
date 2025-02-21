@@ -1,4 +1,4 @@
 {
     "dbtype": "sqlite",
-    "db": "example.db"
+    "db": "example.sqlite3"
 }

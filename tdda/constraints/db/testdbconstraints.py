@@ -113,7 +113,7 @@ class TestDatabaseHandlers:
 class TestSQLiteDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
     @classmethod
     def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.db')
+        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
         db = database_connection(dbtype='sqlite', db=dbfile)
         cls.dbh = DatabaseHandler('sqlite', db)
 
@@ -204,7 +204,7 @@ class TestSQLiteDBConstraintVerifiers(ReferenceTestCase,
                                       TestDatabaseConstraintVerifiers):
     @classmethod
     def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.db')
+        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
         cls.db = database_connection(dbtype='sqlite', db=dbfile)
         cls.dbh = DatabaseHandler('sqlite', cls.db)
 
@@ -266,7 +266,7 @@ class TestSQLiteDBConstraintDiscoverers(ReferenceTestCase,
                                         TestDatabaseConstraintDiscoverers):
     @classmethod
     def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.db')
+        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
         cls.db = database_connection(dbtype='sqlite', db=dbfile)
         cls.dbh = DatabaseHandler('sqlite', cls.db)
 

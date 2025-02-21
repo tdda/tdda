@@ -34,6 +34,8 @@ try:
 except ImportError:
     pymongo = None
 
+from tdda.debug import dprint
+
 
 from tdda.constraints.base import UNICODE_TYPE
 from tdda.constraints.baseconstraints import unicode_string, long_type
@@ -143,6 +145,10 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     Connect to a database, using an appropriate driver for the type
     of database specified.
     """
+    dprint('* *', 'table=', table,
+           'conn=', conn, 'dbtype=', dbtype, 'db=', db,
+           '\nhost=', host, 'port=', port, 'user=', user, 'password=', password,
+           'schema=', schema)
     if conn:
         defaults = ConnectionSpec(conn)
     else:
@@ -188,6 +194,12 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     if db is None:
         print('Database name required ("-db name")', file=sys.stderr)
         sys.exit(1)
+    dprint('^^^', defaults)
+    dprint('***', 'table=', table,
+          'conn=', conn, 'dbtype=', dbtype, 'db=', db,
+          '\nhost=', host, 'port=', port, 'user=', user, 'password=', password,
+          'schema=', schema)
+
 
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
@@ -294,6 +306,10 @@ class ConnectionSpec:
             # then resolve that relative to the location of the .conn file.
             self.db = os.path.join(os.path.dirname(filename), self.db)
 
+    def __str__(self):
+        params=',\n    '.join('%s: %s' % (k, repr(v))
+                       for k, v in sorted(self.__dict__.items()))
+        return 'ConnectionSpec(\n    %s\n)' % params
 
 class Connection:
     """
@@ -308,6 +324,10 @@ class Connection:
         self.database = database
         self.user = user
 
+    def __str__(self):
+        params=',\n    '.join('%s: %s' % (k, repr(v))
+                       for k, v in sorted(self.__dict__.items()))
+        return 'Connection(\n    %s\n)' % params
 
 class DatabaseHandler:
     """
@@ -336,6 +356,7 @@ class SQLDatabaseHandler:
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
+        self._db = db
         self.db = db.connection
         self.schema = db.schema
         self.cursor = db.connection.cursor()
@@ -423,6 +444,9 @@ class SQLDatabaseHandler:
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
 
+        dprint('Connection>>>', self._db)
+        dprint('All SQL>>>', allsql)
+        dprint('SQL>>>', sql)
         if self.execute_scalar(allsql) == 0:
             # no permission to see any tables, so wrong credentials
             raise Exception('Permission denied')
@@ -493,6 +517,7 @@ class SQLDatabaseHandler:
             'datetime'                   : 'date',
             None                         : None,
             ''                           : None,
+            'any'                        : None
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
