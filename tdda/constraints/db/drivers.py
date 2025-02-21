@@ -379,7 +379,7 @@ class SQLDatabaseHandler:
             return None
         else:
             raise Exception('Unrecognised database type %s' % self.dbtype)
-        
+
     def split_name(self, name):
         parts = name.split('.')
         if len(parts) == 1:
@@ -492,20 +492,21 @@ class SQLDatabaseHandler:
             'date'                       : 'date',
             'datetime'                   : 'date',
             None                         : None,
+            ''                           : None,
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
                 sql = '''
                     SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_NAME = '%s' 
+                    WHERE TABLE_NAME = '%s'
                      AND TABLE_SCHEMA = '%s'
                      AND COLUMN_NAME = '%s';
                     ''' % (table, schema, colname)
             else:
                 sql = '''
                     SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_NAME = '%s' 
+                    WHERE TABLE_NAME = '%s'
                      AND COLUMN_NAME = '%s';
                     ''' % (tablename, colname)
             typeresult = self.execute_scalar(sql)

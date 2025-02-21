@@ -871,4 +871,9 @@ and upgraded a utcnow to a non-naive version.
 
 20.01.2025 2.2.07
 Update some things for Python 3.12 and Numpy 2.0
+
+###
+Minor SQLite fix (type handling)
+
+
 """
