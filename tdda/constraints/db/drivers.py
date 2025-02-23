@@ -215,8 +215,8 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
         conn = connector(host, port, database, user, password)
         if conn is None:
             sys.exit(1)   # error message already reported
-        return Connection(conn, schema, host=host, port=port,
-                          database=database, user=user)
+        return DBConnector(conn, schema, host=host, port=port,
+                           database=database, user=user)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -331,9 +331,11 @@ class ConnectionSpec:
         return 'ConnectionSpec(\n    %s\n)' % params
 
 
-class Connection:
+class DBConnector:
     """
-    A database connection object (also holder for additional attributes)
+    A database connector object, containing the actual
+    database *connection*, as well as holding additional attributes
+    about the connection.
     """
     def __init__(self, connection, schema, host=None, port=None,
                  database=None, user=None):
@@ -347,16 +349,16 @@ class Connection:
     def __str__(self):
         params=',\n    '.join('%s: %s' % (k, repr(v))
                        for k, v in sorted(self.__dict__.items()))
-        return 'Connection(\n    %s\n)' % params
+        return 'DBConnector(\n    %s\n)' % params
 
 
 class DatabaseHandler:
     """
     Common SQL and NoSQL database support
     """
-    def __init__(self, dbtype, db):
+    def __init__(self, dbtype, dbc):
         handlerClass = self.check_db_type(dbtype)
-        self.instance = handlerClass(dbtype, db)
+        self.instance = handlerClass(dbtype, dbc)
 
     def check_db_type(self, dbtype):
         """
@@ -377,8 +379,8 @@ class SQLDatabaseHandler:
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
-        self._db = db
-        self.db = db.connection
+        self.db = db  # TODO: probably rename as .db
+        self.dbc = db.connection  # TODO: rename as dbc
         self.schema = db.schema
         self.cursor = db.connection.cursor()
 
@@ -465,7 +467,7 @@ class SQLDatabaseHandler:
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
 
-        dprint('Connection>>>', self._db)
+        dprint('DBConnector>>>', self.dbc)
         dprint('All SQL>>>', allsql)
         dprint('SQL>>>', sql)
         if self.execute_scalar(allsql) == 0:
@@ -694,16 +696,16 @@ class MongoDBDatabaseHandler:
     """
     NoSQL MonggoDB support
     """
-    def __init__(self, dbtype, db):
+    def __init__(self, dbtype, dbc):
         self.dbtype = dbtype
-        self.db = db
+        self.db = dbc
 
     def find_collection(self, tablename):
         """
         Search through the collections hierarchy to resolve dotted names
         """
         parts = tablename.split('.')
-        collection = self.db.connection
+        collection = self.dbc.connection
         for p in parts:
             if p not in collection.collection_names():
                 raise Exception('collection %s does not exist' % tablename)

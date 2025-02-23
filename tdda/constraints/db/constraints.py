@@ -123,14 +123,14 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
     A :py:class:`DatabaseConstraintVerifier` object provides methods
     for verifying every type of constraint against a single database table.
     """
-    def __init__(self, dbtype, db, tablename, epsilon=None,
+    def __init__(self, dbtype, dbc, tablename, epsilon=None,
                  type_checking='strict', testing=False):
         """
         Inputs:
 
             *dbtype*:
                     Type of database.
-            *db*:
+            *dbc*:
                     A DB-API database connection object (as obtained from
                     a call to the connect() method on the underlying database
                     driver).
@@ -139,7 +139,7 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
                     database and is accessible. It can either be a simple
                     name, or a schema-qualified name of the form `schema.name`.
         """
-        DatabaseHandler.__init__(self, dbtype, db)
+        DatabaseHandler.__init__(self, dbtype, dbc)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename, testing)
@@ -165,8 +165,8 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     A :py:class:`DatabaseConstraintDiscoverer` object is used to discover
     constraints on a single database table.
     """
-    def __init__(self, dbtype, db, tablename, inc_rex=False, seed=None):
-        DatabaseHandler.__init__(self, dbtype, db)
+    def __init__(self, dbtype, dbc, tablename, inc_rex=False, seed=None):
+        DatabaseHandler.__init__(self, dbtype, dbc)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename)
