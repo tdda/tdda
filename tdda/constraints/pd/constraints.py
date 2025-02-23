@@ -1134,7 +1134,6 @@ def discover_df(df, inc_rex=False, df_path=None):
 
     See *simple_generation.py* in the :ref:`constraint_examples`
     for a slightly fuller example.
-
     """
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
     constraints = disco.discover()

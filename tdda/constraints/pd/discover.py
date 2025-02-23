@@ -8,7 +8,6 @@ as parquetfiles, and save the generated constraints as a .tdda JSON file.
 """
 
 USAGE = '''
-
 Parameters:
 
   * input is one of:
@@ -37,6 +36,30 @@ from tdda.constraints.pd.constraints import discover_df, load_df
 
 
 def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+    """
+    Automatically discover potentially useful constraints that characterize
+    the data provided in the file.
+
+    Input:
+
+        *df_path*:
+            any file in a format understood, usually a CSV file,
+            a parquet file.
+
+        *constraints_path*:
+            The path to which to write the constraints.
+            If None, constraints are not written.
+            If '-', constraints are sent to stdout.
+
+        *verbose*:
+            Controls level of output reporting
+
+        *kwargs*:
+            Passed to discover_df
+
+    Returns:
+        :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
+    """
     md_df_path = df_path
     if df_path == '-':
         df_path = StringIO(sys.stdin.read())

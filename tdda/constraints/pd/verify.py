@@ -42,6 +42,30 @@ from tdda.constraints.pd.constraints import verify_df, load_df
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+    """
+    Verify that (i.e. check whether) the data provided
+    satisfies the constraints in the JSON ``.tdda`` file provided.
+
+    Inputs:
+
+        *df_path*:
+             Path to a file containing data to be verified.
+             Normally a parquet of CSV file.
+
+        *constraints_path*:
+             The path to a JSON ``.tdda`` file.
+             Alternatively, can be an in-memory
+             :py:class:`~tdda.constraints.base.DatasetConstraints` object.
+
+        *verbose*:
+            Controls level of output reporting
+
+        *kwargs*:
+            Passed to discover_df
+
+    Returns:
+        JSON description of constraints.
+    """
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())
         if constraints_path is None:
