@@ -305,7 +305,7 @@ class ConnectionSpec:
         # as well as database, and also (currently) store as .db
         # as well as .database. But .db this will be removed when safe
         self.database = d.get('database') or d.get('db')
-        self.db = self.database
+        self.db = self.database  # TODO: Remove!
 
         self.host = d.get('host')
         self.port = d.get('port')
@@ -315,10 +315,12 @@ class ConnectionSpec:
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
                     and self.db is not None
-                    and not os.path.isabs(self.db)):
+                    and not os.path.isabs(self.database)):
             # if a .conn file for a sqlite connection specifies a .db file,
             # then resolve that relative to the location of the .conn file.
-            self.db = os.path.join(os.path.dirname(filename), self.db)
+            self.database = os.path.join(os.path.dirname(filename),
+                                         self.database)
+            self.db = self.database
 
     def __str__(self):
         params=',\n    '.join('%s: %s' % (k, repr(v))
