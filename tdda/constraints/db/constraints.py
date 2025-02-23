@@ -319,7 +319,7 @@ def detect_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
                               'for databases.')
 
 
-def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
+def discover_db_table(dbtype, dbc, tablename, inc_rex=False, seed=None):
     """
     Automatically discover potentially useful constraints that characterize
     the database table provided.
@@ -329,7 +329,7 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
         *dbtype*:
             Type of database.
         *db*:
-            a database object
+            a database connection object
         *tablename*:
             a table name
 
@@ -433,7 +433,7 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
             f.write(constraints.to_json())
 
     """
-    disco = DatabaseConstraintDiscoverer(dbtype, db, tablename,
+    disco = DatabaseConstraintDiscoverer(dbtype, dbc, tablename,
                                          inc_rex=inc_rex, seed=seed)
     if not disco.check_table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
@@ -443,8 +443,8 @@ def discover_db_table(dbtype, db, tablename, inc_rex=False, seed=None):
         nrows = disco.get_nrows(tablename)
         constraints.set_stats(n_records=nrows, n_selected=nrows)
         constraints.set_dates_user_host_creator()
-        constraints.set_rdbms('%s:%s:%s:%s' % (dbtype or '', db.host or '',
-                                               db.user, db.database))
+        constraints.set_rdbms('%s:%s:%s:%s' % (dbtype or '', dbc.host or '',
+                                               dbc.user, dbc.database))
         constraints.set_source(tablename, tablename)
     return constraints
 

@@ -42,6 +42,8 @@ from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
+from tdda.utils import handle_tilde
+
 
 DATABASE_USAGE = '''
 
@@ -138,38 +140,44 @@ def database_arg_flags(create_flags, parser, args, params):
     return flags
 
 
-def database_connection(table=None, conn=None, dbtype=None, db=None,
+def database_connection(table=None, conn_file=None, dbtype=None, database=None,
                         host=None, port=None, user=None, password=None,
-                        schema=None):
+                        schema=None, db=None, conn=None):
     """
     Connect to a database, using an appropriate driver for the type
     of database specified.
     """
+
+    # Backwards compatibilty
+    database = database or db
+    conn_file = conn_file or conn
+
     dprint('* *', 'table=', table,
-           'conn=', conn, 'dbtype=', dbtype, 'db=', db,
-           '\nhost=', host, 'port=', port, 'user=', user, 'password=', password,
-           'schema=', schema)
-    if conn:
-        defaults = ConnectionSpec(conn)
+           'conn_file=', conn_file, 'dbtype=', dbtype, 'database=', database,
+           '\nhost=', host, 'port=', port, 'user=', user,
+           'password=', password, 'schema=', schema)
+    if conn_file:
+        defaults = ConnectionSpec(conn_file)
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
-            connfile = os.path.join(os.path.expanduser('~'),
-                                    '.tdda_db_conn' + '_' + dbtypelower)
-            if dbtypelower == 'postgres' and not os.path.exists(connfile):
-                connfile = os.path.join(os.path.expanduser('~'),
-                                        '.tdda_db_conn_postgresql')
+            dflt_conn_file = handle_tilde('~/.tdda_db_conn_' + dbtypelower)
+            if (
+                dbtypelower == 'postgres'
+                and not os.path.exists(dflt_conn_file)
+            ):
+                dflt_conn_file = handle_tilde('~.tdda_db_conn_postgresql')
         else:
-            connfile = os.path.join(os.path.expanduser('~'), '.tdda_db_conn')
-        if os.path.exists(connfile):
-            defaults = ConnectionSpec(connfile)
+            dflt_conn_file = handle_tilde('~/.tdda_db_conn')
+        if os.path.exists(dflt_conn_file):
+            defaults = ConnectionSpec(dflt_conn_file)
         else:
             defaults = None
     if defaults:
         if dbtype is None:
             dbtype = defaults.dbtype
-        if db is None:
-            db = defaults.db
+        if database is None:
+            database = defaults.database or defaults.db
         if host is None:
             host = defaults.host
         if port is None:
@@ -191,12 +199,12 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     if dbtype is None:
         print('Database type required ("-dbtype type")', file=sys.stderr)
         sys.exit(1)
-    if db is None:
+    if database is None:
         print('Database name required ("-db name")', file=sys.stderr)
         sys.exit(1)
     dprint('^^^', defaults)
     dprint('***', 'table=', table,
-          'conn=', conn, 'dbtype=', dbtype, 'db=', db,
+          'conn_file=', conn_file, 'dbtype=', dbtype, 'database=', database,
           '\nhost=', host, 'port=', port, 'user=', user, 'password=', password,
           'schema=', schema)
 
@@ -204,11 +212,11 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
         connector = DATABASE_CONNECTORS[dbtypelower]
-        conn = connector(host, port, db, user, password)
+        conn = connector(host, port, database, user, password)
         if conn is None:
             sys.exit(1)   # error message already reported
-        return Connection(conn, schema, host=host, port=port, database=db,
-                          user=user)
+        return Connection(conn, schema, host=host, port=port,
+                          database=database, user=user)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -292,7 +300,13 @@ class ConnectionSpec:
         with open(filename) as f:
             d = json.loads(f.read())
         self.dbtype = d.get('dbtype')
-        self.db = d.get('db')
+
+        # For reasons of backwards compatibility, we accept db
+        # as well as database, and also (currently) store as .db
+        # as well as .database. But .db this will be removed when safe
+        self.database = d.get('database') or d.get('db')
+        self.db = self.database
+
         self.host = d.get('host')
         self.port = d.get('port')
         self.user = d.get('user')
@@ -310,6 +324,7 @@ class ConnectionSpec:
         params=',\n    '.join('%s: %s' % (k, repr(v))
                        for k, v in sorted(self.__dict__.items()))
         return 'ConnectionSpec(\n    %s\n)' % params
+
 
 class Connection:
     """

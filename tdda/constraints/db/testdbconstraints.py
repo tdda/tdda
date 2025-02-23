@@ -138,6 +138,7 @@ class TestMySQLDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
 
 @unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
 class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
+    @tag
     def test_sqlite_connection_from_file(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
         db = database_connection(conn=connfile)

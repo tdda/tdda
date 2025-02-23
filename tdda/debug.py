@@ -2,7 +2,7 @@ from rich import print as rprint
 from rich.console import Console
 from rich.style import Style
 
-DEBUG = False
+DEBUG = True
 
 def dprint(*args, **kw):
     if DEBUG:
