@@ -222,18 +222,18 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
         sys.exit(1)
 
 
-def database_connection_postgres(host, port, db, user, password):
+def database_connection_postgres(host, port, database, user, password):
     if pgdb:
         if port is not None:
             host = host + ':' + str(port)
-        return pgdb.connect(host=host, database=db,
+        return pgdb.connect(host=host, database=database,
                             user=user, password=password)
     else:
         print('PostgreSQL driver not available', file=sys.stderr)
         sys.exit(1)
 
 
-def database_connection_mysql(host, port, db, user, password):
+def database_connection_mysql(host, port, database, user, password):
     if MySQLdb:
         # TODO: should provide support for MySQL 'option-files' too.
         if host is None:
@@ -244,7 +244,7 @@ def database_connection_mysql(host, port, db, user, password):
             user = getpass.getuser()
         if password:
             try:
-                return MySQLdb.connect(host=host, port=port, db=db,
+                return MySQLdb.connect(host=host, port=port, db=database,
                                        user=user, password=password)
             except:
                 # some versions of the MySQL driver use different names
@@ -256,25 +256,25 @@ def database_connection_mysql(host, port, db, user, password):
         print('MySQL driver not available', file=sys.stderr)
 
 
-def database_connection_sqlite(host, port, db, user, password):
+def database_connection_sqlite(host, port, database, user, password):
     if sqlite3:
-        conn = sqlite3.connect(db)
-        conn.create_function('regexp', 2, regex_matcher)
-        return conn
+        dbc = sqlite3.connect(database)
+        dbc.create_function('regexp', 2, regex_matcher)
+        return dbc
     else:
         print('sqlite driver not available', file=sys.stderr)
         sys.exit(1)
 
 
-def database_connection_mongodb(host, port, db, user, password):
+def database_connection_mongodb(host, port, database, user, password):
     if pymongo:
         if host is None:
             host = 'localhost'
         if port is None:
             port = 27017
         client = pymongo.MongoClient(host, port)
-        if db not in client.database_names():
-            print('Mongodb database %s does not exist' % db)
+        if database not in client.database_names():
+            print('Mongodb database %s does not exist' % database)
             sys.exit(1)
         return client[db]
     else:
@@ -316,7 +316,8 @@ class ConnectionSpec:
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
                     and self.db is not None
                     and not os.path.isabs(self.database)):
-            # if a .conn file for a sqlite connection specifies a .db file,
+            # if a .conn file for a sqlite connection specifies a .sqlite3
+            # file,
             # then resolve that relative to the location of the .conn file.
             self.database = os.path.join(os.path.dirname(filename),
                                          self.database)
