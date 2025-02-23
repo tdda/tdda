@@ -63,6 +63,18 @@ def swap_ext_q(path, new_ext):
     return outpath, new_ext != ext
 
 
+def handle_tilde(path):
+    """
+    Handle paths starting tilde.
+
+    Does nothing unless path is a string and starts with '~'
+    """
+    if type(path) is str and path.startswith('~'):
+        return os.path.expanduser(path)
+    else:
+        return path
+
+
 def dict_to_json(d, path=None):
     """
     Dumps appropriately formatted version of dictionary d to JSON.

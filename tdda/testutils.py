@@ -1,3 +1,5 @@
+import os
+
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 from tdda.utils import *
 from unicodedata import normalize
@@ -72,6 +74,32 @@ class TestTDDAUtils(ReferenceTestCase):
                            for c in glyphs) + '\n'
         testdir = os.path.join(os.path.dirname(__file__), 'testdata')
         self.assertStringCorrect(actual, os.path.join(testdir, 'emoji.txt'))
+
+    def test_handle_tilde_non_strings(self):
+        self.assertIsNone(handle_tilde(None))
+        self.assertEqual(handle_tilde(0), 0)
+
+
+    def test_handle_tilde_strings(self):
+        homedir = os.path.expanduser('~')
+        user = os.path.split(homedir)[-1]
+
+        self.assertEqual(handle_tilde('~/foo.csv'),
+                         os.path.join(homedir, 'foo.csv'))
+        self.assertEqual(handle_tilde('~%s/foo.csv' % user),
+                         os.path.join(homedir, 'foo.csv'))
+
+        self.assertEqual(handle_tilde('~/bar/foo.csv'),
+                         os.path.join(homedir, 'bar', 'foo.csv'))
+        self.assertEqual(handle_tilde('~%s/bar/foo.csv' % user),
+                         os.path.join(homedir, 'bar', 'foo.csv'))
+
+    def test_handle_tilde_non_tilde_trings(self):
+
+        self.assertEqual(handle_tilde('foo.csv'), 'foo.csv')
+        self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
+
+
 
 
 if __name__ == '__main__':

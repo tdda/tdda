@@ -60,6 +60,7 @@ from tdda.constraints.baseconstraints import (
 )
 from tdda.pd.utils import is_string_col, is_string_dtype, is_categorical_dtype
 
+
 from tdda.referencetest.checkpandas import (default_csv_loader,
                                             default_csv_writer)
 from tdda import rexpy
@@ -70,7 +71,7 @@ from tdda.serial.utils import (
     find_metadata_type_from_path
 )
 from tdda.serial.pandasio import to_pandas_read_csv_args
-from tdda.utils import ok_field_name, pass_fail_stats
+from tdda.utils import ok_field_name, pass_fail_stats, handle_tilde
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
@@ -714,7 +715,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
                             For example, with epsilon set to 0.01 (i.e. 1%),
                             values can be up to 1% larger than a max constraint
                             without generating constraint failure,
-                            and minimum values can be up to 1% smaller
+
                             that the minimum constraint value without
                             generating a constraint failure. (These
                             are modified, as appropriate, for negative
@@ -1184,6 +1185,8 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
     exists = os.path.exists(os.path.expanduser(path))
     stem, ext = os.path.splitext(path)
     lcstem, ext = stem.lower(), ext.lower()
+
+    path = handle_tilde(path)
 
     if ext == '.parquet':
         return pd.read_parquet(path)

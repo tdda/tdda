@@ -189,7 +189,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
         M = self.get_max(colname)
         if self.is_null(M):       # If there are no values, no value can
-            return True           # the maximum constraint
+            return True           # violate the maximum constraint
 
         if (isinstance(value, datetime.datetime)
                 or isinstance(value, datetime.date)):

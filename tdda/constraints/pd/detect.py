@@ -41,6 +41,8 @@ from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
+from tdda.utils import handle_tilde, nvl
+
 
 def detect_df_from_file(df_path, constraints_path, outpath=None,
                         verbose=True, **kwargs):
@@ -120,7 +122,7 @@ class PandasDetector:
 
     def detect(self):
         params = pd_detect_params(self.argv[1:])
-        path = params['df_path']
+        path = handle_tilde(params['df_path'])
         if path is not None and path != '-' and not os.path.isfile(path):
             print('%s does not exist' % path)
             sys.exit(1)
