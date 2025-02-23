@@ -248,10 +248,11 @@ def database_connection_mysql(host, port, database, user, password):
                                        user=user, password=password)
             except:
                 # some versions of the MySQL driver use different names
-                return MySQLdb.connect(host=host, port=port, db=db,
+                return MySQLdb.connect(host=host, port=port, db=database,
                                        username=user, passwd=password)
         else:
-            return MySQLdb.connect(host=host, port=port, db=db, user=user)
+            return MySQLdb.connect(host=host, port=port, db=database,
+                                   user=user)
     else:
         print('MySQL driver not available', file=sys.stderr)
 
@@ -276,7 +277,7 @@ def database_connection_mongodb(host, port, database, user, password):
         if database not in client.database_names():
             print('Mongodb database %s does not exist' % database)
             sys.exit(1)
-        return client[db]
+        return client[database]
     else:
         print('mongodb driver not available', file=sys.stderr)
         sys.exit(1)
@@ -304,6 +305,7 @@ class ConnectionSpec:
         # For reasons of backwards compatibility, we accept db
         # as well as database, and also (currently) store as .db
         # as well as .database. But .db this will be removed when safe
+
         self.database = d.get('database') or d.get('db')
         self.db = self.database  # TODO: Remove!
 
@@ -314,7 +316,7 @@ class ConnectionSpec:
         self.schema = d.get('schema')
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
-                    and self.db is not None
+                    and self.database is not None
                     and not os.path.isabs(self.database)):
             # if a .conn file for a sqlite connection specifies a .sqlite3
             # file,
@@ -346,6 +348,7 @@ class Connection:
         params=',\n    '.join('%s: %s' % (k, repr(v))
                        for k, v in sorted(self.__dict__.items()))
         return 'Connection(\n    %s\n)' % params
+
 
 class DatabaseHandler:
     """
