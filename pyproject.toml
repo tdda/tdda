@@ -27,8 +27,19 @@ pythonpath = [
   ".", "tdda"
 ]
 
-testpaths = [
-    "serial",
+#testpaths = [
+    #"tdda/serial",
+#]
+
+norecursedirs = [
+    'constraints',
+    'deprecated',
+    'pd',
+    'gentest',
+    'rexpy',
+    'serial',
+    'referencetest',
+    'build'
 ]
 
 [tool.black]
