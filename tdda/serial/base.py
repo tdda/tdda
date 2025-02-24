@@ -35,6 +35,18 @@ class URI:
     CSVW = 'http://www.w3.org/ns/csvw'
 
 
+class Defaults:
+    ENCODING = 'UTF-8'
+    DELIMITER = ','
+    QUOTE_CHAR = '"'
+    ESCAPE_CHAR = '\\'
+    STUTTER = False
+    HEADER_ROW_COUNT = 1
+    NULL_INDICATORS = ['']
+    DATE_FORMAT = DateFormat.ISO8601_DATE
+    DATETIME_FORMAT = DateFormat.ISO8601_DATETIME
+
+
 CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
 
@@ -76,20 +88,8 @@ class FieldMetadata:
         self.name = name
         self.mtype = mtype
         self.altnames = None
-
-        self.delimiter = None
-        self.encoding = None
-
-        self.header_row_count = None
-        self.comment_prefix = None
-        self.line_terminators = None
-        self.quote_char = None
-        self.skip_blank_rows = None
-        self.skip_initial_space = None
-        self.skip_columns = None
-        self.skip_rows = None
+        self.format = format
         self.nullmarkers = nullmarkers
-        # stutter
 
         for k, v in kw.items():
             if allow_extras:
@@ -135,8 +135,9 @@ class Metadata:
         escape_char=None,
         stutter_quotes=None,
         date_format=None,
+        datetime_format=None,
         null_indicators=None,
-        header_rows=0,
+        header_rows=1,
         verbosity=VERBOSITY
     ):
         self.fields = fields or []
@@ -147,6 +148,19 @@ class Metadata:
         self.escape_char = escape_char
         self.stutter_quotes = stutter_quotes
         self.date_format = None
+        self.null_indicators = null_indicators
+
+        self.delimiter = None
+        self.encoding = None
+
+        self.header_row_count = None
+        self.comment_prefix = None
+        self.line_terminators = None
+        self.skip_blank_rows = None
+        self.skip_initial_space = None
+        self.skip_columns = None
+        self.skip_rows = None
+
 
         self.errors = []
         self.warnings = []

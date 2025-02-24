@@ -5,7 +5,9 @@ import sys
 import pandas as pd
 
 from tdda.serial.csvw import CSVWMetadata
-from tdda.serial.base import Metadata, FieldMetadata, FieldType
+from tdda.serial.base import (
+    Metadata, FieldMetadata, FieldType, DateFormat, Defaults
+)
 
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
@@ -171,11 +173,17 @@ def df_to_metadata(df, path=None):
         col_to_field_metadata(df[c])
         for c in df
     ]
-
+    return Metadata(fields, path=path,
+                    encoding=Defaults.ENCODING,
+                    delimiter=Defaults.DELIMITER,
+                    quote_char=Defaults.QUOTE_CHAR,
+                    escape_char=Defaults.ESCAPE_CHAR,
+                    null_indicators=Defaults.NULL_INDICATORS,
+                    header_rows=Defaults.HEADER_ROWS)
 
 
 def col_to_field_metadata(field, mtype=None,
-                                 fmt=None, validate=True):
+                          fmt=None, prefer_nullable=True):
     """
     Produces a FieldMetadata object for the pandas series provided
     in field.
@@ -184,21 +192,32 @@ def col_to_field_metadata(field, mtype=None,
 
         field: a pandas series
 
-        mtype: Optional mtype to use. Must be compatible
-               with the data in the field if validate is True
+        fieldtype:         Optional mtype to use. Must be compatible
+                           with the data in the field if validate is True
 
-        fmt: Optional format informaiton for the field
+        fmt:               Optional format informaiton for the field
 
-        validate: If true, will fail if mtype is not compatible
-                  with the data in the field.
+        prefer_nullable:   promote int-ish floats to ints
 
     Returns:
 
         FieldMetadata object for the field
 
     """
-    name = field.name
+    if mtype:
+        fieldtype = mtype
+    else:
+        fieldtype = dtype_to_fieldtype(field.mtype, col=field,
+                                       prefer_nullable=prefer_nullable)
 
+    if not fmt:
+        if fieldtype == Fieldtype.DATE:
+            fmt = DateFormat.ISO8601_DATE
+        elif fieldtype == Fieldtype.DATETIME:
+            fmt = DateFormat.ISO8601_DATETIME
+        elif fieldtype == Fieldtype.DATETIME_WITH_TIMEZONE:
+            fmt = DateFormat.ISO8601_DATETIME_TZ
+    return FieldMetadata(field.name, mtype, format=fmt)
 
 
 def item(v):
