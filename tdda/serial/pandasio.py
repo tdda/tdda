@@ -1,5 +1,14 @@
+import datetime
+import re
 import sys
+
+import pandas as pd
+
 from tdda.serial.csvw import CSVWMetadata
+from tdda.serial.base import Metadata, FieldMetadata, FieldType
+
+
+DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 
 
 MTYPE_TO_PANDAS_DTYPE = {
@@ -83,3 +92,114 @@ def to_pandas_read_csv_args(md):
                 kw['true_values'] = list(trues)
                 kw['false_values'] = list(falses)
     return kw
+
+
+def dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
+    """
+    Converts a pandas dtype to a serial.base.FieldType
+
+    Args:
+
+        dtype   is the pandas datatype to be converted.
+                It can be provided as the actual dtype (df[col].dtype)
+                or as the string version of that (str(df[col].dtype)).
+
+        col     (Optional) the column of values (a pd.Series, typically)
+
+        prefer_nullable:  If True, will demote floats to ints where possible
+
+    Returns:
+
+        The mtype (a value from FieldType) if recognized,
+        or None if no recognized dtype is found.
+    """
+
+    dt = str(dtype) if type(dtype) is not str else dtype
+    dtl = dt.lower()
+    if dtl.startswith('int') or dtl.startswith('uint'):
+        return FieldType.INT
+    elif dtl.startswith('float'):
+        if prefer_nullable and (col is not None):
+            nonnull = col.dropna()
+            if nonnull.size > 0:
+                if (nonnull.astype(int) == nonnull).sum() == len(nonnull):
+                    return FieldType.INT
+        return FieldType.FLOAT
+    elif dt.startswith('string'):
+        return FieldType.STRING
+    elif dt.startswith('datetime'):
+        m = re.match(DATETIME_RE, dt)
+        if m:
+            if m.group(1):
+                return FieldType.DATETIME_WITH_TIMEZONE
+            else:
+                return FieldType.DATETIME
+    elif dtl.startswith('bool'):
+        return FieldType.BOOL
+    elif dtl == 'object':
+        if col is None:
+            return FieldType.STRING  # Most likely
+        else:
+            nonnulls = col.dropna()
+            if nonnulls.size == 0:
+                return FieldType.STRING  # Most likely
+            r = nonnulls.min()
+            m = item(r)
+            t = type(m)
+            if t is str:
+                return FieldType.STRING
+            elif pd.isnull(m):
+                return FieldType.STRING
+            elif t is bool:
+                return FieldType.BOOL
+            elif t is int:
+                return FieldType.INT
+            elif t is float:
+                return FieldType.FLOAT
+            elif t is datetime.date:
+                return FieldType.DATE
+            elif t is datetime.datetime:
+                return FieldType.DATETIME
+            elif str(t).endwith('Timestamp'):
+                return FieldType.DATETIME_TZ
+    else:
+        return None
+
+
+def df_to_metadata(df, path=None):
+    fields = [
+        col_to_field_metadata(df[c])
+        for c in df
+    ]
+
+
+
+def col_to_field_metadata(field, mtype=None,
+                                 fmt=None, validate=True):
+    """
+    Produces a FieldMetadata object for the pandas series provided
+    in field.
+
+    Args:
+
+        field: a pandas series
+
+        mtype: Optional mtype to use. Must be compatible
+               with the data in the field if validate is True
+
+        fmt: Optional format informaiton for the field
+
+        validate: If true, will fail if mtype is not compatible
+                  with the data in the field.
+
+    Returns:
+
+        FieldMetadata object for the field
+
+    """
+    name = field.name
+
+
+
+def item(v):
+    return v.item() if hasattr(v, 'item') else v

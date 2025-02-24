@@ -19,5 +19,8 @@ except ImportError:
     print('Skipping Database tests', file=sys.stderr)
 
 
+from tdda.constraints.testcommonconstraints import *
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main()

@@ -10,6 +10,10 @@ from collections import namedtuple
 
 import numpy as np
 
+from rich import print as rprint
+
+TDDADIR = os.path.dirname(__file__)  # base tdda directory for package
+
 class PassFailStats:
     def __init__(self, passes, failures, items='records'):
         self.items = items
@@ -209,3 +213,32 @@ def n_glyphs(s):
     """
     return len(regex.findall(r'\X', s))
 
+
+def tddadir(path):
+    """
+    Returns the full path to path where path is in the base tdda directory
+    """
+    return os.path.join(TDDADIR, path)
+
+
+def constraints_testdata_path(path):
+    """
+    Returns the full path to path where path is in the constraints
+    testdata directory
+    """
+    return os.path.join(TDDADIR, 'constraints', 'testdata', path)
+
+
+
+def richbad(s, colour=True, cond=True):
+    if colour and cond:
+        return '[red]%s[/red]' % s
+    else:
+        return str(s)
+
+
+def richgood(s, colour=True, cond=True):
+    if colour and cond:
+        return '[green]%s[/green]' % s
+    else:
+        return str(s)

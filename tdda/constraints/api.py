@@ -36,12 +36,12 @@ def source_kind(src):
       None if it doesn't look like anything known.
 
     """
-    if type(o) == str:
-        if indata.endswith('.parquet'):
+    if type(src) == str:
+        if src.endswith('.parquet'):
             return 'parquet'
         else:  # for now, assume anything else is a flat file
             return 'flat'
-    elif pd and isinstance(df, pd.DataFrame):
+    elif pd and isinstance(src, pd.DataFrame):
         return 'pandas'
     else:
         return None
@@ -89,8 +89,8 @@ def discover(indata, constraints_path, verbose=True, backend=DEFAULT_BACKEND,
         sys.exit(1)
 
 
-def verify(indata, constraints, outdata, verbose=True, backend=DEFAULT_BACKEND,
-           **kwargs):
+def verify(indata, constraints_path, outdata=None, verbose=True,
+           backend=DEFAULT_BACKEND, **kwargs):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -120,13 +120,13 @@ def verify(indata, constraints, outdata, verbose=True, backend=DEFAULT_BACKEND,
         JSON description of constraints.
     """
     kind = source_kind(indata)
-    if indata == 'pandas':
-        verify_df(indata, constraints_path, verbose=verbose, **kwargs)
-    elif indata in ('parquet', 'flat') and backend == pandas:
-        verify_df_from_file(indata, constraints_path, verbose=verbose,
+    if kind == 'pandas':
+        return verify_df(indata, constraints_path, verbose=verbose, **kwargs)
+    elif kind in ('parquet', 'flat') and backend == 'pandas':
+        return verify_df_from_file(indata, constraints_path, verbose=verbose,
                               **kwargs)
     else:
-        print('Unsupported verication mode', file=sys.stderr)
+        print('Unsupported verification mode (%s)' % kind, file=sys.stderr)
         sys.exit(1)
 
 

@@ -19,6 +19,9 @@ from tdda.utils import (
 )
 from tdda.config import Config
 from tdda.version import version
+from tdda.utils import nvl, richgood, richbad
+
+from rich import print as rprint
 
 CONFIG = Config()
 
@@ -694,7 +697,7 @@ class Verification(object):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 
-    def __str__(self):
+    def to_string(self, colour=False, ascii=None):
         """
         Returns string representation of the :py:class:`Verification` object.
 
@@ -702,6 +705,7 @@ class Verification(object):
         object's :py:attr:`report` property. If this is set to 'fields',
         then it reports only those fields that have failures.
         """
+        ascii = nvl(ascii, self.ascii)
         if self.report in ('fields', 'records'):
             # Report only fields with failures
             field_items = list((field, ver)
@@ -711,25 +715,32 @@ class Verification(object):
             field_items = self.fields.items()
         fields = '\n\n'.join('%s: %s  %s  %s'
                            % (field,
-                              plural(ver.failures, 'failure'),
-                              plural(ver.passes, 'pass', 'es'),
-                              '  '.join('%s %s' % (c, tcn(s, self.ascii))
+                              richbad(plural(ver.failures, 'failure'),
+                                       colour, ver.failures > 0),
+                              richgood(plural(ver.passes, 'pass', 'es'),
+                                     colour, ver.failures == 0),
+                              '  '.join('%s %s' % (c, tcn(s, ascii, colour))
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
 
         if self.report == 'records' and self.detection:
+            nf = self.detection.n_failing_records
             return ('%sSUMMARY:\n\n'
-                    'Records passing: %d\n'
-                    'Records failing: %d'
+                    'Records passing: %s\n'
+                    'Records failing: %s'
                     % (fields_part,
-                       self.detection.n_passing_records,
-                       self.detection.n_failing_records))
+                       richgood(self.detection.n_passing_records, colour,
+                                nf == 0),
+                       richbad(nf, colour, nf > 0)))
         else:
             return ('%sSUMMARY:\n\n'
-                    'Constraints passing: %d\n'
-                    'Constraints failing: %d'
-                    % (fields_part, self.passes, self.failures))
+                    'Constraints passing: %s\n'
+                    'Constraints failing: %s'
+                    % (fields_part,
+                        richgood(self.passes, colour, self.failures == 0),
+                        richbad(self.failures, colour, self.failures > 0)))
+    __str__ = to_string
 
     def write_detection_reports(self, minimal=True):
         """
@@ -913,8 +924,6 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     return results
 
 
-
-
 def detect(constraints, fieldnames, verifiers, VerificationClass=None,
            detected_records_writer=None, **kwargs):
     """
@@ -926,13 +935,19 @@ def detect(constraints, fieldnames, verifiers, VerificationClass=None,
                   **kwargs)
 
 
-def tcn(sat, ascii=False):
+def tcn(sat, ascii=False, colour=False):
     """
     Convert True/False/None value to the appropriate tick, cross
     or nothing mark for printing.
     """
     marks = SafeMarks if ascii else Marks
-    return marks.nothing if sat is None else marks.tick if sat else marks.cross
+    mark = marks.nothing if sat is None else marks.tick if sat else marks.cross
+    if colour:
+        return (
+            mark if sat is None else richgood(mark) if sat else richbad(mark)
+        )
+    else:
+        return mark
 
 
 def warn(s):

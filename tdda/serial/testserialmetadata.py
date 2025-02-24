@@ -10,9 +10,9 @@ import pandas as pd
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.serial.base import RE_ISO8601
+from tdda.serial.base import RE_ISO8601, FieldType
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
-from tdda.serial.pandasio import gen_pandas_kwargs
+from tdda.serial.pandasio import gen_pandas_kwargs, dtype_to_fieldtype
 from tdda.serial.reader import (
     csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args
 )
@@ -903,6 +903,55 @@ class TestPandasRoundTrips(ReferenceTestCase):
         self.assertDataFramesEquivalent(df, df2, type_matching='medium')
 
 
+@tag
+class TestPandasToMetadata(ReferenceTestCase):
+    def testSimpleDtypeFieldtypeMapping(self):
+        # WITH col passed in, prefer nullable types (defaults)
+
+        df, expected_types = small_wide_pd_df()
+        actual = {
+            col: dtype_to_fieldtype(df[col].dtype, df[col])
+            for col in df
+        }
+        remove_common_key_vals(actual, expected_types)
+        self.assertEqual(actual, expected_types)
+        self.assertEqual(actual, {})
+
+    def testSimpleDtypeFieldtypeMappingNoValues(self):
+        # WITHOUT col passed in
+
+        df, expected_types = small_wide_pd_df(with_col=False)
+        actual = {
+            col: dtype_to_fieldtype(df[col].dtype)
+            for col in df
+        }
+
+        remove_common_key_vals(actual, expected_types)
+        self.assertEqual(actual, expected_types)
+        self.assertEqual(actual, {})
+
+    def testSimpleDtypeFieldtypeMappingNotPreferNullable(self):
+        # WITHOUT preferring nullable types:
+
+        df, expected_types = small_wide_pd_df(prefer_nullable=False)
+        actual = {
+            col: dtype_to_fieldtype(df[col].dtype, df[col],
+                                    prefer_nullable=False)
+            for col in df
+        }
+
+        # Similarly, with no values, the whole-number floats
+        # remain as floats
+
+        remove_common_key_vals(actual, expected_types)
+        self.assertEqual(actual, expected_types)
+        self.assertEqual(actual, {})
+
+
+
+
+
+
 def testDataset4():
     return pd.DataFrame({
         'row': [1, 2, 3, 4, 5],
@@ -977,6 +1026,97 @@ def this_function_name():
     Returns the name of the function (or method) from which this was called
     """
     return inspect.stack()[1][3]
+
+
+def small_wide_pd_df(with_col=True, prefer_nullable=True):
+    """
+    Generates a dataframe and ites expected types.
+    """
+    df = pd.DataFrame({
+       'null': pd.Series([None] * 3, dtype='O'),
+       'inull': pd.Series([None] * 3, dtype='Int64'),
+       'bnull': pd.Series([None] * 3, dtype='boolean'),
+       'fnull': pd.Series([None] * 3, dtype='float'),
+       'bn': pd.Series([True, False, None], dtype='O'),
+       'b': [True, False, True],
+       'B': pd.Series([True, False, None], dtype='boolean'),
+       'in': [1, -1, None],
+       'i': [1, -1, 0],
+       'I': pd.Series([1, -1, None], dtype='Int64'),
+       'U': pd.Series([1, 0, None], dtype='UInt64'),
+       'un': pd.Series([1, 2, None], dtype='float'),
+       'fn': [1.5, 2.0, None],
+       'f': [1.5, 2.0, 3.0],
+       'Fn': [1.0, 2.0, None],
+       'F': [1.0, 2.0, 3.0],
+       's': list('abc'),
+       'sn': ['a', 'b', None],
+       'd': [datetime.date(2025, 1, day) for day in range(1, 4)],
+       'dn': [datetime.date(2025, 1, day) for day in range(1, 3)] + [None],
+       'dt': [datetime.datetime(2025, 12, 31, 23, 59, s)
+              for s in range(57, 60)],
+       'dtn': [datetime.datetime(2025, 12, 31, 23, 59, s)
+               for s in range(58, 60)] + [None],
+       'dz': [datetime.datetime(2025, 12, 31, 23, 59, 59,
+                                tzinfo=datetime.timezone(
+                                    datetime.timedelta(seconds=3600 * delta)))
+              for delta in (-1, 0, 1)],
+       'dzn': [datetime.datetime(2025, 12, 31, 23, 59, 59,
+                                 tzinfo=datetime.timezone(
+                                    datetime.timedelta(seconds=3600 * delta)))
+               for delta in (-1, 1)] + [None],
+       'dzn': [datetime.datetime.now(datetime.timezone(datetime.timedelta(seconds=3600)))] * 2 + [None]
+    })
+
+    types = {
+        'null': FieldType.STRING,
+        'inull': FieldType.INT,
+        'bnull': FieldType.BOOL,
+        'fnull': FieldType.FLOAT,
+        'bn': FieldType.BOOL,
+        'b': FieldType.BOOL,
+        'B': FieldType.BOOL,
+        'in': FieldType.INT,
+        'i': FieldType.INT,
+        'I': FieldType.INT,
+        'U': FieldType.INT,
+        'un': FieldType.INT,
+        'Fn': FieldType.INT,
+        'F': FieldType.INT,
+        'fn': FieldType.FLOAT,
+        'f': FieldType.FLOAT,
+        's': FieldType.STRING,
+        'sn': FieldType.STRING,
+        'd': FieldType.DATE,
+        'dn': FieldType.DATE,
+        'dt': FieldType.DATETIME,
+        'dtn': FieldType.DATETIME,
+        'dz': FieldType.DATETIME,
+        'dzn': FieldType.DATETIME_WITH_TIMEZONE,
+    }
+
+    if not with_col:
+        # With no values, all the object fields become strings
+        for k in ('bn', 'dn', 'd', 'dz'):
+            types[k] = FieldType.STRING
+
+    # Similarly, with no values, or of not prefer_nullable
+    # the whole-number floats
+    # remain as float
+    if not prefer_nullable or not with_col:
+        for k in ('F', 'Fn', 'un', 'in'):
+            types[k] = FieldType.FLOAT
+
+    return (df, types)
+
+
+
+def remove_common_key_vals(left, right):
+    for k in list(left.keys()):
+        if left[k] == right[k]:
+            del left[k]
+            del right[k]
+
 
 
 if __name__ == '__main__':
