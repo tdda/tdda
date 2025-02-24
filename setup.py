@@ -49,6 +49,7 @@ setup(
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],
+        'tdda.serial': data(['tdda', 'serial'], ['testdata']),
     },
     entry_points = {
         'console_scripts': [
