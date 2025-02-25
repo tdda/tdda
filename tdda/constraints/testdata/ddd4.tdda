@@ -1,0 +1,181 @@
+{
+    "creation_metadata": {
+        "as_at": "2025-02-24 00:00:00",
+        "local_time": "2025-02-24 09:39:04",
+        "utc_time": "2025-02-24 09:39:04",
+        "creator": "Miro 3.3.16",
+        "creation_command": "disco -day -o /tmp/ddd4",
+        "creation_session_log": "/Users/njr/miro/log/2025/02/24/session001.html",
+        "source": "ddd",
+        "host": "gardot.local",
+        "user": "njr",
+        "dataset": "ddd",
+        "n_records": 10,
+        "n_selected": 4,
+        "tddafile": "/tmp/ddd4.tdda"
+    },
+    "fields": {
+        "index": {
+            "type": "int",
+            "min": 0,
+            "max": 5,
+            "sign": "non-negative",
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "evennulls": {
+            "type": "bool",
+            "min": true,
+            "max": true
+        },
+        "oddnulls": {
+            "type": "bool",
+            "min": true,
+            "max": true
+        },
+        "evens": {
+            "type": "int",
+            "min": 0,
+            "max": 2,
+            "sign": "non-negative",
+            "no_duplicates": true
+        },
+        "odds": {
+            "type": "int",
+            "min": 1,
+            "max": 5,
+            "sign": "positive",
+            "no_duplicates": true
+        },
+        "evenreals": {
+            "type": "real",
+            "min": 0.0,
+            "max": 2.0,
+            "sign": "non-negative"
+        },
+        "oddreals": {
+            "type": "real",
+            "min": 1.0,
+            "max": 5.0,
+            "sign": "positive"
+        },
+        "evenstr": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 1,
+            "no_duplicates": true,
+            "rex": [
+                "^(\\d)$"
+            ]
+        },
+        "oddstr": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 1,
+            "no_duplicates": true,
+            "rex": [
+                "^(\\d)$"
+            ]
+        },
+        "elevens": {
+            "type": "string",
+            "min_length": 2,
+            "max_length": 2,
+            "max_nulls": 0,
+            "no_duplicates": true,
+            "rex": [
+                "^(\\d{2})$"
+            ]
+        },
+        "greek": {
+            "type": "string",
+            "min_length": 2,
+            "max_length": 4,
+            "max_nulls": 0,
+            "no_duplicates": true,
+            "rex": [
+                "^([^\\W0-9_]{2,4})$"
+            ]
+        },
+        "binnedindex": {
+            "type": "int",
+            "min": 1,
+            "max": 6,
+            "sign": "positive",
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "binnedodds": {
+            "type": "int",
+            "min": 1,
+            "max": 5,
+            "sign": "positive",
+            "no_duplicates": true
+        },
+        "basedate": {
+            "type": "date",
+            "min": "1970-01-01",
+            "max": "1970-01-06",
+            "max_nulls": 0
+        },
+        "basedate:time-before-now": {
+            "min": "20138 days",
+            "max": "20143 days",
+            "sign": "positive",
+            "transform": "time-before-now"
+        },
+        "evendates": {
+            "type": "date",
+            "min": "1970-01-01",
+            "max": "1970-01-03 00:00:02"
+        },
+        "evendates:time-before-now": {
+            "min": "20140 days, 23:59:58",
+            "max": "20143 days",
+            "sign": "positive",
+            "transform": "time-before-now"
+        }
+    },
+    "dataset": {
+        "required_fields": [
+            "index",
+            "evennulls",
+            "oddnulls",
+            "evens",
+            "odds",
+            "evenreals",
+            "oddreals",
+            "evenstr",
+            "oddstr",
+            "elevens",
+            "greek",
+            "binnedindex",
+            "binnedodds",
+            "basedate",
+            "evendates"
+        ],
+        "allowed_fields": [
+            "index",
+            "evennulls",
+            "oddnulls",
+            "evens",
+            "odds",
+            "evenreals",
+            "oddreals",
+            "evenstr",
+            "oddstr",
+            "elevens",
+            "greek",
+            "binnedindex",
+            "binnedodds",
+            "basedate",
+            "evendates"
+        ],
+        "allowed_all_null_fields": []
+    },
+    "field_groups": {
+        "basedate,evendates": {
+            "lte": true
+        }
+    }
+}

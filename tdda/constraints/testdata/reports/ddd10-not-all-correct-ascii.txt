@@ -1,0 +1,40 @@
+FIELDS:
+
+basedate:time-before-now: 3 failures  0 passes  min X  max X  sign X  transform -
+
+evendates:time-before-now: 3 failures  0 passes  min X  max X  sign X  transform -
+
+index: 1 failure  5 passes  type OK  min OK  max X  sign OK  max_nulls OK  no_duplicates OK
+
+evennulls: 0 failures  3 passes  type OK  min OK  max OK
+
+oddnulls: 0 failures  3 passes  type OK  min OK  max OK
+
+evens: 1 failure  4 passes  type OK  min OK  max X  sign OK  no_duplicates OK
+
+odds: 1 failure  4 passes  type OK  min OK  max X  sign OK  no_duplicates OK
+
+evenreals: 1 failure  3 passes  type OK  min OK  max X  sign OK
+
+oddreals: 1 failure  3 passes  type OK  min OK  max X  sign OK
+
+evenstr: 0 failures  5 passes  type OK  min_length OK  max_length OK  no_duplicates OK  rex OK
+
+oddstr: 0 failures  5 passes  type OK  min_length OK  max_length OK  no_duplicates OK  rex OK
+
+elevens: 0 failures  6 passes  type OK  min_length OK  max_length OK  max_nulls OK  no_duplicates OK  rex OK
+
+greek: 1 failure  5 passes  type OK  min_length OK  max_length OK  max_nulls OK  no_duplicates X  rex OK
+
+binnedindex: 1 failure  5 passes  type OK  min OK  max X  sign OK  max_nulls OK  no_duplicates OK
+
+binnedodds: 1 failure  4 passes  type OK  min OK  max X  sign OK  no_duplicates OK
+
+basedate: 1 failure  3 passes  type OK  min OK  max X  max_nulls OK
+
+evendates: 1 failure  2 passes  type OK  min OK  max X
+
+SUMMARY:
+
+Constraints passing: 60
+Constraints failing: 16

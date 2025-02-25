@@ -1,0 +1,34 @@
+FIELDS:
+
+index: 0 failures  6 passes  type OK  min OK  max OK  sign OK  max_nulls OK  no_duplicates OK
+
+evennulls: 0 failures  3 passes  type OK  min OK  max OK
+
+oddnulls: 0 failures  3 passes  type OK  min OK  max OK
+
+evens: 0 failures  5 passes  type OK  min OK  max OK  sign OK  no_duplicates OK
+
+odds: 0 failures  5 passes  type OK  min OK  max OK  sign OK  no_duplicates OK
+
+evenreals: 0 failures  4 passes  type OK  min OK  max OK  sign OK
+
+oddreals: 0 failures  4 passes  type OK  min OK  max OK  sign OK
+
+evenstr: 0 failures  4 passes  type OK  min_length OK  max_length OK  no_duplicates OK
+
+oddstr: 0 failures  4 passes  type OK  min_length OK  max_length OK  no_duplicates OK
+
+elevens: 0 failures  5 passes  type OK  min_length OK  max_length OK  max_nulls OK  no_duplicates OK
+
+binnedindex: 0 failures  6 passes  type OK  min OK  max OK  sign OK  max_nulls OK  no_duplicates OK
+
+binnedodds: 0 failures  5 passes  type OK  min OK  max OK  sign OK  no_duplicates OK
+
+basedate: 0 failures  4 passes  type OK  min OK  max OK  max_nulls OK
+
+evendates: 0 failures  3 passes  type OK  min OK  max OK
+
+SUMMARY:
+
+Constraints passing: 61
+Constraints failing: 0
