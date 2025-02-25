@@ -11,7 +11,19 @@ except ImportError:
     print('Skipping Pandas tests', file=sys.stderr)
 
 try:
-    from tdda.constraints.db.testdbconstraints import *
+    from tdda.constraints.db.testdbconstraints import (
+        TestSQLiteDBHandlers,
+        TestPostgresDBHandlers,
+        TestMySQLDBHandlers,
+        TestSQLiteDatabaseConnectionFile,
+        TestMongoDBHandlers,
+        TestSQLiteDBConstraintVerifiers,
+        TestDatabaseConstraintDiscoverers,
+        TestSQLiteDBConstraintDiscoverers,
+        TestPostgresDBConstraintDiscoverers,
+        TestMySQLDBConstraintDiscoverers,
+        TestMongoDBConstraintDiscoverers,
+    )
     # The individual imports of the database driver libraries
     # are now all protected with try...except blocks,
     # so this try...except is probably now unnecessary.

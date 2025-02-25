@@ -540,7 +540,7 @@ class SQLDatabaseHandler:
             'datetime'                   : 'date',
             None                         : None,
             ''                           : None,
-            'any'                        : None
+            'any'                        : None,
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):

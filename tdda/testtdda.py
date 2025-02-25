@@ -25,10 +25,10 @@ else:
     pass
 
 
-def testall(module=None, argv=None):
+def run_all_tests(module=None, argv=None):
     os.environ['TDDA_TESTING'] = 'TRUE'
     ReferenceTestCase.main(module=module, argv=argv)
 
 
 if __name__ == '__main__':
-    testall(argv=sys.argv)
+    run_all_tests(argv=sys.argv)
