@@ -1,0 +1,113 @@
+{
+    "@context": "http://tdda.info/ns/tddametadata",
+    "fields": [
+        {
+            "name": "null",
+            "fieldtype": "string"
+        },
+        {
+            "name": "inull",
+            "fieldtype": "int"
+        },
+        {
+            "name": "bnull",
+            "fieldtype": "bool"
+        },
+        {
+            "name": "fnull",
+            "fieldtype": "float"
+        },
+        {
+            "name": "bn",
+            "fieldtype": "bool"
+        },
+        {
+            "name": "b",
+            "fieldtype": "bool"
+        },
+        {
+            "name": "B",
+            "fieldtype": "bool"
+        },
+        {
+            "name": "in",
+            "fieldtype": "int"
+        },
+        {
+            "name": "i",
+            "fieldtype": "int"
+        },
+        {
+            "name": "I",
+            "fieldtype": "int"
+        },
+        {
+            "name": "U",
+            "fieldtype": "int"
+        },
+        {
+            "name": "un",
+            "fieldtype": "int"
+        },
+        {
+            "name": "fn",
+            "fieldtype": "float"
+        },
+        {
+            "name": "f",
+            "fieldtype": "float"
+        },
+        {
+            "name": "Fn",
+            "fieldtype": "int"
+        },
+        {
+            "name": "F",
+            "fieldtype": "int"
+        },
+        {
+            "name": "s",
+            "fieldtype": "string"
+        },
+        {
+            "name": "sn",
+            "fieldtype": "string"
+        },
+        {
+            "name": "d",
+            "fieldtype": "date",
+            "format": "iso8601date"
+        },
+        {
+            "name": "dn",
+            "fieldtype": "date",
+            "format": "iso8601date"
+        },
+        {
+            "name": "dt",
+            "fieldtype": "datetime",
+            "format": "iso8601datetime"
+        },
+        {
+            "name": "dtn",
+            "fieldtype": "datetime",
+            "format": "iso8601datetime"
+        },
+        {
+            "name": "dz",
+            "fieldtype": "datetime",
+            "format": "iso8601datetime"
+        },
+        {
+            "name": "dzn",
+            "fieldtype": "datetime_tz",
+            "format": "iso8601datetime_tz"
+        }
+    ],
+    "quote_char": "\"",
+    "escape_char": "\\",
+    "null_indicators": [
+        ""
+    ],
+    "header_rows": 1
+}

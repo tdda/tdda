@@ -14,7 +14,7 @@ from tdda.utils import nvl
 # From https://w3c.github.io/csvw/primer/#datatypes
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
 
-CSVW_TYPE_TO_MTYPE = {
+CSVW_TYPE_TO_FIELDTYPE = {
     'boolean': 'bool',
     'integer': 'int',
     'string': 'string',
@@ -366,22 +366,24 @@ class CSVWMetadata(Metadata):
             if datatype:
                 if isinstance(datatype, dict):
                     fmt = datatype.get('format')
-                    mtype = CSVW_TYPE_TO_MTYPE.get(datatype.get('base'))
+                    fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(
+                                    datatype.get('base')
+                                )
                 else:
-                    mtype = CSVW_TYPE_TO_MTYPE.get(datatype)
-                field.mtype = mtype
+                    fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(datatype)
+                field.fieldtype = fieldtype
             else:
-                mtype = None
+                fieldtype = None
             if not fmt:
                 fmt = field.get_val(f, 'format')
             if fmt:
-                if mtype.startswith('date'):
+                if fieldtype.startswith('date'):
                     fmt = csvw_date_format_to_md_date_format(
                         fmt,
                         extensions=self._extensions
                     )
                 field.format = fmt
-            elif mtype and mtype.startswith('date'):
+            elif fieldtype and fieldtype.startswith('date'):
                 field.format = 'ISO8601'  # too pandas specific
 
 

@@ -3,32 +3,32 @@
     "fields": [
         {
             "name": "Index",
-            "mtype": "int"
+            "fieldtype": "int"
         },
         {
             "name": "Odd",
-            "mtype": "bool"
+            "fieldtype": "bool"
         },
         {
             "name": "Even",
-            "mtype": "bool"
+            "fieldtype": "bool"
         },
         {
             "name": "Real",
-            "mtype": "number"
+            "fieldtype": "number"
         },
         {
             "name": "Name",
-            "mtype": "string"
+            "fieldtype": "string"
         },
         {
             "name": "LastInFeb",
-            "mtype": "date",
+            "fieldtype": "date",
             "format": "ISO8601"
         },
         {
             "name": "LastIn2024",
-            "mtype": "datetime",
+            "fieldtype": "datetime",
             "format": "ISO8601"
         }
     ],

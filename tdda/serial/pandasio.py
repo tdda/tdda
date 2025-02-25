@@ -13,7 +13,7 @@ from tdda.serial.base import (
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 
 
-MTYPE_TO_PANDAS_DTYPE = {
+FIELDTYPE_TO_PANDAS_DTYPE = {
     'bool': 'boolean',
     'int': 'Int64',
     'string': 'string',
@@ -48,13 +48,13 @@ def to_pandas_read_csv_args(md):
     kw = {}
     date_fields = {
         f.name: f for f in md.fields
-                if f.mtype and f.mtype.startswith('date')
+                if f.fieldtype and f.fieldtype.startswith('date')
     }
     kw['dtype'] = {
-        f.name: MTYPE_TO_PANDAS_DTYPE.get(f.mtype)
+        f.name: FIELDTYPE_TO_PANDAS_DTYPE.get(f.fieldtype)
         for f in md.fields
         if f.name not in date_fields
-        and MTYPE_TO_PANDAS_DTYPE.get(f.mtype) is not None
+        and FIELDTYPE_TO_PANDAS_DTYPE.get(f.fieldtype) is not None
     } or None
     if any(v.format for v in date_fields):
         kw['date_format'] = {name: f.format for name, f in date_fields.items()}
@@ -76,7 +76,7 @@ def to_pandas_read_csv_args(md):
     booleans = [
         f.format
         for f in md.fields
-        if getattr(f, 'format', None) and f.mtype == 'bool'
+        if getattr(f, 'format', None) and f.fieldtype == 'bool'
     ]
     if booleans:
         trues, falses = set(), set()
@@ -112,7 +112,7 @@ def dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
 
     Returns:
 
-        The mtype (a value from FieldType) if recognized,
+        The fieldtype (a value from FieldType) if recognized,
         or None if no recognized dtype is found.
     """
 
@@ -179,10 +179,10 @@ def df_to_metadata(df, path=None):
                     quote_char=Defaults.QUOTE_CHAR,
                     escape_char=Defaults.ESCAPE_CHAR,
                     null_indicators=Defaults.NULL_INDICATORS,
-                    header_rows=Defaults.HEADER_ROWS)
+                    header_rows=Defaults.HEADER_ROW_COUNT)
 
 
-def col_to_field_metadata(field, mtype=None,
+def col_to_field_metadata(field, fieldtype=None,
                           fmt=None, prefer_nullable=True):
     """
     Produces a FieldMetadata object for the pandas series provided
@@ -192,7 +192,7 @@ def col_to_field_metadata(field, mtype=None,
 
         field: a pandas series
 
-        fieldtype:         Optional mtype to use. Must be compatible
+        fieldtype:         Optional fieldtype to use. Must be compatible
                            with the data in the field if validate is True
 
         fmt:               Optional format informaiton for the field
@@ -204,20 +204,20 @@ def col_to_field_metadata(field, mtype=None,
         FieldMetadata object for the field
 
     """
-    if mtype:
-        fieldtype = mtype
+    if fieldtype:
+        fieldtype = fieldtype
     else:
-        fieldtype = dtype_to_fieldtype(field.mtype, col=field,
+        fieldtype = dtype_to_fieldtype(field.dtype, col=field,
                                        prefer_nullable=prefer_nullable)
 
     if not fmt:
-        if fieldtype == Fieldtype.DATE:
+        if fieldtype == FieldType.DATE:
             fmt = DateFormat.ISO8601_DATE
-        elif fieldtype == Fieldtype.DATETIME:
+        elif fieldtype == FieldType.DATETIME:
             fmt = DateFormat.ISO8601_DATETIME
-        elif fieldtype == Fieldtype.DATETIME_WITH_TIMEZONE:
+        elif fieldtype == FieldType.DATETIME_WITH_TIMEZONE:
             fmt = DateFormat.ISO8601_DATETIME_TZ
-    return FieldMetadata(field.name, mtype, format=fmt)
+    return FieldMetadata(field.name, fieldtype, format=fmt)
 
 
 def item(v):

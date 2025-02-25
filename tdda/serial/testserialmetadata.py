@@ -12,7 +12,11 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial.base import RE_ISO8601, FieldType
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
-from tdda.serial.pandasio import gen_pandas_kwargs, dtype_to_fieldtype
+from tdda.serial.pandasio import (
+    gen_pandas_kwargs,
+    dtype_to_fieldtype,
+    df_to_metadata
+)
 from tdda.serial.reader import (
     csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args
 )
@@ -96,7 +100,6 @@ class TestDateSanityRE(ReferenceTestCase):
                                          '%m-%d-%Y %H:%M:%S')
         self.assertEqual(map_date_format('dd-MM-yy HH:mm'),
                                          '%d-%m-%y %H:%M')
-
 
 
 class TestPandasKeywordArgsGeneration(ReferenceTestCase):
@@ -888,7 +891,6 @@ class TestCSVWTests(ReferenceTestCase):
 
 
 class TestPandasRoundTrips(ReferenceTestCase):
-    @tag
     def testDefault(self):
         df = testDataset4()
         path = tmppath('ds4-pandas-defaults.csv')
@@ -898,12 +900,11 @@ class TestPandasRoundTrips(ReferenceTestCase):
         with open(md_path, 'r') as f:
             md = f.read()
         self.assertFileCorrect(md_path,
-                               tdpath('ds4-pandas-defaults.tddacsvmd'))
+                               tdpath('ds4-pandas-defaults.tddam'))
         df2 = pandas_read_csv(path)
         self.assertDataFramesEquivalent(df, df2, type_matching='medium')
 
 
-@tag
 class TestPandasToMetadata(ReferenceTestCase):
     def testSimpleDtypeFieldtypeMapping(self):
         # WITH col passed in, prefer nullable types (defaults)
@@ -947,9 +948,11 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
-
-
-
+    @tag
+    def testMetadataGeneration(self):
+        df, _ = small_wide_pd_df(with_col=False)
+        m = df_to_metadata(df)
+        self.assertStringCorrect(str(m), tdpath('small_wide.tddam'))
 
 
 def testDataset4():
@@ -1065,7 +1068,9 @@ def small_wide_pd_df(with_col=True, prefer_nullable=True):
                                  tzinfo=datetime.timezone(
                                     datetime.timedelta(seconds=3600 * delta)))
                for delta in (-1, 1)] + [None],
-       'dzn': [datetime.datetime.now(datetime.timezone(datetime.timedelta(seconds=3600)))] * 2 + [None]
+       'dzn': [datetime.datetime.now(
+                  datetime.timezone(
+                      datetime.timedelta(seconds=3600)))] * 2 + [None]
     })
 
     types = {

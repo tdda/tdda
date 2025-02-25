@@ -52,7 +52,7 @@ RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
 
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 
-MTYPES = tuple(FieldType.__dict__.values())
+FIELDTYPES = tuple(FieldType.__dict__.values())
 
 
 class MetadataError(Exception):
@@ -68,8 +68,8 @@ class FieldMetadata:
         name:   Name of the field/column. This need not be the same as the
                 name in the file. MANDATORY.
 
-        mtype:  the type of the field. Must be one of the values
-                in MTYPES. MANDATORY.
+        fieldtype:  the type of the field. Must be one of the values
+                    in FIELDTYPES. MANDATORY.
 
         csvname: Name of the column in the file. OPTIONAL.
 
@@ -82,11 +82,11 @@ class FieldMetadata:
 
 
     """
-    def __init__(self, name, mtype=None,
+    def __init__(self, name, fieldtype=None,
                  format=None, nullmarkers=None,
                  allow_extras=False, **kw):
         self.name = name
-        self.mtype = mtype
+        self.fieldtype = fieldtype
         self.altnames = None
         self.format = format
         self.nullmarkers = nullmarkers
@@ -115,9 +115,9 @@ class FieldMetadata:
         return d.get(k, None)
 
     def validate(self):
-        if self.mtype not in MTYPES:
+        if self.fieldtype not in FIELDTYPES:
             self.errors.append(
-                f'Unknown field type "{self.mtype}" for field {self.name}'
+                f'Unknown field type "{self.fieldtype}" for field {self.name}'
             )
 
     def unobjectify(self):
