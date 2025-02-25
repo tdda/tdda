@@ -900,7 +900,7 @@ class TestPandasRoundTrips(ReferenceTestCase):
         with open(md_path, 'r') as f:
             md = f.read()
         self.assertFileCorrect(md_path,
-                               tdpath('ds4-pandas-defaults.serialmd'))
+                               tdpath('ds4-pandas-defaults.serialargs'))
         df2 = pandas_read_csv(path)
         self.assertDataFramesEquivalent(df, df2, type_matching='medium')
 
