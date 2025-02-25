@@ -18,7 +18,6 @@ try:
         TestSQLiteDatabaseConnectionFile,
         TestMongoDBHandlers,
         TestSQLiteDBConstraintVerifiers,
-        TestDatabaseConstraintDiscoverers,
         TestSQLiteDBConstraintDiscoverers,
         TestPostgresDBConstraintDiscoverers,
         TestMySQLDBConstraintDiscoverers,
