@@ -900,7 +900,7 @@ class TestPandasRoundTrips(ReferenceTestCase):
         with open(md_path, 'r') as f:
             md = f.read()
         self.assertFileCorrect(md_path,
-                               tdpath('ds4-pandas-defaults.tddam'))
+                               tdpath('ds4-pandas-defaults.serialmd'))
         df2 = pandas_read_csv(path)
         self.assertDataFramesEquivalent(df, df2, type_matching='medium')
 
@@ -952,7 +952,7 @@ class TestPandasToMetadata(ReferenceTestCase):
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = df_to_metadata(df)
-        self.assertStringCorrect(str(m), tdpath('small_wide.tddam'))
+        self.assertStringCorrect(str(m), tdpath('small-wide.serialmd'))
 
 
 def testDataset4():

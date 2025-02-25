@@ -31,7 +31,7 @@ class DateFormat:
 
 
 class URI:
-    TDDAMETADATA = 'http://tdda.info/ns/tddametadata'
+    SERIALMETADATA = 'http://tdda.info/ns/serial-metadata'
     CSVW = 'http://www.w3.org/ns/csvw'
 
 
@@ -214,12 +214,15 @@ class Metadata:
         self.valid = valid
 
     def unobjectify(self):
-        d = {'@context': URI.TDDAMETADATA}
+        d = {'@context': URI.SERIALMETADATA}
         d.update({
             k: unobjectify(v) for k, v in self.__dict__.items()
                                   if not k.startswith('_')
                                   and nonnull(v)
         })
+        nulls = d.get('null_indicators')
+        if type(nulls) == list and len(nulls) == 1:
+            d['null_indicators'] = nulls[0]
         return d
 
     def to_json(self, indent=4):

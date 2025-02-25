@@ -1,5 +1,5 @@
 {
-    "@context": "http://tdda.info/ns/tddametadata",
+    "@context": "http://tdda.info/ns/serial-metadata",
     "fields": [
         {
             "name": "null",
@@ -106,8 +106,6 @@
     ],
     "quote_char": "\"",
     "escape_char": "\\",
-    "null_indicators": [
-        ""
-    ],
+    "null_indicators": "",
     "header_rows": 1
 }

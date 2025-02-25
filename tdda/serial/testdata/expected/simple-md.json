@@ -1,5 +1,5 @@
 {
-    "@context": "http://tdda.info/ns/tddametadata",
+    "@context": "http://tdda.info/ns/serial-metadata",
     "fields": [
         {
             "name": "Index",
