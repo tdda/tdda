@@ -117,10 +117,10 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         diffs = c.check_dataframe(df1, df2, type_matching='strict')
         assert diffs == FailureDiffs(0, [])
 
+
 def pandas_write_csv(df, path, md_path=None, verify=False, **kwargs):
     return write_csv('pandas.read_csv', df, path=path,
                      md_path=md_path, verify=verify, **kwargs)
-
 
 
 def read_csv(lib, path, md_path=None, **kwargs):
