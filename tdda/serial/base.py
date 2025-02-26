@@ -1,5 +1,6 @@
 import json
 import sys
+from tdda.version import version as VERSION
 
 class MISSING:
     ERROR = 2
@@ -31,7 +32,7 @@ class DateFormat:
 
 
 class URI:
-    SERIALMETADATA = 'http://tdda.info/ns/serial-metadata'
+    TDDASERIAL = 'http://tdda.info/ns/tdda.serial'
     CSVW = 'http://www.w3.org/ns/csvw'
 
 
@@ -49,6 +50,11 @@ class Defaults:
 
 CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
+
+WRITER = 'tdda.serial'
+
+TDDASERIAL_VERSION = '0.1'
+TDDASERIAL_FORMAT = f'{URI.TDDASERIAL}/{TDDASERIAL_VERSION}'
 
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 
@@ -125,7 +131,7 @@ class FieldMetadata:
                 if nonnull(v)}
 
 
-class Metadata:
+class SerialMetadata:
     def __init__(self,
         fields=None,
         path=None,
@@ -214,15 +220,19 @@ class Metadata:
         self.valid = valid
 
     def unobjectify(self):
-        d = {'@context': URI.SERIALMETADATA}
-        d.update({
+        d = {
+            'format': URI.TDDASERIAL,
+            'writer': writer(),
+        }
+        m = {
             k: unobjectify(v) for k, v in self.__dict__.items()
                                   if not k.startswith('_')
                                   and nonnull(v)
-        })
-        nulls = d.get('null_indicators')
+        }
+        nulls = m.get('null_indicators')
         if type(nulls) == list and len(nulls) == 1:
-            d['null_indicators'] = nulls[0]
+            m['null_indicators'] = nulls[0]
+        d['tdda.serial'] = m
         return d
 
     def to_json(self, indent=4):
@@ -250,3 +260,7 @@ def nonnull(v):
     test value v for whether it should be dumped.
     """
     return v is not None and v != [] and v != () and v != {}
+
+
+def writer():
+    return f'tdda.serial-{VERSION}'

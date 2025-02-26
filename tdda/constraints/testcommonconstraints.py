@@ -12,21 +12,42 @@ def reportpath(path):
 
 class TestCommon(ReferenceTestCase):
 
-    def testSimpleAllCorrectVerificationFromFile(self):
+    def testSimpleAllCorrectVerificationFromParquetFile(self):
+        # Parquet file, right types all good
         report = verify(tdpath('ddd.parquet'), tdpath('ddd.tdda'),
                         verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
+
+        # Also test ascii vesion
         self.assertStringCorrect(report.to_string(ascii=True),
                                  reportpath('ddd10-all-correct-ascii.txt'))
 
     def testSimpleNotCorrectVerificationFromFile(self):
+        # Also parquet; here the constraints are too tight
+        # from 4-row dataset
         report = verify(tdpath('ddd.parquet'), tdpath('ddd4.tdda'),
                         verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-not-all-correct.txt'))
         self.assertStringCorrect(report.to_string(ascii=True),
                                  reportpath('ddd10-not-all-correct-ascii.txt'))
+
+    def testSimpleAllNotCorrectVerificationFromCSVFile(self):
+        # CSV file. Elevens is read as integers with no metadata
+        report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
+                        verbose=False)
+        self.assertStringCorrect(str(report),
+                                 reportpath('ddd10-elevens-wrong-type.txt'))
+
+    def todo_testSimpleAllCorrectVerificationFromCSVFile(self):
+        # CSV file with pandasargs metadata.
+        # Decide how to specify this. And whether args same etc.
+        report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
+                        mdpath='', verbose=False)
+        self.assertStringCorrect(str(report),
+                                 reportpath('ddd10-elevens-wrong-type.txt'))
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

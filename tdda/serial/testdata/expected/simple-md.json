@@ -1,43 +1,46 @@
 {
-    "@context": "http://tdda.info/ns/serial-metadata",
-    "fields": [
-        {
-            "name": "Index",
-            "fieldtype": "int"
-        },
-        {
-            "name": "Odd",
-            "fieldtype": "bool"
-        },
-        {
-            "name": "Even",
-            "fieldtype": "bool"
-        },
-        {
-            "name": "Real",
-            "fieldtype": "number"
-        },
-        {
-            "name": "Name",
-            "fieldtype": "string"
-        },
-        {
-            "name": "LastInFeb",
-            "fieldtype": "date",
-            "format": "ISO8601"
-        },
-        {
-            "name": "LastIn2024",
-            "fieldtype": "datetime",
-            "format": "ISO8601"
-        }
-    ],
-    "encoding": "utf-8",
-    "metadata_source": "http://www.w3.org/ns/csvw",
-    "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/simple-metadata.json",
-    "valid": true,
-    "header_rows": 1,
-    "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata",
-    "table_number": 0,
-    "n_tables": 1
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.08",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "Index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "Odd",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "Even",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "Real",
+                "fieldtype": "number"
+            },
+            {
+                "name": "Name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "LastInFeb",
+                "fieldtype": "date",
+                "format": "ISO8601"
+            },
+            {
+                "name": "LastIn2024",
+                "fieldtype": "datetime",
+                "format": "ISO8601"
+            }
+        ],
+        "encoding": "utf-8",
+        "metadata_source": "http://www.w3.org/ns/csvw",
+        "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/simple-metadata.json",
+        "valid": true,
+        "header_rows": 1,
+        "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata",
+        "table_number": 0,
+        "n_tables": 1
+    }
 }

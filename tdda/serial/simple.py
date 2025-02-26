@@ -9,14 +9,14 @@ from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import FailureDiffs
 from tdda.referencetest.checkpandas import loosen_type
 
-TDDA_SERIAL_VERSION = '1.0'
+from tdda.serial.base import writer, TDDASERIAL_FORMAT
 
 
 ReadWriteDiff = namedtuple('ReadWriteDiff', 'read write Comparison')
 
 
 def nvl(v, default):
-    return default if v is None else default
+    return default if v is None else v
 
 
 def swap_ext(path, ext):
@@ -26,11 +26,12 @@ def swap_ext(path, ext):
 
 
 def metadata_path(path, md_path=None):
-    return nvl(md_path, swap_ext(path, '.tddacsvmd'))
+    r = nvl(md_path, swap_ext(path, '.tddaserial'))
+    return r
 
 
 FUNCTIONS = {
-    'pandas': (
+    'pandas.read_csv': (
         ReadWriteDiff(read=lambda path, **kwargs:
                                   pd.read_csv(path, **kwargs),
                       write=lambda df, path, **kwargs:
@@ -99,7 +100,8 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         kw['date_format'] = 'ISO8601'
     md_path = metadata_path(path, md_path)
     d = {
-        'tdda.serial': TDDA_SERIAL_VERSION,
+        'format': TDDASERIAL_FORMAT,
+        'writer': writer(),
         lib: kw,
     }
     with open (md_path, 'w') as f:
@@ -116,7 +118,7 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         assert diffs == FailureDiffs(0, [])
 
 def pandas_write_csv(df, path, md_path=None, verify=False, **kwargs):
-    return write_csv('pandas', df, path=path,
+    return write_csv('pandas.read_csv', df, path=path,
                      md_path=md_path, verify=verify, **kwargs)
 
 
@@ -126,7 +128,7 @@ def read_csv(lib, path, md_path=None, **kwargs):
     md_path = metadata_path(path, md_path)
     with open(md_path) as f:
         params = json.load(f)
-    assert 'tdda.serial' in params
+    assert lib in params
     kwargs = params[lib]
     fns = FUNCTIONS[lib]
     df = fns.read(path, **kwargs)
@@ -134,7 +136,7 @@ def read_csv(lib, path, md_path=None, **kwargs):
 
 
 def pandas_read_csv(path, md_path=None, **kwargs):
-    return read_csv('pandas', path=path, md_path=md_path, **kwargs)
+    return read_csv('pandas.read_csv', path=path, md_path=md_path, **kwargs)
 
 
 

@@ -33,6 +33,11 @@ TESTDATADIR = os.path.join(THISDIR, 'testdata')
 
 TMPDIR = tempfile.mkdtemp()
 
+TDDASERIAL_PATTERNS = [
+    r'^\s*"format": "http://tdda\.info/ns/tdda\.serial[.0-9/]*",?$',
+    r'^\s*"writer": "tdda\.serial[-.0-9]*",?$',
+]
+
 
 def tdpath(path):
     return os.path.join(TESTDATADIR, path)
@@ -900,9 +905,33 @@ class TestPandasRoundTrips(ReferenceTestCase):
         with open(md_path, 'r') as f:
             md = f.read()
         self.assertFileCorrect(md_path,
-                               tdpath('ds4-pandas-defaults.serialargs'))
+                               tdpath('ds4-pandas-defaults.tddaserial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS,)
+
         df2 = pandas_read_csv(path)
         self.assertDataFramesEquivalent(df, df2, type_matching='medium')
+
+        df3 = pandas_read_csv(path, md_path=md_path)
+        self.assertDataFramesEquivalent(df, df3, type_matching='medium')
+
+        alt_md_path = tdpath('ds4-pandas-alt.tddaserial')
+        df4 = pandas_read_csv(path, md_path=alt_md_path)
+        dtypes = {k: str(df4[k].dtype) for k in df4}
+        self.assertEqual(
+            dtypes,
+            {
+                'row': 'float64',
+                'b': 'object',
+                'i': 'float64',
+                'I': 'string',
+                'r': 'object',
+                's': 'object',
+                'nulllike': 'object',
+                'd': 'datetime64[ns]',
+                'dt': 'datetime64[ns]'
+            }
+        )
+
 
 
 class TestPandasToMetadata(ReferenceTestCase):
@@ -948,11 +977,14 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
-    @tag
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = df_to_metadata(df)
-        self.assertStringCorrect(str(m), tdpath('small-wide.serialmd'))
+        self.assertStringCorrect(
+            str(m),
+            tdpath('small-wide.tddaserial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
 
 
 def testDataset4():

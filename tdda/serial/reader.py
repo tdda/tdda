@@ -51,7 +51,7 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
         with open(path) as f:
             md = json.load(f)
         context = md.get(CONTEXT_KEY)
-        if context == URI.SERIALMETADATA:
+        if context == URI.TDDASERIAL:
             kind = 'csvmetadata'
         elif context == URI.CSVW:
             kind = 'csvw'

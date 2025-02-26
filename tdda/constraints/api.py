@@ -90,7 +90,7 @@ def discover(indata, constraints_path, verbose=True, backend=DEFAULT_BACKEND,
 
 
 def verify(indata, constraints_path, outdata=None, verbose=True,
-           backend=DEFAULT_BACKEND, **kwargs):
+           backend=DEFAULT_BACKEND, mdpath=None, **kwargs):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -113,6 +113,9 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
             Backend to use.
             Currently only pandas is supported.
 
+        *mdpath*:
+            Path to metadata for indata (if any)
+
         *kwargs*:
             Passed to discover_df
 
@@ -124,7 +127,7 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
         return verify_df(indata, constraints_path, verbose=verbose, **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
         return verify_df_from_file(indata, constraints_path, verbose=verbose,
-                              **kwargs)
+                                   mdpath=mdpath, **kwargs)
     else:
         print('Unsupported verification mode (%s)' % kind, file=sys.stderr)
         sys.exit(1)
