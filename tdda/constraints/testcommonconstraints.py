@@ -39,14 +39,13 @@ class TestCommon(ReferenceTestCase):
                         verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-elevens-wrong-type.txt'))
-
-    def todo_testSimpleAllCorrectVerificationFromCSVFile(self):
-        # CSV file with pandasargs metadata.
-        # Decide how to specify this. And whether args same etc.
+    #@tag
+    def atestSimpleAllCorrectVerificationFromCSVFile(self):
+        # CSV file with pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        mdpath='', verbose=False)
+                        mdpath=tdpath('ddd-pandas.tddaserial'), verbose=False)
         self.assertStringCorrect(str(report),
-                                 reportpath('ddd10-elevens-wrong-type.txt'))
+                                 reportpath('ddd10-all-correct.txt'))
 
 
 if __name__ == '__main__':
