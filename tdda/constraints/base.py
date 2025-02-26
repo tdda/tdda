@@ -41,6 +41,7 @@ CONSTRAINT_SUFFIX_MAP = OrderedDict((
     ('transform', None),  # this mapped value isn't used
 ))
 
+
 STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
 STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')

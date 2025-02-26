@@ -9,7 +9,7 @@ from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import FailureDiffs
 from tdda.referencetest.checkpandas import loosen_type
 
-from tdda.serial.base import writer, TDDASERIAL_FORMAT
+from tdda.serial.base import TDDASERIAL
 
 
 ReadWriteDiff = namedtuple('ReadWriteDiff', 'read write Comparison')
@@ -100,8 +100,8 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         kw['date_format'] = 'ISO8601'
     md_path = metadata_path(path, md_path)
     d = {
-        'format': TDDASERIAL_FORMAT,
-        'writer': writer(),
+        'format': TDDASERIAL.format,
+        'writer': TDDASERIAL.writer,
         lib: kw,
     }
     with open (md_path, 'w') as f:

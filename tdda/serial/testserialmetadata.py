@@ -10,7 +10,7 @@ import pandas as pd
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.serial.base import RE_ISO8601, FieldType
+from tdda.serial.base import RE_ISO8601, FieldType, URI
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
     gen_pandas_kwargs,
@@ -18,7 +18,8 @@ from tdda.serial.pandasio import (
     df_to_metadata
 )
 from tdda.serial.reader import (
-    csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args
+    csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args,
+    find_metadata_kind
 )
 
 from tdda.serial.simple import (
@@ -985,6 +986,129 @@ class TestPandasToMetadata(ReferenceTestCase):
             tdpath('small-wide.tddaserial'),
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
+
+
+@tag
+class TestFindMetadata(ReferenceTestCase):
+    def test_find_metadata_empty(self):
+        kind, md = find_metadata_kind({})
+        self.assertIsNone(kind)
+        self.assertIsNone(md)
+
+        kind, md = find_metadata_kind([{}])
+        self.assertIsNone(kind)
+        self.assertIsNone(md)
+
+        kind, md = find_metadata_kind([])
+        self.assertIsNone(kind)
+        self.assertIsNone(md)
+
+    def test_find_metadata_one_level(self):
+        d = {'@context': URI.CSVW}
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'csvw')
+        self.assertEqual(md, d)
+
+        d = {'tdda.serial': {}}
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'tdda.serial')
+        self.assertEqual(md, {})
+
+        d = {'pandas.read_csv': {'sep': '|'}}
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'pandas.read_csv')
+        self.assertEqual(md, {'sep': '|'})
+
+    def test_find_metadata_priority(self):
+        d = {
+            'tdda.serial' : {'sep': ','},
+            'pandas.read_csv' : {'sep': '|'},
+            'csvw' : {'sep': '\t'},
+            'e': 3
+        }
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'tdda.serial')
+        self.assertEqual(md, {'sep': ','})
+
+        # preferred
+
+        kind, md = find_metadata_kind(d, 'pandas.read_csv')
+        self.assertEqual(kind, 'pandas.read_csv')
+        self.assertEqual(md, {'sep': '|'})
+
+        kind, md = find_metadata_kind(d, 'csvw')
+        self.assertEqual(kind, 'csvw')
+        self.assertEqual(md, {'sep': '\t'})
+
+        kind, md = find_metadata_kind(d, 'tdda.serial')
+        self.assertEqual(kind, 'tdda.serial')
+        self.assertEqual(md, {'sep': ','})
+
+    def test_find_metadata_two_levels(self):
+        c = {
+            'pandas.read_csv' : {'quote': '*'},
+            'tdda.serial' : {'quote': "'"},
+            'csvw' : {'quote': '|'},
+        }
+        d = {
+            'a': 'foo',
+            'b': 2,
+            'c': c,
+        }
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'tdda.serial')
+        self.assertEqual(md, {'quote': "'"})
+
+        # preferred
+
+        kind, md = find_metadata_kind(d, 'pandas.read_csv')
+        self.assertEqual(kind, 'pandas.read_csv')
+        self.assertEqual(md, {'quote': '*'})
+
+        kind, md = find_metadata_kind(d, 'csvw')
+        self.assertEqual(kind, 'csvw')
+        self.assertEqual(md, {'quote': '|'})
+
+        kind, md = find_metadata_kind(d, 'tdda.serial')
+        self.assertEqual(kind, 'tdda.serial')
+        self.assertEqual(md, {'quote': "'"})
+
+    def test_find_metadata_deep(self):
+        d = {
+            'a': 1,
+            'b': {
+                'c': 1,
+                'd': 'foo',
+                'A': {
+                    'r': {
+                        'tdda.serial': {
+                            'quote_char': "'"
+                        }
+                    }
+                }
+            },
+            'e': {
+                'f': {
+                    'g': 'bar',
+                    'h': {
+                        'i': {
+                             'csvw': {
+                                 'blah': 'blah'
+                             }
+                        }
+                    },
+                    'j': 2,
+                    'pandas.read_csv': {
+                        'sep': ','
+                    }
+                }
+            }
+        }
+        kind, md = find_metadata_kind(d)
+        self.assertEqual(kind, 'pandas.read_csv')  # least deep
+        self.assertEqual(md, {'sep': ","})
+
+
 
 
 def testDataset4():

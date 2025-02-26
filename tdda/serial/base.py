@@ -36,6 +36,7 @@ class URI:
     CSVW = 'http://www.w3.org/ns/csvw'
 
 
+
 class Defaults:
     ENCODING = 'UTF-8'
     DELIMITER = ','
@@ -51,10 +52,24 @@ class Defaults:
 CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
 
-WRITER = 'tdda.serial'
 
-TDDASERIAL_VERSION = '0.1'
-TDDASERIAL_FORMAT = f'{URI.TDDASERIAL}/{TDDASERIAL_VERSION}'
+class TDDASERIAL:
+    name = 'tdda.serial'
+    key = name
+    ext = '.tddaserial'
+    version = '0.1'
+    writer = f'tdda.serial-{version}'
+    URI = URI.TDDASERIAL
+    format = f'{URI}/{version}'
+
+
+METADATA_KINDS = [
+    TDDASERIAL.key,
+    'csvw',
+    'pandas.read_csv',
+]
+
+
 
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 
@@ -144,7 +159,9 @@ class SerialMetadata:
         datetime_format=None,
         null_indicators=None,
         header_rows=1,
-        verbosity=VERBOSITY
+        verbosity=VERBOSITY,
+        lib=None,
+        lib_params=None,
     ):
         self.fields = fields or []
         self.path = path
@@ -166,6 +183,9 @@ class SerialMetadata:
         self.skip_initial_space = None
         self.skip_columns = None
         self.skip_rows = None
+
+        self.lib = lib
+        self.lib_params = lib_params
 
 
         self.errors = []

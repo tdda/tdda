@@ -170,7 +170,8 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
 
     def calc_all_non_nulls_boolean(self, colname):
         nn = self.df[colname].dropna()
-        return all([type(v) is bool for i, v in nn.iteritems()])
+        return all(type(v) is bool for i, v in nn.iteritems())
+        #return all(type(v) is bool for v in nn.to_list())
 
     def allowed_values_exclusions(self):
         # remarkably, Pandas returns various kinds of nulls as
@@ -1221,7 +1222,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
         return default_csv_loader(path)
 
     else:  # explicit metadatapath provided
-        metadata = load_metadata(path)
+        metadata = load_metadata(mdpath)
         kw = to_pandas_read_csv_args(metadata)
         return default_csv_loader(path, **kw)
 
