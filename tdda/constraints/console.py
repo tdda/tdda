@@ -200,7 +200,7 @@ def main_with_argv(argv, verbose=True):
         print(__version__)
     elif name == 'test':
         from tdda import testtdda
-        testtdda.testall(module=testtdda, argv=['python'])
+        testtdda.run_all_tests(module=testtdda, argv=['python'])
     elif name == 'diff':
         from tdda.referencetest.ddiff import ddiff_helper
         ddiff_helper(argv[2:])

@@ -876,5 +876,10 @@ Update some things for Python 3.12 and Numpy 2.0
 Minor SQLite fix (type handling)
 
 ###
-Minor fixes
+Various fixes for new Python versions.
+
+In particular, distutils is not available (directly)
+in Python 3.13, which broke the pandas tests.
+
+A few other minor things too.
 """

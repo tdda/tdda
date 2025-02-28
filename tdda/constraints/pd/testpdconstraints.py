@@ -18,7 +18,7 @@ import unittest
 
 from collections import OrderedDict, namedtuple
 #from distutils.spawn import find_executable
-from shututil import which
+from shutil import which
 
 import pandas as pd
 import numpy as np
@@ -58,7 +58,7 @@ from tdda.constraints.pd import constraints as pdc
 from tdda.constraints.pd.constraints import (load_df, verify_df,
                                              discover_df, detect_df)
 from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file#, detect_df_from_file
+from tdda.constraints.pd.verify import verify_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
 
 
