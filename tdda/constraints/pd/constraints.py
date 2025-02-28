@@ -1124,6 +1124,7 @@ def discover_df(df, inc_rex=False, df_path=None):
                  where each value in the dataframe is expected to match
                  at least one of the expressions.
 
+
     Example usage::
 
         import pandas as pd

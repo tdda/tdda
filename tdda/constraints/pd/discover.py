@@ -37,7 +37,8 @@ from tdda.constraints.pd.constraints import discover_df, load_df
 from tdda.utils import handle_tilde, nvl
 
 
-def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
+def discover_df_from_file(df_path, constraints_path, report_formats=None,
+                          verbose=True, **kwargs):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -52,6 +53,9 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
             The path to which to write the constraints.
             If None, constraints are not written.
             If '-', constraints are sent to stdout.
+
+        *report_formats*:
+            Any extra formats in which to write constraints reports
 
         *verbose*:
             Controls level of output reporting
@@ -76,6 +80,10 @@ def discover_df_from_file(df_path, constraints_path, verbose=True, **kwargs):
     if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
             f.write(output)
+        if report_formats:
+            constraints.write_discovery_reports(constraints_path,
+                                                report_formats)
+
     elif verbose or constraints_path == '-':
         print(output)
     return output

@@ -10,6 +10,9 @@ import os
 import re
 import socket
 import sys
+import tomli_w
+import yaml
+
 
 from collections import OrderedDict
 
@@ -19,7 +22,7 @@ from tdda.utils import (
 )
 from tdda.config import Config
 from tdda.version import version
-from tdda.utils import nvl, richgood, richbad, XML
+from tdda.utils import nvl, richgood, richbad, XML, write_or_return
 
 from rich import print as rprint
 
@@ -277,6 +280,88 @@ class DatasetConstraints(object):
             fields = sorted(self.fields.keys())
         self.fields.set_key_order(fields)
 
+    def write_discovery_reports(self, constraints_path, formats):
+        """
+        If any detection reports are specified by report_formats parameter
+        or by configuration, this writes the report or reports.
+        """
+
+        print('*** Reports requested:')
+        for fmt in formats:
+            print(' ', fmt)
+        print()
+
+
+
+        # d = self.constraints.to_dict()
+        # key_fields = self.detect_key
+        # for field in list(d['fields']):
+        #     constraints = d['fields'][field]
+        #     for constraint in list(constraints):
+        #         value = constraints[constraint]
+        #         c = constraints[constraint] = {
+        #             'constraint_value': value
+        #         }
+        #         stats = self.get_constraint_stats(field, constraint)
+        #         if stats.n_failures == 0:
+        #             if minimal:
+        #                 del constraints[constraint]
+        #             else:
+        #                 c['n_failures'] = 0
+        #         else:
+        #             c.update(stats.to_dict())
+        #             failures = self.get_failure_values(field, constraint,
+        #                                                key_fields)
+        #             c['failures'] = json_sanitize(list(failures))
+        #     if constraints == {}:
+        #         del d['fields'][field]
+        for fmt in formats:
+            outpath = swap_ext(constraints_path, f'.{fmt}')
+            if fmt == 'json':
+                self.to_json_report(outpath)
+            elif fmt == 'yaml':
+                self.to_yaml_report(outpath)
+            elif fmt == 'toml':
+                self.to_toml_report(outpath)
+            elif fmt == 'txt':
+                self.to_text_report(outpath)
+            elif fmt in ('md', 'markdown'):
+                self.to_markdown_report(outpath)
+            elif fmt == 'html':
+                self.to_html_detect_report(outpath)
+            else:
+                print(f'Ignoring unknown output format "{fmt}".',
+                      file=sys.stderr)
+
+    def to_json_report(self, outpath=None):
+        return write_or_return({'json': 'report'}, json.dump, json.dumps,
+                               path=outpath)
+
+    def to_yaml_report(self, outpath=None):
+        return write_or_return({'json': 'report'}, yaml.dump, yaml.dump,
+                               path=outpath)
+
+    def to_toml_report(self, outpath=None):
+        return write_or_return({'json': 'report'}, tomli_w.dump,
+                               tomli_w.dumps, path=outpath)
+
+    def to_text_report(self, outpath=None):
+        return write_or_return('Text Report', fwrite, passthrough,
+                               path=outpath)
+
+    def to_markdown_report(self, outpath=None):
+        return write_or_return('#Markdown Report', fwrite, passthrough)
+
+    def to_html_detect_report(self, outpath=None):
+        xml = XML(
+            html=True,
+            headerAttr={'title': 'TDDA Failure Report'},
+        )
+        xml.WriteElement('h1', 'TDDA Discover Report')
+        xml.CloseXML()
+        return write_or_return(xml.xml(), fwrite, passthrough, path=outpath)
+
+
 
 class Fields(TDDAObject):
     def __init__(self, constraints=None):
@@ -342,6 +427,7 @@ class FieldConstraints(object):
                                         '\n  '.join('%13s: %s'
                                                     % (k, self.constraints[k])
                                                        for k in keys)))
+
 
 
 class MultiFieldConstraints(FieldConstraints):
@@ -1209,6 +1295,7 @@ def write_html_detect_report(d, outpath):
     )
 
     xml.WriteElement('h1', 'TDDA FAILURE REPORT')
+    xml.OpenElement('div', attributes=(('id', 'tdda-discover'),))
     xml.WriteElement('h2', 'Fields:')
     for field, constraints in d['fields'].items():
         xml.WriteElement('h3', f'Field: {field}')
@@ -1245,9 +1332,18 @@ def write_html_detect_report(d, outpath):
                 xml.CloseElement('li')
             xml.CloseElement('ul')
             xml.CloseElement('ul')
+    xml.CloseElement('div')
 
 
     xml.CloseXML()
 
     with open(outpath, 'w') as f:
         f.write(xml.xml())
+
+
+def fwrite(content, f):
+    f.write(content)
+
+
+def passthrough(content):
+    return content

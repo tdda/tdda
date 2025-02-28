@@ -15,6 +15,11 @@ Optional flags are:
       Include regular expression generation. Disabled by default.
   * -R or --norex
       Exclude regular expression generation (the default)
+
+  * -c --report FORMAT1 FORMAT2 ...
+      Write constraints reports in the formats listed. Allowed formats
+      are: txt json yaml toml md markdown html.
+
 '''
 
 VERIFY_HELP = '''
@@ -63,7 +68,7 @@ Optional flags are:
       In the output, place the verification fields immediately after
       the original field to which they correspond.
   * -r --report FORMAT1 FORMAT2 ...
-      Write reportsin the formats listed. Allowed formats
+      Write reports in the formats listed. Allowed formats
       are: txt json yaml toml md markdown html.
   * --index
       Include a row-number index in the output file.
@@ -85,6 +90,8 @@ def discover_parser(usage=''):
                         help='exclude regular expression generation')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
+    parser.add_argument('-c', '--report', nargs='*',
+                        help='Report formats to write.')
     return parser
 
 
@@ -94,6 +101,11 @@ def discover_flags(parser, args, params):
         print(parser.epilog, file=sys.stderr)
         sys.exit(1)
     params['inc_rex'] = flags.rex
+    if flags.report is not None:
+        params['report_formats'] = flags.report
+    else:
+        params['report_formats'] = []
+
     return flags
 
 

@@ -614,3 +614,16 @@ class XML:
         else:
             return str(v)
 
+
+def write_or_return(content, dump, stringify, path=None, binary=False):
+    """
+    If path has a value, write content to it and return None.
+    Use binary mode for writing if binary it set.
+    """
+    if path:
+        mode = 'wb' if binary else 'w'
+        with open(path, mode) as f:
+            dump(content, f)
+        return None
+    else:
+        return stringify(content)
