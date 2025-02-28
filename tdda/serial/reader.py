@@ -12,7 +12,7 @@ from tdda.serial.base import (
     VERBOSITY,
     TDDASERIAL,
     METADATA_KINDS,
-    SerialMetadata,
+    Metadata,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
 from tdda.serial.pandasio import to_pandas_read_csv_args
@@ -23,7 +23,7 @@ from tdda.serial.utils import (
 )
 
 
-class CSVMetadataError(Exception):
+class TDDASerialError(Exception):
     pass
 
 
@@ -64,17 +64,17 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)
         if kind == TDDASERIAL.key:
-            md = SerialMetadata(**md)
+            md = Metadata(**md)
         elif kind == 'csvw':
             md = CSVWMetadata(path, table_number=table_number,
                               for_table_name=for_table_name,
                               verbosity=verbosity)
         elif kind:
-            md = SerialMetadata(lib=kind, lib_params=md)
+            md = Metadata(lib=kind, lib_params=md)
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:
-                raise CSVMetadataError(
+                raise TDDASerialError(
                     f'Unrecognized metadata content in {path}'
                 )
             if kind == 'csvw':
@@ -87,10 +87,10 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
             md = yaml.load(f, yaml.SafeLoader)
             kind = 'frictionless'
     else:
-        raise CSVMetadataError(f'Unexpected file extension {ext} for metadata '
+        raise TDDASerialError(f'Unexpected file extension {ext} for metadata '
                                f'file.\nExpected .json or .yaml.')
     if mdtype and kind != mdtype:
-        raise CSVMetadataError(f'Expected {mdtype} file; found {kind} file.')
+        raise TDDASerialError(f'Expected {mdtype} file; found {kind} file.')
 
     return md
 
@@ -162,20 +162,20 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
         for_table_name = os.path.basename(path)
     if path is None:
         if mdpath is None:
-            raise CSVMetadataError('Must provide path or mdpath')
+            raise TDDASerialError('Must provide path or mdpath')
         else:
             md = load_metadata(mdpath, mdtype=mdtype,
                                table_number=table_number,
                                for_table_name=for_table_name)
             path = md._fullpath
             if path is None:
-                raise CSVMetadataError('No data specified.')
+                raise TDDASerialError('No data specified.')
 
 
     if mdpath is None and findmd:
         mdpath = find_associated_metadata_file(path)
         if mdpath is None:
-            raise CSVMetadataError('Could not find any associated metadata '
+            raise TDDASerialError('Could not find any associated metadata '
                                    f'for {os.path.abspath(path)}')
 
     if md is None and mdpath is not None:

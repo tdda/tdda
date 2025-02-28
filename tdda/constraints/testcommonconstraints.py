@@ -39,12 +39,34 @@ class TestCommon(ReferenceTestCase):
                         verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-elevens-wrong-type.txt'))
+
     def testSimpleAllCorrectVerificationFromCSVFile(self):
-        # CSV file with pandas tddaserial metadata.
+        # CSV file with full pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
                         mdpath=tdpath('ddd-pandas.tddaserial'), verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
+
+        # CSV file with only the elevens field dtype.
+        report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
+                        mdpath=tdpath('ddd-pandas-minimal.tddaserial'),
+                        verbose=False)
+        self.assertStringCorrect(str(report),
+                                 reportpath('ddd10-all-correct.txt'))
+
+        report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
+                        mdpath=tdpath('ddd.tddaserial'),
+                        verbose=False)
+        self.assertStringCorrect(str(report),
+                                 reportpath('ddd10-all-correct.txt'))
+
+        # CSV file with only the elevens field dtype.
+        # and no format or writer
+        report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
+                        mdpath=tdpath('ddd-pandas-really-minimal.tddaserial'),
+                        verbose=False)
+
+
 
         # Doesn't work if you specify evennulls and oddnulls as object.
         # Even though they are from pandas.

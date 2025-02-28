@@ -98,19 +98,19 @@ class FieldMetadata:
                  Used mainly with date and datetime columns.
                  OPTIONAL
 
-        nullmarkers: values to be interpreted as NULL (missing/NA) values.
+        null_indicators: values to be interpreted as NULL (missing/NA) values.
                      OPTIONAL.
 
 
     """
     def __init__(self, name, fieldtype=None,
-                 format=None, nullmarkers=None,
+                 format=None, null_indicators=None,
                  allow_extras=False, **kw):
         self.name = name
         self.fieldtype = fieldtype
         self.altnames = None
         self.format = format
-        self.nullmarkers = nullmarkers
+        self.null_indicators = null_indicators
 
         for k, v in kw.items():
             if allow_extras:
@@ -146,7 +146,7 @@ class FieldMetadata:
                 if nonnull(v)}
 
 
-class SerialMetadata:
+class Metadata:
     def __init__(self,
         fields=None,
         path=None,
