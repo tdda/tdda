@@ -876,5 +876,5 @@ Update some things for Python 3.12 and Numpy 2.0
 Minor SQLite fix (type handling)
 
 ###
-Reverted serial merge
+Minor fixes
 """
