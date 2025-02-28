@@ -24,7 +24,7 @@ def find_metadata_type_from_path(path):
     for csvw, csvmetadata, frictionless. If so, return the metadata type
       - 'csvw',
       - 'csvmetadata'
-      - 'fictionless'
+      - 'frictionless'
       - or 'frictionless package'.
     Returns None if the path is not recognized as some kinds of CSV metadata.
     """

@@ -64,7 +64,7 @@ Optional flags are:
       the original field to which they correspond.
   * -r --report FORMAT1 FORMAT2 ...
       Write reportsin the formats listed. Allowed formats
-      are txt json yaml toml md markdown html.
+      are: txt json yaml toml md markdown html.
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
@@ -111,6 +111,8 @@ def verify_parser(usage=''):
                         help='report only fields with failures')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
+    parser.add_argument('-r', '--report', nargs='*',
+                        help='Report formats to write.')
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
@@ -239,7 +241,7 @@ def detect_flags(parser, args, params):
     params['in_place'] = False  # Only applicable in API case
 
     # Notice the confusing similarity of these parameters,
-    params['report'] = 'records'
+    # params['report'] = 'records'  # already done above
     if flags.report is not None:
         params['report_formats'] = flags.report
     else:

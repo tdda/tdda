@@ -7,21 +7,19 @@
         "quoting": 0,
         "escapechar": "\\",
         "dtype": {
-            "index": "int64"
-            "evennulls": "object"
-            "oddnulls": "object"
-            "evens": "float64"
-            "odds": "float64"
-            "evenreals": "float64"
-            "oddreals": "float64"
-            "evenstr": "object"
-            "oddstr": "object"
-            "elevens": "object"
-            "greek": "category"
-            "binnedindex": "int64"
+            "index": "int64",
+            "evennulls": "boolean",
+            "oddnulls": "boolean",
+            "evens": "float64",
+            "odds": "float64",
+            "evenreals": "float64",
+            "oddreals": "float64",
+            "evenstr": "object",
+            "oddstr": "object",
+            "elevens": "object",
+            "greek": "category",
+            "binnedindex": "int64",
             "binnedodds": "float64"
-            "basedate": "datetime64[us]"
-            "evendates": "datetime64[us]"
         },
         "keep_default_na": false,
         "na_values": "",

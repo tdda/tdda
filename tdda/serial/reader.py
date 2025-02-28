@@ -5,7 +5,15 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from tdda.serial.base import CONTEXT_KEY, URI, MetadataError, VERBOSITY
+from tdda.serial.base import (
+    CONTEXT_KEY,
+    URI,
+    MetadataError,
+    VERBOSITY,
+    TDDASERIAL,
+    METADATA_KINDS,
+    SerialMetadata,
+)
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
 from tdda.serial.pandasio import to_pandas_read_csv_args
 
@@ -20,7 +28,7 @@ class CSVMetadataError(Exception):
 
 
 def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
-                  verbosity=VERBOSITY):
+                  preferred_kind=None, verbosity=VERBOSITY):
     """
     Attempt to load metadata from path given.
 
@@ -29,8 +37,8 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
       path    Path to the metadata file
 
       mdtype    Optional metadata kind. One of
-                'csvmetadata'  (csvmetadata.CSVMETADATA)
-                'csvw'         (csvmetadata.CSVW)
+                'tdda.serial'   (csvmetadata.CSVMETADATA)
+                'csvw'          (csvmetadata.CSVW)
                 'frictionless'  (csvmetadata.FRICTIONLESS)
 
       table_number  If specified, use the nth table from a CSVW file.
@@ -41,23 +49,28 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
                       by matching the (end of the) url in the metadata
                       to this table name
 
+      preferred_kind: If multiple formats are found at the same level,
+                      the one to choose.
+
       verbosity:   2: errors and warnings to stderr
                    1: warnings to stderr
                    0: don't show errors or warnings
     """
     stem, ext = os.path.splitext(path)
     lcstem, ext = stem.lower(), ext.lower()
-    if ext == '.json':
-        with open(path) as f:
-            md = json.load(f)
-        context = md.get(CONTEXT_KEY)
-        if context == URI.TDDASERIAL:
-            kind = 'csvmetadata'
-        elif context == URI.CSVW:
-            kind = 'csvw'
+    with open(path) as f:
+        text = f.read().strip()
+    if ext == '.json' or text.startswith('{'):
+        structured = json.loads(text)
+        kind, md = find_metadata_kind(structured)
+        if kind == TDDASERIAL.key:
+            md = SerialMetadata(**md)
+        elif kind == 'csvw':
             md = CSVWMetadata(path, table_number=table_number,
                               for_table_name=for_table_name,
                               verbosity=verbosity)
+        elif kind:
+            md = SerialMetadata(lib=kind, lib_params=md)
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:
@@ -212,3 +225,41 @@ def poss_upgrade_to_int(df, name):
             if n_same == field.shape[0]:
                 # no floats have fractional parts
                 df[name] = int_col
+
+
+def find_metadata_kind(mds, preferred=''):
+    """
+    Breadth-first search of dict or list of dicts
+    for a recognized blob of metadata.
+
+    Returns the kind and subportion representing
+    the metadata for the first found, or the preferred
+    kind of specified.
+
+    If no metadata is found, returns None, None
+    """
+    kind = None
+    dicts = []
+    if not mds:
+        return None, None
+    if not isinstance(mds, list):
+        mds = [mds]
+    for md in mds:
+        if preferred and preferred in md:
+            kind = preferred
+            return preferred, md[preferred]
+        for k in METADATA_KINDS:
+            if k in md:
+                return k, md[k]
+            if CONTEXT_KEY in md:
+                context = md.get(CONTEXT_KEY)
+                if context == URI.CSVW:
+                    kind = 'csvw'
+                return kind, md
+        dicts.extend([v for v in md.values() if isinstance(v, dict)])
+    return find_metadata_kind(dicts, preferred)
+
+
+
+
+

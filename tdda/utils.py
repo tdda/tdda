@@ -3,8 +3,19 @@ import math
 import os
 import re
 import regex
-import yaml
+import sys
 import tomli_w
+import types
+import yaml
+
+
+#jythonc needs explicit import of utf-8 and iso-8859-1/latin1 encoding packages
+import encodings.aliases     # type:ignore
+import encodings.utf_8
+import encodings.ascii       # type:ignore
+import encodings.latin_1     # type:ignore
+import encodings.iso8859_1   # type:ignore
+
 
 from collections import namedtuple
 
@@ -13,6 +24,10 @@ import numpy as np
 from rich import print as rprint
 
 TDDADIR = os.path.dirname(__file__)  # base tdda directory for package
+DEFAULT_INPUT_ENCODING = 'UTF-8'
+
+
+
 
 class PassFailStats:
     def __init__(self, passes, failures, items='records'):
@@ -242,3 +257,360 @@ def richgood(s, colour=True, cond=True):
         return '[green]%s[/green]' % s
     else:
         return str(s)
+
+
+class XMLError(Exception):
+    pass
+
+
+class XML:
+
+    def __init__(self, indentLevel=0, tabSize=4, omitHeader=0,
+                 output=None, html=0, xsl='', css=[],
+                 title='', padEmptyElements=0, content='',
+                 inputEncoding=DEFAULT_INPUT_ENCODING,
+                 headerAttr={}, useHardTabs=True,
+                 float_precision=None, debug=False,
+                 altnbsp=None):
+        """Initialize XML.
+
+           An XML declaration is put in unless
+                omitHeader = 1 or indentLevel > 0.
+           If html is set to 5, an HTML5 head <!DOCTYPE html>
+           is used in place of the XML header.
+
+           If tabSize is given, nested elements are indented by this many
+                spaced (tabified).
+
+           If output is set to 'stdout' (in any case),
+           output is written to STDOUT on the fly and flushed.
+           If it is set to anything else, this is used as a filename
+           to write to, and again output is written on the fly and flushed.
+
+           If html = 1, an XHTML file is written with
+                - a title in the head if provided
+                - a list of CSS stylesheets in the head, if css is provided
+                - a head if a title or a css list is provided
+
+           If padEmptyElements = 1, these get a non-breaking space.
+
+           If xsl is given, this is added to the XML as an xsl-stylesheet
+                processing instruction.
+
+           If context is given, self.contentType is set to the
+                appropriate string.
+
+           If inputEncoding is given, this specifies the encoding input
+                data is in. Output encoding is always utf-8."""
+
+        self.indentLevel = indentLevel
+        self.tabSize = tabSize
+        self.pad = padEmptyElements
+        self.stack = []
+        self.html = html
+        self.xmlbuf = ['']
+        self.out = None
+        self.tab = '\t' if useHardTabs else '        '
+        self.float_precision = float_precision
+        self.float_fmt = (('%%.%df' % float_precision) if float_precision
+                                                       else None)
+        self.altnbsp = None
+        self.debug = debug
+        if output:
+            self.output = output
+            if output.lower() == 'stdout':
+                self.out = sys.stdout
+            elif output:
+                self.out = open(self.output, 'wb')
+        if indentLevel == 0 and not(omitHeader):
+            extraAttr = ''
+            if html == 5:
+                self.xmlbuf.append('<!DOCTYPE html lang="en">\n')
+            else:
+                if headerAttr:
+                    extraAttr = ''.join([' %s="%s"' % (key, headerAttr[key])
+                                         for key in headerAttr.keys()])
+                self.xmlbuf.append('<?xml version="1.0" encoding="UTF-8"%s?>\n'
+                                   % extraAttr)
+        self.inputEncoding = inputEncoding
+
+        if self.html:
+            self.WriteElement('html', leave='open')
+            if title or css:
+                self.WriteElement('head', leave='open')
+                if html == 5:
+                    self.WriteElement('meta', '', {'charset': 'UTF-8'})
+                if title:
+                    self.WriteElement('title', title)
+                if css:
+                    if type(css) in (list, tuple):  # list of URLs
+                        for c in css:
+                            self.WriteElement('style', '',
+                                               {'type': 'text/css',
+                                                'href': c,
+                                                'rel': 'stylesheet'})
+                    else:  # in-line CSS
+                        self.WriteElement('style', css, {'type': 'text/css'})
+                self.CloseElement('head')
+            self.WriteElement('body', leave='open')
+
+        if xsl:
+            self.WritePI('xml-stylesheet', {'href': xsl,
+                                             'type': 'text/xsl'})
+
+        if content.lower() in('xml', 'html', 'text'):
+            self.contentType = 'Content-Type: text/%s\n' % content.lower()
+        elif content == '':
+            self.contentType = ''
+        else:
+            raise XMLError('Unknown content type "%s"' % content)
+
+    def LatinSafe(self, S):
+        o = []
+        for s in S:
+            n = ord(s)
+            if n < 128 or n >= 160:
+                o.append(s)
+        return ''.join(o)
+
+    def Flush(self):
+        if self.out:
+            self.out.write(UTF8Definite(self.xml(flushing=True)))
+            self.xmlbuf = []
+
+    def Entitize(self, s, entitize=1, asUnicode=True):
+        s = re.sub('&', '&amp;', s)
+        s = re.sub('<', '&lt;', s)
+        s = re.sub('>', '&gt;', s)
+        if entitize > 1:
+            s = re.sub('&lt;=', '&#x2264;', s)
+            s = re.sub('&gt;=', '&#x2265;', s)
+        s = re.sub(u"'", '&apos;', s)
+        s = re.sub('"', '&quot;', s)
+        if self.altnbsp:
+            s = re.sub(self.nbsp, '&nbsp;', s)
+        return self.toString(s) if asUnicode else s
+
+    def WriteElement(self, name, content='', attributes={},
+                     leave='close', entitize=1, convertWS=0,
+                     link='', convertNL=0, tight=False, forceNL=False,
+                     openclose=False):
+        # convertNL: binary field:
+        #   0  to ignore newlines
+        #   *1 to convert backslash n (r'\n') to <br/>
+        #   1* to convert inline newline '\n' to <br/>
+        indent = '' if tight else self.IndentString()
+        if content is None:
+            print('WARNING: null content for element %s' % name,
+                  file=sys.stderr)
+            content = ''
+        else:
+            content = self.toString(content)
+        self.ForceNL(forceNL)
+        self.xmlbuf.append(indent + '<' + self.toString(name))
+        if attributes:
+            self.WriteAttributes(attributes)
+        if content == '' and leave == 'close':
+            if openclose:
+                self.xmlbuf.append('></%s>%s' % (self.toString(name),
+                                                  '' if tight else '\n'))
+            else:
+                self.xmlbuf.append('/>' if tight else '/>\n')
+        else:
+            self.xmlbuf.append('>')
+        if link:
+            self.xmlbuf.append('<a href="%s">' % link)
+        if (re.match('^[ \t]+$', content)
+                    or (self.pad and content == '' and leave == 'close')):
+            xmlc = '&#160;'
+        elif entitize:
+            xmlc = self.Entitize(content, entitize)
+        else:
+            xmlc = content
+        if convertNL & 1:
+            xmlc = xmlc.replace('\\n', '<br/>')
+        if convertNL & 2:
+            xmlc = xmlc.replace('\n', '<br/>')
+        if xmlc:
+            self.xmlbuf.append(xmlc)
+        if link:
+            self.xmlbuf.append('</a>')
+        if leave == 'close':
+            if content != '':
+                self.xmlbuf.append('</' + self.toString(name)
+                                   + ('>' if tight else '>\n'))
+        else:
+            self.Push(name, tight)
+        self.Flush()
+
+    def OpenElement(self, name, content='', attributes={},
+                         leave='close', entitize=1, convertWS=0,
+                         link='', tight=False, forceNL=False):
+        self.WriteElement(name, content, attributes, 'open',
+                          entitize, convertWS, link, tight=tight,
+                          forceNL=forceNL)
+
+    def WriteCDElement(self, name, content='', attributes={},
+                        leave='close', urlsafe=0):
+        indent = self.IndentString()
+        self.xmlbuf.append(indent + '<' + self.toString(name))
+        if attributes:
+            self.WriteAttributes(attributes)
+        self.xmlbuf.append('>')
+        if urlsafe:
+            self.xmlbuf.append('<![CDATA['
+                               + str(encode_uri_component(content))
+                               + ']]>')
+        else:
+            content = UnicodeDefinite(content)
+            self.xmlbuf.append('<![CDATA[' + content + ']]>')
+        if leave == 'close':
+            self.xmlbuf.append('</' + name + '>\n')
+        else:
+            self.Push(name)
+        self.Flush()
+
+    def WritePI(self, name, attributes={}):
+        self.xmlbuf.append('<?' + name)
+        if attributes:
+            self.WriteAttributes(attributes)
+        self.xmlbuf.append('?>\n')
+
+    def IndentString(self):
+        return (self.tab * ((self.indentLevel * self.tabSize) // 8)
+                + ' ' * ((self.indentLevel * self.tabSize) % 8))
+
+    def Push(self, name, tight=False):
+        if not tight:
+            self.xmlbuf.append('\n')
+        self.indentLevel += 1
+        self.stack.append(name)
+
+    def WriteContent(self, content, leave='open', force=False, tight=False,
+                     entitize=False):
+        if not force and self.indentLevel < 1:
+            raise XMLError('No element open for writing')
+        if content:
+            c = self.Entitize(content) if entitize else content
+            if tight:
+                self.xmlbuf.append(c)
+            else:
+                self.xmlbuf.append(self.IndentString() + c)
+        if leave == 'close':
+            self.CloseElement()
+
+    def AddBalancedXML(self, xml):
+        """Add a balanced XML section to the output.
+           It is the caller's responsibility to ensure that the XML
+           delivered is balanced, well-formed, in situ etc: this function
+           just appends it to the output."""
+        self.xmlbuf.append(xml if type(xml) == str
+                               else xml.decode('UTF-8'))
+
+    def CloseElement(self, element=None, tight=False, forceNL=False):
+        if self.indentLevel < 1:
+            raise XMLError('No element open for closing')
+        self.indentLevel -= 1
+        stored = self.stack.pop()
+        if element:
+            if str(element) != stored:
+                info = '\n'.join([''] + self.xmlbuf) if self.debug else ''
+                raise XMLError('Attempt to close %s with %s%s'
+                               % (stored, element, info))
+        if tight:
+            self.xmlbuf.append('</' + stored + '>')
+        else:
+            self.ForceNL(forceNL)
+            self.xmlbuf.append(self.IndentString() + '</' + stored + '>\n')
+        self.Flush()
+
+    def ForceNL(self, forceNL):
+        if forceNL and self.xmlbuf and not self.xmlbuf[-1].endswith('\n'):
+            self.xmlbuf.append('\n')
+
+    def CloseAllOpen(self):
+        while self.indentLevel > 0:
+            self.CloseElement()
+
+    def CloseXML(self, forceTidy=0):
+        if forceTidy:
+            self.CloseAllOpen()
+        else:
+            if self.html:
+                self.CloseElement('body')
+                self.CloseElement('html')
+            if self.indentLevel != 0:
+                raise XMLError('Attempt to terminate open XML '
+                                    '(items remaining %s)'
+                                        % str(self.stack))
+        self.Flush()
+        if self.out and self.out != sys.stdout:
+            self.out.close()
+
+    def WriteAttributes(self, attributes):
+        if type(attributes) == type({}):
+            for a in attributes:
+                val = attributes[a]
+                if type(val) is bytes:
+                    val = str(val, self.inputEncoding, 'ignore')
+                if type(a) is bytes:
+                    a = str(a, self.inputEncoding, 'ignore')
+                self.xmlbuf.append(' %s="%s"' % (self.toString(a),
+                                   self.Entitize(self.toString(val))))
+        else:   # tuple
+            for (k, v) in attributes:
+                self.xmlbuf.append(' %s="%s"'
+                                   % (self.toString(k),
+                                      self.Entitize(self.toString(v))))
+
+    def WriteComment(self, comment, padlines=1):
+        padding = '\n' * padlines
+        indent = self.IndentString()
+        if type(comment) == list:
+            if len(comment) > 0:
+                c = comment[0].replace('--', '- - ')
+                self.xmlbuf.append('%s%s<!-- %s\n' % (padding, indent, c))
+                indent = '%s%s' % (indent, ' ' * 5)
+                for i, cl in enumerate(comment[1:]):
+                    c = cl.replace('--', '- - ')
+                    if i == len(comment) - 2:  # last
+                        end = ' -->\n%s' % padding
+                    else:
+                        end = '\n'
+                    self.xmlbuf.append('%s%s%s' % (indent, c, end))
+
+        else:
+            c = comment.replace('--', '- - ')
+            self.xmlbuf.append('%s%s<!-- %s -->%s\n' % (padding,
+                                                     self.IndentString(),
+                                                     comment, padding))
+
+    def __str__(self):
+        s = 'indent level = %d\n' % self.indentLevel
+        s = 'indentation size = %d' % self.tabSize
+        s += 'stack = %s\n' % self.stack
+        s += 'xml = \n' + self.xml()
+        return s
+
+    def xml(self, flushing=False):
+        if self.indentLevel > 0 and not flushing:
+            raise XMLError('Elements still open: %s.'
+                           % ', '.join(self.stack))
+        return ''.join(self.xmlbuf)
+
+    def toString(self, v):
+        if type(v) is str:
+            return v
+        elif type(v) is bytes:
+            return str(v, self.inputEncoding, 'ignore')
+        elif type(v) is float and self.float_fmt is not None:
+            s = str(self.float_fmt % v)
+            while (s.endswith('0') and not len(s) == 1
+                   and not s.endswith('.0')):
+                s = s[:-1]
+            if s.endswith('.0') and len(s) > 2:
+                s = s[:-2]
+            return s
+        else:
+            return str(v)
+

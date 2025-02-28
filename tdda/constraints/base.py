@@ -19,7 +19,7 @@ from tdda.utils import (
 )
 from tdda.config import Config
 from tdda.version import version
-from tdda.utils import nvl, richgood, richbad
+from tdda.utils import nvl, richgood, richbad, XML
 
 from rich import print as rprint
 
@@ -40,6 +40,7 @@ CONSTRAINT_SUFFIX_MAP = OrderedDict((
     ('rex', 'rex'),
     ('transform', None),  # this mapped value isn't used
 ))
+
 
 STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
 STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
@@ -783,17 +784,17 @@ class Verification(object):
         for fmt in self.detect_report_formats:
             outpath = swap_ext(self.detect_outpath, f'.{fmt}')
             if fmt == 'json':
-                outpath = swap_ext(self.detect_outpath, '.json')
                 dict_to_json(d, outpath)
             elif fmt == 'yaml':
-                outpath = swap_ext(self.detect_outpath, '.yaml')
                 dict_to_yaml(d, outpath)
             elif fmt == 'toml':
-                outpath = swap_ext(self.detect_outpath, '.toml')
                 dict_to_toml(d, outpath)
             elif fmt == 'txt':
-                outpath = swap_ext(self.detect_outpath, '.txt')
                 write_text_detect_report(d, outpath)
+            elif fmt in ('md', 'markdown'):
+                write_markdown_detect_report(d, outpath)
+            elif fmt == 'html':
+                write_html_detect_report(d, outpath)
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
@@ -1146,6 +1147,7 @@ def write_text_detect_report(d, outpath):
     indent = '  '
     ffv = CONFIG.format_failure_values
     with open(outpath, 'w') as f:
+        f.write('TDDA FAILURES REPORT')
         f.write('FIELDS:\n')
         for field, constraints in d['fields'].items():
             f.write(f'\nField: {field}\n')
@@ -1167,3 +1169,85 @@ def write_text_detect_report(d, outpath):
                     f.write(f'{indent * 3}{ffv(failure)}\n')
 
 
+def write_markdown_detect_report(d, outpath):
+    """
+    Writes a human-readable textual report on detection failures
+    """
+    ffv = CONFIG.format_failure_values
+    with open(outpath, 'w') as f:
+        f.write('# TDDA FAILURES REPORT:\n')
+        f.write('## FIELDS:\n')
+        for field, constraints in d['fields'].items():
+            f.write(f'\n### Field: {field}\n')
+            for ic, (constraint, results) in enumerate(constraints.items()):
+                label = f'**Constraint:** `{constraint}`: '
+                value = results['constraint_value']
+                is_rex = constraint == 'rex'
+                fval = CONFIG.format_constraint_value(value, len(label), 4,
+                                                      rex=is_rex)
+                if fval.startswith('\n'):
+                    label = label[:-1]
+                nl = '\n' if ic > 0 else ''
+                f.write(f'{nl} * {label}`{fval}`\n')
+                nf = results['n_failures']
+                n = nf + results['n_passes']
+                pc = results['failure_rate']
+                f.write(f'   * **Failures:** {nf:,} / {n:,} ({pc})\n')
+                for failure in results['failures']:
+                    f.write(f'      * `{ffv(failure)}`\n')
+
+
+def write_html_detect_report(d, outpath):
+    """
+    Writes a human-readable textual report on detection failures
+    """
+    indent = '  '
+    ffv = CONFIG.format_failure_values
+    xml = XML(
+        html=True,
+        headerAttr={'title': 'TDDA Failure Report'},
+    )
+
+    xml.WriteElement('h1', 'TDDA FAILURE REPORT')
+    xml.WriteElement('h2', 'Fields:')
+    for field, constraints in d['fields'].items():
+        xml.WriteElement('h3', f'Field: {field}')
+
+        for ic, (constraint, results) in enumerate(constraints.items()):
+            xml.OpenElement('ul')
+            xml.OpenElement('li')
+            xml.WriteElement('b', 'Constraint: ')
+            xml.WriteElement('code', constraint)
+            value = results['constraint_value']
+            xml.WriteContent(':')
+            xml.WriteElement('code', value)
+            xml.CloseElement('li')
+
+            is_rex = constraint == 'rex'
+            label = f'Constraint: {constraint}: '
+            fval = CONFIG.format_constraint_value(value, len(label), 4,
+                                                  rex=is_rex)
+
+#            if fval.startswith('\n'):
+#                label = label[:-1]
+            nf = results['n_failures']
+            n = nf + results['n_passes']
+            pc = results['failure_rate']
+            xml.OpenElement('li')
+            xml.WriteElement('b', 'Failures: ')
+            xml.WriteContent(f'{nf:,} / {n:,} ({pc})')
+            xml.CloseElement('li')
+
+            xml.OpenElement('ul')
+            for failure in results['failures']:
+                xml.OpenElement('li')
+                xml.WriteElement('code', f'{ffv(failure)}')
+                xml.CloseElement('li')
+            xml.CloseElement('ul')
+            xml.CloseElement('ul')
+
+
+    xml.CloseXML()
+
+    with open(outpath, 'w') as f:
+        f.write(xml.xml())

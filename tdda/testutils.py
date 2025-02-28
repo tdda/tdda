@@ -100,6 +100,71 @@ class TestTDDAUtils(ReferenceTestCase):
         self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
 
 
+class TestXMLGeneration(ReferenceTestCase):
+    def testSimpleXMLGen(self):
+        x = XML()
+        x.OpenElement('foo')
+        x.WriteElement('bar', 'Contents of bar oné, twø, thrέé',
+                       attributes=(('a1', 1), ('a2', 2)))
+        x.CloseElement()
+        stripped = x.xml().strip()
+        self.assertEqual(stripped, '''
+<?xml version="1.0" encoding="UTF-8"?>
+<foo>
+    <bar a1="1" a2="2">Contents of bar oné, twø, thrέé</bar>
+</foo>
+'''.strip())
+        self.assertEqual(type(stripped), str)
+
+    def testSimpleLatin1XMLGen(self):
+        x = XML(inputEncoding='latin1')
+        x.OpenElement('foo')
+        x.WriteElement('bar', u'Contents of bar oné, twø, threé'.encode('latin1'),
+                       attributes=(('a1', 1), ('a2', 2)))
+        x.CloseElement()
+        stripped = x.xml().strip()
+        self.assertEqual(stripped, '''
+<?xml version="1.0" encoding="UTF-8"?>
+<foo>
+    <bar a1="1" a2="2">Contents of bar oné, twø, threé</bar>
+</foo>
+'''.strip())
+        self.assertEqual(type(stripped), str)
+
+    def testSimpleLatin9XMLGen(self):
+        x = XML(inputEncoding='latin9')
+        x.OpenElement('foo')
+        x.WriteElement('bar', u'Contents of bar oné, twø, threé at €3.'.encode('latin9'),
+                       attributes=(('a1', 1), ('a2', 2)))
+        x.CloseElement()
+        stripped = x.xml().strip()
+        self.assertEqual(stripped, '''
+<?xml version="1.0" encoding="UTF-8"?>
+<foo>
+    <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
+</foo>
+'''.strip())
+        self.assertEqual(type(stripped), str)
+
+    def testHarderLatin9XMLGen(self):
+        x = XML(inputEncoding='latin9')
+        x.OpenElement('foo')
+        x.WriteElement('bar', u'Contents of bar oné, twø, threé at €3.',
+                       attributes=(('a1', 1), ('a2', 2)))
+        x.WriteElement('bas', u'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode('latin9'))
+        x.CloseElement()
+        stripped = x.xml().strip()
+        self.assertEqual(stripped, '''
+<?xml version="1.0" encoding="UTF-8"?>
+<foo>
+    <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
+    <bas>N/A/N/A of 78042 on N/A at N/Abarceló hotels &amp; resorts</bas>
+</foo>
+'''.strip())
+        self.assertEqual(type(stripped), str)
+
+
+
 
 
 if __name__ == '__main__':
