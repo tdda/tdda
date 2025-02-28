@@ -875,7 +875,7 @@ Update some things for Python 3.12 and Numpy 2.0
 21.02.2025 2.2.08
 Minor SQLite fix (type handling)
 
-###
+28.02.2025 2.2.09
 Various fixes for new Python versions.
 
 In particular, distutils is not available (directly)
