@@ -31,7 +31,7 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
       mdtype    Optional metadata kind. One of
                 'csvmetadata'  (csvmetadata.CSVMETADATA)
                 'csvw'         (csvmetadata.CSVW)
-                'fictionless'  (csvmetadata.FRICTIONLESS)
+                'frictionless'  (csvmetadata.FRICTIONLESS)
 
       table_number  If specified, use the nth table from a CSVW file.
                     Raise an error if not present, (indexed from zero)
