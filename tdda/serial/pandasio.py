@@ -6,7 +6,7 @@ import pandas as pd
 
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.base import (
-    SerialMetadata, FieldMetadata, FieldType, DateFormat, Defaults
+    Metadata, FieldMetadata, FieldType, DateFormat, Defaults
 )
 
 
@@ -175,7 +175,7 @@ def df_to_metadata(df, path=None):
         col_to_field_metadata(df[c])
         for c in df
     ]
-    return SerialMetadata(
+    return Metadata(
                fields, path=path,
                encoding=Defaults.ENCODING,
                delimiter=Defaults.DELIMITER,

@@ -1,0 +1,7 @@
+{
+    "pandas.read_csv": {
+        "dtype": {
+            "elevens": "object"
+        }
+    }
+}
