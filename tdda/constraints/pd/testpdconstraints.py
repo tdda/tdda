@@ -17,7 +17,8 @@ import tempfile
 import unittest
 
 from collections import OrderedDict, namedtuple
-from distutils.spawn import find_executable
+#from distutils.spawn import find_executable
+from shututil import which
 
 import pandas as pd
 import numpy as np
@@ -1692,7 +1693,7 @@ class TestPandasCommandAPI(ReferenceTestCase, CommandLineHelper):
         return str(main_with_argv(argv, verbose=False))
 
 
-@unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
     @classmethod
     def setUpClass(cls):
