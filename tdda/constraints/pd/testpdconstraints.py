@@ -107,6 +107,19 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
 
+
+def ReportNoFeather():
+    if not feather and pmmif:
+        print('Skipping feather tests:')
+    if not feather:
+        print('    featherfile is not installed (pip install featherfile.')
+    if not pmmif:
+        print('    pmmif is not installed pip install pmmif.')
+
+ReportNoFeather()
+
+
+
 class ConstraintVerificationTester:
     """
     Delegate class for checking constraint verifications.

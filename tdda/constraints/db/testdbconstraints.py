@@ -26,25 +26,28 @@ import unittest
 try:
     import pgdb
 except ImportError:
-    print('Skipping Postgres tests (no driver library)', file=sys.stderr)
+    print('Skipping Postgres tests (no driver library (pip install pygresql)', file=sys.stderr)
     pgdb = None
 
 try:
-    import MySQLdb
+    # import MySQLdb
+    import mysql.connector as MySQLdb
 except ImportError:
-    print('Skipping MySQL tests (no driver library)', file=sys.stderr)
+    print('Skipping MySQL tests (no driver library (pip install mysql-connector-python))', file=sys.stderr)
     MySQLdb = None
 
 try:
     import sqlite3
 except ImportError:
-    print('Skipping SQLite tests (no driver library)', file=sys.stderr)
+    # shouldn't happe in an ymodern Python; part of stdlib
+    print('Skipping SQLite tests (no driver library for sqlite3)', file=sys.stderr)
     sqlite3 = None
 
+print('Skipping MongoDB tests (not yet working)', file=sys.stderr)
 try:
     import pymongo
 except ImportError:
-    #print('Skipping MongoDB tests (no driver library)', file=sys.stderr)
+    #print('Skipping MongoDB tests (no driver library pymongo)', file=sys.stderr)
     pymongo = None
 pymongo = None  # The tests don't yet work for MongoDB
 
@@ -65,6 +68,19 @@ MYSQL_CONN_FILE = os.path.join(os.path.expanduser('~'),
                               '.tdda_db_conn_mysql')
 MONGODB_CONN_FILE = os.path.join(os.path.expanduser('~'),
                                  '.tdda_db_conn_mongodb')
+
+
+if pgdb and not os.path.exists(POSTGRES_CONN_FILE):
+    print('Skipping Postgres because no connection file exists at %s.'
+          % POSTGRES_CONN_FILE)
+
+if MySQLdb and not os.path.exists(MYSQL_CONN_FILE):
+    print('Skipping MySQL because no connection file exists at %s.'
+          % MYSQL_CONN_FILE)
+
+if pymongo and not os.path.exists(MONGODB_CONN_FILE):
+    print('Skipping Mongo because no connection file exists at %s.'
+          % MONGODB_CONN_FILE)
 
 isPython2 = sys.version_info[0] < 3
 
