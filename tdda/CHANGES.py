@@ -888,7 +888,7 @@ A few other minor things too.
 1.03.2025 2.2.11
 Better reporting of why tests are skipped
 
-###
+2.03.2025 2.2.12
 Database enhancements.
 
 Some problems with MySQL string lengths have been fixed.
