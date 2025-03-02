@@ -1377,7 +1377,6 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
         self.assertEqual(v.failures, 17)
         self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
 
-    @tag
     def testDetectElements118rexToFilePerConstraint(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -1403,23 +1402,19 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
         ddf = v.detected()
         self.assertStringCorrect(ddf.to_string(), 'elements118rex_detect.df')
 
-    @tag
     def testDetectElements118_csv_to_csv(self):
         self.detectElements('csv', 'csv')
 
-    @tag
     @unittest.skipIf(pmmif is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_csv_to_feather(self):
         self.detectElements('csv', 'feather')
 
-    @tag
     @unittest.skipIf(pmmif is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_feather_to_csv(self):
         self.detectElements('feather', 'csv')
 
-    @tag
     @unittest.skipIf(pmmif is None or feather is None,
                      'pmmif/feather not installed')
     def testDetectElements118_feather_to_feather(self):

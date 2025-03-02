@@ -159,6 +159,9 @@ class Metadata:
         datetime_format=None,
         null_indicators=None,
         header_rows=1,
+        accept_percentages_as_floats = None,
+        map_missing_trailing_cols_to_null = None,
+
         verbosity=VERBOSITY,
         lib=None,
         lib_params=None,
@@ -173,6 +176,11 @@ class Metadata:
         self.date_format = None
         self.null_indicators = null_indicators
 
+        self.accept_percentages_as_floats = accept_percentages_as_floats
+        self.map_missing_trailing_cols_to_null = (
+            map_missing_trailing_cols_to_null
+        )
+
         self.delimiter = None
         self.encoding = None
 
@@ -183,6 +191,8 @@ class Metadata:
         self.skip_initial_space = None
         self.skip_columns = None
         self.skip_rows = None
+
+
 
         self.lib = lib
         self.lib_params = lib_params
@@ -200,6 +210,9 @@ class Metadata:
 #        self.metametadata = {
 #            'creationhash': ''
 #        }
+
+        self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
+                       for f in self.fields] 
 
 
     def error(self, msg):

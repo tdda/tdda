@@ -978,6 +978,7 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
+    @tag
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = df_to_metadata(df)
@@ -988,7 +989,6 @@ class TestPandasToMetadata(ReferenceTestCase):
         )
 
 
-@tag
 class TestFindMetadata(ReferenceTestCase):
     def test_find_metadata_empty(self):
         kind, md = find_metadata_kind({})
