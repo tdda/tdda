@@ -17,7 +17,8 @@ import tempfile
 import unittest
 
 from collections import OrderedDict, namedtuple
-from distutils.spawn import find_executable
+#from distutils.spawn import find_executable
+from shutil import which
 
 import pandas as pd
 import numpy as np
@@ -57,7 +58,7 @@ from tdda.constraints.pd import constraints as pdc
 from tdda.constraints.pd.constraints import (load_df, verify_df,
                                              discover_df, detect_df)
 from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file#, detect_df_from_file
+from tdda.constraints.pd.verify import verify_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
 
 
@@ -104,6 +105,19 @@ OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
+
+
+
+def ReportNoFeather():
+    if not feather and pmmif:
+        print('Skipping feather tests:')
+    if not feather:
+        print('    featherfile is not installed (pip install featherfile.')
+    if not pmmif:
+        print('    pmmif is not installed pip install pmmif.')
+
+ReportNoFeather()
+
 
 
 class ConstraintVerificationTester:
@@ -1692,7 +1706,7 @@ class TestPandasCommandAPI(ReferenceTestCase, CommandLineHelper):
         return str(main_with_argv(argv, verbose=False))
 
 
-@unittest.skipIf(find_executable('tdda') is None, 'tdda not installed')
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
     @classmethod
     def setUpClass(cls):

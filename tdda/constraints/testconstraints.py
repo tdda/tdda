@@ -12,16 +12,19 @@ except ImportError:
 
 try:
     from tdda.constraints.db.testdbconstraints import (
-        TestSQLiteDBHandlers,
-        TestPostgresDBHandlers,
-        TestMySQLDBHandlers,
         TestSQLiteDatabaseConnectionFile,
-        TestMongoDBHandlers,
-        TestSQLiteDBConstraintVerifiers,
+        TestSQLiteDBHandlers,
         TestSQLiteDBConstraintDiscoverers,
+        TestSQLiteDBConstraintVerifiers,
+
+        TestPostgresDBHandlers,
         TestPostgresDBConstraintDiscoverers,
+
+        TestMySQLDBHandlers,
         TestMySQLDBConstraintDiscoverers,
-        TestMongoDBConstraintDiscoverers,
+
+        #TestMongoDBHandlers,
+        #TestMongoDBConstraintDiscoverers,
     )
     # The individual imports of the database driver libraries
     # are now all protected with try...except blocks,

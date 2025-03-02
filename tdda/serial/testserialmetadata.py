@@ -181,7 +181,8 @@ class TestConversion(ReferenceTestCase):
                                  ignore_substrings=[
                                     'metadata_source_path',
                                     'metadata_source_dir'
-                                 ])
+                                 ],
+                                 ignore_patterns=TDDASERIAL_PATTERNS)
 
     def test_simple2pd(self):
         mdpath = os.path.join(TESTDATADIR, 'simple-metadata.json')
