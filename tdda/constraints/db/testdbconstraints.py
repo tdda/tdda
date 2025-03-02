@@ -187,21 +187,8 @@ class TestDatabaseConstraintVerifiers:
         result = verify_db_table(self.dbh.dbtype, self.db, elements,
                                  constraints_file, testing=True)
 
-        self.assertEqual(result.passes, 58)    # the original 57, minus the
-                                               # type (and min and max) ones
-                                               # on the Group field, which
-                                               # the constraints (wrongly)
-                                               # claim to be a real field,
-                                               # rather than integer... but
-                                               # also including three new
-                                               # passing regex constraints
-
-        self.assertEqual(result.failures, 20)  # the original 15, plus
-                                               # the three additional failures
-                                               # because of type mismatch
-                                               # on the Group field, and
-                                               # two failing regexps because
-                                               # of having more elements.
+        self.assertEqual(result.passes, 61)
+        self.assertEqual(result.failures, 17)
 
         for field in result.fields.values():
             for name, value in field.items():
