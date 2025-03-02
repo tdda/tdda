@@ -12,13 +12,8 @@ except ImportError:
 
 try:
     from tdda.constraints.db.testdbconstraints import (
-        TestSQLiteDatabaseConnectionFile,
-        TestSQLiteDBHandlers,
-        TestSQLiteDBConstraintDiscoverers,
-        TestSQLiteDBConstraintVerifiers,
-
+        TestSQLiteDB,
         TestPostgresDB,
-
         TestMySQLDB,
     )
     # The individual imports of the database driver libraries
