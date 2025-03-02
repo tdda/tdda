@@ -34,11 +34,15 @@ try:
 except ImportError:
     pymongo = None
 
+from tdda.debug import dprint
+
 
 from tdda.constraints.base import UNICODE_TYPE
 from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
+
+from tdda.utils import handle_tilde
 
 
 DATABASE_USAGE = '''
@@ -87,10 +91,10 @@ def applicable(argv):
             (table, dbtype) = parse_table_name(a, None)
             if dbtype in DATABASE_HANDLERS:
                 return True
-        elif a == '-dbtype':
+        elif a in ('-dbtype', '--dbtype'):
             return (i < len(argv) - 1
                     and argv[i+1] in DATABASE_HANDLERS)
-    return '-db' in argv
+    return '-db' in argv or '--db' in argv
 
 
 def database_arg_parser(create_parser, usage):
@@ -136,34 +140,50 @@ def database_arg_flags(create_flags, parser, args, params):
     return flags
 
 
-def database_connection(table=None, conn=None, dbtype=None, db=None,
+def database_connection(table=None, conn_file=None, dbtype=None, database=None,
                         host=None, port=None, user=None, password=None,
-                        schema=None):
+                        schema=None, db=None, conn=None):
     """
     Connect to a database, using an appropriate driver for the type
     of database specified.
     """
-    if conn:
-        defaults = ConnectionSpec(conn)
+
+    # Backwards compatibilty
+    database = database or db
+    conn_file = conn_file or conn
+
+    dprint('CONNECTION PARAMETERS PASSED IN',
+           f'table={table},'
+           f'conn_file={conn_file},'
+           f'dbtype={dbtype},'
+           f'database={database},'
+           f'\nhost={host},'
+           f'port={port},'
+           f'user={user},'
+           f'password={password},'
+           f'schema={schema}\n')
+    if conn_file:
+        defaults = ConnectionSpec(conn_file)
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
-            connfile = os.path.join(os.path.expanduser('~'),
-                                    '.tdda_db_conn' + '_' + dbtypelower)
-            if dbtypelower == 'postgres' and not os.path.exists(connfile):
-                connfile = os.path.join(os.path.expanduser('~'),
-                                        '.tdda_db_conn_postgresql')
+            dflt_conn_file = handle_tilde('~/.tdda_db_conn_' + dbtypelower)
+            if (
+                dbtypelower == 'postgres'
+                and not os.path.exists(dflt_conn_file)
+            ):
+                dflt_conn_file = handle_tilde('~.tdda_db_conn_postgresql')
         else:
-            connfile = os.path.join(os.path.expanduser('~'), '.tdda_db_conn')
-        if os.path.exists(connfile):
-            defaults = ConnectionSpec(connfile)
+            dflt_conn_file = handle_tilde('~/.tdda_db_conn')
+        if os.path.exists(dflt_conn_file):
+            defaults = ConnectionSpec(dflt_conn_file)
         else:
             defaults = None
     if defaults:
         if dbtype is None:
             dbtype = defaults.dbtype
-        if db is None:
-            db = defaults.db
+        if database is None:
+            database = defaults.database or defaults.db
         if host is None:
             host = defaults.host
         if port is None:
@@ -185,35 +205,46 @@ def database_connection(table=None, conn=None, dbtype=None, db=None,
     if dbtype is None:
         print('Database type required ("-dbtype type")', file=sys.stderr)
         sys.exit(1)
-    if db is None:
+    if database is None:
         print('Database name required ("-db name")', file=sys.stderr)
         sys.exit(1)
+    dprint('^^^', defaults)
+    dprint('\nCONNECTION PARAMETERS RESOLVED',
+           f'table={table},'
+           f'conn_file={conn_file},'
+           f'dbtype={dbtype},'
+           f'database={database},'
+           f'\nhost={host},'
+           f'port={port},'
+           f'user={user},'
+           f'password={password},'
+           f'schema={schema},')
 
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
         connector = DATABASE_CONNECTORS[dbtypelower]
-        conn = connector(host, port, db, user, password)
+        conn = connector(host, port, database, user, password)
         if conn is None:
             sys.exit(1)   # error message already reported
-        return Connection(conn, schema, host=host, port=port, database=db,
-                          user=user)
+        return DBConnector(conn, schema, host=host, port=port,
+                           database=database, user=user)
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
 
 
-def database_connection_postgres(host, port, db, user, password):
+def database_connection_postgres(host, port, database, user, password):
     if pgdb:
         if port is not None:
             host = host + ':' + str(port)
-        return pgdb.connect(host=host, database=db,
+        return pgdb.connect(host=host, database=database,
                             user=user, password=password)
     else:
         print('PostgreSQL driver not available', file=sys.stderr)
         sys.exit(1)
 
 
-def database_connection_mysql(host, port, db, user, password):
+def database_connection_mysql(host, port, database, user, password):
     if MySQLdb:
         # TODO: should provide support for MySQL 'option-files' too.
         if host is None:
@@ -224,39 +255,40 @@ def database_connection_mysql(host, port, db, user, password):
             user = getpass.getuser()
         if password:
             try:
-                return MySQLdb.connect(host=host, port=port, db=db,
+                return MySQLdb.connect(host=host, port=port, db=database,
                                        user=user, password=password)
             except:
                 # some versions of the MySQL driver use different names
-                return MySQLdb.connect(host=host, port=port, db=db,
+                return MySQLdb.connect(host=host, port=port, db=database,
                                        username=user, passwd=password)
         else:
-            return MySQLdb.connect(host=host, port=port, db=db, user=user)
+            return MySQLdb.connect(host=host, port=port, db=database,
+                                   user=user)
     else:
         print('MySQL driver not available', file=sys.stderr)
 
 
-def database_connection_sqlite(host, port, db, user, password):
+def database_connection_sqlite(host, port, database, user, password):
     if sqlite3:
-        conn = sqlite3.connect(db)
-        conn.create_function('regexp', 2, regex_matcher)
-        return conn
+        dbc = sqlite3.connect(database)
+        dbc.create_function('regexp', 2, regex_matcher)
+        return dbc
     else:
         print('sqlite driver not available', file=sys.stderr)
         sys.exit(1)
 
 
-def database_connection_mongodb(host, port, db, user, password):
+def database_connection_mongodb(host, port, database, user, password):
     if pymongo:
         if host is None:
             host = 'localhost'
         if port is None:
             port = 27017
         client = pymongo.MongoClient(host, port)
-        if db not in client.database_names():
-            print('Mongodb database %s does not exist' % db)
+        if database not in client.database_names():
+            print('Mongodb database %s does not exist' % database)
             sys.exit(1)
-        return client[db]
+        return client[database]
     else:
         print('mongodb driver not available', file=sys.stderr)
         sys.exit(1)
@@ -280,7 +312,14 @@ class ConnectionSpec:
         with open(filename) as f:
             d = json.loads(f.read())
         self.dbtype = d.get('dbtype')
-        self.db = d.get('db')
+
+        # For reasons of backwards compatibility, we accept db
+        # as well as database, and also (currently) store as .db
+        # as well as .database. But .db this will be removed when safe
+
+        self.database = d.get('database') or d.get('db')
+        self.db = self.database  # TODO: Remove!
+
         self.host = d.get('host')
         self.port = d.get('port')
         self.user = d.get('user')
@@ -288,16 +327,26 @@ class ConnectionSpec:
         self.schema = d.get('schema')
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
-                    and self.db is not None
-                    and not os.path.isabs(self.db)):
-            # if a .conn file for a sqlite connection specifies a .db file,
+                    and self.database is not None
+                    and not os.path.isabs(self.database)):
+            # if a .conn file for a sqlite connection specifies a .sqlite3
+            # file,
             # then resolve that relative to the location of the .conn file.
-            self.db = os.path.join(os.path.dirname(filename), self.db)
+            self.database = os.path.join(os.path.dirname(filename),
+                                         self.database)
+            self.db = self.database
+
+    def __str__(self):
+        params=',\n    '.join('%s: %s' % (k, repr(v))
+                       for k, v in sorted(self.__dict__.items()))
+        return 'ConnectionSpec(\n    %s\n)' % params
 
 
-class Connection:
+class DBConnector:
     """
-    A database connection object (also holder for additional attributes)
+    A database connector object, containing the actual
+    database *connection*, as well as holding additional attributes
+    about the connection.
     """
     def __init__(self, connection, schema, host=None, port=None,
                  database=None, user=None):
@@ -308,14 +357,19 @@ class Connection:
         self.database = database
         self.user = user
 
+    def __str__(self):
+        params=',\n    '.join('%s: %s' % (k, repr(v))
+                       for k, v in sorted(self.__dict__.items()))
+        return 'DBConnector(\n    %s\n)' % params
+
 
 class DatabaseHandler:
     """
     Common SQL and NoSQL database support
     """
-    def __init__(self, dbtype, db):
+    def __init__(self, dbtype, dbc):
         handlerClass = self.check_db_type(dbtype)
-        self.instance = handlerClass(dbtype, db)
+        self.instance = handlerClass(dbtype, dbc)
 
     def check_db_type(self, dbtype):
         """
@@ -336,7 +390,8 @@ class SQLDatabaseHandler:
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
-        self.db = db.connection
+        self.db = db
+        self.dbc = db.connection
         self.schema = db.schema
         self.cursor = db.connection.cursor()
 
@@ -361,6 +416,15 @@ class SQLDatabaseHandler:
         # execute a SQL statement, returning a list of rows
         self.cursor.execute(sql)
         return self.cursor.fetchall()
+
+    def execute_commit(self, sql, commit_each=False):
+        queries = [sql] if type(sql) is str else sql
+        for query in queries:
+            self.cursor.execute(query)
+            if commit_each:
+                self.dbc.commit()
+        if not commit_each:
+            self.dbc.commit()
 
     def db_value_is_null(self, value):
         return value is None
@@ -423,6 +487,9 @@ class SQLDatabaseHandler:
         else:
             raise Exception('Unsupported database type %s' % self.dbtype)
 
+        dprint('DBConnector>>>', self.dbc)
+        dprint('All SQL>>>', allsql)
+        dprint('SQL>>>', sql)
         if self.execute_scalar(allsql) == 0:
             # no permission to see any tables, so wrong credentials
             raise Exception('Permission denied')
@@ -493,6 +560,7 @@ class SQLDatabaseHandler:
             'datetime'                   : 'date',
             None                         : None,
             ''                           : None,
+            'any'                        : None,
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
@@ -573,10 +641,10 @@ class SQLDatabaseHandler:
             uniqs = self.get_database_unique_values(tablename, colname)
             if uniqs:
                 if type(uniqs[0]) is unicode_string:
-                    L = [len(v) for v in uniqs]
+                    lengths = [len(v) for v in uniqs]
                 else:
-                    L = [len(v.decode('UTF-8')) for v in uniqs]
-                x = agg([len(s) for s in uniqs])
+                    lengths = [len(v.decode('UTF-8')) for v in uniqs]
+                return agg(lengths)
             else:
                 return None
         else:
@@ -648,16 +716,16 @@ class MongoDBDatabaseHandler:
     """
     NoSQL MonggoDB support
     """
-    def __init__(self, dbtype, db):
+    def __init__(self, dbtype, dbc):
         self.dbtype = dbtype
-        self.db = db
+        self.db = dbc
 
     def find_collection(self, tablename):
         """
         Search through the collections hierarchy to resolve dotted names
         """
         parts = tablename.split('.')
-        collection = self.db.connection
+        collection = self.dbc.connection
         for p in parts:
             if p not in collection.collection_names():
                 raise Exception('collection %s does not exist' % tablename)
