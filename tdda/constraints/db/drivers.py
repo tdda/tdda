@@ -390,8 +390,8 @@ class SQLDatabaseHandler:
     """
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
-        self.db = db  # TODO: probably rename as .db
-        self.dbc = db.connection  # TODO: rename as dbc
+        self.db = db
+        self.dbc = db.connection
         self.schema = db.schema
         self.cursor = db.connection.cursor()
 
@@ -416,6 +416,15 @@ class SQLDatabaseHandler:
         # execute a SQL statement, returning a list of rows
         self.cursor.execute(sql)
         return self.cursor.fetchall()
+
+    def execute_commit(self, sql, commit_each=False):
+        queries = [sql] if type(sql) is str else sql
+        for query in queries:
+            self.cursor.execute(query)
+            if commit_each:
+                self.dbc.commit()
+        if not commit_each:
+            self.dbc.commit()
 
     def db_value_is_null(self, value):
         return value is None
