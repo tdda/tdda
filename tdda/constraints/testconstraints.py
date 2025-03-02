@@ -12,22 +12,21 @@ except ImportError:
 
 try:
     from tdda.constraints.db.testdbconstraints import (
-        TestSQLiteDBHandlers,
-        TestPostgresDBHandlers,
-        TestMySQLDBHandlers,
         TestSQLiteDatabaseConnectionFile,
-        TestMongoDBHandlers,
-        TestSQLiteDBConstraintVerifiers,
+        TestSQLiteDBHandlers,
         TestSQLiteDBConstraintDiscoverers,
-        TestPostgresDBConstraintDiscoverers,
-        TestMySQLDBConstraintDiscoverers,
-        TestMongoDBConstraintDiscoverers,
+        TestSQLiteDBConstraintVerifiers,
+
+        TestPostgresDB,
+
+        TestMySQLDB,
     )
     # The individual imports of the database driver libraries
     # are now all protected with try...except blocks,
     # so this try...except is probably now unnecessary.
 except ImportError:
     print('Skipping Database tests', file=sys.stderr)
+
 
 
 if __name__ == '__main__':
