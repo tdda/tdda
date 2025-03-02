@@ -960,7 +960,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertEqual(v.passes, 78)
         self.assertEqual(v.failures, 0)
 
-    def testElements118(self):
+    def testElements118CSV(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
@@ -971,9 +971,32 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         vdf.sort_values('field', inplace=True)
         self.assertStringCorrect(vdf.to_string(), 'elements118.df')
 
-    def testElements118rex(self):
+    def testElements118Parquet(self):
+        # Same as previous but with parquet file
+        path = os.path.join(TESTDATA_DIR, 'elements118.parquet')
+        df = pd.read_parquet(path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        v = verify_df(df, constraints_path, report='fields')
+        self.assertEqual(v.passes, 57)
+        self.assertEqual(v.failures, 15)
+        vdf = v.to_dataframe()
+        vdf.sort_values('field', inplace=True)
+        self.assertStringCorrect(vdf.to_string(), 'elements118.df')
+
+    def testElements118rexCSV(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
+        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        v = verify_df(df, constraints_path, report='fields')
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 17)
+        vdf = v.to_dataframe()
+        vdf.sort_values('field', inplace=True)
+        self.assertStringCorrect(vdf.to_string(), 'elements118rex.df')
+
+    def testElements118rexParquet(self):
+        path = os.path.join(TESTDATA_DIR, 'elements118.parquet')
+        df = pd.read_parquet(path)
         constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
         v = verify_df(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 61)
