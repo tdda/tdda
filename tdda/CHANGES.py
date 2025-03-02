@@ -887,4 +887,14 @@ A few other minor things too.
 
 1.03.2025 2.2.11
 Better reporting of why tests are skipped
+
+###
+Database enhancements.
+
+Some problems with MySQL string lengths have been fixed.
+
+A .tdda file has been updated and tests updated accordingly.
+
+Mongo tests have been removed. (They were always skipped because
+they don't actually work.)
 """
