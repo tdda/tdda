@@ -17,11 +17,11 @@ try:
         TestSQLiteDBConstraintDiscoverers,
         TestSQLiteDBConstraintVerifiers,
 
-        TestPostgresDBHandlers,
-        TestPostgresDBConstraintDiscoverers,
+        TestPostgresDB,
+#        TestPostgresDBConstraintDiscoverers,
 
-        TestMySQLDBHandlers,
-        TestMySQLDBConstraintDiscoverers,
+        TestMySQLDB,
+        #TestMySQLDBConstraintDiscoverers,
 
         #TestMongoDBHandlers,
         #TestMongoDBConstraintDiscoverers,

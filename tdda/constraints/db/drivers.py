@@ -91,10 +91,10 @@ def applicable(argv):
             (table, dbtype) = parse_table_name(a, None)
             if dbtype in DATABASE_HANDLERS:
                 return True
-        elif a == '-dbtype':
+        elif a in ('-dbtype', '--dbtype'):
             return (i < len(argv) - 1
                     and argv[i+1] in DATABASE_HANDLERS)
-    return '-db' in argv
+    return '-db' in argv or '--db' in argv
 
 
 def database_arg_parser(create_parser, usage):
@@ -152,10 +152,16 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
     database = database or db
     conn_file = conn_file or conn
 
-    dprint('* *', 'table=', table,
-           'conn_file=', conn_file, 'dbtype=', dbtype, 'database=', database,
-           '\nhost=', host, 'port=', port, 'user=', user,
-           'password=', password, 'schema=', schema)
+    dprint('CONNECTION PARAMETERS PASSED IN',
+           f'table={table},'
+           f'conn_file={conn_file},'
+           f'dbtype={dbtype},'
+           f'database={database},'
+           f'\nhost={host},'
+           f'port={port},'
+           f'user={user},'
+           f'password={password},'
+           f'schema={schema}\n')
     if conn_file:
         defaults = ConnectionSpec(conn_file)
     else:
@@ -203,11 +209,16 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
         print('Database name required ("-db name")', file=sys.stderr)
         sys.exit(1)
     dprint('^^^', defaults)
-    dprint('***', 'table=', table,
-          'conn_file=', conn_file, 'dbtype=', dbtype, 'database=', database,
-          '\nhost=', host, 'port=', port, 'user=', user, 'password=', password,
-          'schema=', schema)
-
+    dprint('\nCONNECTION PARAMETERS RESOLVED',
+           f'table={table},'
+           f'conn_file={conn_file},'
+           f'dbtype={dbtype},'
+           f'database={database},'
+           f'\nhost={host},'
+           f'port={port},'
+           f'user={user},'
+           f'password={password},'
+           f'schema={schema},')
 
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
@@ -621,10 +632,10 @@ class SQLDatabaseHandler:
             uniqs = self.get_database_unique_values(tablename, colname)
             if uniqs:
                 if type(uniqs[0]) is unicode_string:
-                    L = [len(v) for v in uniqs]
+                    lengths = [len(v) for v in uniqs]
                 else:
-                    L = [len(v.decode('UTF-8')) for v in uniqs]
-                x = agg([len(s) for s in uniqs])
+                    lengths = [len(v.decode('UTF-8')) for v in uniqs]
+                return agg(lengths)
             else:
                 return None
         else:

@@ -26,31 +26,25 @@ import unittest
 try:
     import pgdb
 except ImportError:
-    print('Skipping Postgres tests (no driver library (pip install pygresql)', file=sys.stderr)
+    print('Skipping Postgres tests (no driver library (pip install pygresql)',
+          file=sys.stderr)
     pgdb = None
 
 try:
     # import MySQLdb
     import mysql.connector as MySQLdb
 except ImportError:
-    print('Skipping MySQL tests (no driver library (pip install mysql-connector-python))', file=sys.stderr)
+    print('Skipping MySQL tests (no driver library '
+          '(pip install mysql-connector-python))', file=sys.stderr)
     MySQLdb = None
 
 try:
     import sqlite3
 except ImportError:
     # shouldn't happe in an ymodern Python; part of stdlib
-    print('Skipping SQLite tests (no driver library for sqlite3)', file=sys.stderr)
+    print('Skipping SQLite tests (no driver library for sqlite3)',
+          file=sys.stderr)
     sqlite3 = None
-
-# print('Skipping MongoDB tests (not yet working)', file=sys.stderr)
-# try:
-#     import pymongo
-# except ImportError:
-#     #print('Skipping MongoDB tests (no driver library pymongo)', file=sys.stderr)
-#     pymongo = None
-# pymongo = None  # The tests don't yet work for MongoDB
-
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 
@@ -61,13 +55,10 @@ from tdda.constraints.db.constraints import (verify_db_table,
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 
-
 POSTGRES_CONN_FILE = os.path.join(os.path.expanduser('~'),
                                   '.tdda_db_conn_postgres')
 MYSQL_CONN_FILE = os.path.join(os.path.expanduser('~'),
                               '.tdda_db_conn_mysql')
-MONGODB_CONN_FILE = os.path.join(os.path.expanduser('~'),
-                                 '.tdda_db_conn_mongodb')
 
 
 if pgdb and not os.path.exists(POSTGRES_CONN_FILE):
@@ -78,11 +69,8 @@ if MySQLdb and not os.path.exists(MYSQL_CONN_FILE):
     print('Skipping MySQL because no connection file exists at %s.'
           % MYSQL_CONN_FILE)
 
-#if pymongo and not os.path.exists(MONGODB_CONN_FILE):
-#    print('Skipping Mongo because no connection file exists at %s.'
-#          % MONGODB_CONN_FILE)
-
 isPython2 = sys.version_info[0] < 3
+
 
 class TestDatabaseHandlers:
     """
@@ -123,106 +111,6 @@ class TestDatabaseHandlers:
                          ['Actinoid', 'Alkali metal', 'Alkaline earth metal',
                           'Halogen', 'Lanthanoid', 'Metalloid', 'Noble gas',
                           'Nonmetal', 'Poor metal', 'Transition metal'])
-
-
-@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
-class TestSQLiteDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
-    @classmethod
-    def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
-        db = database_connection(dbtype='sqlite', db=dbfile)
-        cls.dbh = DatabaseHandler('sqlite', db)
-
-
-@unittest.skipIf(pgdb is None or not os.path.exists(POSTGRES_CONN_FILE),
-                 'pgdb not available, or no tdda postgres connection file')
-class TestPostgresDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
-    @classmethod
-    def setUpClass(cls):
-        db = database_connection(dbtype='postgres')
-        cls.dbh = DatabaseHandler('postgres', db)
-
-
-@unittest.skipIf(MySQLdb is None or not os.path.exists(MYSQL_CONN_FILE),
-                 'MySDLdb not available, or no tdda mysql connection file')
-class TestMySQLDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
-    @classmethod
-    def setUpClass(cls):
-        db = database_connection(dbtype='mysql')
-        cls.dbh = DatabaseHandler('mysql', db)
-
-
-@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
-class TestSQLiteDatabaseConnectionFile(unittest.TestCase):
-    def test_sqlite_connection_from_file(self):
-        connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
-        db = database_connection(conn=connfile)
-        dbh = DatabaseHandler('sqlite', db)
-        elements = dbh.resolve_table('elements')
-        self.assertTrue(dbh.check_table_exists(elements))
-        self.assertFalse(dbh.check_table_exists('does_not_exist'))
-
-
-# @unittest.skipIf(pymongo is None or not os.path.exists(MONGODB_CONN_FILE),
-#                  'MongoDB not available, or no tdda mongodb connection file')
-# class TestMongoDBHandlers(ReferenceTestCase, TestDatabaseHandlers):
-#     @classmethod
-#     def setUpClass(cls):
-#         db = database_connection(dbtype='mongodb')
-#         cls.dbh = DatabaseHandler('mongodb', db)
-
-
-class TestDatabaseConstraintVerifiers:
-    """
-    Mix-in class, to be used in a subclass that also inherits ReferenceTestCase
-    """
-    def test_verify_elements(self):
-        # check the full 118 using constraints built on just 92
-        constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
-        elements = self.dbh.resolve_table('elements')
-        result = verify_db_table(self.dbh.dbtype, self.db, elements,
-                                 constraints_file, testing=True)
-        self.assertEqual(result.passes, 57)
-        self.assertEqual(result.failures, 15)
-
-    def test_verify_elements_rex(self):
-        # check the full 118 using constraints built on just 92, but
-        # also including regex constraints - and using constraints that
-        # were built using pandas, so there are some type differences too.
-        constraints_file = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
-        elements = self.dbh.resolve_table('elements')
-        result = verify_db_table(self.dbh.dbtype, self.db, elements,
-                                 constraints_file, testing=True)
-
-        self.assertEqual(result.passes, 58)    # the original 57, minus the
-                                               # type (and min and max) ones
-                                               # on the Group field, which
-                                               # the constraints (wrongly)
-                                               # claim to be a real field,
-                                               # rather than integer... but
-                                               # also including three new
-                                               # passing regex constraints
-
-        self.assertEqual(result.failures, 20)  # the original 15, plus
-                                               # the three additional failures
-                                               # because of type mismatch
-                                               # on the Group field, and
-                                               # two failing regexps because
-                                               # of having more elements.
-
-        for field in result.fields.values():
-            for name, value in field.items():
-                self.assertEqual(type(value), bool)
-
-
-@unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
-class TestSQLiteDBConstraintVerifiers(ReferenceTestCase,
-                                      TestDatabaseConstraintVerifiers):
-    @classmethod
-    def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
-        cls.db = database_connection(dbtype='sqlite', db=dbfile)
-        cls.dbh = DatabaseHandler('sqlite', cls.db)
 
 
 class TestDatabaseConstraintDiscoverers:
@@ -277,50 +165,108 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"tddafile":'])
 
 
+class TestDatabaseConstraintVerifiers:
+    """
+    Mix-in class, to be used in a subclass that also inherits ReferenceTestCase
+    """
+    def test_verify_elements(self):
+        # check the full 118 using constraints built on just 92
+        constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        elements = self.dbh.resolve_table('elements')
+        result = verify_db_table(self.dbh.dbtype, self.db, elements,
+                                 constraints_file, testing=True)
+        self.assertEqual(result.passes, 57)
+        self.assertEqual(result.failures, 15)
+
+    def test_verify_elements_rex(self):
+        # check the full 118 using constraints built on just 92, but
+        # also including regex constraints - and using constraints that
+        # were built using pandas, so there are some type differences too.
+        constraints_file = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        elements = self.dbh.resolve_table('elements')
+        result = verify_db_table(self.dbh.dbtype, self.db, elements,
+                                 constraints_file, testing=True)
+
+        self.assertEqual(result.passes, 58)    # the original 57, minus the
+                                               # type (and min and max) ones
+                                               # on the Group field, which
+                                               # the constraints (wrongly)
+                                               # claim to be a real field,
+                                               # rather than integer... but
+                                               # also including three new
+                                               # passing regex constraints
+
+        self.assertEqual(result.failures, 20)  # the original 15, plus
+                                               # the three additional failures
+                                               # because of type mismatch
+                                               # on the Group field, and
+                                               # two failing regexps because
+                                               # of having more elements.
+
+        for field in result.fields.values():
+            for name, value in field.items():
+                self.assertEqual(type(value), bool)
+
+
+
+
 @unittest.skipIf(sqlite3 is None, 'sqlite3 not available')
-class TestSQLiteDBConstraintDiscoverers(ReferenceTestCase,
-                                        TestDatabaseConstraintDiscoverers):
+class TestSQLiteDB(
+    ReferenceTestCase,
+    TestDatabaseHandlers,
+    TestDatabaseConstraintDiscoverers,
+    TestDatabaseConstraintVerifiers,
+):
     @classmethod
     def setUpClass(cls):
         dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
         cls.db = database_connection(dbtype='sqlite', db=dbfile)
         cls.dbh = DatabaseHandler('sqlite', cls.db)
 
+    def test_sqlite_connection_from_file(self):
+        connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
+        db = database_connection(conn=connfile)
+        dbh = DatabaseHandler('sqlite', db)
+        elements = dbh.resolve_table('elements')
+        self.assertTrue(dbh.check_table_exists(elements))
+        self.assertFalse(dbh.check_table_exists('does_not_exist'))
+
+
+
+
 
 @unittest.skipIf(pgdb is None or not os.path.exists(POSTGRES_CONN_FILE),
                  'pgdb not available, or no tdda postgres connection file')
-class TestPostgresDBConstraintDiscoverers(ReferenceTestCase,
-                                          TestDatabaseConstraintDiscoverers):
+class TestPostgresDB(
+    ReferenceTestCase,
+    TestDatabaseHandlers,
+    TestDatabaseConstraintDiscoverers,
+    TestDatabaseConstraintVerifiers,
+):
     @classmethod
     def setUpClass(cls):
         cls.db = database_connection(dbtype='postgres')
         cls.dbh = DatabaseHandler('postgres', cls.db)
 
 
+
 @unittest.skipIf(MySQLdb is None or not os.path.exists(MYSQL_CONN_FILE),
                  'MySDLdb not available, or no tdda mysql connection file')
-class TestMySQLDBConstraintDiscoverers(ReferenceTestCase,
-                                       TestDatabaseConstraintDiscoverers):
+class TestMySQLDB(
+    ReferenceTestCase,
+    TestDatabaseHandlers,
+    TestDatabaseConstraintDiscoverers,
+    TestDatabaseConstraintVerifiers,
+):
     @classmethod
     def setUpClass(cls):
         cls.db = database_connection(dbtype='mysql')
         cls.dbh = DatabaseHandler('mysql', cls.db)
 
 
-# @unittest.skipIf(pymongo is None or not os.path.exists(MONGODB_CONN_FILE),
-#                  'MongoDB not available, or no tdda mongodb connection file')
-# class TestMongoDBConstraintDiscoverers(ReferenceTestCase,
-#                                        TestDatabaseConstraintDiscoverers):
-#     @classmethod
-#     def setUpClass(cls):
-#         cls.db = database_connection(dbtype='mongodb')
-#         cls.dbh = DatabaseHandler('mongodb', cls.db)
-
-
-TestSQLiteDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
-TestPostgresDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
-TestMySQLDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
-#TestMongoDBConstraintDiscoverers.set_default_data_location(TESTDATA_DIR)
+TestSQLiteDB.set_default_data_location(TESTDATA_DIR)
+TestPostgresDB.set_default_data_location(TESTDATA_DIR)
+TestMySQLDB.set_default_data_location(TESTDATA_DIR)
 
 
 if __name__ == '__main__':
