@@ -907,6 +907,6 @@ SQLite also now opens the database at the start of each test
 and closes it at the end. Not doing so was causing problems
 on Linux.
 
-###
+3.03.2025 2.2.14
 Add DB data initialization files to setup.py
 """
