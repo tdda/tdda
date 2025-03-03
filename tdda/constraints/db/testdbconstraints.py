@@ -259,7 +259,7 @@ class TestMySQLDB(
 ):
     @classmethod
     def setUpClass(cls):
-        cls.dbtype = dbtype = 'postgres'
+        cls.dbtype = dbtype = 'mysql'
         initialize_db(f'{dbtype}:dummy', init_data(dbtype))
         cls.db = database_connection(dbtype=dbtype)
         cls.dbh = DatabaseHandler(dbtype, cls.db)
