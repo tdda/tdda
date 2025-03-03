@@ -206,9 +206,14 @@ class TestSQLiteDB(
 ):
     @classmethod
     def setUpClass(cls):
-        dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
-        cls.db = database_connection(dbtype='sqlite', db=dbfile)
-        cls.dbh = DatabaseHandler('sqlite', cls.db)
+        cls.dbfile = os.path.join(TESTDATA_DIR, 'example.sqlite3')
+
+    def setUp(self):
+        self.db = database_connection(dbtype='sqlite', db=self.dbfile)
+        self.dbh = DatabaseHandler('sqlite', self.db)
+
+    def tearDown(self):
+        self.dbh.dbc.close()
 
     def test_sqlite_connection_from_file(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
