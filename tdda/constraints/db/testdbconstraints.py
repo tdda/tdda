@@ -48,12 +48,17 @@ except ImportError:
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 
-from tdda.constraints.db.drivers import database_connection, DatabaseHandler
+from tdda.constraints.db.drivers import (
+    database_connection,
+    DatabaseHandler,
+    initialize_db,
+)
 from tdda.constraints.db.constraints import (verify_db_table,
                                              discover_db_table)
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
+INIT_DIR = os.path.join(THIS_DIR, 'init')
 
 POSTGRES_CONN_FILE = os.path.join(os.path.expanduser('~'),
                                   '.tdda_db_conn_postgres')
@@ -237,8 +242,10 @@ class TestPostgresDB(
 ):
     @classmethod
     def setUpClass(cls):
-        cls.db = database_connection(dbtype='postgres')
-        cls.dbh = DatabaseHandler('postgres', cls.db)
+        cls.dbtype = dbtype = 'postgres'
+        initialize_db(f'{dbtype}:dummy', init_data(dbtype))
+        cls.db = database_connection(dbtype=dbtype)
+        cls.dbh = DatabaseHandler(dbtype, cls.db)
 
 
 
@@ -252,13 +259,22 @@ class TestMySQLDB(
 ):
     @classmethod
     def setUpClass(cls):
-        cls.db = database_connection(dbtype='mysql')
-        cls.dbh = DatabaseHandler('mysql', cls.db)
+        cls.dbtype = dbtype = 'postgres'
+        initialize_db(f'{dbtype}:dummy', init_data(dbtype))
+        cls.db = database_connection(dbtype=dbtype)
+        cls.dbh = DatabaseHandler(dbtype, cls.db)
 
 
 TestSQLiteDB.set_default_data_location(TESTDATA_DIR)
 TestPostgresDB.set_default_data_location(TESTDATA_DIR)
 TestMySQLDB.set_default_data_location(TESTDATA_DIR)
+
+
+def init_data(dbtype):
+    """
+    Location of the SQL for creating the test data
+    """
+    return os.path.join(INIT_DIR, f'{dbtype}-create-elements.sql')
 
 
 if __name__ == '__main__':

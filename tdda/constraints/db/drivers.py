@@ -68,6 +68,71 @@ if present.
 '''
 
 
+def get_db_handler(table, dbtype=None, **kw):
+    """
+    Returns a handler for the database table specified.
+
+    Args:
+
+        table: tablename
+               or dbtype:tablename
+
+        dbtype: dbtype if not in table
+
+        keyword args: Override parameters
+                      Parameters are read from the connection file
+                      (.tdda_db_conn_dbtype), but can be overridden her.
+
+    Returns: A SQLDBHandler, with
+                .db      containing for the database connector
+                .dbc     containing for the database connection
+                .cursor  containing the cursor
+             and methods for executing queries.
+    """
+    (table, dbtype) = parse_table_name(table, dbtype)
+    db = database_connection(table=table, dbtype=dbtype, **kw)
+    return SQLDatabaseHandler(dbtype, db)
+
+
+def get_db_connector(table, dbtype=None, **kw):
+    """
+    Returns a connection for the database table specified.
+
+    Args:
+
+        table: tablename
+               or dbtype:tablename
+
+        dbtype: dbtype if not in table
+
+        keyword args: Override parameters
+                      Parameters are read from the connection file
+                      (.tdda_db_conn_dbtype), but can be overridden her.
+
+    Returns: A DBConnector, with a .connection attribute
+             and other attributes for the connection properties.
+    """
+    (table, dbtype) = parse_table_name(table, dbtype)
+    return database_connection(table=table, dbtype=dbtype, **kw)
+
+
+def initialize_db(table, sql_path, conn=None, dbtype=None, verbose=False):
+    """
+    Initialize a databse for testing by adding test data.
+    This is currently the elements data.
+    """
+    h = get_db_handler(table, dbtype=dbtype, conn=conn)
+    if verbose:
+        print('db:', str(h.db))
+        print('dbc:', str(h.dbc))
+        print('handler:', str(h))
+    with open(sql_path) as f:
+        s = f.read()
+        queries = [q.strip() for q in s.split(';\n')]
+        queries = [q for q in queries if q]
+        h.execute_commit(queries)
+
+
 def parse_table_name(table, dbtype):
     """
     split a qualified table name into its two parts: the database type
@@ -167,14 +232,14 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
-            dflt_conn_file = handle_tilde('~/.tdda_db_conn_' + dbtypelower)
+            dflt_conn_file = connection_file(dbtypelower)
             if (
                 dbtypelower == 'postgres'
                 and not os.path.exists(dflt_conn_file)
             ):
-                dflt_conn_file = handle_tilde('~.tdda_db_conn_postgresql')
+                dflt_conn_file = connection_file('postgresql')
         else:
-            dflt_conn_file = handle_tilde('~/.tdda_db_conn')
+            dflt_conn_file = connection_file('')
         if os.path.exists(dflt_conn_file):
             defaults = ConnectionSpec(dflt_conn_file)
         else:
@@ -231,6 +296,11 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
+
+
+def connection_file(suffix):
+    suf = f'_{suffix}' if suffix else ''
+    return handle_tilde(f'~/.tdda_db_conn{suf}')
 
 
 def database_connection_postgres(host, port, database, user, password):
