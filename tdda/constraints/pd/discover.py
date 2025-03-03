@@ -64,7 +64,7 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
             Passed to discover_df
 
     Returns:
-        :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
+        :py:class:`~tdda.constraints.pd.constraints.PandasConstraintsDiscoverer` object.
     """
     md_df_path = df_path
     if df_path == '-':
@@ -76,17 +76,18 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
         # should never happen
         return
 
-    output = constraints.to_json(tddafile=constraints_path)
+    out_json = constraints.to_json(tddafile=constraints_path)
     if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
-            f.write(output)
+            f.write(out_json)
         if report_formats:
             constraints.write_discovery_reports(constraints_path,
                                                 report_formats)
 
     elif verbose or constraints_path == '-':
-        print(output)
-    return output
+        print(out_json)
+    return constraints
+
 
 
 def pd_discover_parser():

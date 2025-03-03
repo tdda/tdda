@@ -47,8 +47,8 @@ def source_kind(src):
         return None
 
 
-def discover(indata, constraints_path, verbose=True, backend=DEFAULT_BACKEND,
-             **kwargs):
+def discover(indata, constraints_path=None, verbose=True,
+             backend=DEFAULT_BACKEND, **kwargs):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -79,10 +79,10 @@ def discover(indata, constraints_path, verbose=True, backend=DEFAULT_BACKEND,
         :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
     """
     kind = source_kind(indata)
-    if indata == 'pandas':
-        discover_df(indata, constraints_path, verbose=verbose, **kwargs)
-    elif indata in ('parquet', 'flat') and backend == pandas:
-        discover_df_from_file(indata, constraints_path, verbose=verbose,
+    if kind == 'pandas':
+        return discover_df(indata, constraints_path, verbose=verbose, **kwargs)
+    elif kind in ('parquet', 'flat') and backend == 'pandas':
+        return discover_df_from_file(indata, constraints_path, verbose=verbose,
                               **kwargs)
     else:
         print('Unsupported discovery mode', file=sys.stderr)
@@ -169,10 +169,10 @@ def detect(df_path, constraints_path, outpath=None, backend=DEFAULT_BACKEND,
         :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
     """
     kind = source_kind(indata)
-    if indata == 'pandas':
+    if kind == 'pandas':
         detect_df(indata, constraints_path, outpath=outpath,
                   verbose=verbose, **kwargs)
-    elif indata in ('parquet', 'flat') and backend == pandas:
+    elif kind in ('parquet', 'flat') and backend == 'pandas':
         dect_df_from_file(indata, constraints_path, verbose=verbose,
                           outpath=outpath, **kwargs)
     else:

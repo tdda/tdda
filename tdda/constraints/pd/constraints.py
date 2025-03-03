@@ -180,9 +180,9 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
 
     def find_rexes(self, colname, values=None, seed=None):
         if values is None:
-            return rexpy.pdextract(self.df[colname])
+            return rexpy.pdextract(self.df[colname], tag=self.group_rexes)
         else:
-            return rexpy.extract(values, seed=None)
+            return rexpy.extract(values, seed=None, tag=self.group_rexes)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
         # note that this should return a set of violations, not True/False.
@@ -600,9 +600,10 @@ class PandasConstraintDiscoverer(PandasConstraintCalculator,
     A :py:class:`PandasConstraintDiscoverer` object is used to discover
     constraints on a Pandas DataFrame.
     """
-    def __init__(self, df, inc_rex=False):
+    def __init__(self, df, inc_rex=False, group_rexes=True):
         PandasConstraintCalculator.__init__(self, df)
-        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex)
+        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
+                                          group_rexes=group_rexes)
 
 
 def pandas_types_compatible(x, y, colname=None):
@@ -659,7 +660,7 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    if is_categorical_dtype(dt):
+    if is_categorical_dtype(dt) or str(dt) == 'string':
         return 'string'
     dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
@@ -1013,7 +1014,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       report=report, **kwargs)
 
 
-def discover_df(df, inc_rex=False, df_path=None):
+def discover_df(df, inc_rex=False, df_path=None, group_rexes=True):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1029,6 +1030,10 @@ def discover_df(df, inc_rex=False, df_path=None):
 
         *df_path*:
             The path from which the dataframe was loaded, if any.
+
+        *group_rexes*:
+            If True, include groups in variable parts of regular
+            expressions generated
 
     Possible return values:
 
@@ -1138,7 +1143,8 @@ def discover_df(df, inc_rex=False, df_path=None):
     See *simple_generation.py* in the :ref:`constraint_examples`
     for a slightly fuller example.
     """
-    disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
+    disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex,
+                                       group_rexes=group_rexes)
     constraints = disco.discover()
     if constraints:
         constraints.set_dates_user_host_creator()
@@ -1191,7 +1197,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
     path = handle_tilde(path)
 
     if ext == '.parquet':
-        return pd.read_parquet(path)
+        return pd.read_parquet(path, dtype_backend='numpy_nullable')
     elif ext == '.feather':
         return read_feather_file(path)
 

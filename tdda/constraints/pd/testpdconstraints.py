@@ -23,15 +23,8 @@ from shutil import which
 import pandas as pd
 import numpy as np
 
-try:
-    import pmmif
-except ImportError:
-    pmmif = None
-
-try:
-    import feather
-except ImportError:
-    feather = None
+pmmif = None
+feather = None
 
 from tdda.constraints.base import (
     MinConstraint,
@@ -105,19 +98,6 @@ OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
-
-
-
-def ReportNoFeather():
-    if not feather and pmmif:
-        print('Skipping feather tests:')
-    if not feather:
-        print('    featherfile is not installed (pip install featherfile.')
-    if not pmmif:
-        print('    pmmif is not installed pip install pmmif.')
-
-ReportNoFeather()
-
 
 
 class ConstraintVerificationTester:
@@ -1124,7 +1104,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         tmpdir = tempfile.gettempdir()
         tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
         with open(tmpfile, 'w') as f:
-            f.write(c)
+            f.write(c.to_json())
         v = verify_df_from_file(csv_path, tmpfile, report='fields',
                                 verbose=False)
         self.assertEqual(v.passes, 61)
@@ -1442,20 +1422,14 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
     def testDetectElements118_csv_to_csv(self):
         self.detectElements('csv', 'csv')
 
-    @unittest.skipIf(pmmif is None or feather is None,
-                     'pmmif/feather not installed')
-    def testDetectElements118_csv_to_feather(self):
-        self.detectElements('csv', 'feather')
+    def testDetectElements118_csv_to_parquet(self):
+        self.detectElements('csv', 'parquet')
 
-    @unittest.skipIf(pmmif is None or feather is None,
-                     'pmmif/feather not installed')
-    def testDetectElements118_feather_to_csv(self):
-        self.detectElements('feather', 'csv')
+    def testDetectElements118_parquet_to_csv(self):
+        self.detectElements('parquet', 'csv')
 
-    @unittest.skipIf(pmmif is None or feather is None,
-                     'pmmif/feather not installed')
-    def testDetectElements118_feather_to_feather(self):
-        self.detectElements('feather', 'feather')
+    def testDetectElements118_parquet_to_parquet(self):
+        self.detectElements('parquet', 'parquet')
 
     def detectElements(self, input, output):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.%s' % input)
@@ -1469,9 +1443,8 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
                       rownumber_is_index=(input == 'feather'))
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
-        if output == 'feather':
-            # TODO: compare binary feather files and check they're the same
-            pass
+        if output == 'parquet':
+            self.assertBinaryFileCorrect(detectfile, detect_name)
         else:
             self.assertTextFileCorrect(detectfile, detect_name)
 
@@ -1527,7 +1500,7 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
             new_refjson = f.read()
         old_ref = native_definite(json.loads(old_refjson))
         new_ref = native_definite(json.loads(new_refjson))
-        constraints = discover_df(df, inc_rex=inc_rex)
+        constraints = discover_df(df, inc_rex=inc_rex, group_rexes=False)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         old_ref_fields = old_ref['fields']
@@ -1569,7 +1542,7 @@ class CommandLineHelper:
 
         cls.e92csv = os.path.join(cls.testDataDir, 'elements92.csv')
         cls.e118csv = os.path.join(cls.testDataDir, 'elements118.csv')
-        cls.e118feather = os.path.join(cls.testDataDir, 'elements118.feather')
+        cls.e118parquet = os.path.join(cls.testDataDir, 'elements118.parquet')
         cls.e92tdda_correct = os.path.join(cls.testDataDir, 'elements92.tdda')
         cls.dddcsv = os.path.join(cls.testDataDir, 'ddd.csv')
         cls.dddtdda_correct = os.path.join(cls.testDataDir, 'ddd.tdda')
@@ -1700,10 +1673,8 @@ class CommandLineHelper:
                                    'detect-els-cmdline-interleaved.csv')
         os.remove(self.e92bads3)
 
-    @unittest.skipIf(pmmif is None or feather is None,
-                     'pmmif/feather not installed')
-    def testDetectE118FeatherCmd(self):
-        argv = ['tdda', 'detect', self.e118feather, self.e92tdda_correct,
+    def testDetectE118ParquetCmd(self):
+        argv = ['tdda', 'detect', self.e118parquet, self.e92tdda_correct,
                 self.e92bads2, '--per-constraint', '--output-fields',
                 '--index']
         result = self.execute_command(argv)

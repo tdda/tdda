@@ -919,5 +919,11 @@ during testing.
 
 Changed everything (currently using TDDAParams) to use StateParams
 instead.
+
+Removed feather tests; replaced with "equivalent" parquet tests.
+
+Started tests for discover reporting.
+
+Changed parquet load to use nullable types by default.
 ----------------------- end of dev -----------------------------
 """

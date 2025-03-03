@@ -520,9 +520,10 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
-    def __init__(self, inc_rex=False, seed=None, **kwargs):
+    def __init__(self, inc_rex=False, seed=None, group_rexes=True, **kwargs):
         self.inc_rex = inc_rex
         self.seed = seed
+        self.group_rexes = group_rexes
 
     def discover(self):
         field_constraints = []
@@ -598,7 +599,10 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         max_constraint = MaxConstraint(M)
 
                     # Non-date fields potentially get a sign constraint too.
-                    if min_constraint and max_constraint and type_ != 'date':
+                    if (
+                        min_constraint and max_constraint
+                        and type_ not in ('date', 'bool')
+                    ):
                         if m == M == 0:
                             sign_constraint = SignConstraint('zero')
                         elif m >= 0:

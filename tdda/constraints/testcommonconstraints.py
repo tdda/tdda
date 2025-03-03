@@ -1,9 +1,21 @@
 import os
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.constraints import verify
+from tdda.constraints import discover, verify
 from tdda.utils import constraints_testdata_path as tdpath, rprint
 
+TESTDATA_DIR = os.path.join(os.path.dirname(__file__), 'testdata')
+
+TDDA_MD_IGNORES = [
+    r'^\s*"local_time": ".*",$',
+    r'^\s*"utc_time": ".*",$',
+    r'^\s*"creator": "TDDA .*",$',
+    r'^\s*"source": "/.*tdda/consrtaints/testdata/small7x5.parquet",$',
+    r'^\s*"user": ".*",$',
+]
+
+def testdata(filename):
+    return os.path.join(TESTDATA_DIR, filename)
 
 
 def reportpath(path):
@@ -73,6 +85,22 @@ class TestCommon(ReferenceTestCase):
         # And calc_all_non_nulls_boolean fails with odd error
         # And it doesn't like dates fields in dtype...which is OK
         # I suppose.
+
+
+@tag
+class TestDisoverReports(ReferenceTestCase):
+    @classmethod
+    def setUpClass(cls):
+        small7x5path = testdata('small7x5.parquet')
+        cls.constraints = c = discover(small7x5path, inc_rex=True,
+                                       verbose=False)
+        cls.constraints_json = c.to_json()
+
+    def testDiscoverJSON(self):
+        self.assertStringCorrect(self.constraints_json,
+                                 tdpath('small7x5.tdda'),
+                                 ignore_patterns=TDDA_MD_IGNORES)
+
 
 
 if __name__ == '__main__':

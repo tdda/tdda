@@ -1,11 +1,11 @@
 {
     "creation_metadata": {
-        "local_time": "2019-06-25 13:13:56",
-        "utc_time": "2019-06-25 12:12:56",
-        "creator": "TDDA 1.0.30",
-        "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.db",
+        "local_time": "2025-03-03T17:43:22",
+        "utc_time": "2025-03-03T17:43:22+00:00",
+        "creator": "TDDA 2.2.15",
+        "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.sqlite3",
         "source": "elements",
-        "host": "bartok.local",
+        "host": "gardot.local",
         "user": "njr",
         "dataset": "elements",
         "n_records": 118,
@@ -27,7 +27,7 @@
             "max_nulls": 0,
             "no_duplicates": true,
             "rex": [
-                "^[A-Z][a-z]+$"
+                "^([A-Z])([a-z]+)$"
             ]
         },
         "Symbol": {
@@ -37,7 +37,7 @@
             "max_nulls": 0,
             "no_duplicates": true,
             "rex": [
-                "^[A-Za-z]{1,3}$"
+                "^([A-Za-z]{1,3})$"
             ]
         },
         "Period": {
@@ -71,8 +71,8 @@
                 "Transition metal"
             ],
             "rex": [
-                "^[A-Z][a-z]+$",
-                "^[A-Z][a-z]+ [a-z]{3,5}$",
+                "^([A-Z])([a-z]+)$",
+                "^([A-Z])([a-z]+) ([a-z]{3,5})$",
                 "^Alkaline earth metal$"
             ]
         },
@@ -89,16 +89,16 @@
             "max_length": 53,
             "max_nulls": 1,
             "rex": [
-                "^[A-Za-z]+$",
-                "^[A-Za-z]+ [A-Za-z]+$",
-                "^[A-Za-z]+ [A-Za-z]+ [A-Za-z]+$",
-                "^[A-Z][a-z]+, [A-Z][a-z]+$",
+                "^([A-Za-z]+)$",
+                "^([A-Za-z]+) ([A-Za-z]+)$",
+                "^([A-Za-z]+) ([A-Za-z]+) ([A-Za-z]+)$",
+                "^([A-Z])([a-z]+), ([A-Z])([a-z]+)$",
                 "^Greek protos and actinium$",
-                "^[A-Z][a-z]{4,5} [A-Z]\\. [A-Z][a-z]{6,7}$",
+                "^([A-Z])([a-z]{4,5}) ([A-Z])\\. ([A-Z])([a-z]{6,7})$",
                 "^State and University of California$",
-                "^Latin uni, uni, and [a-z]+$",
-                "^Latin uni, uni, and Greek [a-z]{3,4}$",
-                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$",
+                "^Latin uni, uni, and ([a-z]+)$",
+                "^Latin uni, uni, and Greek ([a-z]{3,4})$",
+                "^([A-Z])([a-z]{4,5}) and the traditional \\-([a-z]{3,4}) ending$",
                 "^Pierre and Marie Curie and the traditional \\-um ending$"
             ]
         },
@@ -141,10 +141,10 @@
             "min_length": 1,
             "max_length": 83,
             "rex": [
-                "^[a-z0-9]+$",
-                "^[a-z]+ [a-z]{3,5}$",
-                "^[0-9]\\.[0-9]{1,2}$",
-                "^[0-9][.-][0-9] [a-z]{8,9}$",
+                "^([a-z0-9]+)$",
+                "^([a-z]+) ([a-z]{3,5})$",
+                "^([0-9])\\.([0-9]{1,2})$",
+                "^([0-9])[.-]([0-9]) ([a-z]{8,9})$",
                 "^radioactive alkali metal$",
                 "^1\\.5 soft metal$",
                 "^radioactive alkaline earth metal$",
@@ -156,14 +156,14 @@
             "min_length": 4,
             "max_length": 80,
             "rex": [
-                "^[a-z]+$",
-                "^[a-z]+ [a-z]+$",
+                "^([a-z]+)$",
+                "^([a-z]+) ([a-z]+)$",
                 "^silvery\\-white$",
                 "^silvery white/gray$",
-                "^silvery lustrous [a-z]{4}$",
-                "^[a-z]{4}, [a-z]{7,8} [a-z]{5,6}$",
+                "^silvery lustrous ([a-z]{4})$",
+                "^([a-z]{4}), ([a-z]{7,8}) ([a-z]{5,6})$",
                 "^silvery white, metallic$",
-                "^[a-z]+ [a-z]{4,5}, [a-z]+ tinge$",
+                "^([a-z]+) ([a-z]{4,5}), ([a-z]+) tinge$",
                 "^violet\\-dark gray, lustrous$",
                 "^yellow\\-green or yellowish brown$",
                 "^yellowish green or greenish yellow$",
