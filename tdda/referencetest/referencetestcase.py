@@ -116,6 +116,7 @@ import sys
 import unittest
 
 from tdda.referencetest.referencetest import ReferenceTest, tag
+from tdda.state import params
 
 
 class ReferenceTestCase(unittest.TestCase, ReferenceTest):
@@ -141,7 +142,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         ReferenceTest.__init__(self, self.assertTrue)
 
     @staticmethod
-    def main(module=None, argv=None, **kw):
+    def main(module=None, argv=None, testtdda=False, **kw):
         """
         Wrapper around the :py:func:`unittest.main()` entry point.
 
@@ -152,7 +153,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         """
         argv, tagged, check = _set_flags_from_argv(argv)
         _run_tests(module=module, argv=argv, tagged=tagged, check=check, **kw)
-
+        params.testing = True  # avoid custom params when testing tdda lib
 
 def _run_tests(module=None, argv=None, tagged=False, check=False, **kw):
     """

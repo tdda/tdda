@@ -313,8 +313,7 @@ class PandasComparison(BaseComparison):
             return 0
         else:
             #return self.same_structure_summary_diffs(df, ref_df, diffs)
-            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df,
-                                                            params=self.params)
+            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
             n_diffs = diffs.dfd.diff.n_diff_values
             if n_diffs:
                 diffs.append(str(diffs.dfd.diff))
@@ -926,7 +925,7 @@ def diff_masks(df, ref_df, only_diffs=False):
     return diffs
 
 
-def same_structure_dataframe_diffs(df, ref_df, params=None):
+def same_structure_dataframe_diffs(df, ref_df):
     """
     Compute differences between each pair of columns in two data frames.
 
@@ -936,7 +935,6 @@ def same_structure_dataframe_diffs(df, ref_df, params=None):
     Args:
         df        "left" data frame  (typically "actual")
         ref_df    "right" data frame (typically expected/reference)
-        params    TDDAParams object
 
     Returns:
         SameStructureDDiff  for df, ref_df
@@ -960,7 +958,7 @@ def same_structure_dataframe_diffs(df, ref_df, params=None):
         row_diff_counts = None
     return SameStructureDDiff(df.shape,
                               pd.DataFrame(d), row_diff_counts,
-                              n_vals, n_cols, n_rows, params=params)
+                              n_vals, n_cols, n_rows)
 
 
 def single_col_diffs(L, R):

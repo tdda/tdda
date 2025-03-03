@@ -24,7 +24,7 @@ from rich.table import Table
 
 from tdda.utils import nvl
 
-from tdda.params import TDDAParams
+from tdda.state import params
 
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
@@ -40,8 +40,7 @@ class BaseComparison(object):
     """
     Common base class for different implementations of comparisons.
     """
-    def __init__(self, print_fn=None, verbose=True, tmp_dir=None,
-                 params=None):
+    def __init__(self, print_fn=None, verbose=True, tmp_dir=None):
         """
         Constructor for an instance of the BaseComparison class.
 
@@ -53,7 +52,6 @@ class BaseComparison(object):
         self.print_fn = print_fn
         self.verbose = verbose
         self.tmp_dir = tmp_dir or tempfile.gettempdir()
-        self.params = params or TDDAParams()
 
     def info(self, msgs, s):
         """
@@ -208,15 +206,13 @@ class SameStructureDDiff:
     Container for information about differences betwee data frames
     with the same structure.
     """
-    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 params=None):
+    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
-        self.params = params or TDDAParams()
 
 
     def __str__(self):
@@ -245,7 +241,7 @@ class SameStructureDDiff:
         n = min(target_rows, self.n_diff_rows)
         cols = list(self.diff_df)
         m = len(cols)
-        p = self.params.referencetest
+        p = params.referencetest
         vertical = nvl(p.vertical, False)
         prefix = vertical and (p.mono or p.bw)
 #        if self.n_diff_rows <= n:

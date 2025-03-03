@@ -6,7 +6,7 @@ from tdda.referencetest.checkpandas import (
 )
 
 import argparse
-from tdda.params import TDDAParams
+from tdda.state import params
 
 from rich import print as rprint
 from rich.console import Console
@@ -50,11 +50,10 @@ Notes
 class TDDADiff:
     def __init__(self, args):
         self.args = args
-        self.params = TDDAParams()
         self.process_args()
 
     def ddiff(self):
-        c = PandasComparison(params=self.params)
+        c = PandasComparison()
         dfL = c.load_serialized_dataframe(self.left)
         dfR = c.load_serialized_dataframe(self.right)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
@@ -78,7 +77,7 @@ class TDDADiff:
     def process_args(self):
         parser = self.parser()
         flags, more = parser.parse_known_args(self.args)
-        p = self.params.referencetest
+        p = params.referencetest
         self.fields = None
 
         if more:

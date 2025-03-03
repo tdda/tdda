@@ -8,6 +8,7 @@ import sys
 from tdda.referencetest import ReferenceTestCase
 
 from tdda.constraints.testconstraints import *
+from tdda.state import params
 from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 from tdda.serial.testserialmetadata import *
@@ -26,8 +27,11 @@ else:
 
 
 def run_all_tests(module=None, argv=None):
-    os.environ['TDDA_TESTING'] = 'TRUE'
-    ReferenceTestCase.main(module=module, argv=argv)
+    params.testing = True
+    try:
+        ReferenceTestCase.main(module=module, argv=argv)
+    finally:
+        params.tesing = False
 
 
 if __name__ == '__main__':

@@ -912,4 +912,12 @@ Add DB data initialization files to setup.py
 
 3.03.2025 2.2.15
 Avoid extra DB open in SQLite3 tests
+
+---------------------------- dev -------------------------------
+Added state.py with global params and ability to turn off
+during testing.
+
+Changed everything (currently using TDDAParams) to use StateParams
+instead.
+----------------------- end of dev -----------------------------
 """
