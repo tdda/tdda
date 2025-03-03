@@ -906,4 +906,7 @@ This involves (re-)creating the elements test data each time.
 SQLite also now opens the database at the start of each test
 and closes it at the end. Not doing so was causing problems
 on Linux.
+
+###
+Add DB data initialization files to setup.py
 """
