@@ -46,6 +46,8 @@ setup(
                                  exclusions=['accounts1k.csv',
                                              'accounts25k.csv'])
                             + ['tdda_json_file_format.md'],
+        'tdda.constraints.db': data(['tdda', 'constraints', 'db'],
+                                    ['init']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt'],

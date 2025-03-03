@@ -887,4 +887,29 @@ A few other minor things too.
 
 1.03.2025 2.2.11
 Better reporting of why tests are skipped
+
+2.03.2025 2.2.12
+Database enhancements.
+
+Some problems with MySQL string lengths have been fixed.
+
+A .tdda file has been updated and tests updated accordingly.
+
+Mongo tests have been removed. (They were always skipped because
+they don't actually work.)
+
+3.03.2025 2.2.13
+Database tests now initialize themselves.
+
+This involves (re-)creating the elements test data each time.
+
+SQLite also now opens the database at the start of each test
+and closes it at the end. Not doing so was causing problems
+on Linux.
+
+3.03.2025 2.2.14
+Add DB data initialization files to setup.py
+
+3.03.2025 2.2.15
+Avoid extra DB open in SQLite3 tests
 """

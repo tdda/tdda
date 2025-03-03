@@ -12,19 +12,9 @@ except ImportError:
 
 try:
     from tdda.constraints.db.testdbconstraints import (
-        TestSQLiteDatabaseConnectionFile,
-        TestSQLiteDBHandlers,
-        TestSQLiteDBConstraintDiscoverers,
-        TestSQLiteDBConstraintVerifiers,
-
+        TestSQLiteDB,
         TestPostgresDB,
-#        TestPostgresDBConstraintDiscoverers,
-
         TestMySQLDB,
-        #TestMySQLDBConstraintDiscoverers,
-
-        #TestMongoDBHandlers,
-        #TestMongoDBConstraintDiscoverers,
     )
     # The individual imports of the database driver libraries
     # are now all protected with try...except blocks,
@@ -34,7 +24,6 @@ except ImportError:
 
 
 from tdda.constraints.testcommonconstraints import *
-
 
 if __name__ == '__main__':
     ReferenceTestCase.main()
