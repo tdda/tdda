@@ -925,5 +925,7 @@ Removed feather tests; replaced with "equivalent" parquet tests.
 Started tests for discover reporting.
 
 Changed parquet load to use nullable types by default.
+
+Added grouping to regular expressions.
 ----------------------- end of dev -----------------------------
 """
