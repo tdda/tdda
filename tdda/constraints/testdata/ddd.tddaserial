@@ -1,0 +1,78 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.08",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evennulls",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "oddnulls",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "evens",
+                "fieldtype": "int"
+            },
+            {
+                "name": "odds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evenreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "oddreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "evenstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "oddstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "elevens",
+                "fieldtype": "string"
+            },
+            {
+                "name": "greek",
+                "fieldtype": "string"
+            },
+            {
+                "name": "binnedindex",
+                "fieldtype": "int"
+            },
+            {
+                "name": "binnedodds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "basedate",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "evendates",
+                "fieldtype": "datetime"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "date_format": "iso8601datetime",
+        "null_indicators": "",
+        "header_rows": 1,
+        "header_rows": 1,
+        "stutter_quotes": false,
+        "escape_char": "\\",
+        "accept_percentages_as_floats": false
+    }
+}

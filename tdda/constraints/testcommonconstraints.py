@@ -11,6 +11,7 @@ TDDA_MD_IGNORES = [
     r'^\s*"utc_time": ".*",$',
     r'^\s*"creator": "TDDA .*",$',
     r'^\s*"source": "/.*tdda/consrtaints/testdata/small7x5.parquet",$',
+    r'^\s*"host": ".*",$',
     r'^\s*"user": ".*",$',
 ]
 
@@ -52,6 +53,7 @@ class TestCommon(ReferenceTestCase):
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-elevens-wrong-type.txt'))
 
+    @tag
     def testSimpleAllCorrectVerificationFromCSVFile(self):
         # CSV file with full pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
@@ -87,8 +89,7 @@ class TestCommon(ReferenceTestCase):
         # I suppose.
 
 
-@tag
-class TestDisoverReports(ReferenceTestCase):
+class TestDiscoverReports(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
         small7x5path = testdata('small7x5.parquet')
