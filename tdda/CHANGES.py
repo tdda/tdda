@@ -912,4 +912,7 @@ Add DB data initialization files to setup.py
 
 3.03.2025 2.2.15
 Avoid extra DB open in SQLite3 tests
+
+###
+Removed feather and pmmif
 """

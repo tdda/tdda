@@ -30,8 +30,6 @@ import sys
 
 from collections import OrderedDict
 
-from tdda.deprecated.featherfiles import read_feather_file, write_feather_file
-
 try:
     from StringIO import StringIO
 except ImportError:
@@ -59,6 +57,7 @@ from tdda.constraints.baseconstraints import (
     unicode_string, byte_string, long_type
 )
 from tdda.pd.utils import is_string_col, is_string_dtype, is_categorical_dtype
+
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
                                             default_csv_writer)
@@ -168,7 +167,8 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
 
     def calc_all_non_nulls_boolean(self, colname):
         nn = self.df[colname].dropna()
-        return all([type(v) is bool for i, v in nn.iteritems()])
+        return all(type(v) is bool for i, v in nn.iteritems())
+        #return all(type(v) is bool for v in nn.to_list())
 
     def allowed_values_exclusions(self):
         # remarkably, Pandas returns various kinds of nulls as
@@ -334,10 +334,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
         orig_fields = list(self.df)
         output_is_typed = (
             detect_outpath
-            and file_format(detect_outpath) in ('parquet', 'feather')
+            and file_format(detect_outpath) == 'parquet'
         )
-        output_is_feather = (detect_outpath
-                             and file_format(detect_outpath) == 'feather')
 
         out_df = self.out_df
         add_index = detect_index or detect_output_fields is None
@@ -382,18 +380,13 @@ class PandasConstraintDetector(BaseConstraintDetector):
             else:
                 df_to_save = convert_output_types(out_df, boolean_ints)
             if add_index:
+                # Legacy
                 # Add Index or RowNumber columns to output CSV file (or
                 # add appropriate columns to output feather file and reset
                 # its index, because feather doesn't support MultiIndexes
                 # and doesn't retain single indexes).
-                #
-                # TODO: If the feather file is going to be saved using
-                #       pmmif's featherpmm, and if featherpmm were able to
-                #       transparently retain indexes, then we wouldn't need
-                #       to do that in this case (when featherpmm is set, and
-                #       output_is_typed).
                 indexes = []
-                if output_is_feather or rownumber_is_index:
+                if rownumber_is_index:
                     stem = 'Index' if rownumber_is_index else 'RowNumber'
                     if isinstance(df_to_save.index, pd.MultiIndex):
                         for i, level in enumerate(df_to_save.index.levels):
@@ -634,7 +627,7 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    if is_categorical_dtype(dt):
+    if is_categorical_dtype(dt) or str(dt) == 'string':
         return 'string'
     dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
@@ -878,8 +871,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         *outpath*:
                             This specifies that the verification process
                             should detect records that violate any constraints,
-                            and write them out to this CSV, parquet
-                            or feather file.
+                            and write them out to this CSV or parquet file.
 
                             By default, only failing records are written out
                             to file, but this can be overridden with the
@@ -1111,7 +1103,6 @@ def discover_df(df, inc_rex=False, df_path=None):
 
     See *simple_generation.py* in the :ref:`constraint_examples`
     for a slightly fuller example.
-
     """
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex)
     constraints = disco.discover()
@@ -1164,9 +1155,10 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
     lcstem, ext = stem.lower(), ext.lower()
 
     if ext == '.parquet':
-        return pd.read_parquet(path)
-    elif ext == '.feather':
-        return read_feather_file(path)
+        return pd.read_parquet(
+            path,
+            #backend='numpy_nullable',
+        )
 
     if mdpath is None:
         md_type, _ = find_metadata_type_from_path(path)
@@ -1196,7 +1188,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
         return default_csv_loader(path)
 
     else:  # explicit metadatapath provided
-        metadata = load_metadata(path)
+        metadata = load_metadata(mdpath)
         kw = to_pandas_read_csv_args(metadata)
         return default_csv_loader(path, **kw)
 
@@ -1210,8 +1202,6 @@ def save_df(df, path, index=False):
         df.to_parquet(path=path, index=False)
     elif fmt in ('csv', 'psv', 'tsv', 'txt'):
         default_csv_writer(df, path, index=index)
-    elif fmt == 'feather':
-        write_feather_file(df, path, name='verification')
     else:
         raise Exception(f'Unknown output format: {fmt}')
 

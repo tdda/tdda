@@ -71,3 +71,6 @@ target/
 
 privatedata
 
+**/scratch
+**/doc/structure.graffle
+**/doc/structure.txt

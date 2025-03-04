@@ -41,9 +41,41 @@ from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
+from tdda.utils import handle_tilde, nvl
 
-def detect_df_from_file(df_path, constraints_path, outpath,
+
+def detect_df_from_file(df_path, constraints_path, outpath=None,
                         verbose=True, **kwargs):
+    """
+    Check the records from the Pandas DataFrame provided, to detect
+    records that fail any of the constraints in the JSON ``.tdda`` file
+    provided. This is anomaly detection.
+
+    Inputs:
+
+        *df_path*:
+             Path to a file containing data to be verified.
+             Normally a parquet of CSV file.
+
+        *constraints_path*:
+             The path to a JSON ``.tdda`` file.
+             Alternatively, can be an in-memory
+             :py:class:`~tdda.constraints.base.DatasetConstraints` object.
+
+        *outpath*:
+            Optional destination to write output records.
+            Normally path for a CSV or parquet file.
+            None for no output.
+
+        *verbose*:
+            Controls level of output reporting
+
+        *kwargs*:
+            Passed to discover_df
+
+    Returns:
+        :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
+    """
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())
         if constraints_path is None:
@@ -53,11 +85,9 @@ def detect_df_from_file(df_path, constraints_path, outpath,
         (stem, ext) = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    from_feather = file_format(df_path) == 'feather'
-
     df = load_df(df_path)
     v = detect_df(df, constraints_path, outpath=outpath,
-                  rownumber_is_index=from_feather, **kwargs)
+                  rownumber_is_index=False, **kwargs)
     if verbose and outpath is not None and outpath != '-':
         print(v)
     return v
@@ -90,7 +120,7 @@ class PandasDetector:
 
     def detect(self):
         params = pd_detect_params(self.argv[1:])
-        path = params['df_path']
+        path = handle_tilde(params['df_path'])
         if path is not None and path != '-' and not os.path.isfile(path):
             print('%s does not exist' % path)
             sys.exit(1)
