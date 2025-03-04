@@ -64,7 +64,7 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
             Passed to discover_df
 
     Returns:
-        :py:class:`~tdda.constraints.pd.constraints.PandasConstraintsDiscoverer` object.
+        :py:class:`~tdda.constraints.base.DatasetConstraints` object.
     """
     md_df_path = df_path
     if df_path == '-':
