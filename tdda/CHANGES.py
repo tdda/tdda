@@ -927,5 +927,10 @@ Started tests for discover reporting.
 Changed parquet load to use nullable types by default.
 
 Added grouping to regular expressions.
+
+Removed all feather and pmmif code except in the testexamples,
+where they should be replaced with parquet.
+
+Also added Makefile with entry to build coverage report.
 ----------------------- end of dev -----------------------------
 """

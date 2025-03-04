@@ -85,11 +85,9 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
         (stem, ext) = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    from_feather = file_format(df_path) == 'feather'
-
     df = load_df(df_path)
     v = detect_df(df, constraints_path, outpath=outpath,
-                  rownumber_is_index=from_feather, **kwargs)
+                  rownumber_is_index=False, **kwargs)
     if verbose and outpath is not None and outpath != '-':
         print(v)
     return v

@@ -30,8 +30,6 @@ import sys
 
 from collections import OrderedDict
 
-from tdda.deprecated.featherfiles import read_feather_file, write_feather_file
-
 try:
     from StringIO import StringIO
 except ImportError:
@@ -337,10 +335,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
         orig_fields = list(self.df)
         output_is_typed = (
             detect_outpath
-            and file_format(detect_outpath) in ('parquet', 'feather')
+            and file_format(detect_outpath) == 'parquet'
         )
-        output_is_feather = (detect_outpath
-                             and file_format(detect_outpath) == 'feather')
 
         out_df = self.out_df
         add_index = detect_index or detect_output_fields is None
@@ -385,18 +381,13 @@ class PandasConstraintDetector(BaseConstraintDetector):
             else:
                 df_to_save = convert_output_types(out_df, boolean_ints)
             if add_index:
+                # Legacy
                 # Add Index or RowNumber columns to output CSV file (or
                 # add appropriate columns to output feather file and reset
                 # its index, because feather doesn't support MultiIndexes
                 # and doesn't retain single indexes).
-                #
-                # TODO: If the feather file is going to be saved using
-                #       pmmif's featherpmm, and if featherpmm were able to
-                #       transparently retain indexes, then we wouldn't need
-                #       to do that in this case (when featherpmm is set, and
-                #       output_is_typed).
                 indexes = []
-                if output_is_feather or rownumber_is_index:
+                if rownumber_is_index:
                     stem = 'Index' if rownumber_is_index else 'RowNumber'
                     if isinstance(df_to_save.index, pd.MultiIndex):
                         for i, level in enumerate(df_to_save.index.levels):
@@ -904,8 +895,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         *outpath*:
                             This specifies that the verification process
                             should detect records that violate any constraints,
-                            and write them out to this CSV, parquet
-                            or feather file.
+                            and write them out to this CSV or parquet file.
 
                             By default, only failing records are written out
                             to file, but this can be overridden with the
@@ -1198,8 +1188,6 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
 
     if ext == '.parquet':
         return pd.read_parquet(path, dtype_backend='numpy_nullable')
-    elif ext == '.feather':
-        return read_feather_file(path)
 
     if mdpath is None:
         md_type, _ = find_metadata_type_from_path(path)
@@ -1243,8 +1231,6 @@ def save_df(df, path, index=False):
         df.to_parquet(path=path, index=False)
     elif fmt in ('csv', 'psv', 'tsv', 'txt'):
         default_csv_writer(df, path, index=index)
-    elif fmt == 'feather':
-        write_feather_file(df, path, name='verification')
     else:
         raise Exception(f'Unknown output format: {fmt}')
 

@@ -160,9 +160,6 @@ class DatasetConstraints(object):
         if name in self.fields:
             del self.fields[name]
 
-    def __str__(self):
-        return 'FIELDS:\n\n%s' % str(self.fields)
-
     def load(self, path):
         """
         Builds a DatasetConstraints object from a json file
@@ -360,6 +357,10 @@ class DatasetConstraints(object):
         xml.WriteElement('h1', 'TDDA Discover Report')
         xml.CloseXML()
         return write_or_return(xml.xml(), fwrite, passthrough, path=outpath)
+
+    def __str__(self):
+        return 'FIELDS:\n\n%s' % str(self.fields)
+
 
 
 

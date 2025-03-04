@@ -24,7 +24,7 @@ class TDDAPandasExtension(ExtensionBase):
             if a == '-':
                 return True
             (stem, ext) = os.path.splitext(a)
-            if (ext in ('.csv', '.psv', '.tsv', '.parquet', '.feather'
+            if (ext in ('.csv', '.psv', '.tsv', '.parquet',
                         '.json', '.yaml')):
                 return True
         return False

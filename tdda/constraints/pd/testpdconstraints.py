@@ -23,9 +23,6 @@ from shutil import which
 import pandas as pd
 import numpy as np
 
-pmmif = None
-feather = None
-
 from tdda.constraints.base import (
     MinConstraint,
     MaxConstraint,
@@ -1452,7 +1449,7 @@ class TestPandasMultipleConstraintDetector(
         v = detect_df(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
                       per_constraint=True, index=True,
-                      rownumber_is_index=(input == 'feather'))
+                      rownumber_is_index=False)
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
         if output == 'parquet':

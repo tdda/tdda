@@ -23,7 +23,7 @@ def reportpath(path):
     return tdpath(os.path.join('reports', path))
 
 
-class TestCommon(ReferenceTestCase):
+class TestCommonConstraints(ReferenceTestCase):
 
     def testSimpleAllCorrectVerificationFromParquetFile(self):
         # Parquet file, right types all good
@@ -88,6 +88,7 @@ class TestCommon(ReferenceTestCase):
         # I suppose.
 
 
+@tag
 class TestDiscoverReports(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
@@ -100,6 +101,9 @@ class TestDiscoverReports(ReferenceTestCase):
         self.assertStringCorrect(self.constraints_json,
                                  tdpath('small7x5.tdda'),
                                  ignore_patterns=TDDA_MD_IGNORES)
+
+    def atestDiscoverDict(self):
+        print(repr(self.constraints.to_dict()))
 
 
 
