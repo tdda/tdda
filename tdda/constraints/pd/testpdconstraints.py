@@ -50,6 +50,7 @@ from tdda.constraints.pd.constraints import (load_df, verify_df,
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
+from tdda.utils import PDCONSTRAINTSDIR, CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 
 from tdda.examples import copy_accounts_data_unzipped
@@ -62,12 +63,12 @@ from tdda.referencetest.pddates import (
     get_date_separators
 )
 from tdda.referencetest.checkpandas import default_csv_loader
+from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 
 isPython2 = sys.version_info[0] < 3
 
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
+    
 
 
 SMALL = 2.48e-324
@@ -92,15 +93,10 @@ DATES = (datetime.datetime(1970, 1, 1),
 OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
                                                               else (b'u',))
 
-
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
-
-
 class ParquetFileChecker:
     def check_parquet_file_correct(self, actual_path, expected_path):
         actual_df = load_df(actual_path)
-        expected_df = load_df(os.path.join(TESTDATA_DIR, expected_path))
+        expected_df = load_df(os.path.join(TESTDATADIR, expected_path))
         self.assertDataFramesEquivalent(actual_df, expected_df,
                                         actual_path, expected_path)
 
@@ -931,25 +927,25 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertEqual(str(results3), expected)
 
     def testElements92(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         v = verify_df(df, constraints_path)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
     def testElements92rex(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         v = verify_df(df, constraints_path)
         self.assertEqual(v.passes, 78)
         self.assertEqual(v.failures, 0)
 
     def testElements118CSV(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         v = verify_df(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 57)
         self.assertEqual(v.failures, 15)
@@ -959,9 +955,9 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
 
     def testElements118Parquet(self):
         # Same as previous but with parquet file
-        path = os.path.join(TESTDATA_DIR, 'elements118.parquet')
+        path = os.path.join(TESTDATADIR, 'elements118.parquet')
         df = pd.read_parquet(path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         v = verify_df(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 57)
         self.assertEqual(v.failures, 15)
@@ -970,9 +966,9 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertStringCorrect(vdf.to_string(), 'elements118.df')
 
     def testElements118rexCSV(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         v = verify_df(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
@@ -981,9 +977,9 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertStringCorrect(vdf.to_string(), 'elements118rex.df')
 
     def testElements118rexParquet(self):
-        path = os.path.join(TESTDATA_DIR, 'elements118.parquet')
+        path = os.path.join(TESTDATADIR, 'elements118.parquet')
         df = pd.read_parquet(path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         v = verify_df(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
@@ -994,9 +990,9 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
 
 class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_df(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
@@ -1005,8 +1001,8 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 3)
 
     def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df_from_file(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
@@ -1022,7 +1018,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         c = discover_df_from_file(csv_path, constraints_path=None,
                                   verbose=False)
         tmpdir = tempfile.gettempdir()
@@ -1035,9 +1031,9 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 0)
 
     def testDDD_df(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
@@ -1046,8 +1042,8 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 3)
 
     def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df_from_file(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
@@ -1063,7 +1059,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         c = discover_df_from_file(csv_path, constraints_path=None,
                                   verbose=False)
         tmpdir = tempfile.gettempdir()
@@ -1076,9 +1072,9 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 0)
 
     def testDDD_df(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
@@ -1087,8 +1083,8 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.failures, 3)
 
     def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATA_DIR, 'ddd.tdda')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
+        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         v = verify_df_from_file(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
@@ -1104,7 +1100,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATA_DIR, 'ddd.csv')
+        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         c = discover_df_from_file(csv_path, constraints_path=None,
                                   verbose=False)
         tmpdir = tempfile.gettempdir()
@@ -1220,12 +1216,12 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 class TestPandasExampleAccountsData(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
-        copy_accounts_data_unzipped(TESTDATA_DIR)
+        copy_accounts_data_unzipped(TESTDATADIR)
 
     def testDiscover1k(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
+        csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         c = discover_df_from_file(csv_path, constraints_path=tddafile1k,
                                   verbose=False)
         self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
@@ -1240,9 +1236,9 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
                                    ])
 
     def testDiscover1k_parquet(self):
-        pq_path = os.path.join(TESTDATA_DIR, 'accounts1k.parquet')
+        pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         c = discover_df_from_file(pq_path, constraints_path=tddafile1k,
                                   verbose=False)
         self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
@@ -1258,24 +1254,24 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
                                    ])
 
     def testVerify1k(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'accounts1k.csv')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
                                 verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
     def testVerify1k_parquet(self):
-        pq_path = os.path.join(TESTDATA_DIR, 'accounts1k.parquet')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
                                 verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
     def testVerify25kAgainst1k(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
                                   verbose=False)
 
@@ -1291,8 +1287,8 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     def testVerify25kAgainst1k_parquet(self):
-        pq_path = os.path.join(TESTDATA_DIR, 'accounts25k.parquet')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
+        pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
                                 verbose=False)
 
@@ -1312,9 +1308,9 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         self.assertEqual(v.failures, failingConstraints)
 
     def testDetect25kAgainst1k(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
-        refpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.txt')
+        csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
+        refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
         v = detect_df_from_file(csv_path, constraints_path=reftddafile1k,
                                 outpath=outfile, verbose=False)
@@ -1337,10 +1333,10 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         self.assertTextFileCorrect(outfile, refpath)
 
     def testDetect25kAgainst1k_parquet(self):
-        pq_path = os.path.join(TESTDATA_DIR, 'accounts25k.parquet')
-        reftddafile1k = os.path.join(TESTDATA_DIR, 'ref-accounts1k.tdda')
-        refpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.parquet')
-        refcsvpath = os.path.join(TESTDATA_DIR, 'ref-detect25k-failures.txt')
+        pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
+        reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
+        refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.parquet')
+        refcsvpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.parquet')
         v = detect_df_from_file(pq_path, constraints_path=reftddafile1k,
                                 outpath=outfile, verbose=False)
@@ -1370,9 +1366,9 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
 
     def testDiscover25k(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'accounts25k.csv')
+        csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
         tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
-        reftddafile = os.path.join(TESTDATA_DIR, 'ref-accounts25k.tdda')
+        reftddafile = os.path.join(TESTDATADIR, 'ref-accounts25k.tdda')
         c = discover_df_from_file(csv_path, constraints_path=tddafile,
                                   verbose=False)
         self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
@@ -1392,9 +1388,9 @@ class TestPandasMultipleConstraintDetector(
     ParquetFileChecker
 ):
     def testDetectElements118rexToFile(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect.csv')
         v = detect_df(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
@@ -1404,9 +1400,9 @@ class TestPandasMultipleConstraintDetector(
         self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
 
     def testDetectElements118rexToFilePerConstraint(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir,
                                   'elements118rex_detect_perc.csv')
         v = detect_df(df, constraints_path, report='fields',
@@ -1418,9 +1414,9 @@ class TestPandasMultipleConstraintDetector(
                                    'elements118rex_detect_perc.csv')
 
     def testDetectElements118rexToDataFrame(self):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92rex.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         v = detect_df(df, constraints_path, output_fields=['Z'],
                       rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
@@ -1441,9 +1437,9 @@ class TestPandasMultipleConstraintDetector(
         self.detectElements('parquet', 'parquet')
 
     def detectElements(self, input, output):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements118.%s' % input)
+        csv_path = os.path.join(TESTDATADIR, 'elements118.%s' % input)
         df = load_df(csv_path)
-        constraints_path = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         detect_name = 'elements118_detect_from_%s.%s' % (input, output)
         detectfile = os.path.join(self.tmp_dir, detect_name)
         v = detect_df(df, constraints_path, report='fields',
@@ -1492,17 +1488,17 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
         self.constraintsGenerationTest(inc_rex=True)
 
     def constraintsGenerationTest(self, inc_rex=False):
-        csv_path = os.path.join(TESTDATA_DIR, 'elements92.csv')
+        csv_path = os.path.join(TESTDATADIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
         if inc_rex:
             old_ref_name = 'elements92oldrex.tdda'
             new_ref_name = 'elements92rex.tdda'
-            old_ref_constraints_path = os.path.join(TESTDATA_DIR, old_ref_name)
-            new_ref_constraints_path = os.path.join(TESTDATA_DIR, new_ref_name)
+            old_ref_constraints_path = os.path.join(TESTDATADIR, old_ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATADIR, new_ref_name)
         else:
             ref_name = 'elements92.tdda'
-            old_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
-            new_ref_constraints_path = os.path.join(TESTDATA_DIR, ref_name)
+            old_ref_constraints_path = os.path.join(TESTDATADIR, ref_name)
+            new_ref_constraints_path = os.path.join(TESTDATADIR, ref_name)
         with open(old_ref_constraints_path) as f:
             old_refjson = f.read()
         with open(new_ref_constraints_path) as f:
@@ -1903,10 +1899,10 @@ class TestUtilityFunctions(ReferenceTestCase):
 
 
 
-TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATA_DIR)
-TestPandasMultipleConstraintDetector.set_default_data_location(TESTDATA_DIR)
-TestPandasCommandLine.set_default_data_location(TESTDATA_DIR)
-TestPandasCommandAPI.set_default_data_location(TESTDATA_DIR)
+TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATADIR)
+TestPandasMultipleConstraintDetector.set_default_data_location(TESTDATADIR)
+TestPandasCommandLine.set_default_data_location(TESTDATADIR)
+TestPandasCommandAPI.set_default_data_location(TESTDATADIR)
 
 
 def rmdirs(parent, dirs):

@@ -1,3 +1,4 @@
+import datetime
 import json
 import math
 import os
@@ -24,6 +25,13 @@ import numpy as np
 from rich import print as rprint
 
 TDDADIR = os.path.dirname(__file__)  # base tdda directory for package
+CONSTRAINTSDIR = os.path.join(TDDADIR, 'constraints')
+PDCONSTRAINTSDIR = os.path.join(CONSTRAINTSDIR, 'pd')
+DBCONSTRAINTSDIR = os.path.join(CONSTRAINTSDIR, 'db')
+CONSTRAINTSTESTDATADIR = os.path.join(CONSTRAINTSDIR, 'testdata')
+TEMPLATESDIR = os.path.join(TDDADIR, 'templates')
+REFTESTSDIR = os.path.join(TDDADIR, 'referencetest')
+
 DEFAULT_INPUT_ENCODING = 'UTF-8'
 
 
@@ -627,3 +635,30 @@ def write_or_return(content, dump, stringify, path=None, binary=False):
         return None
     else:
         return stringify(content)
+
+
+def tdda_css():
+    with open(os.path.join(TEMPLATESDIR, 'tdda.css')) as f:
+        return f.read()
+
+def constraint_val(v, kind=None):
+    if type(v) is list:
+        return '\n'.join(constraint_val(x) for x in v)
+    elif type(v) is int:
+        return str(v)
+    elif type(v) is float:
+        return str(v)
+    elif type(v) is str:
+        return json.dumps(v)
+    elif type(v) is bool:
+        if kind == 'no_duplicates':
+            return 'no' if v else ''
+        return str(v).lower()
+    elif type(v) is datetime.datetime:
+        s = v.isoformat(timespec='seconds')
+        return s[:10] if s.endswith('T00:00:00') else s
+    elif type(v) is datetime.date:
+        return v.isoformat()
+    else:
+        return repr(v)
+

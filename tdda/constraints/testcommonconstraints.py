@@ -1,10 +1,13 @@
 import os
+import tempfile
+
 from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.constraints import discover, verify
 from tdda.utils import constraints_testdata_path as tdpath, rprint
 
 TESTDATA_DIR = os.path.join(os.path.dirname(__file__), 'testdata')
+TMPDIR = tempfile.gettempdir()
 
 TDDA_MD_IGNORES = [
     r'^\s*"local_time": ".*",$',
@@ -21,6 +24,11 @@ def testdata(filename):
 
 def reportpath(path):
     return tdpath(os.path.join('reports', path))
+
+
+def tmppath(path):
+    return tdpath(os.path.join(TMPDIR, path))
+
 
 
 class TestCommonConstraints(ReferenceTestCase):
@@ -88,7 +96,6 @@ class TestCommonConstraints(ReferenceTestCase):
         # I suppose.
 
 
-@tag
 class TestDiscoverReports(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
@@ -102,8 +109,19 @@ class TestDiscoverReports(ReferenceTestCase):
                                  tdpath('small7x5.tdda'),
                                  ignore_patterns=TDDA_MD_IGNORES)
 
-    def atestDiscoverDict(self):
-        print(repr(self.constraints.to_dict()))
+    @tag
+    def testDiscoverTextTable(self):
+        name = 'small7x5-constraints.txt'
+        path = tmppath(name)
+        self.constraints.to_text_report(path)
+        self.assertFileCorrect(path, reportpath(name))
+
+    @tag
+    def testDiscoverHTMLTable(self):
+        name = 'small7x5-constraints.html'
+        path = tmppath(name)
+        print(self.constraints.to_html_report(path))
+        self.assertFileCorrect(path, reportpath(name))
 
 
 

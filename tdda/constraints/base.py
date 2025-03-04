@@ -16,15 +16,19 @@ import yaml
 
 from collections import OrderedDict
 
+from tdda.config import Config
+from tdda.tables import Table
 from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
-    json_sanitize, strip_lines, print_obj
+    json_sanitize, strip_lines, print_obj,
+    nvl, richgood, richbad, XML, write_or_return,
+    tdda_css, constraint_val
 )
-from tdda.config import Config
 from tdda.version import version
-from tdda.utils import nvl, richgood, richbad, XML, write_or_return
 
 from rich import print as rprint
+
+from artists.miro.rexutils import colour_regexes
 
 CONFIG = Config()
 
@@ -42,6 +46,17 @@ CONSTRAINT_SUFFIX_MAP = OrderedDict((
     ('allowed_values', 'values'),
     ('rex', 'rex'),
     ('transform', None),  # this mapped value isn't used
+))
+
+CONSTRAINT_COLS = dict((
+    ('type', 'Type Allowed'),
+    ('min', 'Min Allowed'),
+    ('max', 'Max Allowed'),
+    ('sign', 'Sign Allowed'),
+    ('max_nulls', 'Nulls Allowed'),
+    ('no_duplicates', 'Duplicates Allowed'),
+    ('allowed_values', 'Values Allowed'),
+    ('rex', 'Regular Expressions'),
 ))
 
 
@@ -70,7 +85,6 @@ EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
 METADATA_KEYS = ('as_at', 'local_time', 'utc_time', 'creator',
                  'rdbms', 'source', 'host','user', 'dataset',
                  'n_records', 'n_selected', 'tddafile')
-
 
 
 class Marks:
@@ -129,6 +143,12 @@ class DatasetConstraints(object):
             self.load(loadpath)
         else:
             self.fields = Fields(per_field_constraints)
+
+    @property
+    def table(self):
+        if not hasattr(self, '_table'):
+            self.to_table()
+        return self._table
 
     def set_creator(self, creator=None):
         self.creator = creator or 'TDDA %s' % version
@@ -343,20 +363,53 @@ class DatasetConstraints(object):
                                tomli_w.dumps, path=outpath)
 
     def to_text_report(self, outpath=None):
-        return write_or_return('Text Report', fwrite, passthrough,
+        return write_or_return(self.table.toString(), fwrite, passthrough,
                                path=outpath)
 
     def to_markdown_report(self, outpath=None):
         return write_or_return('#Markdown Report', fwrite, passthrough)
 
-    def to_html_detect_report(self, outpath=None):
+    def to_html_report(self, outpath=None):
         xml = XML(
             html=True,
-            headerAttr={'title': 'TDDA Failure Report'},
+            headerAttr={'title': 'TDDA Discover Report'},
+            css=tdda_css(),
         )
         xml.WriteElement('h1', 'TDDA Discover Report')
+        xml.AddBalancedXML(self.table.toHTML())
         xml.CloseXML()
         return write_or_return(xml.xml(), fwrite, passthrough, path=outpath)
+
+    def to_table(self):
+        headers = ['Field name'] + list(CONSTRAINT_COLS.values())
+        rows = []
+        htmlrows = []
+        any_rex = False
+        for field in self.fields.values():
+            row = [field.name]
+            htmlrow = ['']
+            for kind in CONSTRAINT_COLS:
+                c = field.constraints.get(kind, None)
+                if c is None and kind in ('min', 'max'):
+                    c = field.constraints.get(kind + '_length', None)
+                if c is not None:
+                    v = c.value
+                    row.append(constraint_val(c.value, kind))
+                    if kind == 'rex':
+                        htmlrow.append(colour_regexes(c.value))
+                        any_rex = True
+                    else:
+                        htmlrow.append('')
+                else:
+                    row.append('')
+                    htmlrow.append('')
+            rows.append(row)
+            htmlrows.append(htmlrow)
+        self._table = Table(headers, rows,
+                            attr={'class': 'solid tdda'},
+                            groupHeader='Individual Field Constraints',
+                            commonHeadColour=True,
+                            htmlrows=htmlrows if any_rex else None)
 
     def __str__(self):
         return 'FIELDS:\n\n%s' % str(self.fields)

@@ -1,0 +1,88 @@
+.Sans, body {font-family: Geneva, Helvetica, Arial, Verdana, Sans-serif;}
+.tt {font-family: Menlo, monospace, "Andale Mono", "Courier", "Courier New";}
+.separator {margin: 10px 0 10px 0;}
+
+a:link {color: #C00000; text-decoration: none;}
+a:hover {color: #FF0000; text-decoration: none;}
+a:visited{color: #800000; text-decoration: none;}
+
+.tdred {
+ color: #E00000;
+ font-weight: bold;
+}
+.tdgreen {
+ color: #008000;
+}
+.nullgrey {
+ color: #C0C0C0;
+}
+
+table.padrh {
+ padding-left: 20px;
+}
+
+table.padrh th {
+ padding: 0px 3px 0px 3px;
+ text-align: right;
+}
+table.padrh td {
+ padding: 0px 3px 0px 3px;
+ font-family: Courier, "Courier New", monospace;
+}
+table.solid, table.light {
+ border-spacing: 0px;
+}
+table.solid, table.solid td, table.solid th, table.solid tr {
+ border-collapse: collapse;
+ border: 1px solid #808080;
+ empty-cells: show;
+}
+
+table.solid td {text-align: right}
+table.nb {border-collapse: separate;}
+table.nb,table.nb td, table.nb th, table.nb tr {border: 0px}
+table.rh td {text-align: right;}
+
+tr td.mdl {text-align: left;}
+
+.colsep {
+ width: 0px;
+ background-color: #808080;
+}
+
+.rowsep {
+ height: 0px;
+ background-color: #808080;
+}
+
+table.tdver, table.tdver td, table.tdver th, table.tdver tr {
+ border-collapse: collapse;
+ border: 1px solid #808080; empty-cells: show;
+}
+
+table.tdver tr td, table.tdvercell {
+ margin-left: auto;
+ margin-right: auto;
+}
+
+table.tdvercell, table.tdvercell td, table.tdvercell th, table.tdvercell tr {
+ border-collapse: collapse;
+ border: 0px solid #808080; empty-cells: show;
+ text-align: center;
+}
+
+table.tdvercell td {
+ font-size: x-large;
+ padding: 3px;
+ font-weight: bold;
+}
+
+table.tdver td {
+ padding: 3px;
+}
+
+.break {
+    padding: 6pt;
+}
+'''
+

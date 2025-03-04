@@ -1,7 +1,7 @@
 import os
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
-from tdda.utils import *
+from tdda.utils import to_pc, n_glyphs, handle_tilde, XML
 from unicodedata import normalize
 
 class TestTDDAUtils(ReferenceTestCase):
@@ -162,9 +162,6 @@ class TestXMLGeneration(ReferenceTestCase):
 </foo>
 '''.strip())
         self.assertEqual(type(stripped), str)
-
-
-
 
 
 if __name__ == '__main__':
