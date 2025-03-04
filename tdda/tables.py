@@ -5,10 +5,6 @@ from collections import OrderedDict, namedtuple
 
 from tdda.utils import XML
 
-from artists.miro.mirocore import (MarkdownLike, rgb_bool, nz_red,
-                                   nz_green, n1_red, nns_red, z_red,
-                                   ranking_red, tt)
-
 
 RE_FLAGS = re.UNICODE | re.DOTALL
 URL_RE = re.compile(r'^(http://|https://|file://).+$', RE_FLAGS)
@@ -26,15 +22,6 @@ class Dummy:
 
 
 ColWidthInfo = namedtuple('ColWidthInfo', 'data header word tex')
-
-
-def uGen(row):
-    """Generator for Unicode versions of contents of UTF-8 list"""
-    for v in row:
-        yield str(v)
-
-def ulen(s):
-    return len(str(s))
 
 
 def colour_class(fn):
@@ -62,7 +49,7 @@ class Table:
                  fixedCellColourSchemes=None,
                  transpose=False, groupHeader=None, shortlinks=False,
                  repeatHeader=0, colHeadPadding=None, colPadding=None,
-                 stringFormat=None, gridlines=0, session=None,
+                 gridlines=0, session=None,
                  commonHeadColour=False, forceBGColour=False,
                  attr=None,
                  command=None, justify=None, cellClasses=None,
@@ -104,10 +91,6 @@ class Table:
 
         colPadding is a list of numbers between 1 and 8, one for each
         column, specifying how much to pad the column by.
-
-        stringFormat is another optional list of lists with the same shape
-        as rows. If present, each value should be a valid format value from
-        (currently) mdl or raw.
 
         gridlines affects text table formatting. If set to 1, tight
         ASCII row and column separators are drawn; if set to 2,
@@ -196,7 +179,6 @@ class Table:
         self.repeatHeader = repeatHeader
         self.colHeadPadding = colHeadPadding
         self.colPadding = colPadding
-        self.stringFormat = stringFormat
         self.gridlines = gridlines  # text only. 1 for tight, 2 for spaced
         self.cellClasses = cellClasses
         self.cellClassFns = cellClassFns
@@ -306,10 +288,6 @@ class Table:
             if uHeader:
                 headerFormat = ['%%%ds' % w for w in colWidths]
                 just = [self.justify or 'r'] * len(colWidths)
-                if self.stringFormat:
-                    for i, sf in enumerate(self.stringFormat[0]):
-                        if sf == 'verb':
-                            just[i] = 'l'
                 colFormat = [str(ColWithinColFormat(h, c, j))
                              for h, c, j in zip(headerWidths, colWidths, just)]
                 if self.gridlines:
@@ -322,10 +300,6 @@ class Table:
             else:
                 sign = '-' if self.justify == 'l' else ''
                 sign = [sign] * len(colWidths)
-                if self.stringFormat:
-                    for i, sf in enumerate(self.stringFormat[0]):
-                        if sf == 'verb':
-                            sign[i] = '-'
                 colFormat = ['%%%s%ds' % (sf, w) for sf, w in zip(sign,
                                                                    colWidths)]
             for row2D in u2Drows:
@@ -418,10 +392,6 @@ class Table:
             if uHeader:
                 headerFormat = ['%%%ds' % w for w in colWidths]
                 just = [justify] * len(colWidths)
-                if self.stringFormat:
-                    for i, sf in enumerate(self.stringFormat[0]):
-                        if sf == 'verb':
-                            just[i] = 'l'
                 colFormat = [ColWithinColFormat(h, c, j)
                              for h, c, j in zip(headerWidths, colWidths, just)]
                 line = sep.join(f % h for f, h in zip(headerFormat, uHeader))
@@ -431,10 +401,6 @@ class Table:
                 s.append(interline)
                 sign = '-' if self.justify == 'l' else ''
                 sign = [sign] * len(colWidths)
-                if self.stringFormat:
-                    for i, sf in enumerate(self.stringFormat[0]):
-                        if sf == 'verb':
-                            sign[i] = '-'
                 colFormat = ['%%%s%ds' % (sf, w) for sf, w in zip(sign,
                                                                   colWidths)]
             for row2D in u2Drows:
@@ -783,17 +749,8 @@ class Table:
 
     def MDFormatElement(self, x, elt, v, i, j, attributes=None,
                         entitize=2, convertNL=2):
-        thefmt = self.stringFormat
-        fmt = thefmt[i][j] if thefmt else None
-        if fmt == 'mdl':
-            MarkdownLike(v, x=x, elt=elt, attributes={'class': 'mdl'})
-        elif fmt == 'verb':
-            x.OpenElement(elt, '', attributes={'class': 'mdl'})
-            x.WriteElement('pre', v, entitize=entitize, convertNL=convertNL)
-            x.CloseElement(elt)
-        else:
-            x.WriteElement(elt, v, attributes=attributes,
-                           entitize=entitize, convertNL=convertNL)
+        x.WriteElement(elt, v, attributes=attributes,
+                       entitize=entitize, convertNL=convertNL)
 
     def ModifyForNull(self, attr, i, j, ignore=False):
         return attr
@@ -969,12 +926,45 @@ def mmd_justify_marker(n, justify):
         return ':-%s:' % dashes
 
 
-def latex_centre_statements(fmt):
-    ct = getattr(fmt, 'latex_raw_tables', None)
-    if ct:
-        return '', ''
-    else:
-        return '\\begin{center}\n', '\n\\end{center}\n'
+
+def rgb_bool(satisfied, **params):
+    """truthy: Green  nil: black:  other falsy: Green"""
+    return 'tdgreen' if satisfied else None if satisfied is None else 'tdred'
+
+
+def z_red(satisfied, **params):
+    """nil or truthy: Red   other falsy: grey"""
+    return 'nullgrey' if (satisfied or satisfied is None) else 'tdred'
+
+
+def nz_red(v, **params):
+    """nil: black  otherwise: Red"""
+    return 'tdred' if v else None
+
+
+def nz_green(v, **params):
+    """truthy: Green  falsy: black"""
+    return 'tdgreen' if v else None
+
+def n1_red(v, **params):
+    """< 1: Red; otherwise: black"""
+    return 'tdred' if v is not None and v < 1.0 else None
+
+def nns_red(v, **md):
+    """< (n-selected): Red  otherwise: black"""
+    N = md.get('n_selected')
+    return 'tdred' if v is not None and N is not None and v < N else None
+
+
+def ranking_red(v, **params):
+    """<= 8: red  otherwise: grey"""
+    return 'tdred' if v is not None and v < 9 else 'nullgrey'
+
+
+def tt(v, **params):
+    """Forces monospace (typewriter type)"""
+    return 'tt'
+
 
 
 PassthroughCellColourer = Dummy()

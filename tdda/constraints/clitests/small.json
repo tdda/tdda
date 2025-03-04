@@ -1,0 +1,58 @@
+{
+    "creation_metadata": {
+        "local_time": "2024-08-17T08:14:58",
+        "utc_time": "2024-08-17T07:14:58",
+        "creator": "TDDA 2.2.05",
+        "source": "small.csv",
+        "host": "gardot.local",
+        "user": "njr",
+        "dataset": "small.csv",
+        "n_records": 3,
+        "n_selected": 3,
+        "tddafile": "small.json"
+    },
+    "fields": {
+        "i": {
+            "type": "int",
+            "min": 1,
+            "max": 3,
+            "sign": "positive",
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "a": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 1,
+            "max_nulls": 0,
+            "no_duplicates": true,
+            "allowed_values": [
+                "1",
+                "A",
+                "a"
+            ]
+        },
+        "b": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 1,
+            "max_nulls": 1,
+            "no_duplicates": true,
+            "allowed_values": [
+                "B",
+                "b"
+            ]
+        },
+        "c": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 1,
+            "max_nulls": 1,
+            "no_duplicates": true,
+            "allowed_values": [
+                "3",
+                "c"
+            ]
+        }
+    }
+}

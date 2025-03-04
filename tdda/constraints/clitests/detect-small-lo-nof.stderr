@@ -1,0 +1,52 @@
+
+
+Parameters:
+
+  * input is one of:
+
+      - a csv file
+      - a .parquet file
+      - any of the other supported data sources
+
+  * constraints.tdda, if provided, is a JSON .tdda file constaining
+    constraints.
+
+  * name of output file (.csv, .parqet)
+    where detection results are to be written.
+    Can be - (or missing) to write to standard output.
+
+
+Optional flags are:
+
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+  * --epsilon E
+      Use this value of epsilon for fuzziness in comparing numeric values.
+  * --write-all
+      Include passing records in the output.
+  * --per-constraint
+      Write one additional column per failing constraint, to show if a
+      constraint passed or failed, as well as the n_failures
+      total column for each row. This is set by default.
+  * --no-per-constraint
+      Disable the --per-constraint flag, so that the only constraint-based
+      column written out is the nfailures field.
+  * --no-original-fields
+      Do not write out any of the original columns. By default, all of the
+      original columns are written out, unless you use --output-fields.
+  * --output-fields FIELD1 FIELD2 ...
+      Specify original columns to write out.
+  * --interleave
+      In the output, place the verification fields immediately after
+      the original field to which they correspond.
+  * --index
+      Include a row-number index in the output file.
+      The row number is automatically included if no output fields are
+      specified. Rows are usually numbered from 1, unless the
+      input file already has an index.
+
+

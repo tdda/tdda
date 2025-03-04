@@ -932,5 +932,7 @@ Removed all feather and pmmif code except in the testexamples,
 where they should be replaced with parquet.
 
 Also added Makefile with entry to build coverage report.
+
+Tables --- discover html and text tables for now
 ----------------------- end of dev -----------------------------
 """

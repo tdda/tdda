@@ -1,0 +1,10 @@
+FIELDS:
+
+a: 1 failure  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✗
+
+c: 1 failure  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✗
+
+SUMMARY:
+
+Records passing: 2
+Records failing: 1

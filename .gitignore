@@ -68,6 +68,10 @@ target/
 *.swp
 
 *~
+\#*
 
 privatedata
 
+**/structure.graffle
+**/structure.txt
+**/scratch

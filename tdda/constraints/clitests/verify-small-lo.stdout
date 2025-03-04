@@ -1,0 +1,14 @@
+FIELDS:
+
+i: 0 failures  6 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✓  no_duplicates ✓
+
+a: 1 failure  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✗
+
+b: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✓
+
+c: 1 failure  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✗
+
+SUMMARY:
+
+Constraints passing: 22
+Constraints failing: 2

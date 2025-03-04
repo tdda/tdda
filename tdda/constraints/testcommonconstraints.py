@@ -108,7 +108,6 @@ class TestDiscoverReports(ReferenceTestCase):
         self.assertStringCorrect(self.constraints_json,
                                  tdpath('small7x5.tdda'),
                                  ignore_patterns=TDDA_MD_IGNORES)
-
     @tag
     def testDiscoverTextTable(self):
         name = 'small7x5-constraints.txt'
@@ -120,7 +119,6 @@ class TestDiscoverReports(ReferenceTestCase):
     def testDiscoverHTMLTable(self):
         name = 'small7x5-constraints.html'
         path = tmppath(name)
-        print(self.constraints.to_html_report(path))
         self.assertFileCorrect(path, reportpath(name))
 
 
