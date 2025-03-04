@@ -53,7 +53,6 @@ class TestCommon(ReferenceTestCase):
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-elevens-wrong-type.txt'))
 
-    @tag
     def testSimpleAllCorrectVerificationFromCSVFile(self):
         # CSV file with full pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),

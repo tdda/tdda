@@ -91,13 +91,22 @@ DATES = (datetime.datetime(1970, 1, 1),
          datetime.datetime(1, 1, 1),
          datetime.datetime(9999, 12, 31, 23, 59, 59),
          datetime.datetime.now(),
-         datetime.datetime.utcnow())
+         datetime.datetime.now(datetime.UTC))
 OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
                                                               else (b'u',))
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
+
+
+class ParquetFileChecker:
+    def check_parquet_file_correct(self, actual_path, expected_path):
+        actual_df = load_df(actual_path)
+        expected_df = load_df(os.path.join(TESTDATA_DIR, expected_path))
+        self.assertDataFramesEquivalent(actual_df, expected_df,
+                                        actual_path, expected_path)
+
 
 
 class ConstraintVerificationTester:
@@ -1381,7 +1390,10 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
                                    ])
 
 
-class TestPandasMultipleConstraintDetector(ReferenceTestCase):
+class TestPandasMultipleConstraintDetector(
+    ReferenceTestCase,
+    ParquetFileChecker
+):
     def testDetectElements118rexToFile(self):
         csv_path = os.path.join(TESTDATA_DIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -1444,7 +1456,7 @@ class TestPandasMultipleConstraintDetector(ReferenceTestCase):
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
         if output == 'parquet':
-            self.assertBinaryFileCorrect(detectfile, detect_name)
+            self.check_parquet_file_correct(detectfile, detect_name)
         else:
             self.assertTextFileCorrect(detectfile, detect_name)
 
