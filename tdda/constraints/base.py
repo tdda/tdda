@@ -32,6 +32,8 @@ from tdda.rexpy.rexutils import colour_regexes
 
 CONFIG = Config()
 
+outdict = dict
+
 PRECISIONS = ('open', 'closed', 'fuzzy')
 
 CONSTRAINT_SUFFIX_MAP = OrderedDict((
@@ -248,7 +250,7 @@ class DatasetConstraints(object):
         self.set_creator()
 
     def get_metadata(self, tddafile=None):
-        d = OrderedDict(
+        d = outdict(
             (k, getattr(self, k, None))
             for k in METADATA_KEYS if getattr(self, k, None) is not None
         )
@@ -263,11 +265,11 @@ class DatasetConstraints(object):
         """
         Converts the constraints in this object to a dictionary.
         """
-        constraints = OrderedDict((
+        constraints = outdict((
             (f, v.to_dict_value()) for f, v in self.fields.items()
         ))
         metadata = self.get_metadata(tddafile=tddafile)
-        d = OrderedDict()
+        d = outdict()
         if metadata:
             d['creation_metadata'] = metadata
         d['fields'] = constraints
@@ -351,15 +353,15 @@ class DatasetConstraints(object):
                       file=sys.stderr)
 
     def to_json_report(self, outpath=None):
-        return write_or_return({'json': 'report'}, json.dump, json.dumps,
+        return write_or_return(self.to_json(), json.dump, json.dumps,
                                path=outpath)
 
     def to_yaml_report(self, outpath=None):
-        return write_or_return({'json': 'report'}, yaml.dump, yaml.dump,
+        return write_or_return(self.to_dict(), yaml.dump, yaml.dump,
                                path=outpath)
 
     def to_toml_report(self, outpath=None):
-        return write_or_return({'json': 'report'}, tomli_w.dump,
+        return write_or_return(self.to_dict(), tomli_w.dump,
                                tomli_w.dumps, path=outpath)
 
     def to_text_report(self, outpath=None):
@@ -461,7 +463,7 @@ class FieldConstraints(object):
         The ordering is all to make the JSON file get written in a sensible
         order, rather than being a jumbled mess.
         """
-        d = OrderedDict()
+        d = outdict()
         keys = to_preferred_order(self.constraints.keys(),
                                   STANDARD_FIELD_CONSTRAINTS)
         for k in keys:

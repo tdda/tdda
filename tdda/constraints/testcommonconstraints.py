@@ -10,13 +10,14 @@ TESTDATA_DIR = os.path.join(os.path.dirname(__file__), 'testdata')
 TMPDIR = tempfile.gettempdir()
 
 TDDA_MD_IGNORES = [
-    r'^\s*"local_time": ".*",$',
-    r'^\s*"utc_time": ".*",$',
+    r'''^\s*"?local_time"?: ["'].*['"],?$''',
+    r'''^\s*"?utc_time"?: ['"].*['"],?$''',
     r'^\s*"creator": "TDDA .*",$',
     r'^\s*"source": "/.*tdda/consrtaints/testdata/small7x5.parquet",$',
     r'^\s*"host": ".*",$',
     r'^\s*"user": ".*",$',
 ]
+
 
 def testdata(filename):
     return os.path.join(TESTDATA_DIR, filename)
@@ -109,6 +110,20 @@ class TestDiscoverReports(ReferenceTestCase):
                                  tdpath('small7x5.tdda'),
                                  ignore_patterns=TDDA_MD_IGNORES)
 
+    def testDiscoverYAML(self):
+        name = 'small7x5-constraints.yaml'
+        path = tmppath(name)
+        self.constraints.to_yaml_report(path)
+        self.assertFileCorrect(path, reportpath(name),
+                                 ignore_patterns=TDDA_MD_IGNORES)
+
+    def testDiscoverTOML(self):
+        name = 'small7x5-constraints.toml'
+        path = tmppath(name)
+        self.constraints.to_yaml_report(path)
+        self.assertFileCorrect(path, reportpath(name),
+                                 ignore_patterns=TDDA_MD_IGNORES)
+
     def testDiscoverTextTable(self):
         name = 'small7x5-constraints.txt'
         path = tmppath(name)
@@ -132,6 +147,7 @@ class TestDiscoverReports(ReferenceTestCase):
         path = tmppath(name)
         self.constraints.to_html_report(path)
         self.assertFileCorrect(path, reportpath(name))
+
 
 
 
