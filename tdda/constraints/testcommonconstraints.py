@@ -148,6 +148,30 @@ class TestDiscoverReports(ReferenceTestCase):
         self.constraints.to_html_report(path)
         self.assertFileCorrect(path, reportpath(name))
 
+class TestVerificationReports(ReferenceTestCase):
+    @classmethod
+    def setUpClass(cls):
+        small7x5path = testdata('small7x5.parquet')
+        bads_path = testdata('small7x5bad.parquet')
+        constraints_path = testdata('small7x5.tdda')
+        cls.verification = verify(small7x5path, constraints_path,
+                                  verbose=False)
+        cls.bad_verification = verify(bads_path, constraints_path,
+                                      verbose=False)
+
+    def testVerifyGood(self):
+        name = 'small7x5-verification_good.txt'
+        path = tmppath(name)
+        self.assertStringCorrect(self.verification.to_string(),
+                                 reportpath(name))
+
+    def testVerifyBads(self):
+        name = 'small7x5-verification_bad.txt'
+        path = tmppath(name)
+        self.assertStringCorrect(self.bad_verification.to_string(),
+                                 reportpath(name))
+
+
 
 
 

@@ -1557,6 +1557,14 @@ class CommandLineHelper:
         cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
         cls.e92bads3 = os.path.join(cls.test_tmpdir, 'elements92bads3.csv')
 
+        cls.E118summary = (
+            'SUMMARY:\n\n'
+            'Records passing: 91\n'
+            'Records failing: 27\n'
+            'Constraints passing: 57\n'
+            'Constraints failing: 15'
+        )
+
         argv = ['tdda', 'examples', cls.test_tmpdir]
         cls.execute_command(argv)
 
@@ -1658,9 +1666,7 @@ class CommandLineHelper:
                 self.e92bads1, '--per-constraint', '--output-fields',
                 '--index']
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Records passing: 91\n'
-                                                'Records failing: 27'))
+        self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads1))
         self.assertTextFileCorrect(self.e92bads1, 'detect-els-cmdline.csv')
         os.remove(self.e92bads1)
@@ -1670,9 +1676,7 @@ class CommandLineHelper:
                 self.e92bads3, '--per-constraint', '--output-fields',
                 '--interleave']
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Records passing: 91\n'
-                                                'Records failing: 27'))
+        self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads3))
         self.assertTextFileCorrect(self.e92bads3,
                                    'detect-els-cmdline-interleaved.csv')
@@ -1683,9 +1687,7 @@ class CommandLineHelper:
                 self.e92bads2, '--per-constraint', '--output-fields',
                 '--index']
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Records passing: 91\n'
-                                                'Records failing: 27'))
+        self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads2))
         self.assertTextFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
         os.remove(self.e92bads2)

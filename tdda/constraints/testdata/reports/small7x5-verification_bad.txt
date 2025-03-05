@@ -1,0 +1,20 @@
+FIELDS:
+
+id: 2 failures  4 passes  type ✓  min ✓  max ✗  sign ✓  max_nulls ✗  no_duplicates ✓
+
+stringField: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  allowed_values ✓  rex ✓
+
+intField: 0 failures  6 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✓  no_duplicates ✓
+
+realField: 2 failures  3 passes  type ✓  min ✗  max ✓  sign ✗  max_nulls ✓
+
+boolField: 0 failures  4 passes  type ✓  min ✓  max ✓  max_nulls ✓
+
+dateField: 0 failures  4 passes  type ✓  min ✓  max ✓  max_nulls ✓
+
+stringDateField: 0 failures  7 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  allowed_values ✓  rex ✓
+
+SUMMARY:
+
+Constraints passing: 34
+Constraints failing: 4

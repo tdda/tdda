@@ -22,7 +22,10 @@ from collections import namedtuple
 
 import numpy as np
 
-from rich import print as rprint
+import rich
+rprint = rich.print
+rich.reconfigure(highlight=False, soft_wrap=True)
+
 
 TDDADIR = os.path.dirname(__file__)  # base tdda directory for package
 CONSTRAINTSDIR = os.path.join(TDDADIR, 'constraints')
@@ -680,3 +683,12 @@ class Dummy(object):
 
     def to_dict(self):
         return self.__dict__
+
+
+def cprint(*args, colour=None, **kw):
+    if isinstance(colour, dict):
+        colour = colour.get('colour', None)
+    if colour is True:
+        rprint(*args, **kw)
+    else:
+        print(*args, **kw)

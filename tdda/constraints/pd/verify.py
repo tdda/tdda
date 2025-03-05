@@ -40,7 +40,7 @@ from tdda import __version__
 from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.pd.constraints import verify_df, load_df
 
-from tdda.utils import handle_tilde, nvl
+from tdda.utils import handle_tilde, nvl, cprint
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True,
@@ -84,7 +84,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
     df = load_df(df_path, mdpath=mdpath)
     v = verify_df(df, constraints_path, mdpath=mdpath, **kwargs)
     if verbose:
-        print(v)
+        cprint(v.to_string(), colour=kwargs)
     return v
 
 

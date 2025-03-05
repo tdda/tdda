@@ -41,7 +41,7 @@ from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
-from tdda.utils import handle_tilde, nvl
+from tdda.utils import handle_tilde, nvl, cprint
 
 
 def detect_df_from_file(df_path, constraints_path, outpath=None,
@@ -89,7 +89,7 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=False, **kwargs)
     if verbose and outpath is not None and outpath != '-':
-        print(v)
+        cprint(v.to_string(), colour=kwargs)
     return v
 
 

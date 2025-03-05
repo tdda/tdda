@@ -815,7 +815,7 @@ class Verification(object):
                  ascii=False, detect=False, detect_outpath=None,
                  detect_write_all=False, detect_per_constraint=False,
                  detect_output_fields=None, detect_index=False,
-                 detect_in_place=False, **kwargs):
+                 detect_in_place=False, colour=False, **kwargs):
         self.constraints = constraints
         self.fields = TDDAObject()
         self.failures = 0
@@ -823,6 +823,7 @@ class Verification(object):
         self.detection = None
         self.report = report
         self.ascii = ascii
+        self.colour = colour
         self.detect = detect
         self.detect_outpath = detect_outpath
         self.detect_write_all = detect_write_all
@@ -841,7 +842,7 @@ class Verification(object):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 
-    def to_string(self, colour=False, ascii=None):
+    def to_string(self, colour=None, ascii=None):
         """
         Returns string representation of the :py:class:`Verification` object.
 
@@ -850,6 +851,7 @@ class Verification(object):
         then it reports only those fields that have failures.
         """
         ascii = nvl(ascii, self.ascii)
+        colour = nvl(colour, self.colour)
         if self.report in ('fields', 'records'):
             # Report only fields with failures
             field_items = list((field, ver)
@@ -868,22 +870,21 @@ class Verification(object):
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
 
+        out = ['%sSUMMARY:\n' % fields_part]
         if self.report == 'records' and self.detection:
             nf = self.detection.n_failing_records
-            return ('%sSUMMARY:\n\n'
-                    'Records passing: %s\n'
-                    'Records failing: %s'
-                    % (fields_part,
-                       richgood(self.detection.n_passing_records, colour,
-                                nf == 0),
-                       richbad(nf, colour, nf > 0)))
-        else:
-            return ('%sSUMMARY:\n\n'
-                    'Constraints passing: %s\n'
-                    'Constraints failing: %s'
-                    % (fields_part,
-                        richgood(self.passes, colour, self.failures == 0),
-                        richbad(self.failures, colour, self.failures > 0)))
+            out.extend(
+              ['Records passing: %s'
+                % richgood(self.detection.n_passing_records, colour,
+                           nf == 0),
+               'Records failing: %s'
+                % richbad(nf, colour, nf > 0)])
+        out.extend(
+            ['Constraints passing: %s'
+             % richgood(self.passes, colour, self.failures == 0),
+             'Constraints failing: %s'
+             % richbad(self.failures, colour, self.failures > 0)])
+        return '\n'.join(out)
     __str__ = to_string
 
     def write_detection_reports(self, minimal=True):

@@ -31,6 +31,10 @@ Optional flags are:
       Report only fields with failures
   * -7, --ascii
       Report in ASCII form, without using special characters.
+  * --colour, --color
+      Coloured output
+  * --nocolour --nocolor
+      Monochrome output
   * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values.
 '''
@@ -44,6 +48,10 @@ Optional flags are:
       Report only fields with failures
   * -7, --ascii
       Report in ASCII form, without using special characters.
+  * --colour, --color
+      Coloured output
+  * --nocolour --nocolor
+      Monochrome output
   * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values.
   * --write-all
@@ -123,6 +131,14 @@ def verify_parser(usage=''):
                         help='report only fields with failures')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
+    parser.add_argument('--colour', '--color', action='store_true',
+                        help='Use colour in terminal output')
+#    parser.add_argument('--color', action='store_true',
+#                        help='Use colour in terminal output')
+    parser.add_argument('--nocolour', action='store_true',
+                        help='Do not not use colour in terminal output')
+#    parser.add_argument('--nocolor', action='store_true',
+#                        help='Do not not use colour in terminal output')
     parser.add_argument('-r', '--report', nargs='*',
                         help='Report formats to write.')
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
@@ -147,6 +163,10 @@ def detect_parser(usage=''):
                         help='report only fields with failures')
     parser.add_argument('-7', '--ascii', action='store_true',
                         help='report without using special characters')
+    parser.add_argument('--colour', action='store_true',
+                        help='Use colour in terminal output')
+    parser.add_argument('--nocolour', action='store_true',
+                        help='Do not not use colour in terminal output')
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
@@ -199,6 +219,12 @@ def verify_flags(parser, args, params):
         params['report'] = 'fields'
     if flags.ascii:
         params['ascii'] = True
+    if flags.colour: # or flags.color:
+        params['colour'] = True
+    if flags.nocolour: #  or flags.nocolor:
+        params['colour'] = False
+    if flags.ascii:
+        params['ascii'] = True
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
     if flags.epsilon is not None:
@@ -225,6 +251,10 @@ def detect_flags(parser, args, params):
         sys.exit(1)
     if flags.ascii:
         params['ascii'] = True
+    if flags.colour: # or flags.color:
+        params['colour'] = True
+    if flags.nocolour: # or flags.nocolor:
+        params['colour'] = False
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
     if flags.epsilon is not None:
