@@ -12,10 +12,10 @@ TMPDIR = tempfile.gettempdir()
 TDDA_MD_IGNORES = [
     r'''^\s*"?local_time"?: ["'].*['"],?$''',
     r'''^\s*"?utc_time"?: ['"].*['"],?$''',
-    r'''^\s*"?creator"?: ['"]TDDA .*['"],?$''',
-    r'''^\s*"?source"?: ['"]/.*/testdata/small7x5.parquet['"],?$''',
-    r'''^\s*"?host"?: ['"].*['"],?$''',
-    r'''^\s*"?user"?: ['"].*['"],?$''',
+    r'''^\s*"?creator"?: ['"]?TDDA .*['"]?,?$''',
+    r'''^\s*"?source"?: ['"]?/.*/testdata/small7x5.parquet['"]?,?$''',
+    r'''^\s*"?host"?: ['"]?.*['"]?,?$''',
+    r'''^\s*"?user"?: ['"]?.*['"]?,?$''',
 ]
 
 
