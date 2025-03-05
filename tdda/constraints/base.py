@@ -28,7 +28,7 @@ from tdda.version import version
 
 from rich import print as rprint
 
-from artists.miro.rexutils import colour_regexes
+from tdda.rexpy.rexutils import colour_regexes
 
 CONFIG = Config()
 

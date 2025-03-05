@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" title="TDDA Discover Report"?>
+<html>
+    <head>
+	<style type="text/css">.Sans, body {font-family: Geneva, Helvetica, Arial, Verdana, Sans-serif;}
+.tt {font-family: Menlo, monospace, &quot;Andale Mono&quot;, &quot;Courier&quot;, &quot;Courier New&quot;;}
+.separator {margin: 10px 0 10px 0;}
+
+a:link {color: #C00000; text-decoration: none;}
+a:hover {color: #FF0000; text-decoration: none;}
+a:visited{color: #800000; text-decoration: none;}
+
+.tdred {
+ color: #E00000;
+ font-weight: bold;
+}
+.tdgreen {
+ color: #008000;
+}
+.nullgrey {
+ color: #C0C0C0;
+}
+
+table.padrh {
+ padding-left: 20px;
+}
+
+table.padrh th {
+ padding: 0px 3px 0px 3px;
+ text-align: right;
+}
+table.padrh td {
+ padding: 0px 3px 0px 3px;
+ font-family: Courier, &quot;Courier New&quot;, monospace;
+}
+table.solid, table.light {
+ border-spacing: 0px;
+}
+table.solid, table.solid td, table.solid th, table.solid tr {
+ border-collapse: collapse;
+ border: 1px solid #808080;
+ empty-cells: show;
+}
+
+table.solid td {text-align: right}
+table.nb {border-collapse: separate;}
+table.nb,table.nb td, table.nb th, table.nb tr {border: 0px}
+table.rh td {text-align: right;}
+
+tr td.mdl {text-align: left;}
+
+.colsep {
+ width: 0px;
+ background-color: #808080;
+}
+
+.rowsep {
+ height: 0px;
+ background-color: #808080;
+}
+
+table.tdver, table.tdver td, table.tdver th, table.tdver tr {
+ border-collapse: collapse;
+ border: 1px solid #808080; empty-cells: show;
+}
+
+table.tdver tr td, table.tdvercell {
+ margin-left: auto;
+ margin-right: auto;
+}
+
+table.tdvercell, table.tdvercell td, table.tdvercell th, table.tdvercell tr {
+ border-collapse: collapse;
+ border: 0px solid #808080; empty-cells: show;
+ text-align: center;
+}
+
+table.tdvercell td {
+ font-size: x-large;
+ padding: 3px;
+ font-weight: bold;
+}
+
+table.tdver td {
+ padding: 3px;
+}
+
+.break {
+    padding: 6pt;
+}
+&apos;&apos;&apos;
+
+</style>
+    </head>
+    <body>
+	<h1>TDDA Discover Report</h1>
+<table class="solid tdda">
+    <tr>
+	<th colspan="9" bgcolor="#A8A8A8">Individual Field Constraints</th>
+    </tr>
+    <tr>
+	<th bgcolor="#A8A8A8">Field name</th>
+	<th bgcolor="#A8A8A8">Type Allowed</th>
+	<th bgcolor="#A8A8A8">Min Allowed</th>
+	<th bgcolor="#A8A8A8">Max Allowed</th>
+	<th bgcolor="#A8A8A8">Sign Allowed</th>
+	<th bgcolor="#A8A8A8">Nulls Allowed</th>
+	<th bgcolor="#A8A8A8">Duplicates Allowed</th>
+	<th bgcolor="#A8A8A8">Values Allowed</th>
+	<th bgcolor="#A8A8A8">Regular Expressions</th>
+    </tr>
+    <tr>
+	<td>id</td>
+	<td>&quot;int&quot;</td>
+	<td>1</td>
+	<td>5</td>
+	<td>&quot;positive&quot;</td>
+	<td>0</td>
+	<td>no</td>
+	<td/>
+	<td/>
+    </tr>
+    <tr>
+	<td>stringField</td>
+	<td>&quot;string&quot;</td>
+	<td>3</td>
+	<td>8</td>
+	<td/>
+	<td>0</td>
+	<td/>
+	<td>&quot;one&quot;<br/>&quot;repeater&quot;<br/>&quot;three&quot;<br/>&quot;two&quot;</td>
+	<td>
+<pre class="emptycommand"><span class="anchor">^</span><span style="color: #303030;">([a-z]+)</span><span class="anchor">$</span></pre>	</td>
+    </tr>
+    <tr>
+	<td>intField</td>
+	<td>&quot;int&quot;</td>
+	<td>1</td>
+	<td>23</td>
+	<td>&quot;positive&quot;</td>
+	<td>1</td>
+	<td>no</td>
+	<td/>
+	<td/>
+    </tr>
+    <tr>
+	<td>realField</td>
+	<td>&quot;real&quot;</td>
+	<td>1.0</td>
+	<td>1000.0</td>
+	<td>&quot;positive&quot;</td>
+	<td>1</td>
+	<td/>
+	<td/>
+	<td/>
+    </tr>
+    <tr>
+	<td>boolField</td>
+	<td>&quot;bool&quot;</td>
+	<td>false</td>
+	<td>true</td>
+	<td/>
+	<td>1</td>
+	<td/>
+	<td/>
+	<td/>
+    </tr>
+    <tr>
+	<td>dateField</td>
+	<td>&quot;date&quot;</td>
+	<td>2011-01-01T01:11:11</td>
+	<td>2055-05-05T05:55:55</td>
+	<td/>
+	<td>1</td>
+	<td/>
+	<td/>
+	<td/>
+    </tr>
+    <tr>
+	<td>stringDateField</td>
+	<td>&quot;string&quot;</td>
+	<td>19</td>
+	<td>19</td>
+	<td/>
+	<td>1</td>
+	<td>no</td>
+	<td>&quot;2011-01-01T01:11:11&quot;<br/>&quot;2022-02-02T02:22:22&quot;<br/>&quot;2033-03-03T03:33:33&quot;<br/>&quot;2044-04-04T04:44:44&quot;</td>
+	<td>
+<pre class="emptycommand"><span class="anchor">^</span><span style="color: #303030;">([0-9]{4})</span><span style="color: #BF0F00;">\-</span><span style="color: #008AA5;">([0-9]{2})</span><span style="color: #E57200;">\-</span><span style="color: #007F15;">([0-9]{2})</span><span style="color: #6C00D8;">([A-Z])</span><span style="color: #303030;">([0-9]{2})</span><span style="color: #BF0F00;">:</span><span style="color: #008AA5;">([0-9]{2})</span><span style="color: #E57200;">:</span><span style="color: #007F15;">([0-9]{2})</span><span class="anchor">$</span></pre>	</td>
+    </tr>
+</table>
+<div class="separator">
+</div>
+    </body>
+</html>
