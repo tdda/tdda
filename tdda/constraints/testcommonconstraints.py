@@ -119,6 +119,7 @@ class TestDiscoverReports(ReferenceTestCase):
     def testDiscoverHTMLTable(self):
         name = 'small7x5-constraints.html'
         path = tmppath(name)
+        self.constraints.to_html_report(path)
         self.assertFileCorrect(path, reportpath(name))
 
 
