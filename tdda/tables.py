@@ -387,7 +387,8 @@ class Table:
                     fmt = ColWithinColFormat(tableWidth, ghw, 'c')
                 else:
                     fmt = '%s'
-                fmt = '|%s%s' % (fmt, '|' * nCols)
+                if flavour == 'mmd':
+                    fmt = '|%s%s' % (fmt, '|' * nCols)
                 s.append(fmt % self.groupHeader)
 
             if uHeader:

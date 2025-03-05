@@ -366,9 +366,9 @@ class DatasetConstraints(object):
         return write_or_return(self.table.toString(), fwrite, passthrough,
                                path=outpath)
 
-    def to_markdown_report(self, outpath=None):
-        return write_or_return(self.table.toMarkdown(), fwrite, passthrough,
-                               path=outpath)
+    def to_markdown_report(self, outpath=None, flavour='github'):
+        return write_or_return(self.table.toMarkdown(flavour=flavour),
+                               fwrite, passthrough, path=outpath)
 
     def to_html_report(self, outpath=None):
         xml = XML(

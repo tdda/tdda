@@ -108,17 +108,23 @@ class TestDiscoverReports(ReferenceTestCase):
         self.assertStringCorrect(self.constraints_json,
                                  tdpath('small7x5.tdda'),
                                  ignore_patterns=TDDA_MD_IGNORES)
+
     def testDiscoverTextTable(self):
         name = 'small7x5-constraints.txt'
         path = tmppath(name)
         self.constraints.to_text_report(path)
         self.assertFileCorrect(path, reportpath(name))
 
-    @tag
     def testMarkdownTable(self):
         name = 'small7x5-constraints.md'
         path = tmppath(name)
         self.constraints.to_markdown_report(path)
+        self.assertFileCorrect(path, reportpath(name))
+
+    def testMultiMarkdownTable(self):
+        name = 'small7x5-constraints-mmd.md'
+        path = tmppath(name)
+        self.constraints.to_markdown_report(path, flavour='mmd')
         self.assertFileCorrect(path, reportpath(name))
 
     def testDiscoverHTMLTable(self):
