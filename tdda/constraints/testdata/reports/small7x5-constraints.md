@@ -1,4 +1,4 @@
-                                                                             Individual Field Constraints                                                                             
+|                                                                             Individual Field Constraints                                                                             |||||||||
 |      Field name | Type Allowed |         Min Allowed |         Max Allowed | Sign Allowed | Nulls Allowed | Duplicates Allowed |        Values Allowed |                                                             Regular Expressions |
 | --------------- | ------------ | ------------------- | ------------------- | ------------ | ------------- | ------------------ | --------------------- | ------------------------------------------------------------------------------- |
 |              id |      "int"   |                   1 |                   5 |  "positive"  |       0       |         no         |                       |                                                                                 |
