@@ -917,5 +917,5 @@ Avoid extra DB open in SQLite3 tests
 Removed feather and pmmif
 
 ###
-Add rexutils.py; tweak utils.py
+Add rexutils.py; tweak utils.py.
 """
