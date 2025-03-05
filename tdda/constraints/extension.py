@@ -247,11 +247,15 @@ class BaseConstraintCalculator:
         """
         raise NotImplementedError('types_compatible')
 
-    def allowed_values_exclusions(self):
-        """
-        Get list of values to ignore when computing allowed values
-        """
-        return [None]
+    # def allowed_values_exclusions(self):
+    #     """
+    #     Get list of values to ignore when computing allowed values
+    #     """
+    #     return [None]
+
+    def filter_out_nulls(self, values):
+        return {v for v in values if not v is None}
+
 
     def calc_tdda_type(self, colname):
         """

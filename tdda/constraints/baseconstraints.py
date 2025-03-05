@@ -386,7 +386,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         if not self.column_exists(colname):
             return False
 
-        exclusions = self.allowed_values_exclusions()
+        #exclusions = self.allowed_values_exclusions()
         allowed_values = constraint.value
         if allowed_values is None:      # a null value is not considered
             return True                 # to be an active constraint,
@@ -400,10 +400,11 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             result = False
         else:
             actual_values = self.get_unique_values(colname)
-            exclusions = exclusions or []
+            #exclusions = exclusions or []
 
-            violations = (set(actual_values) - set(allowed_values)
-                                             - set(exclusions))
+            violations = (
+                self.filter_out_nulls(actual_values) - set(allowed_values)
+            )
             result = len(violations) == 0
 
         if detect and not bool(result):

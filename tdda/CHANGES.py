@@ -935,5 +935,10 @@ Also added Makefile with entry to build coverage report.
 
 Tables --- discover html, text, and markdown tables for now.
 Includes multimarkdown or GitHub
+
+Change constraint back ends to use filter_out_nulls.
+(Previously, back ends supplied values to ignore in allowed_values,
+which doesn't really work with Pandas and doesn't feel altogether
+safe.)
 ----------------------- end of dev -----------------------------
 """

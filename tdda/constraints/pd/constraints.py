@@ -171,10 +171,13 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return all(type(v) is bool for i, v in nn.iteritems())
         #return all(type(v) is bool for v in nn.to_list())
 
-    def allowed_values_exclusions(self):
-        # remarkably, Pandas returns various kinds of nulls as
-        # unique values, despite not counting them with .nunique()
-        return [None, np.nan, pd.NaT]
+    # def allowed_values_exclusions(self):
+    #     # remarkably, Pandas returns various kinds of nulls as
+    #     # unique values, despite not counting them with .nunique()
+    #     return [None, np.nan, pd.NaT, pd.NA, float('nan')]
+
+    def filter_out_nulls(self, values):
+        return {v for v in values if not pd.isnull(v)}
 
     def find_rexes(self, colname, values=None, seed=None):
         if values is None:
@@ -309,7 +312,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                          violations):
         name = verification_field(colname, 'allowed_values')
         c = self.df[colname]
-        self.out_df[name] = detection_field(c, ~ c.isin(violations))
+        self.out_df[name] = detection_field(c, ~c.isin(violations))
 
     def detect_rex_constraint(self, colname, violations):
         name = verification_field(colname, 'rex')
