@@ -533,7 +533,7 @@ class SQLDatabaseHandler:
         else:
             return table
 
-    def check_table_exists(self, tablename):
+    def table_exists(self, tablename):
         """
         Check that a table (or a schema.table) exists and is accessible.
         """
@@ -564,6 +564,15 @@ class SQLDatabaseHandler:
             # no permission to see any tables, so wrong credentials
             raise Exception('Permission denied')
         return self.execute_scalar(sql) > 0
+
+    def drop_table_if_exists(self, tablename):
+        if self.table_exists(tablename):
+            self.drop_table(tablename)
+
+    def drop_table(self, tablename):
+        table = self.resolve_table(tablename)
+        sql = 'DROP TABLE %s CASCADE' % table
+        self.execute_commit(sql)
 
     def get_nrows(self, tablename):
         (schema, table) = self.split_name(tablename)
@@ -763,6 +772,27 @@ class SQLDatabaseHandler:
                % (tablename, name, ' OR '.join(rexprs)))
         return self.execute_scalar(sql) == 0
 
+    def rex_match_sql(self, qname, rexes):
+        if rexes is None:      # a null value is not considered to be an
+            return ''          # active constraint, so is always satisfied
+
+        if self.dbtype in ('postgres', 'postgresql'):
+            # postgresql uses ~ syntax
+            rexprs = ["(%s ~ '%s')" % (qname, r) for r in rexes]
+        elif self.dbtype == 'mysql':
+            # mysql uses REGEXP syntax, and doesn't understand \d
+            rexes = [r.replace('\\d', '[0-9]') for r in rexes]
+            rexprs = ["(%s REGEXP '%s')" % (qname, r) for r in rexes]
+        elif self.dbtype == 'sqlite':
+            # sqlite doesn't support regular expressions unless the
+            # regexp() user-defined function is available - but we have
+            # arranged for that in the database_connection_mongodb function.
+            rexprs = ["(%s REGEXP '%s')" % (qname, r) for r in rexes]
+        else:
+            raise Exception('Unsupported database type')
+
+        return ' OR '.join(rexprs)
+
     def cast_bool_to_int(self, s):
         if self.dbtype == 'mysql':
             return s
@@ -805,7 +835,7 @@ class MongoDBDatabaseHandler:
     def resolve_table(self, name):
         return name
 
-    def check_table_exists(self, tablename):
+    def table_exists(self, tablename):
         try:
             self.find_collection(tablename)
             return True

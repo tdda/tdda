@@ -1405,3 +1405,12 @@ def fwrite(content, f):
 
 def passthrough(content):
     return content
+
+
+def constraints_from_path_or_dict(path_or_dict):
+    if isinstance(path_or_dict, dict):
+        constraints = DatasetConstraints()
+        constraints.initialize_from_dict(native_definite(path_or_dict))
+    else:
+        constraints = DatasetConstraints(loadpath=path_or_dict)
+    return constraints

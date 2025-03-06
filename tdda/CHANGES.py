@@ -940,5 +940,7 @@ Change constraint back ends to use filter_out_nulls.
 (Previously, back ends supplied values to ignore in allowed_values,
 which doesn't really work with Pandas and doesn't feel altogether
 safe.)
+
+Database detect starting to work
 ----------------------- end of dev -----------------------------
 """

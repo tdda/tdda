@@ -83,8 +83,8 @@ class TestDatabaseHandlers:
     """
     def test_connection(self):
         elements = self.dbh.resolve_table('elements')
-        self.assertTrue(self.dbh.check_table_exists(elements))
-        self.assertFalse(self.dbh.check_table_exists('does_not_exist'))
+        self.assertTrue(self.dbh.table_exists(elements))
+        self.assertFalse(self.dbh.table_exists('does_not_exist'))
 
     def test_handler_simple_ops(self):
         elements = self.dbh.resolve_table('elements')
@@ -225,16 +225,16 @@ class TestSQLiteDB(
         db = self.db
         dbh = self.dbh
         elements = dbh.resolve_table('elements')
-        self.assertTrue(dbh.check_table_exists(elements))
-        self.assertFalse(dbh.check_table_exists('does_not_exist'))
+        self.assertTrue(dbh.table_exists(elements))
+        self.assertFalse(dbh.table_exists('does_not_exist'))
 
     def test_sqlite_connection_from_file(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
         db = database_connection(conn=connfile)
         dbh = DatabaseHandler('sqlite', db)
         elements = dbh.resolve_table('elements')
-        self.assertTrue(dbh.check_table_exists(elements))
-        self.assertFalse(dbh.check_table_exists('does_not_exist'))
+        self.assertTrue(dbh.table_exists(elements))
+        self.assertFalse(dbh.table_exists('does_not_exist'))
 
 
 

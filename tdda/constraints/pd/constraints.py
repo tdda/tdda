@@ -46,7 +46,9 @@ from tdda.constraints.base import (
     DatasetConstraints,
     Verification,
     Detection,
-    fuzz_up, fuzz_down,
+    constraints_from_path_or_dict,
+    fuzz_down,
+    fuzz_up,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -990,11 +992,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
     """
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
-    if isinstance(constraints_path, dict):
-        constraints = DatasetConstraints()
-        constraints.initialize_from_dict(native_definite(constraints_path))
-    else:
-        constraints = DatasetConstraints(loadpath=constraints_path)
+    constraints = constraints_from_path_or_dict(constraints_path)
     if repair:
         pdv.repair_field_types(constraints)
     return pdv.detect(constraints, VerificationClass=PandasDetection,

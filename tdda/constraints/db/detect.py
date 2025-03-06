@@ -33,10 +33,10 @@ from tdda.constraints.db.drivers import (database_connection, parse_table_name,
                                          database_arg_flags)
 
 
-def detect_database_table_from_file(table, constraints_path,
-                                    conn=None, dbtype=None, db=None,
-                                    host=None, port=None, user=None,
-                                    password=None, **kwargs):
+def detect_database_table_cli(table, constraints_path, destination,
+                              conn=None, dbtype=None, db=None,
+                              host=None, port=None, user=None,
+                              password=None, **kwargs):
     """
     detect using the given database table, against constraints in the .tdda
     file specified.
@@ -44,10 +44,12 @@ def detect_database_table_from_file(table, constraints_path,
     Not implemented
     """
     (table, dbtype) = parse_table_name(table, dbtype)
-    db = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                             host=host, port=port,
-                             user=user, password=password)
-    print(detect_db_table(dbtype, db, table, constraints_path, **kwargs))
+    dest_pair = parse_table_name(destination, dbtype)
+    dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
+                              host=host, port=port,
+                              user=user, password=password)
+    print(detect_db_table(dbtype, dbc, table, constraints_path,
+                          destination=dest_pair, **kwargs))
 
 
 def get_detect_params(args):
@@ -62,7 +64,7 @@ def get_detect_params(args):
     params['table'] = flags.table[0] if flags.table else None
     params['constraints_path'] = (flags.constraints[0] if flags.constraints
                                   else None)
-    params['outpath'] = flags.outpath
+    params['destination'] = flags.outpath
     return params
 
 
@@ -73,7 +75,7 @@ class DatabaseDetector:
 
     def detect(self):
         params = get_detect_params(self.argv[1:])
-        detect_database_table_from_file(**params)
+        detect_database_table_cli(**params)
 
 
 def main(argv):

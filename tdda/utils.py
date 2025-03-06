@@ -673,6 +673,14 @@ def DQuote(string, escape=True):
     return '"%s"' % quoted
 
 
+def squote(string, escape=True):
+    parts = string.split("'")
+    if escape:
+        parts = [p.replace('\\', r'\\').replace('\n', r'\n') for p in parts]
+    quoted = ('\\"').join(parts)
+    return "'%s'" % quoted
+
+
 class Dummy(object):
     """
     A dummy object. For whatever.
