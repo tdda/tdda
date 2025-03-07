@@ -176,4 +176,4 @@ class TestVerificationReports(ReferenceTestCase):
 
 
 if __name__ == '__main__':
-    ReferenceTestCase.main()
+    ReferenceTestCase.main(testtdda=1)

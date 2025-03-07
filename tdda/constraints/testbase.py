@@ -171,4 +171,4 @@ TestConstraints.set_default_data_location(TESTDATA_DIR)
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(testtdda=1)

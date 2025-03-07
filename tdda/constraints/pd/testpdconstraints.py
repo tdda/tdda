@@ -1918,4 +1918,4 @@ def check_shell_output(args):
 
 
 if __name__ == '__main__':
-    ReferenceTestCase.main()
+    ReferenceTestCase.main(testtdda=1)

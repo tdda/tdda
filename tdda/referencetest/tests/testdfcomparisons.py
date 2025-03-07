@@ -400,4 +400,4 @@ def rich_capture(content):
 
 if __name__ == '__main__':
     # write_ref()              # generate test files
-    ReferenceTestCase.main()
+    ReferenceTestCase.main(testtdda=1)

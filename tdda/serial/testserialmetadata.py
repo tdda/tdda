@@ -1282,4 +1282,4 @@ def remove_common_key_vals(left, right):
 
 
 if __name__ == '__main__':
-    ReferenceTestCase.main()
+    ReferenceTestCase.main(testtdda=1)
