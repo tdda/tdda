@@ -22,9 +22,8 @@ from itertools import chain
 
 from rich.table import Table
 
+from tdda.config import Config
 from tdda.utils import nvl
-
-from tdda.state import params
 
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
@@ -213,7 +212,7 @@ class SameStructureDDiff:
         self.n_diff_rows = n_rows
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
-
+        self.config = Config()
 
     def __str__(self):
         lines = [
@@ -241,16 +240,16 @@ class SameStructureDDiff:
         n = min(target_rows, self.n_diff_rows)
         cols = list(self.diff_df)
         m = len(cols)
-        p = params.referencetest
-        vertical = nvl(p.vertical, False)
-        prefix = vertical and (p.mono or p.bw)
+        C = self.config.referencetest
+        vertical = nvl(C.vertical, False)
+        prefix = vertical and (C.mono or C.bw)
 #        if self.n_diff_rows <= n:
         if True:
             # Extract small dataframes with diffs  n x m
             L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             indexes = [
-                p.common(v, dim_if_not_bw=True) for v in L.index.to_list()
+                C.common(v, dim_if_not_bw=True) for v in L.index.to_list()
             ]
             rows = []
             plain_rows = []
@@ -258,20 +257,20 @@ class SameStructureDDiff:
                 l_vals = [py_val(L.iat[r, c]) for c in range(m)]
                 r_vals = [py_val(R.iat[r, c]) for c in range(m)]
                 lstr = [
-                    p.common(left) if left == right
-                                    else p.left_diff(left, prefix)
+                    C.common(left) if left == right
+                                    else C.left_diff(left, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 rstr = [
-                    p.common(right) if left == right
-                                    else p.right_diff(right, prefix)
+                    C.common(right) if left == right
+                                    else C.right_diff(right, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 plstr = [
-                    p.left_annotated(left, prefix) for left in l_vals
+                    C.left_annotated(left, prefix) for left in l_vals
                 ]
                 prstr = [
-                    p.right_annotated(right, prefix) for right in r_vals
+                    C.right_annotated(right, prefix) for right in r_vals
                 ]
                 if vertical:
                     rows.append([indexes[r]] + lstr)
@@ -325,7 +324,7 @@ class SameStructureDDiff:
                 if vertical:
                     table.add_column(col, justify='right', no_wrap=True)
                 else:
-                    pL, pR = p.stripped_prefixes()
+                    pL, pR = C.stripped_prefixes()
                     table.add_column(col + pL, justify='right', no_wrap=True)
                     table.add_column(col + pR, justify='right', no_wrap=True)
             for row in rows:

@@ -30,7 +30,7 @@ from rich import print as rprint
 
 from tdda.rexpy.rexutils import colour_regexes
 
-CONFIG = Config()
+# CONFIG = Config()
 
 outdict = dict
 

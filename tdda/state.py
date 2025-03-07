@@ -1,7 +1,4 @@
-import os
-
-from tdda.params import TDDAParams
-from tdda.utils import handle_tilde
+from tdda.config import Config
 
 
 class StateParams:
@@ -23,11 +20,11 @@ class StateParams:
         finally:
             params.testing = False
     """
-    custom = TDDAParams()
+    custom = Config()
     custom.referencetest.right_colour = 'blue'
     custom._testing = True
 
-    default = TDDAParams()
+    default = Config()
     default._testing = False
 
     testing = False
