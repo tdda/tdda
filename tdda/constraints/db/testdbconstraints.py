@@ -53,8 +53,15 @@ from tdda.constraints.db.drivers import (
     DatabaseHandler,
     initialize_db,
 )
-from tdda.constraints.db.constraints import (verify_db_table,
-                                             discover_db_table)
+
+from tdda.constraints.db.constraints import (
+    discover_db_table,
+    verify_db_table,
+    detect_db_table
+)
+
+from tdda.utils import dump_as_json
+
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
@@ -169,7 +176,6 @@ class TestDatabaseConstraintDiscoverers:
                                                     '"dataset":',
                                                     '"tddafile":'])
 
-
 class TestDatabaseConstraintVerifiers:
     """
     Mix-in class, to be used in a subclass that also inherits ReferenceTestCase
@@ -199,6 +205,27 @@ class TestDatabaseConstraintVerifiers:
             for name, value in field.items():
                 self.assertEqual(type(value), bool)
 
+
+class TestDatabaseDetect:
+    @tag
+    def test_detect_elements(self):
+        constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
+        source_table = self.dbh.resolve_table('elements')
+        dest_table = self.dbh.resolve_table('bad_elements')
+        dest_pair = (dest_table, self.dbh.dbtype)  # might be different
+                                                   # eventually
+        result = detect_db_table(self.dbh.dbtype, self.db, source_table,
+                                 constraints_file, dest_pair,
+                                 testing=True)
+        self.assertEqual(result.passes, 57)
+        self.assertEqual(result.failures, 15)
+        del result.sql
+        print(dump_as_json(result.fields))
+        print(dump_as_json(result.fields['Z']))
+        for f, v in result.fields.items():
+            passes = len([c for c in v.values() if c])
+            fails = len([c for c in v.values() if not c])
+            print(f, 'passes', passes, 'failures', fails)
 
 
 
@@ -244,6 +271,7 @@ class TestPostgresDB(
     TestDatabaseHandlers,
     TestDatabaseConstraintDiscoverers,
     TestDatabaseConstraintVerifiers,
+    TestDatabaseDetect,
 ):
     @classmethod
     def setUpClass(cls):

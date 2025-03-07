@@ -22,6 +22,7 @@ import sys
 
 from tdda.constraints.base import (
     DatasetConstraints,
+    FieldConstraints,
     Verification,
     constraints_from_path_or_dict,
 )
@@ -34,7 +35,7 @@ from tdda.constraints.baseconstraints import (
 )
 
 from tdda.constraints.db.drivers import DatabaseHandler
-from tdda.utils import squote
+from tdda.utils import squote, remove_falsy_values
 from tdda import rexpy
 
 
@@ -164,9 +165,9 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
     """
     def __init__(self, dbtype, dbc, tablename,
                  epsilon=None, type_checking='strict', **kwargs):
-        DatabaseHandler.__init__(self, dbtype, dbc)
+        #DatabaseHandler.__init__(self, dbtype, dbc, tablename)
+        DatabaseConstraintVerifier.__init__(self, dbtype, dbc, tablename)
         self.dbtype = dbtype
-        #self.tablename = tablename
         self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
@@ -174,7 +175,28 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True):
-        # self.verify(constraints, VerificationClass=DatabaseVerification)
+        ver = self.verify(constraints, VerificationClass=DatabaseVerification)
+
+        # Build map from names of fields with failures
+        # to the failing constraints (only)
+        failure_map = remove_falsy_values({
+            field: [c for (c, ok) in fc.items() if not ok]
+            for field, fc in ver.fields.items()
+        })
+        d = {}
+        for field, fc in constraints.fields.items():
+            L = []
+            if field in failure_map:
+                fails = failure_map[field]
+                for kind, constraint in fc.constraints.items():
+                    if kind in fails:
+                        L.append(constraint)
+            if L:
+                d[field] = FieldConstraints(field, L)
+        failure_field_constraints = d
+        print(d)
+        ver.n_failing_fields = len(failure_map)
+        ver.n_passing_fields = len(ver.fields) - ver.n_failing_fields
         raw_dest_name, dest_dbtype = dest_pair
         dest_name = self.resolve_table(raw_dest_name, quote=True)
 
@@ -183,10 +205,10 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
                             'writing to same RDBMS.')
         self.drop_table_if_exists(raw_dest_name)
         exprs = [] if self.interleave else [
-            self.quoted(field) for f in constraints.fields
+            self.quoted(field) for f in failing_constraints
         ]
         detection_fields = []
-        for fc in constraints.fields.values():
+        for fc in failure_field_constraints.values():
             if self.interleave:
                 exprs.append(self.quoted(fc.name))
             exprs.extend(self.detection_field_expressions(fc))
@@ -204,11 +226,10 @@ SELECT *,
        {n_failures_field}
 FROM BASE
 '''.strip()
+        ver.sql = sql
         if execute:
             self.execute_commit(sql)
-            return f'{raw_dest_name} created'
-        else:
-            return sql
+        return ver
 
 
     def detection_field_expressions(self, fc):

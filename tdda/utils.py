@@ -506,9 +506,19 @@ def json_sanitize(v):
         return [json_sanitize(u) for u in v]
     elif isinstance(v, dict):
         return {str(k): str(u) for k, u in v.items()}
+    elif hasattr(v, '__dict__'):
+        return json_sanitize(v.__dict__)
     else:
         s = str(v)
         return s[:-9] if s.endswith('00:00:00') else s  # slightly dodgy
+
+
+def dump_as_json(d):
+    return json.dumps(json_sanitize(d), indent=4, ensure_ascii=False)
+
+
+def remove_falsy_values(d):
+    return {k: v for k, v in d.items() if v}
 
 
 def strip_lines(s):
