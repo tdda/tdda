@@ -7,12 +7,12 @@ import tomli
 DATETIME_RE ='^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
 class Override:
-    def override(self, d):
+    def override(self, d, complain):
         for k, v in d.items():
             if k in self.__dict__ and not k.startswith('_'):
                 self.__dict__[k] = v
             elif complain:
-                part = self.part
+                part = self._part
                 print(f'Unknown configuration parameter {k} '
                       f'ignored{(" " + part) if part else ""}.',
                       file=sys.stderr)
@@ -25,22 +25,22 @@ class Config(Override):
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
         if load or load is None and not 'TDDA_SELF_TEST' in os.environ:
-            self.load()
+            self.load(complain=complain)
 
-    def load(self):
+    def load(self, complain=True):
         config_path = os.path.expanduser('~/.tdda.toml')
         if os.path.exists(config_path):
             with open(config_path, 'rb') as f:
                 d = tomli.load(f)
                 rc = d.get('referencetest')
                 if rc:
-                    self.referencetest.override(rc)
+                    self.referencetest.override(rc, complain)
                     del d['referencetest']
                 cc = d.get('constraints')
                 if cc:
-                    self.constraints.override(cc)
+                    self.constraints.override(cc, complain)
                     del d['constraints']
-                self.override(d)
+                self.override(d, complain)
 
     def format_failure_values(self, failure):
         if len(failure) == 1:
