@@ -126,14 +126,47 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
                                                constraint.value)
 
 
-class DatabaseConstraintDetector(BaseConstraintDetector,
+class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
+                                 BaseConstraintVerifier,
                                  DatabaseHandler):
+    """
+    A :py:class:`DatabaseConstraintVerifier` object provides methods
+    for verifying every type of constraint against a single database table.
+    """
+    def __init__(self, dbtype, dbc, source_table,
+                 epsilon=None, type_checking='strict', testing=False):
+        """
+        Inputs:
+
+            *dbtype*:
+                    Type of database.
+            *dbc*:
+                    A DB-API database connection object (as obtained from
+                    a call to the connect() method on the underlying database
+                    driver).
+            *tablename*:
+                    A table name, referring to a table that exists in the
+                    database and is accessible. It can either be a simple
+                    name, or a schema-qualified name of the form `schema.name`.
+        """
+        DatabaseHandler.__init__(self, dbtype, dbc)
+        source_table = self.resolve_table(source_table)
+
+        DatabaseConstraintCalculator.__init__(self, source_table, testing)
+        #DatabaseConstraintDetector.__init__(self, dbtype, dbc, source_table)
+        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
+                                        type_checking=type_checking)
+
+
+class DatabaseConstraintDetector(DatabaseConstraintVerifier,
+                                 BaseConstraintDetector):
     """
     """
     def __init__(self, dbtype, dbc, tablename,
                  epsilon=None, type_checking='strict', **kwargs):
         DatabaseHandler.__init__(self, dbtype, dbc)
         self.dbtype = dbtype
+        #self.tablename = tablename
         self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
@@ -141,8 +174,10 @@ class DatabaseConstraintDetector(BaseConstraintDetector,
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True):
+        # self.verify(constraints, VerificationClass=DatabaseVerification)
         raw_dest_name, dest_dbtype = dest_pair
         dest_name = self.resolve_table(raw_dest_name, quote=True)
+
         if dest_dbtype != self.dbtype:
             raise Exception('Detect from RDBMS currently only supports'
                             'writing to same RDBMS.')
@@ -298,39 +333,6 @@ FROM BASE
 
     def out_field_name(self, field, kind):
         return f'{field}_{kind}_{self.out_field_suffix}'
-
-
-class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
-                                 #DatabaseConstraintDetector,
-                                 BaseConstraintVerifier,
-                                 DatabaseHandler):
-    """
-    A :py:class:`DatabaseConstraintVerifier` object provides methods
-    for verifying every type of constraint against a single database table.
-    """
-    def __init__(self, dbtype, dbc, source_table,
-                 epsilon=None, type_checking='strict', testing=False):
-        """
-        Inputs:
-
-            *dbtype*:
-                    Type of database.
-            *dbc*:
-                    A DB-API database connection object (as obtained from
-                    a call to the connect() method on the underlying database
-                    driver).
-            *tablename*:
-                    A table name, referring to a table that exists in the
-                    database and is accessible. It can either be a simple
-                    name, or a schema-qualified name of the form `schema.name`.
-        """
-        DatabaseHandler.__init__(self, dbtype, dbc)
-        source_table = self.resolve_table(source_table)
-
-        DatabaseConstraintCalculator.__init__(self, source_table, testing)
-        DatabaseConstraintDetector.__init__(self, dbtype, dbc, source_table)
-        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
-                                        type_checking=type_checking)
 
 
 class DatabaseVerification(Verification):

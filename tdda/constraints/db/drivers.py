@@ -533,10 +533,10 @@ class SQLDatabaseHandler:
         (schema, table) = self.split_name(name)
         if schema:
             result = '%s.%s' % (schema, table)
-            return self.quoted_parts(result)
         else:
             result =  table
-            return self.quoted(result)
+        return self.quoted_parts(result) if quote else result
+
 
     def table_exists(self, tablename):
         """
@@ -583,7 +583,8 @@ class SQLDatabaseHandler:
         Returns True unless it fails
         """
         table = self.resolve_table(tablename)
-        sql = 'DROP TABLE %s CASCADE' % table
+        cascade = '' if self.dbtype == 'sqlite' else ' cascade'
+        sql = 'DROP TABLE %s%s' % (table, cascade)
         self.execute_commit(sql)
         return True
 

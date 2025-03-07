@@ -237,9 +237,6 @@ class TestSQLiteDB(
         self.assertFalse(dbh.table_exists('does_not_exist'))
 
 
-
-
-
 @unittest.skipIf(pgdb is None or not os.path.exists(POSTGRES_CONN_FILE),
                  'pgdb not available, or no tdda postgres connection file')
 class TestPostgresDB(
