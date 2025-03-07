@@ -1035,7 +1035,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect_outpath:
         # empty (and then remove) the detection output file first,
-        # so that we can get an early error if the file isn't writeable,
+        # so that we can get an early error if the file isn't writable,
         # and so that we don't leave a bogus wrong file in place if
         # we turn out not to detect anything.
         with open(detect_outpath, 'w') as f:

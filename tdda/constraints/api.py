@@ -173,12 +173,8 @@ def detect(df_path, constraints_path, outpath=None, backend=DEFAULT_BACKEND,
         detect_df(indata, constraints_path, outpath=outpath,
                   verbose=verbose, **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
-        dect_df_from_file(indata, constraints_path, verbose=verbose,
+        detect_df_from_file(indata, constraints_path, verbose=verbose,
                           outpath=outpath, **kwargs)
     else:
         print('Unsupported detect mode', file=sys.stderr)
         sys.exit(1)
-
-
-
-

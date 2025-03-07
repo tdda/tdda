@@ -474,6 +474,9 @@ class SQLDatabaseHandler:
         else:
             return '"%s"' % name
 
+    def quoted_parts(self, name):
+        return '.'.join(self.quoted(part) for part in name.split('.'))
+
     def execute_scalar(self, sql):
         # execute a SQL statement, returning a single scalar result
         self.cursor.execute(sql)
@@ -523,15 +526,17 @@ class SQLDatabaseHandler:
             schema = parts[0]
             table = parts[1]
         else:
-            raise Exception('Bad table format %s' % tablename)
+            raise Exception('Bad table format %s' % name)
         return (schema, table)
 
-    def resolve_table(self, name):
+    def resolve_table(self, name, quote=False):
         (schema, table) = self.split_name(name)
         if schema:
-            return '%s.%s' % (schema, table)
+            result = '%s.%s' % (schema, table)
+            return self.quoted_parts(result)
         else:
-            return table
+            result =  table
+            return self.quoted(result)
 
     def table_exists(self, tablename):
         """
@@ -566,13 +571,21 @@ class SQLDatabaseHandler:
         return self.execute_scalar(sql) > 0
 
     def drop_table_if_exists(self, tablename):
+        """
+        Returns True if dropped; false if didn't exist
+        """
         if self.table_exists(tablename):
-            self.drop_table(tablename)
+            return self.drop_table(tablename)
+        return False
 
     def drop_table(self, tablename):
+        """
+        Returns True unless it fails
+        """
         table = self.resolve_table(tablename)
         sql = 'DROP TABLE %s CASCADE' % table
         self.execute_commit(sql)
+        return True
 
     def get_nrows(self, tablename):
         (schema, table) = self.split_name(tablename)

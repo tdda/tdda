@@ -134,19 +134,19 @@ class DatabaseConstraintDetector(BaseConstraintDetector,
                  epsilon=None, type_checking='strict', **kwargs):
         DatabaseHandler.__init__(self, dbtype, dbc)
         self.dbtype = dbtype
-        self.source_table = self.resolve_table(tablename)
+        self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
         self.interleave = True
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True):
-        dest_name, dest_dbtype = dest_pair
-        dest_name = self.quoted(self.resolve_table(dest_name))
+        raw_dest_name, dest_dbtype = dest_pair
+        dest_name = self.resolve_table(raw_dest_name, quote=True)
         if dest_dbtype != self.dbtype:
             raise Exception('Detect from RDBMS currently only supports'
                             'writing to same RDBMS.')
-        self.drop_table_if_exists(dest_name)
+        self.drop_table_if_exists(raw_dest_name)
         exprs = [] if self.interleave else [
             self.quoted(field) for f in constraints.fields
         ]
@@ -171,7 +171,7 @@ FROM BASE
 '''.strip()
         if execute:
             self.execute_commit(sql)
-            return f'{dest_name} created'
+            return f'{raw_dest_name} created'
         else:
             return sql
 
@@ -301,7 +301,7 @@ FROM BASE
 
 
 class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
-                                 DatabaseConstraintDetector,
+                                 #DatabaseConstraintDetector,
                                  BaseConstraintVerifier,
                                  DatabaseHandler):
     """
