@@ -4,9 +4,9 @@ from tdda.referencetest.checkpandas import (
     PandasComparison,
     same_structure_dataframe_diffs
 )
+from tdda.config import Config
 
 import argparse
-from tdda.state import params
 
 from rich import print as rprint
 from rich.console import Console
@@ -48,7 +48,8 @@ Notes
 '''
 
 class TDDADiff:
-    def __init__(self, args):
+    def __init__(self, args, config=None):
+        self.config = config or Config()
         self.args = args
         self.process_args()
 
@@ -77,7 +78,7 @@ class TDDADiff:
     def process_args(self):
         parser = self.parser()
         flags, more = parser.parse_known_args(self.args)
-        p = params.referencetest
+        p = self.config.referencetest
         self.fields = None
 
         if more:

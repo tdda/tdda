@@ -8,6 +8,43 @@ import argparse
 import sys
 
 
+def help_defaults(help=True, seven=True, colour=True, config=True,
+                  epsilon=False):
+    out = []
+    if epsilon:
+        out.append('''
+  * --epsilon E
+      Use this value of epsilon for fuzziness in comparing numeric values.
+''')
+    if seven:
+        out.append('''
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+''')
+    if colour:
+        out.append('''
+  * --colour, --color
+      Coloured output
+  * --nocolour --nocolor
+      Monochrome output
+''')
+    if config:
+        out.append('''
+  * --config
+      Use ~/tdda.toml to configure tdda
+  * -N, --no-config
+      Do not configure using ~/tdda.toml: use all defaults
+''')
+    return ''.join(o.rstrip() for o in out) + '\n'
+
+    if help:
+        out.append('''
+  * -?, --help
+      Show help
+''')
+    return ''.join(o.rstrip() for o in out) + '\n'
+
+
 DISCOVER_HELP = '''
 Optional flags are:
 
@@ -15,29 +52,19 @@ Optional flags are:
       Include regular expression generation. Disabled by default.
   * -R or --norex
       Exclude regular expression generation (the default)
-
   * -c --report FORMAT1 FORMAT2 ...
       Write constraints reports in the formats listed. Allowed formats
-      are: txt json yaml toml md markdown html.
+      are: txt json yaml toml md markdown html.''' + help_defaults()
 
-'''
-
-VERIFY_HELP = '''
+VERIFY_HELP = ('''
 Optional flags are:
 
   * -a, --all
       Report all fields, even if there are no failures
   * -f, --fields
-      Report only fields with failures
-  * -7, --ascii
-      Report in ASCII form, without using special characters.
-  * --colour, --color
-      Coloured output
-  * --nocolour --nocolor
-      Monochrome output
-  * --epsilon E
-      Use this value of epsilon for fuzziness in comparing numeric values.
-'''
+      Report only fields with failures'''
+      + help_defaults(epsilon=True)
+)
 
 DETECT_HELP = '''
 Optional flags are:
@@ -46,14 +73,6 @@ Optional flags are:
       Report all fields, even if there are no failures
   * -f, --fields
       Report only fields with failures
-  * -7, --ascii
-      Report in ASCII form, without using special characters.
-  * --colour, --color
-      Coloured output
-  * --nocolour --nocolor
-      Monochrome output
-  * --epsilon E
-      Use this value of epsilon for fuzziness in comparing numeric values.
   * --write-all
       Include passing records in the output.
   * --per-constraint
@@ -82,22 +101,19 @@ Optional flags are:
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
       specified. Rows are usually numbered from 1, unless the
-      input file already has an index.
-'''
+      input file already has an index.''' + help_defaults(epsilon=True)
+
 
 def discover_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(prog='tdda discover',
                                      epilog=usage + DISCOVER_HELP,
                                      formatter_class=formatter)
-    parser.add_argument('-?', '--?', action='help',
-                        help='same as -h or --help')
+    add_defaults(parser)
     parser.add_argument('-r', '--rex', action='store_true',
                         help='include regular expression generation')
     parser.add_argument('-R', '--norex', action='store_true',
                         help='exclude regular expression generation')
-    parser.add_argument('-7', '--ascii', action='store_true',
-                        help='report without using special characters')
     parser.add_argument('-c', '--report', nargs='*',
                         help='Report formats to write.')
     return parser
@@ -122,30 +138,17 @@ def verify_parser(usage=''):
     parser = argparse.ArgumentParser(prog='tdda verify',
                                      epilog=usage + VERIFY_HELP,
                                      formatter_class=formatter)
-    parser.add_argument('-?', '--?', action='help',
-                        help='same as -h or --help')
+    add_defaults(parser, epsilon=True)
     parser.add_argument('-a', '--all', action='store_true',
                         help='report all fields, even if there are '
                              'no failures')
     parser.add_argument('-f', '--fields', action='store_true',
                         help='report only fields with failures')
-    parser.add_argument('-7', '--ascii', action='store_true',
-                        help='report without using special characters')
-    parser.add_argument('--colour', '--color', action='store_true',
-                        help='Use colour in terminal output')
-#    parser.add_argument('--color', action='store_true',
-#                        help='Use colour in terminal output')
-    parser.add_argument('--nocolour', action='store_true',
-                        help='Do not not use colour in terminal output')
-#    parser.add_argument('--nocolor', action='store_true',
-#                        help='Do not not use colour in terminal output')
     parser.add_argument('-r', '--report', nargs='*',
                         help='Report formats to write.')
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
-    parser.add_argument('-epsilon', '--epsilon', type=float,
-                        help='epsilon fuzziness')
     return parser
 
 
@@ -154,24 +157,15 @@ def detect_parser(usage=''):
     parser = argparse.ArgumentParser(prog='tdda detect',
                                      epilog=usage + DETECT_HELP,
                                      formatter_class=formatter)
-    parser.add_argument('-?', '--?', action='help',
-                        help='same as -h or --help')
+    add_defaults(parser, epsilon=True)
     parser.add_argument('-a', '--all', action='store_true',
                         help='report all fields, even if there are '
                              'no failures')
     parser.add_argument('-f', '--fields', action='store_true',
                         help='report only fields with failures')
-    parser.add_argument('-7', '--ascii', action='store_true',
-                        help='report without using special characters')
-    parser.add_argument('--colour', action='store_true',
-                        help='Use colour in terminal output')
-    parser.add_argument('--nocolour', action='store_true',
-                        help='Do not not use colour in terminal output')
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
-    parser.add_argument('-epsilon', '--epsilon', type=float,
-                        help='epsilon fuzziness')
     parser.add_argument('--write-all', action='store_true',
                         help='Include passing records')
     parser.add_argument('--per-constraint', action='store_true',
@@ -213,22 +207,13 @@ def verify_flags(parser, args, params):
         'report': 'all',
         'ascii': False,
     })
+    add_flags(flags, params, epsilon=True)
     if flags.all:
         params['report'] = 'all'
     elif flags.fields:
         params['report'] = 'fields'
-    if flags.ascii:
-        params['ascii'] = True
-    if flags.colour: # or flags.color:
-        params['colour'] = True
-    if flags.nocolour: #  or flags.nocolor:
-        params['colour'] = False
-    if flags.ascii:
-        params['ascii'] = True
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
-    if flags.epsilon is not None:
-        params['epsilon'] = float(flags.epsilon)
     return flags
 
 
@@ -241,6 +226,7 @@ def detect_flags(parser, args, params):
         'report': 'records',
         'ascii': False,
     })
+    add_flags(flags, params, epsilon=True)
     if flags.per_constraint and flags.no_per_constraint:
         print('You must not specify both --per-constraint and '
               '--no-per-constraint.', file=sys.stderr)
@@ -249,16 +235,8 @@ def detect_flags(parser, args, params):
         print('You must not specify both --output-fields and '
               '--no-output-fields.', file=sys.stderr)
         sys.exit(1)
-    if flags.ascii:
-        params['ascii'] = True
-    if flags.colour: # or flags.color:
-        params['colour'] = True
-    if flags.nocolour: # or flags.nocolor:
-        params['colour'] = False
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
-    if flags.epsilon is not None:
-        params['epsilon'] = float(flags.epsilon)
     if flags.write_all:
         params['write_all'] = True
     if not flags.no_per_constraint:
@@ -289,6 +267,39 @@ def detect_flags(parser, args, params):
     else:
         params['report_formats'] = []
 
-
     return flags
 
+
+def add_defaults(parser, help=True, seven=True, colour=True, config=True,
+                 epsilon=False):
+    if help:
+        parser.add_argument('-?', '--?', action='help',
+                            help='same as -h or --help')
+    if seven:
+        parser.add_argument('-7', '--ascii', action='store_true',
+                            help='report without using special characters')
+    if config:
+        parser.add_argument('--config', action='store_true',
+                            help='Use ~/.tdda.toml for configuration')
+        parser.add_argument('--no-config', action='store_true',
+                            help='Skip loading ~/.tdda.toml')
+    if colour:
+        parser.add_argument('--colour', '--color', action='store_true',
+                            help='Use colour in terminal output')
+        parser.add_argument('--nocolour', '--nocolor', action='store_true',
+                            help='Do not not use colour in terminal output')
+    if epsilon:
+        parser.add_argument('-epsilon', '--epsilon', type=float,
+                            help='epsilon fuzziness')
+
+
+def add_flags(flags, params, epsilon=False):
+    if flags.ascii:
+        params['ascii'] = True
+    if flags.colour: # or flags.color:
+        params['colour'] = True
+    if flags.nocolour: #  or flags.nocolor:
+        params['colour'] = False
+    if epsilon:
+        if flags.epsilon is not None:
+            params['epsilon'] = float(flags.epsilon)
