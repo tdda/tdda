@@ -49,7 +49,7 @@ Notes
 
 class TDDADiff:
     def __init__(self, args, config=None):
-        self.config = config or Config()
+        #self.config = config or Config()
         self.args = args
         self.process_args()
 
@@ -77,7 +77,11 @@ class TDDADiff:
 
     def process_args(self):
         parser = self.parser()
+        #print(222, self.args)
         flags, more = parser.parse_known_args(self.args)
+        #print(333, flags)
+        #print(555, flags.no_config)
+        self.config = Config(load=not flags.no_config)
         p = self.config.referencetest
         self.fields = None
 
@@ -199,12 +203,14 @@ class TDDADiff:
         parser.add_argument('--xfields', type=str, action='store',
             help='Check all fields except these (comma-separated list)')
 
+        parser.add_argument('--no-config', action='store_true',
+            help='Use default configuration (ignore ~/.tdda.toml)')
         return parser
 
 
 def ddiff_helper(args):
     tddadiff = TDDADiff(args)
-    # print(tddadiff.__dict__)
+    #print(111, args)
     tddadiff.ddiff()
 
 
