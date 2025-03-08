@@ -5,6 +5,7 @@ Helpers for command-line option flags for discover and verify
 """
 
 import argparse
+import os
 import sys
 
 
@@ -30,8 +31,6 @@ def help_defaults(help=True, seven=True, colour=True, config=True,
 ''')
     if config:
         out.append('''
-  * --config
-      Use ~/tdda.toml to configure tdda
   * -N, --no-config
       Do not configure using ~/tdda.toml: use all defaults
 ''')
@@ -279,8 +278,6 @@ def add_defaults(parser, help=True, seven=True, colour=True, config=True,
         parser.add_argument('-7', '--ascii', action='store_true',
                             help='report without using special characters')
     if config:
-        parser.add_argument('--config', action='store_true',
-                            help='Use ~/.tdda.toml for configuration')
         parser.add_argument('--no-config', action='store_true',
                             help='Skip loading ~/.tdda.toml')
     if colour:
@@ -300,6 +297,9 @@ def add_flags(flags, params, epsilon=False):
         params['colour'] = True
     if flags.nocolour: #  or flags.nocolor:
         params['colour'] = False
+    if flags.no_config:
+        params['no_config'] = True
+        os.environ['TDDA_NO_CONFIG'] = True
     if epsilon:
         if flags.epsilon is not None:
             params['epsilon'] = float(flags.epsilon)
