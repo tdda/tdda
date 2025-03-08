@@ -22,7 +22,7 @@ from itertools import chain
 
 from rich.table import Table
 
-from tdda.config import Config
+from tdda.state import get_config
 from tdda.utils import nvl
 
 FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
@@ -212,7 +212,7 @@ class SameStructureDDiff:
         self.n_diff_rows = n_rows
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
-        self.config = Config()
+        self.config = get_config()
 
     def __str__(self):
         lines = [

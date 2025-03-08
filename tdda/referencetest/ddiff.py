@@ -1,10 +1,11 @@
+import os
 import sys
 
 from tdda.referencetest.checkpandas import (
     PandasComparison,
     same_structure_dataframe_diffs
 )
-from tdda.config import Config
+from tdda.state import get_config
 
 import argparse
 
@@ -49,7 +50,6 @@ Notes
 
 class TDDADiff:
     def __init__(self, args, config=None):
-        #self.config = config or Config()
         self.args = args
         self.process_args()
 
@@ -77,11 +77,8 @@ class TDDADiff:
 
     def process_args(self):
         parser = self.parser()
-        #print(222, self.args)
         flags, more = parser.parse_known_args(self.args)
-        #print(333, flags)
-        #print(555, flags.no_config)
-        self.config = Config(load=not flags.no_config)
+        self.config = get_config(force_no_global=flags.no_config)
         p = self.config.referencetest
         self.fields = None
 
