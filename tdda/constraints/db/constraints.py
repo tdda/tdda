@@ -153,7 +153,6 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
         source_table = self.resolve_table(source_table)
 
         DatabaseConstraintCalculator.__init__(self, source_table, testing)
-        #DatabaseConstraintDetector.__init__(self, dbtype, dbc, source_table)
         BaseConstraintVerifier.__init__(self, epsilon=epsilon,
                                         type_checking=type_checking)
 
