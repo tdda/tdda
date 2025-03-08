@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 TDDA constraint discovery and verification is provided for a number
 of DB-API (PEP-0249) compliant databases, and also for a number of other
@@ -165,7 +164,6 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
     """
     def __init__(self, dbtype, dbc, tablename,
                  epsilon=None, type_checking='strict', **kwargs):
-        #DatabaseHandler.__init__(self, dbtype, dbc, tablename)
         DatabaseConstraintVerifier.__init__(self, dbtype, dbc, tablename)
         self.dbtype = dbtype
         self.source_table = self.resolve_table(tablename, quote=True)
@@ -176,6 +174,9 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
 
     def detect(self, constraints, dest_pair, execute=True):
         ver = self.verify(constraints, VerificationClass=DatabaseVerification)
+        if ver.failures == 0:
+            return ver  # possibly calulate failure passing & failing
+                        # records and values; though that's bit trivial
 
         # Build map from names of fields with failures
         # to the failing constraints (only)
@@ -183,18 +184,15 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
             field: [c for (c, ok) in fc.items() if not ok]
             for field, fc in ver.fields.items()
         })
-        d = {}
-        for field, fc in constraints.fields.items():
-            L = []
-            if field in failure_map:
-                fails = failure_map[field]
-                for kind, constraint in fc.constraints.items():
-                    if kind in fails:
-                        L.append(constraint)
-            if L:
-                d[field] = FieldConstraints(field, L)
-        failure_field_constraints = d
-        print(d)
+        failure_field_constraints = remove_falsy_values({
+            field: FieldConstraints(field, [
+                        constraint
+                        for kind, constraint in fc.constraints.items()
+                        if kind in failure_map[field]
+                    ])
+            for field, fc in constraints.fields.items()
+            if field in failure_map
+        })
         ver.n_failing_fields = len(failure_map)
         ver.n_passing_fields = len(ver.fields) - ver.n_failing_fields
         raw_dest_name, dest_dbtype = dest_pair
