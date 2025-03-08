@@ -6,7 +6,7 @@ import tomli
 
 DATETIME_RE ='^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
-class Override:
+class BaseConfig:
     def override(self, d, complain):
         for k, v in d.items():
             if k in self.__dict__ and not k.startswith('_'):
@@ -17,14 +17,26 @@ class Override:
                       f'ignored{(" " + part) if part else ""}.',
                       file=sys.stderr)
 
+    def get(self, key, params=None, raiseOnFailure=True):
+        if params:
+            v = params.get(key, None)
+            if v is not None:
+                return v
+        v = getattr(self, key, None)
+        if raiseOnFailure:
+            raise AttributeError('No atttibute {keu} in {self._config_name}')
+        else:
+            return None
 
-class Config(Override):
+
+class Config(BaseConfig):
     def __init__(self, load=None, complain=True):
         self._part = ''
+        self._config_name = 'config'
         self.null_rep = '∅'
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
-        if load or load is None and not 'TDDA_SELF_TEST' in os.environ:
+        if load or load is None and not 'TDDA_NO_CONFIG' in os.environ:
             self.load(complain=complain)
 
     def load(self, complain=True):
@@ -102,9 +114,10 @@ class Config(Override):
         return f'\n{item_indent}{item_joint.join(lines)}'
 
 
-class ReferenceTestConfig(Override):
+class ReferenceTestConfig(BaseConfig):
     def __init__(self):
         self._part = 'referencetest'
+        self._config_name = 'config.referencetest'
         self.left_colour = 'red'
         self.right_colour = 'green'
         self.mono = False
@@ -157,6 +170,7 @@ class ReferenceTestConfig(Override):
                 pre + self.right_prefix.strip().replace(':', ''))
 
 
-class ConstraintsConfig(Override):
+class ConstraintsConfig(BaseConfig):
     def __init__(self):
-        self._part = 'constriants'
+        self._part = 'constraints'
+        self._config_name = 'config.constraints'
