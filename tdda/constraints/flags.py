@@ -94,6 +94,9 @@ Optional flags are:
   * --interleave
       In the output, place the verification fields immediately after
       the original field to which they correspond.
+  * --no-interleave
+      In the output, place all the verification fields
+      at the end the original fields
   * -r --report FORMAT1 FORMAT2 ...
       Write reports in the formats listed. Allowed formats
       are: txt json yaml toml md markdown html.
@@ -187,6 +190,8 @@ def detect_parser(usage=''):
                         help='Report formats to write.')
     parser.add_argument('--interleave', action='store_true',
                         help='Interleave ok columns with original fields.')
+    parser.add_argument('--no-interleave', action='store_true',
+                        help='Do not interleave ok columns with original fields.')
     parser.add_argument('--index', action='store_true',
                         help='Include a row-number index in the output file '
                              'when detecting. Rows are usually numbered from '
@@ -253,6 +258,8 @@ def detect_flags(parser, args, params):
 
     if flags.interleave:
         params['interleave'] = True
+    elif flags.no_interleave:
+        params['interleave'] = False
     params['in_place'] = False  # Only applicable in API case
 
     # Notice the confusing similarity of these parameters,

@@ -175,6 +175,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.interleave = cconfig.get('interleave', kwargs)
         self.per_constraint = cconfig.get('per_constraint', kwargs)
         self.report_formats = cconfig.get('report_formats', kwargs)
+        self.write_all_records = cconfig.get('write_all_records', kwargs)
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True, **kwargs):
@@ -209,7 +210,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
                             'writing to same RDBMS.')
         self.drop_table_if_exists(raw_dest_name)
         exprs = [] if self.interleave else [
-            self.quoted(field) for f in failing_constraints
+            self.quoted(field) for field in failure_map
         ]
         detection_fields = []
         for fc in failure_field_constraints.values():
@@ -217,18 +218,25 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
                 exprs.append(self.quoted(fc.name))
             exprs.extend(self.detection_field_expressions(fc))
             detection_fields.extend(self.detection_field_names(fc))
-        n_failures_field = self.failures_field(detection_fields)
+        n_failures_field_sql = self.failures_field(detection_fields)
         exprstr = ',\n'.join(exprs)
+        where = '' if self.write_all_records else (
+            f'WHERE {self.quoted(self.n_failures_field)} > 0'
+        )
         sql = f'''
 CREATE TABLE {dest_name}
 AS
 WITH BASE AS (
     SELECT {indent(exprstr, 11)}
     FROM {self.source_table}
-)
+),
+DETECTED AS (
 SELECT *,
-       {n_failures_field}
+       {n_failures_field_sql}
 FROM BASE
+)
+SELECT * FROM DETECTED
+{where}
 '''.strip()
         ver.sql = sql
         if execute:
@@ -261,13 +269,13 @@ FROM BASE
               + '\n       - ('
               + (joint.join(f'{self.cast_bool_to_int(field)}'
                      for field in out_fields))
-              + f'\n        ) AS {self.n_failures_field}'
+              + f'\n        ) AS {self.quoted(self.n_failures_field)}'
             )
         else:
             joint = '\n       + '
             return (
                 (joint.join(f'{field}::INT' for field in out_fields))
-                + f'\nAS {self.n_failures_field}'
+                + f'\nAS {self.quoted(self.n_failures_field)}'
             )
 
     def detect_ok_field(self, field, kind, constraint):
