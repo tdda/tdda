@@ -326,7 +326,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def write_detected_records(self,
                                detect_outpath=None,
-                               detect_write_all=False,
+                               detect_write_all_records=False,
                                detect_per_constraint=False,
                                detect_output_fields=None,
                                detect_index=False,
@@ -413,11 +413,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 for name, index in reversed(indexes):
                     df_to_save.insert(0, name, index)
 
-            if not detect_write_all:
+            if not detect_write_all_records:
                 df_to_save = df_to_save[df_to_save[nfailname] > 0]
             save_df(df_to_save, detect_outpath, index=False)
 
-        if not detect_write_all:
+        if not detect_write_all_records:
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
 
@@ -585,7 +585,7 @@ class PandasDetection(PandasVerification):
         Returns a Pandas DataFrame containing the detection results.
 
         If there are no failing records, and the detection was not run
-        with the `write_all` flag set, then ``None`` is returned.
+        with the `write_all_records` flag set, then ``None`` is returned.
         """
         return self.detection.obj if self.detection else None
 
@@ -823,7 +823,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
-              outpath=None, write_all=False, per_constraint=False,
+              outpath=None, write_all_records=False, per_constraint=False,
               output_fields=None, index=False, in_place=False,
               rownumber_is_index=True, boolean_ints=False,
               repair=True, report='records',
@@ -904,7 +904,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
                             By default, only failing records are written out
                             to file, but this can be overridden with the
-                            ``write_all`` parameter.
+                            ``write_all_records`` parameter.
 
                             By default, the columns in the detection output
                             file will be a boolean ``ok`` field for each
@@ -914,7 +914,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             overridden with the ``per_constraint``,
                             ``output_fields`` and ``index`` parameters.
 
-        *write_all*:
+        *write_all_records*:
                             Include passing records in the detection output
                             file when detecting.
 
@@ -996,7 +996,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
     if repair:
         pdv.repair_field_types(constraints)
     return pdv.detect(constraints, VerificationClass=PandasDetection,
-                      outpath=outpath, write_all=write_all,
+                      outpath=outpath, write_all_records=write_all_records,
                       per_constraint=per_constraint,
                       output_fields=output_fields, index=index,
                       in_place=in_place,

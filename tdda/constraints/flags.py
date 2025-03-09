@@ -74,7 +74,7 @@ Optional flags are:
       Report all fields, even if there are no failures
   * -f, --fields
       Report only fields with failures
-  * --write-all
+  * --write-all-records
       Include passing records in the output.
   * --per-constraint
       Write one additional column per failing constraint, to show if a
@@ -166,7 +166,7 @@ def detect_parser(usage=''):
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
-    parser.add_argument('--write-all', action='store_true',
+    parser.add_argument('--write-all-records', action='store_true',
                         help='Include passing records')
     parser.add_argument('--per-constraint', action='store_true',
                         help='Write one flag column per failing constraint '
@@ -237,8 +237,8 @@ def detect_flags(parser, args, params):
         sys.exit(1)
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
-    if flags.write_all:
-        params['write_all'] = True
+    if flags.write_all_records:
+        params['write_all_records'] = True
     if not flags.no_per_constraint:
         params['per_constraint'] = True
     if flags.index:

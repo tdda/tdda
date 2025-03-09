@@ -289,7 +289,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
 
     def write_detected_records(self,
                                detect_outpath=None,
-                               detect_write_all=False,
+                               detect_write_all_records=False,
                                detect_per_constraint=False,
                                detect_output_fields=None,
                                detect_index=False,
@@ -339,7 +339,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
                                 record[ok_field_name] = ok[field][i]
                                 if ok[field][i] is False:
                                     bad = True
-                    if bad or detect_write_all:
+                    if bad or detect_write_all_records:
                         writer.writerow(record)
         return None
 

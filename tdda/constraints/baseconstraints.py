@@ -93,7 +93,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                       **kwargs)
 
     def detect(self, constraints, VerificationClass=Verification,
-               outpath=None, write_all=False, per_constraint=False,
+               outpath=None, write_all_records=False, per_constraint=False,
                output_fields=None, index=False, in_place=False,
                rownumber_is_index=True, boolean_ints=False, **kwargs):
         """
@@ -106,7 +106,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         """
         return detect(constraints, self.get_column_names(), self.verifiers(),
                       VerificationClass=VerificationClass,
-                      detect_outpath=outpath, detect_write_all=write_all,
+                      detect_outpath=outpath,
+                      detect_write_all_records=write_all_records,
                       detect_per_constraint=per_constraint,
                       detect_output_fields=output_fields,
                       detect_index=index,
