@@ -325,7 +325,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             self.out_df[name] = detection_field(c, ~ c.isin(violations))
 
     def write_detected_records(self,
-                               detect_outpath=None,
+                               outpath=None,
                                write_all_records=False,
                                per_constraint=False,
                                output_fields=None,
@@ -339,8 +339,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
             return None
         orig_fields = list(self.df)
         output_is_typed = (
-            detect_outpath
-            and file_format(detect_outpath) == 'parquet'
+            outpath
+            and file_format(outpath) == 'parquet'
         )
 
         out_df = self.out_df
@@ -379,7 +379,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 #             if in_place:  # does not work in place
 #                 self.interleave(self.df, orig_fields, nfailname)
 
-        if detect_outpath:
+        if outpath:
             index_is_trivial = is_pd_index_trivial(out_df)
             if output_is_typed:
                 df_to_save = out_df
@@ -415,7 +415,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
             if not write_all_records:
                 df_to_save = df_to_save[df_to_save[nfailname] > 0]
-            save_df(df_to_save, detect_outpath, index=False)
+            save_df(df_to_save, outpath, index=False)
 
         if not write_all_records:
             out_df = out_df[out_df[nfailname] > 0]

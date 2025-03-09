@@ -106,7 +106,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         """
         return detect(constraints, self.get_column_names(), self.verifiers(),
                       VerificationClass=VerificationClass,
-                      detect_outpath=outpath,
+                      outpath=outpath,
                       write_all_records=write_all_records,
                       per_constraint=per_constraint,
                       output_fields=output_fields,

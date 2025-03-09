@@ -288,7 +288,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
         self.rex_ok[colname] = [v not in violations for v in vals]
 
     def write_detected_records(self,
-                               detect_outpath=None,
+                               outpath=None,
                                write_all_records=False,
                                per_constraint=False,
                                output_fields=None,
@@ -296,7 +296,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
                                in_place=False,
                                **kwargs):
         input_fields = ['name', 'size']
-        if detect_outpath:
+        if outpath:
             if output_fields is None:
                 output_fields = []
             elif len(output_fields) == 0:
@@ -322,7 +322,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
             for k in ok_output_names:
                 bad_output_names.append(k)
 
-            with open(detect_outpath, 'w') as csvfile:
+            with open(outpath, 'w') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=bad_output_names)
                 writer.writeheader()
                 for i, (name, size) in enumerate(zip(self.names, self.sizes)):

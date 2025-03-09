@@ -810,7 +810,7 @@ class Verification(object):
     in the context of a given set of constraints.
     """
     def __init__(self, constraints, report='all',
-                 ascii=False, detect=False, detect_outpath=None,
+                 ascii=False, detect=False, outpath=None,
                  write_all_records=False, per_constraint=False,
                  output_fields=None, index=False,
                  in_place=False, colour=False, **kwargs):
@@ -824,7 +824,7 @@ class Verification(object):
         self.ascii = ascii
         self.colour = config.get('colour', colour)
         self.detect = detect
-        self.detect_outpath = detect_outpath
+        self.outpath = outpath
         self.write_all_records = write_all_records
         self.per_constraint = per_constraint
         self.output_fields = output_fields
@@ -835,7 +835,7 @@ class Verification(object):
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
-        if not detect_outpath and not detect and not in_place:
+        if not outpath and not detect and not in_place:
             if any((write_all_records, per_constraint,
                     output_fields, index)):
                 raise Exception('You have specified detection parameters '
@@ -893,7 +893,7 @@ class Verification(object):
         configuration, this writes the report or reports.
         """
         # print_obj(self, '(constraints|fields)', invert=True)
-        if not (self.detect_outpath and self.detect_report_formats):
+        if not (self.outpath and self.detect_report_formats):
             return
 
         #
@@ -925,7 +925,7 @@ class Verification(object):
             if constraints == {}:
                 del d['fields'][field]
         for fmt in self.detect_report_formats:
-            outpath = swap_ext(self.detect_outpath, f'.{fmt}')
+            outpath = swap_ext(self.outpath, f'.{fmt}')
             if fmt == 'json':
                 dict_to_json(d, outpath)
             elif fmt == 'yaml':
@@ -1023,8 +1023,8 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     """
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
-    detect_outpath = kwargs.get('detect_outpath')
-    detect = (detect_outpath is not None
+    outpath = kwargs.get('outpath')
+    detect = (outpath is not None
               or kwargs.get('detect') is not None
               or kwargs.get('in_place') is not None)
 
@@ -1032,14 +1032,14 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
                        key=lambda f: fieldnames.index(f) if f in fieldnames
                                                          else -1)
 
-    if detect_outpath:
+    if outpath:
         # empty (and then remove) the detection output file first,
         # so that we can get an early error if the file isn't writable,
         # and so that we don't leave a bogus wrong file in place if
         # we turn out not to detect anything.
-        with open(detect_outpath, 'w') as f:
+        with open(outpath, 'w') as f:
             pass
-        os.remove(detect_outpath)
+        os.remove(outpath)
 
     for name in allfields:
         field_results = TDDAObject()

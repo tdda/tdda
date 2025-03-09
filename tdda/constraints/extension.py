@@ -422,7 +422,7 @@ class BaseConstraintDetector:
         pass
 
     def write_detected_records(self,
-                               detect_outpath=None,
+                               outpath=None,
                                write_all_records=False,
                                per_constraint=False,
                                output_fields=None,
