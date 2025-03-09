@@ -328,7 +328,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                detect_outpath=None,
                                detect_write_all_records=False,
                                detect_per_constraint=False,
-                               detect_output_fields=None,
+                               output_fields=None,
                                detect_index=False,
                                detect_in_place=False,
                                rownumber_is_index=True,
@@ -344,11 +344,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
         )
 
         out_df = self.out_df
-        add_index = detect_index or detect_output_fields is None
-        if detect_output_fields is None:
-            detect_output_fields = []
-        elif len(detect_output_fields) == 0:
-            detect_output_fields = list(self.df)
+        add_index = detect_index or output_fields is None
+        if output_fields is None:
+            output_fields = []
+        elif len(output_fields) == 0:
+            output_fields = list(self.df)
 
         nfailname = 'n_failures'
         nf = len(list(out_df))
@@ -367,8 +367,8 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 newfield = out_df[fname]
                 self.df[unique_column_name(self.df, fname)] = newfield
 
-        if detect_output_fields:
-            for fname in reversed(detect_output_fields):
+        if output_fields:
+            for fname in reversed(output_fields):
                 if fname in list(self.df):
                     out_df.insert(0, fname, self.df[fname])
                 else:

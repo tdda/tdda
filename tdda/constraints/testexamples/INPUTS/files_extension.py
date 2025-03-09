@@ -291,18 +291,18 @@ class FilesConstraintDetector(BaseConstraintDetector):
                                detect_outpath=None,
                                detect_write_all_records=False,
                                detect_per_constraint=False,
-                               detect_output_fields=None,
+                               output_fields=None,
                                detect_index=False,
                                detect_in_place=False,
                                **kwargs):
         input_fields = ['name', 'size']
         if detect_outpath:
-            if detect_output_fields is None:
-                detect_output_fields = []
-            elif len(detect_output_fields) == 0:
-                detect_output_fields = input_fields
+            if output_fields is None:
+                output_fields = []
+            elif len(output_fields) == 0:
+                output_fields = input_fields
             else:
-                for k in detect_output_fields:
+                for k in output_fields:
                     if k not in input_fields:
                         raise Exception('Unknown column %s' % k)
             cnames = ('min', 'max', 'min_length', 'max_length',
@@ -315,9 +315,9 @@ class FilesConstraintDetector(BaseConstraintDetector):
                                for cname, v in zip(cnames, cvalues)
                                    if fname in v]
             bad_output_names = []
-            if len(detect_output_fields) == 0:
+            if len(output_fields) == 0:
                 bad_output_names.append('RowNumber')
-            for k in detect_output_fields:
+            for k in output_fields:
                 bad_output_names.append(k)
             for k in ok_output_names:
                 bad_output_names.append(k)
@@ -327,9 +327,9 @@ class FilesConstraintDetector(BaseConstraintDetector):
                 writer.writeheader()
                 for i, (name, size) in enumerate(zip(self.names, self.sizes)):
                     record = OrderedDict()
-                    if len(detect_output_fields) == 0:
+                    if len(output_fields) == 0:
                         record['RowNumber'] = i + 1
-                    for k in detect_output_fields:
+                    for k in output_fields:
                         record[k] = name if k == 'name' else size
                     bad = False
                     for field in input_fields:

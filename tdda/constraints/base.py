@@ -812,7 +812,7 @@ class Verification(object):
     def __init__(self, constraints, report='all',
                  ascii=False, detect=False, detect_outpath=None,
                  detect_write_all_records=False, detect_per_constraint=False,
-                 detect_output_fields=None, detect_index=False,
+                 output_fields=None, detect_index=False,
                  detect_in_place=False, colour=False, **kwargs):
         config = get_config()
         self.constraints = constraints
@@ -827,7 +827,7 @@ class Verification(object):
         self.detect_outpath = detect_outpath
         self.detect_write_all_records = detect_write_all_records
         self.detect_per_constraint = detect_per_constraint
-        self.detect_output_fields = detect_output_fields
+        self.output_fields = output_fields
         self.detect_index = detect_index
         self.detect_in_place = detect_in_place
         self.detect_key = kwargs.get('key', [])
@@ -837,7 +837,7 @@ class Verification(object):
                             ' or "records", not "%s".' % report)
         if not detect_outpath and not detect and not detect_in_place:
             if any((detect_write_all_records, detect_per_constraint,
-                    detect_output_fields, detect_index)):
+                    output_fields, detect_index)):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 

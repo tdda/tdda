@@ -425,7 +425,7 @@ class BaseConstraintDetector:
                                detect_outpath=None,
                                detect_write_all_records=False,
                                detect_per_constraint=False,
-                               detect_output_fields=None,
+                               output_fields=None,
                                detect_index=False,
                                detect_in_place=False,
                                rownumber_is_index=True,

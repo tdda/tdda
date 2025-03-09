@@ -109,7 +109,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                       detect_outpath=outpath,
                       detect_write_all_records=write_all_records,
                       detect_per_constraint=per_constraint,
-                      detect_output_fields=output_fields,
+                      output_fields=output_fields,
                       detect_index=index,
                       detect_in_place=in_place,
                       detected_records_writer=self.write_detected_records,
