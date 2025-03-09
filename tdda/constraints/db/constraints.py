@@ -34,6 +34,7 @@ from tdda.constraints.baseconstraints import (
 )
 
 from tdda.constraints.db.drivers import DatabaseHandler
+from tdda.state import get_config
 from tdda.utils import squote, remove_falsy_values
 from tdda import rexpy
 
@@ -164,11 +165,16 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
     def __init__(self, dbtype, dbc, tablename,
                  epsilon=None, type_checking='strict', **kwargs):
         DatabaseConstraintVerifier.__init__(self, dbtype, dbc, tablename)
+        config = get_config()
+        cconfig = config.constraints
         self.dbtype = dbtype
         self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
-        self.interleave = True
+        print(kwargs)
+        self.interleave = cconfig.get('interleave', kwargs)
+        self.per_constraint = cconfig.get('per_constraint', kwargs)
+        self.report_formats = cconfig.get('report_formats', kwargs)
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True):

@@ -85,9 +85,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
     df = load_df(df_path, mdpath=mdpath)
     v = verify_df(df, constraints_path, mdpath=mdpath, **kwargs)
     if verbose:
-        config = get_config()
-        colour = config.get('colour', kwargs)
-        cprint(v.to_string(colour=colour), colour=colour)
+        cprint(v)
     return v
 
 

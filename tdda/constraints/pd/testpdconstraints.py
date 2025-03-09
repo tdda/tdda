@@ -1590,7 +1590,6 @@ class CommandLineHelper:
         self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
                                                 'Constraints passing: 72\n'
                                                 'Constraints failing: 0'))
-
     def testVerifyE118Cmd(self):
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct]
         result = self.execute_command(argv)

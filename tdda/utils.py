@@ -25,6 +25,7 @@ import numpy as np
 import rich
 rprint = rich.print
 rich.reconfigure(highlight=False, soft_wrap=True)
+from tdda.state import get_config
 
 
 TDDADIR = os.path.dirname(__file__)  # base tdda directory for package
@@ -704,7 +705,10 @@ class Dummy(object):
 
 
 def cprint(*args, colour=None, **kw):
+    if colour is None:
+        config = get_config()
+        colour = config.get('colour')
     if colour:
-        rprint(*args, **kw)
+        rprint(*(str(a) for a in args), **kw)
     else:
         print(*args, **kw)

@@ -90,9 +90,7 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=False, **kwargs)
     if verbose and outpath is not None and outpath != '-':
-        config = get_config()
-        colour = config.get('colour', kwargs)
-        cprint(v.to_string(colour=colour), colour=colour)
+        cprint(v)
     return v
 
 

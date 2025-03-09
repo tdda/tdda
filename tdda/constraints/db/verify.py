@@ -29,6 +29,7 @@ from tdda.constraints.db.constraints import verify_db_table
 from tdda.constraints.db.drivers import (database_connection, parse_table_name,
                                          database_arg_parser,
                                          database_arg_flags)
+from tdda.utils import cprint
 
 
 def verify_database_table_from_file(table, constraints_path,
@@ -45,7 +46,7 @@ def verify_database_table_from_file(table, constraints_path,
     db = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
                              host=host, port=port,
                              user=user, password=password)
-    print(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
+    cprint(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
 
 
 def get_verify_params(args):

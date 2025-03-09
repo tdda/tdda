@@ -197,4 +197,9 @@ class ConstraintsConfig(BaseConfig):
         self._part = 'constraints'
         self._config_name = 'config.constraints'
 
+        self.interleave = True
+        self.per_constraint = True
+        self.report_formats = []
+
+
 

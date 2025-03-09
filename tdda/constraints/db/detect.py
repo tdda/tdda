@@ -31,6 +31,7 @@ from tdda.constraints.db.constraints import detect_db_table
 from tdda.constraints.db.drivers import (database_connection, parse_table_name,
                                          database_arg_parser,
                                          database_arg_flags)
+from tdda.utils import cprint
 
 
 def detect_database_table_cli(table, constraints_path, destination,
@@ -48,7 +49,7 @@ def detect_database_table_cli(table, constraints_path, destination,
     dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
                               host=host, port=port,
                               user=user, password=password)
-    print(detect_db_table(dbtype, dbc, table, constraints_path,
+    cprint(detect_db_table(dbtype, dbc, table, constraints_path,
                           destination=dest_pair, **kwargs))
 
 
