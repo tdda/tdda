@@ -942,5 +942,7 @@ which doesn't really work with Pandas and doesn't feel altogether
 safe.)
 
 Database detect starting to work
+
+Refactored config and state.
 ----------------------- end of dev -----------------------------
 """

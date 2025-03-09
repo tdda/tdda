@@ -979,7 +979,6 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
-    @tag
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = df_to_metadata(df)

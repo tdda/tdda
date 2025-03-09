@@ -116,6 +116,7 @@ import os
 import sys
 import unittest
 
+from tdda.state import get_testing, set_testing
 from tdda.referencetest.referencetest import ReferenceTest, tag
 
 
@@ -153,15 +154,14 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         """
         argv, tagged, check = _set_flags_from_argv(argv)
         if testtdda:
-            saved = os.environ.get('TDDA_NO_CONFIG')
-            os.environ['TDDA_NO_CONFIG'] = '1'
+            saved = set_testing(True)
         try:
             _run_tests(module=module, argv=argv, tagged=tagged, check=check,
                        **kw)
         finally:
             if testtdda:
                 if saved is not None:
-                    os.environ['TDDA_NO_CONFIG'] = saved
+                    set_testing(saved)
 
 
 def _run_tests(module=None, argv=None, tagged=False, check=False, **kw):

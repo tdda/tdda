@@ -205,7 +205,8 @@ class SameStructureDDiff:
     Container for information about differences betwee data frames
     with the same structure.
     """
-    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows):
+    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
+                 colour=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols

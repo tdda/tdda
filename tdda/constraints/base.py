@@ -16,7 +16,7 @@ import yaml
 
 from collections import OrderedDict
 
-from tdda.config import Config
+from tdda.state import get_config
 from tdda.tables import Table
 from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
@@ -814,6 +814,7 @@ class Verification(object):
                  detect_write_all=False, detect_per_constraint=False,
                  detect_output_fields=None, detect_index=False,
                  detect_in_place=False, colour=False, **kwargs):
+        config = get_config()
         self.constraints = constraints
         self.fields = TDDAObject()
         self.failures = 0
@@ -821,7 +822,7 @@ class Verification(object):
         self.detection = None
         self.report = report
         self.ascii = ascii
-        self.colour = colour
+        self.colour = config.get('colour', colour)
         self.detect = detect
         self.detect_outpath = detect_outpath
         self.detect_write_all = detect_write_all

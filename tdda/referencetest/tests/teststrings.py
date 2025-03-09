@@ -321,7 +321,6 @@ class TestStrings(ReferenceTestCase):
             (0, []),
         )
 
-    @tag
     def test_permutations(self):
         compare = FilesComparison()
         self.assertEqual(

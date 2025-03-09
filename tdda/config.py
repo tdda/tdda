@@ -17,26 +17,46 @@ class BaseConfig:
                       f'ignored{(" " + part) if part else ""}.',
                       file=sys.stderr)
 
-    def get(self, key, params=None, raiseOnFailure=True):
-        if params:
-            v = params.get(key, None)
-            if v is not None:
-                return v
+    def get(self, key, preferred=None, raiseOnFailure=True):
+        """
+        Get the appropriate value for key as follows:
+
+        1. preferred is used if it is a scalar other than None.
+
+        2. if preferred is a dictionary, and key is a non-None value
+           in the dictionary, that is used.
+
+        3. otherwise, the value in the Config object is returned.
+
+        If no non-None value is found anywhere, an error is raised
+        unless raiseOnFailure is set to False.
+        """
+        if preferred is not None:
+            if isinstance(preferred, dict):
+                v = preferred.get(key, None)
+                if v is not None:
+                    return v
+            else:
+                return preferred
         v = getattr(self, key, None)
+        if v is not None:
+            return v
         if raiseOnFailure:
-            raise AttributeError('No atttibute {keu} in {self._config_name}')
+            raise AttributeError(f'No atttibute {key} in {self._config_name}')
         else:
             return None
 
 
 class Config(BaseConfig):
-    def __init__(self, load=None, complain=True):
+    def __init__(self, load=None, testing=None, complain=True):
+        env = os.environ
         self._part = ''
         self._config_name = 'config'
         self.null_rep = '∅'
+        self.colour = load and not testing
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
-        if load or load is None and not 'TDDA_NO_CONFIG' in os.environ:
+        if not testing and (load or load is None):
             self.load(complain=complain)
 
     def load(self, complain=True):
@@ -44,13 +64,15 @@ class Config(BaseConfig):
         if os.path.exists(config_path):
             with open(config_path, 'rb') as f:
                 d = tomli.load(f)
-                rc = d.get('referencetest')
+                rc = d.get('referencetest', None)
                 if rc:
                     self.referencetest.override(rc, complain)
-                    del d['referencetest']
-                cc = d.get('constraints')
+                cc = d.get('constraints', None)
                 if cc:
                     self.constraints.override(cc, complain)
+                if 'referencetest' in d:
+                    del d['referencetest']
+                if 'constriants' in d:
                     del d['constraints']
                 self.override(d, complain)
 
@@ -124,7 +146,7 @@ class ReferenceTestConfig(BaseConfig):
         self.bw = False
         self.left_prefix = '< '
         self.right_prefix = '> '
-        self.vertical = None
+        self.vertical = False
         self.force_val_prefixes = False
 
     def left_diff(self, value, force_prefix=None):
@@ -174,3 +196,5 @@ class ConstraintsConfig(BaseConfig):
     def __init__(self):
         self._part = 'constraints'
         self._config_name = 'config.constraints'
+
+

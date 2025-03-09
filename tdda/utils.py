@@ -704,9 +704,7 @@ class Dummy(object):
 
 
 def cprint(*args, colour=None, **kw):
-    if isinstance(colour, dict):
-        colour = colour.get('colour', None)
-    if colour is True:
+    if colour:
         rprint(*args, **kw)
     else:
         print(*args, **kw)

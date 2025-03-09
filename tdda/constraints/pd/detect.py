@@ -38,6 +38,7 @@ import pandas as pd
 import numpy as np
 
 from tdda import __version__
+from tdda.state import get_config
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
@@ -89,7 +90,9 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=False, **kwargs)
     if verbose and outpath is not None and outpath != '-':
-        cprint(v.to_string(), colour=kwargs)
+        config = get_config()
+        colour = config.get('colour', kwargs)
+        cprint(v.to_string(colour=colour), colour=colour)
     return v
 
 

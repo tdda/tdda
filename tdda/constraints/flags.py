@@ -8,6 +8,8 @@ import argparse
 import os
 import sys
 
+from tdda.state import set_load
+
 
 def help_defaults(help=True, seven=True, colour=True, config=True,
                   epsilon=False):
@@ -24,9 +26,9 @@ def help_defaults(help=True, seven=True, colour=True, config=True,
 ''')
     if colour:
         out.append('''
-  * --colour, --color
+  * --colour
       Coloured output
-  * --nocolour --nocolor
+  * --no-colour
       Monochrome output
 ''')
     if config:
@@ -49,7 +51,7 @@ Optional flags are:
 
   * -r or --rex
       Include regular expression generation. Disabled by default.
-  * -R or --norex
+  * -R or --no-rex
       Exclude regular expression generation (the default)
   * -c --report FORMAT1 FORMAT2 ...
       Write constraints reports in the formats listed. Allowed formats
@@ -81,14 +83,15 @@ Optional flags are:
   * --no-per-constraint
       Disable the --per-constraint flag, so that the only constraint-based
       column written out is the nfailures field.
+  * --original-fields
+      Do not write out any of the original columns. By default, all of the
+      original columns are written out, unless you use --output-fields.
   * --no-original-fields
       Do not write out any of the original columns. By default, all of the
       original columns are written out, unless you use --output-fields.
   * --output-fields FIELD1 FIELD2 ...
       Specify original columns to write out.
   * --key FIELD1 FIELD2 ...
-      Same as --output-fields
-  * --keys FIELD1 FIELD2 ...
       Same as --output-fields
   * --interleave
       In the output, place the verification fields immediately after
@@ -111,7 +114,7 @@ def discover_parser(usage=''):
     add_defaults(parser)
     parser.add_argument('-r', '--rex', action='store_true',
                         help='include regular expression generation')
-    parser.add_argument('-R', '--norex', action='store_true',
+    parser.add_argument('-R', '--no-rex', action='store_true',
                         help='exclude regular expression generation')
     parser.add_argument('-c', '--report', nargs='*',
                         help='Report formats to write.')
@@ -174,6 +177,8 @@ def detect_parser(usage=''):
                         help='Do not write out any per-constraint flag columns')
     parser.add_argument('--no-original-fields', action='store_true',
                         help='Do not write out original fields columns')
+    parser.add_argument('--original-fields', action='store_true',
+                        help='Write out original fields columns (default)')
     parser.add_argument('--no-output-fields', action='store_true',
                         help='Do not write out any original fields in the '
                              'output. By default, all original columns will '
@@ -281,9 +286,9 @@ def add_defaults(parser, help=True, seven=True, colour=True, config=True,
         parser.add_argument('--no-config', action='store_true',
                             help='Skip loading ~/.tdda.toml')
     if colour:
-        parser.add_argument('--colour', '--color', action='store_true',
+        parser.add_argument('--colour', action='store_true',
                             help='Use colour in terminal output')
-        parser.add_argument('--nocolour', '--nocolor', action='store_true',
+        parser.add_argument('--no-colour', action='store_true',
                             help='Do not not use colour in terminal output')
     if epsilon:
         parser.add_argument('-epsilon', '--epsilon', type=float,
@@ -293,13 +298,18 @@ def add_defaults(parser, help=True, seven=True, colour=True, config=True,
 def add_flags(flags, params, epsilon=False):
     if flags.ascii:
         params['ascii'] = True
-    if flags.colour: # or flags.color:
-        params['colour'] = True
-    if flags.nocolour: #  or flags.nocolor:
+
+    if flags.no_colour:
         params['colour'] = False
+    elif flags.colour:
+        params['colour'] = True
+    else:
+        params['colour'] = None
+
     if flags.no_config:
         params['no_config'] = True
-        os.environ['TDDA_NO_CONFIG'] = True
+        # os.environ['TDDA_NO_CONFIG'] = '1'
+        set_load(False)
     if epsilon:
         if flags.epsilon is not None:
             params['epsilon'] = float(flags.epsilon)
