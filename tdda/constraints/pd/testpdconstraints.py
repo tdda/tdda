@@ -1614,7 +1614,6 @@ class CommandLineHelper:
             'Failing Constraints: 0 (0.00%)'
         ))
 
-    @tag
     def testVerifyE118Cmd(self):
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct]
         result = self.execute_command(argv)
