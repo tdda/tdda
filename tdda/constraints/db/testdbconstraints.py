@@ -218,13 +218,14 @@ class TestDatabaseDetect:
                                  testing=True)
         self.assertEqual(result.passes, 57)
         self.assertEqual(result.failures, 15)
+        expected_path = os.path.join(TESTDATA_DIR,
+                                     'elements118_verify_92_out.txt')
+        # Same as Pandas
+        self.assertStringCorrect(str(result), expected_path)
         del result.sql
-        print(dump_as_json(result.fields))
-        print(dump_as_json(result.fields['Z']))
-        for f, v in result.fields.items():
-            passes = len([c for c in v.values() if c])
-            fails = len([c for c in v.values() if not c])
-            print(f, 'passes', passes, 'failures', fails)
+
+        # Really need to pull the data from the table and compaire
+        # to the parquet or CSV
 
 
 

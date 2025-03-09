@@ -636,6 +636,15 @@ def richgood(s, colour=True, cond=True):
         return str(s)
 
 
+def richgoodbad(s, colour=True, cond=True):
+    if colour:
+        c = 'green' if cond else 'red'
+        return f'[{c}]{s}[/{c}]'
+    else:
+        return str(s)
+
+
+
 def write_or_return(content, dump, stringify, path=None, binary=False):
     """
     If path has a value, write content to it and return None.

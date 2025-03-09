@@ -1,0 +1,41 @@
+FIELDS:
+
+Z: 1 failure  5 passes  type ✓  min ✓  max ✗  sign ✓  max_nulls ✓  no_duplicates ✓
+
+Name: 1 failure  4 passes  type ✓  min_length ✓  max_length ✗  max_nulls ✓  no_duplicates ✓
+
+Symbol: 1 failure  4 passes  type ✓  min_length ✓  max_length ✗  max_nulls ✓  no_duplicates ✓
+
+Period: 0 failures  5 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✓
+
+Group: 0 failures  4 passes  type ✓  min ✓  max ✓  sign ✓
+
+ChemicalSeries: 0 failures  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  allowed_values ✓
+
+AtomicWeight: 2 failures  3 passes  type ✓  min ✓  max ✗  sign ✓  max_nulls ✗
+
+Etymology: 2 failures  2 passes  type ✓  min_length ✓  max_length ✗  max_nulls ✗
+
+RelativeAtomicMass: 2 failures  3 passes  type ✓  min ✓  max ✗  sign ✓  max_nulls ✗
+
+MeltingPointC: 1 failure  3 passes  type ✓  min ✓  max ✓  max_nulls ✗
+
+MeltingPointKelvin: 1 failure  4 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✗
+
+BoilingPointC: 1 failure  3 passes  type ✓  min ✓  max ✓  max_nulls ✗
+
+BoilingPointF: 1 failure  3 passes  type ✓  min ✓  max ✓  max_nulls ✗
+
+Density: 2 failures  3 passes  type ✓  min ✓  max ✗  sign ✓  max_nulls ✗
+
+Description: 0 failures  3 passes  type ✓  min_length ✓  max_length ✓
+
+Colour: 0 failures  3 passes  type ✓  min_length ✓  max_length ✓
+
+SUMMARY:
+
+Constrained Fields: 16
+Failing Fields: 11 (68.75%)
+
+Constraints: 72
+Failing Constraints: 15 (20.83%)

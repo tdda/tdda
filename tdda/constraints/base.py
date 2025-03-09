@@ -21,7 +21,7 @@ from tdda.tables import Table
 from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
     json_sanitize, strip_lines, print_obj,
-    nvl, richgood, richbad, XML, write_or_return,
+    nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val
 )
 from tdda.version import version
@@ -851,11 +851,15 @@ class Verification(object):
         """
         ascii = nvl(ascii, self.ascii)
         colour = nvl(colour, self.colour)
+        n_fields = len(self.fields)
+        failing_field_items = list((field, ver)
+                                   for (field, ver) in self.fields.items()
+                                   if ver.failures > 0)
+
+        n_fields_with_failures = len(failing_field_items)
         if self.report in ('fields', 'records'):
             # Report only fields with failures
-            field_items = list((field, ver)
-                               for (field, ver) in self.fields.items()
-                               if ver.failures > 0)
+            field_items = failing_field_items
         else:
             field_items = self.fields.items()
         fields = '\n\n'.join('%s: %s  %s  %s'
@@ -877,12 +881,20 @@ class Verification(object):
                 % richgood(self.detection.n_passing_records, colour,
                            nf == 0),
                'Records failing: %s'
-                % richbad(nf, colour, nf > 0)])
+                % richbad(nf, colour, nf > 0), ''])
+        fields_badpc = 100 * n_fields_with_failures / n_fields
         out.extend(
-            ['Constraints passing: %s'
-             % richgood(self.passes, colour, self.failures == 0),
-             'Constraints failing: %s'
-             % richbad(self.failures, colour, self.failures > 0)])
+            [f'Constrained Fields: {n_fields:,}',
+             'Failing Fields: %s'
+             % richgoodbad(f'{n_fields_with_failures:,} ({fields_badpc:.2f}%)',
+                           colour, n_fields_with_failures == 0), ''])
+        nc = self.passes + self.failures
+        constraints_badpc = 100 * self.failures / nc
+        out.extend(
+            [f'Constraints: {nc:,}',
+             'Failing Constraints: %s'
+             % richgoodbad(f'{self.failures:,} ({constraints_badpc:.2f}%)',
+                           colour, self.failures == 0)])
         return '\n'.join(out)
     __str__ = to_string
 

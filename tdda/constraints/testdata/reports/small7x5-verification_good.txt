@@ -16,5 +16,8 @@ stringDateField: 0 failures  7 passes  type ✓  min_length ✓  max_length ✓ 
 
 SUMMARY:
 
-Constraints passing: 38
-Constraints failing: 0
+Constrained Fields: 7
+Failing Fields: 0 (0.00%)
+
+Constraints: 38
+Failing Constraints: 0 (0.00%)

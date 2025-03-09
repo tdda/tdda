@@ -835,7 +835,11 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                     'i: 0 failures  6 passes  '
                     'type ✓  min ✓  max ✓  sign ✓  '
                     'max_nulls ✓  no_duplicates ✓\n\n'
-                    'SUMMARY:\n\nConstraints passing: 6\nConstraints failing: 0')
+                    'SUMMARY:\n\n'
+                    'Constrained Fields: 1\n'
+                    'Failing Fields: 0 (0.00%)\n\n'
+                    'Constraints: 6\n'
+                    'Failing Constraints: 0 (0.00%)')
         self.assertEqual(str(results1), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -861,7 +865,11 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                     'i: 5 failures  1 pass  '
                     'type ✓  min ✗  max ✗  sign ✗  '
                     'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 5')
+                    'SUMMARY:\n\n'
+                    'Constrained Fields: 1\n'
+                    'Failing Fields: 1 (100.00%)\n\n'
+                    'Constraints: 6\n'
+                    'Failing Constraints: 5 (83.33%)')
         self.assertEqual(str(results2), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -884,7 +892,11 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                     'i: 6 failures  0 passes  '
                     'type ✗  min ✗  max ✗  sign ✗  '
                     'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\nConstraints passing: 0\nConstraints failing: 6')
+                    'SUMMARY:\n\n'
+                    'Constrained Fields: 1\n'
+                    'Failing Fields: 1 (100.00%)\n\n'
+                    'Constraints: 6\n'
+                    'Failing Constraints: 6 (100.00%)')
         self.assertEqual(str(results2strict), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -908,7 +920,11 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         results3 = verify(dsc3, list(df3), pdcv3.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type ✓\n\n'
-                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 0')
+                    'SUMMARY:\n\n'
+                    'Constrained Fields: 1\n'
+                    'Failing Fields: 0 (0.00%)\n\n'
+                    'Constraints: 1\n'
+                    'Failing Constraints: 0 (0.00%)')
         self.assertEqual(str(results3), expected)
         expected = pd.DataFrame(OrderedDict((
                         ('field', ['i']),
@@ -923,7 +939,11 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         results3 = verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
-                    'SUMMARY:\n\nConstraints passing: 1\nConstraints failing: 0')
+                    'SUMMARY:\n\n'
+                    'Constrained Fields: 1\n'
+                    'Failing Fields: 0 (0.00%)\n\n'
+                    'Constraints: 1\n'
+                    'Failing Constraints: 0 (0.00%)')
         self.assertEqual(str(results3), expected)
 
     def testElements92(self):
@@ -1560,9 +1580,11 @@ class CommandLineHelper:
         cls.E118summary = (
             'SUMMARY:\n\n'
             'Records passing: 91\n'
-            'Records failing: 27\n'
-            'Constraints passing: 57\n'
-            'Constraints failing: 15'
+            'Records failing: 27\n\n'
+            'Constrained Fields: 16\n'
+            'Failing Fields: 11 (68.75%)\n\n'
+            'Constraints: 72\n'
+            'Failing Constraints: 15 (20.83%)'
         )
 
         argv = ['tdda', 'examples', cls.test_tmpdir]
@@ -1587,78 +1609,87 @@ class CommandLineHelper:
     def testVerifyE92Cmd(self):
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct]
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 72\n'
-                                                'Constraints failing: 0'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 72\n'
+            'Failing Constraints: 0 (0.00%)'
+        ))
+
+    @tag
     def testVerifyE118Cmd(self):
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct]
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 57\n'
-                                                'Constraints failing: 15'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 72\n'
+            'Failing Constraints: 15 (20.83%)'
+        ))
+        self.assertStringCorrect(str(result), 'elements118_verify_92_out.txt')
 
     def testVerifyOptionFlags(self):
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct]
         result = self.execute_command(argv)
-        self.assertEqual(len(result.splitlines()), 38)
+        self.assertEqual(len(result.splitlines()), 41)
         self.assertTrue('✓' in result)
         self.assertFalse('OK' in result)
 
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
                 '--ascii']
         result = self.execute_command(argv)
-        self.assertEqual(len(result.splitlines()), 38)
+        self.assertEqual(len(result.splitlines()), 41)
         self.assertTrue('OK' in result)
 
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
                 '--fields']
         result = self.execute_command(argv)
-        self.assertEqual(len(result.splitlines()), 4)
+        self.assertEqual(len(result.splitlines()), 7)
 
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
                 '--all']
         result = self.execute_command(argv)
-        self.assertEqual(len(result.splitlines()), 38)
+        self.assertEqual(len(result.splitlines()), 41)
 
         argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
                 '--fields', '--type_checking', 'strict']
         result = self.execute_command(argv)
         # 5 type-failures (plus min_length on elevens, considered as an int)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 55\n'
-                                                'Constraints failing: 6'))
-
+        self.assertTrue(result.strip().endswith(
+           'Constraints: 61\n'
+           'Failing Constraints: 6 (9.84%)'
+        ))
         argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
                 '--fields', '--type_checking', 'sloppy']
         result = self.execute_command(argv)
         # 1 failure, because elevens is treated as an int, so min_length fails
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 60\n'
-                                                'Constraints failing: 1'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 61\n'
+            'Failing Constraints: 1 (1.64%)'
+        ))
 
     def testVerifyEpsilon(self):
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
                 '--fields']
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 57\n'
-                                                'Constraints failing: 15'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 72\n'
+            'Failing Constraints: 15 (20.83%)'
+        ))
 
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
                 '--fields', '--epsilon', '0.5']
         result = self.execute_command(argv)
         # a few fewer failures, because of epsilon
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 60\n'
-                                                'Constraints failing: 12'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 72\n'
+            'Failing Constraints: 12 (16.67%)'
+        ))
 
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
                 '--fields', '--epsilon', '10']
         result = self.execute_command(argv)
         # even fewer failures, because of massive epsilon
-        self.assertTrue(result.strip().endswith('SUMMARY:\n\n'
-                                                'Constraints passing: 61\n'
-                                                'Constraints failing: 11'))
+        self.assertTrue(result.strip().endswith(
+            'Constraints: 72\n'
+            'Failing Constraints: 11 (15.28%)'
+        ))
 
     def testDetectE118Cmd(self):
         argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,

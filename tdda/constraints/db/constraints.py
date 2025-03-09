@@ -171,7 +171,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
-        print(kwargs)
+        # print(kwargs)
         self.interleave = cconfig.get('interleave', kwargs)
         self.per_constraint = cconfig.get('per_constraint', kwargs)
         self.report_formats = cconfig.get('report_formats', kwargs)

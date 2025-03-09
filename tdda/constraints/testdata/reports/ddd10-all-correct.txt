@@ -30,5 +30,8 @@ evendates: 0 failures  3 passes  type ✓  min ✓  max ✓
 
 SUMMARY:
 
-Constraints passing: 61
-Constraints failing: 0
+Constrained Fields: 14
+Failing Fields: 0 (0.00%)
+
+Constraints: 61
+Failing Constraints: 0 (0.00%)
