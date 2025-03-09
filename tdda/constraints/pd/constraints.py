@@ -326,11 +326,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
     def write_detected_records(self,
                                detect_outpath=None,
-                               detect_write_all_records=False,
-                               detect_per_constraint=False,
+                               write_all_records=False,
+                               per_constraint=False,
                                output_fields=None,
-                               detect_index=False,
-                               detect_in_place=False,
+                               index=False,
+                               in_place=False,
                                rownumber_is_index=True,
                                boolean_ints=False,
                                interleave=False,
@@ -344,7 +344,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
         )
 
         out_df = self.out_df
-        add_index = detect_index or output_fields is None
+        add_index = index or output_fields is None
         if output_fields is None:
             output_fields = []
         elif len(output_fields) == 0:
@@ -358,11 +358,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
         n_failing_records = (fails > 0).astype(int).sum()
         n_passing_records = len(out_df) - n_failing_records
 
-        if not detect_per_constraint:
+        if not per_constraint:
             fnames = [name for name in list(out_df) if name != nfailname]
             out_df = out_df.drop(fnames, axis=1)
 
-        if detect_in_place:
+        if in_place:
             for fname in list(out_df):
                 newfield = out_df[fname]
                 self.df[unique_column_name(self.df, fname)] = newfield
@@ -376,7 +376,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
 
         if interleave:
             out_df = self.interleave(out_df, orig_fields, nfailname)
-#             if detect_in_place:  # does not work in place
+#             if in_place:  # does not work in place
 #                 self.interleave(self.df, orig_fields, nfailname)
 
         if detect_outpath:
@@ -413,11 +413,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
                 for name, index in reversed(indexes):
                     df_to_save.insert(0, name, index)
 
-            if not detect_write_all_records:
+            if not write_all_records:
                 df_to_save = df_to_save[df_to_save[nfailname] > 0]
             save_df(df_to_save, detect_outpath, index=False)
 
-        if not detect_write_all_records:
+        if not write_all_records:
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
 

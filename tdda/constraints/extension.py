@@ -417,17 +417,17 @@ class BaseConstraintDetector:
 
     def detect_rex_constraint(self, colname, value, violations):
         """
-        Detect failures for a rex constraint.
+        Detect failures for a rex constraint.<
         """
         pass
 
     def write_detected_records(self,
                                detect_outpath=None,
-                               detect_write_all_records=False,
-                               detect_per_constraint=False,
+                               write_all_records=False,
+                               per_constraint=False,
                                output_fields=None,
-                               detect_index=False,
-                               detect_in_place=False,
+                               index=False,
+                               in_place=False,
                                rownumber_is_index=True,
                                boolean_ints=False,
                                **kwargs):

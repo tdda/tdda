@@ -811,9 +811,9 @@ class Verification(object):
     """
     def __init__(self, constraints, report='all',
                  ascii=False, detect=False, detect_outpath=None,
-                 detect_write_all_records=False, detect_per_constraint=False,
-                 output_fields=None, detect_index=False,
-                 detect_in_place=False, colour=False, **kwargs):
+                 write_all_records=False, per_constraint=False,
+                 output_fields=None, index=False,
+                 in_place=False, colour=False, **kwargs):
         config = get_config()
         self.constraints = constraints
         self.fields = TDDAObject()
@@ -825,19 +825,19 @@ class Verification(object):
         self.colour = config.get('colour', colour)
         self.detect = detect
         self.detect_outpath = detect_outpath
-        self.detect_write_all_records = detect_write_all_records
-        self.detect_per_constraint = detect_per_constraint
+        self.write_all_records = write_all_records
+        self.per_constraint = per_constraint
         self.output_fields = output_fields
-        self.detect_index = detect_index
-        self.detect_in_place = detect_in_place
+        self.index = index
+        self.in_place = in_place
         self.detect_key = kwargs.get('key', [])
         self.detect_report_formats = kwargs.get('report_formats', [])
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
-        if not detect_outpath and not detect and not detect_in_place:
-            if any((detect_write_all_records, detect_per_constraint,
-                    output_fields, detect_index)):
+        if not detect_outpath and not detect and not in_place:
+            if any((write_all_records, per_constraint,
+                    output_fields, index)):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 
@@ -1026,7 +1026,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     detect_outpath = kwargs.get('detect_outpath')
     detect = (detect_outpath is not None
               or kwargs.get('detect') is not None
-              or kwargs.get('detect_in_place') is not None)
+              or kwargs.get('in_place') is not None)
 
     allfields = sorted(constraints.fields.keys(),
                        key=lambda f: fieldnames.index(f) if f in fieldnames
