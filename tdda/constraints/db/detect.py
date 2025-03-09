@@ -50,7 +50,7 @@ def detect_database_table_cli(table, constraints_path, destination,
                               host=host, port=port,
                               user=user, password=password)
     cprint(detect_db_table(dbtype, dbc, table, constraints_path,
-                          destination=dest_pair, **kwargs))
+                           destination=dest_pair, **kwargs))
 
 
 def get_detect_params(args):

@@ -199,6 +199,7 @@ class ConstraintsConfig(BaseConfig):
 
         self.interleave = True
         self.per_constraint = True
+        self.detect_passes = True  # ok fields. False for _bad fields
         self.report_formats = []
 
 

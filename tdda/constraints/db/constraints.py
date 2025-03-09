@@ -177,8 +177,9 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.report_formats = cconfig.get('report_formats', kwargs)
         self.n_failures_field = 'n_failures'
 
-    def detect(self, constraints, dest_pair, execute=True):
-        ver = self.verify(constraints, VerificationClass=DatabaseVerification)
+    def detect(self, constraints, dest_pair, execute=True, **kwargs):
+        ver = self.verify(constraints, VerificationClass=DatabaseVerification,
+                          colour=kwargs.get('colour'))
         if ver.failures == 0:
             return ver  # possibly calulate failure passing & failing
                         # records and values; though that's bit trivial
@@ -533,7 +534,7 @@ def detect_db_table(dbtype, dbc, tablename, constraints_path, destination,
         **kwargs
     )
     constraints = constraints_from_path_or_dict(constraints_path)
-    return detector.detect(constraints, destination)
+    return detector.detect(constraints, destination, **kwargs)
 
 
 
