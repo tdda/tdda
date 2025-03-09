@@ -91,8 +91,6 @@ Optional flags are:
       original columns are written out, unless you use --output-fields.
   * --output-fields FIELD1 FIELD2 ...
       Specify original columns to write out.
-  * --key FIELD1 FIELD2 ...
-      Same as --output-fields
   * --interleave
       In the output, place the verification fields immediately after
       the original field to which they correspond.
@@ -185,8 +183,6 @@ def detect_parser(usage=''):
                              'be included.')
     parser.add_argument('--output-fields', nargs='*',
                         help='Specify original columns to write out.')
-    parser.add_argument('--key', nargs='*',
-                        help='Same key fields for output.')
     parser.add_argument('-r', '--report', nargs='*',
                         help='Report formats to write.')
     parser.add_argument('--interleave', action='store_true',
@@ -254,11 +250,6 @@ def detect_flags(parser, args, params):
         params['output_fields'] = flags.output_fields
     elif not flags.no_output_fields:
         params['output_fields'] = []
-
-    if flags.key is not None:
-        params['key'] = flags.key
-    else:
-        params['key'] = []
 
     if flags.interleave:
         params['interleave'] = True
