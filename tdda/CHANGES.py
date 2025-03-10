@@ -944,5 +944,8 @@ safe.)
 Database detect starting to work
 
 Refactored config and state.
+
+Database detection appears to be fully working (though more
+to test and write tests for).
 ----------------------- end of dev -----------------------------
 """

@@ -806,11 +806,14 @@ class Verification(object):
         cconfig = get_config().constraints
         self.detect_passes = cconfig.get('detect_passes')
         self.int_bools = cconfig.get('int_bools')
+        self.report_path = kwargs.get('report_path', outpath)
 
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
-        if not outpath and not detect and not in_place:
+        if (not outpath and not detect and not in_place
+            and not getattr(self, 'is_db', None)
+        ):
             if any((write_all_records, per_constraint,
                     output_fields, index)):
                 raise Exception('You have specified detection parameters '
@@ -880,7 +883,7 @@ class Verification(object):
         configuration, this writes the report or reports.
         """
         # print_obj(self, '(constraints|fields)', invert=True)
-        if not (self.outpath and self.detect_report_formats):
+        if not (self.report_path and self.detect_report_formats):
             return
 
         #
@@ -911,8 +914,9 @@ class Verification(object):
                     c['failures'] = json_sanitize(list(failures))
             if constraints == {}:
                 del d['fields'][field]
+        config = get_config()
         for fmt in self.detect_report_formats:
-            outpath = swap_ext(self.outpath, f'.{fmt}')
+            outpath = swap_ext(nvl(self.report_path, self.outpath), f'.{fmt}')
             if fmt == 'json':
                 dict_to_json(d, outpath)
             elif fmt == 'yaml':
@@ -920,11 +924,11 @@ class Verification(object):
             elif fmt == 'toml':
                 dict_to_toml(d, outpath)
             elif fmt == 'txt':
-                write_text_detect_report(d, outpath)
+                write_text_detect_report(d, outpath, config)
             elif fmt in ('md', 'markdown'):
-                write_markdown_detect_report(d, outpath)
+                write_markdown_detect_report(d, outpath, config)
             elif fmt == 'html':
-                write_html_detect_report(d, outpath)
+                write_html_detect_report(d, outpath, config)
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
@@ -1011,6 +1015,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     VerificationClass = VerificationClass or Verification
     results = VerificationClass(constraints, **kwargs)
     outpath = kwargs.get('outpath')
+    report_path = kwargs.get('reportpath')
     detect = (outpath is not None
               or kwargs.get('detect') is not None
               or kwargs.get('in_place') is not None)
@@ -1050,7 +1055,8 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect and detected_records_writer and results.failures > 0:
         results.detection = detected_records_writer(**kwargs)
-        results.write_detection_reports()
+        if not hasattr(results, 'is_db'):
+            results.write_detection_reports()
 
     return results
 
@@ -1270,12 +1276,12 @@ def sort_constraint_dict(d):
     return OrderedDict((('fields', fields),))
 
 
-def write_text_detect_report(d, outpath):
+def write_text_detect_report(d, outpath, config):
     """
     Writes a human-readable textual report on detection failures
     """
     indent = '  '
-    ffv = CONFIG.format_failure_values
+    ffv = config.format_failure_values
     with open(outpath, 'w') as f:
         f.write('TDDA FAILURES REPORT')
         f.write('FIELDS:\n')
@@ -1285,7 +1291,7 @@ def write_text_detect_report(d, outpath):
                 label = f'{indent}Constraint: {constraint}: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = CONFIG.format_constraint_value(value, len(label), 4,
+                fval = config.format_constraint_value(value, len(label), 4,
                                                       rex=is_rex)
                 if fval.startswith('\n'):
                     label = label[:-1]
@@ -1299,11 +1305,11 @@ def write_text_detect_report(d, outpath):
                     f.write(f'{indent * 3}{ffv(failure)}\n')
 
 
-def write_markdown_detect_report(d, outpath):
+def write_markdown_detect_report(d, outpath, config):
     """
     Writes a human-readable textual report on detection failures
     """
-    ffv = CONFIG.format_failure_values
+    ffv = config.format_failure_values
     with open(outpath, 'w') as f:
         f.write('# TDDA FAILURES REPORT:\n')
         f.write('## FIELDS:\n')
@@ -1313,7 +1319,7 @@ def write_markdown_detect_report(d, outpath):
                 label = f'**Constraint:** `{constraint}`: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = CONFIG.format_constraint_value(value, len(label), 4,
+                fval = config.format_constraint_value(value, len(label), 4,
                                                       rex=is_rex)
                 if fval.startswith('\n'):
                     label = label[:-1]
@@ -1327,12 +1333,12 @@ def write_markdown_detect_report(d, outpath):
                     f.write(f'      * `{ffv(failure)}`\n')
 
 
-def write_html_detect_report(d, outpath):
+def write_html_detect_report(d, outpath, config):
     """
     Writes a human-readable textual report on detection failures
     """
     indent = '  '
-    ffv = CONFIG.format_failure_values
+    ffv = config.format_failure_values
     xml = XML(
         html=True,
         headerAttr={'title': 'TDDA Failure Report'},
@@ -1356,11 +1362,9 @@ def write_html_detect_report(d, outpath):
 
             is_rex = constraint == 'rex'
             label = f'Constraint: {constraint}: '
-            fval = CONFIG.format_constraint_value(value, len(label), 4,
+            fval = config.format_constraint_value(value, len(label), 4,
                                                   rex=is_rex)
 
-#            if fval.startswith('\n'):
-#                label = label[:-1]
             nf = results['n_failures']
             n = nf + results['n_passes']
             pc = results['failure_rate']

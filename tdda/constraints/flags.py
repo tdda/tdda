@@ -70,6 +70,11 @@ Optional flags are:
 DETECT_HELP = '''
 Optional flags are:
 
+  * -o, --report-path PATH
+      Path to which to write reports.
+      Unnecessary when records are written to file, but needed when
+      writing detected records to databases.
+      Extension does not matter (will be chosen to match report formats).
   * -a, --all
       Report all fields, even if there are no failures
   * -f, --fields
@@ -161,6 +166,8 @@ def detect_parser(usage=''):
                                      epilog=usage + DETECT_HELP,
                                      formatter_class=formatter)
     add_defaults(parser, epsilon=True)
+    parser.add_argument('-o', '--report-path', action='store',
+                        help='Path for reports')
     parser.add_argument('-a', '--all', action='store_true',
                         help='report all fields, even if there are '
                              'no failures')
@@ -255,6 +262,9 @@ def detect_flags(parser, args, params):
         params['output_fields'] = flags.output_fields
     elif not flags.no_output_fields:
         params['output_fields'] = []
+
+    if flags.report_path:
+        params['report_path'] = flags.report_path
 
     if flags.interleave:
         params['interleave'] = True
