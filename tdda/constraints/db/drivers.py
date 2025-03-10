@@ -825,6 +825,25 @@ class SQLDatabaseHandler:
             sql = '(%s <> 0)' % s
         return sql
 
+    def sum_sql(self, field):
+        return f'SUM({field})'
+
+    def count_zero_sql(self, field):
+        return f'SUM(CASE WHEN {field} = 0 THEN 1 ELSE 0 END)'
+
+    def count_true_sql(self, field):
+        return f'SUM(CASE WHEN {field} THEN 1 ELSE 0 END)'
+
+    def count_false_sql(self, field):
+        return f'SUM(CASE WHEN {field} THEN 0 ELSE 1 END)'
+
+    def count_non_zero_sql(self, field):
+        return f'SUM(CASE WHEN {self.quoted(field)} <> 0 THEN 1 ELSE 0 END)'
+
+    def get_scalar(self, expr, table):
+        sql = f'SELECT {expr} FROM {table}'
+        return self.execute_scalar(sql)
+
 
 class MongoDBDatabaseHandler:
     """

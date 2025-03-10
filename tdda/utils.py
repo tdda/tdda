@@ -38,6 +38,9 @@ REFTESTSDIR = os.path.join(TDDADIR, 'referencetest')
 
 DEFAULT_INPUT_ENCODING = 'UTF-8'
 
+OK = 'ok'
+BAD = 'bad'
+
 
 class XMLError(Exception):
     pass
@@ -533,11 +536,13 @@ def strip_lines(s):
     return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
 
 
-def ok_field_name(field, constraint, name_map=None):
+def indicator_field_name(field, constraint, name_map=None,
+                         detect_passes=True):
+    suffix = OK if detect_passes else BAD
     if name_map:
-        return f'{field}_{name_map[constraint]}_ok'
+        return f'{field}_{name_map[constraint]}_{suffix}'
     else:
-        return f'{field}_{constraint}_ok'
+        return f'{field}_{constraint}_{suffix}'
 
 
 def pass_fail_stats(passes, failures, items='cases'):

@@ -71,7 +71,7 @@ from tdda.serial.utils import (
     find_metadata_type_from_path
 )
 from tdda.serial.pandasio import to_pandas_read_csv_args
-from tdda.utils import ok_field_name, pass_fail_stats, handle_tilde
+from tdda.utils import indicator_field_name, pass_fail_stats, handle_tilde
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
@@ -332,7 +332,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                                index=False,
                                in_place=False,
                                rownumber_is_index=True,
-                               boolean_ints=False,
+                               int_bools=False,
                                interleave=False,
                                **kwargs):
         if self.out_df is None:
@@ -384,7 +384,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
             if output_is_typed:
                 df_to_save = out_df
             else:
-                df_to_save = convert_output_types(out_df, boolean_ints)
+                df_to_save = convert_output_types(out_df, int_bools)
             if add_index:
                 # Legacy
                 # Add Index or RowNumber columns to output CSV file (or
@@ -543,10 +543,15 @@ class PandasVerification(Verification):
     to_dataframe = to_frame
 
     def get_failure_values(self, field, constraint, key_fields):
-        ok_field = ok_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP)
-        exists = ok_field in self.detection.obj
+        indicator_field = indicator_field_name(
+            field, constraint, CONSTRAINT_SUFFIX_MAP,
+            # detect_passes=self.detect_passes  # not yet implemented
+            #                                   # for Pandas (TODO)
+        )
+        exists = indicator_field in self.detection.obj
+        bad_val = 1  # 0 for bad fild#
         if exists:
-            df = self.detection.obj.query(f'{ok_field} == 0')
+            df = self.detection.obj.query(f'{indicator_field} == {bad_val}')
             return zip(*(df[k].to_list() for k in key_fields),
                        df[field].to_list())
         else:
@@ -825,7 +830,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all_records=False, per_constraint=False,
               output_fields=None, index=False, in_place=False,
-              rownumber_is_index=True, boolean_ints=False,
+              rownumber_is_index=True, int_bools=False,
               repair=True, report='records',
               **kwargs):
     """
@@ -950,7 +955,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                             should refer to row numbers from the file, rather
                             than items from the DataFrame index).
 
-        *boolean_ints*:
+        *int_bools*:
                             If ``True``, write out all boolean values to
                             CSV file as integers (1 for true, and 0 for
                             false), rather than as ``true`` and ``false``
@@ -1001,7 +1006,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       output_fields=output_fields, index=index,
                       in_place=in_place,
                       rownumber_is_index=rownumber_is_index,
-                      boolean_ints=boolean_ints,
+                      int_bools=int_bools,
                       report=report, **kwargs)
 
 
@@ -1259,17 +1264,15 @@ def detection_field(column, expr, default=None):
         return np.where(pd.isnull(column), null, expr.astype('O'))
 
 
-
-
-def convert_output_types(df, boolean_ints):
+def convert_output_types(df, int_bools):
     """
     Construct a new DataFrame with boolean values mapped to appropriate
     string equivalents (usually "true" and "false", but optionally "1" and
     "0")
     """
     newdf = pd.DataFrame(index=df.index)
-    trueval = '1' if boolean_ints else 'true'
-    falseval = '0' if boolean_ints else 'false'
+    trueval = '1' if int_bools else 'true'
+    falseval = '0' if int_bools else 'false'
     pandas_true_values = (True, np.bool_(True))
     pandas_false_values = (True, np.bool_(False))
     for col in list(df):

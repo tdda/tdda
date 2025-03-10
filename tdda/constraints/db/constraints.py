@@ -35,7 +35,8 @@ from tdda.constraints.baseconstraints import (
 
 from tdda.constraints.db.drivers import DatabaseHandler
 from tdda.state import get_config
-from tdda.utils import squote, remove_falsy_values
+from tdda.utils import (squote, remove_falsy_values, indicator_field_name,
+                        pass_fail_stats, OK, BAD)
 from tdda import rexpy
 
 
@@ -170,7 +171,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.dbtype = dbtype
         self.source_table = self.resolve_table(tablename, quote=True)
         self.detect_passes = True  # False for _bad fields
-        self.out_field_suffix = 'ok' if self.detect_passes else 'bad'
+        self.out_field_suffix = OK if self.detect_passes else BAD
         # print(kwargs)
         self.interleave = cconfig.get('interleave', kwargs)
         self.per_constraint = cconfig.get('per_constraint', kwargs)
@@ -181,6 +182,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
     def detect(self, constraints, dest_pair, execute=True, **kwargs):
         ver = self.verify(constraints, VerificationClass=DatabaseVerification,
                           colour=kwargs.get('colour'))
+        ver.dbh = self
         if ver.failures == 0:
             return ver  # possibly calulate failure passing & failing
                         # records and values; though that's bit trivial
@@ -204,6 +206,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         ver.n_passing_fields = len(ver.fields) - ver.n_failing_fields
         raw_dest_name, dest_dbtype = dest_pair
         dest_name = self.resolve_table(raw_dest_name, quote=True)
+        ver.detection_table = dest_name
 
         if dest_dbtype != self.dbtype:
             raise Exception('Detect from RDBMS currently only supports'
@@ -212,7 +215,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         exprs = [] if self.interleave else [
             self.quoted(field) for field in failure_map
         ]
-        detection_fields = []
+        ver.detection_fields = detection_fields = []
         for fc in failure_field_constraints.values():
             if self.interleave:
                 exprs.append(self.quoted(fc.name))
@@ -241,8 +244,10 @@ SELECT * FROM DETECTED
         ver.sql = sql
         if execute:
             self.execute_commit(sql)
+            ver.n_total_records = self.get_nrows(self.source_table)
+            ver.n_failing_records = self.count_failing_records(dest_name)
+            ver.n_passing_records = ver.n_total_records - ver.n_failing_records
         return ver
-
 
     def detection_field_expressions(self, fc):
         detect_field = (
@@ -367,6 +372,10 @@ SELECT * FROM DETECTED
     def out_field_name(self, field, kind):
         return f'{field}_{kind}_{self.out_field_suffix}'
 
+    def count_failing_records(self, table):
+        expr = self.count_non_zero_sql(self.n_failures_field)
+        return self.get_scalar(expr, table)
+
 
 class DatabaseVerification(Verification):
     """
@@ -376,6 +385,52 @@ class DatabaseVerification(Verification):
     """
     def __init__(self, *args, **kwargs):
         Verification.__init__(self, *args, **kwargs)
+
+    def get_failure_values(self, field, constraint, key_fields):
+        indicator_field = (
+            indicator_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP,
+                                 detect_passes=self.detect_passes)
+        )
+        exists = indicator_field in self.detection_fields
+        bad_val = self.bad_val()
+        keys = ','.join(key_fields)
+        if exists:
+            sql = (f'SELECT {keys}, {field} FROM {self.dection_table} '
+                   f'WHERE {indicator_field} = {bad_val}')
+            return self.execute_many()
+        else:
+            return None
+
+    def get_constraint_stats(self, field, constraint):
+        indicator_field = (
+            indicator_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP,
+                                 detect_passes=self.detect_passes)
+        )
+        if not has_attr(self, 'constraint_stats'):
+            # compute them all together and save as dict
+            sql = ('SELECT\n'
+                  + '\n'.join(
+                            self.dbh.count_failing_record_for(indicator)
+                            for indicator in self.detect_fields
+                    )
+                  + 'FROM {ver.detection_table}')
+            result = self.execute_all(sql)
+            self.constraint_stats = dict(zip(self.detect_fields, result[0]))
+        return self.constraint_stats[indicator_field_name]
+
+    def bad_val(self):
+        if self.detect_passes:
+            return '0' if self.int_bools else 'FALSE'
+        else:
+            return '1' if self.int_bools else 'TRUE'
+
+    def count_failing_records_for(self, indicator_field):
+        if self.int_bools:
+            f = self.sum if self.detect_passes else self.count_zero
+        else:
+            f = self.count_false if self.detect_passes else self.count_true
+        return f(indicator_field)
+
 
 
 class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,

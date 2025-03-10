@@ -196,7 +196,7 @@ def detect_parser(usage=''):
                         help='Include a row-number index in the output file '
                              'when detecting. Rows are usually numbered from '
                              '1, unless the input file already has an index.')
-    parser.add_argument('--int', dest='boolean_ints', action='store_true',
+    parser.add_argument('--int', dest='int_bools', action='store_true',
                         help='Write out boolean fields as integers, with '
                              '1 for true and 0 for false.')
     return parser
@@ -248,8 +248,8 @@ def detect_flags(parser, args, params):
         params['per_constraint'] = True
     if flags.index:
         params['index'] = True
-    if flags.boolean_ints:
-        params['boolean_ints'] = True
+    if flags.int_bools:
+        params['int_bools'] = True
 
     if flags.output_fields is not None:
         params['output_fields'] = flags.output_fields

@@ -303,35 +303,6 @@ class DatasetConstraints(object):
         or by configuration, this writes the report or reports.
         """
 
-        print('*** Reports requested:')
-        for fmt in formats:
-            print(' ', fmt)
-        print()
-
-
-
-        # d = self.constraints.to_dict()
-        # key_fields = self.detect_key
-        # for field in list(d['fields']):
-        #     constraints = d['fields'][field]
-        #     for constraint in list(constraints):
-        #         value = constraints[constraint]
-        #         c = constraints[constraint] = {
-        #             'constraint_value': value
-        #         }
-        #         stats = self.get_constraint_stats(field, constraint)
-        #         if stats.n_failures == 0:
-        #             if minimal:
-        #                 del constraints[constraint]
-        #             else:
-        #                 c['n_failures'] = 0
-        #         else:
-        #             c.update(stats.to_dict())
-        #             failures = self.get_failure_values(field, constraint,
-        #                                                key_fields)
-        #             c['failures'] = json_sanitize(list(failures))
-        #     if constraints == {}:
-        #         del d['fields'][field]
         for fmt in formats:
             outpath = swap_ext(constraints_path, f'.{fmt}')
             if fmt == 'json':
@@ -832,6 +803,10 @@ class Verification(object):
         self.in_place = in_place
         self.detect_key = kwargs.get('key', [])
         self.detect_report_formats = kwargs.get('report_formats', [])
+        cconfig = get_config().constraints
+        self.detect_passes = cconfig.get('detect_passes')
+        self.int_bools = cconfig.get('int_bools')
+
         if report not in ('all', 'fields', 'records'):
             raise Exception('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
