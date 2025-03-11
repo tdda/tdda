@@ -11,6 +11,7 @@ requires = [
   "rich >= 13.3",
   "regex >= 2.5.148",
   "tomli_w >= 1.2.0",
+  "tomli >= 2.0",
 ]
 build-backend = "setuptools.build_meta"
 

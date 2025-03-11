@@ -1016,7 +1016,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       report=report, **kwargs)
 
 
-def discover_df(df, inc_rex=False, df_path=None, group_rexes=True):
+def discover_df(df, inc_rex=False, df_path=None, group_rexes=True, verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
