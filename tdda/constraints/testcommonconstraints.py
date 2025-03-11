@@ -142,6 +142,7 @@ class TestDiscoverReports(ReferenceTestCase):
         self.constraints.to_markdown_report(path, flavour='mmd')
         self.assertFileCorrect(path, reportpath(name))
 
+    @tag
     def testDiscoverHTMLTable(self):
         name = 'small7x5-constraints.html'
         path = tmppath(name)
