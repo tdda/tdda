@@ -46,7 +46,7 @@ from tdda.constraints.console import main_with_argv
 from tdda.constraints import discover, verify, detect
 
 from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import load_df, detect_df
+from tdda.constraints.pd.constraints import load_df
 from tdda.utils import PDCONSTRAINTSDIR, CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 
