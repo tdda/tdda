@@ -133,7 +133,7 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
         sys.exit(1)
 
 
-def detect(df_path, constraints_path, outpath=None, backend=DEFAULT_BACKEND,
+def detect(indata, constraints_path, outpath=None, backend=DEFAULT_BACKEND,
            **kwargs):
     """
     Check the records from the Pandas DataFrame provided, to detect
