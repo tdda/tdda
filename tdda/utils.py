@@ -569,41 +569,6 @@ def to_pc(v, mindp=2):
         return f'{small}%'
 
 
-def print_obj(o, rex=None, invert=False, as_repr=False, keys_only=False):
-    """
-    Print the __dict__ from o in the form:
-
-        key (type(value)): value
-
-    If rex is provided, print only keys matching rex.
-
-    If invert is set to True, use rex to exclude rather than include keys.
-
-    If as_repr is set, use repr(.) instead of str(.) for formatting value.
-    """
-    if rex:
-        r = re.compile(rex) if rex else None
-        if invert:
-            for k, v in o.__dict__.items():
-                if not re.match(r, k):
-                    print_item(k, v, as_repr, keys_only)
-        else:
-            for k, v in o.__dict__.items():
-                if re.match(r, k):
-                    print_item(k, v, as_repr, keys_only)
-    else:
-        for k, v in o.__dict__.items():
-            print_item(k, v, as_repr, keys_only)
-
-
-def print_item(k, v, as_repr=False, keys_only=False):
-    f = repr if as_repr else lambda x: x
-    if keys_only:
-        print(f'{k} ({type(v)})')
-    else:
-        print(f'{k} ({type(v)}): {f(v)}')
-
-
 def n_glyphs(s):
     """
     Returns the number of glyphs in a string.
@@ -611,11 +576,11 @@ def n_glyphs(s):
     return len(regex.findall(r'\X', s))
 
 
-def tddadir(path):
+def tddadir(*path):
     """
     Returns the full path to path where path is in the base tdda directory
     """
-    return os.path.join(TDDADIR, path)
+    return os.path.join(TDDADIR, *path)
 
 
 def constraints_testdata_path(path):
@@ -668,6 +633,7 @@ def tdda_css():
     with open(os.path.join(TEMPLATESDIR, 'tdda.css')) as f:
         return f.read()
 
+
 def constraint_val(v, kind=None):
     if type(v) is list:
         return '\n'.join(constraint_val(x) for x in v)
@@ -702,7 +668,7 @@ def squote(string, escape=True):
     parts = string.split("'")
     if escape:
         parts = [p.replace('\\', r'\\').replace('\n', r'\n') for p in parts]
-    quoted = ('\\"').join(parts)
+    quoted = ("\\'").join(parts)
     return "'%s'" % quoted
 
 

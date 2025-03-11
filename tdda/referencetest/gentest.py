@@ -970,6 +970,8 @@ class ExecuteCommand:
                 self.err = self.err.decode('UTF-8')
         except Exception as exc:
             self.exc = exc
+        finally:
+            sp.close()
         self.duration = timeit.default_timer() - t
 
 

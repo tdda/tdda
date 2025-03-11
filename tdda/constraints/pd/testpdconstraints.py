@@ -23,6 +23,7 @@ from shutil import which
 import pandas as pd
 import numpy as np
 
+from tdda.constraints import base
 from tdda.constraints.base import (
     MinConstraint,
     MaxConstraint,
@@ -36,7 +37,6 @@ from tdda.constraints.base import (
     DatasetConstraints,
     Fields,
     FieldConstraints,
-    verify as base_verify,
     native_definite,
     NativeDefiniteObject,
     fuzzy_less_than,
@@ -83,7 +83,7 @@ DATES = (datetime.datetime(1970, 1, 1),
          datetime.datetime(1, 1, 1),
          datetime.datetime(9999, 12, 31, 23, 59, 59),
          datetime.datetime.now(),
-         datetime.datetime.now(datetime.UTC))
+         datetime.datetime.now(datetime.timezone.utc))
 OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
                                                               else (b'u',))
 
@@ -824,7 +824,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc1 = [ic1]
         dsc1 = DatasetConstraints(dfc1)
         pdcv1 = pdc.PandasConstraintVerifier(df1)
-        results1 = base_verify(dsc1, list(df1), pdcv1.verifiers())
+        results1 = base.verify(dsc1, list(df1), pdcv1.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  6 passes  '
                     'type ✓  min ✓  max ✓  sign ✓  '
@@ -853,7 +853,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc2 = [ic2]
         dsc2 = DatasetConstraints(dfc2)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
-        results2 = base_verify(dsc2, list(df2), pdcv2.verifiers())
+        results2 = base.verify(dsc2, list(df2), pdcv2.verifiers())
         # expect the boolean->real type constraint to pass with sloppy types
         expected = ('FIELDS:\n\n'
                     'i: 5 failures  1 pass  '
@@ -880,7 +880,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
-        results2strict = base_verify(dsc2, list(df2), pdcv2strict.verifiers())
+        results2strict = base.verify(dsc2, list(df2), pdcv2strict.verifiers())
         # expect the boolean->real type constraint to fail with strict types
         expected = ('FIELDS:\n\n'
                     'i: 6 failures  0 passes  '
@@ -911,7 +911,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc3 = [ic3]
         dsc3 = DatasetConstraints(dfc3)
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base_verify(dsc3, list(df3), pdcv3.verifiers())
+        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type ✓\n\n'
                     'SUMMARY:\n\n'
@@ -930,7 +930,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base_verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
+        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
                     'SUMMARY:\n\n'

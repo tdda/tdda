@@ -37,6 +37,8 @@ def set_test_attributes(t):
 
 
 class TestGenTest(ReferenceTestCase):
+
+    #@tag
     def test1_exclusions(self):
         name = 'test_gentest1'
         # Create a test generator that doesn't actually run the tests
@@ -61,17 +63,17 @@ class TestGenTest(ReferenceTestCase):
         t.generate_exclusions()
 
         expected = {
-r'^\d{2}$',
-r'^Seed\: \d{10}$',
-r'^Job completed after a total of 0\.\d{4} seconds\.$',
-r'^Logging to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
-r'^Logs [a-z]{6,7} at 2020\/07\/01 16\:30\:\d{2} host ahost\.local\.$',
-r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
+r'^[0-9]{2}$',
+r'^Seed: [0-9]{10}$',
+r'^Job completed after a total of 0\.[0-9]{4} seconds\.$',
+r'^Logging to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
+r'^Logs [a-z]{6,7} at 2020/07/01 16:30:[0-9]{2} host ahost\.local\.$',
+r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
         }
         self.assertEqual(set(t.exclusions['STDOUT'][0]), expected)
         self.assertEqual(set(t.exclusions['STDOUT'][1]), {'ODD'})
 
-#    @tag
+    @tag
     def test2_simple_date_exclusions(self):
         name = 'test_gentest2'
 
@@ -98,7 +100,7 @@ r'^Logs written to \/home\/auser\/miro\/log\/2020\/07\/01\/[a-z]{7}\d{3}\.$',
         rexes, removals, substrings = t.exclusions['STDOUT']
 
         expected_rexes = {
-            r'^Plausible date 2020\-07\-01 12\:00\:\d{2} '
+            r'^Plausible date 2020\-07\-01 12:00:[0-9]{2} '
             r'and the hostname ahost  \# diff$'
             # ^ should be in because the line is different between
             # the two files

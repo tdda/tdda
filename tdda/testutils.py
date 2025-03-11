@@ -1,7 +1,11 @@
 import os
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
-from tdda.utils import to_pc, n_glyphs, handle_tilde, XML
+from tdda.utils import (
+    to_pc, n_glyphs, handle_tilde, XML, squote, DQuote,
+    tddadir, Dummy,
+    CONSTRAINTSDIR, PDCONSTRAINTSDIR,
+)
 from unicodedata import normalize
 
 class TestTDDAUtils(ReferenceTestCase):
@@ -162,6 +166,31 @@ class TestXMLGeneration(ReferenceTestCase):
 </foo>
 '''.strip())
         self.assertEqual(type(stripped), str)
+
+    def testSQuote(self):
+        self.assertEqual(squote(''), "''")
+        self.assertEqual(squote("''"), r"""'\'\''""")
+        self.assertEqual(squote("It's"), r"'It\'s'")
+        self.assertEqual(squote("It's\na\ndog's\nlife."),
+                                r"'It\'s\na\ndog\'s\nlife.'")
+
+    def testDQuote(self):
+        self.assertEqual(DQuote(""), '""')
+        self.assertEqual(DQuote('""'), r'''"\"\""''')
+        self.assertEqual(DQuote('"So,", she said.\n"So, So"'),
+                                r'"\"So,\", she said.\n\"So, So\""')
+
+    def testtddadir(self):
+        self.assertEqual(tddadir('constraints'), CONSTRAINTSDIR)
+        self.assertEqual(tddadir('constraints', 'pd'), PDCONSTRAINTSDIR)
+
+    def testDummy(self):
+        d = Dummy(a=1, b=2)
+        self.assertEqual(d.a, 1)
+        self.assertEqual(d.b, 2)
+        self.assertEqual(d.to_dict(), {'a': 1, 'b': 2})
+
+    
 
 
 if __name__ == '__main__':

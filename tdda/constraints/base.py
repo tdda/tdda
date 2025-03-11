@@ -20,7 +20,7 @@ from tdda.state import get_config
 from tdda.tables import Table
 from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
-    json_sanitize, strip_lines, print_obj,
+    json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val
 )
@@ -235,7 +235,7 @@ class DatasetConstraints(object):
 
     def set_dates_user_host_creator(self, as_at=None):
         now = datetime.datetime.now()
-        utcnow = datetime.datetime.now(datetime.UTC)
+        utcnow = datetime.datetime.now(datetime.timezone.utc)
         self.as_at = as_at
         self.local_time = now.isoformat(timespec='seconds')
         self.utc_time = utcnow.isoformat(timespec='seconds')
@@ -882,7 +882,6 @@ class Verification(object):
         of the output file, or -r / --report flags, or by
         configuration, this writes the report or reports.
         """
-        # print_obj(self, '(constraints|fields)', invert=True)
         if not (self.report_path and self.detect_report_formats):
             return
 

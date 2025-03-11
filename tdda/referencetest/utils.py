@@ -31,10 +31,11 @@ class FileType:
                 self.encoding = 'iso-8859-1'
             else:
                 detector = chardet.UniversalDetector()
-                for line in open(path, 'rb'):
-                    detector.feed(line)
-                    if detector.done:
-                        break
+                with open(path, 'rb') as f:
+                    for line in f.readlines():
+                        detector.feed(line)
+                        if detector.done:
+                            break
                 detector.close()
                 confidence = detector.result.get('confidence', 0.0)
                 if confidence  > MIN_CHARDET_CONFIDENCE:
