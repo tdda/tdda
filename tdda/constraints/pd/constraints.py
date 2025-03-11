@@ -1016,7 +1016,8 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       report=report, **kwargs)
 
 
-def discover_df(df, inc_rex=False, df_path=None, group_rexes=True, verbose=None):
+def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
+                group_rexes=True, report_formats=None, verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1152,7 +1153,24 @@ def discover_df(df, inc_rex=False, df_path=None, group_rexes=True, verbose=None)
         constraints.set_dates_user_host_creator()
         constraints.set_source(df_path)
         constraints.set_stats(n_records=len(df), n_selected=len(df))
+        write_constraints(constraints, constraints_path, report_formats,
+                          verbose=verbose)
+
     return constraints
+
+
+def write_constraints(constraints, constraints_path, report_formats,
+                      verbose=False):
+    out_json = constraints.to_json(tddafile=constraints_path)
+    if constraints_path and constraints_path != '-':
+        with open(constraints_path, 'w') as f:
+            f.write(out_json)
+        if report_formats:
+            constraints.write_discovery_reports(constraints_path,
+                                                report_formats)
+
+    elif verbose or constraints_path == '-':
+        print(out_json)
 
 
 def file_format(path):

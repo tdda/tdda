@@ -83,7 +83,7 @@ def discover(indata, constraints_path=None, verbose=True,
         return discover_df(indata, constraints_path, verbose=verbose, **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
         return discover_df_from_file(indata, constraints_path, verbose=verbose,
-                              **kwargs)
+                                     **kwargs)
     else:
         print('Unsupported discovery mode', file=sys.stderr)
         sys.exit(1)

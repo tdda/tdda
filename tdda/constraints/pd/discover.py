@@ -32,7 +32,8 @@ except ImportError:
 
 from tdda import __version__
 from tdda.constraints.flags import discover_parser, discover_flags
-from tdda.constraints.pd.constraints import discover_df, load_df
+from tdda.constraints.pd.constraints import (discover_df, load_df,
+                                             write_constraints)
 
 from tdda.utils import handle_tilde, nvl
 
@@ -76,18 +77,9 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
         # should never happen
         return
 
-    out_json = constraints.to_json(tddafile=constraints_path)
-    if constraints_path and constraints_path != '-':
-        with open(constraints_path, 'w') as f:
-            f.write(out_json)
-        if report_formats:
-            constraints.write_discovery_reports(constraints_path,
-                                                report_formats)
-
-    elif verbose or constraints_path == '-':
-        print(out_json)
+    write_constraints(constraints, constraints_path, report_formats,
+                      verbose=verbose)
     return constraints
-
 
 
 def pd_discover_parser():

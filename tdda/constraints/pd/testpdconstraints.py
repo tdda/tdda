@@ -36,18 +36,17 @@ from tdda.constraints.base import (
     DatasetConstraints,
     Fields,
     FieldConstraints,
-    verify,
+    verify as base_verify,
     native_definite,
     NativeDefiniteObject,
     fuzzy_less_than,
     fuzzy_greater_than,
 )
 from tdda.constraints.console import main_with_argv
+from tdda.constraints import discover, verify, detect
 
 from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import (load_df, verify_df,
-                                             discover_df, detect_df)
-from tdda.constraints.pd.discover import discover_df_from_file
+from tdda.constraints.pd.constraints import (load_df, verify_df, detect_df)
 from tdda.constraints.pd.verify import verify_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
 from tdda.utils import PDCONSTRAINTSDIR, CONSTRAINTSTESTDATADIR as TESTDATADIR
@@ -67,9 +66,6 @@ from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 
 isPython2 = sys.version_info[0] < 3
-
-    
-
 
 SMALL = 2.48e-324
 MILLION = 1000 * 1000
@@ -830,7 +826,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc1 = [ic1]
         dsc1 = DatasetConstraints(dfc1)
         pdcv1 = pdc.PandasConstraintVerifier(df1)
-        results1 = verify(dsc1, list(df1), pdcv1.verifiers())
+        results1 = base_verify(dsc1, list(df1), pdcv1.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  6 passes  '
                     'type ✓  min ✓  max ✓  sign ✓  '
@@ -859,7 +855,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc2 = [ic2]
         dsc2 = DatasetConstraints(dfc2)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
-        results2 = verify(dsc2, list(df2), pdcv2.verifiers())
+        results2 = base_verify(dsc2, list(df2), pdcv2.verifiers())
         # expect the boolean->real type constraint to pass with sloppy types
         expected = ('FIELDS:\n\n'
                     'i: 5 failures  1 pass  '
@@ -886,7 +882,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
-        results2strict = verify(dsc2, list(df2), pdcv2strict.verifiers())
+        results2strict = base_verify(dsc2, list(df2), pdcv2strict.verifiers())
         # expect the boolean->real type constraint to fail with strict types
         expected = ('FIELDS:\n\n'
                     'i: 6 failures  0 passes  '
@@ -917,7 +913,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc3 = [ic3]
         dsc3 = DatasetConstraints(dfc3)
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = verify(dsc3, list(df3), pdcv3.verifiers())
+        results3 = base_verify(dsc3, list(df3), pdcv3.verifiers())
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type ✓\n\n'
                     'SUMMARY:\n\n'
@@ -936,7 +932,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
+        results3 = base_verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
                     'SUMMARY:\n\n'
@@ -950,7 +946,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
-        v = verify_df(df, constraints_path)
+        v = verify(df, constraints_path)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
@@ -958,7 +954,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'elements92.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        v = verify_df(df, constraints_path)
+        v = verify(df, constraints_path)
         self.assertEqual(v.passes, 78)
         self.assertEqual(v.failures, 0)
 
@@ -966,7 +962,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
-        v = verify_df(df, constraints_path, report='fields')
+        v = verify(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 57)
         self.assertEqual(v.failures, 15)
         vdf = v.to_dataframe()
@@ -978,7 +974,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         path = os.path.join(TESTDATADIR, 'elements118.parquet')
         df = pd.read_parquet(path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
-        v = verify_df(df, constraints_path, report='fields')
+        v = verify(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 57)
         self.assertEqual(v.failures, 15)
         vdf = v.to_dataframe()
@@ -989,7 +985,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        v = verify_df(df, constraints_path, report='fields')
+        v = verify(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         vdf = v.to_dataframe()
@@ -1000,7 +996,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         path = os.path.join(TESTDATADIR, 'elements118.parquet')
         df = pd.read_parquet(path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        v = verify_df(df, constraints_path, report='fields')
+        v = verify(df, constraints_path, report='fields')
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         vdf = v.to_dataframe()
@@ -1013,7 +1009,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df(df, constraints_path)
+        v = verify(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
         #   - the pandas CSV reader will have read the date columns as strings
@@ -1023,7 +1019,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_csv(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        v = verify(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
         #     an int field and then (correctly) converted it to string, but
@@ -1039,13 +1035,12 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover_df_from_file(csv_path, constraints_path=None,
-                                  verbose=False)
+        c = discover(csv_path, constraints_path=None, verbose=False)
         tmpdir = tempfile.gettempdir()
         tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
         with open(tmpfile, 'w') as f:
             f.write(c)
-        v = verify_df_from_file(csv_path, tmpfile, report='fields',
+        v = verify(csv_path, tmpfile, report='fields',
                                 verbose=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
@@ -1054,7 +1049,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df(df, constraints_path)
+        v = verify(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
         #   - the pandas CSV reader will have read the date columns as strings
@@ -1064,7 +1059,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_csv(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        v = verify(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
         #     an int field and then (correctly) converted it to string, but
@@ -1080,14 +1075,12 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover_df_from_file(csv_path, constraints_path=None,
-                                  verbose=False)
+        c = discover(csv_path, constraints_path=None, verbose=False)
         tmpdir = tempfile.gettempdir()
         tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
         with open(tmpfile, 'w') as f:
             f.write(c)
-        v = verify_df_from_file(csv_path, tmpfile, report='fields',
-                                verbose=False)
+        v = verify(csv_path, tmpfile, report='fields', verbose=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
@@ -1095,7 +1088,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df(df, constraints_path)
+        v = verify(df, constraints_path)
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
         #   - the pandas CSV reader will have read the date columns as strings
@@ -1105,7 +1098,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_csv(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify_df_from_file(csv_path, constraints_path, verbose=False)
+        v = verify(csv_path, constraints_path, verbose=False)
         # expect 1 failure:
         #   - the enhanced CSV reader will have initially read 'elevens' as
         #     an int field and then (correctly) converted it to string, but
@@ -1121,21 +1114,19 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_discover_and_verify(self):
         # both discovery and verification done using Pandas
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover_df_from_file(csv_path, constraints_path=None,
-                                  verbose=False)
+        c = discover(csv_path, constraints_path=None, verbose=False)
         tmpdir = tempfile.gettempdir()
         tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
         with open(tmpfile, 'w') as f:
             f.write(c.to_json())
-        v = verify_df_from_file(csv_path, tmpfile, report='fields',
-                                verbose=False)
+        v = verify(csv_path, tmpfile, report='fields', verbose=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
     def testDiscoverDataframeDates(self):
         df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
                                  datetime.date(2019, 1, 2)]})
-        c = discover_df(df)
+        c = discover(df, verbose=False)
         ac = c.fields['a'].constraints
         self.assertEqual(ac['type'].value, 'date')
         self.assertEqual(ac['min'].value, datetime.date(1987, 1, 1))
@@ -1145,7 +1136,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDiscoverDataframeDateTimes(self):
         df = pd.DataFrame({'a': [datetime.datetime(1987, 1, 1),
                                  datetime.datetime(2019, 1, 2)]})
-        c = discover_df(df)
+        c = discover(df, verbose=False)
         ac = c.fields['a'].constraints
         self.assertEqual(ac['type'].value, 'date')
         self.assertEqual(ac['min'].value, datetime.datetime(1987, 1, 1))
@@ -1164,7 +1155,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         }
         constraints = DatasetConstraints()
         constraints.initialize_from_dict(native_definite(cdict))
-        v = verify_df(df, cdict, repair=False)
+        v = verify(df, cdict, repair=False)
         self.assertFalse(v.fields['a']['type'])
         self.assertFalse(v.fields['a']['sign'])
 
@@ -1181,7 +1172,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         }
         constraints = DatasetConstraints()
         constraints.initialize_from_dict(native_definite(cdict))
-        v = verify_df(df, cdict, repair=False)
+        v = verify(df, cdict, repair=False)
         self.assertFalse(v.fields['a']['type'])
         self.assertFalse(v.fields['a']['min_length'])
         self.assertFalse(v.fields['a']['max_length'])
@@ -1230,7 +1221,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             constraints = DatasetConstraints()
             with self.assertRaises(Exception):
                 constraints.initialize_from_dict(native_definite(cdict))
-                v = verify_df(df, cdict, repair=False)
+                v = verify(df, cdict, repair=False)
 
 
 class TestPandasExampleAccountsData(ReferenceTestCase):
@@ -1242,8 +1233,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover_df_from_file(csv_path, constraints_path=tddafile1k,
-                                  verbose=False)
+        c = discover(csv_path, constraints_path=tddafile1k, verbose=False)
         self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
@@ -1259,8 +1249,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover_df_from_file(pq_path, constraints_path=tddafile1k,
-                                  verbose=False)
+        c = discover(pq_path, constraints_path=tddafile1k, verbose=False)
         self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
@@ -1276,24 +1265,21 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
     def testVerify1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
-                                verbose=False)
+        v = verify(csv_path, constraints_path=reftddafile1k, verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
     def testVerify1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
-                                verbose=False)
+        v = verify(pq_path, constraints_path=reftddafile1k, verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
 
     def testVerify25kAgainst1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify_df_from_file(csv_path, constraints_path=reftddafile1k,
-                                  verbose=False)
+        v = verify(csv_path, constraints_path=reftddafile1k, verbose=False)
 
         passingConstraints = 53
         failingConstraints = 19
@@ -1309,8 +1295,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
     def testVerify25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify_df_from_file(pq_path, constraints_path=reftddafile1k,
-                                verbose=False)
+        v = verify(pq_path, constraints_path=reftddafile1k, verbose=False)
 
         # These are one different from CSV version because
         # the CSV reader reads the empty strings in account_type
@@ -1389,8 +1374,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
         tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
         reftddafile = os.path.join(TESTDATADIR, 'ref-accounts25k.tdda')
-        c = discover_df_from_file(csv_path, constraints_path=tddafile,
-                                  verbose=False)
+        c = discover(csv_path, constraints_path=tddafile, verbose=False)
         self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
@@ -1525,7 +1509,8 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
             new_refjson = f.read()
         old_ref = native_definite(json.loads(old_refjson))
         new_ref = native_definite(json.loads(new_refjson))
-        constraints = discover_df(df, inc_rex=inc_rex, group_rexes=False)
+        constraints = discover(df, inc_rex=inc_rex, group_rexes=False,
+                               verbose=False)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         old_ref_fields = old_ref['fields']
