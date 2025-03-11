@@ -171,7 +171,7 @@ def detect(indata, constraints_path, outpath=None, backend=DEFAULT_BACKEND,
     kind = source_kind(indata)
     if kind == 'pandas':
         detect_df(indata, constraints_path, outpath=outpath,
-                  verbose=verbose, **kwargs)
+                  **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
         detect_df_from_file(indata, constraints_path, verbose=verbose,
                           outpath=outpath, **kwargs)
