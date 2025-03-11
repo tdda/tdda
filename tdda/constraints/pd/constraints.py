@@ -58,7 +58,11 @@ from tdda.constraints.baseconstraints import (
     MAX_CATEGORIES,
     unicode_string, byte_string, long_type
 )
-from tdda.pd.utils import is_string_col, is_string_dtype, is_categorical_dtype
+from tdda.pd.utils import (
+    is_string_col, is_string_dtype, is_categorical_dtype,
+)
+from tdda.utils import indicator_field_name
+
 
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
@@ -558,7 +562,9 @@ class PandasVerification(Verification):
             return None
 
     def get_constraint_stats(self, field, constraint):
-        ok_field = ok_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP)
+        ok_field = indicator_field_name(field, constraint,
+                                        CONSTRAINT_SUFFIX_MAP)
+        # TODO: support bad as well
         df = self.detection.obj
         n_records = int(self.detection.n_passing_records
                         + self.detection.n_failing_records)

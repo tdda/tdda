@@ -3,7 +3,7 @@ import pandas as pd
 from tdda.serial.reader import csv2pandas
 
 
-def pandas_read_df(path):
+def pandas_read_df(path, nullable=False):
     """
     Reads a pandas data frame from parquet or csv, as the extension suggests.
     Prefers nullable types.
@@ -12,7 +12,11 @@ def pandas_read_df(path):
     if ext == '.csv':
         return csv2pandas(path)
     elif ext == '.parquet':
-        return pd.read_parquet(path)
+        # return pd.read_parquet(path, use_nullable_dtype=True)
+        if nullable:
+            return pd.read_parquet(path, dtype_backend='numpy_nullable')
+        else:
+            return pd.read_parquet(path)
     else:
         raise Exception(f'Unexpected extension {ext} in {path}.')
 

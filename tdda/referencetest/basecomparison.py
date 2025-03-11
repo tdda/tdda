@@ -17,6 +17,8 @@ import shutil
 import sys
 import tempfile
 
+import pandas as pd
+
 from collections import namedtuple
 from itertools import chain
 
@@ -259,7 +261,7 @@ class SameStructureDDiff:
                 r_vals = [py_val(R.iat[r, c]) for c in range(m)]
                 lstr = [
                     C.common(left) if left == right
-                                    else C.left_diff(left, prefix)
+                                   else C.left_diff(left, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 rstr = [
@@ -443,6 +445,17 @@ def df_col_pos(c, df):
 
 def py_val(x):
     try:
-        return x.item()
+        v = x.item()
     except AttributeError:
-        return x
+        v = x
+    return None if pd.isna(v) else v
+
+
+def pd_eq(left, right):
+    if pd.isna(left):
+        if pd.isna(right):
+            return True
+    elif pd.isna(right):
+        return False
+    return left == right
+

@@ -207,7 +207,6 @@ class TestDatabaseConstraintVerifiers:
 
 
 class TestDatabaseDetect:
-    @tag
     def test_detect_elements(self):
         constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
         source_table = self.dbh.resolve_table('elements')
@@ -225,8 +224,9 @@ class TestDatabaseDetect:
         self.assertStringCorrect(str(result), expected_path)
         del result.sql
 
-        # Really need to pull the data from the table and compaire
+        # Really need to pull the data from the table and compare
         # to the parquet or CSV
+
 
 
 

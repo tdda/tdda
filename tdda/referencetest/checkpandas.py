@@ -23,8 +23,10 @@ from tdda.referencetest.basecomparison import (
     SameStructureDDiff
 )
 from tdda.referencetest.pddates import infer_date_format
-from tdda.pd.utils import is_string_col
+from tdda.serial.io import pandas_read_df
 from tdda.utils import nvl
+
+from tdda.pd.utils import is_string_col
 
 import pandas as pd
 import numpy as np
@@ -648,7 +650,8 @@ class PandasComparison(BaseComparison):
         return loader(csvfile, **kwargs)
 
     def load_serialized_dataframe(
-        self, path, actual_df=None, loader=None, reset_index=True, **kwargs
+        self, path, actual_df=None, loader=None, reset_index=True,
+        nullable=True, **kwargs
     ):
         """
         Function for constructing a pandas dataframe from a serialized
@@ -657,7 +660,8 @@ class PandasComparison(BaseComparison):
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:
-                df = pd.read_parquet(path)
+                #nullable = False  # TODO: Hmm...
+                df = pandas_read_df(path, nullable=nullable)
                 if reset_index and not df.index.is_monotonic_increasing:
                     df.reset_index(drop=True, inplace=True)
                 return df
