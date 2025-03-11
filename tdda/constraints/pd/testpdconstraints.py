@@ -46,9 +46,7 @@ from tdda.constraints.console import main_with_argv
 from tdda.constraints import discover, verify, detect
 
 from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import (load_df, verify_df, detect_df)
-from tdda.constraints.pd.verify import verify_df_from_file
-from tdda.constraints.pd.detect import detect_df_from_file
+from tdda.constraints.pd.constraints import load_df, detect_df
 from tdda.utils import PDCONSTRAINTSDIR, CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 
@@ -1196,7 +1194,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         }
         constraints = DatasetConstraints()
         constraints.initialize_from_dict(native_definite(cdict))
-        v = detect_df(df, cdict, per_constraint=True, output_fields=[],
+        v = detect(df, cdict, per_constraint=True, output_fields=[],
                       interleave=True, repair=False)
         d = v.detected()
         self.assertTrue(not d['a_type_ok'].any())
@@ -1317,7 +1315,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
-        v = detect_df_from_file(csv_path, constraints_path=reftddafile1k,
+        v = detect(csv_path, constraints_path=reftddafile1k,
                                 outpath=outfile, verbose=False)
         passingConstraints = 53
         failingConstraints = 19
@@ -1343,7 +1341,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.parquet')
         refcsvpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.parquet')
-        v = detect_df_from_file(pq_path, constraints_path=reftddafile1k,
+        v = detect(pq_path, constraints_path=reftddafile1k,
                                 outpath=outfile, verbose=False)
         passingConstraints = 53
         failingConstraints = 19
@@ -1396,7 +1394,7 @@ class TestPandasMultipleConstraintDetector(
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect.csv')
-        v = detect_df(df, constraints_path, report='fields',
+        v = detect(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
                       rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
@@ -1409,7 +1407,7 @@ class TestPandasMultipleConstraintDetector(
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir,
                                   'elements118rex_detect_perc.csv')
-        v = detect_df(df, constraints_path, report='fields',
+        v = detect(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
                       per_constraint=True, rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
@@ -1421,7 +1419,7 @@ class TestPandasMultipleConstraintDetector(
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        v = detect_df(df, constraints_path, output_fields=['Z'],
+        v = detect(df, constraints_path, output_fields=['Z'],
                       rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
@@ -1446,7 +1444,7 @@ class TestPandasMultipleConstraintDetector(
         constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         detect_name = 'elements118_detect_from_%s.%s' % (input, output)
         detectfile = os.path.join(self.tmp_dir, detect_name)
-        v = detect_df(df, constraints_path, report='fields',
+        v = detect(df, constraints_path, report='fields',
                       outpath=detectfile, output_fields=['Z'],
                       per_constraint=True, index=True,
                       rownumber_is_index=False)
