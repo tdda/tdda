@@ -38,8 +38,8 @@ from tdda.constraints.pd.constraints import (discover_df, load_df,
 from tdda.utils import handle_tilde, nvl
 
 
-def discover_df_from_file(df_path, constraints_path, report_formats=None,
-                          verbose=True, **kwargs):
+def discover_df_from_file(df_path, constraints_path, report_path=None,
+                          report_formats=None, verbose=True, **kwargs):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -55,8 +55,14 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
             If None, constraints are not written.
             If '-', constraints are sent to stdout.
 
-        *report_formats*:
-            Any extra formats in which to write constraints reports
+        *report_path*:
+            Path for reports. Extension is ignored.
+            Will write reports to variations of this path if set;
+            otherwuse uses constraints_path
+
+        * *report_formats*:
+            List of report formats to write from:
+               html, markdown (or md), text (or txt), yaml, json, toml
 
         *verbose*:
             Controls level of output reporting
@@ -72,14 +78,8 @@ def discover_df_from_file(df_path, constraints_path, report_formats=None,
         df_path = StringIO(sys.stdin.read())
         md_df_path = None
     df = load_df(df_path)
-    constraints = discover_df(df, df_path=md_df_path, **kwargs)
-    if constraints is None:
-        # should never happen
-        return
-
-    write_constraints(constraints, constraints_path, report_formats,
-                      verbose=verbose)
-    return constraints
+    return discover_df(df, constraints_path, df_path=md_df_path, report_path=report_path,
+                       report_formats=report_formats, **kwargs)
 
 
 def pd_discover_parser():

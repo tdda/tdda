@@ -47,8 +47,9 @@ def source_kind(src):
         return None
 
 
-def discover(indata, constraints_path=None, verbose=True,
-             backend=DEFAULT_BACKEND, **kwargs):
+def discover(indata, constraints_path=None,
+             backend=DEFAULT_BACKEND, report_path=None, report_formats=None,
+             verbose=True, **kwargs):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -65,12 +66,21 @@ def discover(indata, constraints_path=None, verbose=True,
             If None, constraints are not written.
             If '-', constraints are sent to stdout.
 
-        *verbose*:
-            Controls level of output reporting
-
         *backend*:
             Backend to use.
             Currently only pandas is supported.
+
+        *report_path*:
+            Path for reports. Extension is ignored.
+            Will write reports to variations of this path if set;
+            otherwuse uses constraints_path
+
+        *report_formats*:
+            List of report formats to write from:
+               html, markdown (or md), text (or txt), yaml, json, toml
+
+        *verbose*:
+            Controls level of output reporting
 
         *kwargs*:
             Passed to discover_df
@@ -80,10 +90,14 @@ def discover(indata, constraints_path=None, verbose=True,
     """
     kind = source_kind(indata)
     if kind == 'pandas':
-        return discover_df(indata, constraints_path, verbose=verbose, **kwargs)
+        return discover_df(indata, constraints_path, report_path=report_path,
+                           report_formats=report_formats,
+                           verbose=verbose, **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
-        return discover_df_from_file(indata, constraints_path, verbose=verbose,
-                                     **kwargs)
+        return discover_df_from_file(indata, constraints_path,
+                                     report_path=report_path,
+                                     report_formats=report_formats,
+                                     verbose=verbose, **kwargs)
     else:
         print('Unsupported discovery mode', file=sys.stderr)
         sys.exit(1)

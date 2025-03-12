@@ -49,13 +49,14 @@ def help_defaults(help=True, seven=True, colour=True, config=True,
 DISCOVER_HELP = '''
 Optional flags are:
 
-  * -r or --rex
+  * -x or --rex
       Include regular expression generation. Disabled by default.
-  * -R or --no-rex
+  * -X or --no-rex
       Exclude regular expression generation (the default)
-  * -c --report FORMAT1 FORMAT2 ...
+  * -r or --report FORMAT1 FORMAT2 ...
       Write constraints reports in the formats listed. Allowed formats
-      are: txt json yaml toml md markdown html.''' + help_defaults()
+      are: html, text, txt, json, yaml, toml, mmarkdown, and md.
+  * -o or --report-path PATH''' + help_defaults()
 
 VERIFY_HELP = ('''
 Optional flags are:
@@ -104,7 +105,7 @@ Optional flags are:
       at the end the original fields
   * -r --report FORMAT1 FORMAT2 ...
       Write reports in the formats listed. Allowed formats
-      are: txt json yaml toml md markdown html.
+      are: html, text, txt, json, yaml, toml, mmarkdown, and md.
   * --index
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
@@ -118,12 +119,14 @@ def discover_parser(usage=''):
                                      epilog=usage + DISCOVER_HELP,
                                      formatter_class=formatter)
     add_defaults(parser)
-    parser.add_argument('-r', '--rex', action='store_true',
+    parser.add_argument('-x', '--rex', action='store_true',
                         help='include regular expression generation')
-    parser.add_argument('-R', '--no-rex', action='store_true',
+    parser.add_argument('-X', '--no-rex', action='store_true',
                         help='exclude regular expression generation')
     parser.add_argument('-c', '--report', nargs='*',
                         help='Report formats to write.')
+    parser.add_argument('-o', '--report-path', action='store',
+                        help='Path for reports')
     return parser
 
 
@@ -137,6 +140,8 @@ def discover_flags(parser, args, params):
         params['report_formats'] = flags.report
     else:
         params['report_formats'] = []
+    if flags.report_path:
+        params['report_path'] = flags.report_path
 
     return flags
 

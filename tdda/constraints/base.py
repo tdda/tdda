@@ -297,32 +297,32 @@ class DatasetConstraints(object):
             fields = sorted(self.fields.keys())
         self.fields.set_key_order(fields)
 
-    def write_discovery_reports(self, constraints_path, formats):
+    def write_discovery_reports(self, reports_path, formats):
         """
         If any detection reports are specified by report_formats parameter
         or by configuration, this writes the report or reports.
         """
 
         for fmt in formats:
-            outpath = swap_ext(constraints_path, f'.{fmt}')
+            outpath = swap_ext(reports_path, f'.{fmt}')
             if fmt == 'json':
                 self.to_json_report(outpath)
             elif fmt == 'yaml':
                 self.to_yaml_report(outpath)
             elif fmt == 'toml':
                 self.to_toml_report(outpath)
-            elif fmt == 'txt':
+            elif fmt in ('txt', 'text'):
                 self.to_text_report(outpath)
             elif fmt in ('md', 'markdown'):
                 self.to_markdown_report(outpath)
             elif fmt == 'html':
-                self.to_html_detect_report(outpath)
+                self.to_html_report(outpath)
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
 
     def to_json_report(self, outpath=None):
-        return write_or_return(self.to_json(), json.dump, json.dumps,
+        return write_or_return(self.to_json(), fwrite, json.dumps,
                                path=outpath)
 
     def to_yaml_report(self, outpath=None):
@@ -331,7 +331,7 @@ class DatasetConstraints(object):
 
     def to_toml_report(self, outpath=None):
         return write_or_return(self.to_dict(), tomli_w.dump,
-                               tomli_w.dumps, path=outpath)
+                               tomli_w.dumps, path=outpath, binary=True)
 
     def to_text_report(self, outpath=None):
         return write_or_return(self.table.toString(), fwrite, passthrough,
@@ -922,7 +922,7 @@ class Verification(object):
                 dict_to_yaml(d, outpath)
             elif fmt == 'toml':
                 dict_to_toml(d, outpath)
-            elif fmt == 'txt':
+            elif fmt in ('txt', 'text'):
                 write_text_detect_report(d, outpath, config)
             elif fmt in ('md', 'markdown'):
                 write_markdown_detect_report(d, outpath, config)

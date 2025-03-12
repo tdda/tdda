@@ -1,0 +1,86 @@
+creation_metadata:
+  creator: TDDA 2.2.15
+  dataset: ddd.csv
+  host: escher.local
+  local_time: '2025-03-12T08:44:10'
+  n_records: 10
+  n_selected: 10
+  source: /Users/njr/python/tdda/tdda/constraints/testdata/ddd.csv
+  user: njr
+  utc_time: '2025-03-12T08:44:10+00:00'
+fields:
+  basedate:
+    max: '1970-01-10 00:00:00'
+    max_nulls: 0
+    min: '1970-01-01 00:00:00'
+    type: date
+  binnedindex:
+    max: 10
+    max_nulls: 0
+    min: 1
+    no_duplicates: true
+    sign: positive
+    type: int
+  binnedodds:
+    max: 9.0
+    min: 1.0
+    sign: positive
+    type: real
+  elevens:
+    max: 99
+    max_nulls: 0
+    min: 0
+    no_duplicates: true
+    sign: non-negative
+    type: int
+  evendates:
+    max: '1970-01-09 00:00:08'
+    min: '1970-01-01 00:00:00.123450'
+    type: date
+  evennulls:
+    max: 1.0
+    min: 1.0
+    sign: positive
+    type: real
+  evenreals:
+    max: 8.0
+    min: 0.0
+    sign: non-negative
+    type: real
+  evens:
+    max: 8.0
+    min: 0.0
+    sign: non-negative
+    type: real
+  evenstr:
+    max: 8.0
+    min: 0.0
+    sign: non-negative
+    type: real
+  index:
+    max: 9
+    max_nulls: 0
+    min: 0
+    no_duplicates: true
+    sign: non-negative
+    type: int
+  oddnulls:
+    max: 1.0
+    min: 1.0
+    sign: positive
+    type: real
+  oddreals:
+    max: 9.0
+    min: 1.0
+    sign: positive
+    type: real
+  odds:
+    max: 9.0
+    min: 1.0
+    sign: positive
+    type: real
+  oddstr:
+    max: 9.0
+    min: 1.0
+    sign: positive
+    type: real

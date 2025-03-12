@@ -33,6 +33,7 @@ CONSTRAINTSDIR = os.path.join(TDDADIR, 'constraints')
 PDCONSTRAINTSDIR = os.path.join(CONSTRAINTSDIR, 'pd')
 DBCONSTRAINTSDIR = os.path.join(CONSTRAINTSDIR, 'db')
 CONSTRAINTSTESTDATADIR = os.path.join(CONSTRAINTSDIR, 'testdata')
+TESTREPORTSDIR = os.path.join(CONSTRAINTSTESTDATADIR, 'reports')
 TEMPLATESDIR = os.path.join(TDDADIR, 'templates')
 REFTESTSDIR = os.path.join(TDDADIR, 'referencetest')
 
@@ -435,7 +436,8 @@ def swap_ext(path, new_ext):
     Replaces the extension of path to new_ext
     """
     base, ext = os.path.splitext(path)
-    return base + new_ext
+    dot = '' if new_ext == '' or new_ext.startswith('.') else '.'
+    return base + dot + new_ext
 
 
 def swap_ext_q(path, new_ext):

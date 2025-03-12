@@ -1,0 +1,16 @@
+                      Individual Field Constraints                     
+ Field name Type Allowed Min Allowed         Max Allowed   Sign Allowed Nulls Allowed Duplicates Allowed Values Allowed Regular Expressions
+      index     "int"              0                   9 "non-negative"       0               no                                           
+  evennulls    "real"            1.0                 1.0     "positive"                                                                    
+   oddnulls    "real"            1.0                 1.0     "positive"                                                                    
+      evens    "real"            0.0                 8.0 "non-negative"                                                                    
+       odds    "real"            1.0                 9.0     "positive"                                                                    
+  evenreals    "real"            0.0                 8.0 "non-negative"                                                                    
+   oddreals    "real"            1.0                 9.0     "positive"                                                                    
+    evenstr    "real"            0.0                 8.0 "non-negative"                                                                    
+     oddstr    "real"            1.0                 9.0     "positive"                                                                    
+    elevens     "int"              0                  99 "non-negative"       0               no                                           
+binnedindex     "int"              1                  10     "positive"       0               no                                           
+ binnedodds    "real"            1.0                 9.0     "positive"                                                                    
+   basedate    "date"     1970-01-01          1970-01-10                      0                                                            
+  evendates    "date"     1970-01-01 1970-01-09T00:00:08                                                                                   

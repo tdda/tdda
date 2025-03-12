@@ -1017,7 +1017,8 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
 
 def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
-                group_rexes=True, report_formats=None, verbose=None):
+                group_rexes=True, report_path=None, report_formats=None,
+                verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1037,6 +1038,15 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
         *group_rexes*:
             If True, include groups in variable parts of regular
             expressions generated
+
+        *report_path*:
+            Path for reports. Extension is ignored.
+            Will write reports to variations of this path if set;
+            otherwuse uses constraints_path
+
+        *report_formats*:
+            List of report formats to write from:
+               html, markdown (or md), text (or txt), yaml, json, toml
 
     Possible return values:
 
@@ -1153,20 +1163,23 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
         constraints.set_dates_user_host_creator()
         constraints.set_source(df_path)
         constraints.set_stats(n_records=len(df), n_selected=len(df))
-        write_constraints(constraints, constraints_path, report_formats,
+        write_constraints(constraints, constraints_path,
+                          report_path=report_path or constraints_path,
+                          report_formats=report_formats,
                           verbose=verbose)
 
     return constraints
 
 
-def write_constraints(constraints, constraints_path, report_formats,
+def write_constraints(constraints, constraints_path,
+                      report_path=None, report_formats=None,
                       verbose=False):
     out_json = constraints.to_json(tddafile=constraints_path)
     if constraints_path and constraints_path != '-':
         with open(constraints_path, 'w') as f:
             f.write(out_json)
         if report_formats:
-            constraints.write_discovery_reports(constraints_path,
+            constraints.write_discovery_reports(report_path or constraints_path,
                                                 report_formats)
 
     elif verbose or constraints_path == '-':

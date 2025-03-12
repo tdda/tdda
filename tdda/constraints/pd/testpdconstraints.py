@@ -47,7 +47,12 @@ from tdda.constraints import discover, verify, detect
 
 from tdda.constraints.pd import constraints as pdc
 from tdda.constraints.pd.constraints import load_df
-from tdda.utils import PDCONSTRAINTSDIR, CONSTRAINTSTESTDATADIR as TESTDATADIR
+from tdda.utils import (
+    PDCONSTRAINTSDIR,
+    CONSTRAINTSTESTDATADIR as TESTDATADIR,
+    TESTREPORTSDIR,
+    swap_ext,
+)
 
 
 from tdda.examples import copy_accounts_data_unzipped
@@ -61,6 +66,17 @@ from tdda.referencetest.pddates import (
 )
 from tdda.referencetest.checkpandas import default_csv_loader
 from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
+
+TDDA_MD_IGNORES = [
+    r'''^\s*"?local_time"?[ =:]+["'].*['"],?$''',
+    r'''^\s*"?utc_time"?[:= ]+['"].*['"],?$''',
+    r'''^\s*"?creator"?[:= ]+['"]?TDDA .*['"]?,?$''',
+    r'''^\s*"?source"?[:= ]+ ['"]?/.*/testdata/small7x5.parquet['"]?,?$''',
+    r'''^\s*"?host"?[:= ]+ ['"]?.*['"]?,?$''',
+    r'''^\s*"?user"?[:= ]+ ['"]?.*['"]?,?$''',
+    r'''^\s*"?tddafile"?[:= ]+ ['"]?.*['"]?,?$''',
+]
+
 
 
 isPython2 = sys.version_info[0] < 3
@@ -1030,96 +1046,30 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.passes, 60)
         self.assertEqual(v.failures, 1)
 
-    def testDDD_discover_and_verify(self):
+    def testDDD_discover_and_verify1(self):
         # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover(csv_path, constraints_path=None, verbose=False)
         tmpdir = tempfile.gettempdir()
-        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
-        with open(tmpfile, 'w') as f:
-            f.write(c)
-        v = verify(csv_path, tmpfile, report='fields',
-                                verbose=False)
-        self.assertEqual(v.passes, 61)
-        self.assertEqual(v.failures, 0)
-
-    def testDDD_df(self):
+        actual_constraints = os.path.join(tmpdir, 'dddtestconstraints.tdda')
+        actual_constraints2 = os.path.join(tmpdir, 'dddtestconstraints2.tdda')
+        ref_constraints_tdda = os.path.join(TESTDATADIR, 'ddd-dv.tdda')
+        report_formats = ['html', 'txt', 'md', 'json', 'yaml', 'toml']
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(df, constraints_path)
-        # expect 3 failures:
-        #   - the pandas CSV reader will have read 'elevens' as an int
-        #   - the pandas CSV reader will have read the date columns as strings
-        self.assertEqual(v.passes, 58)
-        self.assertEqual(v.failures, 3)
 
-    def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(csv_path, constraints_path, verbose=False)
-        # expect 1 failure:
-        #   - the enhanced CSV reader will have initially read 'elevens' as
-        #     an int field and then (correctly) converted it to string, but
-        #     it doesn't know that it would need to pad with initial zeros,
-        #     so that means it will have computed its minimum as being '0'
-        #     not '00', so the minimum string length won't be the same as
-        #     Miro would compute (since Miro has the advantage of having
-        #     additional metadata available when it read the CSV file, to
-        #     tell it that 'elevens' is a string field.
-        self.assertEqual(v.passes, 60)
-        self.assertEqual(v.failures, 1)
-
-    def testDDD_discover_and_verify(self):
-        # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover(csv_path, constraints_path=None, verbose=False)
-        tmpdir = tempfile.gettempdir()
-        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
-        with open(tmpfile, 'w') as f:
-            f.write(c)
-        v = verify(csv_path, tmpfile, report='fields', verbose=False)
-        self.assertEqual(v.passes, 61)
-        self.assertEqual(v.failures, 0)
-
-    def testDDD_df(self):
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        df = pd.read_csv(csv_path)
-        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(df, constraints_path)
-        # expect 3 failures:
-        #   - the pandas CSV reader will have read 'elevens' as an int
-        #   - the pandas CSV reader will have read the date columns as strings
-        self.assertEqual(v.passes, 58)
-        self.assertEqual(v.failures, 3)
-
-    def testDDD_csv(self):
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(csv_path, constraints_path, verbose=False)
-        # expect 1 failure:
-        #   - the enhanced CSV reader will have initially read 'elevens' as
-        #     an int field and then (correctly) converted it to string, but
-        #     it doesn't know that it would need to pad with initial zeros,
-        #     so that means it will have computed its minimum as being '0'
-        #     not '00', so the minimum string length won't be the same as
-        #     Miro would compute (since Miro has the advantage of having
-        #     additional metadata available when it read the CSV file, to
-        #     tell it that 'elevens' is a string field.
-        self.assertEqual(v.passes, 60)
-        self.assertEqual(v.failures, 1)
-
-    def testDDD_discover_and_verify(self):
-        # both discovery and verification done using Pandas
-        csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
-        c = discover(csv_path, constraints_path=None, verbose=False)
-        tmpdir = tempfile.gettempdir()
-        tmpfile = os.path.join(tmpdir, 'dddtestconstraints.tdda')
-        with open(tmpfile, 'w') as f:
+        c = discover(csv_path, constraints_path=actual_constraints,
+                     report_formats=report_formats, verbose=False)
+        with open(actual_constraints2, 'w') as f:
             f.write(c.to_json())
-        v = verify(csv_path, tmpfile, report='fields', verbose=False)
+        v = verify(csv_path, actual_constraints2,
+                   report='fields', verbose=False)
+        self.assertFileCorrect(actual_constraints, ref_constraints_tdda,
+                               ignore_patterns=TDDA_MD_IGNORES)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
+        for fmt in report_formats:
+            ref_path = os.path.join(TESTREPORTSDIR, f'ddd-dv.{fmt}')
+            actual_path = swap_ext(actual_constraints, fmt)
+            self.assertFileCorrect(actual_path, ref_path,
+                                   ignore_patterns=TDDA_MD_IGNORES)
 
     def testDiscoverDataframeDates(self):
         df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
@@ -1772,7 +1722,7 @@ class TestUtilityFunctions(ReferenceTestCase):
             self.assertFalse(pdc.is_ver_field(name, 'a'))
 
 
-class TestUtilityFunctions(ReferenceTestCase):
+class TestUtilityFunctions2(ReferenceTestCase):
 
     def testDateInferrer(self):
         df = pd.DataFrame({
