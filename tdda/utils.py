@@ -41,6 +41,8 @@ DEFAULT_INPUT_ENCODING = 'UTF-8'
 
 OK = 'ok'
 BAD = 'bad'
+NAN = float('nan')
+
 
 
 class XMLError(Exception):
@@ -504,14 +506,15 @@ def dict_to_toml(d, path=None):
 
 
 def json_sanitize(v):
-    if v is np.nan:
+    print(v, v is np.nan, v is NAN, repr(v))
+    if repr(v) == 'nan':
         return None
     elif v is None or type(v) in (str, int, float, bool):
         return v
     elif type(v) in (list, tuple):
         return [json_sanitize(u) for u in v]
     elif isinstance(v, dict):
-        return {str(k): str(u) for k, u in v.items()}
+        return {str(k): json_sanitize(u) for k, u in v.items()}
     elif hasattr(v, '__dict__'):
         return json_sanitize(v.__dict__)
     else:

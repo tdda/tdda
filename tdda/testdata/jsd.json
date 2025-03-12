@@ -1,0 +1,23 @@
+{
+    "Null": null,
+    "One": 1,
+    "true": true,
+    "PointFive": 0.5,
+    "String": "string",
+    "List": [
+        1,
+        2,
+        3
+    ],
+    "Dict": {
+        "a": 1
+    },
+    "Object": {
+        "foo": "bar"
+    },
+    "Datetime": "1970-01-01 23:59:59",
+    "Midnight": "1999-12-31",
+    "Date": "1999-12-31",
+    "npnan": null,
+    "pynan": null
+}
