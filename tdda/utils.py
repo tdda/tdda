@@ -506,7 +506,6 @@ def dict_to_toml(d, path=None):
 
 
 def json_sanitize(v):
-    print(v, v is np.nan, v is NAN, repr(v))
     if repr(v) == 'nan':
         return None
     elif v is None or type(v) in (str, int, float, bool):

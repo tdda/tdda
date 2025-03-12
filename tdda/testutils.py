@@ -7,7 +7,7 @@ from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 from tdda.utils import (
     to_pc, n_glyphs, handle_tilde, XML, squote, DQuote,
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
-    json_sanitize,
+    json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
 )
 from unicodedata import normalize
@@ -230,6 +230,9 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(swap_ext('a.b.c.d', 'e'), 'a.b.c.e')
         self.assertEqual(swap_ext('a.b.c.d', '.e'), 'a.b.c.e')
         self.assertEqual(swap_ext('/one/two/a.b.c.d', ''), '/one/two/a.b.c')
+
+        self.assertEqual(swap_ext_q('foo.bar', 'bar'), ('foo.bar', False))
+        self.assertEqual(swap_ext_q('foo.bar', 'baz'), ('foo.baz', True))
 
     def testDictToJSON(self):
         refpath = os.path.join(TESTDIR, 'd1.json')
