@@ -3,8 +3,8 @@ import tempfile
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.constraints import discover, verify
-from tdda.utils import constraints_testdata_path as tdpath, rprint
+from tdda.constraints import discover, verify, detect
+from tdda.utils import constraints_testdata_path as tdpath, rprint, swap_ext
 
 TESTDATA_DIR = os.path.join(os.path.dirname(__file__), 'testdata')
 TMPDIR = tempfile.gettempdir()
@@ -142,12 +142,12 @@ class TestDiscoverReports(ReferenceTestCase):
         self.constraints.to_markdown_report(path, flavour='mmd')
         self.assertFileCorrect(path, reportpath(name))
 
-    @tag
     def testDiscoverHTMLTable(self):
         name = 'small7x5-constraints.html'
         path = tmppath(name)
         self.constraints.to_html_report(path)
         self.assertFileCorrect(path, reportpath(name))
+
 
 class TestVerificationReports(ReferenceTestCase):
     @classmethod
@@ -173,7 +173,122 @@ class TestVerificationReports(ReferenceTestCase):
                                  reportpath(name))
 
 
+class TestDetectionReports(ReferenceTestCase):
+    @classmethod
+    def setUpClass(cls):
+        constraints_path = testdata('small7x5.tdda')
 
+        cls.formats = ['html', 'md', 'txt', 'json', 'yaml', 'toml']
+
+        # TRAINING DATA: NO FAILURES; DETECTION TABLE GENERATED
+
+        train_path = testdata('small7x5.parquet')  # no failures
+        cls.actual_train_detect_full_path = tmppath('small7x5-full.parquet')
+        cls.actual_train_detect_bads_path = tmppath('small7x5-bads.parquet')
+
+        cls.train_bads_detection = detect(
+            train_path,
+            constraints_path,
+            cls.actual_train_detect_bads_path,
+            # write_all_records = False,  # default
+            # interleave = True,          # default
+            report_formats = cls.formats,
+            verbose=False
+        )
+
+        cls.train_full_detection = detect(
+            train_path,
+            constraints_path,
+            cls.actual_train_detect_full_path,
+            write_all_records = True,
+            interleave=False,
+            report_formats = cls.formats,
+            verbose=False
+        )
+
+        # VALIDATION DATA: SOME FAILURES: DETECTION TABLE GENERATED
+
+        validation_path = testdata('small7x5bad.parquet')  # some failures
+
+        detect_full = 'small7x5bad-full.parquet'
+        detect_bads = 'small7x5bad-bads.parquet'
+        cls.ref_validation_detect_full_path    = testdata(detect_full)
+        cls.ref_validation_detect_bads_path    = testdata(detect_bads)
+        cls.actual_validation_detect_full_path =  tmppath(detect_full)
+        cls.actual_validation_detect_bads_path =  tmppath(detect_bads)
+
+        cls.validation_bads_detection = detect(
+            validation_path,
+            constraints_path,
+            cls.actual_validation_detect_bads_path,
+            # write_all_records = False,  # default
+            # interleave = True,          # default
+            report_formats = cls.formats,
+            verbose=False
+        )
+
+        cls.validation_full_detection = detect(
+            validation_path,
+            constraints_path,
+            cls.actual_validation_detect_full_path,
+            write_all_records = True,
+            interleave=False,
+            report_formats = cls.formats,
+            verbose=False
+        )
+
+    @tag
+    def testDetectionTrainBads(self):
+        # No failures
+        self.assertEqual(self.train_bads_detection.failures, 0)
+
+        # So no detection table
+        self.assertFalse(os.path.exists(self.actual_train_detect_bads_path))
+
+        # And no reports
+        for fmt in self.formats:
+            path = swap_ext(self.actual_train_detect_bads_path, fmt)
+            self.assertFalse(os.path.exists(path))
+
+    @tag
+    def testDetectionTrainFull(self):
+        # No failures
+        self.assertEqual(self.train_full_detection.failures, 0)
+
+        # So no detection table
+        self.assertFalse(os.path.exists(self.actual_train_detect_full_path))
+
+        # And no reports
+        for fmt in self.formats:
+            path = swap_ext(self.actual_train_detect_full_path, fmt)
+            self.assertFalse(os.path.exists(path))
+
+
+    @tag
+    def testDetectionValidationBads(self):
+        # No failures
+        self.assertEqual(self.validation_bads_detection.failures, 4)
+
+        # So no detection table
+        self.assertTrue(os.path.exists(self.actual_validation_detect_bads_path))
+
+        # And no reports
+        for fmt in self.formats:
+            path = swap_ext(self.actual_validation_detect_bads_path, fmt)
+            self.assertTrue(os.path.exists(path))
+
+    @tag
+    def testDetectionValidationFull(self):
+        # No failures
+        self.assertEqual(self.validation_full_detection.failures, 4)
+
+        # So no detection table
+        self.assertTrue(os.path.exists(self.actual_validation_detect_full_path))
+
+        # And no reports
+        for fmt in self.formats:
+            path = swap_ext(self.actual_validation_detect_full_path, fmt)
+            self.assertTrue(os.path.exists(path))
 
 
 if __name__ == '__main__':
