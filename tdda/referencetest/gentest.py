@@ -154,7 +154,7 @@ class TestGenerator:
         self.host = socket.gethostname()
         try:
             self.ip_address = socket.gethostbyname(self.host)
-        except:  # 
+        except:
             self.ip_address = None
         self.homedir = home_dir()
         self.user = getpass.getuser()
@@ -964,14 +964,11 @@ class ExecuteCommand:
                                   stderr=subprocess.PIPE, shell=True,
                                   cwd=cwd, close_fds=True, env=os.environ)
             self.out, self.err = sp.communicate()
+            self.out = self.out.decode('UTF-8')
+            self.err = self.err.decode('UTF-8')
             self.exit_code = sp.returncode
-            if is_python3:
-                self.out = self.out.decode('UTF-8')
-                self.err = self.err.decode('UTF-8')
         except Exception as exc:
             self.exc = exc
-        finally:
-            sp.close()
         self.duration = timeit.default_timer() - t
 
 
@@ -1349,7 +1346,8 @@ def wizard(iterations):
     tmp_dir_shell_var = DEFAULT_TMP_DIR_SHELL_VAR if check_tmpdir else None
     if check_cwd:
         reference_files.append('.')
-    print('Enter other files/directories to be checked, one per line, then a blank line:')
+    print('Enter other files/directories to be checked, one per line, '
+          'then a blank line:')
     ref = getline()
     while ref:
         reference_files.append(ref)
@@ -1419,7 +1417,7 @@ def gentest_params(args):
     return positional_args, kw
 
 
-def gentest_wrapper(args):
+def gentest_wrapper(args, **kw):
     positional_args, kw = gentest_params(args)
     reference_files = positional_args[2:]
     command = positional_args[0] if positional_args else None
@@ -1431,7 +1429,7 @@ def gentest(shellcommand, output_script, reference_files,
             max_snapshot_files=MAX_SNAPSHOT_FILES, relative_paths=False,
             iterations=2, tmp_dir_shell_var=DEFAULT_TMP_DIR_SHELL_VAR,
             no_stdout=False, no_stderr=False, non_zero_exit=False,
-            no_clobber=False):
+            no_clobber=False, cwd=None):
     """
     Generate code python in output_script for running the
     shell command given and checking the reference files
@@ -1455,7 +1453,7 @@ def gentest(shellcommand, output_script, reference_files,
         check_stdout = not no_stdout
         check_stderr = not no_stderr
         require_zero_exit_code = not non_zero_exit
-    cwd = os.getcwd()
+    cwd = cwd or os.getcwd()
     if shellcommand is None:
         print('\n*** USAGE:\n  %s' % USAGE, file=sys.stderr)
         sys.exit(1)

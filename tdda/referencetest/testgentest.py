@@ -4,16 +4,18 @@
 test_gentest.py: Manually written tests of tdda gentest.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import datetime
 import os
+import shutil
 import sys
+import tempfile
+
+from tdda.utils import REFTESTDIR
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.gentest import *
+
+from artists.giacometti.captureoutput import CaptureOutput
 
 D1 = '/home/auser/python/tdda/tdda/referencetest/gentest'
 HOST = 'ahost.local'
@@ -21,6 +23,24 @@ ALTHOST = 'ahost'
 HOME = '/home/auser'
 LOCALHOST = '127.0.0.1'   # not used
 USER = 'auser'
+
+
+
+# sources:
+GENTESTSRCDIR = os.path.join(REFTESTDIR, 'testdata')
+
+
+# Used for test output and dirs to ryn in
+TMPDIR = tempfile.gettempdir()
+TDDATMPDIR = os.path.join(TMPDIR, 'tdda')
+GENTESTTMPDIR = os.path.join(TMPDIR, 'tdda/gentest')
+TESTDIRA = os.path.join(GENTESTTMPDIR, 'testa')
+
+def ref_path(*parts):
+    return os.path.join(GENTESTSRCDIR, *parts)
+
+def out_path(*parts):
+    return os.path.join(GENTESTTMPDIR, *parts)
 
 
 def set_test_attributes(t):
@@ -38,7 +58,12 @@ def set_test_attributes(t):
 
 class TestGenTest(ReferenceTestCase):
 
-    #@tag
+    @classmethod
+    def setUpClass(cls):
+        if os.path.exists(GENTESTTMPDIR):
+            shutil.rmtree(GENTESTTMPDIR)
+        os.makedirs(GENTESTTMPDIR)
+
     def test1_exclusions(self):
         name = 'test_gentest1'
         # Create a test generator that doesn't actually run the tests
@@ -51,8 +76,7 @@ class TestGenTest(ReferenceTestCase):
 
         # Point the reference directory to the right place, which
         # the ref directory next to this file.
-        t.refdir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'ref', name)
+        t.refdir = os.path.join(REFTESTDIR, 'testdata', 'ref', name)
 
         # Fix everything else to be as if the modified Miro script output
         # had been on the host HOST, with the cwd as D1
@@ -73,7 +97,6 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
         self.assertEqual(set(t.exclusions['STDOUT'][0]), expected)
         self.assertEqual(set(t.exclusions['STDOUT'][1]), {'ODD'})
 
-    @tag
     def test2_simple_date_exclusions(self):
         name = 'test_gentest2'
 
@@ -87,8 +110,7 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
 
         # Point the reference directory to the right place, which
         # the ref directory next to this file.
-        t.refdir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                'ref', name)
+        t.refdir = os.path.join(REFTESTDIR, 'testdata', 'ref', name)
 
         # Fix everything else to be as if the modified Miro script output
         # had been on the host HOST, with the cwd as D1
@@ -226,6 +248,68 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
         ):
             self.assertIsNotNone(is_datetime_like(s))
         self.assertIsNone(is_datetime_like('2020-07-02'))
+
+    @tag
+    def test_a_generation_failure_then_success(self):
+
+        # Fails because exit code is 99 -> 1
+        os.mkdir(TESTDIRA)
+        for name in('a-gentest1.sh', '2files.py', 'a-gentest2.sh'):
+            shutil.copy(ref_path(name), out_path(TESTDIRA, name))
+
+        cmd = ['tdda', 'gentest',
+               '"python 2files.py"', 'test_python_2files_py.py', '.']
+
+        r = ExecuteCommand(' '.join(cmd), cwd=TESTDIRA)
+        self.assertEqual(r.exit_code, 1)
+        self.assertStringCorrect(r.err.strip(),
+                                 ref_path('a-stderr1.txt'))
+        self.assertStringCorrect(r.out.strip(),
+                                 ref_path('a-stdout1.txt'))
+
+        # Repeat with allow non-zero exist code
+        # Succeedsa
+
+        cmd = ['tdda', 'gentest', '--non-zero-exit',
+               '"python 2files.py"', 'test_python_2files_py.py', '.']
+
+
+        r = ExecuteCommand(' '.join(cmd), cwd=TESTDIRA)
+        self.assertEqual(r.exit_code, 0)
+        self.assertStringCorrect(r.out.strip(),
+                                 ref_path('a-stdout2.txt'),
+                                 ignore_patterns=[
+            r'^Directory to run in: .*/tdda/gentest/testa$',
+
+
+            r'^Test script generated: '
+            r'.*/tdda/gentest/testa/test_python_2files_py.py$',
+
+            r'^Command execution took: .*$'
+        ])
+        self.assertStringCorrect(r.err.strip(),
+                                 ref_path('a-stderr2.txt'))
+        self.assertFileCorrect(out_path('testa/test_python_2files_py.py'),
+                               ref_path('a-test_python_2files_py.py'))
+        self.assertFileCorrect(out_path('testa/ref/python_2files_py/STDOUT'),
+                               ref_path('testa/ref/python_2files_py/STDOUT'))
+        self.assertFileCorrect(out_path('testa/ref/python_2files_py/STDERR'),
+                               ref_path('testa/ref/python_2files_py/STDERR'))
+        self.assertFileCorrect(out_path('testa/ref/python_2files_py/one.txt'),
+                               ref_path('testa/ref/python_2files_py/one.txt'))
+        self.assertFileCorrect(out_path('testa/ref/python_2files_py/one.txt1'),
+                               ref_path('testa/ref/python_2files_py/one.txt1'))
+
+        # Could do this for coverage
+
+        # c1 = CaptureOutput()
+        # c2 = CaptureOutput(stream='stderr')
+        # cmd = cmd[2:]
+        # gentest_wrapper(cmd, cwd=TESTDIRA)
+        # c1.Restore()
+        # c2.Restore()
+
+
 
 
 if __name__ == '__main__':

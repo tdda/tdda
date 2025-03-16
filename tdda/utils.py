@@ -35,7 +35,7 @@ DBCONSTRAINTSDIR = os.path.join(CONSTRAINTSDIR, 'db')
 CONSTRAINTSTESTDATADIR = os.path.join(CONSTRAINTSDIR, 'testdata')
 TESTREPORTSDIR = os.path.join(CONSTRAINTSTESTDATADIR, 'reports')
 TEMPLATESDIR = os.path.join(TDDADIR, 'templates')
-REFTESTSDIR = os.path.join(TDDADIR, 'referencetest')
+REFTESTDIR = os.path.join(TDDADIR, 'referencetest')
 
 DEFAULT_INPUT_ENCODING = 'UTF-8'
 
