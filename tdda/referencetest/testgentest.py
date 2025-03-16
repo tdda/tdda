@@ -254,7 +254,7 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
 
         # Fails because exit code is 99 -> 1
         os.mkdir(TESTDIRA)
-        for name in('a-gentest1.sh', '2files.py', 'a-gentest2.sh'):
+        for name in('2files.py',):
             shutil.copy(ref_path(name), out_path(TESTDIRA, name))
 
         cmd = ['tdda', 'gentest',
@@ -281,11 +281,33 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
                                  ignore_patterns=[
             r'^Directory to run in: .*/tdda/gentest/testa$',
 
-
             r'^Test script generated: '
             r'.*/tdda/gentest/testa/test_python_2files_py.py$',
 
-            r'^Command execution took: .*$'
+            r'^Command execution took: .*$',
+
+            r'^Saved \(non-empty\) output to stdout to '
+            r'.*/tdda/gentest/testa/ref/python_2files_py/STDOUT.$',
+
+            r'^Saved \(empty\) output to stderr to '
+            r'.*/tdda/gentest/testa/ref/python_2files_py/STDERR.$',
+
+            r'^Saved \(non-empty\) output to stdout to '
+            r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDOUT.',
+
+            r'^Saved \(empty\) output to stderr to '
+            r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDERR.',
+
+            r'^Directory to run in: '
+            r'.*/tdda/gentest/testa',
+
+            r'^Test script generated:'
+            r'.*/tdda/gentest/testa/test_python_2files_py.py',
+
+            r'^Test script written as .*'
+            r'/tdda/gentest/testa/test_python_2files_py.py$'
+
+
         ])
         self.assertStringCorrect(r.err.strip(),
                                  ref_path('a-stderr2.txt'))
