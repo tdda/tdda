@@ -1,0 +1,29 @@
+Running command 'python 2files.py' to generate output (run 1 of 2).
+Saved (non-empty) output to stdout to /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/ref/python_2files_py/STDOUT.
+Saved (empty) output to stderr to /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/ref/python_2files_py/STDERR.
+Copied $(pwd)/one.txt to $(pwd)/ref/python_2files_py/one.txt
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/python_2files_py/one.txt1
+
+Running command 'python 2files.py' to generate output (run 2 of 2).
+Saved (non-empty) output to stdout to /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/ref/python_2files_py/2/STDOUT.
+Saved (empty) output to stderr to /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/ref/python_2files_py/2/STDERR.
+Copied $(pwd)/one.txt to $(pwd)/ref/python_2files_py/2/one.txt
+Copied $(pwd)/subdir/one.txt to $(pwd)/ref/python_2files_py/2/one.txt1
+
+Test script written as /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/test_python_2files_py.py
+Command execution took: 0.086s
+
+SUMMARY:
+
+Directory to run in:        /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa
+Shell command:              python 2files.py
+Test script generated:      /private/var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/tdda/gentest/testa/test_python_2files_py.py
+Reference files:
+    $(pwd)/one.txt
+    $(pwd)/subdir/one.txt
+Check stdout:               yes (was 1 line)
+Check stderr:               yes (was empty)
+Expected exit code:         99
+Clobbering permitted:       yes
+Number of times script ran: 2
+Number of tests written:    6
