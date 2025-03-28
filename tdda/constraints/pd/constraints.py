@@ -49,7 +49,7 @@ from tdda.constraints.base import (
     constraints_from_path_or_dict,
     fuzz_down,
     fuzz_up,
-    LabelledPassFailCount
+    PassFailCount
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -359,7 +359,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
                     - out_df.isnull().sum(axis=1).astype(float))
         out_df[nfailname] = fails.astype(int)  # failing record indicator
         n_failing_records = (fails > 0).astype(int).sum()
-        n_passing_records = len(out_df) - n_failing_records
+        n_passing_records = self.df.shape[0] - n_failing_records
 
         if not per_constraint:
             fnames = [name for name in list(out_df) if name != nfailname]
@@ -423,6 +423,7 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if not write_all_records:
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
+
 
     def interleave(self, df, orig_fields, nfailname):
         if set(orig_fields) - set(list(df)):
@@ -577,7 +578,7 @@ class PandasVerification(Verification):
     def get_field_stats(self, field):
         """
         Count the number of passes and failures across all constraints
-        for the field (name) specified as a LabelledPassFailCount object.
+        for the field (name) specified as a PassFailCount object.
 
         Used to calculate number of failing (constrained) values.
         """
@@ -586,7 +587,6 @@ class PandasVerification(Verification):
             self.indicator_field_name(field, constraint)
             for constraint in CONSTRAINT_SUFFIX_MAP
         }.intersection(set(df)))
-        n_rows = df.shape[0]
         if len(indicators) == 0:  # no failures
             nf = 0
         else:
@@ -594,7 +594,7 @@ class PandasVerification(Verification):
                 ' | '.join(f'{indicator} == {self.bad_val}'
                            for indicator in indicators)
             ).shape[0]
-        return LabelledPassFailCount(field, n_rows - nf, nf)
+        return PassFailCount(field, self.detection.n_source_records - nf, nf)
 
 
 
@@ -850,9 +850,10 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         constraints = DatasetConstraints(loadpath=constraints_path)
     if repair:
         pdv.repair_field_types(constraints)
+    n_records = df.shape[0]
     return pdv.verify(constraints,
                       VerificationClass=PandasVerification,
-                      report=report, **kwargs)
+                      report=report, n_source_records=n_records, **kwargs)
 
 
 def detect_df(df, constraints_path, epsilon=None, type_checking=None,
@@ -1028,6 +1029,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
     constraints = constraints_from_path_or_dict(constraints_path)
     if repair:
         pdv.repair_field_types(constraints)
+    n_records = df.shape[0]
     return pdv.detect(constraints, VerificationClass=PandasDetection,
                       outpath=outpath, write_all_records=write_all_records,
                       per_constraint=per_constraint,
@@ -1035,7 +1037,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
                       in_place=in_place,
                       rownumber_is_index=rownumber_is_index,
                       int_bools=int_bools,
-                      report=report, **kwargs)
+                      report=report, n_source_records=n_records, **kwargs)
 
 
 def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,

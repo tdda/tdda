@@ -103,7 +103,7 @@ class InvalidConstraintSpecification(Exception):
     pass
 
 
-class LabelledPassFailCount:
+class PassFailCount:
     """
     Container for pass & fail counts for anything,
     with a few convenience properties
@@ -119,7 +119,7 @@ class LabelledPassFailCount:
 
     @property
     def failure_rate(self):
-        return self.passes / (self.total or 1)
+        return self.failures / (self.total or 1)
 
     @property
     def bad_pc(self):
@@ -810,13 +810,15 @@ class Verification(object):
     Container for the result of a constraint verification for a dataset
     in the context of a given set of constraints.
     """
-    def __init__(self, constraints, report='all',
+    def __init__(self, constraints, n_source_records, report='all',
                  ascii=False, detect=False, outpath=None,
                  write_all_records=False, per_constraint=False,
                  output_fields=None, index=False,
-                 in_place=False, colour=False, **kwargs):
+                 in_place=False, colour=False,
+                 **kwargs):
         config = get_config()
         self.constraints = constraints
+        self.n_source_records = n_source_records
         self.fields = TDDAObject()
         self.failures = 0  # constraints
         self.passes = 0    # constraints
@@ -855,35 +857,37 @@ class Verification(object):
                                     CONSTRAINT_SUFFIX_MAP,
                                     detect_passes=self.detect_passes)
 
-    def create_summary_stats(self, field_stats):
+    def create_summary_stats(self, field_stats=None):
         n_fields_with_failures = len(list(
                 (field, ver)
                  for (field, ver) in self.fields.items()
                  if ver.failures > 0
         ))
 
-        self.summary_stats = {
-            'records': LabelledPassFailCount(
-                'records',
-                self.detection.n_passing_records,
-                self.detection.n_failing_records
-            ),
-            'fields': LabelledPassFailCount(
+        self.summary_stats = stats = {
+            'fields': PassFailCount(
                 'fields',
                 len(self.fields) - n_fields_with_failures,
                 n_fields_with_failures
             ),
-            'values': LabelledPassFailCount(
-                'values',
-                field_stats['_values'].passes,
-                field_stats['_values'].failures
-            ),
-            'constraints': LabelledPassFailCount(
+            'constraints': PassFailCount(
                 'constraints',
                 self.passes,
                 self.failures
             )
         }
+        if field_stats:
+            stats['records'] = PassFailCount(
+                'records',
+                self.detection.n_passing_records,
+                self.detection.n_failing_records
+            )
+            stats['values'] = PassFailCount(
+                'values',
+                field_stats['_values'].passes,
+                field_stats['_values'].failures
+            )
+
 
 
     def to_string(self, colour=None, ascii=None):
@@ -916,16 +920,16 @@ class Verification(object):
                               '  '.join('%s %s' % (c, tcn(s, ascii, colour))
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
-        fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
+        fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else '\n'
 
         out = ['%sSUMMARY:\n' % fields_part]
-        if self.report == 'records' and self.detection:
+        if self.report == 'records' and 'records' in self.summary_stats:
             sr = self.summary_stats['records']
             out.extend(
               [f'Records: {sr.total:,}',
                'Failing Records: %s'
-                % richbad(f'{sr.failures:,} ({sr.bad_pc})',
-                          colour, sr.failures > 0), ''])
+                % richgoodbad(f'{sr.failures:,} ({sr.bad_pc})',
+                             colour, sr.failures == 0), ''])
 
         sf = self.summary_stats['fields']
         out.extend(
@@ -934,12 +938,13 @@ class Verification(object):
              % richgoodbad(f'{sf.failures:,} ({sf.bad_pc})',
                            colour, sf.failures == 0), ''])
 
-        sv = self.summary_stats['values']
-        out.extend(
-            [f'Constrained Values: {sv.total:,}',
-             'Failing Values: %s'
-             % richgoodbad(f'{sv.failures:,} ({sv.bad_pc})',
-                           colour, sv.failures == 0), ''])
+        if 'values' in self.summary_stats:
+            sv = self.summary_stats['values']
+            out.extend(
+                [f'Constrained Values: {sv.total:,}',
+                 'Failing Values: %s'
+                 % richgoodbad(f'{sv.failures:,} ({sv.bad_pc})',
+                               colour, sv.failures == 0), ''])
 
         sc = self.summary_stats['constraints']
         out.extend(
@@ -1005,8 +1010,8 @@ class Verification(object):
         of the output file, or -r / --report flags, or by
         configuration, this writes the report or reports.
         """
-        if not (self.report_path and self.detect_report_formats):
-            return
+#        if not (self.report_path and self.detect_report_formats):
+#            return
 
         # TODO: If detection reports are no, and output_fields
         # are specified and do not include fields with failures
@@ -1019,6 +1024,7 @@ class Verification(object):
         for field in list(d['fields']):
             constraints = d['fields'][field]
             field_stats[field] = self.get_field_stats(field)
+            print(field_stats[field])
             for constraint in list(constraints):
                 value = constraints[constraint]
                 c = constraints[constraint] = {
@@ -1037,13 +1043,11 @@ class Verification(object):
                     c['failures'] = json_sanitize(list(failures))
             if constraints == {}:
                 del d['fields'][field]
-        field_stats['_values'] = LabelledPassFailCount(
+        field_stats['_values'] = PassFailCount(
             '_values',
-            sum(f.failures for f in field_stats.values()),
-            sum(f.passes for f in field_stats.values())
+            sum(f.passes for f in field_stats.values()),
+            sum(f.failures for f in field_stats.values())
         )
-        for k, v in field_stats.items():
-            print(k, v)
         d['_field_stats'] = field_stats
         self.create_summary_stats(field_stats)
         config = get_config()
@@ -1087,6 +1091,10 @@ class Detection(object):
         self.n_passing_records = n_passing_records
         self.n_failing_records = n_failing_records
 
+    @property
+    def n_source_records(self):
+        return self.n_passing_records + self.n_failing_records
+
 
 def constraint_class(kind):
     """
@@ -1116,7 +1124,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     specific verifiers for various types of data.
 
     (Specifically, at the moment, the Pandas verifier verify_df, and
-    the daatabase verifier, verify_db_table, both use this function, as
+    the database verifier, verify_db_table, both use this function, as
     does any other extension.)
 
     Inputs:
@@ -1179,17 +1187,30 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             else:
                 satisfied = None
             field_results[c.kind] = satisfied
-        field_results.failures = failures
-        results.failures += failures
+
+        field_results.failures = failures  # constraints for this field
         field_results.passes = passes
+        results.failures += failures       # all constraints
         results.passes += passes
         results.fields[name] = field_results
 
-    if detect and detected_records_writer and results.failures > 0:
-        results.detection = detected_records_writer(**kwargs)
-        if not hasattr(results, 'is_db'):
-            results.write_detection_reports()
-
+    if detect:
+        if detected_records_writer and results.failures > 0:
+            results.detection = detected_records_writer(**kwargs)
+            if not hasattr(results, 'is_db'):
+                results.write_detection_reports()
+        elif detected_records_writer and results.failures == 0:
+            n_records = results.n_source_records
+            n_fields = len(results.fields)
+            n_constraints = sum(len(v) for v in results.fields.values())
+            results.summary_stats = {
+                'fields': PassFailCount('fields', n_fields, 0),
+                'constraints': PassFailCount('constraints', n_constraints, 0),
+                'records':  PassFailCount('records', n_records, 0),
+                'values': PassFailCount('values', n_records * n_fields, 0)
+            }
+    else:
+        results.create_summary_stats()
     return results
 
 
