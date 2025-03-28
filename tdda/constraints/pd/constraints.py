@@ -575,21 +575,26 @@ class PandasVerification(Verification):
             return pass_fail_stats(n_records, 0, 'values')
 
     def get_field_stats(self, field):
+        """
+        Count the number of passes and failures across all constraints
+        for the field (name) specified as a LabelledPassFailCount object.
+
+        Used to calculate number of failing (constrained) values.
+        """
         df = self.detection.obj
         indicators = list({
             self.indicator_field_name(field, constraint)
             for constraint in CONSTRAINT_SUFFIX_MAP
         }.intersection(set(df)))
         n_rows = df.shape[0]
-        if len(indicators) == 0:
-            # no failures
+        if len(indicators) == 0:  # no failures
             nf = 0
         else:
             nf = df.query(
-                ' | '.join(f'{indicator} == {self.bad_val}')
-                for indicator in indicators
-            )
-        return LabelledPassFailCount(field, 0, n_rows)
+                ' | '.join(f'{indicator} == {self.bad_val}'
+                           for indicator in indicators)
+            ).shape[0]
+        return LabelledPassFailCount(field, n_rows - nf, nf)
 
 
 

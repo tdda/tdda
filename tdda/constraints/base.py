@@ -103,7 +103,24 @@ class InvalidConstraintSpecification(Exception):
     pass
 
 
-LabelledPassFailCount = namedtuple('name', 'passes failures')
+class LabelledPassFailCount:
+    def __init__(self, name, passes, failures):
+        self.name = name
+        self.passes = passes
+        self.failures = failures
+
+    @property
+    def total(self):
+        return self.passes + self.failures
+
+    @property
+    def failure_rate(self):
+        return self.passes / (self.total or 1)
+
+    @property
+    def bad_pc(self):
+        return f'{self.failure_rate * 100:.2f}%'
+
 
 
 class TDDAObject(OrderedDict):
@@ -828,6 +845,37 @@ class Verification(object):
                                     CONSTRAINT_SUFFIX_MAP,
                                     detect_passes=self.detect_passes)
 
+    def create_summary_stats(self, field_stats):
+        n_fields_with_failures = len(list(
+                (field, ver)
+                 for (field, ver) in self.fields.items()
+                 if ver.failures > 0
+        ))
+
+        self.summary_stats = {
+            'records': LabelledPassFailCount(
+                'records',
+                self.detection.n_passing_records,
+                self.detection.n_failing_records
+            ),
+            'fields': LabelledPassFailCount(
+                'fields',
+                len(self.fields) - n_fields_with_failures,
+                n_fields_with_failures
+            ),
+            'values': LabelledPassFailCount(
+                'values',
+                field_stats['_values'].passes,
+                field_stats['_values'].failures
+            ),
+            'constraints': LabelledPassFailCount(
+                'constraints',
+                self.passes,
+                self.failures
+            )
+        }
+
+
     def to_string(self, colour=None, ascii=None):
         """
         Returns string representation of the :py:class:`Verification` object.
@@ -860,49 +908,39 @@ class Verification(object):
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
 
-#        n_passing_values = sum(self.fields) * ###
-
         out = ['%sSUMMARY:\n' % fields_part]
         if self.report == 'records' and self.detection:
-            nf = self.detection.n_failing_records
+            sr = self.summary_stats['records']
             out.extend(
-              ['Records passing: %s'
-                % richgood(self.detection.n_passing_records, colour,
-                           nf == 0),
-               'Records failing: %s'
-                % richbad(nf, colour, nf > 0), ''])
-        fields_badpc = 100 * n_fields_with_failures / n_fields
+              [f'Records: {sr.total:,}',
+               'Failing Records: %s'
+                % richbad(f'{sr.failures:,} ({sr.bad_pc})',
+                          colour, sr.failures > 0), ''])
+
+        sf = self.summary_stats['fields']
         out.extend(
-            [f'Constrained Fields: {n_fields:,}',
+            [f'Constrained Fields: {sf.total:,}',
              'Failing Fields: %s'
-             % richgoodbad(f'{n_fields_with_failures:,} ({fields_badpc:.2f}%)',
-                           colour, n_fields_with_failures == 0), ''])
-        nc = self.passes + self.failures
-        constraints_badpc = 100 * self.failures / nc
+             % richgoodbad(f'{sf.failures:,} ({sf.bad_pc})',
+                           colour, sf.failures == 0), ''])
 
-
-        # out.extend(
-        #     [f'Constrained Values: {n_values:,}',
-        #      'Failing Values: %s'
-        #      % richgoodbad(f'{n_failing_values:,} ({values_badpc:.2f}%)',
-        #                    colour, n_failing_values == 0), ''])
-
+        sv = self.summary_stats['values']
         out.extend(
-            [f'Constraints: {nc:,}',
+            [f'Constrained Values: {sv.total:,}',
+             'Failing Values: %s'
+             % richgoodbad(f'{sv.failures:,} ({sv.bad_pc})',
+                           colour, sv.failures == 0), ''])
+
+        sc = self.summary_stats['constraints']
+        out.extend(
+            [f'Constraints: {sc.total:,}',
              'Failing Constraints: %s'
-             % richgoodbad(f'{self.failures:,} ({constraints_badpc:.2f}%)',
-                           colour, self.failures == 0)])
+             % richgoodbad(f'{sc.failures:,} ({sc.bad_pc})',
+                           colour, sc.failures == 0)])
         return '\n'.join(out)
     __str__ = to_string
 
     def to_table(self, fails, constraints):
-        with open('/tmp/fails.json', 'w') as f:
-            json.dump(fails, f, indent=4)
-        with open('/tmp/constraints.json', 'w') as f:
-            json.dump(constraints, f, indent=4)
-        print(fails)
-        print('\n\n\n')
-        print(constraints)
         checkmark = '✓'
         headers = (
             ['Values', 'Constraints']
@@ -967,8 +1005,10 @@ class Verification(object):
         d = self.constraints.to_dict()
         d_raw = self.constraints.to_dict()
         key_fields = self.detect_key
+        field_stats = {}
         for field in list(d['fields']):
             constraints = d['fields'][field]
+            field_stats[field] = self.get_field_stats(field)
             for constraint in list(constraints):
                 value = constraints[constraint]
                 c = constraints[constraint] = {
@@ -987,6 +1027,13 @@ class Verification(object):
                     c['failures'] = json_sanitize(list(failures))
             if constraints == {}:
                 del d['fields'][field]
+        field_stats['_values'] = LabelledPassFailCount(
+            '_values',
+            sum(f.failures for f in field_stats.values()),
+            sum(f.passes for f in field_stats.values())
+        )
+        d['_field_stats'] = field_stats
+        self.create_summary_stats(field_stats)
         config = get_config()
         self.to_table(d, d_raw)
         for fmt in self.detect_report_formats:
