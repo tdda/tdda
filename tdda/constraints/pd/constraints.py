@@ -49,6 +49,7 @@ from tdda.constraints.base import (
     constraints_from_path_or_dict,
     fuzz_down,
     fuzz_up,
+    LabelledPassFailCount
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -61,8 +62,6 @@ from tdda.constraints.baseconstraints import (
 from tdda.pd.utils import (
     is_string_col, is_string_dtype, is_categorical_dtype,
 )
-from tdda.utils import indicator_field_name
-
 
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
@@ -355,10 +354,10 @@ class PandasConstraintDetector(BaseConstraintDetector):
             output_fields = list(self.df)
 
         nfailname = 'n_failures'
-        nf = len(list(out_df))
+        nf = len(list(out_df))   # ok fields
         fails = (nf - out_df.sum(axis=1).astype(float)
                     - out_df.isnull().sum(axis=1).astype(float))
-        out_df[nfailname] = fails.astype(int)
+        out_df[nfailname] = fails.astype(int)  # failing record indicator
         n_failing_records = (fails > 0).astype(int).sum()
         n_passing_records = len(out_df) - n_failing_records
 
@@ -548,13 +547,11 @@ class PandasVerification(Verification):
 
     def get_failure_values(self, field, constraint, key_fields,
                            max_vals=None):
-        indicator_field = indicator_field_name(
-            field, constraint, CONSTRAINT_SUFFIX_MAP,
-            # detect_passes=self.detect_passes  # not yet implemented
-            #                                   # for Pandas (TODO)
+        indicator_field = self.indicator_field_name(
+            field, constraint
         )
         exists = indicator_field in self.detection.obj
-        bad_val = 1  # 0 for bad field#
+        bad_val = 0  # 1 for bad field#
         if exists:
             df = self.detection.obj.query(f'{indicator_field} == {bad_val}')
             if max_vals and df.shape[0] > max_vals:
@@ -565,8 +562,7 @@ class PandasVerification(Verification):
             return None
 
     def get_constraint_stats(self, field, constraint):
-        ok_field = indicator_field_name(field, constraint,
-                                        CONSTRAINT_SUFFIX_MAP)
+        ok_field = self.indicator_field_name(field, constraint)
         # TODO: support bad as well
         df = self.detection.obj
         n_records = int(self.detection.n_passing_records
@@ -577,6 +573,24 @@ class PandasVerification(Verification):
             return pass_fail_stats(passes, failures, 'values')
         else:
             return pass_fail_stats(n_records, 0, 'values')
+
+    def get_field_stats(self, field):
+        df = self.detection.obj
+        indicators = list({
+            self.indicator_field_name(field, constraint)
+            for constraint in CONSTRAINT_SUFFIX_MAP
+        }.intersection(set(df)))
+        n_rows = df.shape[0]
+        if len(indicators) == 0:
+            # no failures
+            nf = 0
+        else:
+            nf = df.query(
+                ' | '.join(f'{indicator} == {self.bad_val}')
+                for indicator in indicators
+            )
+        return LabelledPassFailCount(field, 0, n_rows)
+
 
 
 class PandasDetection(PandasVerification):
@@ -1000,7 +1014,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
         df = pd.DataFrame({'a': [0, 1, 2, 10, np.nan],
                            'b': ['one', 'one', 'two', 'three', np.nan]})
         v = detect_df(df, 'example_constraints.tdda')
-        detection_df = v.detected()
+       detection_df = v.detected()
         print(detection_df.to_string())
 
     """

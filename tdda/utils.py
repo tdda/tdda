@@ -540,9 +540,13 @@ def strip_lines(s):
     return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
 
 
+def indicator_suffix(detect_passes=True):
+    return OK if detect_passes else BAD
+
+
 def indicator_field_name(field, constraint, name_map=None,
                          detect_passes=True):
-    suffix = OK if detect_passes else BAD
+    suffix = indicator_suffix(detect_passes)
     if name_map:
         return f'{field}_{name_map[constraint]}_{suffix}'
     else:

@@ -14,7 +14,7 @@ import tomli_w
 import yaml
 
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 from tdda.state import get_config
 from tdda.tables import Table
@@ -22,7 +22,7 @@ from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
     json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
-    tdda_css, constraint_val
+    tdda_css, constraint_val, indicator_field_name
 )
 from tdda.version import version
 
@@ -101,6 +101,9 @@ class SafeMarks:
 
 class InvalidConstraintSpecification(Exception):
     pass
+
+
+LabelledPassFailCount = namedtuple('name', 'passes failures')
 
 
 class TDDAObject(OrderedDict):
@@ -805,6 +808,7 @@ class Verification(object):
         self.detect_report_formats = kwargs.get('report_formats', [])
         cconfig = get_config().constraints
         self.detect_passes = cconfig.get('detect_passes')
+        self.bad_val = 0 if self.detect_passes else 1
         self.int_bools = cconfig.get('int_bools')
         self.report_path = kwargs.get('report_path', outpath)
 
@@ -818,6 +822,11 @@ class Verification(object):
                     output_fields, index)):
                 raise Exception('You have specified detection parameters '
                                 'without specifying\na detection output path.')
+
+    def indicator_field_name(self, field, constraint):
+        return indicator_field_name(field, constraint,
+                                    CONSTRAINT_SUFFIX_MAP,
+                                    detect_passes=self.detect_passes)
 
     def to_string(self, colour=None, ascii=None):
         """
@@ -851,6 +860,8 @@ class Verification(object):
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else ''
 
+#        n_passing_values = sum(self.fields) * ###
+
         out = ['%sSUMMARY:\n' % fields_part]
         if self.report == 'records' and self.detection:
             nf = self.detection.n_failing_records
@@ -868,6 +879,14 @@ class Verification(object):
                            colour, n_fields_with_failures == 0), ''])
         nc = self.passes + self.failures
         constraints_badpc = 100 * self.failures / nc
+
+
+        # out.extend(
+        #     [f'Constrained Values: {n_values:,}',
+        #      'Failing Values: %s'
+        #      % richgoodbad(f'{n_failing_values:,} ({values_badpc:.2f}%)',
+        #                    colour, n_failing_values == 0), ''])
+
         out.extend(
             [f'Constraints: {nc:,}',
              'Failing Constraints: %s'
@@ -877,6 +896,10 @@ class Verification(object):
     __str__ = to_string
 
     def to_table(self, fails, constraints):
+        with open('/tmp/fails.json', 'w') as f:
+            json.dump(fails, f, indent=4)
+        with open('/tmp/constraints.json', 'w') as f:
+            json.dump(constraints, f, indent=4)
         print(fails)
         print('\n\n\n')
         print(constraints)
