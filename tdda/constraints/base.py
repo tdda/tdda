@@ -876,6 +876,58 @@ class Verification(object):
         return '\n'.join(out)
     __str__ = to_string
 
+    def to_table(self, fails, constraints):
+        print(fails)
+        print('\n\n\n')
+        print(constraints)
+        checkmark = '✓'
+        headers = (
+            ['Values', 'Constraints']
+            + ['Allowed', 'Actual', checkmark] * 8
+        )
+        structured_header = [
+            [1, 2, 'Name'],
+            [2, 1, 'Failures'],
+            [3, 1, 'Type'],
+            [3, 1, 'Minimum'],
+            [3, 1, 'Maximum'],
+            [3, 1, 'Sign'],
+            [3, 1, 'Max Nulls'],
+            [3, 1, 'Duplicates'],
+            [3, 1, 'Values'],
+            [3, 1, 'Rex']
+        ]
+        rows = []
+        htmlrows = []
+        any_rex = False
+        constraint_fields = constraints['fields']
+        for field, fc in constraint_fields.items():
+            row = [field, '0', '0']
+            htmlrow = ['', '', '']
+            for kind in CONSTRAINT_COLS:
+                c = fc.get(kind, None)
+                if c is None and kind in ('min', 'max'):
+                    c = fc.get(kind + '_length', None)
+                if c is not None:
+                    # v = c['constraint_value']
+                    row.extend([constraint_val(c, kind), '', ''])
+                    # if kind == 'rex':
+                    #     htmlrow.append(colour_regexes(c.value))
+                    #     any_rex = True
+                    # else:
+                    #     htmlrow.append('')
+                else:
+                    row.extend(['', '', ''])
+                    htmlrow.extend(['', '', ''])
+            rows.append(row)
+            htmlrows.append(htmlrow)
+        self._table = Table(headers, rows,
+                            attr={'class': 'solid tdda'},
+                            structuredHeader=structured_header,
+                            commonHeadColour=True,
+                            htmlrows=htmlrows if any_rex else None)
+
+
     def write_detection_reports(self, minimal=True):
         """
         If any detection reports are specified (by the extension
@@ -885,13 +937,12 @@ class Verification(object):
         if not (self.report_path and self.detect_report_formats):
             return
 
-        #
         # TODO: If detection reports are no, and output_fields
         # are specified and do not include fields with failures
         # self.detect_failure_values below will fail.
-        #
 
         d = self.constraints.to_dict()
+        d_raw = self.constraints.to_dict()
         key_fields = self.detect_key
         for field in list(d['fields']):
             constraints = d['fields'][field]
@@ -914,6 +965,7 @@ class Verification(object):
             if constraints == {}:
                 del d['fields'][field]
         config = get_config()
+        self.to_table(d, d_raw)
         for fmt in self.detect_report_formats:
             outpath = swap_ext(nvl(self.report_path, self.outpath), f'.{fmt}')
             if fmt == 'json':
@@ -927,11 +979,10 @@ class Verification(object):
             elif fmt in ('md', 'markdown'):
                 write_markdown_detect_report(d, outpath, config)
             elif fmt == 'html':
-                write_html_detect_report(d, outpath, config)
+                write_html_detect_report(d, outpath, config, self._table)
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
-
 
 
 class Detection(object):
@@ -1332,7 +1383,7 @@ def write_markdown_detect_report(d, outpath, config):
                     f.write(f'      * `{ffv(failure)}`\n')
 
 
-def write_html_detect_report(d, outpath, config):
+def write_html_detect_report(d, outpath, config, table=None):
     """
     Writes a human-readable textual report on detection failures
     """
@@ -1341,10 +1392,16 @@ def write_html_detect_report(d, outpath, config):
     xml = XML(
         html=True,
         headerAttr={'title': 'TDDA Failure Report'},
+        css=tdda_css(),
     )
 
     xml.WriteElement('h1', 'TDDA FAILURE REPORT')
     xml.OpenElement('div', attributes=(('id', 'tdda-discover'),))
+
+    if table:
+        xml.WriteElement('h2', 'Summary:')
+        table.toHTML(xml=xml)
+
     xml.WriteElement('h2', 'Fields:')
     for field, constraints in d['fields'].items():
         xml.WriteElement('h3', f'Field: {field}')

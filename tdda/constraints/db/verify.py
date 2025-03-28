@@ -32,10 +32,10 @@ from tdda.constraints.db.drivers import (database_connection, parse_table_name,
 from tdda.utils import cprint
 
 
-def verify_database_table_from_file(table, constraints_path,
-                                    conn=None, dbtype=None, db=None,
-                                    host=None, port=None, user=None,
-                                    password=None, **kwargs):
+def verify_database_table_cli(table, constraints_path,
+                              conn=None, dbtype=None, db=None,
+                              host=None, port=None, user=None,
+                              password=None, **kwargs):
     """
     Verify the given database table, against constraints in the .tdda
     file specified.
@@ -68,7 +68,7 @@ class DatabaseVerifier:
 
     def verify(self):
         params = get_verify_params(self.argv[1:])
-        verify_database_table_from_file(**params)
+        verify_database_table_cli(**params)
 
 
 def main(argv):

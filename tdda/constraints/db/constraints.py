@@ -389,7 +389,8 @@ class DatabaseVerification(Verification):
         self.is_db = True
         Verification.__init__(self, *args, **kwargs)
 
-    def get_failure_values(self, field, constraint, key_fields):
+    def get_failure_values(self, field, constraint, key_fields,
+                           max_vals=None):
         indicator_field = (
             indicator_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP,
                                  detect_passes=self.detect_passes)
@@ -406,6 +407,11 @@ class DatabaseVerification(Verification):
             sql = (f'SELECT {keys}{self.dbh.quoted(field)}\n'
                    f'FROM {self.detection_table}\n'
                    f'WHERE {dbh.quoted(indicator_field)} = {bad_val}')
+            if max_vals:
+                if not type(max_vals) == int and max_vals > 0:
+                    raise Exception(f'Internal error: Bad value for max_vals: '
+                                    f'{max_vals}')
+                sql += f'\nLIMIT {max_vals}'
             result = self.dbh.execute_all(sql)
             return [list(r) for r in result]
         else:

@@ -31,6 +31,7 @@ from tdda.constraints.db.constraints import detect_db_table
 from tdda.constraints.db.drivers import (database_connection, parse_table_name,
                                          database_arg_parser,
                                          database_arg_flags)
+from tdda.constraints.db.verify import verify_database_table_cli
 from tdda.utils import cprint
 
 
@@ -44,14 +45,19 @@ def detect_database_table_cli(table, constraints_path, destination,
 
     Not implemented
     """
-    (table, dbtype) = parse_table_name(table, dbtype)
-    dest_pair = parse_table_name(destination, dbtype)
-    dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                              host=host, port=port,
-                              user=user, password=password)
-    cprint(detect_db_table(dbtype, dbc, table, constraints_path,
-                           destination=dest_pair, **kwargs))
-
+    if destination:
+        (table, dbtype) = parse_table_name(table, dbtype)
+        dest_pair = parse_table_name(destination, dbtype)
+        dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
+                                  host=host, port=port,
+                                  user=user, password=password)
+        cprint(detect_db_table(dbtype, dbc, table, constraints_path,
+                               destination=dest_pair, **kwargs))
+    else:
+        return verify_database_table_cli(table, constraints_path,
+                                         conn=conn, dbtype=dbtype, db=db,
+                                         host=host, port=port, user=user,
+                                         password=password, **kwargs)
 
 def get_detect_params(args):
     parser = database_arg_parser(detect_parser, USAGE)

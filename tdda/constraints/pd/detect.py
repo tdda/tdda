@@ -89,7 +89,7 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
     df = load_df(df_path)
     v = detect_df(df, constraints_path, outpath=outpath,
                   rownumber_is_index=False, **kwargs)
-    if verbose and outpath is not None and outpath != '-':
+    if verbose:
         cprint(v)
     return v
 

@@ -546,16 +546,19 @@ class PandasVerification(Verification):
 
     to_dataframe = to_frame
 
-    def get_failure_values(self, field, constraint, key_fields):
+    def get_failure_values(self, field, constraint, key_fields,
+                           max_vals=None):
         indicator_field = indicator_field_name(
             field, constraint, CONSTRAINT_SUFFIX_MAP,
             # detect_passes=self.detect_passes  # not yet implemented
             #                                   # for Pandas (TODO)
         )
         exists = indicator_field in self.detection.obj
-        bad_val = 1  # 0 for bad fild#
+        bad_val = 1  # 0 for bad field#
         if exists:
             df = self.detection.obj.query(f'{indicator_field} == {bad_val}')
+            if max_vals and df.shape[0] > max_vals:
+                df = df.head(max_vals)
             return zip(*(df[k].to_list() for k in key_fields),
                        df[field].to_list())
         else:
