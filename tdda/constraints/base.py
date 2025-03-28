@@ -104,6 +104,10 @@ class InvalidConstraintSpecification(Exception):
 
 
 class LabelledPassFailCount:
+    """
+    Container for pass & fail counts for anything,
+    with a few convenience properties
+    """
     def __init__(self, name, passes, failures):
         self.name = name
         self.passes = passes
@@ -120,6 +124,12 @@ class LabelledPassFailCount:
     @property
     def bad_pc(self):
         return f'{self.failure_rate * 100:.2f}%'
+
+    def __str__(self):
+        return (
+            f'PassFailCount({repr(self.name)}, {repr(self.passes)}, '
+            f'{repr(self.failures)})'
+        )
 
 
 
@@ -808,8 +818,8 @@ class Verification(object):
         config = get_config()
         self.constraints = constraints
         self.fields = TDDAObject()
-        self.failures = 0
-        self.passes = 0
+        self.failures = 0  # constraints
+        self.passes = 0    # constraints
         self.detection = None
         self.report = report
         self.ascii = ascii
@@ -1032,6 +1042,8 @@ class Verification(object):
             sum(f.failures for f in field_stats.values()),
             sum(f.passes for f in field_stats.values())
         )
+        for k, v in field_stats.items():
+            print(k, v)
         d['_field_stats'] = field_stats
         self.create_summary_stats(field_stats)
         config = get_config()
