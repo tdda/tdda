@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 import os
 import tempfile
+import unicodedata
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 from tdda.utils import (
@@ -9,6 +10,7 @@ from tdda.utils import (
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
     json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
+    normal_form_tdda
 )
 from unicodedata import normalize
 
@@ -282,6 +284,149 @@ class TestXMLGeneration(ReferenceTestCase):
         )
         refpath = os.path.join(TESTDIR, 'jsd.json')
         self.assertStringCorrect(dict_to_json(json_sanitize(jsd)), refpath)
+
+    def test_normal_form_tdda(self):
+        en_dash = unicodedata.lookup('EN DASH')
+        em_dash = unicodedata.lookup('EM DASH')
+        minus_sign = unicodedata.lookup('MINUS SIGN')
+
+        left_single_quotation_mark = unicodedata.lookup(
+            'LEFT SINGLE QUOTATION MARK'
+        )
+        right_single_quotation_mark = unicodedata.lookup(
+            'RIGHT SINGLE QUOTATION MARK'
+        )
+        modifier_letter_apostrophe = unicodedata.lookup(
+            'MODIFIER LETTER APOSTROPHE'
+        )
+        grave_accent = unicodedata.lookup('GRAVE ACCENT')
+
+        fullwidth_quotation_mark = unicodedata.lookup(
+            'FULLWIDTH QUOTATION MARK'
+        )
+        left_double_quotation_mark = unicodedata.lookup(
+            'LEFT DOUBLE QUOTATION MARK'
+        )
+        right_double_quotation_MARK = unicodedata.lookup(
+            'RIGHT DOUBLE QUOTATION MARK'
+        )
+
+        no_break_space = unicodedata.lookup('NO-BREAK SPACE')
+        en_space = unicodedata.lookup('EN SPACE')
+        em_space = unicodedata.lookup('EM SPACE')
+        figure_space = unicodedata.lookup('FIGURE SPACE')
+        punctuation_space = unicodedata.lookup('PUNCTUATION SPACE')
+
+        tab = '\u00B9'
+        superscript_one = unicodedata.lookup('SUPERSCRIPT ONE')
+        subscript_one = unicodedata.lookup('SUBSCRIPT ONE')
+        circled_digit_one = unicodedata.lookup('CIRCLED DIGIT one')
+        mathematical_double_struck_digit_one = unicodedata.lookup(
+            'MATHEMATICAL DOUBLE-STRUCK DIGIT ONE'
+        )
+        parenthesized_digit_one = unicodedata.lookup('PARENTHESIZED DIGIT ONE')
+        digit_one_full_stop = unicodedata.lookup('DIGIT ONE FULL STOP')
+
+        greek_capital_letter_alpha = unicodedata.lookup(
+            'GREEK CAPITAL LETTER ALPHA'
+        )
+        latin_capital_letter_a_with_ring_above = unicodedata.lookup(
+            'LATIN CAPITAL LETTER A WITH RING ABOVE'
+        )
+        angstrom_sign = unicodedata.lookup('ANGSTROM SIGN')
+
+        horizontal_ellipsis = unicodedata.lookup('HORIZONTAL ELLIPSIS')
+        vertical_ellipsis = unicodedata.lookup('VERTICAL ELLIPSIS')
+
+        midline_horizontal_ellipsis = unicodedata.lookup(
+            'MIDLINE HORIZONTAL ELLIPSIS'
+        )
+        down_right_diagonal_ellipsis = unicodedata.lookup(
+            'DOWN RIGHT DIAGONAL ELLIPSIS'
+        )
+
+        mapping = {
+            en_dash: '-',
+            em_dash: '-',
+            minus_sign: '-',
+
+            left_single_quotation_mark: "'",
+            right_single_quotation_mark: "'",
+            modifier_letter_apostrophe: "'",
+            grave_accent: "'",
+
+            fullwidth_quotation_mark: '"',
+            left_double_quotation_mark: '"',
+            right_double_quotation_MARK: '"',
+
+            no_break_space: ' ',
+            en_space: ' ',
+            em_space: ' ',
+            figure_space: ' ',
+            punctuation_space: ' ',
+            tab: ' ',
+
+            superscript_one: '1',
+            subscript_one: '1',
+            circled_digit_one: '1',
+
+            mathematical_double_struck_digit_one: '1',
+            parenthesized_digit_one: '(1)',
+            digit_one_full_stop: '1.',
+
+            greek_capital_letter_alpha: 'A',
+            latin_capital_letter_a_with_ring_above: 'A',
+            angstrom_sign: 'A',
+
+            horizontal_ellipsis: '...',
+            midline_horizontal_ellipsis: '...',
+            down_right_diagonal_ellipsis: '...',
+            vertical_ellipsis: '...',
+
+            unicodedata.lookup('LATIN SMALL LIGATURE FF'): 'ff',
+            unicodedata.lookup('LATIN SMALL LIGATURE FI'): 'fi',
+            unicodedata.lookup('LATIN SMALL LIGATURE FL'): 'fl',
+            unicodedata.lookup('LATIN SMALL LIGATURE FFI'): 'ffi',
+            unicodedata.lookup('LATIN SMALL LIGATURE FFL'): 'ffl',
+            unicodedata.lookup('LATIN SMALL LIGATURE ST'): 'st',
+            unicodedata.lookup('LATIN SMALL LIGATURE IJ'): 'ij',
+        }
+        for raw, expected in mapping.items():
+            self.assertEqual((raw, normal_form_tdda(raw, strip=False)),
+                             (raw, expected))
+            if expected != ' ':
+                self.assertEqual((raw, normal_form_tdda(raw, strip=True)),
+                                 (raw, expected))
+
+        self.assertEqual(normal_form_tdda(
+                             '  The — em-dash  – and en-dash - and  '
+                             '“various” ‘quotes’ etc … ⋮ ⋯ ⋱  '),
+                         '''The - em-dash - and en-dash - and "various"'''
+                         ''' 'quotes' etc ... ... ... ...''')
+
+        accents = {
+            'àáâäǎæãåā':  'aaaaaaeaaa',
+            'ÀÁÂÄǍÆÃÅĀ':  'AAAAAAEAAA',
+            'èéêëěẽēėęę': 'eeeeeeeeee',
+            'ÈÉÊËĚẼĒĖĘĘ': 'EEEEEEEEEE',
+            'ìíîïǐĩīıį':  'iiiiiiiii',
+            'ÌÍÎÏǏĨĪİĮ':  'IIIIIIIII',
+            'òóôöǒœøõō':  'ooooooeooo',
+            'ÒÓÔÖǑŒØÕŌ':  'OOOOOOEOOO',
+            'ùúûüǔũūűů':  'uuuuuuuuu',
+            'ÙÚÛÜǓŨŪŰŮ':  'UUUUUUUUU',
+
+            'çćčċ ďð ğġ ħ ķ łļľ ñńņň ř ßşșśš țť ŵ ýŷÿ źžż':
+                'cccc dd gg h k lll nnnn r ssssss tt w yyy zzz',
+            'ÇĆČĊ Ď ĞĠ Ķ ĻĽ ÑŃŅŇ Ř ŚŠŞȘ ȚŤ Ŵ ÝŶŸ ŹŽŻ ':
+                'CCCC D GG K LL NNNN R SSSS TT W YYY ZZZ',
+            'ﬀ ﬁ ﬂ ﬃ ﬄ ﬆ œ ӕ Œ Ӕ ĳ':
+                'ff fi fl ffi ffl st oe ae OE AE ij',
+        }
+        for k, v in accents.items():
+            self.assertEqual((k, normal_form_tdda(k)),
+                             (k, v)
+            )
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=True)

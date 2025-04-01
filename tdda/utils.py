@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import json
 import math
 import os
@@ -7,6 +8,7 @@ import regex
 import sys
 import tomli_w
 import types
+import unicodedata
 import yaml
 
 
@@ -42,6 +44,8 @@ DEFAULT_INPUT_ENCODING = 'UTF-8'
 OK = 'ok'
 BAD = 'bad'
 NAN = float('nan')
+
+TDDA_NF_MAP = None  # build lazily
 
 
 
@@ -700,3 +704,115 @@ def cprint(*args, colour=None, **kw):
         rprint(*(str(a) for a in args), **kw)
     else:
         print(*args, **kw)
+
+
+def tdda_nf_map():
+    lu = unicodedata.lookup
+    strmap = {
+        '\u2013': '-',  # EN DASH
+        '\u2014': '-',  # EM DASH
+        '\u2212': '-',  # MINUS SIGN
+
+        '\u2018': "'",  # LEFT SINGLE QUOTATION MARK
+        '\u2019': "'",  # RIGHT SINGLE QUOTATION MARK
+        '\u02BC': "'",  # MODIFIER LETTER APOSTROPHE
+        '\u0060': "'",  # GRAVE ACCENT
+
+        # '\uFF02',  # FULLWIDTH QUOTATION MARK  # Handled by NFKC/D
+        '\u201C': '"',  # LEFT DOUBLE QUOTATION MARK
+        '\u201D': '"',  # RIGHT DOUBLE QUOTATION MARK
+
+        # Handled by NFKC/D
+        #'\u00A0',  # NO-BREAK SPACE
+        #'\u2002',  # EN SPACE
+        # '\u2003',  # EM SPACE
+        #'\u2007',  # FIGURE SPACE
+        # '\u2008',  # PUNCTUATION SPACE
+
+        '\u0009': ' ',  # TAB  # unicodedata.name does not recognize!
+
+        # Handled by NFKC/D:
+        # '\u00B9',  # SUPERSCRIPT ONE
+        # '\u2081',  # SUBSCRIPT ONE
+        # '\u2460',  # CIRCLED DIGIT ONE
+        # '\U0001D7D9',  # MATHEMATICAL DOUBLE-STRUCK DIGIT ONE
+        '\u2474': '(1)',  # PARENTHESIZED DIGIT ONE
+        '\u2488': '1.',  # DIGIT ONE FULL STOP
+
+        '\u0391': 'A',  # GREEK CAPITAL LETTER ALPHA
+        '\u00C5': 'A',  # LATIN CAPITAL LETTER A WITH RING ABOVE
+        # '\u212B',  # ANGSTROM SIGN  # Handled by NFKC/D
+
+        # Handled by NFKC/D:
+        #'\u2026',  # HORIZONTAL ELLIPSIS
+        #'\uFE19',  # PRESENTATION FORM FOR VERTICAL HORIZONTAL ELLIPSIS
+        '\u22EE': '...',   # VERTICAL ELLIPSIS
+
+        '\u22EF': '...',  # MIDLINE HORIZONTAL ELLIPSIS
+        '\u22F1': '...',  # DOWN RIGHT DIAGONAL ELLIPSIS
+
+        '\u04d5': 'ae',  # 'æ'
+        '\u00e6': 'ae',  # 'æ'
+        '\u04d4': 'AE',  # 'Ӕ'
+        '\u00c6': 'AE',  # 'Æ'
+        'ǽ': 'ae',
+        'đ': 'd',
+        'ð': 'd',
+        'ƒ': 'f',
+        'ħ': 'h',
+        'ı': 'i',
+        'ł': 'l',
+        'ø': 'o',
+        'ǿ': 'o',
+        'Ø': 'O',
+        'œ': 'oe',
+        'Œ': 'OE',
+        'ß': 'ss',
+        'ŧ': 't',
+    }
+
+    return str.maketrans(strmap)
+
+
+def normal_form_tdda(s, remove_accents=True, strip=True,
+                     standardize_space=True, nfkd=False):
+    """
+    Maps a string to TDDA normal form (NFT), which is normal
+    Unicode Normal Form KC (or KD, if specified)
+    with some extra mappings of commonly confused characters
+    and the option to strip accents, and to normalize and trim space.
+
+    ARGS:
+        s:                 String to be normalized
+        remove_accents:    If True many accents are removed (default True)
+        strip:             Strips leading and trailing space if True
+        standardize_space: Replaces multiple spaces with single space
+        nfkd:              If True, returns NFKD rather than the default NFKC
+
+    Main non-"kompatability" adjustments are:
+
+        Replace dashes and minus signs with ASCII -
+        Replace curly and left quotes/apostrophes to ASCII ' and "
+        Replace each TAB character with a (single) space.
+
+    """
+    global TDDA_NF_MAP
+    if TDDA_NF_MAP is None:
+        TDDA_NF_MAP = tdda_nf_map()
+
+    form = 'NFKD' if nfkd else 'NFKC'
+    normalized = unicodedata.normalize('NFKD', s)
+    if remove_accents:
+        normalized = ''.join(
+            c for c in normalized if not unicodedata.combining(c)
+        )
+    normalized = normalized.translate(TDDA_NF_MAP)
+    if strip:
+        normalized = normalized.strip()
+    if standardize_space:
+        while '  ' in normalized:
+            normalized = normalized.replace('  ', ' ')
+    return unicodedata.normalize(form, normalized)
+
+
+
