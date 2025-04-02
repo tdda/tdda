@@ -8,7 +8,7 @@ import datetime
 import re
 import sys
 
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 from tdda.constraints.base import (
     PRECISIONS,
@@ -25,7 +25,8 @@ from tdda.constraints.base import (
     NoDuplicatesConstraint, MaxNullsConstraint,
     AllowedValuesConstraint, RexConstraint,
     EPSILON_DEFAULT,
-    fuzzy_greater_than, fuzzy_less_than
+    fuzzy_greater_than, fuzzy_less_than,
+    ConstraintResult
 )
 
 from tdda.constraints.extension import (BaseConstraintCalculator,
@@ -142,36 +143,39 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         constraint specified.
         """
         if not self.column_exists(colname):
-            return False
+            return ConstraintResult(False, None)
 
+        good_none = ConstraintResult(True, None)
         value = constraint.value
         precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
         assert precision in PRECISIONS
 
-        if self.is_null(value):   # a null minimum is not considered to be an
-            return True           # active constraint, so is always satisfied
+        if self.is_null(value):  # a null minimum is not considered to be an
+                                 # active constraint, so is always satisfied
+            return good_none
 
-        m = self.get_min(colname)
-        if self.is_null(m):       # If there are no values, no value can
-            return True           # the minimum constraint
+        m = self.get_min(colname)  # actual min
+        if self.is_null(m):  # If there are no values, no value can
+                             # violate the minimum constraint
+            return good_none
 
         if (isinstance(value, datetime.datetime)
                 or isinstance(value, datetime.date)):
             m = self.to_datetime(m)
 
         if not self.types_compatible(m, value):
-            result = False
+            ok = False
         elif (precision == 'closed' or isinstance(value, datetime.datetime)
                                     or isinstance(value, datetime.date)):
-            result = m >= value
+            ok = m >= value
         elif precision == 'open':
-            result = m > value
+            ok = m > value
         else:
-            result = fuzzy_greater_than(m, value, self.epsilon)
+            ok = fuzzy_greater_than(m, value, self.epsilon)
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_min_constraint(colname, value, precision, self.epsilon)
-        return result
+        return ConstraintResult(ok, m)
 
     def verify_max_constraint(self, colname, constraint, detect=False):
         """

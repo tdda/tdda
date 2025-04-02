@@ -133,6 +133,19 @@ class PassFailCount:
         )
 
 
+class ConstraintResult:
+    """
+    Container for a pass or fail result (in ok).
+    Evaluates as boolean as self.ok
+
+    info is usually used to store an information value for the constraint,
+    e.g. the actual max for a max constraint.
+    """
+    def __init__(self, ok, info=None):
+        self.ok = ok
+        self.info = info
+
+
 
 class TDDAObject(OrderedDict):
     """
@@ -988,6 +1001,7 @@ class Verification(object):
         constraint_fields = constraints['fields']
         for field, fc in constraint_fields.items():
             fail_details = fails['_field_stats'].get(field)
+            field_info = self.field_info.get(field)  # actual field vals
             if fail_details:
                 n_failing_values = fail_details.failures
                 failing_constraints = fails['fields'].get(field)
@@ -1012,8 +1026,14 @@ class Verification(object):
                 if c is None and kind in ('min', 'max'):
                     c = fc.get(kind + '_length', None)
                 if c is not None:
-                    # v = c['constraint_value']
-                    row.extend([constraint_val(c, kind), '', ''])
+                    actual = (
+                        field_info[kind]
+                        if field_info and kind in field_info
+                        else None
+                    )
+                    row.extend([constraint_val(c, kind),
+                                str(nvl(actual, '')),
+                                ''])
                     if kind == 'rex':
                         htmlrow.extend([colour_regexes(c.value), '', ''])
                         any_rex = True
@@ -1199,8 +1219,10 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             pass
         os.remove(outpath)
 
+    results.field_info = {}
     for name in allfields:
         field_results = TDDAObject()
+        info = results.field_info[name] = {}
         failures = passes = 0
         for c in constraints.fields[name]:
             verify = verifiers.get(c.kind)
@@ -1211,8 +1233,13 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
                 else:
                     failures += 1
             else:
-                satisfied = None
-            field_results[c.kind] = satisfied
+                satisfied = ConstraintResult(None, None)
+            if hasattr(satisfied, 'ok'):
+                field_results[c.kind] = satisfied.ok
+                info[c.kind] = satisfied.info
+            else:
+                field_results[c.kind] = satisfied
+                info[c.kind] = None
 
         field_results.failures = failures  # constraints for this field
         field_results.passes = passes
