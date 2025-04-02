@@ -138,9 +138,11 @@ class XML:
                             self.WriteElement('style', '',
                                                {'type': 'text/css',
                                                 'href': c,
-                                                'rel': 'stylesheet'})
+                                                'rel': 'stylesheet'},
+                                               entitize=0)
                     else:  # in-line CSS
-                        self.WriteElement('style', css, {'type': 'text/css'})
+                        self.WriteElement('style', css, {'type': 'text/css'},
+                                          entitize=0)
                 self.CloseElement('head')
             self.WriteElement('body', leave='open')
 
@@ -168,68 +170,24 @@ class XML:
             self.out.write(UTF8Definite(self.xml(flushing=True)))
             self.xmlbuf = []
 
-    def Entitize(self, s, entitize=1, asUnicode=True):
-        s = re.sub('&', '&amp;', s)
-        s = re.sub('<', '&lt;', s)
-        s = re.sub('>', '&gt;', s)
-        if entitize > 1:
-            s = re.sub('&lt;=', '&#x2264;', s)
-            s = re.sub('&gt;=', '&#x2265;', s)
-        s = re.sub(u"'", '&apos;', s)
-        s = re.sub('"', '&quot;', s)
-        if self.altnbsp:
-            s = re.sub(self.nbsp, '&nbsp;', s)
-        return self.toString(s) if asUnicode else s
+    def Entitize(self, s, entitize=1):
+        return xml_entitize(s, entitize=entitize, altnbsp=self.altnbsp)
 
     def WriteElement(self, name, content='', attributes={},
                      leave='close', entitize=1, convertWS=0,
                      link='', convertNL=0, tight=False, forceNL=False,
                      openclose=False):
-        # convertNL: binary field:
-        #   0  to ignore newlines
-        #   *1 to convert backslash n (r'\n') to <br/>
-        #   1* to convert inline newline '\n' to <br/>
-        indent = '' if tight else self.IndentString()
-        if content is None:
-            print('WARNING: null content for element %s' % name,
-                  file=sys.stderr)
-            content = ''
-        else:
-            content = self.toString(content)
-        self.ForceNL(forceNL)
-        self.xmlbuf.append(indent + '<' + self.toString(name))
-        if attributes:
-            self.WriteAttributes(attributes)
-        if content == '' and leave == 'close':
-            if openclose:
-                self.xmlbuf.append('></%s>%s' % (self.toString(name),
-                                                  '' if tight else '\n'))
-            else:
-                self.xmlbuf.append('/>' if tight else '/>\n')
-        else:
-            self.xmlbuf.append('>')
-        if link:
-            self.xmlbuf.append('<a href="%s">' % link)
-        if (re.match('^[ \t]+$', content)
-                    or (self.pad and content == '' and leave == 'close')):
-            xmlc = '&#160;'
-        elif entitize:
-            xmlc = self.Entitize(content, entitize)
-        else:
-            xmlc = content
-        if convertNL & 1:
-            xmlc = xmlc.replace('\\n', '<br/>')
-        if convertNL & 2:
-            xmlc = xmlc.replace('\n', '<br/>')
-        if xmlc:
-            self.xmlbuf.append(xmlc)
-        if link:
-            self.xmlbuf.append('</a>')
-        if leave == 'close':
-            if content != '':
-                self.xmlbuf.append('</' + self.toString(name)
-                                   + ('>' if tight else '>\n'))
-        else:
+        if type(content) == bytes:
+            content = content.decode(self.inputEncoding)
+        self.xmlbuf.append(
+            xml_element(
+                name, content, attributes, leave=leave, entitize=entitize,
+                convertWS=0, link='', convertNL=convertNL,
+                indent='' if tight else self.IndentString(),
+                openclose=openclose
+            )
+        )
+        if leave != 'close':
             self.Push(name, tight)
         self.Flush()
 
@@ -338,20 +296,7 @@ class XML:
             self.out.close()
 
     def WriteAttributes(self, attributes):
-        if type(attributes) == type({}):
-            for a in attributes:
-                val = attributes[a]
-                if type(val) is bytes:
-                    val = str(val, self.inputEncoding, 'ignore')
-                if type(a) is bytes:
-                    a = str(a, self.inputEncoding, 'ignore')
-                self.xmlbuf.append(' %s="%s"' % (self.toString(a),
-                                   self.Entitize(self.toString(val))))
-        else:   # tuple
-            for (k, v) in attributes:
-                self.xmlbuf.append(' %s="%s"'
-                                   % (self.toString(k),
-                                      self.Entitize(self.toString(v))))
+        self.xmlbuf.append(f' {xml_attributes(attributes)}')
 
     def WriteComment(self, comment, padlines=1):
         padding = '\n' * padlines
@@ -403,6 +348,84 @@ class XML:
             return s
         else:
             return str(v)
+
+def xml_entitize(s, entitize=1, altnbsp=None):
+    s = re.sub('&', '&amp;', s)
+    s = re.sub('<', '&lt;', s)
+    s = re.sub('>', '&gt;', s)
+    if entitize > 1:
+        s = re.sub('&lt;=', '&#x2264;', s)
+        s = re.sub('&gt;=', '&#x2265;', s)
+    s = re.sub(u"'", '&apos;', s)
+    s = re.sub('"', '&quot;', s)
+    if altnbsp:
+        s = re.sub(self.nbsp, '&nbsp;', s)
+    return s
+
+
+def xml_attributes(attributes):
+    """
+    Given a dictionary or iterable of pairs of attributes (key, value),
+    returns the appropriate xml string
+
+        'a="3" b="fool"'
+
+    with the values stringified and entitized.
+
+    keys are assumed to be valid, entitized strings.
+    """
+    items = attributes.items() if isinstance(attributes, dict) else attributes
+    return ' '.join(f'{a}="{xml_entitize(str(val))}"'
+                    for a, val in items)
+
+def xml_element(name, content='', attributes={},
+                leave='close', entitize=1, convertWS=0,
+                link='', convertNL=0, indent='', forceNL=False,
+                openclose=False, pad=0):
+    # convertNL: binary field:
+    #   0  to ignore newlines
+    #   *1 to convert backslash n (r'\n') to <br/>
+    #   1* to convert inline newline '\n' to <br/>
+    out = []
+    if content is None:
+        print('WARNING: null content for element %s' % name,
+              file=sys.stderr)
+        content = ''
+    else:
+        content = str(content)
+    if forceNL:
+        out.append('' if out[-1].endswith('\n') else '\n')
+    out.append(f'{indent}<{name}')
+    if attributes:
+        out.append(f' {xml_attributes(attributes)}')
+    if content == '' and leave == 'close':
+        if openclose:
+            out.append(f'></{name}>{"\n" if indent else ""}')
+        else:
+            out.append('/>\n' if indent else '/>')
+    else:
+        out.append('>')
+    if link:
+        out.append('<a href="xml_entitize{%s}">' % link)
+    if (re.match('^[ \t]+$', content)
+                 or (pad and content == '' and leave == 'close')):
+        xmlc = '&#160;'
+    elif entitize:
+        xmlc = xml_entitize(content, entitize=entitize)
+    else:
+        xmlc = content
+    if convertNL & 1:
+        xmlc = xmlc.replace('\\n', '<br/>')
+    if convertNL & 2:
+        xmlc = xmlc.replace('\n', '<br/>')
+    if xmlc:
+        out.append(xmlc)
+    if link:
+        out.append('</a>')
+    if leave == 'close' and content != '':
+        out.append(f'</{name}>{"\n" if indent else ""}')
+    return ''.join(out)
+
 
 
 class PassFailStats:
@@ -816,3 +839,8 @@ def normal_form_tdda(s, remove_accents=True, strip=True,
 
 
 
+def rednz(v):
+    if v == 0:
+        return '0'
+    else:
+        return xml_element('span', f'{v:,}', attributes={'class': 'tdred'})

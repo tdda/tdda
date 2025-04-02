@@ -22,7 +22,8 @@ from tdda.utils import (
     swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
     json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
-    tdda_css, constraint_val, indicator_field_name
+    tdda_css, constraint_val, indicator_field_name,
+    rednz,
 )
 from tdda.version import version
 
@@ -389,7 +390,7 @@ class DatasetConstraints(object):
         any_rex = False
         for field in self.fields.values():
             row = [field.name]
-            htmlrow = ['']
+            htmlrow = [None]
             for kind in CONSTRAINT_COLS:
                 c = field.constraints.get(kind, None)
                 if c is None and kind in ('min', 'max'):
@@ -404,7 +405,7 @@ class DatasetConstraints(object):
                         htmlrow.append('')
                 else:
                     row.append('')
-                    htmlrow.append('')
+                    htmlrow.append(None)
             rows.append(row)
             htmlrows.append(htmlrow)
         self._table = Table(headers, rows,
@@ -956,6 +957,14 @@ class Verification(object):
     __str__ = to_string
 
     def to_table(self, fails, constraints):
+        """
+        Produce the summary table for detection.
+
+        ARGS:
+
+            fails: dictionary keyed on fieldname for fields with any failures.
+            constraints: original constraints
+        """
         checkmark = '✓'
         headers = (
             ['Values', 'Constraints']
@@ -978,8 +987,26 @@ class Verification(object):
         any_rex = False
         constraint_fields = constraints['fields']
         for field, fc in constraint_fields.items():
-            row = [field, '0', '0']
-            htmlrow = ['', '', '']
+            fail_details = fails['_field_stats'].get(field)
+            if fail_details:
+                n_failing_values = fail_details.failures
+                failing_constraints = fails['fields'].get(field)
+                n_failing_constraints = (
+                    len(failing_constraints)
+                    if failing_constraints
+                    else 0
+                )
+                row = [
+                    field,
+                    f'{n_failing_values:,}',
+                    f'{n_failing_constraints}'
+                ]
+                htmlrow = [field,
+                           rednz(n_failing_values),
+                           rednz(n_failing_constraints)]
+            else:
+                row = [field, '0', '0']
+                htmlrow = ['field', '0', '0']
             for kind in CONSTRAINT_COLS:
                 c = fc.get(kind, None)
                 if c is None and kind in ('min', 'max'):
@@ -987,21 +1014,21 @@ class Verification(object):
                 if c is not None:
                     # v = c['constraint_value']
                     row.extend([constraint_val(c, kind), '', ''])
-                    # if kind == 'rex':
-                    #     htmlrow.append(colour_regexes(c.value))
-                    #     any_rex = True
-                    # else:
-                    #     htmlrow.append('')
+                    if kind == 'rex':
+                        htmlrow.extend([colour_regexes(c.value), '', ''])
+                        any_rex = True
+                    else:
+                        htmlrow.extend([None, None, None])
                 else:
                     row.extend(['', '', ''])
-                    htmlrow.extend(['', '', ''])
+                    htmlrow.extend([None, None, None])
             rows.append(row)
             htmlrows.append(htmlrow)
         self._table = Table(headers, rows,
                             attr={'class': 'solid tdda'},
                             structuredHeader=structured_header,
                             commonHeadColour=True,
-                            htmlrows=htmlrows if any_rex else None)
+                            htmlrows=htmlrows)
 
 
     def write_detection_reports(self, minimal=True):
@@ -1024,7 +1051,6 @@ class Verification(object):
         for field in list(d['fields']):
             constraints = d['fields'][field]
             field_stats[field] = self.get_field_stats(field)
-            print(field_stats[field])
             for constraint in list(constraints):
                 value = constraints[constraint]
                 c = constraints[constraint] = {

@@ -736,8 +736,9 @@ class Table:
         if self.colPadding and self.colPadding[j - nHeaders]:
             AddAttribute(attr, 'class', self.colPadding[j - nHeaders])
 
-        fmt = (getattr(self.htmlrows[i][j], 'html', None)
-               if self.htmlrows else None)
+        fmt = self.htmlrows[i][j] if self.htmlrows else None
+        if hasattr(fmt, 'html'):
+            fmt = getattr(fmt, 'html', None)
         if fmt is not None:
             h.OpenElement('td', attributes=attr)
             h.AddBalancedXML(fmt)
