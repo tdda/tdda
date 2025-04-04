@@ -23,7 +23,7 @@ from tdda.utils import (
     json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val, indicator_field_name,
-    rednz,
+    rednz, redblack, coloured_tick_cross
 )
 from tdda.version import version
 
@@ -978,10 +978,9 @@ class Verification(object):
             fails: dictionary keyed on fieldname for fields with any failures.
             constraints: original constraints
         """
-        checkmark = '✓'
         headers = (
             ['Values', 'Constraints']
-            + ['Allowed', 'Actual', checkmark] * 8
+            + ['Allowed', 'Actual', Marks.tick] * 8
         )
         structured_header = [
             [1, 2, 'Name'],
@@ -1001,6 +1000,7 @@ class Verification(object):
         constraint_fields = constraints['fields']
         for field, fc in constraint_fields.items():
             fail_details = fails['_field_stats'].get(field)
+            cfail_details = fails['_constraint_stats'].get(field)
             field_info = self.field_info.get(field)  # actual field vals
             if fail_details:
                 n_failing_values = fail_details.failures
@@ -1023,6 +1023,11 @@ class Verification(object):
                 htmlrow = ['field', '0', '0']
             for kind in CONSTRAINT_COLS:
                 c = fc.get(kind, None)
+                if kind in cfail_details:
+                    cfail = cfail_details[kind].n_failures > 0
+                else:
+                    cfail = False
+                tick_or_cross = Marks.cross if cfail else Marks.tick
                 if c is None and kind in ('min', 'max'):
                     c = fc.get(kind + '_length', None)
                 if c is not None:
@@ -1033,12 +1038,17 @@ class Verification(object):
                     )
                     row.extend([constraint_val(c, kind),
                                 str(nvl(actual, '')),
-                                ''])
+                                tick_or_cross])
                     if kind == 'rex':
-                        htmlrow.extend([colour_regexes(c.value), '', ''])
+                        htmlrow.extend([colour_regexes(c.value),
+                                        None,
+                                        coloured_tick_cross(not cfail)])
                         any_rex = True
                     else:
-                        htmlrow.extend([None, None, None])
+                        htmlrow.extend([
+                            None,
+                            redblack(str(nvl(actual, '')), red=cfail),
+                            coloured_tick_cross(not cfail)])
                 else:
                     row.extend(['', '', ''])
                     htmlrow.extend([None, None, None])
@@ -1068,15 +1078,18 @@ class Verification(object):
         d_raw = self.constraints.to_dict()
         key_fields = self.detect_key
         field_stats = {}
+        constraint_stats = {}
         for field in list(d['fields']):
             constraints = d['fields'][field]
             field_stats[field] = self.get_field_stats(field)
+            constraint_stats[field] = cstats = {}
             for constraint in list(constraints):
                 value = constraints[constraint]
                 c = constraints[constraint] = {
                     'constraint_value': value
                 }
                 stats = self.get_constraint_stats(field, constraint)
+                cstats[constraint] = stats
                 if stats.n_failures == 0:
                     if minimal:
                         del constraints[constraint]
@@ -1095,6 +1108,7 @@ class Verification(object):
             sum(f.failures for f in field_stats.values())
         )
         d['_field_stats'] = field_stats
+        d['_constraint_stats'] = constraint_stats
         self.create_summary_stats(field_stats)
         config = get_config()
         self.to_table(d, d_raw)
@@ -1228,7 +1242,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             verify = verifiers.get(c.kind)
             if verify:
                 satisfied = verify(name, c, detect)
-                if satisfied:
+                if (satisfied == True) or satisfied.ok:
                     passes += 1
                 else:
                     failures += 1

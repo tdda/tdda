@@ -188,175 +188,193 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         value = constraint.value
         precision = getattr(constraint, 'precision', 'fuzzy') or 'fuzzy'
         assert precision in PRECISIONS
+        good_none = ConstraintResult(True, None)
 
         if self.is_null(value):   # a null maximum is not considered to be an
-            return True           # active constraint, so is always satisfied
+            return good_none      # active constraint, so is always satisfied
 
         M = self.get_max(colname)
         if self.is_null(M):       # If there are no values, no value can
-            return True           # violate the maximum constraint
+            return good_none      # violate the maximum constraint
 
         if (isinstance(value, datetime.datetime)
                 or isinstance(value, datetime.date)):
             M = self.to_datetime(M)
 
         if not self.types_compatible(M, value):
-            result = False
+            ok = False
         elif (precision == 'closed' or isinstance(value, datetime.datetime)
                                     or isinstance(value, datetime.date)):
-            result = M <= value
+            ok = M <= value
         elif precision == 'open':
-            result = M < value
+            ok = M < value
         else:
-            result = fuzzy_less_than(M, value, self.epsilon)
+            ok = fuzzy_less_than(M, value, self.epsilon)
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_max_constraint(colname, value, precision, self.epsilon)
-        return result
+        return ConstraintResult(ok, M)
 
     def verify_min_length_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given (string) column satisfies the minimum length
         constraint specified.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         value = constraint.value
         if self.is_null(value):   # a null minimum length is not considered
-            return True           # to be an active constraint, so is always
+            return good_none      # to be an active constraint, so is always
                                   # satisfied
 
         if self.get_tdda_type(colname) != 'string':
-            return False
+            return bad_none
 
         m = self.get_min_length(colname)
         if self.is_null(m):       # If there are no values, no value can
             return True           # the minimum length constraint
 
-        result = m >= value
+        ok = m >= value
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_min_length_constraint(colname, value)
-        return result
+        return ConstraintResult(ok, m)
 
     def verify_max_length_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given (string) column satisfies the maximum length
         constraint specified.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         value = constraint.value
         if self.is_null(value):   # a null minimum length is not considered
-            return True           # to be an active constraint, so is always
+            return good_none      # to be an active constraint, so is always
                                   # satisfied
 
         if self.get_tdda_type(colname) != 'string':
-            return False
+            return bad_none
 
         M = self.get_max_length(colname)
         if self.is_null(M):       # If there are no values, no value can
-            return True           # the maximum length constraint
+            return good_none      # the maximum length constraint
 
-        result = M <= value
+        ok = M <= value
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_max_length_constraint(colname, value)
-        return result
+        return ConstraintResult(ok, M)
 
     def verify_tdda_type_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied type constraint.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         required_type = constraint.value
         allowed_types = (required_type if type(required_type) in (list, tuple)
                          else [required_type])
         if len(allowed_types) == 1 and self.is_null(allowed_types[0]):
-            return True  # a null type is not considered to be an
-                         # active constraint, so is always satisfied
+            return good_none  # a null type is not considered to be an
+                              # active constraint, so is always satisfied
 
         actual_type = self.get_tdda_type(colname)
         if self.type_checking == 'strict':
-            result = actual_type in allowed_types
+            ok = actual_type in allowed_types
         else:
             if actual_type in allowed_types:
-                result = True       # definitely OK if the types actually match
+                ok = True       # definitely OK if the types actually match
             elif 'int' in allowed_types and actual_type == 'real':
-                result = self.get_non_integer_values_count(colname) == 0
+                ok = self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'real':
-                result = self.get_non_integer_values_count(colname) == 0
+                ok = self.get_non_integer_values_count(colname) == 0
             elif 'bool' in allowed_types and actual_type == 'string':
                 # boolean columns with nulls get converted to dtype
                 # object, which is usually used for strings
-                result =  self.get_all_non_nulls_boolean(colname)
+                ok =  self.get_all_non_nulls_boolean(colname)
             else:
-                result = False
+                ok = False
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_tdda_type_constraint(colname, required_type)
-        return result
+        return ConstraintResult(ok, actual_type)
 
     def verify_sign_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied sign constraint.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         value = constraint.value
         if self.is_null(value):   # a null value (as opposed to the string
                                   # 'null') is not considered to be an
-            return True           # active constraint, so is always satisfied
+            return good_none      # active constraint, so is always satisfied
 
         m = self.get_min(colname)
         M = self.get_max(colname)
         if self.is_null(m):
-            return True  # no values: cannot violate constraint
+            return good_none  # no values: cannot violate constraint
 
+        val = m
         if type(m) not in (bool, int, long_type, float):
-            result = False
+            ok = False
+            val = m
         elif type(M) not in (bool, int, long_type, float):
-            result = False
+            ok = False
+            val = M
         elif value == 'null':
-             result = False
+             ok = False
         elif value == 'positive':
-            result = m > 0
+            ok = m > 0
         elif value == 'non-negative':
-            result = m >= 0
+            ok = m >= 0
         elif value == 'zero':
-            result = m == M == 0
+            ok = m == M == 0
+            val = m if m < 0 else M
         elif value == 'non-positive':
-            result = M <= 0
+            ok = M <= 0
+            val = M
         elif value == 'negative':
-            result = M < 0
+            ok = M < 0
+            val = M
         assert value in SIGNS
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_sign_constraint(colname, value)
-        return result
+        return ConstraintResult(ok, value if ok else val)
 
     def verify_max_nulls_constraint(self, colname, constraint, detect=False):
         """
         Verify whether a given column satisfies the supplied constraint
         that it should contain no nulls.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         value = constraint.value
         if self.is_null(value):   # a null value is not considered to be an
-            return True           # active constraint, so is always satisfied
-        result = self.get_null_count(colname) <= value
+            return good_none      # active constraint, so is always satisfied
+        n = self.get_null_count(colname)
+        ok = n <= value
 
-        if bool(result) or not detect:
-            return result
+        if bool(ok) or not detect:
+            return ConstraintResult(ok, n)
         self.detect_max_nulls_constraint(colname, value)
-        return False
+        return ConstraintResult(ok, n)
 
     def verify_no_duplicates_constraint(self, colname, constraint,
                                         detect=False):
@@ -364,23 +382,27 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         Verify whether a given column satisfies the constraint supplied,
         that it should contain no duplicate (non-null) values.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         value = constraint.value
         if value is False or self.is_null(value):
             # a null value is not considered to be an active constraint,
             # so is always satisfied
-            return True
+            return good_none
 
         assert value == True      # value not really used; but should be True
 
         non_nulls = self.get_non_null_count(colname)
-        result = self.get_nunique(colname) == non_nulls
+        n_unique = self.get_nunique(colname)
+        ok = n_unique == non_nulls
+        dups = 'no' if ok else f'{non_nulls - n_unique:,} dups'
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_no_duplicates_constraint(colname, value)
-        return result
+        return ConstraintResult(ok, dups)
 
     def verify_allowed_values_constraint(self, colname, constraint,
                                          detect=False):
@@ -388,21 +410,24 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         Verify whether a given column satisfies the constraint on allowed
         (string) values provided.
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
 
         #exclusions = self.allowed_values_exclusions()
         allowed_values = constraint.value
         if allowed_values is None:      # a null value is not considered
-            return True                 # to be an active constraint,
+            return good_none            # to be an active constraint,
                                         # so is always satisfied
 
         n_allowed_values = len(allowed_values)
         n_actual_values = self.get_nunique(colname)
 
+        val = None
         if not detect and n_actual_values > n_allowed_values:
             # can know the result without actually identifying values
-            result = False
+            ok = False
         else:
             actual_values = self.get_unique_values(colname)
             #exclusions = exclusions or []
@@ -410,12 +435,13 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             violations = (
                 self.filter_out_nulls(actual_values) - set(allowed_values)
             )
-            result = len(violations) == 0
+            ok = len(violations) == 0
+            val = '' if ok else f'e.g. "{violations[0]}"'
 
-        if detect and not bool(result):
+        if detect and not bool(ok):
             self.detect_allowed_values_constraint(colname, allowed_values,
                                                   violations)
-        return result
+        return ConstraintResult(ok, val)
 
     def verify_rex_constraint(self, colname, constraint, detect=False):
         """
@@ -423,10 +449,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         expression constraint (by matching at least one of the regular
         expressions given).
         """
+        good_none = ConstraintResult(True, None)
+        bad_none = ConstraintResult(False, None)
         if not self.column_exists(colname):
-            return False
+            return bad_none
         if self.get_tdda_type(colname) != 'string':
-            return False
+            return bad_none
 
         violations = self.calc_rex_constraint(colname, constraint,
                                               detect=detect)
@@ -434,9 +462,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             # a truthy result means some values failed the constraint
             if detect:
                 self.detect_rex_constraint(colname, violations)
-            return False
+            return ConstraintResult(False, f'e.g. "{violations[0]}"')
         else:
-            return True
+            return good_none
 
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""

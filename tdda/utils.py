@@ -844,3 +844,19 @@ def rednz(v):
         return '0'
     else:
         return xml_element('span', f'{v:,}', attributes={'class': 'tdred'})
+
+
+def redblack(v, red):
+    if red:
+        return xml_element('span', v, attributes={'class': 'tdred'})
+    else:
+        return v
+
+
+def coloured_tick_cross(ok):
+    colour = 'tdgreen' if ok else 'tdred'
+    mark = '✓' if ok else '✗'
+    return xml_element('span', mark, attributes={'class': colour})
+
+
+
