@@ -42,7 +42,7 @@ from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
-from tdda.utils import handle_tilde
+from tdda.utils import handle_tilde, cprint
 
 
 DATABASE_USAGE = '''
@@ -395,6 +395,14 @@ class ConnectionSpec:
         self.user = d.get('user')
         self.password = d.get('password')
         self.schema = d.get('schema')
+        if not self.password:
+            env_var = d.get('password_env_var')
+            if env_var:
+                self.password = os.environ.get(env_var)
+                if not self.password:
+                    cprint('WARNING: No password found in environment variable '
+                          f'{env_var}.',
+                          colour='red', file=sys.stderr)
 
         if (self.dbtype and self.dbtype.lower() == 'sqlite'
                     and self.database is not None
