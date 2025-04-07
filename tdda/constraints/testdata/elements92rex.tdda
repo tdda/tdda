@@ -1,17 +1,24 @@
 {
+    "creation_metadata": {
+        "local_time": "2025-04-05T15:06:04",
+        "utc_time": "2025-04-05T14:06:04+00:00",
+        "creator": "TDDA 2.2.15",
+        "source": "elements92.parquet",
+        "host": "escher.local",
+        "user": "njr",
+        "dataset": "elements92.parquet",
+        "n_records": 92,
+        "n_selected": 92,
+        "tddafile": "elements92rex.tdda"
+    },
     "fields": {
-        "AtomicWeight": {
-            "type": "real",
-            "min": 1.007947,
-            "max": 238.028913,
-            "sign": "positive",
-            "max_nulls": 0
-        },
-        "Group": {
+        "Z": {
             "type": "int",
             "min": 1,
-            "max": 18,
-            "sign": "positive"
+            "max": 92,
+            "sign": "positive",
+            "max_nulls": 0,
+            "no_duplicates": true
         },
         "Name": {
             "type": "string",
@@ -20,22 +27,8 @@
             "max_nulls": 0,
             "no_duplicates": true,
             "rex": [
-                "^[A-Z][a-z]+$"
+                "^([A-Z])([a-z]+)$"
             ]
-        },
-        "Density": {
-            "type": "real",
-            "min": 8.988e-05,
-            "max": 22.61,
-            "sign": "positive",
-            "max_nulls": 0
-        },
-        "MeltingPointKelvin": {
-            "type": "real",
-            "min": 14.2,
-            "max": 3948.0,
-            "sign": "positive",
-            "max_nulls": 1
         },
         "Symbol": {
             "type": "string",
@@ -44,7 +37,7 @@
             "max_nulls": 0,
             "no_duplicates": true,
             "rex": [
-                "^[A-Za-z]{1,2}$"
+                "^([A-Za-z]{1,2})$"
             ]
         },
         "Period": {
@@ -54,25 +47,40 @@
             "sign": "positive",
             "max_nulls": 0
         },
-        "Description": {
+        "Group": {
+            "type": "int",
+            "min": 1,
+            "max": 18,
+            "sign": "positive"
+        },
+        "ChemicalSeries": {
             "type": "string",
-            "min_length": 1,
-            "max_length": 83,
+            "min_length": 7,
+            "max_length": 20,
+            "max_nulls": 0,
+            "allowed_values": [
+                "Actinoid",
+                "Alkali metal",
+                "Alkaline earth metal",
+                "Halogen",
+                "Lanthanoid",
+                "Metalloid",
+                "Noble gas",
+                "Nonmetal",
+                "Poor metal",
+                "Transition metal"
+            ],
             "rex": [
-                "^[a-z0-9]+$",
-                "^[0-9]\\.[0-9]{1,2}$",
-                "^[a-z]+ [a-z]{3,5}$",
-                "^[0-9][.-][0-9] [a-z]{8,9}$",
-                "^radioactive alkali metal$",
-                "^1\\.5 soft metal$",
-                "^radioactive alkaline earth metal$",
-                "^halogen solid that sublimes at room temperatures into an irritating purple\\-pink gas$"
+                "^([A-Z])([a-z]+)$",
+                "^([A-Z])([a-z]+) ([a-z]{3,5})$",
+                "^Alkaline earth metal$"
             ]
         },
-        "BoilingPointF": {
+        "AtomicWeight": {
             "type": "real",
-            "min": -452.07,
-            "max": 10105.0,
+            "min": 1.007947,
+            "max": 238.028913,
+            "sign": "positive",
             "max_nulls": 0
         },
         "Etymology": {
@@ -81,36 +89,20 @@
             "max_length": 39,
             "max_nulls": 0,
             "rex": [
-                "^[A-Za-z]+$",
-                "^[A-Za-z]+ [A-Za-z]+$",
-                "^[A-Za-z]{4,6} [A-Za-z]+ [a-z]+$",
-                "^[A-Z][a-z]{6,7}, [A-Z][a-z]{5}$",
+                "^([A-Za-z]+)$",
+                "^([A-Za-z]+) ([A-Za-z]+)$",
+                "^([A-Za-z]{4,6}) ([A-Za-z]+) ([a-z]+)$",
+                "^([A-Z])([a-z]{6,7}), ([A-Z])([a-z]{5})$",
                 "^Greek protos and actinium$",
-                "^[A-Z][a-z]{4,5} and the traditional \\-[a-z]{3,4} ending$"
+                "^([A-Z])([a-z]{4,5}) and the traditional \\-([a-z]{3,4}) ending$"
             ]
         },
-        "ChemicalSeries": {
-            "type": "string",
-            "min_length": 7,
-            "max_length": 20,
-            "max_nulls": 0,
-            "allowed_values": [
-                "Nonmetal",
-                "Noble gas",
-                "Alkali metal",
-                "Alkaline earth metal",
-                "Metalloid",
-                "Halogen",
-                "Poor metal",
-                "Transition metal",
-                "Lanthanoid",
-                "Actinoid"
-            ],
-            "rex": [
-                "^[A-Z][a-z]+$",
-                "^[A-Z][a-z]+ [a-z]{3,5}$",
-                "^Alkaline earth metal$"
-            ]
+        "RelativeAtomicMass": {
+            "type": "real",
+            "min": 1.007947,
+            "max": 238.028913,
+            "sign": "positive",
+            "max_nulls": 0
         },
         "MeltingPointC": {
             "type": "real",
@@ -118,13 +110,12 @@
             "max": 3675.0,
             "max_nulls": 1
         },
-        "Z": {
-            "type": "int",
-            "min": 1,
-            "max": 92,
+        "MeltingPointKelvin": {
+            "type": "real",
+            "min": 14.2,
+            "max": 3948.0,
             "sign": "positive",
-            "max_nulls": 0,
-            "no_duplicates": true
+            "max_nulls": 1
         },
         "BoilingPointC": {
             "type": "real",
@@ -132,19 +123,47 @@
             "max": 5596.0,
             "max_nulls": 0
         },
+        "BoilingPointF": {
+            "type": "real",
+            "min": -452.07,
+            "max": 10105.0,
+            "max_nulls": 0
+        },
+        "Density": {
+            "type": "real",
+            "min": 8.988e-05,
+            "max": 22.61,
+            "sign": "positive",
+            "max_nulls": 0
+        },
+        "Description": {
+            "type": "string",
+            "min_length": 1,
+            "max_length": 83,
+            "rex": [
+                "^([a-z0-9]+)$",
+                "^([a-z]+) ([a-z]{3,5})$",
+                "^([0-9])\\.([0-9]{1,2})$",
+                "^([0-9])[.-]([0-9]) ([a-z]{8,9})$",
+                "^radioactive alkali metal$",
+                "^1\\.5 soft metal$",
+                "^radioactive alkaline earth metal$",
+                "^halogen solid that sublimes at room temperatures into an irritating purple\\-pink gas$"
+            ]
+        },
         "Colour": {
             "type": "string",
             "min_length": 4,
             "max_length": 80,
             "rex": [
-                "^[a-z]+$",
-                "^[a-z]+ [a-z]+$",
+                "^([a-z]+)$",
+                "^([a-z]+) ([a-z]+)$",
                 "^silvery\\-white$",
-                "^silvery lustrous [a-z]{4}$",
                 "^silvery white/gray$",
-                "^[a-z]{4}, [a-z]{7,8} [a-z]{5,6}$",
+                "^silvery lustrous ([a-z]{4})$",
+                "^([a-z]{4}), ([a-z]{7,8}) ([a-z]{5,6})$",
                 "^silvery white, metallic$",
-                "^[a-z]+ [a-z]{4,5}, [a-z]+ tinge$",
+                "^([a-z]+) ([a-z]{4,5}), ([a-z]+) tinge$",
                 "^violet\\-dark gray, lustrous$",
                 "^yellow\\-green or yellowish brown$",
                 "^yellowish green or greenish yellow$",
@@ -157,13 +176,6 @@
                 "^radioactive metallic element\\. glows in the dark with an eerie blue light\\.$",
                 "^soft, silvery, develops a slightly yellowish or pinkish cast when exposed to air$"
             ]
-        },
-        "RelativeAtomicMass": {
-            "type": "real",
-            "min": 1.007947,
-            "max": 238.028913,
-            "sign": "positive",
-            "max_nulls": 0
         }
     }
 }

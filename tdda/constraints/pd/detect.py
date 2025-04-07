@@ -42,7 +42,7 @@ from tdda.state import get_config
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
-from tdda.utils import handle_tilde, nvl, cprint
+from tdda.utils import handle_tilde, nvl, cprint, print_stderr
 
 
 def detect_df_from_file(df_path, constraints_path, outpath=None,
@@ -123,7 +123,12 @@ class PandasDetector:
         params = pd_detect_params(self.argv[1:])
         path = handle_tilde(params['df_path'])
         if path is not None and path != '-' and not os.path.isfile(path):
-            print('%s does not exist' % path)
+            msg = (f'{path} does not exist.'
+                   + ('\nPerhaps you are trying to mix '
+                      'database tables and files.')
+                     if ':' in path
+                     else '')
+            print_stderr(msg)
             sys.exit(1)
         return detect_df_from_file(verbose=self.verbose, **params)
 

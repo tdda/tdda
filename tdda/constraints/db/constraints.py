@@ -25,6 +25,7 @@ from tdda.constraints.base import (
     Verification,
     constraints_from_path_or_dict,
     CONSTRAINT_SUFFIX_MAP,
+    PassFailCount
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -65,6 +66,7 @@ BAD_SIGN_OP = {
 class DatabaseConstraintCalculator(BaseConstraintCalculator):
     def __init__(self, tablename, testing=False):
         self.tablename = tablename
+        self.n_source_records = self.get_database_nrows(self.tablename)
         self.testing = testing
 
     def is_null(self, value):
@@ -171,9 +173,9 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         cconfig = config.constraints
         self.dbtype = dbtype
         self.source_table = self.resolve_table(tablename, quote=True)
+        self.n_source_records = self.get_database_nrows(self.source_table)
         self.detect_passes = True  # False for _bad fields
         self.out_field_suffix = OK if self.detect_passes else BAD
-        # print(kwargs)
         self.interleave = cconfig.get('interleave', kwargs)
         self.per_constraint = cconfig.get('per_constraint', kwargs)
         self.report_formats = cconfig.get('report_formats', kwargs)
@@ -182,7 +184,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
 
     def detect(self, constraints, dest_pair, execute=True, **kwargs):
         ver = self.verify(constraints, VerificationClass=DatabaseVerification,
-                          **kwargs)
+                          n_source_records=self.n_source_records, **kwargs)
         ver.dbh = self
         if ver.failures == 0:
             return ver  # possibly calulate failure passing & failing
@@ -321,9 +323,9 @@ SELECT * FROM DETECTED
             return a(f"({field} IN ({', '.join(squote(x) for x in val)}) "
                      f"{ornull}")
         if kind == 'rex':
-            rex_sql = rex_match_sql(field, v)
+            rex_sql = self.rex_match_sql(field, val)
             if rex_sql:
-                return a(f'{rex_sql} {ornull}')
+                return a(f'({rex_sql} {ornull}')
             else:
                 return 'true'
         raise Exception(f'Internal error: unknown constraint: {kind}')
@@ -396,7 +398,7 @@ class DatabaseVerification(Verification):
                                  detect_passes=self.detect_passes)
         )
         exists = indicator_field in self.detection_fields
-        bad_val = self.bad_val()
+        bad_val = str(self.bad_val).upper()
         keys = (
             (','.join(self.quoted(k) for k in key_fields) + ', ')
             if key_fields
@@ -453,6 +455,52 @@ class DatabaseVerification(Verification):
                 else dbh.count_true_sql
             )
         return f(indicator_field)
+
+    def build_field_stats(self, fields):
+        self.field_stats = {}
+        inds = {
+            field: list({
+                self.indicator_field_name(field, constraint)
+                for constraint in CONSTRAINT_SUFFIX_MAP
+            }.intersection(set(self.detection_fields)))
+            for field in fields
+        }
+        sql = ('SELECT\n'
+              + ',\n'.join(
+                        self.count_failing_field_values(field, inds[field])
+                        for field in fields
+                )
+              + f'\nFROM {self.detection_table}')
+        results = self.dbh.execute_all(sql)
+        self.field_stats = {
+            field: PassFailCount(
+                       field,
+                       self.n_source_records - results[0][i],
+                       results[0][i]
+                   )
+            for i, field in enumerate(fields)
+        }
+
+    def count_failing_field_values(self, field, indicators):
+        dbh = self.dbh
+        if len(indicators) == 0:  # no indicators, no failures
+            return '0'
+
+        if self.int_bools:
+            if self.detect_passes:
+                return dbh.count_zero_sql(indicators, joint=' * ')
+            elif len(indicators) == 1:
+                return dbh.sum_sql(indicators[0])
+            else:
+                return dbh.sum_greatest_sql(indicators)
+        else:
+            if self.detect_passes:
+                return dbh.count_false_sql(indicators, joint=' AND ')
+            else:
+                return dbh.count_true_sql(indicators, joint=' OR ')
+
+    def get_field_stats(self, field):
+        return self.field_stats[field]
 
 
 
@@ -604,7 +652,8 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
     constraints = DatasetConstraints(loadpath=constraints_path)
     return dbv.verify(constraints,
                       VerificationClass=DatabaseVerification,
-                      report=report, **kwargs)
+                      report=report, n_source_records=dbv.n_source_records,
+                      **kwargs)
 
 
 def detect_db_table(dbtype, dbc, tablename, constraints_path, destination,

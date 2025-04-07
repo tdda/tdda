@@ -462,7 +462,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             # a truthy result means some values failed the constraint
             if detect:
                 self.detect_rex_constraint(colname, violations)
-            return ConstraintResult(False, f'e.g. "{violations[0]}"')
+            val = (
+                f'e.g. "{list(violations)[0]}"'
+                if isinstance(violations, list)
+                else []
+            )
+            return ConstraintResult(False, val)
         else:
             return good_none
 

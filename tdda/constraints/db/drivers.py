@@ -482,6 +482,12 @@ class SQLDatabaseHandler:
         else:
             return '"%s"' % name
 
+    def multi_quoted(self, names, joint=None):
+        if joint is None:
+            return self.quoted(names)
+        else:
+            return joint.join(self.quoted(name) for name in names)
+
     def quoted_parts(self, name):
         return '.'.join(self.quoted(part) for part in name.split('.'))
 
@@ -833,17 +839,25 @@ class SQLDatabaseHandler:
             sql = '(%s <> 0)' % s
         return sql
 
-    def sum_sql(self, field):
-        return f'SUM({self.quoted(field)})'
+    def sum_sql(self, field, joint=None):
+        combination = self.multi_quoted(field, joint)
+        return f'SUM({self.quoted(combination)})'
 
-    def count_zero_sql(self, field):
-        return f'SUM(CASE WHEN {self.quoted(field)} = 0 THEN 1 ELSE 0 END)'
+    def sum_greatest(self, field):
+        combination = self.multi_quoted(field, ', ')
+        return f'SUM(MAX({combination}))'
 
-    def count_true_sql(self, field):
-        return f'SUM(CASE WHEN {self.quoted(field)} THEN 1 ELSE 0 END)'
+    def count_zero_sql(self, field, joint=None):
+        combination = self.multi_quoted(field, joint)
+        return f'SUM(CASE WHEN {combination} = 0 THEN 1 ELSE 0 END)'
 
-    def count_false_sql(self, field):
-        return f'SUM(CASE WHEN {self.quoted(field)} THEN 0 ELSE 1 END)'
+    def count_true_sql(self, field, joint=None):
+        combination = self.multi_quoted(field, joint)
+        return f'SUM(CASE WHEN {combination} THEN 1 ELSE 0 END)'
+
+    def count_false_sql(self, field, joint=None):
+        combination = self.multi_quoted(field, joint)
+        return f'SUM(CASE WHEN {combination} THEN 0 ELSE 1 END)'
 
     def count_non_zero_sql(self, field):
         return f'SUM(CASE WHEN {self.quoted(field)} <> 0 THEN 1 ELSE 0 END)'

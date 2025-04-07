@@ -23,7 +23,7 @@ from tdda.utils import (
     json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val, indicator_field_name,
-    rednz, redblack, coloured_tick_cross
+    rednz, redblack, coloured_tick_cross, print_stderr
 )
 from tdda.version import version
 
@@ -261,8 +261,10 @@ class DatasetConstraints(object):
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
                 elif not kind.startswith('#'):
-                    warn('Constraint kind %s for field %s unknown: ignored.'
-                         % (kind, fieldname))
+                    print_error(
+                        'Constraint kind %s for field %s unknown: ignored.'
+                         % (kind, fieldname)
+                    )
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
         metadata = in_constraints.get('creation_metadata', {})
@@ -851,8 +853,11 @@ class Verification(object):
         self.detect_report_formats = kwargs.get('report_formats', [])
         cconfig = get_config().constraints
         self.detect_passes = cconfig.get('detect_passes')
-        self.bad_val = 0 if self.detect_passes else 1
         self.int_bools = cconfig.get('int_bools')
+        if self.int_bools:
+            self.bad_val = 0 if self.detect_passes else 1
+        else:
+            self.bad_val = False if self.detect_passes else True
         self.report_path = kwargs.get('report_path', outpath)
 
         if report not in ('all', 'fields', 'records'):
@@ -891,10 +896,11 @@ class Verification(object):
             )
         }
         if field_stats:
+            r = nvl(self.detection, self)  # TODO: pd vs. db
             stats['records'] = PassFailCount(
                 'records',
-                self.detection.n_passing_records,
-                self.detection.n_failing_records
+                r.n_passing_records,
+                r.n_failing_records
             )
             stats['values'] = PassFailCount(
                 'values',
@@ -1021,15 +1027,18 @@ class Verification(object):
             else:
                 row = [field, '0', '0']
                 htmlrow = ['field', '0', '0']
-            for kind in CONSTRAINT_COLS:
+            for k in CONSTRAINT_COLS:
+                kind = k
                 c = fc.get(kind, None)
+                if c is None and kind in ('min', 'max'):
+                    c = fc.get(kind + '_length', None)
+                    if c:
+                        kind = kind + '_length'
                 if kind in cfail_details:
                     cfail = cfail_details[kind].n_failures > 0
                 else:
                     cfail = False
                 tick_or_cross = Marks.cross if cfail else Marks.tick
-                if c is None and kind in ('min', 'max'):
-                    c = fc.get(kind + '_length', None)
                 if c is not None:
                     actual = (
                         field_info[kind]
@@ -1040,7 +1049,7 @@ class Verification(object):
                                 str(nvl(actual, '')),
                                 tick_or_cross])
                     if kind == 'rex':
-                        htmlrow.extend([colour_regexes(c.value),
+                        htmlrow.extend([colour_regexes(c),
                                         None,
                                         coloured_tick_cross(not cfail)])
                         any_rex = True
@@ -1079,6 +1088,8 @@ class Verification(object):
         key_fields = self.detect_key
         field_stats = {}
         constraint_stats = {}
+        if hasattr(self,'build_field_stats'):
+            self.build_field_stats(list(d['fields']))
         for field in list(d['fields']):
             constraints = d['fields'][field]
             field_stats[field] = self.get_field_stats(field)
@@ -1111,6 +1122,7 @@ class Verification(object):
         d['_constraint_stats'] = constraint_stats
         self.create_summary_stats(field_stats)
         config = get_config()
+        self.fill_in_missing_db_rex_failures()
         self.to_table(d, d_raw)
         for fmt in self.detect_report_formats:
             outpath = swap_ext(nvl(self.report_path, self.outpath), f'.{fmt}')
@@ -1129,6 +1141,14 @@ class Verification(object):
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
+
+    def fill_in_missing_db_rex_failures(self):
+        for fieldname, info in self.field_info.items():
+            if 'rex' in info:
+                if info['rex'] == []:  # DB does not return bad rex value
+                    info['rex'] = json.dumps(self.get_failure_values(
+                        fieldname, 'rex', [], max_vals=1
+                    )[0][0])
 
 
 class Detection(object):
@@ -1266,6 +1286,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             results.detection = detected_records_writer(**kwargs)
             if not hasattr(results, 'is_db'):
                 results.write_detection_reports()
+
         elif detected_records_writer and results.failures == 0:
             n_records = results.n_source_records
             n_fields = len(results.fields)
@@ -1305,10 +1326,6 @@ def tcn(sat, ascii=False, colour=False):
         )
     else:
         return mark
-
-
-def warn(s):
-    print(s, file=sys.stderr)
 
 
 

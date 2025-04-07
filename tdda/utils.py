@@ -677,7 +677,7 @@ def constraint_val(v, kind=None):
     elif type(v) is float:
         return str(v)
     elif type(v) is str:
-        return json.dumps(v)
+        return v if kind in ('type', 'sign') else json.dumps(v)
     elif type(v) is bool:
         if kind == 'no_duplicates':
             return 'no' if v else ''
@@ -719,14 +719,21 @@ class Dummy(object):
         return self.__dict__
 
 
-def cprint(*args, colour=None, **kw):
+def cprint(*args, colour=None, recolour=None, **kw):
     if colour is None:
         config = get_config()
         colour = config.get('colour')
     if colour:
-        rprint(*(str(a) for a in args), **kw)
+        if recolour:
+            rprint(*(f'[{recolour}]{a}[/{recolour}]' for a in args), **kw)
+        else:
+            rprint(*(str(a) for a in args), **kw)
     else:
         print(*args, **kw)
+
+
+def print_stderr(*args, **kw):
+    cprint(*args, recolour='red', file=sys.stderr)
 
 
 def tdda_nf_map():

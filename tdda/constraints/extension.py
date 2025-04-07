@@ -415,9 +415,9 @@ class BaseConstraintDetector:
         """
         pass
 
-    def detect_rex_constraint(self, colname, value, violations):
+    def detect_rex_constraint(self, colname, violations):
         """
-        Detect failures for a rex constraint.<
+        Detect failures for a rex constraint.
         """
         pass
 

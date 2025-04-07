@@ -597,7 +597,6 @@ class PandasVerification(Verification):
         return PassFailCount(field, self.detection.n_source_records - nf, nf)
 
 
-
 class PandasDetection(PandasVerification):
     """
     A :py:class:`PandasDetection` object adds a :py:meth:`detected()`
