@@ -436,7 +436,7 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
                 self.filter_out_nulls(actual_values) - set(allowed_values)
             )
             ok = len(violations) == 0
-            val = '' if ok else f'e.g. "{violations[0]}"'
+            val = '' if ok else f'e.g. "{list(violations)[0]}"'
 
         if detect and not bool(ok):
             self.detect_allowed_values_constraint(colname, allowed_values,

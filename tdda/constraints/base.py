@@ -1146,9 +1146,10 @@ class Verification(object):
         for fieldname, info in self.field_info.items():
             if 'rex' in info:
                 if info['rex'] == []:  # DB does not return bad rex value
-                    info['rex'] = json.dumps(self.get_failure_values(
+                                       # And nor does pandas!
+                    info['rex'] = json.dumps(list(self.get_failure_values(
                         fieldname, 'rex', [], max_vals=1
-                    )[0][0])
+                    ))[0][0])
 
 
 class Detection(object):
@@ -1262,7 +1263,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             verify = verifiers.get(c.kind)
             if verify:
                 satisfied = verify(name, c, detect)
-                if (satisfied == True) or satisfied.ok:
+                if (satisfied == True) or (satisfied != False and satisfied.ok):
                     passes += 1
                 else:
                     failures += 1
