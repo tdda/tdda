@@ -400,7 +400,8 @@ def xml_element(name, content='', attributes={},
         out.append(f' {xml_attributes(attributes)}')
     if content == '' and leave == 'close':
         if openclose:
-            out.append(f'></{name}>{"\n" if indent else ""}')
+            eol = '\n' if indent else ''
+            out.append(f'></{name}>{eol}')
         else:
             out.append('/>\n' if indent else '/>')
     else:
@@ -423,7 +424,8 @@ def xml_element(name, content='', attributes={},
     if link:
         out.append('</a>')
     if leave == 'close' and content != '':
-        out.append(f'</{name}>{"\n" if indent else ""}')
+        eol = '\n' if indent else ''
+        out.append(f'</{name}>{eol}')
     return ''.join(out)
 
 
