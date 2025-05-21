@@ -207,6 +207,7 @@ class TestDatabaseConstraintVerifiers:
 
 
 class TestDatabaseDetect:
+    @tag
     def test_detect_elements(self):
         constraints_file = os.path.join(TESTDATA_DIR, 'elements92.tdda')
         source_table = self.dbh.resolve_table('elements')
