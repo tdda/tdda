@@ -37,8 +37,5 @@ SUMMARY:
 Constrained Fields: 16
 Failing Fields: 11 (68.75%)
 
-Constrained Values: 1,888
-Failing Values: 88 (4.66%)
-
 Constraints: 72
 Failing Constraints: 15 (20.83%)
