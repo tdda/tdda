@@ -150,11 +150,13 @@ class Asserter:
 
     def isTrue(self):
         self.cvt.decOutstanding()
-        self.cvt.tester.assertTrue(self.satisfied, self.diagnostic(True))
+        v = getattr(self.satisfied, 'ok', self.satisfied)
+        self.cvt.tester.assertTrue(v, self.diagnostic(True))
 
     def isFalse(self):
         self.cvt.decOutstanding()
-        self.cvt.tester.assertFalse(self.satisfied, self.diagnostic(False))
+        v = getattr(self.satisfied, 'ok', self.satisfied)
+        self.cvt.tester.assertFalse(v, self.diagnostic(False))
 
     def diagnostic(self, expected):
         return ('Verifier: %s Inputs: %s %s: Assertion: %s'
@@ -537,6 +539,7 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                 c = MaxLengthConstraint(M)
                 cvt.verify_max_length_constraint(col, c).isFalse()
 
+    @tag
     def test_verify_tdda_type_constraint(self):
         df = pd.DataFrame({
             'b': [True, False],
@@ -1436,7 +1439,6 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
-    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 
