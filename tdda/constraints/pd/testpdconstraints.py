@@ -103,6 +103,23 @@ DATES = (datetime.datetime(1970, 1, 1),
 OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
                                                               else (b'u',))
 
+E118_SUMMARY = '''
+SUMMARY:
+
+Records: 118
+Failing Records: 27 (22.88%)
+
+Constrained Fields: 16
+Failing Fields: 11 (68.75%)
+
+Constrained Values: 1,888
+Failing Values: 176 (9.32%)
+
+Constraints: 72
+Failing Constraints: 15 (20.83%)
+'''
+
+
 class ParquetFileChecker:
     def check_parquet_file_correct(self, actual_path, expected_path):
         actual_df = load_df(actual_path)
@@ -1513,16 +1530,7 @@ class CommandLineHelper:
         cls.e92bads2 = os.path.join(cls.test_tmpdir, 'elements92bads2.csv')
         cls.e92bads3 = os.path.join(cls.test_tmpdir, 'elements92bads3.csv')
 
-        cls.E118summary = (
-            'SUMMARY:\n\n'
-            'Records passing: 91\n'
-            'Records failing: 27\n\n'
-            'Constrained Fields: 16\n'
-            'Failing Fields: 11 (68.75%)\n\n'
-            'Constraints: 72\n'
-            'Failing Constraints: 15 (20.83%)'
-        )
-
+        cls.E118summary = E118_SUMMARY.strip()
         argv = ['tdda', 'examples', cls.test_tmpdir]
         cls.execute_command(argv)
 
