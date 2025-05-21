@@ -539,7 +539,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                 c = MaxLengthConstraint(M)
                 cvt.verify_max_length_constraint(col, c).isFalse()
 
-    @tag
     def test_verify_tdda_type_constraint(self):
         df = pd.DataFrame({
             'b': [True, False],
@@ -1059,7 +1058,8 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
 
         c = discover(csv_path, constraints_path=actual_constraints,
-                     report_formats=report_formats, verbose=False)
+                     report_formats=report_formats,
+                     group_rexes=True, verbose=False)
         with open(actual_constraints2, 'w') as f:
             f.write(c.to_json())
         v = verify(csv_path, actual_constraints2,
@@ -1575,7 +1575,7 @@ class CommandLineHelper:
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
                 '--fields']
         result = self.execute_command(argv)
-        self.assertEqual(len(result.splitlines()), 7)
+        self.assertEqual(len(result.splitlines()), 8)
 
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
                 '--all']
