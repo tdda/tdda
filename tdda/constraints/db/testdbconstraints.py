@@ -220,7 +220,7 @@ class TestDatabaseDetect:
         self.assertEqual(result.passes, 57)
         self.assertEqual(result.failures, 15)
         expected_path = os.path.join(TESTDATA_DIR,
-                                     'elements118_verify_92_out.txt')
+                                     'elements118_detect_92_out.txt')
         # Same as Pandas
         self.assertStringCorrect(str(result), expected_path)
         del result.sql
