@@ -1436,6 +1436,7 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
     def testConstraintGenerationNoRex(self):
         self.constraintsGenerationTest(inc_rex=False)
 
+    @tag
     def testConstraintGenerationWithRex(self):
         self.constraintsGenerationTest(inc_rex=True)
 
@@ -1457,7 +1458,7 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
             new_refjson = f.read()
         old_ref = native_definite(json.loads(old_refjson))
         new_ref = native_definite(json.loads(new_refjson))
-        constraints = discover(df, inc_rex=inc_rex, group_rexes=False,
+        constraints = discover(df, inc_rex=inc_rex, group_rexes=True,
                                verbose=False)
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']

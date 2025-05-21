@@ -249,7 +249,6 @@ r'^Logs written to /home/auser/miro/log/2020/07/01/[a-z]{7}[0-9]{3}\.$',
             self.assertIsNotNone(is_datetime_like(s))
         self.assertIsNone(is_datetime_like('2020-07-02'))
 
-    @tag
     def test_a_generation_failure_then_success(self):
 
         # Fails because exit code is 99 -> 1

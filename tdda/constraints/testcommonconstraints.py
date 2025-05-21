@@ -237,7 +237,6 @@ class TestDetectionReports(ReferenceTestCase):
             verbose=False
         )
 
-    @tag
     def testDetectionTrainBads(self):
         # No failures
         self.assertEqual(self.train_bads_detection.failures, 0)
@@ -250,7 +249,6 @@ class TestDetectionReports(ReferenceTestCase):
             path = swap_ext(self.actual_train_detect_bads_path, fmt)
             self.assertFalse(os.path.exists(path))
 
-    @tag
     def testDetectionTrainFull(self):
         # No failures
         self.assertEqual(self.train_full_detection.failures, 0)
@@ -264,7 +262,6 @@ class TestDetectionReports(ReferenceTestCase):
             self.assertFalse(os.path.exists(path))
 
 
-    @tag
     def testDetectionValidationBads(self):
         # No failures
         self.assertEqual(self.validation_bads_detection.failures, 4)
@@ -277,7 +274,6 @@ class TestDetectionReports(ReferenceTestCase):
             path = swap_ext(self.actual_validation_detect_bads_path, fmt)
             self.assertTrue(os.path.exists(path))
 
-    @tag
     def testDetectionValidationFull(self):
         # No failures
         self.assertEqual(self.validation_full_detection.failures, 4)
