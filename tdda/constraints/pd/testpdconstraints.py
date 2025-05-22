@@ -859,7 +859,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc1 = [ic1]
         dsc1 = DatasetConstraints(dfc1)
         pdcv1 = pdc.PandasConstraintVerifier(df1)
-        results1 = base.verify(dsc1, list(df1), pdcv1.verifiers())
+        results1 = base.verify(dsc1, list(df1), pdcv1.verifiers(),
+                               n_source_records=10)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  6 passes  '
                     'type ✓  min ✓  max ✓  sign ✓  '
@@ -888,7 +889,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc2 = [ic2]
         dsc2 = DatasetConstraints(dfc2)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
-        results2 = base.verify(dsc2, list(df2), pdcv2.verifiers())
+        results2 = base.verify(dsc2, list(df2), pdcv2.verifiers(),
+                               n_source_records=10)
         # expect the boolean->real type constraint to pass with sloppy types
         expected = ('FIELDS:\n\n'
                     'i: 5 failures  1 pass  '
@@ -915,7 +917,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
-        results2strict = base.verify(dsc2, list(df2), pdcv2strict.verifiers())
+        results2strict = base.verify(dsc2, list(df2), pdcv2strict.verifiers(),
+                                     n_source_records=10)
         # expect the boolean->real type constraint to fail with strict types
         expected = ('FIELDS:\n\n'
                     'i: 6 failures  0 passes  '
@@ -946,7 +949,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dfc3 = [ic3]
         dsc3 = DatasetConstraints(dfc3)
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers())
+        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(),
+                               n_source_records=10)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type ✓\n\n'
                     'SUMMARY:\n\n'
@@ -965,7 +969,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True)
+        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True,
+                               n_source_records=10)
         expected = ('FIELDS:\n\n'
                     'i: 0 failures  1 pass  type OK\n\n'
                     'SUMMARY:\n\n'
