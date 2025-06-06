@@ -1376,7 +1376,6 @@ class TestPandasMultipleConstraintDetector(
         self.assertEqual(v.failures, 17)
         self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
 
-    @tag
     def testDetectElements118rexToFilePerConstraint(self):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -1431,6 +1430,7 @@ class TestPandasMultipleConstraintDetector(
         else:
             self.assertTextFileCorrect(detectfile, detect_name)
 
+    @tag
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
         sconstraints = FieldConstraints('s', [NoDuplicatesConstraint()])
@@ -1438,9 +1438,11 @@ class TestPandasMultipleConstraintDetector(
 
         df1 = pd.DataFrame({'i': [1, 2, 3, 4, np.nan],
                             's': ['one', 'two', 'three', 'four', np.nan]})
+        n1 = len(df1)
         verifier1 = pdc.PandasConstraintVerifier(df1)
         v1 = verifier1.detect(constraints,
-                              VerificationClass=pdc.PandasDetection)
+                              VerificationClass=pdc.PandasDetection,
+                              n_source_records=n1)
         self.assertEqual(v1.passes, 2)
         self.assertEqual(v1.failures, 0)
         ddf1 = v1.detected()
@@ -1448,10 +1450,12 @@ class TestPandasMultipleConstraintDetector(
 
         df2 = pd.DataFrame({'i': [1, 2, 3, 2, np.nan],
                             's': ['one', 'two', 'three', 'two', np.nan]})
+        n2 = len(df2)
         verifier2 = pdc.PandasConstraintVerifier(df2)
         v2 = verifier2.detect(constraints,
                               VerificationClass=pdc.PandasDetection,
-                              per_constraint=True, output_fields=['i', 's'])
+                              per_constraint=True, output_fields=['i', 's'],
+                              n_source_records=n2)
         self.assertEqual(v2.passes, 0)
         self.assertEqual(v2.failures, 2)
         ddf2 = v2.detected()
