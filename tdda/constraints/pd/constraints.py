@@ -551,7 +551,8 @@ class PandasVerification(Verification):
         indicator_field = self.indicator_field_name(
             field, constraint
         )
-        exists = indicator_field in self.detection.obj
+        exists = (indicator_field in self.detection.obj
+                  and field in self.detection.obj)
         bad_val = 0  # 1 for bad field#
         if exists:
             df = self.detection.obj.query(f'{indicator_field} == {bad_val}')

@@ -123,11 +123,15 @@ class PandasDetector:
         params = pd_detect_params(self.argv[1:])
         path = handle_tilde(params['df_path'])
         if path is not None and path != '-' and not os.path.isfile(path):
-            msg = (f'{path} does not exist.'
-                   + ('\nPerhaps you are trying to mix '
-                      'database tables and files.')
-                     if ':' in path
-                     else '')
+            msg = (
+                f'{path} does not exist.'
+                + (
+                    '\nPerhaps you are trying to mix '
+                    'database tables and files.'
+                    if ':' in path
+                    else ''
+                )
+            )
             print_stderr(msg)
             sys.exit(1)
         return detect_df_from_file(verbose=self.verbose, **params)

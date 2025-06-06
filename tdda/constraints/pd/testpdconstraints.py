@@ -1376,6 +1376,7 @@ class TestPandasMultipleConstraintDetector(
         self.assertEqual(v.failures, 17)
         self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
 
+    @tag
     def testDetectElements118rexToFilePerConstraint(self):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
@@ -1383,8 +1384,8 @@ class TestPandasMultipleConstraintDetector(
         detectfile = os.path.join(self.tmp_dir,
                                   'elements118rex_detect_perc.csv')
         v = detect(df, constraints_path, report='fields',
-                      outpath=detectfile, output_fields=['Z'],
-                      per_constraint=True, rowindex_is_index=False)
+                   outpath=detectfile, output_fields=['Z'],
+                   per_constraint=True, rowindex_is_index=False)
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         self.assertTextFileCorrect(detectfile,

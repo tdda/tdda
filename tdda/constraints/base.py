@@ -1081,7 +1081,7 @@ class Verification(object):
 
         # TODO: If detection reports are no, and output_fields
         # are specified and do not include fields with failures
-        # self.detect_failure_values below will fail.
+        # self.get_failure_values below will fail.
 
         d = self.constraints.to_dict()
         d_raw = self.constraints.to_dict()
@@ -1110,7 +1110,9 @@ class Verification(object):
                     c.update(stats.to_dict())
                     failures = self.get_failure_values(field, constraint,
                                                        key_fields)
-                    c['failures'] = json_sanitize(list(failures))
+                    c['failures'] = (
+                        json_sanitize(list(failures)) if failures else []
+                    )
             if constraints == {}:
                 del d['fields'][field]
         field_stats['_values'] = PassFailCount(
@@ -1147,9 +1149,14 @@ class Verification(object):
             if 'rex' in info:
                 if info['rex'] == []:  # DB does not return bad rex value
                                        # And nor does pandas!
-                    info['rex'] = json.dumps(list(self.get_failure_values(
+                    failures = self.get_failure_values(
                         fieldname, 'rex', [], max_vals=1
-                    ))[0][0])
+                    )
+                    info['rex'] = (
+                        json.dumps(list(failures)[0][0])
+                        if failures
+                        else ''
+                    )
 
 
 class Detection(object):
@@ -1284,6 +1291,15 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
     if detect:
         if detected_records_writer and results.failures > 0:
+            if results.per_constraint:
+                failing_fields = [
+                    field for field, result in results.fields.items()
+                          if any(v != True for v in result.values())
+                ]
+                missing_failing_fields = (
+                    set(results.output_fields) - set(failing_fields)
+                )
+                results.output_fields.extend(missing_failing_fields)
             results.detection = detected_records_writer(**kwargs)
             if not hasattr(results, 'is_db'):
                 results.write_detection_reports()
