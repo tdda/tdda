@@ -226,3 +226,12 @@ def col_to_field_metadata(field, fieldtype=None,
 
 def item(v):
     return v.item() if hasattr(v, 'item') else v
+
+
+def yn2bool(v):
+    return (
+        None if pd.isnull(v)
+        else True if v.lower().startswith('y')
+        else False if v.lower().startswith('n')
+        else None
+    )

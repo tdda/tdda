@@ -197,10 +197,13 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
         for k in df:
             df[k].dtype == np.dtype('O')
             specified_type = specified_types.get(k)
-            if specified_type:
-                df[k] = df[k].astype(specified_type)
-            elif k in dates:
-                df[k] = df[k].astype('datetime64[ns]')
+            try:
+                if specified_type:
+                    df[k] = df[k].astype(specified_type)
+                elif k in dates:
+                    df[k] = df[k].astype('datetime64[ns]')
+            except ValueError:  # probably time-zone aware date
+                pass
     if upgrade_possible_ints:
         for k in df:
             if not k in (specified_types or []):
