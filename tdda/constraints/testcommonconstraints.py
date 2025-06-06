@@ -173,6 +173,7 @@ class TestVerificationReports(ReferenceTestCase):
                                  reportpath(name))
 
 
+@tag
 class TestDetectionReports(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):

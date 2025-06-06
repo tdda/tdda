@@ -1430,7 +1430,6 @@ class TestPandasMultipleConstraintDetector(
         else:
             self.assertTextFileCorrect(detectfile, detect_name)
 
-    @tag
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
         sconstraints = FieldConstraints('s', [NoDuplicatesConstraint()])
