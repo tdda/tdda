@@ -199,6 +199,13 @@ class Diffs:
         # its internal messages; used in tests.
         return iter(self.lines)
 
+    def __bool__(self):
+        return bool(self.lines)
+
+    @property
+    def ndiffs(self):
+        return len(self.lines)
+
     __str__ = message
 
 
@@ -239,7 +246,7 @@ class SameStructureDDiff:
         return '\n'.join(lines)
 
     def details_table(self, df, ref_df, target_rows=None):
-        target_rows = nvl(target_rows, DEFAULT_DIFF_ROWS)
+        target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
         cols = list(self.diff_df)
         m = len(cols)

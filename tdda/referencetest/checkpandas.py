@@ -61,7 +61,7 @@ class PandasComparison(BaseComparison):
     tmp_file_counter = 0  # used to number otherwise-nameless temp files
 
     def get_temp_filename(self, ext=None):
-        self.tmp_file_counter += 1
+        PandasComparison.tmp_file_counter += 1
         ext = ext or '.parquet'
         return f'df{self.tmp_file_counter:03}{ext}'
 
@@ -149,8 +149,8 @@ class PandasComparison(BaseComparison):
         """
         diffs = msgs  # better name
 
-        self.expected_path = expected_path
         self.actual_path = actual_path
+        self.expected_path = expected_path
 
         type_matching = type_matching or 'strict'
         diffs = nvl(diffs, Diffs())
@@ -1045,3 +1045,8 @@ def replace_cats(df):
             for c in df
         })
     return df
+
+
+def diff_dataframes(*args, **kwargs):
+    c = PandasComparison()
+    return c.check_dataframe(*args, **kwargs)

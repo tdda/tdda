@@ -82,7 +82,7 @@ class TestOne(ReferenceTestCase):
         self.assertEqual(r.failures, 1)
         self.assertStringCorrect(str(r.diffs), fp('one-diff-in-mem.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ])
 
     def testDiffColTypeInMemIntStr(self):
@@ -94,7 +94,7 @@ class TestOne(ReferenceTestCase):
         self.assertEqual(r.failures, 1)
         self.assertStringCorrect(str(r.diffs), fp('diff-col-types-int-str.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ])
         self.assertStringCorrect(str(r.diffs.dfd),
             fp('ddiff-col-types-int-str.txt'))
@@ -110,7 +110,7 @@ class TestOne(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-float.txt'),
             ignore_patterns=[
-                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+                'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ]
         )
         self.assertStringCorrect(

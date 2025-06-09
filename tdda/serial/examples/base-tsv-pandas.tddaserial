@@ -1,0 +1,31 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial/1.0",
+    "writer": "tdda.serial",
+    "pandas.read_csv": {
+        "sep": "\t",
+        "escapechar": "\\",
+        "quotechar": "\"",
+        "na_values": "",
+        "keep_default_na": false,
+        "dtype": {
+            "int": "Int64",
+            "string_float": "string",
+            "string_accents": "string",
+            "string_int": "string",
+            "string": "string",
+            "string_torture": "string",
+            "stri": "string",
+            "strf": "string",
+            "bool1": "boolean",
+            "bool3": "boolean",
+            "nil_bool": "boolean",
+            "nil_str": "string"
+         },
+         "parse_dates": ["date", "datetime", "datetimezone"],
+         "date_format": {
+             "date": "ISO8601",
+             "datetime": "ISO8601",
+             "datetimezone": "ISO8601"
+         }
+    }
+}

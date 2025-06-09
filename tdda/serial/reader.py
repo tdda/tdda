@@ -144,7 +144,7 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                                columns with nulls but with no fractional
                                components will be upgraded to Ints.
 
-       return_md   If true, returns metadata and DataFrame (as tuple)
+       return_md   If true, returns DataFrame and metadata (as tuple)
 
        table_number  If set, use the specified table number (indexed
                      from zero) in the metadata

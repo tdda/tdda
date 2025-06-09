@@ -21,29 +21,6 @@ DEFAULT_PRECISION = 7
 DEFAULT_DPS = 7
 
 
-def ddiff_helper_orig(args):
-    if len(args) < 2 or len(args) > 4:
-        print(USAGE, file=sys.stderr)
-        sys.exit(1)
-    else:
-        if len(args) >= 3:
-            try:
-                n = int(args[2])
-            except ValueError:
-                print(USAGE, file=sys.stderr)
-                sys.exit(1)
-        else:
-            n = None
-        if len(args) >= 4:
-            try:
-                dps = int(args[3])
-            except ValueError:
-                print(USAGE, file=sys.stderr)
-        else:
-            dps = 6
-        ddiff(*(args[:2]), n, dps)
-
-
 TDDA_DIFF_HELP = '''
 Notes
 '''
@@ -207,11 +184,8 @@ class TDDADiff:
 
 def ddiff_helper(args):
     tddadiff = TDDADiff(args)
-    #print(111, args)
     tddadiff.ddiff()
 
 
 if __name__ == '__main__':
     ddiff_helper(sys.argv)
-
-

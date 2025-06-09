@@ -203,7 +203,6 @@ def main_with_argv(argv, verbose=True):
         testtdda.run_all_tests(module=testtdda, argv=['python'])
     elif name == 'diff':
         from tdda.referencetest.ddiff import ddiff_helper
-        #print(444, argv)
         ddiff_helper(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None

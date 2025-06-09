@@ -229,6 +229,12 @@ def item(v):
 
 
 def yn2bool(v):
+    """
+    Convert string v
+        to True is it starts with Y or y
+        to False if it startsw ith N or n
+    Otherwise return None
+    """
     return (
         None if pd.isnull(v)
         else True if v.lower().startswith('y')
