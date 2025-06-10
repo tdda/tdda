@@ -25,6 +25,7 @@ def refloc(filename):
 
 @unittest.skipIf(pd is None, 'no pandas')
 class TestPandasDataFrames(ReferenceTestCase):
+    @tag
     def test_frames_ok(self):
         compare = PandasComparison(verbose=False)
         df1 = pd.DataFrame(
@@ -88,6 +89,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         )
         self.assertEqual(r, (0, []))
 
+    @tag
     def test_pandas_csv_fail(self):
         compare = PandasComparison(verbose=False)
         (code, errs) = compare.check_csv_file(

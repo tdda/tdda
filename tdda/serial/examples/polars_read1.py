@@ -1,4 +1,7 @@
 import polars as pl
+
+from tdda.serial.reader import csv2polars
+
 from example_helpers import generate_python_lists
 
 
@@ -36,28 +39,46 @@ def generate_reference_polars_dataframe():
     return df
 
 
-df = pl.read_csv('base.csv',
-                 separator=',',
-                 schema_overrides={
-                    'stri': pl.String,
-                    'strf': pl.String,
-                    'nil_str': pl.String,
-                    'nil_bool': pl.Boolean,
-                    'date': pl.Date,
-                    'datetime': pl.Datetime,
-                    'datetimezone': pl.Datetime,
-            })
-ref_df = generate_reference_polars_dataframe()
-
-df = df.drop('bool2', 'bool3')
-ref_df = ref_df.drop('bool2', 'bool3')
-df.write_parquet('/tmp/pl_csv_actual.parquet')
-ref_df.write_parquet('/tmp/pl_ref.parquet')
-
-with pl.Config() as cfg:
-    cfg.set_tbl_cols(-1)
-    cfg.set_tbl_rows(-1)
-    print(df)
+def bool_values(s, f, t):
+    return [
+        None if v is None else True if v == t else False if v == f else None
+        for v in list(s)
+    ]
 
 
-print('Use:\ntdda diff /tmp/pl_csv_actual.parquet /tmp/pl_ref.parquet')
+def fix_bool_cols(df):
+    c2 = pl.Series('bool2', bool_values(df['bool2'], 'no', 'yes'), pl.Boolean)
+    c3 = pl.Series('bool3', bool_values(df['bool3'], 0, 1), pl.Boolean)
+    df.replace_column(4, c2)
+    df.replace_column(5, c3)
+
+
+if __name__ == '__main__':
+
+    dfc = csv2polars('base.csv', 'base-csv-polars.serial')
+    dfp = csv2polars('base.psv', 'base-psv-polars.serial')
+    dft = csv2polars('base.tsv', 'base-tsv-polars.serial')
+
+    raw_df = pl.read_csv('base.csv')
+    ref_df = generate_reference_polars_dataframe()
+
+    for d in (dfc, dfp, dft):
+        fix_bool_cols(d)
+
+
+    ref_df.write_parquet('/tmp/pl_ref.parquet')
+    dfc.write_parquet('/tmp/pl_csv_actualc.parquet')
+    dfp.write_parquet('/tmp/pl_csv_actualp.parquet')
+    dft.write_parquet('/tmp/pl_csv_actualt.parquet')
+    raw_df.write_parquet('/tmp/pl_raw.parquet')
+
+
+    with pl.Config() as cfg:
+        cfg.set_tbl_cols(-1)
+        cfg.set_tbl_rows(-1)
+        print(dfc)
+
+
+    print('Use:\ntdda diff /tmp/pl_csv_actualc.parquet /tmp/pl_ref.parquet')
+    print('Use:\ntdda diff /tmp/pl_csv_actualc.parquet /tmp/pl_csv_actualp.parquet')
+    print('Use:\ntdda diff /tmp/pl_csv_actualc.parquet /tmp/pl_raw.parquet')

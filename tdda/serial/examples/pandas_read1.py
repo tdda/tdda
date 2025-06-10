@@ -70,10 +70,10 @@ def compare(actual_df, ref_df, n, verbose=True):
 def main():
     verbose = '-v' in sys.argv or '--verbose' in sys.argv
     ref_df = generate_reference_pandas_dataframe()
-    df1 = read_csv_explicit('base.csv', 'base-csv-pandas.tddaserial')
-    df2 = read_with_tdda_serial('base.csv', 'base-csv-pandas.tddaserial')
-    df3 = read_with_tdda_serial('base.psv', 'base-psv-pandas.tddaserial')
-    df4 = read_with_tdda_serial('base.tsv', 'base-tsv-pandas.tddaserial')
+    df1 = read_csv_explicit('base.csv', 'base-csv-pandas.serial')
+    df2 = read_with_tdda_serial('base.csv', 'base-csv-pandas.serial')
+    df3 = read_with_tdda_serial('base.psv', 'base-psv-pandas.serial')
+    df4 = read_with_tdda_serial('base.tsv', 'base-tsv-pandas.serial')
 
     for n, df in enumerate((df1, df2, df3, df4), 1):
         compare(df, ref_df, n, verbose=verbose)

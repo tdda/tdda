@@ -1,0 +1,16 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial/1.0",
+    "writer": "tdda.serial",
+    "polars.read_csv": {
+        "separator": ",",
+        "schema_overrides": {
+            "stri": "String",
+            "strf": "String",
+            "nil_str": "String",
+            "nil_bool": "Boolean",
+            "date": "Date",
+            "datetime": "Datetime",
+            "datetimezone": "Datetime"
+         }
+    }
+}

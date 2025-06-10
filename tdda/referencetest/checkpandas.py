@@ -43,14 +43,46 @@ ESC_MAP = str.maketrans({
 })
 
 
-def escape(name):
-    """Escape column name etc. for passing through shell in single quotes"""
-    return name.translate(ESC_MAP)
+class DiffState:
+    """
+    Container for DataFrame differences state
+    """
+    def __init__(self, actual_nrows, ref_nrows, common_cols,
+                 wrong_types=None, extra_cols=None, missing_cols=None,
+                 out_of_order=False, n_diff_values=0):
+        self.actual_nrows = actual_nrows
+        self.ref_nrows = ref_nrows
+        self.common_cols = common_cols
+        self.wrong_types = nvl(wrong_types, [])  # where type checking applied
+        self.extra_cols = nvl(extra_cols, [])    # where specified
+        self.missing_cols = nvl(missing_cols, [])  # where specified
+        self.out_of_order = out_of_order         # if specified
+        self.n_diff_values = n_diff_values       # Only when not 'quick'
+                                                 # if there are structure
+                                                 # differences
 
+    @property
+    def same_nrows(self):
+        return self.actual_nrows == self.ref_nrows
 
-def escaped_list(items):
-    """Escape column name etc. for passing through shell in single quotes"""
-    return ','.join(item.translate(ESC_MAP) for item in items)
+    @property
+    def diff_nrows(self):
+        return self.actual_nrows != self.ref_nrows
+
+    @property
+    def different(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.wrong_types
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same(self):
+        return not self.different
 
 
 class PandasComparison(BaseComparison):
@@ -84,6 +116,7 @@ class PandasComparison(BaseComparison):
         msgs=None,
         type_matching=None,
         create_temporaries=True,
+        quick=True
     ):
         """
         Compare two pandas dataframes.
@@ -132,6 +165,18 @@ class PandasComparison(BaseComparison):
                                   the actual result in the dataframe will be
                                   written to disk (usually as parquet).
 
+            *quick*  If True (the default), the main goal of the function
+                     is quickly to identify whether the actual and
+                     references DataFrames are the same. In thus case,
+                     information about differences is returned, but once
+                     (for example) a column is found to have the wrong
+                     type, or to be missing, unexpected, or out of place,
+                     the function returns with no more comparison.
+
+                     When quick is False, the function tries a little
+                     harder to find detailed differences even when
+                     types are not exactly the same etc.
+
         Returns:
 
             A FailureDiffs named tuple with:
@@ -158,67 +203,91 @@ class PandasComparison(BaseComparison):
 
         check_types = resolve_option_flag(check_types, ref_df)
         check_extra_cols = resolve_option_flag(check_extra_cols, df)
+        common_cols = list(set(df).intersection(set(ref_df)))
 
-        missing_cols = []
-        extra_cols = []
-        wrong_types = []
-        wrong_ordering = False
+        # Check whether they have the same number of records
+        state = DiffState(len(df), len(ref_df), common_cols)
+
+        # 1. Convert category fields to string fields
+
         df = replace_cats(df)
         ref_df = replace_cats(ref_df)
+
+        # 2. Make initial set of missing columns
+
+        missing_cols = set(ref_df) - set(df)
+
+        # 3. Check types of fields, where type checking is used.
+        #    Also mark any fields not present in df that are
+        #    supposed to be type checked as missing.
+
         for c in check_types:
             if c not in list(df):
-                missing_cols.append(c)
+                missing_cols.add(c)
             elif not (
                 types_match(df[c].dtype, ref_df[c].dtype, type_matching)
             ):
-                wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
+                state.wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
+
+        # 4. Sort the missing columns
+        state.missing_cols = sorted(missing_cols)
+
+        # 5. Find any cols in df not in ref_df
         if check_extra_cols:
-            extra_cols = sorted(set(df) - set(ref_df))
+            state.extra_cols = sorted(set(df) - set(ref_df))
+
+        # 6. If checking order, do it now
         if check_order != False and not missing_cols:
             check_order = resolve_option_flag(check_order, ref_df)
             order1 = [c for c in list(df) if c in check_order if c in ref_df]
             order2 = [c for c in list(ref_df) if c in check_order if c in df]
-            wrong_ordering = order1 != order2
+            state.out_of_order = order1 != order2
 
-        same = not any(
-            (missing_cols, extra_cols, wrong_types, wrong_ordering)
-        )
-        if not same:  # Just column structure, at this point
+        if not state.same:
+            # Log problems with the column structure
             self.different_column_structure(diffs)
-            self.missing_columns_detected(diffs, missing_cols, ref_df)
-            self.extra_columns_found(diffs, extra_cols, df)
-            if wrong_types:
-                for c, dtype, ref_dtype in wrong_types:
+            self.missing_columns_detected(diffs, state.missing_cols, ref_df)
+            self.extra_columns_found(diffs, state.extra_cols, df)
+            if state.wrong_types:
+                for c, dtype, ref_dtype in state.wrong_types:
                     self.field_types_differ(diffs, c, dtype, ref_dtype)
-            if wrong_ordering:
+            if state.out_of_order:
                 self.different_column_orders(diffs, df, ref_df)
 
+        # Now move onto records.
+        # If sortby is specified, both DataFrames need to be
+        # sorted.
+        #
+        # Could also do a join here.
+        #
         if sortby:
             sortby = resolve_option_flag(sortby, ref_df)
-            if any([c in sortby for c in missing_cols]):
+            if any([c in sortby for c in state.missing_cols]):
                 self.info('Cannot sort on missing columns')
             else:
                 df.sort_values(sortby, inplace=True)
                 ref_df.sort_values(sortby, inplace=True)
 
+        # If a condition is specifed, apply it to both DataFrames
         if condition:
             df = df[condition(df)].reindex()
             ref_df = ref_df[condition(ref_df)].reindex()
+            state.actual_nrows = len(df)
+            state.ref_nrows = len(ref_df)
 
-        na, nr = len(df), len(ref_df)
-        same_len = na == nr
-        if not same_len:
-            self.different_numbers_of_rows(diffs, na, nr)
-            same = False
+        if state.diff_nrows:
+            # Log if not
+            self.different_numbers_of_rows(diffs, state.actual_nrows,
+                                           state.ref_nrows)
 
-        cols = list(df)
-        if same:
+        cols = state.common_cols
+        if not quick or state.same:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
-                cols = [c for c in check_data if c not in missing_cols]
-                nd = self.same_structure_ddiff(df[cols], ref_df[cols], diffs)
-                same = nd == 0
-
+                cols = [c for c in check_data if c in state.common_cols]
+                state.n_diff_values = self.same_structure_ddiff(df[cols],
+                                                                ref_df[cols],
+                                                                diffs)
         switches = []
         nc = len(cols)
         nL = len(list(df))
@@ -228,9 +297,9 @@ class PandasComparison(BaseComparison):
             else:
                 rest = [f for f in df if f in (set(df) - set(cols))]
                 switches.append('--xfields \'%s\'' % escaped_list(rest))
-        if not same and create_temporaries:
+        if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
-        return FailureDiffs(failures=0 if same else 1, diffs=diffs)
+        return FailureDiffs(failures=0 if state.same else 1, diffs=diffs)
 
     def write_temporaries(self, actual, expected, msgs, switches=None):
         differ = tdda_differ = None
@@ -319,8 +388,6 @@ class PandasComparison(BaseComparison):
             n_diffs = diffs.dfd.diff.n_diff_values
             if n_diffs:
                 diffs.append(str(diffs.dfd.diff))
-            df.to_parquet('df3.parquet')
-            ref_df.to_parquet('ref3.parquet')
             return n_diffs
 
     def same_structure_summary_diffs(self, df, ref_df, diffs):
@@ -1038,6 +1105,10 @@ def create_row_diff_counts(masks):
 
 
 def replace_cats(df):
+    """
+    Replace any columns of type category with corresponding string
+    columns in df.
+    """
     cats = [c for c in df if str(df[c].dtype) == 'category']
     if cats:
         df = pd.DataFrame({
@@ -1045,6 +1116,16 @@ def replace_cats(df):
             for c in df
         })
     return df
+
+
+def escape(name):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return name.translate(ESC_MAP)
+
+
+def escaped_list(items):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return ','.join(item.translate(ESC_MAP) for item in items)
 
 
 def diff_dataframes(*args, **kwargs):

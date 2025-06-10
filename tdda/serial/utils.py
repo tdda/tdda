@@ -5,7 +5,7 @@ from tdda.serial.constants import TDDASERIAL
 
 METADATA_STYLE_MAP = {
     r'^(.*)-(metadata)(\.json)$': 'csvw',
-    r'^(.*)(\.serial)$': 'serial',
+    r'^(.*)(\.serial)$': 'tdda.serial',
     r'^(.*\.).*(package|resource|schema).*(\.json)': 'frictionless',
 }
 
@@ -64,3 +64,5 @@ def find_associated_metadata_file(path):
                 if os.path.exists(mdpath):
                     return mdpath
     return None
+
+

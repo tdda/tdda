@@ -53,6 +53,7 @@ METADATA_KINDS = [
     TDDASERIAL.key,
     'csvw',
     'pandas.read_csv',
+    'polars.read_csv',
 ]
 
 
@@ -198,7 +199,7 @@ class Metadata:
 #        }
 
         self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
-                       for f in self.fields] 
+                       for f in self.fields]
 
 
     def error(self, msg):

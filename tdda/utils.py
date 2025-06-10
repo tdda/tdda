@@ -27,6 +27,11 @@ import numpy as np
 import rich
 rprint = rich.print
 rich.reconfigure(highlight=False, soft_wrap=True)
+
+from rich.console import Console
+stdout_console = Console()
+stderr_console = Console(stderr=True)
+
 from tdda.state import get_config
 
 
@@ -868,4 +873,15 @@ def coloured_tick_cross(ok):
     return xml_element('span', mark, attributes={'class': colour})
 
 
+
+def richprint(*args, **kw):
+    stdout_console.print(*args, **kw)
+
+
+def warn(*args, **kw):
+    stderr_console.print(*args, style='red', **kw)
+
+def err(*args, **kw):
+    warn(*args, **kw)
+    sys.exit(1)
 
