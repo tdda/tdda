@@ -27,8 +27,9 @@ class TDDASerialError(Exception):
     pass
 
 
-def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
-                  preferred_kind=None, verbosity=VERBOSITY):
+def load_metadata(path, md_file_type=None, table_number=None,
+                  for_table_name=None,
+                  preferred_serial_flavour=None, verbosity=VERBOSITY):
     """
     Attempt to load metadata from path given.
 
@@ -36,10 +37,10 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
 
       path    Path to the metadata file
 
-      mdtype    Optional metadata kind. One of
-                'tdda.serial'   (csvmetadata.CSVMETADATA)
-                'csvw'          (csvmetadata.CSVW)
-                'frictionless'  (csvmetadata.FRICTIONLESS)
+      md_file_type    Optional metadata file type. One of
+                      'tdda.serial'   (csvmetadata.CSVMETADATA)
+                      'csvw'          (csvmetadata.CSVW)
+                      'frictionless'  (csvmetadata.FRICTIONLESS)
 
       table_number  If specified, use the nth table from a CSVW file.
                     Raise an error if not present, (indexed from zero)
@@ -49,8 +50,9 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
                       by matching the (end of the) url in the metadata
                       to this table name
 
-      preferred_kind: If multiple formats are found at the same level,
-                      the one to choose.
+      preferred_serial_flavour: If multiple metadata flavours are found
+                                at the same level of a .tddaserial file,
+                                the one to choose.
 
       verbosity:   2: errors and warnings to stderr
                    1: warnings to stderr
@@ -89,13 +91,15 @@ def load_metadata(path, mdtype=None, table_number=None, for_table_name=None,
     else:
         raise TDDASerialError(f'Unexpected file extension {ext} for metadata '
                                f'file.\nExpected .json or .yaml.')
-    if mdtype and kind != mdtype:
-        raise TDDASerialError(f'Expected {mdtype} file; found {kind} file.')
+    if md_file_type and kind != md_file_type:
+        raise TDDASerialError(
+                  f'Expected {md_file_type} file; found {kind} file.'
+              )
 
     return md
 
 
-def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
+def csv2pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
                upgrade_types=True, upgrade_possible_ints=False,
                return_md=False, table_number=None, use_table_name=False,
                verbosity=VERBOSITY,
@@ -124,11 +128,11 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                 that if possible, and will raise an error if it cannot
                 be found.
 
-       mdtype   Optional specification of the kind of metadata file.
-                Should be one of
-                    'csvmetadata'   (csvmetadata.CSVMETADATA)
-                    'csvw'          (csvmetadata.CSVW)
-                    'frictionless'  (csvmetadata.FRICTIONLESS)
+       md_file_type   Optional specification of the kind of metadata file.
+                      Should be one of
+                          'csvmetadata'   (csvmetadata.CSVMETADATA)
+                          'csvw'          (csvmetadata.CSVW)
+                          'frictionless'  (csvmetadata.FRICTIONLESS)
 
        findmd   If this is set to True, the library will try to find
                 associated metadata based on filename conventions.
@@ -164,7 +168,7 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
         if mdpath is None:
             raise TDDASerialError('Must provide path or mdpath')
         else:
-            md = load_metadata(mdpath, mdtype=mdtype,
+            md = load_metadata(mdpath, md_file_type=md_file_type,
                                table_number=table_number,
                                for_table_name=for_table_name)
             path = md._fullpath
@@ -179,7 +183,8 @@ def csv2pandas(path=None, mdpath=None, mdtype=None, findmd=False,
                                    f'for {os.path.abspath(path)}')
 
     if md is None and mdpath is not None:
-        md = load_metadata(mdpath, mdtype=mdtype, table_number=table_number,
+        md = load_metadata(mdpath, md_file_type=md_file_type,
+                           table_number=table_number,
                            for_table_name=for_table_name, verbosity=verbosity)
 
     if md:
@@ -236,8 +241,9 @@ def find_metadata_kind(mds, preferred=''):
     for a recognized blob of metadata.
 
     Returns the kind and subportion representing
-    the metadata for the first found, or the preferred
-    kind of specified.
+    the metadata for the first found, or, if there are ties
+    at the same leve, the preferred tdda.serial metadata flavour,
+    if specified.
 
     If no metadata is found, returns None, None
     """

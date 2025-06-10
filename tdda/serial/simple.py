@@ -26,7 +26,7 @@ def swap_ext(path, ext):
 
 
 def metadata_path(path, md_path=None):
-    r = nvl(md_path, swap_ext(path, '.tddaserial'))
+    r = nvl(md_path, swap_ext(path, '.serial'))
     return r
 
 

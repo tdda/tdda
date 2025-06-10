@@ -56,7 +56,7 @@ RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
 class TDDASERIAL:
     name = 'tdda.serial'
     key = name
-    ext = '.tddaserial'
+    ext = '.serial'
     version = '0.1'
     writer = f'tdda.serial-{version}'
     URI = URI.TDDASERIAL

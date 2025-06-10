@@ -907,7 +907,7 @@ class TestPandasRoundTrips(ReferenceTestCase):
         with open(md_path, 'r') as f:
             md = f.read()
         self.assertFileCorrect(md_path,
-                               tdpath('ds4-pandas-defaults.tddaserial'),
+                               tdpath('ds4-pandas-defaults.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS,)
 
         df2 = pandas_read_csv(path)
@@ -916,7 +916,7 @@ class TestPandasRoundTrips(ReferenceTestCase):
         df3 = pandas_read_csv(path, md_path=md_path)
         self.assertDataFramesEquivalent(df, df3, type_matching='medium')
 
-        alt_md_path = tdpath('ds4-pandas-alt.tddaserial')
+        alt_md_path = tdpath('ds4-pandas-alt.serial')
         df4 = pandas_read_csv(path, md_path=alt_md_path)
         dtypes = {k: str(df4[k].dtype) for k in df4}
         self.assertEqual(
@@ -984,7 +984,7 @@ class TestPandasToMetadata(ReferenceTestCase):
         m = df_to_metadata(df)
         self.assertStringCorrect(
             str(m),
-            tdpath('small-wide.tddaserial'),
+            tdpath('small-wide.serial'),
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
