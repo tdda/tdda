@@ -1,6 +1,8 @@
 import json
 import sys
+
 from tdda.version import version as VERSION
+from tdda.serial.constants import URI, TDDASERIAL
 
 class MISSING:
     ERROR = 2
@@ -31,12 +33,6 @@ class DateFormat:
     EURO_DATETIME = 'eu datetime'
 
 
-class URI:
-    TDDASERIAL = 'http://tdda.info/ns/tdda.serial'
-    CSVW = 'http://www.w3.org/ns/csvw'
-
-
-
 class Defaults:
     ENCODING = 'UTF-8'
     DELIMITER = ','
@@ -51,16 +47,6 @@ class Defaults:
 
 CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
-
-
-class TDDASERIAL:
-    name = 'tdda.serial'
-    key = name
-    ext = '.serial'
-    version = '0.1'
-    writer = f'tdda.serial-{version}'
-    URI = URI.TDDASERIAL
-    format = f'{URI}/{version}'
 
 
 METADATA_KINDS = [
