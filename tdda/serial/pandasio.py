@@ -45,8 +45,8 @@ def csvw2pandas_kwargs(spec, extensions=False):
 
 
 def to_pandas_read_csv_args(md):
-    if md.lib == 'pandas.read_csv':
-        return md.lib_params
+    if 'pandas.read_csv' in md.libs:
+        return md.libs['pandas.read_csv']
     kw = {}
     date_fields = {
         f.name: f for f in md.fields

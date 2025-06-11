@@ -49,7 +49,8 @@ CONTEXT_KEY = '@context'
 RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
 
 
-METADATA_KINDS = [
+# Allowed keys in .serial files
+METADATA_FLAVOURS = [
     TDDASERIAL.key,
     'csvw',
     'pandas.read_csv',
@@ -148,10 +149,9 @@ class SerialMetadata:
         header_rows=1,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
-
+        fill_from_lib=False,
         verbosity=VERBOSITY,
-        lib=None,
-        lib_params=None,
+        libs=None,
     ):
         self.fields = fields or []
         self.path = path
@@ -179,11 +179,7 @@ class SerialMetadata:
         self.skip_columns = None
         self.skip_rows = None
 
-
-
-        self.lib = lib
-        self.lib_params = lib_params
-
+        self.libs = libs or {}
 
         self.errors = []
         self.warnings = []
@@ -200,6 +196,8 @@ class SerialMetadata:
 
         self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
                        for f in self.fields]
+        if fill_from_lib:
+            print('Fill from library')
 
 
     def error(self, msg):
@@ -247,12 +245,18 @@ class SerialMetadata:
         m = {
             k: unobjectify(v) for k, v in self.__dict__.items()
                                   if not k.startswith('_')
+                                  and k != 'libs'
                                   and nonnull(v)
         }
         nulls = m.get('null_indicators')
         if type(nulls) == list and len(nulls) == 1:
             m['null_indicators'] = nulls[0]
         d['tdda.serial'] = m
+        for (lib, params) in self.libs.items():
+            d[lib] = {
+                unobjectify(v)
+                for (k, v) in params.items()
+            }
         return d
 
     def to_json(self, indent=4):

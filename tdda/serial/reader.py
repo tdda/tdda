@@ -14,7 +14,7 @@ from tdda.serial.base import (
     SerialMetadataError,
     VERBOSITY,
     TDDASERIAL,
-    METADATA_KINDS,
+    METADATA_FLAVOURS,
     SerialMetadata,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
@@ -25,6 +25,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
+from tdda.utils import err
 
 
 class TDDASerialError(Exception):
@@ -69,7 +70,18 @@ def load_metadata(path, md_file_type=None, table_number=None,
     lcstem, ext = stem.lower(), ext.lower()
     with open(path) as f:
         text = f.read().strip()
-    if ext == '.json' or text.startswith('{'):
+    if ext == '.serial':  # tdda.serial file
+        md = json.loads(text)
+        if not isinstance(md, dict):
+            err(f'{path} does not appear to be a tdda.serial file.')
+        kw = md.get('tdda.serial')
+        libs = {}
+        for flavour in METADATA_FLAVOURS:
+            spec = md.get(flavour)
+            if spec:
+                libs[flavour] = spec
+        md = SerialMetadata(libs=libs, fill_from_lib=not kw, **kw)
+    elif ext == '.json' or text.startswith('{'):
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)
         if kind == TDDASERIAL.key:
@@ -79,7 +91,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
                               for_table_name=for_table_name,
                               verbosity=verbosity)
         elif kind:
-            md = SerialMetadata(lib=kind, lib_params=md)
+            md = SerialMetadata(libs={kind: md})
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:
@@ -377,7 +389,7 @@ def find_metadata_kind(mds, preferred=''):
         if preferred and preferred in md:
             kind = preferred
             return preferred, md[preferred]
-        for k in METADATA_KINDS:
+        for k in METADATA_FLAVOURS:
             if k in md:
                 return k, md[k]
             if CONTEXT_KEY in md:
