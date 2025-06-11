@@ -38,7 +38,7 @@ def write_pandas_kwargs(inpath, outpath):
     """
     if os.path.exists(os.path.dirname(outpath)):
         with open(outpath, 'w') as f:
-            out = fmt(gen_pandas_kwargs(inpath))
+            out = fmt(csvw2pandas_kwargs(inpath))
             f.write(f'pd_kwargs = {out}\n')
     else:
         error(f'Directory {os.path.dirname(outpath)} not found.')
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             error(f'Directory {os.path.dirname(inpath)} not found.')
 
         if len(sys.argv) == 2:
-            print(fmt(gen_pandas_kwargs(inpath)))
+            print(fmt(csvw2pandas_kwargs(inpath)))
         else:
             write_pandas_kwargs(inpath, sys.argv[2])
 

@@ -6,7 +6,7 @@ import pandas as pd
 
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.base import (
-    Metadata, FieldMetadata, FieldType, DateFormat, Defaults
+    SerialMetadata, FieldMetadata, FieldType, DateFormat, Defaults
 )
 
 
@@ -24,7 +24,7 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
 }
 
 
-def gen_pandas_kwargs(spec, extensions=False):
+def csvw2pandas_kwargs(spec, extensions=False):
     """
     Construct a suitable set of kwargs to pass to pandas.read_csv
     to get it to read a CSV file in conformance to the csvw
@@ -175,7 +175,7 @@ def df_to_metadata(df, path=None):
         col_to_field_metadata(df[c])
         for c in df
     ]
-    return Metadata(
+    return SerialMetadata(
                fields, path=path,
                encoding=Defaults.ENCODING,
                delimiter=Defaults.DELIMITER,

@@ -63,7 +63,7 @@ VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 FIELDTYPES = tuple(FieldType.__dict__.values())
 
 
-class MetadataError(Exception):
+class SerialMetadataError(Exception):
     pass
 
 
@@ -133,7 +133,7 @@ class FieldMetadata:
                 if nonnull(v)}
 
 
-class Metadata:
+class SerialMetadata:
     def __init__(self,
         fields=None,
         path=None,

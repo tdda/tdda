@@ -13,7 +13,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.serial.base import RE_ISO8601, FieldType, URI
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
-    gen_pandas_kwargs,
+    csvw2pandas_kwargs,
     dtype_to_fieldtype,
     df_to_metadata
 )
@@ -111,7 +111,7 @@ class TestDateSanityRE(ReferenceTestCase):
 class TestPandasKeywordArgsGeneration(ReferenceTestCase):
     def test_isodate(self):
         mdpath = os.path.join(TESTDATADIR, 'isod-metadata.json')
-        self.assertEqual(gen_pandas_kwargs(mdpath), {
+        self.assertEqual(csvw2pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'date': 'ISO8601'},
             'parse_dates': ['date'],
@@ -120,7 +120,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_simple(self):
         mdpath = os.path.join(TESTDATADIR, 'simple-metadata.json')
-        self.assertEqual(gen_pandas_kwargs(mdpath), {
+        self.assertEqual(csvw2pandas_kwargs(mdpath), {
             'date_format': {'LastIn2024': 'ISO8601', 'LastInFeb': 'ISO8601'},
             'dtype': {
                 'Even': 'boolean',
@@ -134,7 +134,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_isodate_tsv(self):
         mdpath = os.path.join(TESTDATADIR, 'isodt-tsv-metadata.json')
-        self.assertEqual(gen_pandas_kwargs(mdpath), {
+        self.assertEqual(csvw2pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'time': 'ISO8601'},
             'parse_dates': ['time'],
@@ -144,7 +144,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_eurodate(self):
         mdpath = os.path.join(TESTDATADIR, 'eurod-metadata.json')
-        self.assertEqual(gen_pandas_kwargs(mdpath), {
+        self.assertEqual(csvw2pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'date': '%d/%m/%Y'},
             'parse_dates': ['date'],
@@ -160,7 +160,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'isod-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'isod.csv')
 
-        df = pd.read_csv(csvpath, **gen_pandas_kwargs(mdpath))
+        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
 
         self.assertEqual(df.row.dtype, 'Int64')
         self.assertEqual(df.date.dtype, 'datetime64[ns]')
@@ -188,7 +188,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'simple-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'simple.csv')
 
-        kw = gen_pandas_kwargs(mdpath)
+        kw = csvw2pandas_kwargs(mdpath)
         self.assertEqual(kw, {
             'date_format': {
                 'LastIn2024': 'ISO8601',
@@ -233,7 +233,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'isodt-tsv-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'isodt.tsv')
 
-        df = pd.read_csv(csvpath, **gen_pandas_kwargs(mdpath))
+        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
 
         expected = pd.DataFrame({
             'row': pd.Series([1, 15], dtype='Int64'),
@@ -247,8 +247,8 @@ class TestConversion(ReferenceTestCase):
     def test_eurodate2pd(self):
         mdpath = os.path.join(TESTDATADIR, 'eurod-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'eurod.csv')
-        kw = gen_pandas_kwargs(mdpath)
-        df = pd.read_csv(csvpath, **gen_pandas_kwargs(mdpath))
+        kw = csvw2pandas_kwargs(mdpath)
+        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
 
         expected = pd.DataFrame({
             'row': pd.Series([1, 15], dtype='Int64'),

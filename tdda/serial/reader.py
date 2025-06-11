@@ -11,11 +11,11 @@ from collections import namedtuple
 from tdda.serial.base import (
     CONTEXT_KEY,
     URI,
-    MetadataError,
+    SerialMetadataError,
     VERBOSITY,
     TDDASERIAL,
     METADATA_KINDS,
-    Metadata,
+    SerialMetadata,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
 from tdda.serial.pandasio import to_pandas_read_csv_args
@@ -73,13 +73,13 @@ def load_metadata(path, md_file_type=None, table_number=None,
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)
         if kind == TDDASERIAL.key:
-            md = Metadata(**md)
+            md = SerialMetadata(**md)
         elif kind == 'csvw':
             md = CSVWMetadata(path, table_number=table_number,
                               for_table_name=for_table_name,
                               verbosity=verbosity)
         elif kind:
-            md = Metadata(lib=kind, lib_params=md)
+            md = SerialMetadata(lib=kind, lib_params=md)
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:

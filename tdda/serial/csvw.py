@@ -3,7 +3,7 @@ import os
 import re
 
 from tdda.serial.base import (
-    Metadata,
+    SerialMetadata,
     FieldMetadata,
     MISSING,
     RE_ISO8601
@@ -82,14 +82,14 @@ class CSVWConstants:
     CONTEXT = 'http://www.w3.org/ns/csvw'
 
 
-class CSVWMetadata(Metadata):
+class CSVWMetadata(SerialMetadata):
     """
-    Subclass of Metadata specifically for CSV Metadata provided
+    Subclass of SerialMetadata specifically for CSVW Metadata provided
     in CSVW format.
 
     Imports the information from a csvw JSON file
     (typically foo-metadata.json for file foo.csv)
-    to Metadata.
+    to SerialMetadata.
 
     Args:
         spec should either be a path to a CSVW file (usually .json)
