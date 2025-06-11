@@ -96,6 +96,15 @@ def tddaserial_to_pandas_read_csv_args(md):
     if md.header_row_count == 0:
         kw['header'] = None
 
+    if md.escape_char:
+        kw['escapechar'] = md.escape_char
+
+    if md.quote_char:
+        kw['quotechar'] = md.quote_char
+
+    if md.stutter_quotes in (True, False):
+        kw['doublequote'] = md.stutter_quotes
+
     booleans = [
         f.format
         for f in md.fields
@@ -117,6 +126,28 @@ def tddaserial_to_pandas_read_csv_args(md):
                 kw['true_values'] = list(trues)
                 kw['false_values'] = list(falses)
     return kw
+
+
+def pandas_read_csv_to_tddaserial(params):
+    """
+    Given a dictionary of pandas.read_csv parameters
+    (usually from a 'pandas.read_csv' block in a .serial file),
+    Construct the equivalent tdda.serial parameters, so far as possible
+    and return these as a pair of dicts---the first with the general
+    parameters and the second with the FieldMetadata dictionaries
+    """
+    kw = {}
+    kw['delimiter'] = params.get('sep')
+    kw['header_row_count'] = 0 if params.get('header') is None else 1
+    kw['escapechar'] = params.get('escape_char')
+    kw['quotechar'] = params.get('quote_char')
+    kw['doublequote'] = md.stutter_quotes
+
+    names = set()
+    dtypes = params.get('dtypes')
+    if isinstance(dtypes, dict):
+        names.update(set(dtypes))
+
 
 
 def dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):

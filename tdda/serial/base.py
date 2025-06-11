@@ -149,7 +149,6 @@ class SerialMetadata:
         header_row_count=1,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
-        fill_from_lib=False,
         verbosity=VERBOSITY,
         libs=None,
     ):
@@ -187,7 +186,6 @@ class SerialMetadata:
         self.metadata_source = None
         self.metadata_source_path = None
         self.valid = None
-#        self.header_rows = header_rows
         self._verbosity = verbosity
 
 #        self.metametadata = {
@@ -196,8 +194,6 @@ class SerialMetadata:
 
         self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
                        for f in self.fields]
-        if fill_from_lib:
-            print('Fill from library')
 
 
     def error(self, msg):
