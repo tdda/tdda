@@ -8,6 +8,7 @@ from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.base import (
     SerialMetadata, FieldMetadata, FieldType, DateFormat, Defaults
 )
+from tdda.serial.utils import listify
 
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
@@ -20,8 +21,9 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
     'string': 'string',
     'number': 'float',
     'float': 'float',
-    'datetime': 'datetime',
-    'date': 'date',
+    'datetime': 'datetime',  # not passed to Pandas
+    'date': 'date',          # not passed to Pandas
+
 }
 
 
@@ -80,7 +82,8 @@ def tddaserial_to_pandas_read_csv_args(md):
         and FIELDTYPE_TO_PANDAS_DTYPE.get(f.fieldtype) is not None
     } or None
     if any(v.format for v in date_fields):
-        kw['date_format'] = {name: f.format for name, f in date_fields.items()}
+        kw['date_format'] = {name: to_pandas_date_format(f.format)
+                             for name, f in date_fields.items()}
     if date_fields:
         kw['parse_dates'] = list(date_fields)
 
@@ -90,6 +93,7 @@ def tddaserial_to_pandas_read_csv_args(md):
 
     if md.delimiter:
         kw['sep'] = md.delimiter
+
     if md.encoding:
         kw['encoding'] = md.encoding
 
@@ -105,13 +109,17 @@ def tddaserial_to_pandas_read_csv_args(md):
     if md.stutter_quotes in (True, False):
         kw['doublequote'] = md.stutter_quotes
 
+    if md.null_indicators is not None:
+        kw['na_values'] = listify(md.null_indicators)
+        kw['keep_default_na'] = False
+    # CSVW-style booleans
     booleans = [
         f.format
         for f in md.fields
         if getattr(f, 'format', None) and f.fieldtype == 'bool'
     ]
+    trues, falses = set(), set()
     if booleans:
-        trues, falses = set(), set()
         for b in booleans:
             parts = b.split('|')
             if len(parts) == 2:
@@ -125,6 +133,36 @@ def tddaserial_to_pandas_read_csv_args(md):
             else:
                 kw['true_values'] = list(trues)
                 kw['false_values'] = list(falses)
+    names = []
+    dtypes = {}
+    date_formats = {}
+    date_fields = []
+    fields = []
+    for fmd in md.fields:
+        # names.append(fmd.name)
+        # if fmd.fieldtype:
+        #     dtype = FIELDTYPE_TO_PANDAS_DTYPE.get(fmd.fieldtype)
+        #     if dtype and 'date' not in dtype:
+        #         dtypes[fmd.name] = dtype
+        # if (
+        #     fmd.format and fmd.fieldtype
+        #     and fmd.fieldtype.lower().startswith('date')
+        # ):
+        #     date_formats[fmd.name] = fmd.format
+        #     date_fields.append(fmd.name)
+        if fmd.true_values and fmd.fieldtype.lower().startswith('bool'):
+             trues.update(fmd.true_values)
+        if fmd.false_values and fmd.fieldtype.lower().startswith('bool'):
+             falses.update(fmd.false_values)
+    if trues:
+        kw['true_values'] = list(trues)
+    if falses:
+        kw['false_values'] = list(falses)
+    if dtypes:
+        kw['dtype'] = dtypes
+    if date_formats:
+        kw['date_format'] = date_formats
+        kw['parse_dates'] = date_fields
     return kw
 
 
@@ -145,12 +183,34 @@ def pandas_read_csv_to_tddaserial(params):
 
     names = set()
     dtypes = params.get('dtypes')
-    if isinstance(dtypes, dict):
-        names.update(set(dtypes))
+    formats = params.get('date_format')
+    for source in (dtypes, formats):
+        if isinstance(params.get(source), dict):
+            names.update(set(source))
+    fields = []
+    for name in names:
+        type_ = fmt = None
+        if isinstance(dtypes, dict):
+            dtype = dtypes.get(name)
+            if dtype:
+                type_ = pandas_dtype_to_fieldtype(dtype)
+        if isinstance(formats, dict):
+            date_format = formats.get(name)
+            if date_format:
+                print(f'Format {date_format} found for field {name}. Convert!')
+    # problem:
+    # tdda.serial expects a list of fields with properties
+    # but these might not be specified with pandas args.
+    # When writing DataFrame, we can get the names.
+    # Could write into .names...but that will cause a rename if used
+    # with differene data.
+    # Could also change SerialMetadata to use a dictionary,
+    # with optional position (0-based?) and when these are provided,
+    # that would provide names.
+    # Or could allow dict or list...but that feels messy.
 
 
-
-def dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
+def pandas_dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
     """
     Converts a pandas dtype to a serial.base.FieldType
 
@@ -222,9 +282,9 @@ def dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
         return None
 
 
-def df_to_metadata(df, path=None):
+def pandas_df_to_metadata(df, path=None):
     fields = [
-        col_to_field_metadata(df[c])
+        pandas_col_to_field_metadata(df[c])
         for c in df
     ]
     return SerialMetadata(
@@ -238,8 +298,8 @@ def df_to_metadata(df, path=None):
            )
 
 
-def col_to_field_metadata(field, fieldtype=None,
-                          fmt=None, prefer_nullable=True):
+def pandas_col_to_field_metadata(field, fieldtype=None,
+                                 fmt=None, prefer_nullable=True):
     """
     Produces a FieldMetadata object for the pandas series provided
     in field.
@@ -263,8 +323,8 @@ def col_to_field_metadata(field, fieldtype=None,
     if fieldtype:
         fieldtype = fieldtype
     else:
-        fieldtype = dtype_to_fieldtype(field.dtype, col=field,
-                                       prefer_nullable=prefer_nullable)
+        fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field,
+                                              prefer_nullable=prefer_nullable)
 
     if not fmt:
         if fieldtype == FieldType.DATE:
@@ -293,3 +353,11 @@ def yn2bool(v):
         else False if v.lower().startswith('n')
         else None
     )
+
+
+def to_pandas_date_format(v):
+    if v is None:
+        return None
+    if v.startswith('iso8601'):
+        return 'ISO8601'
+    return v  # for now

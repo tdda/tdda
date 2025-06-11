@@ -74,13 +74,13 @@ def load_metadata(path, md_file_type=None, table_number=None,
         md = json.loads(text)
         if not isinstance(md, dict):
             err(f'{path} does not appear to be a tdda.serial file.')
-        kw = md.get('tdda.serial')
+        kw = md.get('tdda.serial') or {}
         libs = {}
         for flavour in METADATA_FLAVOURS:
             spec = md.get(flavour)
             if spec:
                 libs[flavour] = spec
-        md = SerialMetadata(libs=libs, fill_from_lib=not kw, **kw)
+        md = SerialMetadata(libs=libs, **kw)
     elif ext == '.json' or text.startswith('{'):
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)

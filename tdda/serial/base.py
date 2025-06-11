@@ -3,6 +3,7 @@ import sys
 
 from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
+from tdda.serial.utils import listify
 
 class MISSING:
     ERROR = 2
@@ -25,12 +26,12 @@ class FieldType:
 
 
 class DateFormat:
-    ISO8601_DATE = 'iso8601date'
-    ISO8601_DATETIME = 'iso8601datetime'
-    ISO8601_DATETIME_TZ = 'iso8601datetime_tz'
+    ISO8601_DATE = 'iso8601-date'
+    ISO8601_DATETIME = 'iso8601-datetime'
+    ISO8601_DATETIME_TZ = 'iso8601-datetime-tz'
 
-    EURO_DATE = 'eu date'
-    EURO_DATETIME = 'eu datetime'
+    EURO_DATE = 'eu-date'
+    EURO_DATETIME = 'eu-datetime'
 
 
 class Defaults:
@@ -91,14 +92,18 @@ class FieldMetadata:
 
 
     """
-    def __init__(self, name, fieldtype=None,
+    def __init__(self, name, fieldtype=None, csvname=None,
                  format=None, null_indicators=None,
+                 true_values=None, false_values=None,
                  allow_extras=False, **kw):
         self.name = name
         self.fieldtype = fieldtype
+        self.csvname = None
         self.altnames = None
         self.format = format
         self.null_indicators = null_indicators
+        self.true_values = listify(true_values)
+        self.false_values = listify(false_values)
 
         for k, v in kw.items():
             if allow_extras:

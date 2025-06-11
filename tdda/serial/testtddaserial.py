@@ -14,8 +14,8 @@ from tdda.serial.base import RE_ISO8601, FieldType, URI
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
     csvw2pandas_kwargs,
-    dtype_to_fieldtype,
-    df_to_metadata
+    pandas_dtype_to_fieldtype,
+    pandas_df_to_metadata
 )
 from tdda.serial.reader import (
     csv2pandas,
@@ -945,7 +945,7 @@ class TestPandasToMetadata(ReferenceTestCase):
 
         df, expected_types = small_wide_pd_df()
         actual = {
-            col: dtype_to_fieldtype(df[col].dtype, df[col])
+            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col])
             for col in df
         }
         remove_common_key_vals(actual, expected_types)
@@ -957,7 +957,7 @@ class TestPandasToMetadata(ReferenceTestCase):
 
         df, expected_types = small_wide_pd_df(with_col=False)
         actual = {
-            col: dtype_to_fieldtype(df[col].dtype)
+            col: pandas_dtype_to_fieldtype(df[col].dtype)
             for col in df
         }
 
@@ -970,8 +970,8 @@ class TestPandasToMetadata(ReferenceTestCase):
 
         df, expected_types = small_wide_pd_df(prefer_nullable=False)
         actual = {
-            col: dtype_to_fieldtype(df[col].dtype, df[col],
-                                    prefer_nullable=False)
+            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col],
+                                           prefer_nullable=False)
             for col in df
         }
 
@@ -984,7 +984,7 @@ class TestPandasToMetadata(ReferenceTestCase):
 
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
-        m = df_to_metadata(df)
+        m = pandas_df_to_metadata(df)
         self.assertStringCorrect(
             str(m),
             tdpath('small-wide.serial'),

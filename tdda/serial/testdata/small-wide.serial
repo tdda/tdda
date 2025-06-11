@@ -1,6 +1,6 @@
 {
-    "format": "http://tdda.info/ns/tdda.serial/0.1",
-    "writer": "tdda.serial",
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
     "tdda.serial": {
         "fields": [
             {
@@ -78,32 +78,32 @@
             {
                 "name": "d",
                 "fieldtype": "date",
-                "format": "iso8601date"
+                "format": "iso8601-date"
             },
             {
                 "name": "dn",
                 "fieldtype": "date",
-                "format": "iso8601date"
+                "format": "iso8601-date"
             },
             {
                 "name": "dt",
                 "fieldtype": "datetime",
-                "format": "iso8601datetime"
+                "format": "iso8601-datetime"
             },
             {
                 "name": "dtn",
                 "fieldtype": "datetime",
-                "format": "iso8601datetime"
+                "format": "iso8601-datetime"
             },
             {
                 "name": "dz",
                 "fieldtype": "datetime",
-                "format": "iso8601datetime"
+                "format": "iso8601-datetime"
             },
             {
                 "name": "dzn",
                 "fieldtype": "datetime_tz",
-                "format": "iso8601datetime_tz"
+                "format": "iso8601-datetime-tz"
             }
         ],
         "quote_char": "\"",

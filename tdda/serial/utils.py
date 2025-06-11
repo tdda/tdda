@@ -66,3 +66,5 @@ def find_associated_metadata_file(path):
     return None
 
 
+def listify(v):
+    return None if v is None or isinstance(v, list) else [v]
