@@ -12,7 +12,7 @@ from tdda.constraints.testconstraints import *
 from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 from tdda.referencetest.testgentest import *
-from tdda.serial.testserialmetadata import *
+from tdda.serial.testtddaserial import *
 from tdda.testutils import *
 
 # Set the enviroment variable TDDA_CONFIG_TESTS to something (e.g. 1)

@@ -73,7 +73,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
-from tdda.serial.pandasio import to_pandas_read_csv_args
+from tdda.serial.pandasio import tddaserial_to_pandas_read_csv_args
 from tdda.utils import indicator_field_name, pass_fail_stats, handle_tilde
 
 # pd.tslib is deprecated in newer versions of Pandas
@@ -1267,7 +1267,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
                 print('** Using metadata %s.  '
                       'Use --no-csv-metadata to override.' % path,
                       file=sys.stderr)
-                kw = to_pandas_read_csv_args(metadata)
+                kw = tddaserial_to_pandas_read_csv_args(metadata)
                 return default_csv_loader(metadata.path, **kw)
 
         if not ignore_apparent_metadata:
@@ -1275,7 +1275,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
             mdpath = find_associated_metadata_file(path)
             if mdpath:
                 metadata = load_metadata(path)
-                kw = to_pandas_read_csv_args(metadata)
+                kw = tddaserial_to_pandas_read_csv_args(metadata)
                 return default_csv_loader(path, **kw)
             elif infer_metadata:
                 # infer metadata
@@ -1285,7 +1285,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
 
     else:  # explicit metadatapath provided
         metadata = load_metadata(mdpath)
-        kw = to_pandas_read_csv_args(metadata)
+        kw = tddaserial_to_pandas_read_csv_args(metadata)
         return default_csv_loader(path, **kw)
 
 

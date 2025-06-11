@@ -18,7 +18,7 @@ from tdda.serial.base import (
     SerialMetadata,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
-from tdda.serial.pandasio import to_pandas_read_csv_args
+from tdda.serial.pandasio import tddaserial_to_pandas_read_csv_args
 from tdda.serial.polarsio import to_polars_read_csv_args
 
 from tdda.serial.utils import (
@@ -236,7 +236,7 @@ def csv2pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
      )
 
     if md:
-        md_kw = to_pandas_read_csv_args(md)
+        md_kw = tddaserial_to_pandas_read_csv_args(md)
     if md and kw:
         md_kw.update(kw)
         kw = md_kw

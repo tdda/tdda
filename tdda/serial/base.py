@@ -146,7 +146,7 @@ class SerialMetadata:
         date_format=None,
         datetime_format=None,
         null_indicators=None,
-        header_rows=1,
+        header_row_count=1,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
         fill_from_lib=False,
@@ -171,7 +171,7 @@ class SerialMetadata:
         self.delimiter = None
         self.encoding = None
 
-        self.header_row_count = None
+        self.header_row_count = header_row_count
         self.comment_prefix = None
         self.line_terminators = None
         self.skip_blank_rows = None
@@ -187,7 +187,7 @@ class SerialMetadata:
         self.metadata_source = None
         self.metadata_source_path = None
         self.valid = None
-        self.header_rows = header_rows
+#        self.header_rows = header_rows
         self._verbosity = verbosity
 
 #        self.metametadata = {

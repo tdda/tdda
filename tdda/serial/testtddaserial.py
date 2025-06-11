@@ -18,7 +18,10 @@ from tdda.serial.pandasio import (
     df_to_metadata
 )
 from tdda.serial.reader import (
-    csv2pandas, poss_upgrade_to_int, load_metadata, to_pandas_read_csv_args,
+    csv2pandas,
+    poss_upgrade_to_int,
+    load_metadata,
+    tddaserial_to_pandas_read_csv_args,
     find_metadata_kind
 )
 

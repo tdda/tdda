@@ -11,6 +11,7 @@ from tdda.serial.base import (
 
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
+DTYPE_RE = re.compile(r'^([A-Za-z])([0-9]+)?(\[[a-z]+(,?)(.*)\])$')
 
 
 FIELDTYPE_TO_PANDAS_DTYPE = {
@@ -21,6 +22,26 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
     'float': 'float',
     'datetime': 'datetime',
     'date': 'date',
+}
+
+
+PANDAS_DTYPE_TO_FIELDTYPE = {
+    'boolean': 'bool',
+    'bool': 'bool',
+    'Int': 'int',
+    'int': 'int',
+    'Float': 'float',
+    'float': 'float',
+    'string': 'string',
+    'object': 'string',
+    'float': 'float',
+    'datetime': 'datetime',
+    'date': 'date',
+#    'category' : ???,
+#    'period' : ???,
+#    'Spares' : ???,
+#    'interval' : ???,
+#    'Interval' : ???,
 }
 
 
@@ -40,11 +61,11 @@ def csvw2pandas_kwargs(spec, extensions=False):
         the spec given as closely as possible.
     """
     md = CSVWMetadata(spec, extensions=extensions)
-    kw = to_pandas_read_csv_args(md)
+    kw = tddaserial_to_pandas_read_csv_args(md)
     return kw
 
 
-def to_pandas_read_csv_args(md):
+def tddaserial_to_pandas_read_csv_args(md):
     if 'pandas.read_csv' in md.libs:
         return md.libs['pandas.read_csv']
     kw = {}
@@ -72,7 +93,7 @@ def to_pandas_read_csv_args(md):
     if md.encoding:
         kw['encoding'] = md.encoding
 
-    if md.header_rows == 0:
+    if md.header_row_count == 0:
         kw['header'] = None
 
     booleans = [
@@ -182,7 +203,7 @@ def df_to_metadata(df, path=None):
                quote_char=Defaults.QUOTE_CHAR,
                escape_char=Defaults.ESCAPE_CHAR,
                null_indicators=Defaults.NULL_INDICATORS,
-               header_rows=Defaults.HEADER_ROW_COUNT
+               header_row_count=Defaults.HEADER_ROW_COUNT
            )
 
 

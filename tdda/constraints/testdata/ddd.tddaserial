@@ -69,8 +69,7 @@
         "quote_char": "\"",
         "date_format": "iso8601datetime",
         "null_indicators": "",
-        "header_rows": 1,
-        "header_rows": 1,
+        "header_row_count": 1,
         "stutter_quotes": false,
         "escape_char": "\\",
         "accept_percentages_as_floats": false

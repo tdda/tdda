@@ -324,9 +324,12 @@ class CSVWMetadata(SerialMetadata):
         self.skip_rows = self.get_val(dialect, 'skipRows')
         self.skip_initial_space = self.get_val(dialect, 'skipInitialSpace')
         self.skip_columns = self.get_val(dialect, 'skipCols')
-        header_rows = self.get_val(dialect, 'headerRowCount')
-        header = self.get_val(dialect, 'headerRowCount')
-        self.header_rows = 0 if header == False else nvl(header_rows, 1)
+        header_row_count = self.get_val(dialect, 'headerRowCount')
+        header = self.get_val(dialect, 'header')
+        self.header_row_count = (
+            0 if header == False
+            else nvl(header_row_count, 1)
+        )
 
         # Allowed to be a boolean or string value. If string:
         # string value: true false, start, end
