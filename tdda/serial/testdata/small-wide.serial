@@ -106,6 +106,8 @@
                 "format": "iso8601-datetime-tz"
             }
         ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
         "null_indicators": "",

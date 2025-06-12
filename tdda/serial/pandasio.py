@@ -9,6 +9,7 @@ from tdda.serial.base import (
     SerialMetadata, FieldMetadata, FieldType, DateFormat, Defaults
 )
 from tdda.serial.utils import listify
+from tdda.utils import nvl
 
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
@@ -177,16 +178,21 @@ def pandas_read_csv_to_tddaserial(params):
     kw = {}
     kw['delimiter'] = params.get('sep')
     kw['header_row_count'] = 0 if params.get('header') is None else 1
-    kw['escapechar'] = params.get('escape_char')
-    kw['quotechar'] = params.get('quote_char')
-    kw['doublequote'] = md.stutter_quotes
+    kw['escape_char'] = params.get('escapechar')
+    kw['quote_char'] = params.get('quotechar')
+    kw['stutter_quotes'] = params.get('doublequote')
+    true_values = params.get('true_values')
+    false_values = params.get('false_values')
 
-    names = set()
+    namelist = params.get('names')
+    names = nvl(namelist, set())
+    has_names = bool(namelist)
     dtypes = params.get('dtypes')
     formats = params.get('date_format')
-    for source in (dtypes, formats):
-        if isinstance(params.get(source), dict):
-            names.update(set(source))
+    if not has_names:
+        for source in (dtypes, formats):
+            if isinstance(source, dict):
+                names.update(set(source))
     fields = []
     for name in names:
         type_ = fmt = None
@@ -198,16 +204,28 @@ def pandas_read_csv_to_tddaserial(params):
             date_format = formats.get(name)
             if date_format:
                 print(f'Format {date_format} found for field {name}. Convert!')
-    # problem:
-    # tdda.serial expects a list of fields with properties
-    # but these might not be specified with pandas args.
-    # When writing DataFrame, we can get the names.
-    # Could write into .names...but that will cause a rename if used
-    # with differene data.
-    # Could also change SerialMetadata to use a dictionary,
-    # with optional position (0-based?) and when these are provided,
-    # that would provide names.
-    # Or could allow dict or list...but that feels messy.
+                print(f'... And get subtype')
+                fmt = date_format
+                type_ = 'datetime'
+        if has_names or type_ or fmt:
+            fields.append(
+                FieldMetadata(
+                    name, fieldtype=type_, format=fmt,
+                    true_values=true_values, false_values=false_values
+                )
+            )
+
+    if not has_names:
+        # Names were not provided as list.
+        # Need to turn fields into dictionary so as not to assume
+        # it is complete
+        fields = {
+            field.name: field
+            for field in fields
+        }
+    if fields:
+        kw['fields'] = fields
+    return kw
 
 
 def pandas_dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):

@@ -172,9 +172,6 @@ class SerialMetadata:
             map_missing_trailing_cols_to_null
         )
 
-        self.delimiter = None
-        self.encoding = None
-
         self.header_row_count = header_row_count
         self.comment_prefix = None
         self.line_terminators = None
@@ -197,8 +194,9 @@ class SerialMetadata:
 #            'creationhash': ''
 #        }
 
-        self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
-                       for f in self.fields]
+        if isinstance(self.fields, list):
+            self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
+                           for f in self.fields]
 
 
     def error(self, msg):
