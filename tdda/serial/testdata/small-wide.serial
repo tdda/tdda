@@ -38,7 +38,7 @@
             },
             {
                 "name": "in",
-                "fieldtype": "int"
+                "fieldtype": "float"
             },
             {
                 "name": "i",
@@ -54,7 +54,7 @@
             },
             {
                 "name": "un",
-                "fieldtype": "int"
+                "fieldtype": "float"
             },
             {
                 "name": "fn",
@@ -66,11 +66,11 @@
             },
             {
                 "name": "Fn",
-                "fieldtype": "int"
+                "fieldtype": "float"
             },
             {
                 "name": "F",
-                "fieldtype": "int"
+                "fieldtype": "float"
             },
             {
                 "name": "s",

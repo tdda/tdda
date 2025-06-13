@@ -44,6 +44,10 @@ TDDASERIAL_PATTERNS = [
 ]
 
 
+THREE_FLAVOURS = ['tdda.serial', 'pandas.read_csv', 'pandas.DataFrame.to_csv']
+PANDAS2 = ['pandas.read_csv', 'pandas.DataFrame.to_csv']
+
+
 def tdpath(path):
     return os.path.join(TESTDATADIR, path)
 
@@ -992,14 +996,88 @@ class TestPandasToMetadata(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-    def testMetadataGeneration2(self):
+    def testMetadataGeneration_tinycd(self):
+        # Write metadata for tiny complete (c: no nulls), default types (d)
         df = tiny_pandas_df(nulls=False, nullable_types=False)
-        csv_path = tmppath('tiny1.csv')
-        md_path = tmppath('tiny1.serial')
-        pandas_df_to_csv(df, csv_path, md_path)
-        self.assertFileCorrect(csv_path, tdpath('tiny1.csv'))
-        self.assertFileCorrect(md_path, tdpath('tiny1.serial'),
+        csv_path = tmppath('tiny1cd3.csv')
+        md_path = tmppath('tiny1cd3.serial')
+        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        self.assertFileCorrect(csv_path, tdpath('tiny1cd3.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cd3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        self.assertFileCorrect(csv_path, tdpath('tiny1cd.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cd.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        self.assertFileCorrect(csv_path, tdpath('tiny1cd-pandas.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cd-pandas.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+    def testMetadataGeneration_tinynd(self):
+        # Write metadata for tiny with nulls (n), default types (d)
+        df = tiny_pandas_df(nulls=True, nullable_types=False)
+        csv_path = tmppath('tiny1nd3.csv')
+        md_path = tmppath('tiny1nd3.serial')
+        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        self.assertFileCorrect(csv_path, tdpath('tiny1nd3.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nd3.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        self.assertFileCorrect(csv_path, tdpath('tiny1nd.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nd.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        self.assertFileCorrect(csv_path, tdpath('tiny1nd-pandas.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nd-pandas.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+    def testMetadataGeneration_tinycn(self):
+        # Write metadata for tiny complete (c: no nulls), nullable types (n)
+        df = tiny_pandas_df(nulls=False, nullable_types=True)
+        csv_path = tmppath('tiny1cn3.csv')
+        md_path = tmppath('tiny1cn3.serial')
+        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        self.assertFileCorrect(csv_path, tdpath('tiny1cn3.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cn3.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        self.assertFileCorrect(csv_path, tdpath('tiny1cn.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cn.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        self.assertFileCorrect(csv_path, tdpath('tiny1cn-pandas.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1cn-pandas.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+
+    def testMetadataGeneration_tinynn(self):
+        # Write metadata for tiny with nulls (n), nullable types (n)
+        df = tiny_pandas_df(nulls=True, nullable_types=True)
+        csv_path = tmppath('tiny1nn3.csv')
+        md_path = tmppath('tiny1nn3.serial')
+        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        self.assertFileCorrect(csv_path, tdpath('tiny1nn3.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nn3.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        self.assertFileCorrect(csv_path, tdpath('tiny1nn.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nn.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        self.assertFileCorrect(csv_path, tdpath('tiny1nn-pandas.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1nn-pandas.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
+
+
 
 
 class TestFindMetadata(ReferenceTestCase):

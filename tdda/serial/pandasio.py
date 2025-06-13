@@ -165,7 +165,7 @@ def tddaserial_to_pandas_read_csv_args(md):
     return kw
 
 
-def pandas_read_csv_to_tddaserial(params):
+def pandas_read_csv_to_tddaserial(params, prefer_nullable=False):
     """
     Given a dictionary of pandas.read_csv parameters
     (usually from a 'pandas.read_csv' block in a .serial file),
@@ -208,7 +208,9 @@ def pandas_read_csv_to_tddaserial(params):
         if isinstance(dtypes, dict):
             dtype = dtypes.get(name)
             if dtype:
-                type_ = pandas_dtype_to_fieldtype(dtype)
+                type_ = pandas_dtype_to_fieldtype(
+                    dtype, prefer_nullable=prefer_nullable
+                )
         if isinstance(formats, dict):
             date_format = formats.get(name)
             if date_format:
@@ -307,6 +309,7 @@ def pandas_dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
 
 
 def pandas_write_to_read_params(df, **kw):
+    date_format = kw.get('date_format', 'ISO8601')
     d = {
         'encoding': kw.get('encoding', Defaults.ENCODING),
         'delimiter': kw.get('sep', Defaults.DELIMITER),
@@ -315,7 +318,7 @@ def pandas_write_to_read_params(df, **kw):
         'na_values': kw.get('na_rep', Defaults.NULL_INDICATORS),
         'keep_default_na': False,  # because we're specifying na_rep
         'header': None if kw.get('header') == False else 1,
-        'date_format': kw.get('date_format', 'ISO8601'),
+        'date_format': date_format,
     }
     idx = kw.get('index')
     if idx is None or idx == True:
@@ -331,7 +334,37 @@ def pandas_write_to_read_params(df, **kw):
                                  # Yes, this is a little bit crazy,
                                  # and a big bit confusing.
 
+    typemap = {}
+    dts = {}
+    for col in df:
+        t = str(df[col].dtype)
+        if is_dtype_writable(t):
+            typemap[col] = t
+        elif is_dtype_datelike(t):
+            dts[col] = date_format
+        else:
+            warn(f'Unhandled pandas dtype "{t}"')
+    if typemap:
+        d['dtype'] = typemap
+    if dts:
+        d['parse_dates'] = dts
     return d
+
+
+def is_dtype_writable(t):
+    writable = ('int', 'float', 'bool', 'object', 'string')
+    for w in writable:
+        if t.lower().startswith(w):
+            return True
+    return False
+
+
+def is_dtype_datelike(t):
+    datelike = ('datetime',)
+    for d in datelike:
+        if t.lower().startswith(d):
+            return True
+    return False
 
 
 def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
@@ -410,7 +443,7 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
 
 
 def pandas_col_to_field_metadata(field, fieldtype=None,
-                                 fmt=None, prefer_nullable=True):
+                                 fmt=None, prefer_nullable=False):
     """
     Produces a FieldMetadata object for the pandas series provided
     in field.
@@ -483,7 +516,7 @@ def pandas_date_format_to_tddaserial(fmt):
 
 def pandas_df_to_csv(df, path=None,
                      serial_out=None,
-                     out_flavours=None,
+                     flavours=None,
                      serial_in=None,
                      preferred_in_flavour=None,
                      **kw):
@@ -503,7 +536,7 @@ def pandas_df_to_csv(df, path=None,
                 If True, the .serial path will be the
                 path for the data with the extension swapped to .serial.
 
-    out_flavours: By default, the .tddaserial file will include
+    flavours:   By default, the .tddaserial file will include
                   the following three flavours:
                       tdda.serial
                       pandas.DataFrame.to_csv
@@ -571,7 +604,7 @@ def pandas_df_to_csv(df, path=None,
 
     if serial_out_path:
         md_out = pandas_df_to_metadata(df, outpath=serial_out_path,
-                                       flavours=out_flavours,
+                                       flavours=flavours,
                                        **kw)
 
     return serial_out_path

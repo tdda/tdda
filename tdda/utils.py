@@ -882,7 +882,7 @@ def richprint(*args, **kw):
 
 
 def warn(*args, **kw):
-    stderr_console.print(*args, style='red', **kw)
+    stderr_console.print(*args, style='yellow', **kw)
 
 
 def err(*args, **kw):
