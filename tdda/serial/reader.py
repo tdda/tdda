@@ -245,8 +245,8 @@ def csv2pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
     df = pd.read_csv(path, **kw)
 
     specified_types = kw.get('dtype')
-    dates = (kw.get('date_format') or {}).keys()
     if upgrade_types and specified_types:
+        dates = (kw.get('date_format') or {}).keys()
         for k in df:
             df[k].dtype == np.dtype('O')
             specified_type = specified_types.get(k)

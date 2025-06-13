@@ -15,6 +15,7 @@ from tdda.serial.base import (
 )
 from tdda.serial.utils import find_associated_metadata_file
 from tdda.utils import nvl, err, warn, listify
+from tdda.pd.utils import first_non_null
 
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
@@ -317,7 +318,7 @@ def pandas_write_to_read_params(df, **kw):
         'escapechar': kw.get('escapechar', Defaults.ESCAPE_CHAR),
         'na_values': kw.get('na_rep', Defaults.NULL_INDICATORS),
         'keep_default_na': False,  # because we're specifying na_rep
-        'header': None if kw.get('header') == False else 1,
+        'header': None if kw.get('header') == False else 0,
         'date_format': date_format,
     }
     idx = kw.get('index')
@@ -335,15 +336,20 @@ def pandas_write_to_read_params(df, **kw):
                                  # and a big bit confusing.
 
     typemap = {}
-    dts = {}
+    dts = []
     for col in df:
         t = str(df[col].dtype)
         if is_dtype_writable(t):
             typemap[col] = t
         elif is_dtype_datelike(t):
-            dts[col] = date_format
-        else:
+            dts.append(col)
+        elif t != 'object':
             warn(f'Unhandled pandas dtype "{t}"')
+        if t == 'object':
+            v = first_non_null(df[col])
+            if type(v) in (datetime.date, datetime.datetime):
+                dts.append(col)
+
     if typemap:
         d['dtype'] = typemap
     if dts:
@@ -352,7 +358,7 @@ def pandas_write_to_read_params(df, **kw):
 
 
 def is_dtype_writable(t):
-    writable = ('int', 'float', 'bool', 'object', 'string')
+    writable = ('int', 'float', 'bool', 'string')
     for w in writable:
         if t.lower().startswith(w):
             return True

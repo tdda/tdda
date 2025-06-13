@@ -14,7 +14,7 @@
             ""
         ],
         "keep_default_na": false,
-        "header": 1,
+        "header": 0,
         "date_format": "ISO8601",
         "index_col": 0,
         "dtype": {
@@ -23,8 +23,8 @@
             "f": "float64",
             "s": "string"
         },
-        "parse_dates": {
-            "d": "ISO8601"
-        }
+        "parse_dates": [
+            "t"
+        ]
     }
 }

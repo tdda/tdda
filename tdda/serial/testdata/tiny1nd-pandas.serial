@@ -14,15 +14,15 @@
             ""
         ],
         "keep_default_na": false,
-        "header": 1,
+        "header": 0,
         "date_format": "ISO8601",
         "index_col": 0,
         "dtype": {
-            "b": "object",
             "i": "float64",
-            "f": "float64",
-            "s": "object",
-            "d": "object"
-        }
+            "f": "float64"
+        },
+        "parse_dates": [
+            "t"
+        ]
     }
 }

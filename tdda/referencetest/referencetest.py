@@ -253,6 +253,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         type_matching=None,
+        fuzzy_nulls=False
     ):
         """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
@@ -341,6 +342,7 @@ class ReferenceTest(object):
             sortby=sortby,
             precision=precision,
             type_matching=type_matching,
+            fuzzy_nulls=fuzzy_nulls
         )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
@@ -361,6 +363,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         type_matching=None,
+        fuzzy_nulls=False,
         **kwargs,
     ):
         """
@@ -430,6 +433,7 @@ class ReferenceTest(object):
                 sortby=sortby,
                 precision=precision,
                 type_matching=type_matching,
+                fuzzy_nulls=fuzzy_nulls,
             )
 
     def assertStoredDataFrameCorrect(
@@ -527,6 +531,7 @@ class ReferenceTest(object):
         condition=None,
         sortby=None,
         precision=None,
+        fuzzy_nulls=False,
         **kwargs,
     ):
         """
@@ -544,6 +549,7 @@ class ReferenceTest(object):
             condition=condition,
             sortby=sortby,
             precision=precision,
+            fuzzy_nulls=fuzzy_nulls,
             **kwargs,
         )
 
@@ -559,6 +565,7 @@ class ReferenceTest(object):
         condition=None,
         sortby=None,
         precision=None,
+        fuzzy_nulls=False,
         **kwargs,
     ):
         r"""Check that a set of serialized datafames in files
@@ -623,6 +630,7 @@ class ReferenceTest(object):
                 sortby=sortby,
                 precision=precision,
                 loader=csv_read_fn,
+                fuzzy_nulls=fuzzy_nulls,
                 **kwargs,
             )
             (failures, msgs) = r
@@ -642,6 +650,7 @@ class ReferenceTest(object):
         condition=None,
         sortby=None,
         precision=None,
+        fuzzy_nulls=False,
         **kwargs,
     ):
         """
@@ -658,6 +667,7 @@ class ReferenceTest(object):
             condition=condition,
             sortby=sortby,
             precision=precision,
+            fuzzy_nulls=fuzzy_nulls,
             **kwargs,
         )
 

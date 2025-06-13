@@ -24,9 +24,9 @@ from tdda.referencetest.basecomparison import (
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.serial.io import pandas_read_df
-from tdda.utils import nvl
+from tdda.utils import nvl, err
 
-from tdda.pd.utils import is_string_col
+from tdda.pd.utils import is_string_col, first_non_null
 
 import pandas as pd
 import numpy as np
@@ -116,6 +116,7 @@ class PandasComparison(BaseComparison):
         msgs=None,
         type_matching=None,
         create_temporaries=True,
+        fuzzy_nulls=False,
         quick=True
     ):
         """
@@ -165,6 +166,19 @@ class PandasComparison(BaseComparison):
                                   the actual result in the dataframe will be
                                   written to disk (usually as parquet).
 
+            *fuzzy_nulls* Ordinarily, nulls and empty strings are
+                          considered not equal (fuzzy_nulls=False
+                          or any falsy value).
+
+                          If set to 'object', where either column
+                          in a comparison is of type object, and the
+                          other is object or string, those
+                          nulls will be mapped to the empty string
+                          on both sides so that '' == None (in effect).
+
+                          If set to True (or 1), this will also be
+                          done for string columns as well as object columns.
+
             *quick*  If True (the default), the main goal of the function
                      is quickly to identify whether the actual and
                      references DataFrames are the same. In thus case,
@@ -200,6 +214,10 @@ class PandasComparison(BaseComparison):
         type_matching = type_matching or 'strict'
         diffs = nvl(diffs, Diffs())
         self.precision = nvl(precision, 7)
+        self.fuzzy_nulls = fuzzy_nulls
+        if bool(fuzzy_nulls) and not fuzzy_nulls in (True, 'object'):
+            err(f'fuzzy_nulls value {fuzzy_nulls} unknown. '
+                 ' Should be True, False or "object"')
 
         check_types = resolve_option_flag(check_types, ref_df)
         check_extra_cols = resolve_option_flag(check_extra_cols, df)
@@ -379,6 +397,21 @@ class PandasComparison(BaseComparison):
             ref_df = ref_df.round(self.precision).reset_index(
                 drop=True
             )
+
+        if self.fuzzy_nulls:
+            dtypes = ['object']
+            if self.fuzzy_nulls == True:
+                dtypes.append('string')
+
+            for c in (df):
+                ltype = str(df[c].dtype)
+                rtype = str(ref_df[c].dtype)
+                if ltype in dtypes and rtype in dtypes:
+                    if ltype == 'string' or type(first_non_null(df[c])) == str:
+                        df[c] = df[c].fillna('')
+                    if (rtype == 'string'
+                            or type(first_non_null(ref_df[c])) == str):
+                        ref_df[c] = ref_df[c].fillna('')
 
         if df.equals(ref_df):  # the check
             return 0
@@ -1131,3 +1164,5 @@ def escaped_list(items):
 def diff_dataframes(*args, **kwargs):
     c = PandasComparison()
     return c.check_dataframe(*args, **kwargs)
+
+

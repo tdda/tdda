@@ -25,3 +25,9 @@ def is_string_col(col):
     return is_string_dtype(col.dtype)
 
 
+def first_non_null(s):
+    """
+    Returns first non-null value in series s
+    """
+    i = s.first_valid_index()
+    return s.loc[i] if i is not None else None
