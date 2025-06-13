@@ -3,7 +3,7 @@ import sys
 
 from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
-from tdda.serial.utils import listify
+from tdda.utils import listify
 
 class MISSING:
     ERROR = 2
@@ -21,6 +21,7 @@ class FieldType:
     DATE = 'date'
     DATETIME = 'datetime'
     DATETIME_WITH_TIMEZONE = 'datetime_tz'
+    ISO8601 = 'iso8601'
 
     STRING = 'string'
 
@@ -29,6 +30,7 @@ class DateFormat:
     ISO8601_DATE = 'iso8601-date'
     ISO8601_DATETIME = 'iso8601-datetime'
     ISO8601_DATETIME_TZ = 'iso8601-datetime-tz'
+    ISO8601_UNSPECIFIED = 'iso8601'
 
     EURO_DATE = 'eu-date'
     EURO_DATETIME = 'eu-datetime'
@@ -95,7 +97,7 @@ class FieldMetadata:
     def __init__(self, name, fieldtype=None, csvname=None,
                  format=None, null_indicators=None,
                  true_values=None, false_values=None,
-                 allow_extras=False, **kw):
+                 allow_extras=False, description=None, **kw):
         self.name = name
         self.fieldtype = fieldtype
         self.csvname = None
@@ -104,6 +106,7 @@ class FieldMetadata:
         self.null_indicators = null_indicators
         self.true_values = listify(true_values)
         self.false_values = listify(false_values)
+        self.description = description
 
         for k, v in kw.items():
             if allow_extras:
@@ -250,16 +253,21 @@ class SerialMetadata:
         nulls = m.get('null_indicators')
         if type(nulls) == list and len(nulls) == 1:
             m['null_indicators'] = nulls[0]
-        d['tdda.serial'] = m
+        d[TDDASERIAL.key] = m
         for (lib, params) in self.libs.items():
             d[lib] = {
-                unobjectify(v)
+                k: unobjectify(v)
                 for (k, v) in params.items()
             }
         return d
 
     def to_json(self, indent=4):
         return json.dumps(self.unobjectify(), indent=indent)
+
+
+    def write(self, path=None):
+        with open(path, 'w') as f:
+            f.write(self.to_json())
 
     def __str__(self):
         return self.to_json()
@@ -286,4 +294,4 @@ def nonnull(v):
 
 
 def writer():
-    return f'tdda.serial-{VERSION}'
+    return f'{TDDASERIAL.key}-{VERSION}'

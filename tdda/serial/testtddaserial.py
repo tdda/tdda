@@ -15,7 +15,8 @@ from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
     csvw2pandas_kwargs,
     pandas_dtype_to_fieldtype,
-    pandas_df_to_metadata
+    pandas_df_to_metadata,
+    pandas_df_to_csv,
 )
 from tdda.serial.reader import (
     csv2pandas,
@@ -984,12 +985,21 @@ class TestPandasToMetadata(ReferenceTestCase):
 
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
-        m = pandas_df_to_metadata(df)
+        m = pandas_df_to_metadata(df, flavours=['tdda.serial'])
         self.assertStringCorrect(
             str(m),
             tdpath('small-wide.serial'),
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
+
+    def testMetadataGeneration2(self):
+        df = tiny_pandas_df(nulls=False, nullable_types=False)
+        csv_path = tmppath('tiny1.csv')
+        md_path = tmppath('tiny1.serial')
+        pandas_df_to_csv(df, csv_path, md_path)
+        self.assertFileCorrect(csv_path, tdpath('tiny1.csv'))
+        self.assertFileCorrect(md_path, tdpath('tiny1.serial'),
+                               ignore_patterns=TDDASERIAL_PATTERNS)
 
 
 class TestFindMetadata(ReferenceTestCase):
@@ -1272,6 +1282,54 @@ def small_wide_pd_df(with_col=True, prefer_nullable=True):
             types[k] = FieldType.FLOAT
 
     return (df, types)
+
+
+def tiny_python_values(nulls=False):
+    """
+    Generate tiny 5x2 or 5x3 set of values for a DataFrame
+    with Python booleans, integers, floats, strings and dates.
+
+    If nulls is True, the second row (row 1) is all null
+    and there are three rows.
+
+    Otherwise, there are two, non-null rows.
+    """
+    values = {
+        'b': [False, True],
+        'i': [0, 1],
+        'f': [0.5, 1.5],
+        's': ['', 'a'],
+        'd': [datetime.date(1970, 1, 1), datetime.date(1999, 12, 31)]
+    }
+    if nulls:
+        values = {
+            k: v[:1] + [None] + v[1:]
+            for k, v in values.items()
+        }
+    return values
+
+
+def tiny_pandas_df(nulls=False, nullable_types=False):
+    if nullable_types:
+        return pd.DataFrame({
+            k: pd.Series(v, dtype=ntype(k))
+            for k, v in tiny_python_values(nulls=nulls).items()
+        })
+    else:
+        return pd.DataFrame(tiny_python_values(nulls=nulls))
+
+
+def ntype(name):
+    d = {
+        'b': 'boolean',
+        'i': 'Int64',
+        'f': 'float',
+        'r': 'float',
+        's': 'string',
+        'd': 'datetime64[ns]'
+    }
+    return d[name[:1].lower()]
+
 
 
 

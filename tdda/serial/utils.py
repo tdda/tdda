@@ -64,7 +64,3 @@ def find_associated_metadata_file(path):
                 if os.path.exists(mdpath):
                     return mdpath
     return None
-
-
-def listify(v):
-    return None if v is None or isinstance(v, list) else [v]

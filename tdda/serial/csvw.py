@@ -111,6 +111,7 @@ class CSVWMetadata(SerialMetadata):
         self._csvw_language = None
         self._extensions = extensions
         self._fullpath = None
+        self._flavour = 'csvw'
         self.metadata_source_dir = None
         self.table_number = table_number
         self.for_table_name = for_table_name

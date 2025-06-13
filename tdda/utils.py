@@ -714,6 +714,11 @@ def squote(string, escape=True):
     return "'%s'" % quoted
 
 
+def is_sequence(L):
+    return ((hasattr(L, "__getitem__") or hasattr(L, "__iter__"))
+            and not hasattr(L, "strip"))
+
+
 class Dummy(object):
     """
     A dummy object. For whatever.
@@ -852,7 +857,6 @@ def normal_form_tdda(s, remove_accents=True, strip=True,
     return unicodedata.normalize(form, normalized)
 
 
-
 def rednz(v):
     if v == 0:
         return '0'
@@ -873,7 +877,6 @@ def coloured_tick_cross(ok):
     return xml_element('span', mark, attributes={'class': colour})
 
 
-
 def richprint(*args, **kw):
     stdout_console.print(*args, **kw)
 
@@ -881,7 +884,16 @@ def richprint(*args, **kw):
 def warn(*args, **kw):
     stderr_console.print(*args, style='red', **kw)
 
+
 def err(*args, **kw):
     warn(*args, **kw)
     sys.exit(1)
+
+
+def listify(v):
+    return (
+        v if v is None or isinstance(v, list)
+        else list(v) if isinstance(v, tuple)
+        else [v]
+    )
 

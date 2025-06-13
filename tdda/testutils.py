@@ -10,7 +10,7 @@ from tdda.utils import (
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
     json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
-    normal_form_tdda
+    normal_form_tdda, is_sequence, listify
 )
 from unicodedata import normalize
 
@@ -427,6 +427,32 @@ class TestXMLGeneration(ReferenceTestCase):
             self.assertEqual((k, normal_form_tdda(k)),
                              (k, v)
             )
+
+    def testIsSequence(self):
+        self.assertTrue(is_sequence([0, 1]))
+        self.assertTrue(is_sequence((0, 1)))
+        self.assertTrue(is_sequence(range(2)))
+        self.assertTrue(is_sequence(i for i in range(2)))
+        self.assertFalse(is_sequence('ab'))
+
+        # Less clear whether these should be, but they are iterable
+        self.assertTrue(is_sequence({'a': 1, 'b': 2}))
+        self.assertTrue(is_sequence({1, 2}))
+
+    def testListify(self):
+        self.assertEqual(listify(None), None)
+        self.assertEqual(listify(1), [1])
+        self.assertEqual(listify('a'), ['a'])
+        self.assertEqual(listify([1]), [1])
+        self.assertEqual(listify([]), [])
+        self.assertEqual(listify((1,)), [1])
+        self.assertEqual(type(listify((1,))), list)
+        self.assertEqual(listify(()), [])
+        self.assertEqual(type(listify(())), list)
+
+        self.assertEqual(listify({'foo': 1}), [{'foo': 1}])
+
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=True)

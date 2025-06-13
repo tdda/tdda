@@ -25,7 +25,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
-from tdda.utils import err
+from tdda.utils import err, is_sequence
 
 
 class TDDASerialError(Exception):
@@ -60,7 +60,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
 
       preferred_serial_flavour: If multiple metadata flavours are found
                                 at the same level of a .tddaserial file,
-                                the one to choose.
+                                the one to choose (or priority list).
 
       verbosity:   2: errors and warnings to stderr
                    1: warnings to stderr
@@ -367,7 +367,7 @@ def poss_upgrade_to_int(df, name):
                 df[name] = int_col
 
 
-def find_metadata_kind(mds, preferred=''):
+def find_metadata_kind(mds, preferred=None):
     """
     Breadth-first search of dict or list of dicts
     for a recognized blob of metadata.
@@ -375,10 +375,15 @@ def find_metadata_kind(mds, preferred=''):
     Returns the kind and subportion representing
     the metadata for the first found, or, if there are ties
     at the same leve, the preferred tdda.serial metadata flavour,
-    if specified.
+    if specified. The preferred metadata flavour can be
+    a single flavour or a list. If it is a list, the preferences
+    run from higherest to lowest
 
     If no metadata is found, returns None, None
     """
+    preferred = preferred or []
+    if not is_sequence(preferred):
+        preferred = [preferred]
     kind = None
     dicts = []
     if not mds:
@@ -386,9 +391,10 @@ def find_metadata_kind(mds, preferred=''):
     if not isinstance(mds, list):
         mds = [mds]
     for md in mds:
-        if preferred and preferred in md:
-            kind = preferred
-            return preferred, md[preferred]
+        for preferred in preferred:
+            if preferred in md:
+                kind = preferred
+                return preferred, md[preferred]
         for k in METADATA_FLAVOURS:
             if k in md:
                 return k, md[k]
