@@ -30,7 +30,10 @@ from tdda.serial.simple import (
     pandas_read_csv, pandas_write_csv, metadata_path
 )
 
-from tdda.referencetest.checkpandas import loosen_type, types_match
+from tdda.referencetest.checkpandas import (
+    loosen_type, types_match,
+    diff_dataframes
+)
 
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
@@ -905,7 +908,7 @@ class TestCSVWTests(ReferenceTestCase):
 
 
 
-class TestPandasRoundTrips(ReferenceTestCase):
+class TestPandasFlatFileRoundTrips(ReferenceTestCase):
     def testDefault(self):
         df = testDataset4()
         path = tmppath('ds4-pandas-defaults.csv')
@@ -942,7 +945,6 @@ class TestPandasRoundTrips(ReferenceTestCase):
             }
         )
 
-    @tag
     def testMetadataGeneration_tinycd(self):
         # Write metadata for tiny complete (c: no nulls), default types (d)
         df = tiny_pandas_df(nulls=False, nullable_types=False)
@@ -991,7 +993,6 @@ class TestPandasRoundTrips(ReferenceTestCase):
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-    @tag
     def testMetadataGeneration_tinynd(self):
         # Write metadata for tiny with nulls (n), default types (d)
         df = tiny_pandas_df(nulls=True, nullable_types=False)
@@ -1032,7 +1033,6 @@ class TestPandasRoundTrips(ReferenceTestCase):
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 
-    @tag
     def testMetadataGeneration_tinycn(self):
         # Write metadata for tiny complete (c: no nulls), nullable types (n)
         df = tiny_pandas_df(nulls=False, nullable_types=True)
@@ -1072,7 +1072,6 @@ class TestPandasRoundTrips(ReferenceTestCase):
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-    @tag
     def testMetadataGeneration_tinynn(self):
         # Write metadata for tiny with nulls (n), nullable types (n)
         df = tiny_pandas_df(nulls=True, nullable_types=True)
@@ -1111,6 +1110,71 @@ class TestPandasRoundTrips(ReferenceTestCase):
                          mdpath=tdpath('tiny1nn-pandas.serial'),
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
+
+
+@tag
+class TestPandasParquetRoundTrips(ReferenceTestCase):
+    # Really checking diff_dataframes more than parquet
+    # But also confirming that round-tripping is working
+    # for Pandas via parquet
+    def testTinyParquetCD(self):
+        df = tiny_pandas_df(nulls=False, nullable_types=False)
+        path = tmppath('tiny1cd.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        self.assertEqual(diff_dataframes(df2, df).failures, 0)
+
+    def testTinyParquetCN(self):
+        df = tiny_pandas_df(nulls=False, nullable_types=True)
+        path = tmppath('tiny1cn.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        self.assertEqual(diff_dataframes(df2, df).failures, 0)
+
+    def testTinyParquetND(self):
+        df = tiny_pandas_df(nulls=True, nullable_types=False)
+        path = tmppath('tiny1cd.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        self.assertEqual(diff_dataframes(df2, df).failures, 0)
+
+    def testTinyParquetNN(self):
+        df = tiny_pandas_df(nulls=True, nullable_types=True)
+        path = tmppath('tiny1cn.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        diffs = diff_dataframes(df2, df, create_temporaries=False)
+        self.assertEqual(diff_dataframes(df2, df).failures, 0)
+
+    def testTinyParquetSmallWideD(self):
+        df, _ = small_wide_pd_df(prefer_nullable=False)
+        path = tmppath('small_wide-d.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        diffs = diff_dataframes(df2, df, create_temporaries=False)
+        self.assertEqual(diffs.failures, 1)  # types
+        msg = str(diffs.diffs)
+        self.assertTrue(msg.startswith(
+            'Data frames have different column structure.'
+        ))
+
+        diffs2 = diff_dataframes(df2, df, type_matching='medium')
+        self.assertEqual(diffs2.failures, 0)
+
+    def testTinyParquetSmallWideN(self):
+        df, _ = small_wide_pd_df(prefer_nullable=True)
+        path = tmppath('small_wide-n.parquet')
+        df.to_parquet(path)
+        df2 = pd.read_parquet(path)
+        diffs = diff_dataframes(df2, df, create_temporaries=False)
+        self.assertEqual(diffs.failures, 1)  # types
+        msg = str(diffs.diffs)
+        self.assertTrue(msg.startswith(
+            'Data frames have different column structure.'
+        ))
+
+        diffs2 = diff_dataframes(df2, df, type_matching='medium')
+        self.assertEqual(diffs2.failures, 0)
 
 
 class TestPandasToMetadata(ReferenceTestCase):

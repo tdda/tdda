@@ -84,6 +84,20 @@ class DiffState:
     def same(self):
         return not self.different
 
+    @property
+    def different_ignoring_types(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same_ignoring_types(self):
+        return not self.different_ignoring_types
+
 
 class PandasComparison(BaseComparison):
     """
@@ -299,7 +313,7 @@ class PandasComparison(BaseComparison):
                                            state.ref_nrows)
 
         cols = state.common_cols
-        if not quick or state.same:
+        if not quick or state.same_ignoring_types:
             check_data = resolve_option_flag(check_data, ref_df)
             if check_data:
                 cols = [c for c in check_data if c in state.common_cols]
