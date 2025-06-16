@@ -1145,7 +1145,6 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         diffs = diff_dataframes(df2, df, create_temporaries=False)
         self.assertEqual(diff_dataframes(df2, df).failures, 0)
 
-    @tag
     def testTinyParquetSmallWideD(self):
         df, _ = small_wide_pd_df(prefer_nullable=False)
         path = tmppath('small_wide-d.parquet')
@@ -1161,7 +1160,6 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         print(diffs2.diffs)
         self.assertEqual(diffs2.failures, 0)
 
-    @tag
     def testTinyParquetSmallWideN(self):
         df, _ = small_wide_pd_df(prefer_nullable=True)
         path = tmppath('small_wide-n.parquet')

@@ -14,6 +14,7 @@ from tdda.referencetest.tests.alltests import *
 from tdda.referencetest.testgentest import *
 from tdda.serial.testserial import *
 from tdda.testutils import *
+from tdda.pd.testpdutils import *
 
 # Set the enviroment variable TDDA_CONFIG_TESTS to something (e.g. 1)
 # to report on environment from within which tests are run

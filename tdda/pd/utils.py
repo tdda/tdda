@@ -31,3 +31,11 @@ def first_non_null(s):
     """
     i = s.first_valid_index()
     return s.loc[i] if i is not None else None
+
+
+def object_col_underlying_type(s):
+    dt = str(s.dtype)
+    if dt == 'object':
+        v = first_non_null(s)
+        return str(type(v).__name__)
+    return dt
