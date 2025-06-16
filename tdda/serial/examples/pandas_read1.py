@@ -21,8 +21,8 @@ def read_csv_explicit(datapath, mdpath):
     return df
 
 
-def read_with_tdda_serial(datapath, mdpath):
-    df = csv2pandas(datapath, mdpath)
+def read_with_tdda_serial(datapath, mdpath, **kw):
+    df = csv2pandas(datapath, mdpath, upgrade_types=False, **kw)
 #    df['bool2'] = pd.Series(df['bool2'].map(yn2bool), dtype='boolean')
     return df
 
@@ -75,8 +75,9 @@ def main():
     df3 = read_with_tdda_serial('base.psv', 'base-psv-pandas.serial')
     df4 = read_with_tdda_serial('base.tsv', 'base-tsv-pandas.serial')
     df5 = read_with_tdda_serial('base.csv', 'base-csv.serial')
+    df6 = read_with_tdda_serial('base-dot-null.csv', 'base-dot-csv.serial')
 
-    for n, df in enumerate((df1, df2, df3, df4, df5), 1):
+    for n, df in enumerate((df1, df2, df3, df4, df5, df6), 1):
         compare(df, ref_df, n, verbose=verbose)
 
     assert diff_dataframes(df1, df2, type_matching='strict',

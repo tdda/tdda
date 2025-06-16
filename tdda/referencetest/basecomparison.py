@@ -253,8 +253,7 @@ class SameStructureDDiff:
         C = self.config.referencetest
         vertical = nvl(C.vertical, False)
         prefix = vertical and (C.mono or C.bw)
-#        if self.n_diff_rows <= n:
-        if True:
+        if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
             L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
             R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
@@ -341,7 +340,7 @@ class SameStructureDDiff:
                 table.add_row(*row)
             return table
         else:
-            pass
+            return None
             # find ones with most diffs (n=target-rows)
             # see which cols are covered
             # For the ones not covered

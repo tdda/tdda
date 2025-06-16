@@ -6,11 +6,11 @@ from tdda.referencetest.checkpandas import (
     same_structure_dataframe_diffs
 )
 from tdda.state import get_config
+from tdda.utils import warn, err, stdout_console as console
 
 import argparse
 
 from rich import print as rprint
-from rich.console import Console
 
 USAGE = '''
 USAGE: tdda diff LEFT.parquet RIGHT.parquet [MAX_DIFFS [DPS]]
@@ -28,6 +28,7 @@ Notes
 class TDDADiff:
     def __init__(self, args, config=None):
         self.args = args
+        self.type_checking = 'medium'
         self.process_args()
 
     def ddiff(self):
@@ -36,7 +37,7 @@ class TDDADiff:
         dfR = c.load_serialized_dataframe(self.right)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
                                    check_data=self.fields,
-                                   type_matching='medium',
+                                   type_matching=self.type_checking,
                                    precision=self.precision)
 
         if result.failures > 0:
@@ -44,12 +45,9 @@ class TDDADiff:
             diff = result.diffs.dfd.diff  # there if same structure
             if diff:
                 table = diff.details_table(dfL, dfR, self.maxdiffs)
-                print()
-                # rprint(table)
-                console = Console(soft_wrap=True)
-                console.print(table)
-
-
+                if table:
+                    print()
+                    console.print(table)
 
 
     def process_args(self):
@@ -106,6 +104,19 @@ class TDDADiff:
             self.fields = lambda df: (
                 set(df) - set(f.strip() for f in self.xfields.split(','))
             )
+
+        if (  (self.strict and 1)
+            + (self.medium and 1)
+            + (self.permissive and 1)
+        ) > 1:
+            warn('Only one of --strict, --medium and --permissive should '
+                 'be given.\nUsing medium (default).')
+        elif self.strict:
+            self.type_checking = 'strict'
+        elif self.medium:
+            self.type_checking = 'medium'
+        elif self.permissive:
+            self.type_checking = 'permissive'
 
     def error(self, msg):
         print(msg, file=sys.stderr)
@@ -179,6 +190,16 @@ class TDDADiff:
 
         parser.add_argument('--no-config', action='store_true',
             help='Use default configuration (ignore ~/.tdda.toml)')
+
+        parser.add_argument('--strict', action='store_true',
+            help='Use strict type comparisons')
+
+        parser.add_argument('--medium', action='store_true',
+            help='Use medium type comparisons')
+
+        parser.add_argument('--permissive', action='store_true',
+            help='Use loose type comparisons')
+
         return parser
 
 

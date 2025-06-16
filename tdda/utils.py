@@ -29,8 +29,8 @@ rprint = rich.print
 rich.reconfigure(highlight=False, soft_wrap=True)
 
 from rich.console import Console
-stdout_console = Console()
-stderr_console = Console(stderr=True)
+stdout_console = Console(highlight=False, soft_wrap=True)
+stderr_console = Console(stderr=True, highlight=False, soft_wrap=True)
 
 from tdda.state import get_config
 

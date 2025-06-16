@@ -57,8 +57,9 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
 
 
 def to_polars_read_csv_args(md):
-    if md.lib == 'polars.read_csv':
-        o = md.lib_params.get('schema_overrides')
+    params = md.libs.get('polars.read_csv')
+    if params:
+        o = params.get('schema_overrides')
         if o:
             for k, v in o.items():
                 dtype = POLARS_DTYPE_MAP.get(v)
@@ -66,5 +67,5 @@ def to_polars_read_csv_args(md):
                     o[k] = dtype
                 else:
                     warn(f'Polars type "{dtype}" not known')
-        return md.lib_params
+    return params
 

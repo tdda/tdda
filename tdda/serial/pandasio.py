@@ -14,7 +14,7 @@ from tdda.serial.base import (
     Defaults
 )
 from tdda.serial.utils import find_associated_metadata_file
-from tdda.utils import nvl, err, warn, listify
+from tdda.utils import nvl, err, warn, listify, Dummy
 from tdda.pd.utils import first_non_null
 
 
@@ -525,6 +525,7 @@ def pandas_df_to_csv(df, path=None,
                      flavours=None,
                      serial_in=None,
                      preferred_in_flavour=None,
+                     find_safe_null=False,
                      **kw):
     """
     Write pandas dataframe provided to flat file to the path or buffer
@@ -575,15 +576,15 @@ def pandas_df_to_csv(df, path=None,
           incompatibilities.
 
     Returns:
-        The path of the .serial file written, if one is written,
-        failing which None.
+        Object with:
+            .serial_out_path  (if written, else None)
+            .path             (path written to)
     """
     serial_in_path = serial_out_path = None
     if serial_in:
         if serial_in == True:
             serial_in_path = find_associated_metadata_file(path)
             if not serial_in:
-
                 err(f'Cannot find input .serial metadata associated'
                     f' with {path}')
         else:
@@ -605,6 +606,9 @@ def pandas_df_to_csv(df, path=None,
         else:
             serial_out_path = serial_out
 
+    if find_safe_null:
+        kw['na_rep'] = find_safe_null_rep(df)
+
     if path:  # if None, just write the metadata
         df.to_csv(path, **kw)  # write the csv
 
@@ -613,7 +617,10 @@ def pandas_df_to_csv(df, path=None,
                                        flavours=flavours,
                                        **kw)
 
-    return serial_out_path
+    d = Dummy()
+    d.serial_out_path = serial_out_path
+    d.out_path = path
+    return d
 
 
 
