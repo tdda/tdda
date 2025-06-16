@@ -362,7 +362,7 @@ class DataFrameDiffs:
         self.expected_order = []   # list of field names
         self.actual_length = None
         self.expected_length = None
-        self.type_matching = 'exact'
+        self.type_matching = 'strict'
         self.verbose = verbose
 
         self.diff = None           # SameStructureDDiff

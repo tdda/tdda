@@ -107,7 +107,7 @@ class TDDADiff:
 
         if (  (self.strict and 1)
             + (self.medium and 1)
-            + (self.permissive and 1)
+            + ((self.permissive or self.loose) and 1)
         ) > 1:
             warn('Only one of --strict, --medium and --permissive should '
                  'be given.\nUsing medium (default).')
@@ -115,7 +115,7 @@ class TDDADiff:
             self.type_checking = 'strict'
         elif self.medium:
             self.type_checking = 'medium'
-        elif self.permissive:
+        elif self.permissive or self.loose:
             self.type_checking = 'permissive'
 
     def error(self, msg):
@@ -197,8 +197,11 @@ class TDDADiff:
         parser.add_argument('--medium', action='store_true',
             help='Use medium type comparisons')
 
+        parser.add_argument('--loose', action='store_true',
+            help='Use loose (permissive) type comparisons')
+
         parser.add_argument('--permissive', action='store_true',
-            help='Use loose type comparisons')
+            help='Use loose (permissive) type comparisons')
 
         return parser
 

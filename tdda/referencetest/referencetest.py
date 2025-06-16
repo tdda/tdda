@@ -324,8 +324,8 @@ class ReferenceTest(object):
                 (Optional) number of decimal places to use for
                 floating-point comparisons.  Default is 7 decimal places.
 
-            *type_matching*  'strict', 'medium', 'permissive' (default:
-                strict).
+            *type_matching*  'strict', 'medium', 'permissive' (or 'loose')
+                (default: strict).
 
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 

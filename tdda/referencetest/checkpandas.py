@@ -173,7 +173,7 @@ class PandasComparison(BaseComparison):
             *msgs*
                             Optional Diffs object.
 
-            *type_matching* 'strict', 'medium', 'permissive'.
+            *type_matching* 'strict', 'medium', 'permissive'/'loose'.
                             None is same as strict.
 
             *create_temporaries*  If True (the default), if the check fails,
@@ -1005,9 +1005,11 @@ def loosen_type(t):
 
 
 def types_match(t1, t2, level=None):
+    if level == 'loose':
+        level = 'permissive'
     if not (level is None or level in ('strict', 'medium', 'permissive')):
-        raise ValueError(f'Type match level must be one of strict, medium '
-                         f'or permissive, not {level}')
+        raise ValueError(f'Type match level must be one of strict, medium, '
+                         f'or permissive(/loose), not {level}')
     t1i = t1
     t2i = t2
     t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
