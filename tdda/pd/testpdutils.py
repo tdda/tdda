@@ -9,7 +9,10 @@ import pandas as pd
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 from tdda.pd.utils import (
     first_non_null,
-    object_col_underlying_type
+    object_col_underlying_type,
+    find_safe_null_rep,
+    NULL_REPS,
+    FIRST_BRAILLE,
 )
 from unicodedata import normalize
 
@@ -52,6 +55,45 @@ class TestPandasUtils(ReferenceTestCase):
              'datetime64[ns]',
              'NoneType']
         )
+
+    def test_find_safe_null_rep(self):
+        df = pd.DataFrame({
+            'a': ['a', 'b', None],
+            'n': [1, 2, 3],
+            'b': [True, False, True],
+        })
+        self.assertEqual(find_safe_null_rep(df), '')  # '' OK
+        self.assertEqual(find_safe_null_rep(df, non_ascii=True), '∙')  # '' OK
+
+        df['c'] = ['', '', '∙']
+        self.assertEqual(find_safe_null_rep(df), 'NULL')
+        self.assertEqual(find_safe_null_rep(df, non_ascii=True), '∅')
+
+        df['d'] = ['NULL', '∙', '']
+        self.assertEqual(find_safe_null_rep(df), '∅')
+
+        df['e'] = ['∅', '∅', '∅']
+
+        df['f'] = [chr(x) for x in range(0xA1, 0xA4)]
+        self.assertEqual(find_safe_null_rep(df), '¤')
+
+        # a and b no use: used
+        self.assertEqual(find_safe_null_rep(df, ['a', 'b']), '¤')
+
+        # c can be used
+        self.assertEqual(find_safe_null_rep(df, ['a', 'b', 'c']), 'c')
+
+        # Just to be awkward: Use all the defaults
+
+        df = pd.DataFrame({'a': NULL_REPS})
+        self.assertEqual(find_safe_null_rep(df), '⠁')  # first braille
+
+        # All the defaults, and the same number of Brailles:
+
+        N = len(df)
+        df['b'] = [chr(n) for n in range(FIRST_BRAILLE, FIRST_BRAILLE + N)]
+        expected = chr(FIRST_BRAILLE + N)
+        self.assertEqual(find_safe_null_rep(df), expected)  # first braille
 
 
 
