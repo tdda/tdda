@@ -1,2 +1,9 @@
 Field types differ
   squares: actual object; expected int64
+
+Difference summary: 
+DataFrames have same structure, but different values.
+Total number of different values: 4 of 8 (50.00%).
+Total number of rows with differences: 4
+Total number of columns with differences: 1:
+           4: squares

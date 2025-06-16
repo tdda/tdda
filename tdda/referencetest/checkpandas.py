@@ -981,7 +981,23 @@ def sample_format2(values, precision=None):
     )
 
 
+def pandas_string_type(t):
+    if type(t):
+        s = str(t)
+        if s.startswith('<'):
+            s = (
+                s.split('.')[-1]
+                 .replace('Dtype', '')
+                 .replace('_', '')
+                 .replace("'>", '')
+            )
+    else:
+        s = t
+    return s
+
+
 def loosen_type(t):
+    t = pandas_string_type(t)
     name = ''.join(c for c in t if not c.isdigit()).lower()
     p = name.find('[')
     name = name[:p] if p > -1 else name
@@ -992,11 +1008,14 @@ def types_match(t1, t2, level=None):
     if not (level is None or level in ('strict', 'medium', 'permissive')):
         raise ValueError(f'Type match level must be one of strict, medium '
                          f'or permissive, not {level}')
-    if level is None or level == 'strict' or t1.name == t2.name:
-        return t1.name == t2.name
+    t1i = t1
+    t2i = t2
+    t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
+    if level is None or level == 'strict' or t1 == t2:
+        return t1 == t2
 
-    t1loose = loosen_type(t1.name)
-    t2loose = loosen_type(t2.name)
+    t1loose = loosen_type(t1)
+    t2loose = loosen_type(t2)
     object_types = ('string', 'boolean', 'datetime', 'bool')
     if (
         t1loose == t2loose

@@ -1112,7 +1112,6 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 
-@tag
 class TestPandasParquetRoundTrips(ReferenceTestCase):
     # Really checking diff_dataframes more than parquet
     # But also confirming that round-tripping is working
@@ -1146,6 +1145,7 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         diffs = diff_dataframes(df2, df, create_temporaries=False)
         self.assertEqual(diff_dataframes(df2, df).failures, 0)
 
+    @tag
     def testTinyParquetSmallWideD(self):
         df, _ = small_wide_pd_df(prefer_nullable=False)
         path = tmppath('small_wide-d.parquet')
@@ -1157,10 +1157,11 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         self.assertTrue(msg.startswith(
             'Data frames have different column structure.'
         ))
-
         diffs2 = diff_dataframes(df2, df, type_matching='medium')
+        print(diffs2.diffs)
         self.assertEqual(diffs2.failures, 0)
 
+    @tag
     def testTinyParquetSmallWideN(self):
         df, _ = small_wide_pd_df(prefer_nullable=True)
         path = tmppath('small_wide-n.parquet')

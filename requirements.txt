@@ -1,11 +1,11 @@
 # prerequisites
 numpy >= 1.23.5
-pytest
+pytest >= 8.4.0
 pandas >= 2.0
-pyarrow >= 15.0
+pyarrow >= 20.0.0
 pyyaml >= 6.0
 chardet >= 5.2
 rich >= 13.3
-regex >= 2.5.148
+regex >= 2022.3.15
 tomli_w >= 1.2.0
-tomli >= 2.0
+tomli >= 2.2.1

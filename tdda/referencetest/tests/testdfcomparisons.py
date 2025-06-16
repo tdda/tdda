@@ -110,7 +110,7 @@ class TestOne(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-float.txt'),
             ignore_patterns=[
-                'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ]
         )
         self.assertStringCorrect(
