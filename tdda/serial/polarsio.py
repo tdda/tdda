@@ -1,9 +1,11 @@
 import polars as pl
 
 from tdda.serial.base import VERBOSITY
+from tdda.serial.reader import get_metadata_for_reader
 from tdda.utils import warn
 
-class POLARSS:
+
+class POLARS:
     read_key = 'polars.read_csv'
     write_key = 'polars.DataFrame.to_csv'
 

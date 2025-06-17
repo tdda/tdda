@@ -25,9 +25,8 @@ from itertools import chain
 from rich.table import Table
 
 from tdda.state import get_config
-from tdda.utils import nvl
+from tdda.utils import Dummy, nvl
 
-FailureDiffs = namedtuple('FailureDiffs', 'failures diffs')
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
@@ -35,6 +34,41 @@ ColDiff = namedtuple('ColDiff', 'mask n')
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 DEFAULT_DIFF_ROWS = 10
+
+
+class FailureDiffs:
+    """
+    Container for Information about comparison failures.
+
+    Args:
+
+        failures: Number of failures.
+                  Can also be accessed (read) as .count.
+
+        diffs: Diffs object, with descriptions of failures
+               Can also be accessed (read) as .descriptions.
+
+    Failures diffs objects have a boolean value of True if there
+    are failures (differences) and False if not.
+    """
+    def __init__(self, failures, diffs):
+         self.failures = failures
+         self.diffs = diffs
+
+    @property
+    def count(self):
+        return self.failures
+
+    @property
+    def description(self):
+        return self.diffs
+
+    def __str__(self):
+        msg = '\n'.join(self.diffs)
+        return f'Number of Differences: {self.failures}\n{msg}'
+
+    def __bool__(self):
+        return self.failures > 0
 
 
 class BaseComparison(object):
@@ -245,6 +279,44 @@ class SameStructureDDiff:
 
         return '\n'.join(lines)
 
+    def details(self, df, ref_df, target_rows=None):
+        target_rows = nvl(target_rows, self.n_diff_rows)
+        n = min(target_rows, self.n_diff_rows)
+        cols = list(self.diff_df)
+        m = len(cols)
+        C = self.config.referencetest
+        vertical = nvl(C.vertical, False)
+        prefix = vertical and (C.mono or C.bw)
+        if self.n_diff_rows > 0:  # <= n:
+            # Extract small dataframes with diffs  n x m
+            L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
+            R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
+            indexes = L.index.to_list()
+            plain_rows = []
+            for r in range(n):
+                l_vals = [py_val(L.iat[r, c]) for c in range(m)]
+                r_vals = [py_val(R.iat[r, c]) for c in range(m)]
+                if vertical:
+                    plain_rows.append([indexes[r]] + l_vals)
+                    plain_rows.append([indexes[r]] + r_vals)
+                else:
+                    plain_rows.append(
+                        [indexes[r]]
+                        + list(chain(*([L, R] for L, R in zip(l_vals, r_vals))))
+                    )
+            index_head = 'index'
+
+            s = '' if n == 1 else 's'
+            rows_desc = (
+                'all rows with differences'
+                 if self.n_diff_rows <= n
+                 else f'First {n:,} row{s} with differences'
+            )
+            title = f'Value Differences ({rows_desc})'
+            return Dummy(title=title, cols=[index_head] + cols, rows=plain_rows)
+        else:
+            return None
+
     def details_table(self, df, ref_df, target_rows=None):
         target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
@@ -324,7 +396,6 @@ class SameStructureDDiff:
             table = Table(
                 title=title,
                 title_style='bold',
-#                width = table_width
             )
             if not vertical:
                 index_head += '\n '

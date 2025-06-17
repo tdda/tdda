@@ -4,7 +4,7 @@ class Dummy:
     pass
 
 
-def generate_python_lists():
+def generate_base_python_lists():
     """
     Genenerates intended values for data frame as Python lists.
     """

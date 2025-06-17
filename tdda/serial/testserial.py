@@ -10,6 +10,8 @@ import pandas as pd
 
 from tdda.referencetest import ReferenceTestCase, tag
 
+from tdda.referencetest.checkpandas import diff_dataframes as pd_diff
+
 from tdda.serial.base import RE_ISO8601, FieldType, URI
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
@@ -37,9 +39,17 @@ from tdda.referencetest.checkpandas import (
     diff_dataframes
 )
 
+from tdda.serial.examples.pdgen import (
+    compare,
+    read_with_tdda_serial,
+    read_csv_explicit,
+    generate_reference_base_pandas_dataframe
+)
+
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
 TESTDATADIR = os.path.join(THISDIR, 'testdata')
+EXAMPLESDIR = os.path.join(THISDIR, 'examples')
 
 TMPDIR = tempfile.mkdtemp()
 
@@ -55,6 +65,10 @@ PANDAS2 = ['pandas.read_csv', 'pandas.DataFrame.to_csv']
 
 def tdpath(path):
     return os.path.join(TESTDATADIR, path)
+
+
+def examples_path(path):
+    return os.path.join(EXAMPLESDIR, path)
 
 
 def tmppath(name):
@@ -351,6 +365,8 @@ class TestPandasLoad(ReferenceTestCase):
             #                   dtype='datetime64[ns]'),
         })
 
+        cls.ref_base_df = generate_reference_base_pandas_dataframe()
+
     def test_default_load_small(self):
         # Test loading of small.csv with pandas read_csv defaults
         # No date parsing so all date/datetime fields end up as strings
@@ -464,6 +480,24 @@ class TestPandasLoad(ReferenceTestCase):
         df = csv_to_pandas(mdpath=mdpath)
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
+
+    @tag
+    def test_load_base_serial_explicit(self):
+        # Bypass tdda serial and read metadata directly from file
+        mdpath = examples_path('base-csv-pandas.serial')
+        with open(mdpath) as f:
+            d = json.load(f)
+        params = d['pandas.read_csv']
+        df = pd.read_csv(examples_path('base.csv'), **params)
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+                        create_temporaries=False)
+        self.assertEqual(diffs.count, 1)
+        diff = diffs.diffs.dfd.diff
+        details = diff.details(df, self.ref_base_df)
+        self.assertEqual(details.cols, ['index', 'string_torture'])
+        self.assertEqual(details.rows, [[5, None, '']])
+
 
 
 class TestCSVWTests(ReferenceTestCase):

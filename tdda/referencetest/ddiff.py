@@ -43,6 +43,7 @@ class TDDADiff:
         if result.failures > 0:
             print(result.diffs)
             diff = result.diffs.dfd.diff  # there if same structure
+                                          # or close enough
             if diff:
                 table = diff.details_table(dfL, dfR, self.maxdiffs)
                 if table:
