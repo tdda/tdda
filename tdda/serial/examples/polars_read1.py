@@ -1,6 +1,6 @@
 import polars as pl
 
-from tdda.serial.reader import csv2polars
+from tdda.serial.polarsio import csv_to_polars
 
 from example_helpers import generate_python_lists
 
@@ -55,9 +55,9 @@ def fix_bool_cols(df):
 
 if __name__ == '__main__':
 
-    dfc = csv2polars('base.csv', 'base-csv-polars.serial')
-    dfp = csv2polars('base.psv', 'base-psv-polars.serial')
-    dft = csv2polars('base.tsv', 'base-tsv-polars.serial')
+    dfc = csv_to_polars('base.csv', 'base-csv-polars.serial')
+    dfp = csv_to_polars('base.psv', 'base-psv-polars.serial')
+    dft = csv_to_polars('base.tsv', 'base-tsv-polars.serial')
 
     raw_df = pl.read_csv('base.csv')
     ref_df = generate_reference_polars_dataframe()

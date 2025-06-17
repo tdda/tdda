@@ -4,7 +4,12 @@ CSVMETADATA = 'csvmetadata'
 CSVW = 'csvw'
 FRICTIONLESS = 'frictionless'
 
-from tdda.serial.reader import load_metadata, csv2pandas
+from tdda.serial.reader import load_metadata
+from tdda.serial.pandasio import csv_to_pandas
+from tdda.serial.polarsio import csv_to_polars
 from tdda.serial.base import (
-    SerialMetadata, FieldMetadata, FieldType, DateFormat
+    DateFormat,
+    FieldMetadata,
+    FieldType,
+    SerialMetadata,
 )

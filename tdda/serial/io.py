@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from tdda.serial.reader import csv2pandas
+from tdda.serial.pandasio import csv_to_pandas
 
 
 def pandas_read_df(path, nullable=False):
@@ -10,7 +10,7 @@ def pandas_read_df(path, nullable=False):
     """
     _, ext = os.path.splitext(path)
     if ext == '.csv':
-        return csv2pandas(path)
+        return csv_to_pandas(path)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
         if nullable:

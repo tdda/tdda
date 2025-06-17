@@ -13,21 +13,23 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.serial.base import RE_ISO8601, FieldType, URI
 from tdda.serial.csvw import CSVWMetadata, csvw_date_format_to_md_date_format
 from tdda.serial.pandasio import (
-    csvw2pandas_kwargs,
-    pandas_dtype_to_fieldtype,
-    pandas_df_to_metadata,
+    csv_to_pandas,
+    csvw_to_pandas_kwargs,
     pandas_df_to_csv,
+    pandas_df_to_metadata,
+    pandas_dtype_to_fieldtype,
+    poss_upgrade_to_int,
+    tddaserial_to_pandas_read_csv_args,
 )
 from tdda.serial.reader import (
-    csv2pandas,
-    poss_upgrade_to_int,
+    find_metadata_kind,
     load_metadata,
-    tddaserial_to_pandas_read_csv_args,
-    find_metadata_kind
 )
 
 from tdda.serial.simple import (
-    pandas_read_csv, pandas_write_csv, metadata_path
+    pandas_read_csv,
+    pandas_write_csv,
+    metadata_path
 )
 
 from tdda.referencetest.checkpandas import (
@@ -122,7 +124,7 @@ class TestDateSanityRE(ReferenceTestCase):
 class TestPandasKeywordArgsGeneration(ReferenceTestCase):
     def test_isodate(self):
         mdpath = os.path.join(TESTDATADIR, 'isod-metadata.json')
-        self.assertEqual(csvw2pandas_kwargs(mdpath), {
+        self.assertEqual(csvw_to_pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'date': 'ISO8601'},
             'parse_dates': ['date'],
@@ -131,7 +133,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_simple(self):
         mdpath = os.path.join(TESTDATADIR, 'simple-metadata.json')
-        self.assertEqual(csvw2pandas_kwargs(mdpath), {
+        self.assertEqual(csvw_to_pandas_kwargs(mdpath), {
             'date_format': {'LastIn2024': 'ISO8601', 'LastInFeb': 'ISO8601'},
             'dtype': {
                 'Even': 'boolean',
@@ -145,7 +147,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_isodate_tsv(self):
         mdpath = os.path.join(TESTDATADIR, 'isodt-tsv-metadata.json')
-        self.assertEqual(csvw2pandas_kwargs(mdpath), {
+        self.assertEqual(csvw_to_pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'time': 'ISO8601'},
             'parse_dates': ['time'],
@@ -155,7 +157,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
 
     def test_eurodate(self):
         mdpath = os.path.join(TESTDATADIR, 'eurod-metadata.json')
-        self.assertEqual(csvw2pandas_kwargs(mdpath), {
+        self.assertEqual(csvw_to_pandas_kwargs(mdpath), {
             'dtype': {'row': 'Int64'},
             'date_format': {'date': '%d/%m/%Y'},
             'parse_dates': ['date'],
@@ -171,7 +173,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'isod-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'isod.csv')
 
-        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
+        df = pd.read_csv(csvpath, **csvw_to_pandas_kwargs(mdpath))
 
         self.assertEqual(df.row.dtype, 'Int64')
         self.assertEqual(df.date.dtype, 'datetime64[ns]')
@@ -199,7 +201,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'simple-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'simple.csv')
 
-        kw = csvw2pandas_kwargs(mdpath)
+        kw = csvw_to_pandas_kwargs(mdpath)
         self.assertEqual(kw, {
             'date_format': {
                 'LastIn2024': 'ISO8601',
@@ -244,7 +246,7 @@ class TestConversion(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'isodt-tsv-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'isodt.tsv')
 
-        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
+        df = pd.read_csv(csvpath, **csvw_to_pandas_kwargs(mdpath))
 
         expected = pd.DataFrame({
             'row': pd.Series([1, 15], dtype='Int64'),
@@ -258,8 +260,8 @@ class TestConversion(ReferenceTestCase):
     def test_eurodate2pd(self):
         mdpath = os.path.join(TESTDATADIR, 'eurod-metadata.json')
         csvpath = os.path.join(TESTDATADIR, 'eurod.csv')
-        kw = csvw2pandas_kwargs(mdpath)
-        df = pd.read_csv(csvpath, **csvw2pandas_kwargs(mdpath))
+        kw = csvw_to_pandas_kwargs(mdpath)
+        df = pd.read_csv(csvpath, **csvw_to_pandas_kwargs(mdpath))
 
         expected = pd.DataFrame({
             'row': pd.Series([1, 15], dtype='Int64'),
@@ -362,14 +364,14 @@ class TestPandasLoad(ReferenceTestCase):
         # metadata. All types now come in correctly
         csvpath = os.path.join(TESTDATADIR, 'small.csv')
         mdpath = os.path.join(TESTDATADIR, 'small-metadata.json')
-        df = csv2pandas(csvpath, mdpath)
+        df = csv_to_pandas(csvpath, mdpath)
         self.assertDataFramesEqual(df, self.correct_df)
 
     def test_load_latin1(self):
         # Read sig_latin1.csv correctly as iso-8859-1,
         # as specified in csvw metadata file
         mdpath = os.path.join(TESTDATADIR, 'sig-latin1-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'sig-latin1.parquet')
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf, type_matching='medium')
@@ -377,7 +379,7 @@ class TestPandasLoad(ReferenceTestCase):
         # This is correct decoding from latin-1 (checked above)
         self.assertEqual(df.sig[0], '¤¦¨¼½¾')
 
-        df = csv2pandas(mdpath=mdpath, encoding='iso-8859-15')
+        df = csv_to_pandas(mdpath=mdpath, encoding='iso-8859-15')
 
         # Check read *incorrectly* when latin9 specified
         self.assertNotEqual(df.sig[0], '¤¦¨¼½¾')
@@ -389,7 +391,7 @@ class TestPandasLoad(ReferenceTestCase):
         # Read sig_latin9.csv correctly as iso-8859-15,
         # as specified in csvw metadata file
         mdpath = os.path.join(TESTDATADIR, 'sig-latin9-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'sig-latin9.parquet')
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf, type_matching='medium')
@@ -398,7 +400,7 @@ class TestPandasLoad(ReferenceTestCase):
         # Read sig_cp1252.csv correctly as cp1252
         # as specified in csvw metadata file
         mdpath = os.path.join(TESTDATADIR, 'sig-cp1252-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'sig-cp1252.parquet')
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf, type_matching='medium')
@@ -408,7 +410,7 @@ class TestPandasLoad(ReferenceTestCase):
         # This includes all the characters that differ among
         # latin1 (iso-8859-1), latin9 (iso-8859-15), and cp1252.
         mdpath = os.path.join(TESTDATADIR, 'sig-equiv-utf16-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'sig-equiv-utf16.parquet')
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf, type_matching='medium')
@@ -418,7 +420,7 @@ class TestPandasLoad(ReferenceTestCase):
         # This includes all the characters that differ among
         # latin1 (iso-8859-1), latin9 (iso-8859-15), and cp1252.
         mdpath = os.path.join(TESTDATADIR, 'sig-equiv-utf8-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'sig-equiv-utf8.parquet')
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf, type_matching='medium')
@@ -430,7 +432,7 @@ class TestPandasLoad(ReferenceTestCase):
         # correctly, with others loading as strings.
         #
         mdpath = os.path.join(TESTDATADIR, 'all-csvw-types-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         refpath = os.path.join(TESTDATADIR, 'all-csvw-types.parquet')
         rf = pd.read_parquet(refpath, dtype_backend='numpy_nullable')
 
@@ -453,13 +455,13 @@ class TestPandasLoad(ReferenceTestCase):
         #   - used NULL as the null marker
         #
         mdpath = os.path.join(TESTDATADIR, 'small2-metadata.json')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         self.assertDataFramesEqual(df, self.correct_df)
 
     def test_load_nulls1(self):
         mdpath = os.path.join(TESTDATADIR, 'nulls1-metadata.json')
         refpath = os.path.join(TESTDATADIR, 'nulls1.parquet')
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
 
@@ -503,7 +505,7 @@ class TestCSVWTests(ReferenceTestCase):
         # because it has nulls
 
         # Clearly pandas behaviour is better, and there is not CSVW
-        # involved. But we might like csv2pandas to coerce types
+        # involved. But we might like csv_to_pandas to coerce types
 
         # By using upgrade_possible_ints, we get int64 for id
         # (with no nulls) and Int64 for child_id.
@@ -536,7 +538,7 @@ class TestCSVWTests(ReferenceTestCase):
         test = this_function_name()  # function name
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         resultspath = self.fullpath(f'{test}/result.json')
-        df = csv2pandas(csvpath, findmd=True)
+        df = csv_to_pandas(csvpath, findmd=True)
         string_to_int(df, 'GID')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
@@ -558,7 +560,7 @@ class TestCSVWTests(ReferenceTestCase):
         resultspath = self.fullpath(f'{test}/result.json')
 
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath('test012/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -581,7 +583,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath('tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -603,7 +605,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}/linked-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -626,7 +628,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -649,7 +651,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -672,7 +674,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -695,7 +697,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv2pandas(mdpath=mdpath, return_md=True)
+        df, md = csv_to_pandas(mdpath=mdpath, return_md=True)
         string_to_int(df, 'GID')
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -730,7 +732,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
 
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         self.assertEqual(list(df), [0, 1, 2, 3, 4])
         # This is what Pandas does:  ^^^
         # CSVW wants _col.1 to _col.5 apparently.
@@ -756,7 +758,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
 
-        df = csv2pandas(mdpath=mdpath)
+        df = csv_to_pandas(mdpath=mdpath)
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
         ref_df = csvw_bare_json_to_df(resultspath, fields)
@@ -769,7 +771,7 @@ class TestCSVWTests(ReferenceTestCase):
         csvpath = self.fullpath(f'countries.csv')
         resultspath = self.fullpath(f'{test}.json')
 
-        df = csv2pandas(csvpath)
+        df = csv_to_pandas(csvpath)
         fields = fields_from(csvpath)
         ref_df = csvw_json_to_df(resultspath, fields)
         string_to_float(ref_df, 'latitude')
@@ -783,7 +785,7 @@ class TestCSVWTests(ReferenceTestCase):
         csvpath = self.fullpath(f'countries.csv')
         resultspath = self.fullpath(f'{test}.json')
 
-        df = csv2pandas(csvpath)
+        df = csv_to_pandas(csvpath)
         fields = fields_from(csvpath)
         ref_df = csvw_bare_json_to_df(resultspath, fields)
         string_to_float(ref_df, 'latitude')
@@ -798,7 +800,7 @@ class TestCSVWTests(ReferenceTestCase):
         mdpath = self.fullpath(f'countries.json')
         resultspath = self.fullpath(f'{test}.json')  # contains two tables
 
-        df = csv2pandas(csvpath, mdpath, table_number=0)
+        df = csv_to_pandas(csvpath, mdpath, table_number=0)
         fields = fields_from(csvpath)
         ref_fields = [
             'http://www.geonames.org/ontology#countryCode',
@@ -814,7 +816,7 @@ class TestCSVWTests(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
         slice_csvpath = self.fullpath(f'country_slice.csv')
-        df2 = csv2pandas(slice_csvpath, mdpath, table_number=1)
+        df2 = csv_to_pandas(slice_csvpath, mdpath, table_number=1)
         slice_fields = fields_from(slice_csvpath)
         ref_df2 = csvw_json_to_df(resultspath, slice_fields, table_number=1)
         ref_df2['countryRef'] = (
@@ -833,7 +835,7 @@ class TestCSVWTests(ReferenceTestCase):
         resultspath = self.parquet_path(f'{test}-result.parquet')
         mdpath = self.fullpath(f'{test}/csv-metadata.json')
 
-        df, md = csv2pandas(csvpath, mdpath, return_md=True, verbosity=1)
+        df, md = csv_to_pandas(csvpath, mdpath, return_md=True, verbosity=1)
         self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
 
         # Compare against known correct result (not from csvw project)
@@ -847,7 +849,7 @@ class TestCSVWTests(ReferenceTestCase):
         f = self.fullpath
         pqp = self.parquet_path
         mdpath = f(f'{test}/csv-metadata.json')
-        sdf, md = csv2pandas(
+        sdf, md = csv_to_pandas(
             f(f'{test}/senior-roles.csv'),
             mdpath,
             use_table_name=True,
@@ -856,7 +858,7 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'))
-        jdf = csv2pandas(
+        jdf = csv_to_pandas(
             f(f'{test}/junior-roles.csv'),
             mdpath,
             use_table_name=True,
@@ -865,7 +867,7 @@ class TestCSVWTests(ReferenceTestCase):
         )
         self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'))
 
-        pdf = csv2pandas(
+        pdf = csv_to_pandas(
             f(f'{test}/gov.uk/data/professions.csv'),
             mdpath,
             use_table_name=True,
@@ -874,7 +876,7 @@ class TestCSVWTests(ReferenceTestCase):
         )
         self.assertDataFrameCorrect(jdf, pqp(f'{test}-professions.parquet'))
 
-        odf = csv2pandas(
+        odf = csv_to_pandas(
             f(f'{test}/gov.uk/data/organizations.csv'),
             mdpath,
             use_table_name=True,
@@ -893,7 +895,7 @@ class TestCSVWTests(ReferenceTestCase):
         md = load_metadata(
             self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
         )
-        df = csv2pandas(csvpath, findmd=True)
+        df = csv_to_pandas(csvpath, findmd=True)
         self.assertDataFrameCorrect(df, resultspath)
 
 
@@ -901,7 +903,7 @@ class TestCSVWTests(ReferenceTestCase):
     def _test_csv_json(self, stem, upgrade_possible_ints=False,
                        to_ints=None):
         csvpath, resultspath = self.csv_json_paths(stem)
-        df = csv2pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
+        df = csv_to_pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
         fields = fields_from(csvpath)
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
         #self.assertDataFramesEqual(df, ref_df)
@@ -975,20 +977,20 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
         # Read back correctly using various metadata in .serial file
 
-        dfa = csv2pandas(tdpath('tiny1cd3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cd3.csv'),
                          mdpath=tdpath('tiny1cd3.serial'),
                          upgrade_types=False,
                          preferred='pandas.read_csv')
 
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1cd3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cd3.csv'),
                          mdpath=tdpath('tiny1cd3.serial'),
                          upgrade_types=False,
                          preferred='tdda.serial')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1cd-pandas.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cd-pandas.csv'),
                          mdpath=tdpath('tiny1cd-pandas.serial'),
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
@@ -1015,19 +1017,19 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
         # Read back correctly using various metadata in .serial file
 
-        dfa = csv2pandas(tdpath('tiny1nd3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1nd3.csv'),
                          mdpath=tdpath('tiny1nd3.serial'),
                          upgrade_types=False,
                          preferred='pandas.read_csv')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1nd3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1nd3.csv'),
                          mdpath=tdpath('tiny1nd3.serial'),
                          upgrade_types=False,
                          preferred='tdda.serial')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1nd3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1nd3.csv'),
                          mdpath=tdpath('tiny1nd-pandas.serial'),
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
@@ -1055,19 +1057,19 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
         # Read back correctly using various metadata in .serial file
 
-        dfa = csv2pandas(tdpath('tiny1cn3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cn3.csv'),
                          mdpath=tdpath('tiny1cn3.serial'),
                          upgrade_types=False,
                          preferred='pandas.read_csv')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1cn3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cn3.csv'),
                          mdpath=tdpath('tiny1cn3.serial'),
                          upgrade_types=False,
                          preferred='tdda.serial')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1cn3.csv'),
+        dfa = csv_to_pandas(tdpath('tiny1cn3.csv'),
                          mdpath=tdpath('tiny1cn-pandas.serial'),
                          upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
@@ -1094,21 +1096,21 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
         # Read back correctly using various metadata in .serial file
 
-        dfa = csv2pandas(tdpath('tiny1nn3.csv'),
-                         mdpath=tdpath('tiny1nn3.serial'),
-                         upgrade_types=False,
-                         preferred='pandas.read_csv')
+        dfa = csv_to_pandas(tdpath('tiny1nn3.csv'),
+                            mdpath=tdpath('tiny1nn3.serial'),
+                            upgrade_types=False,
+                            preferred='pandas.read_csv')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1nn3.csv'),
-                         mdpath=tdpath('tiny1nn3.serial'),
-                         upgrade_types=False,
-                         preferred='tdda.serial')
+        dfa = csv_to_pandas(tdpath('tiny1nn3.csv'),
+                            mdpath=tdpath('tiny1nn3.serial'),
+                            upgrade_types=False,
+                            preferred='tdda.serial')
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-        dfa = csv2pandas(tdpath('tiny1nn3.csv'),
-                         mdpath=tdpath('tiny1nn-pandas.serial'),
-                         upgrade_types=False)
+        dfa = csv_to_pandas(tdpath('tiny1nn3.csv'),
+                            mdpath=tdpath('tiny1nn-pandas.serial'),
+                            upgrade_types=False)
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 

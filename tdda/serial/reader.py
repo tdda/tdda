@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from collections import namedtuple
 
 from tdda.serial.base import (
     CONTEXT_KEY,
@@ -18,8 +17,6 @@ from tdda.serial.base import (
     SerialMetadata,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
-from tdda.serial.pandasio import tddaserial_to_pandas_read_csv_args
-from tdda.serial.polarsio import to_polars_read_csv_args
 
 from tdda.serial.utils import (
     find_associated_metadata_file,
@@ -31,8 +28,6 @@ from tdda.utils import err, is_sequence
 class TDDASerialError(Exception):
     pass
 
-
-DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 
 
 def load_metadata(path, md_file_type=None, table_number=None,
@@ -160,211 +155,6 @@ def get_metadata_for_reader(path, mdpath, md_file_type, findmd,
                            table_number=table_number,
                            for_table_name=for_table_name, verbosity=verbosity)
     return md, path, mdpath
-
-
-def csv2pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
-               upgrade_types=True, upgrade_possible_ints=False,
-               return_md=False, table_number=None, use_table_name=False,
-               preferred=None, verbosity=VERBOSITY,
-               **kw):
-    """
-    Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
-    and extra metadata.
-
-    Args:
-
-       path     The path to the data file (usually CSV) to be read.
-                If this is None, the mdpath must be set and contain
-                the path to the data.
-
-       mdpath   The optional path to the associated metadata file.
-
-                If path is None, this must be set and contain the
-                path to the data (CSV file).
-
-                If path is not None, the path in the metadata file
-                is ignored.
-
-                If mdpath is None, path must not be None.
-                In this case, if findmd is set to True, this function
-                will try to find an associated metadata file and use
-                that if possible, and will raise an error if it cannot
-                be found.
-
-       md_file_type   Optional specification of the kind of metadata file.
-                      Should be one of
-                          'tdda.serial'
-                          'csvw'
-                          'frictionless'
-
-       findmd   If this is set to True, the library will try to find
-                associated metadata based on filename conventions.
-                This should not be set if mdpath is provided.
-                If assocaited metadata cannot be found, an error
-                will be raised when this is set.
-
-       upgrade_types   If True (the default), this will upgrade
-                       some columns read_csv will create as object
-                       (dtype object) to stricter types.
-
-       upgrade_possible_ints   If True (not the default), any float
-                               columns with nulls but with no fractional
-                               components will be upgraded to Ints.
-
-       return_md   If true, returns DataFrame and metadata (as tuple)
-
-       table_number  If set, use the specified table number (indexed
-                     from zero) in the metadata
-
-       preferred  Normally, if tdda.serial metadata is used,
-                  csv2pandas will use the panda.read_csv metadata flavour
-                  if present. This can be set to 'tdda.serial'
-                  or 'csvw' to override that.
-
-       verbosity   For metadata reader
-
-       **kw     These keyword arguments are passed to pandas.read_csv,
-                and can be used to override values from the
-                metadata file.
-    """
-    md, path, mdpath = get_metadata_for_reader(
-         path=path, mdpath=mdpath, md_file_type=md_file_type,
-         findmd=findmd, table_number=table_number,
-         use_table_name=use_table_name,
-         preferred=preferred or 'pandas.read_csv',
-         verbosity=verbosity
-     )
-
-    if md:
-        md_kw = tddaserial_to_pandas_read_csv_args(md)
-    if md and kw:
-        md_kw.update(kw)
-        kw = md_kw
-    elif md:
-        kw = md_kw
-    df = pd.read_csv(path, **kw)
-
-    specified_types = kw.get('dtype')
-    if upgrade_types and specified_types:
-        dates = (kw.get('date_format') or {}).keys()
-        for k in df:
-            df[k].dtype == np.dtype('O')
-            specified_type = specified_types.get(k)
-            try:
-                if specified_type:
-                    df[k] = df[k].astype(specified_type)
-                elif k in dates:
-                    df[k] = df[k].astype('datetime64[ns]')
-            except ValueError:  # probably time-zone aware date
-                pass
-    if upgrade_possible_ints:
-        for k in df:
-            if not k in (specified_types or []):
-                poss_upgrade_to_int(df, k)
-    return DataFrameWithMetadata(df, md) if return_md else df
-
-
-def csv2polars(path=None, mdpath=None, md_file_type=None, findmd=False,
-               upgrade_types=True, upgrade_possible_ints=False,
-               return_md=False, table_number=None, use_table_name=False,
-               preferred=None, verbosity=VERBOSITY,
-               **kw):
-    """
-    Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
-    and extra metadata.
-
-    Args:
-
-       path     The path to the data file (usually CSV) to be read.
-                If this is None, the mdpath must be set and contain
-                the path to the data.
-
-       mdpath   The optional path to the associated metadata file.
-
-                If path is None, this must be set and contain the
-                path to the data (CSV file).
-
-                If path is not None, the path in the metadata file
-                is ignored.
-
-                If mdpath is None, path must not be None.
-                In this case, if findmd is set to True, this function
-                will try to find an associated metadata file and use
-                that if possible, and will raise an error if it cannot
-                be found.
-
-       md_file_type   Optional specification of the kind of metadata file.
-                      Should be one of
-                          'tdda.serial'
-                          'csvw'
-                          'frictionless'
-
-       findmd   If this is set to True, the library will try to find
-                associated metadata based on filename conventions.
-                This should not be set if mdpath is provided.
-                If assocaited metadata cannot be found, an error
-                will be raised when this is set.
-
-       upgrade_types   If True (the default), this will upgrade
-                       some columns read_csv will create as object
-                       (dtype object) to stricter types.
-
-       upgrade_possible_ints   If True (not the default), any float
-                               columns with nulls but with no fractional
-                               components will be upgraded to Ints.
-
-       return_md   If true, returns DataFrame and metadata (as tuple)
-
-       table_number  If set, use the specified table number (indexed
-                     from zero) in the metadata
-
-       preferred  Normally, if tdda.serial metadata is used,
-                  csv2pandas will use the polars.read_csv metadata flavour
-                  if present. This can be set to 'tdda.serial'
-                  or 'csvw' to override that.
-
-       verbosity   For metadata reader
-
-       **kw     These keyword arguments are passed to pandas.read_csv,
-                and can be used to override values from the
-                metadata file.
-    """
-    md, path, mdpath = get_metadata_for_reader(
-         path=path, mdpath=mdpath, md_file_type=md_file_type,
-         findmd=findmd, table_number=table_number,
-         use_table_name=use_table_name,
-         preferred=preferred or 'polars.read_csv',
-         verbosity=verbosity
-     )
-    if md:
-        md_kw = to_polars_read_csv_args(md)
-    if md and kw:
-        md_kw.update(kw)
-        kw = md_kw
-    elif md:
-        kw = md_kw
-    df = pl.read_csv(path, **kw)
-    return DataFrameWithMetadata(df, md) if return_md else df
-
-
-
-def poss_upgrade_to_int(df, name):
-    field = df[name]
-    if str(field.dtype).startswith('float'):
-        n_nulls = sum(field.isnull())
-        if n_nulls > 0:
-            # Could be float as result of nulls
-            int_col = field.astype(pd.Int64Dtype())
-            n_same = sum(int_col.dropna() == field.dropna())
-            if n_same + n_nulls == field.shape[0]:
-                # no floats have fractional parts
-                df[name] = int_col
-        else:
-            int_col = field.astype('int')
-            n_same = sum(int_col== field)
-            if n_same == field.shape[0]:
-                # no floats have fractional parts
-                df[name] = int_col
 
 
 def find_metadata_kind(mds, preferred=None):

@@ -4,8 +4,7 @@ import sys
 
 import pandas as pd
 
-from tdda.serial.pandasio import yn2bool
-from tdda.serial.reader import csv2pandas
+from tdda.serial.pandasio import yn2bool,csv_to_pandas
 
 from tdda.referencetest.checkpandas import diff_dataframes
 
@@ -22,7 +21,7 @@ def read_csv_explicit(datapath, mdpath):
 
 
 def read_with_tdda_serial(datapath, mdpath, **kw):
-    df = csv2pandas(datapath, mdpath, upgrade_types=False, **kw)
+    df = csv_to_pandas(datapath, mdpath, upgrade_types=False, **kw)
 #    df['bool2'] = pd.Series(df['bool2'].map(yn2bool), dtype='boolean')
     return df
 
