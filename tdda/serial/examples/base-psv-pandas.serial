@@ -26,6 +26,8 @@
              "date": "ISO8601",
              "datetime": "ISO8601",
              "datetimezone": "ISO8601"
-         }
+         },
+         "false_values": ["no"],
+         "true_values": ["yes"]
     }
 }

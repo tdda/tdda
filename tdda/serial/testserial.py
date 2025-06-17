@@ -67,7 +67,8 @@ def tdpath(path):
     return os.path.join(TESTDATADIR, path)
 
 
-def examples_path(path):
+def epath(path):
+    """Examples path"""
     return os.path.join(EXAMPLESDIR, path)
 
 
@@ -481,22 +482,78 @@ class TestPandasLoad(ReferenceTestCase):
         rf = pd.read_parquet(refpath)
         self.assertDataFramesEqual(df, rf)
 
-    @tag
     def test_load_base_serial_explicit(self):
         # Bypass tdda serial and read metadata directly from file
-        mdpath = examples_path('base-csv-pandas.serial')
+        mdpath = epath('base-csv-pandas.serial')
         with open(mdpath) as f:
             d = json.load(f)
         params = d['pandas.read_csv']
-        df = pd.read_csv(examples_path('base.csv'), **params)
+        df = pd.read_csv(epath('base.csv'), **params)
         diffs = pd_diff(df, self.ref_base_df,
                         type_matching='medium', precision=6,
                         create_temporaries=False)
         self.assertEqual(diffs.count, 1)
-        diff = diffs.diffs.dfd.diff
-        details = diff.details(df, self.ref_base_df)
+        details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
         self.assertEqual(details.rows, [[5, None, '']])
+
+    def test_load_base_with_pandas_specific_serial_metadata(self):
+        # Same as previous but using read_with_tdda_serial
+        # using the pandas-specific metadata
+        df = csv_to_pandas(epath('base.csv'), epath('base-csv-pandas.serial'))
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+                        create_temporaries=False)
+        self.assertEqual(diffs.count, 1)
+        details = diffs.details(df, self.ref_base_df)
+        self.assertEqual(details.cols, ['index', 'string_torture'])
+        self.assertEqual(details.rows, [[5, None, '']])
+
+    def test_load_base_with_tddaserial_metadata(self):
+        # Same as previous but using read_with_tdda_serial
+        # using the pandas-specific metadata
+        df = csv_to_pandas(epath('base.csv'), epath('base-csv.serial'))
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+
+                        create_temporaries=False)
+        self.assertEqual(diffs.count, 1)
+        details = diffs.details(df, self.ref_base_df)
+        self.assertEqual(details.cols, ['index', 'string_torture'])
+        self.assertEqual(details.rows, [[5, None, '']])
+
+    def test_load_base_psv_with_tddaserial(self):
+        # Same as previous but using pipe-separators
+        df = csv_to_pandas(epath('base.psv'), epath('base-psv.serial'))
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+                        create_temporaries=False)
+        self.assertEqual(diffs.count, 1)
+        details = diffs.details(df, self.ref_base_df)
+        self.assertEqual(details.cols, ['index', 'string_torture'])
+        self.assertEqual(details.rows, [[5, None, '']])
+
+    def test_load_base_tsv_with_pandas_serial(self):
+        # Same as previous but using read_with_tdda_serial
+        # using the tab separators and the pandas-specific tdda serial data
+        df = csv_to_pandas(epath('base.tsv'), epath('base-tsv-pandas.serial'))
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+                        create_temporaries=False)
+        self.assertEqual(diffs.count, 1)
+        details = diffs.details(df, self.ref_base_df)
+        self.assertEqual(details.cols, ['index', 'string_torture'])
+        self.assertEqual(details.rows, [[5, None, '']])
+
+    def test_load_base_csv_with_pandas_serial_dot_null(self):
+        # Using ∙ (bullet operator) as null marker
+        df = csv_to_pandas(epath('base-dot-null.csv'),
+                           epath('base-dot-csv.serial'))
+        diffs = pd_diff(df, self.ref_base_df,
+                        type_matching='medium', precision=6,
+
+                        create_temporaries=False)
+        self.assertFalse(diffs)  # Actually reads it correctly!
 
 
 

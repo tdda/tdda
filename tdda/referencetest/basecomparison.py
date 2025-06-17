@@ -81,6 +81,11 @@ class FailureDiffs:
     def pair(self):
         return (self.failures, self.diffs)
 
+    def details(self, df, ref_df):
+        dfd = getattr(self.diffs, 'dfd', None)
+        diff = getattr(dfd, 'diff', None)
+        return diff.details(df, ref_df) if diff else None
+
 
 class BaseComparison(object):
     """

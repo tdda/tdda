@@ -2,38 +2,88 @@
     "format": "http://tdda.info/ns/tdda.serial",
     "writer": "tdda.serial-2.2.15",
     "tdda.serial": {
-        "lib": "pandas.read_csv",
-        "lib_params": {
-            "sep": "|",
-            "escapechar": "\\",
-            "quotechar": "\"",
-            "na_values": "",
-            "keep_default_na": false,
-            "dtype": {
-                "int": "Int64",
-                "string_float": "string",
-                "string_accents": "string",
-                "string_int": "string",
-                "string": "string",
-                "string_torture": "string",
-                "stri": "string",
-                "strf": "string",
-                "bool1": "boolean",
-                "bool3": "boolean",
-                "nil_bool": "boolean",
-                "nil_str": "string"
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
             },
-            "parse_dates": [
-                "date",
-                "datetime",
-                "datetimezone"
-            ],
-            "date_format": {
-                "date": "ISO8601",
-                "datetime": "ISO8601",
-                "datetimezone": "ISO8601"
+            {
+                "name": "int",
+                "fieldtype": "int"
+            },
+            {
+                "name": "float",
+                "fieldtype": "float"
+            },
+            {
+                "name": "bool1",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "bool2",
+                "fieldtype": "bool",
+                "true_values": "yes",
+                "false_values": "no"
+            },
+            {
+                "name": "bool3",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "stri",
+                "fieldtype": "string"
+            },
+            {
+                "name": "strf",
+                "fieldtype": "string"
+            },
+            {
+                "name": "string",
+                "fieldtype": "string"
+            },
+            {
+                "name": "string_accents",
+                "fieldtype": "string"
+            },
+            {
+                "name": "string_torture",
+                "fieldtype": "string"
+            },
+            {
+                "name": "date",
+                "fieldtype": "date",
+                "format": "iso8601"
+            },
+            {
+                "name": "datetime",
+                "fieldtype": "datetime",
+                "format": "iso8601"
+            },
+            {
+                "name": "datetimezone",
+                "fieldtype": "datetime",
+                "format": "iso8601"
+            },
+            {
+                "name": "nil_bool",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "nil_str",
+                "fieldtype": "string"
+            },
+            {
+                "name": "row2",
+                "fieldtype": "int"
             }
-        },
-        "header_rows": 1
+        ],
+        "encoding": "UTF-8",
+        "delimiter": "|",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "stutter_quotes": false,
+        "null_indicators": "",
+        "accept_percentages_as_floats": false,
+        "header_row_count": 1
     }
 }
