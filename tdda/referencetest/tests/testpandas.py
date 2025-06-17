@@ -40,15 +40,12 @@ class TestPandasDataFrames(ReferenceTestCase):
             }
         )
         df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
-        self.assertEqual(compare.check_dataframe(df1, df1), (0, []))
-        self.assertEqual(
-            compare.check_dataframe(df1, df2, precision=3), (0, [])
-        )
-        self.assertEqual(
+        self.assertFalse(compare.check_dataframe(df1, df1))
+        self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
+        self.assertFalse(
             compare.check_dataframe(
                 df1, df3, check_types=['a'], check_data=['a']
-            ),
-            (0, []),
+            )
         )
 
     def test_frames_fail(self):
@@ -67,8 +64,8 @@ class TestPandasDataFrames(ReferenceTestCase):
         )
         df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
 
-        self.assertEqual(
-            compare.check_dataframe(df1, df2, precision=3), (0, [])
+        self.assertFalse(
+            compare.check_dataframe(df1, df2, precision=3)
         )
 
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
@@ -86,7 +83,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         r = compare.check_csv_file(
             refloc('colours.txt'), refloc('colours.txt')
         )
-        self.assertEqual(r, (0, []))
+        self.assertFalse(r)
 
     def test_pandas_csv_fail(self):
         compare = PandasComparison(verbose=False)

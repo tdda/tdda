@@ -107,16 +107,16 @@ class TestInternals(ReferenceTestCase):
 class TestStrings(ReferenceTestCase):
     def test_strings_ok(self):
         compare = FilesComparison()
-        self.assertEqual(compare.check_strings([], []), (0, []))
-        self.assertEqual(compare.check_strings(["abc"], ["abc"]), (0, []))
-        self.assertEqual(
-            compare.check_strings(["ab", "c"], ["ab", "c"]), (0, [])
+        self.assertFalse(compare.check_strings([], []))
+        self.assertFalse(compare.check_strings(["abc"], ["abc"]))
+        self.assertFalse(
+            compare.check_strings(["ab", "c"], ["ab", "c"])
         )
 
     def test_strings_fail(self):
         compare = FilesComparison()
         self.assertEqual(
-            compare.check_strings([], ["x"], create_temporaries=False),
+            compare.check_strings([], ["x"], create_temporaries=False).pair,
             (
                 1,
                 [
@@ -127,7 +127,7 @@ class TestStrings(ReferenceTestCase):
             ),
         )
         self.assertEqual(
-            compare.check_strings(["y"], ["x"], create_temporaries=False),
+            compare.check_strings(["y"], ["x"], create_temporaries=False).pair,
             (
                 1,
                 [
@@ -154,7 +154,7 @@ class TestStrings(ReferenceTestCase):
         self.assertEqual(
             compare.check_strings(
                 ["   abc"], ["abc"], create_temporaries=False
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -163,17 +163,16 @@ class TestStrings(ReferenceTestCase):
                 ],
             ),
         )
-        self.assertEqual(
-            compare.check_strings(["   abc"], ["abc"], lstrip=True), (0, [])
+        self.assertFalse(
+            compare.check_strings(["   abc"], ["abc"], lstrip=True)
         )
-        self.assertEqual(
-            compare.check_strings(["abc   "], ["abc"], rstrip=True), (0, [])
+        self.assertFalse(
+            compare.check_strings(["abc   "], ["abc"], rstrip=True)
         )
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["   abc   "], ["abc"], lstrip=True, rstrip=True
-            ),
-            (0, []),
+            )
         )
 
     def test_ignore_substrings(self):
@@ -183,7 +182,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "red", "banana"],
                 ["abc", "blue", "grapefruit"],
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -198,7 +197,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "red", "grapefruit"],
                 ignore_substrings=["re"],
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -210,13 +209,12 @@ class TestStrings(ReferenceTestCase):
                 ],
             ),
         )
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["abc", "red", "banana"],
                 ["abc", "blue", "grapefruit"],
                 ignore_substrings=["ue", "gra"],
-            ),
-            (0, []),
+            )
         )
 
     def test_ignore_patterns(self):
@@ -228,7 +226,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "red", "banana"],
                 ["abc", "blue", "grapefruit"],
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -245,7 +243,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "blue", "grapefruit"],
                 ignore_patterns=["gr.*t"],
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -265,7 +263,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "blue", "grapefruit"],
                 ignore_patterns=["gr.*t"],
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -279,13 +277,12 @@ class TestStrings(ReferenceTestCase):
         )
 
         # spangle DOES ~ sp......, and breadfruit DOES ~ .*fruit => success
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["abc", "spangle", "breadfruit"],
                 ["abc", "spanner", "grapefruit"],
                 ignore_patterns=["sp.....", "[bg].*fruit"],
-            ),
-            (0, []),
+            )
         )
 
     def test_preprocess(self):
@@ -303,7 +300,7 @@ class TestStrings(ReferenceTestCase):
                 ["abc", "spanner", "grapefruit"],
                 preprocess=strip_first_five,
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -312,13 +309,12 @@ class TestStrings(ReferenceTestCase):
                 ],
             ),
         )
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["abc", "spangle", "breadfruit"],
                 ["abc", "spanner", "grapefruit"],
                 preprocess=strip_first_seven,
-            ),
-            (0, []),
+            )
         )
 
     def test_permutations(self):
@@ -329,7 +325,7 @@ class TestStrings(ReferenceTestCase):
                 ["spangle", "spanner", "abc"],
                 max_permutation_cases=1,
                 create_temporaries=False,
-            ),
+            ).pair,
             (
                 1,
                 [
@@ -338,21 +334,19 @@ class TestStrings(ReferenceTestCase):
                 ],
             ),
         )
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["abc", "spangle", "spanner"],
                 ["abc", "spanner", "spangle"],
                 max_permutation_cases=2,
-            ),
-            (0, []),
+            )
         )
-        self.assertEqual(
+        self.assertFalse(
             compare.check_strings(
                 ["abc", "spangle", "spanner"],
                 ["spangle", "spanner", "abc"],
                 max_permutation_cases=3,
-            ),
-            (0, []),
+            )
         )
 
 

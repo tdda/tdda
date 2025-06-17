@@ -70,6 +70,17 @@ class FailureDiffs:
     def __bool__(self):
         return self.failures > 0
 
+    def __iter__(self):
+        """Make iterable to allow it to be assigned to a pair (2-tuple)"""
+        return (x for x in (self.failures, self.diffs))
+
+    def __eq__(self, other):
+        return self.failures == other.failures and self.diffs == other.diffs
+
+    @property
+    def pair(self):
+        return (self.failures, self.diffs)
+
 
 class BaseComparison(object):
     """
