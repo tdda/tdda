@@ -13,7 +13,6 @@ from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 from tdda.referencetest.testgentest import *
 from tdda.serial.testserial import *
-from tdda.serial.testpdserial import *
 from tdda.testutils import *
 from tdda.pd.testpdutils import *
 

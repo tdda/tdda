@@ -2,7 +2,7 @@ import polars as pl
 
 from tdda.serial.base import VERBOSITY
 from tdda.serial.reader import get_metadata_for_reader
-from tdda.utils import warn
+from tdda.utils import listify, warn
 
 
 class POLARS:
@@ -53,7 +53,7 @@ POLARS_DTYPE_MAP = {
 }
 
 
-FIELDTYPE_TO_PANDAS_DTYPE = {
+FIELDTYPE_TO_POLARS_DTYPE = {
     'bool': pl.Boolean,
     'int': pl.Int64,
     'string': pl.String,
@@ -64,13 +64,20 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
 }
 
 
-def to_polars_read_csv_args(md):
+def pl_dtype_to_str(t):
+    return str(t).split('.')[-1] if t else str(t)
+
+
+def tddaserial_to_polars_read_csv_args(md, warner=warn, serializable=False):
+    if warner:
+        warn = warner
+    f = pl_dtype_to_str if serializable else lambda x: x
     params = md.libs.get(POLARS.read_key)
     if params:
         o = params.get('schema_overrides')
         if o:
             for k, v in o.items():
-                dtype = POLARS_DTYPE_MAP.get(v)
+                dtype = f(POLARS_DTYPE_MAP.get(v))
                 if dtype:
                     o[k] = dtype
                 else:
@@ -78,7 +85,6 @@ def to_polars_read_csv_args(md):
         return params
 
     kw = {}
-
     if md.delimiter:
         kw['separator'] = md.delimiter
 
@@ -92,9 +98,37 @@ def to_polars_read_csv_args(md):
     if md.null_indicators is not None:
         kw['null_values'] = listify(md.null_indicators)  # Can do per field
 
-    if header_row_count == 0:
+    if md.header_row_count == 0:
         kw['has_header'] = False
 
+    if md.encoding:
+        kw['encoding'] = md.encoding
+
+    if isinstance(md.fields, list):    # full schema
+        schema = kw['schema'] = {
+            field.name: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
+            for field in md.fields
+        }
+        fields = {
+            field.name: field
+            for field in md.fields
+        }
+
+    elif isinstance(md.fields, dict):  # partial schema
+        schema = kw['schema_overrides'] = {
+            field.name: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
+            for field in md.fields.values()
+        }
+        fields = md.fields
+    else:
+        fields = {}
+
+    for field, fmd in fields.items():
+        if fmd.fieldtype.startswith('date'):
+            if fmd.format and not fmd.format.lower().startswith('iso'):
+                schema[field] = f(pl.String)
+                warn(f'Field {field} date format {fmd.format} will not be '
+                      'understood by Polars.\nSetting to pl.String.')
 
     # 'missing_utf8_is_empty_string'
     # infer_schema
@@ -120,11 +154,12 @@ def to_polars_read_csv_args(md):
     # truncate_ragged_lines
     # glob
 
+    return kw
 
 def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
-                  preferred=None, verbosity=VERBOSITY,
+                  preferred=None, verbosity=VERBOSITY, warner=None,
                   **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
@@ -194,7 +229,7 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
          verbosity=verbosity
      )
     if md:
-        md_kw = to_polars_read_csv_args(md)
+        md_kw = tddaserial_to_polars_read_csv_args(md, warner=warner)
     if md and kw:
         md_kw.update(kw)
         kw = md_kw

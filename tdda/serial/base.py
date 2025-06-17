@@ -49,7 +49,7 @@ class Defaults:
 
 
 CONTEXT_KEY = '@context'
-RE_ISO8601 = r'^%Y-%m-%d([T ]%H:%M:%S(\.%f)?)?$'
+RE_ISO8601 = r'^%Y.%m.%d([T ]%H.%M.%S(\.%f)?)?$'
 
 
 # Allowed keys in .serial files

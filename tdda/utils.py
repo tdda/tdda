@@ -881,12 +881,15 @@ def richprint(*args, **kw):
     stdout_console.print(*args, **kw)
 
 
-def warn(*args, **kw):
-    stderr_console.print(*args, style='yellow', **kw)
+def warn(*args, buf=None, **kw):
+    if buf:
+        buf.append(args)
+    else:
+        stderr_console.print(*args, style='yellow', **kw)
 
 
 def err(*args, **kw):
-    warn(*args, **kw)
+    stderr_console.print(*args, style='red', **kw)
     sys.exit(1)
 
 
