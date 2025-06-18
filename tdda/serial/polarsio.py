@@ -2,7 +2,7 @@ import polars as pl
 
 from tdda.serial.base import VERBOSITY
 from tdda.serial.reader import get_metadata_for_reader
-from tdda.utils import listify, warn
+from tdda.utils import listify, warn as warn
 
 
 class POLARS:
@@ -68,9 +68,11 @@ def pl_dtype_to_str(t):
     return str(t).split('.')[-1] if t else str(t)
 
 
-def tddaserial_to_polars_read_csv_args(md, warner=warn, serializable=False):
-    if warner:
-        warn = warner
+def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
+    if warner is not None:
+        Warn = warner
+    else:
+        Warn = warn
     f = pl_dtype_to_str if serializable else lambda x: x
     params = md.libs.get(POLARS.read_key)
     if params:
@@ -81,7 +83,7 @@ def tddaserial_to_polars_read_csv_args(md, warner=warn, serializable=False):
                 if dtype:
                     o[k] = dtype
                 else:
-                    warn(f'Polars type "{dtype}" not known')
+                    Warn(f'Polars type "{dtype}" not known')
         return params
 
     kw = {}
@@ -92,7 +94,7 @@ def tddaserial_to_polars_read_csv_args(md, warner=warn, serializable=False):
         kw['quote_char'] = md.quote_char
 
     if md.escape_char:
-        warn('Polars does not understand escape characters.\n'
+        Warn('Polars does not understand escape characters.\n'
              f'Ignoring escape value: {md.escape_char}')
 
     if md.null_indicators is not None:
@@ -127,7 +129,7 @@ def tddaserial_to_polars_read_csv_args(md, warner=warn, serializable=False):
         if fmd.fieldtype.startswith('date'):
             if fmd.format and not fmd.format.lower().startswith('iso'):
                 schema[field] = f(pl.String)
-                warn(f'Field {field} date format {fmd.format} will not be '
+                Warn(f'Field {field} date format {fmd.format} will not be '
                       'understood by Polars.\nSetting to pl.String.')
 
     # 'missing_utf8_is_empty_string'
@@ -235,6 +237,7 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
         kw = md_kw
     elif md:
         kw = md_kw
+
     df = pl.read_csv(path, **kw)
     return DataFrameWithMetadata(df, md) if return_md else df
 

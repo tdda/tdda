@@ -124,6 +124,7 @@ class CSVWMetadata(SerialMetadata):
         self.get_url()
 
         self.get_dialect()
+        self.get_non_dialect_attrs()
 
         # Extract field metadata
         self.get_fields_metadata()
@@ -312,7 +313,7 @@ class CSVWMetadata(SerialMetadata):
         dialect = self._dialect
         self.delimiter = self.get_val(dialect, 'delimiter')
         self.encoding = self.get_val(dialect, 'encoding')
-
+        nulls = self.get_val(dialect, 'null')
         self._double_quote = self.get_val(dialect, 'doubleQuote')
         self.header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')
@@ -346,6 +347,10 @@ class CSVWMetadata(SerialMetadata):
         elif self.trim == "false":
             self.trim = False
 
+    def get_non_dialect_attrs(self):
+        nulls = self._csvw.get('null')
+        if nulls:
+            self.null_indicators = nulls
 
     def get_fields_metadata(self):
 
