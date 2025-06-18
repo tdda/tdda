@@ -439,12 +439,19 @@ class TestPolarsLoad(ReferenceTestCase):
 
         # self.assertDataFramesEqual(df, self.correct_df)
 
-#     def test_load_nulls1(self):
-#         mdpath = tdpath('nulls1-metadata.json')
-#         refpath = tdpath('nulls1.parquet')
-#         df = csv_to_polars(mdpath=mdpath)
-#         rf = pl.read_parquet(refpath)
-#         self.assertDataFramesEqual(df, rf)
+    @tag
+    def test_load_nulls1(self):
+        mdpath = tdpath('nulls1-metadata.json')
+        refpath = tdpath('nulls1.parquet')
+        warn, buf = testwarn()
+        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        self.assertEqual(len(df), 31)  # two blank lines at end
+
+        df = df[:29]  # truncate
+        self.assertEqual(buf, [])
+        rf = pl.read_parquet(refpath)
+        self.assertTrue(df.equals(rf))
+        # self.assertDataFramesEqual(df, rf)
 
 #     def test_load_base_serial_explicit(self):
 #         # Bypass tdda serial and read metadata directly from file

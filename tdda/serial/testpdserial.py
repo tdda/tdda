@@ -410,8 +410,8 @@ class TestPandasLoad(ReferenceTestCase):
         mdpath = os.path.join(TESTDATADIR, 'nulls1-metadata.json')
         refpath = os.path.join(TESTDATADIR, 'nulls1.parquet')
         df = csv_to_pandas(mdpath=mdpath)
-        rf = pd.read_parquet(refpath)
-        self.assertDataFramesEqual(df, rf)
+        rf = pd.read_parquet(refpath, dtype_backend='numpy_nullable')
+        self.assertDataFramesEqual(df, rf, type_matching='loose')
 
     def test_load_base_serial_explicit(self):
         # Bypass tdda serial and read metadata directly from file

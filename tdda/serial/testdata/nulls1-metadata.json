@@ -1,6 +1,31 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
+    "null": [
+        "",
+        "#N/A N/A",
+        "#N/A",
+        "#NA",
+        "-1.#IND",
+        "-1.#QNAN",
+        "-NaN",
+        "-nan",
+        "1.#IND",
+        "1.#QNAN",
+        "<NA>",
+        "N/A",
+        "NA",
+        "NULL",
+        "NaN",
+        "None",
+        "n/a",
+        "nan",
+        "null",
+        "null ",
+        "NaT",
+        "NAT",
+        "nat"
+    ],
     "tables": [
         {
             "tableSchema": {
