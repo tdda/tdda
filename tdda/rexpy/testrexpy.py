@@ -1793,7 +1793,7 @@ class TestExtraction(ReferenceTestCase):
         from pprint import pprint as pp
         freqs = r.examples.vrle_freqs
         pp({k: freqs[k] for k in freqs})
-        print()
+        # print()
         pp(r.build_tree(r.results.vrles))
 
         tree = r.build_tree(r.results.vrles)

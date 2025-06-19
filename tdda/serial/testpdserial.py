@@ -1181,7 +1181,6 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
             'Data frames have different column structure.'
         ))
         diffs2 = diff_dataframes(df2, df, type_matching='medium')
-        print(diffs2.diffs)
         self.assertEqual(diffs2.failures, 0)
 
     def testTinyParquetSmallWideN(self):
