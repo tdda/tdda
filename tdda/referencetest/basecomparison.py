@@ -35,6 +35,13 @@ DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 DEFAULT_DIFF_ROWS = 10
 
+ESC_MAP = str.maketrans({
+    '\\': r'\\',
+    ' ': r'\ ',
+    "'": r'\'',
+})
+
+
 
 class FailureDiffs:
     """
@@ -87,6 +94,63 @@ class FailureDiffs:
         return diff.details(df, ref_df) if diff else None
 
 
+class DiffState:
+    """
+    Container for DataFrame differences state
+    """
+    def __init__(self, actual_nrows, ref_nrows, common_cols,
+                 wrong_types=None, extra_cols=None, missing_cols=None,
+                 out_of_order=False, n_diff_values=0):
+        self.actual_nrows = actual_nrows
+        self.ref_nrows = ref_nrows
+        self.common_cols = common_cols
+        self.wrong_types = nvl(wrong_types, [])  # where type checking applied
+        self.extra_cols = nvl(extra_cols, [])    # where specified
+        self.missing_cols = nvl(missing_cols, [])  # where specified
+        self.out_of_order = out_of_order         # if specified
+        self.n_diff_values = n_diff_values       # Only when not 'quick'
+                                                 # if there are structure
+                                                 # differences
+
+    @property
+    def same_nrows(self):
+        return self.actual_nrows == self.ref_nrows
+
+    @property
+    def diff_nrows(self):
+        return self.actual_nrows != self.ref_nrows
+
+    @property
+    def different(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.wrong_types
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same(self):
+        return not self.different
+
+    @property
+    def different_ignoring_types(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same_ignoring_types(self):
+        return not self.different_ignoring_types
+
+
+
 class BaseComparison(object):
     """
     Common base class for different implementations of comparisons.
@@ -103,6 +167,231 @@ class BaseComparison(object):
         self.print_fn = print_fn
         self.verbose = verbose
         self.tmp_dir = tmp_dir or tempfile.gettempdir()
+
+    def check_dataframe(
+        self,
+        df,
+        ref_df,
+        actual_path=None,
+        expected_path=None,
+        check_data=None,
+        check_types=None,
+        check_order=None,
+        check_extra_cols=True,
+        sortby=None,
+        condition=None,
+        precision=None,
+        msgs=None,
+        type_matching=None,
+        create_temporaries=True,
+        fuzzy_nulls=False,
+        quick=True
+    ):
+        """
+        Compare two DataFrames.
+        Details of dataframe differences abstracted,
+        mostly with static methods on subclasses.
+
+        Args:
+
+            *df*
+                            Actual dataframe
+            *ref_df*
+                            Expected dataframe
+            *actual_path*
+                            Path for file where actual dataframe originated,
+                            used for error messages.
+            *expected_path*
+                            Path for file where expected dataframe originated,
+                            used for error messages.
+            *check_types*
+                            Option to specify fields to use to compare types.
+            *check_order*
+                            Option to specify fields to use to compare field
+                            order.
+            *check_data*
+                            Option to specify fields to use to compare cell
+                            values.
+            *check_extra_cols*
+                            If set to False, columns present in df but not
+                            ref_df are ignored
+            *sortby*
+                            Option to specify fields to sort by before
+                            comparing.
+            *condition*
+                            Filter to be applied to datasets before comparing.
+                            It can be ``None``, or can be a function that takes
+                            a DataFrame as its single parameter and returns
+                            a vector of booleans (to specify which rows should
+                            be compared).
+            *precision*
+                            Number of decimal places to compare float values.
+            *msgs*
+                            Optional Diffs object.
+
+            *type_matching* 'strict', 'medium', 'permissive'/'loose'.
+                            None is same as strict.
+
+            *create_temporaries*  If True (the default), if the check fails,
+                                  the actual result in the dataframe will be
+                                  written to disk (usually as parquet).
+
+            *fuzzy_nulls* Ordinarily, nulls and empty strings are
+                          considered not equal (fuzzy_nulls=False
+                          or any falsy value).
+
+                          If set to 'object', where either column
+                          in a comparison is of type object, and the
+                          other is object or string, those
+                          nulls will be mapped to the empty string
+                          on both sides so that '' == None (in effect).
+
+                          If set to True (or 1), this will also be
+                          done for string columns as well as object columns.
+
+            *quick*  If True (the default), the main goal of the function
+                     is quickly to identify whether the actual and
+                     references DataFrames are the same. In thus case,
+                     information about differences is returned, but once
+                     (for example) a column is found to have the wrong
+                     type, or to be missing, unexpected, or out of place,
+                     the function returns with no more comparison.
+
+                     When quick is False, the function tries a little
+                     harder to find detailed differences even when
+                     types are not exactly the same etc.
+
+        Returns:
+
+            A FailureDiffs named tuple with:
+              .failures     the number of failures
+              .diffs        a Diffs object with information about
+                            the failures
+
+        All of the 'Option' parameters can be of any of the following:
+
+            - ``None`` (to apply that kind of comparison to all fields)
+            - ``False`` (to skip that kind of comparison completely)
+            - a list of field names
+            - a function taking a dataframe as its single parameter, and
+              returning a list of field names to use.
+        """
+        diffs = msgs  # better name
+
+        self.actual_path = actual_path
+        self.expected_path = expected_path
+
+        type_matching = type_matching or 'strict'
+        diffs = nvl(diffs, Diffs())
+        self.precision = nvl(precision, 7)
+        self.fuzzy_nulls = fuzzy_nulls
+        if bool(fuzzy_nulls) and not fuzzy_nulls in (True, 'object'):
+            err(f'fuzzy_nulls value {fuzzy_nulls} unknown. '
+                 ' Should be True, False or "object"')
+
+        check_types = resolve_option_flag(check_types, ref_df)
+        check_extra_cols = resolve_option_flag(check_extra_cols, df)
+
+        df_names = self._col_names(df)
+        rf_names = self._col_names(ref_df)
+        common_cols = list(set(df_names).intersection(set(rf_names)))
+
+        # Check whether they have the same number of records
+        state = DiffState(len(df), len(ref_df), common_cols)
+
+        # 1. Convert category fields to string fields
+
+        df = self._replace_cats(df)
+        ref_df = self._replace_cats(ref_df)
+
+        # 2. Make initial set of missing columns
+
+        missing_cols = set(rf_names) - set(df_names)
+
+        # 3. Check types of fields, where type checking is used.
+        #    Also mark any fields not present in df that are
+        #    supposed to be type checked as missing.
+
+        for c in check_types:
+            if c not in self._col_names(df):
+                missing_cols.add(c)
+            elif not (
+                self._types_match(df[c].dtype, ref_df[c].dtype, type_matching)
+            ):
+                state.wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
+
+        # 4. Sort the missing columns
+        state.missing_cols = sorted(missing_cols)
+
+        # 5. Find any cols in df not in ref_df
+        if check_extra_cols:
+            state.extra_cols = sorted(set(df_names) - set(rf_names))
+
+        # 6. If checking order, do it now
+        if check_order != False and not missing_cols:
+            check_order = resolve_option_flag(check_order, ref_df)
+            order1 = [c for c in df_names if c in check_order if c in ref_df]
+            order2 = [c for c in rf_names if c in check_order if c in df]
+            state.out_of_order = order1 != order2
+
+        if not state.same:
+            # Log problems with the column structure
+            self.different_column_structure(diffs)
+            self.missing_columns_detected(diffs, state.missing_cols, ref_df)
+            self.extra_columns_found(diffs, state.extra_cols, df)
+            if state.wrong_types:
+                for c, dtype, ref_dtype in state.wrong_types:
+                    self.field_types_differ(diffs, c, dtype, ref_dtype)
+            if state.out_of_order:
+                self.different_column_orders(diffs, df, ref_df)
+
+        # Now move onto records.
+        # If sortby is specified, both DataFrames need to be
+        # sorted.
+        #
+        # Could also do a join here.
+        #
+        if sortby:
+            sortby = resolve_option_flag(sortby, ref_df)
+            if any([c in sortby for c in state.missing_cols]):
+                self.info('Cannot sort on missing columns')
+            else:
+                self._sort_df(df, sortby)
+                self._sort_df(ref_df, sortby)
+
+        # If a condition is specifed, apply it to both DataFrames
+        if condition:
+            df = self._apply_condition(df, condition)
+            ref_df = self._apply_condition(ref_df, condition)
+            state.actual_nrows = len(df)
+            state.ref_nrows = len(ref_df)
+
+        if state.diff_nrows:
+            # Log if not
+            self.different_numbers_of_rows(diffs, state.actual_nrows,
+                                           state.ref_nrows)
+
+        cols = state.common_cols
+        if not quick or state.same_ignoring_types:
+            check_data = resolve_option_flag(check_data, ref_df)
+            if check_data:
+                cols = [c for c in check_data if c in state.common_cols]
+                state.n_diff_values = self.same_structure_ddiff(df[cols],
+                                                                ref_df[cols],
+                                                                diffs)
+        switches = []
+        nc = len(cols)
+        nL = len(list(df))
+        if check_data and nc < nL:
+            if nc < nL - nc:
+                switches.append('--fields \'%s\'' % escaped_list(cols))
+            else:
+                rest = [f for f in df if f in (set(df) - set(cols))]
+                switches.append('--xfields \'%s\'' % escaped_list(rest))
+        if not state.same and create_temporaries:
+            self.write_temporaries(df, ref_df, diffs, switches=switches)
+        return FailureDiffs(failures=0 if state.same else 1, diffs=diffs)
+
 
     def info(self, msgs, s):
         """
@@ -551,4 +840,36 @@ def pd_eq(left, right):
     elif pd.isna(right):
         return False
     return left == right
+
+def resolve_option_flag(flag, df):
+    """
+    Method to resolve an option flag, which may be any of:
+
+       ``None`` or ``True``:
+                use all columns in the dataframe
+       ``False``:
+                use no columns
+       list of columns
+                use these columns
+       function returning a list of columns
+    """
+    if flag is None or flag is True:
+        return list(df)
+    elif flag is False:
+        return []
+    elif hasattr(flag, '__call__'):
+        return flag(df)
+    else:
+        return flag
+
+
+def escape(name):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return name.translate(ESC_MAP)
+
+
+def escaped_list(items):
+    """Escape column name etc. for passing through shell in single quotes"""
+    return ','.join(item.translate(ESC_MAP) for item in items)
+
 

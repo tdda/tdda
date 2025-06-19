@@ -8,8 +8,6 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.checkpandas import (
     PandasComparison,
-    types_match,
-    loosen_type,
     single_col_diffs,
     create_row_diffs_mask,
     create_row_diff_counts,

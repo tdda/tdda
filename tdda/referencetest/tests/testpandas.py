@@ -12,8 +12,8 @@ import pandas as pd
 
 from tdda.referencetest.checkpandas import (
     PandasComparison,
-    types_match,
-    loosen_type,
+    pandas_types_match,
+    loosen_pandas_type,
 )
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest import tag, ReferenceTestCase
@@ -148,67 +148,67 @@ class TestPandasDataFrames(ReferenceTestCase):
         )
 
         for d, L in zip(dtypes, ltypes):
-            self.assertEqual(loosen_type(d), L)
+            self.assertEqual(loosen_pandas_type(d), L)
 
         for level in ('strict', 'medium', 'permissive'):
             for t in dtypes:
-                self.assertTrue(types_match(t, t, level))
+                self.assertTrue(pandas_types_match(t, t, level))
         for t1 in dtypes:
             for t2 in dtypes:
                 if t1 != t2:
-                    self.assertFalse(types_match(t1, t2))
+                    self.assertFalse(pandas_types_match(t1, t2))
 
         for t in (S, B, b, dms, dns):
             for level in ('medium', 'loose'):
-                self.assertTrue(types_match(t, o, level))
-                self.assertTrue(types_match(o, t, level))
+                self.assertTrue(pandas_types_match(t, o, level))
+                self.assertTrue(pandas_types_match(o, t, level))
 
         for t1 in (I, i64, i32):
             for t1 in (I, i64, i32):
                 for level in ('medium', 'permissive'):
-                    self.assertTrue(types_match(t, o, level))
-                    self.assertTrue(types_match(o, t, level))
+                    self.assertTrue(pandas_types_match(t, o, level))
+                    self.assertTrue(pandas_types_match(o, t, level))
 
         for level in ('medium', 'loose'):
-            self.assertTrue(types_match(f64, f32, level))
-            self.assertTrue(types_match(f32, f64, level))
-            self.assertTrue(types_match(b, B, level))
-            self.assertTrue(types_match(B, b, level))
-            self.assertTrue(types_match(dms, dns, level))
-            self.assertTrue(types_match(dns, dms, level))
+            self.assertTrue(pandas_types_match(f64, f32, level))
+            self.assertTrue(pandas_types_match(f32, f64, level))
+            self.assertTrue(pandas_types_match(b, B, level))
+            self.assertTrue(pandas_types_match(B, b, level))
+            self.assertTrue(pandas_types_match(dms, dns, level))
+            self.assertTrue(pandas_types_match(dns, dms, level))
 
         # medium
         for t1 in (I, i64, i32):
             for t2 in (f64, f32, dms, dns, b, B, S, o):
-                self.assertFalse(types_match(t1, t2, 'medium'))
-                self.assertFalse(types_match(t2, t1, 'medium'))
+                self.assertFalse(pandas_types_match(t1, t2, 'medium'))
+                self.assertFalse(pandas_types_match(t2, t1, 'medium'))
 
         for t1 in (f64, f32):
             for t2 in (dms, dns, b, B, S, o):
-                self.assertFalse(types_match(t1, t2, 'medium'))
-                self.assertFalse(types_match(t2, t1, 'medium'))
+                self.assertFalse(pandas_types_match(t1, t2, 'medium'))
+                self.assertFalse(pandas_types_match(t2, t1, 'medium'))
 
         for t1 in (dms, dns):
             for t2 in (b, B, S):
-                self.assertFalse(types_match(t1, t2, 'medium'))
-                self.assertFalse(types_match(t2, t1, 'medium'))
+                self.assertFalse(pandas_types_match(t1, t2, 'medium'))
+                self.assertFalse(pandas_types_match(t2, t1, 'medium'))
 
         # permissive
 
         for t1 in (I, i64, i32, f64, f32, b, B):
             for t2 in (I, i64, i32, f64, f32, b, B):
-                self.assertTrue(types_match(t1, t2, 'permissive'))
-                self.assertTrue(types_match(t2, t1, 'loose'))
+                self.assertTrue(pandas_types_match(t1, t2, 'permissive'))
+                self.assertTrue(pandas_types_match(t2, t1, 'loose'))
 
         for t1 in (I, i64, i32, f64, f32):
             for t2 in (o, S, dms, dns):
-                self.assertFalse(types_match(t1, t2, 'loose'))
-                self.assertFalse(types_match(t2, t1, 'permissive'))
+                self.assertFalse(pandas_types_match(t1, t2, 'loose'))
+                self.assertFalse(pandas_types_match(t2, t1, 'permissive'))
 
         for t1 in (b, B):
             for t2 in (S, dms, dns):
-                self.assertFalse(types_match(t1, t2, 'permissive'))
-                self.assertFalse(types_match(t2, t1, 'loose'))
+                self.assertFalse(pandas_types_match(t1, t2, 'permissive'))
+                self.assertFalse(pandas_types_match(t2, t1, 'loose'))
 
 
 if __name__ == '__main__':

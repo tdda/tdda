@@ -7,7 +7,7 @@ import pandas as pd
 
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import FailureDiffs
-from tdda.referencetest.checkpandas import loosen_type
+from tdda.referencetest.checkpandas import loosen_pandas_type
 
 from tdda.serial.base import TDDASERIAL
 
@@ -68,7 +68,8 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
     del kw['index']    # don't want in the read args
 
     # parse these dates
-    dates = [col for col in df if 'date' in loosen_type(df[col].dtype.name)]
+    dates = [col for col in df
+             if 'date' in loosen_pandas_type(df[col].dtype.name)]
 
     # Don't specify these types (typically strings, bools, and dates)
     objects = [col for col in df if df[col].dtype.name == 'object']
