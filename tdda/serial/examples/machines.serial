@@ -1,0 +1,50 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "encoding": "UTF-8",
+        "delimiter": "|",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "stutter_quotes": false,
+        "null_indicators": "",
+        "accept_percentages_as_floats": false,
+        "header_row_count": 1,
+        "map_missing_trailing_cols_to_null": false,
+        "fields": {
+            "mc id": {
+                "name": "ID",
+                "fieldtype": "int"
+            },
+            "mc nm": {
+                "name": "Name",
+                "fieldtype": "string"
+            },
+            "secs": {
+                "name": "TimeToManufacture",
+                "fieldtype": "int"
+            },
+            "commission date": {
+                "name": "DateOfCommission",
+                "fieldtype": "date",
+                "format": "iso8601date"
+            },
+            "mc cp": {
+                "name": "CompletionTime",
+                "fieldtype": "datetime",
+                "format": "iso8601datetime"
+            },
+            "sh dt":  {
+                "name": "ShipDate",
+                "fieldtype": "date",
+                "format": "iso8601date"
+            },
+            "qa passed?": {
+                "name": "PassedQA",
+                "fieldtype": "bool",
+                "true_values": "yes",
+                "false_values": "no"
+            }
+        }
+    }
+}
