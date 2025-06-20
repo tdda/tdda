@@ -895,8 +895,9 @@ def err(*args, **kw):
 
 def listify(v):
     return (
-        v if v is None or isinstance(v, list)
+        v if isinstance(v, list)
         else list(v) if isinstance(v, tuple)
+        else [] if v is None
         else [v]
     )
 

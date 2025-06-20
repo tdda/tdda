@@ -440,7 +440,7 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertTrue(is_sequence({1, 2}))
 
     def testListify(self):
-        self.assertEqual(listify(None), None)
+        self.assertEqual(listify(None), [])
         self.assertEqual(listify(1), [1])
         self.assertEqual(listify('a'), ['a'])
         self.assertEqual(listify([1]), [1])

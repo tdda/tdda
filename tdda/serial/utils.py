@@ -53,14 +53,14 @@ def find_associated_metadata_file(path):
 
     # tdda.serial
     for name in (base, pathstem):
-        mdpath = name + TDDASERIAL.ext
-        if os.path.exists(mdpath):
-            return mdpath
+        md_path = name + TDDASERIAL.ext
+        if os.path.exists(md_path):
+            return md_path
 
     for (suffixes, exts) in METADATA_STYLES:
         for suffix in suffixes:
             for ext in exts:
-                mdpath = pathstem + suffix + ext
-                if os.path.exists(mdpath):
-                    return mdpath
+                md_path = pathstem + suffix + ext
+                if os.path.exists(md_path):
+                    return md_path
     return None

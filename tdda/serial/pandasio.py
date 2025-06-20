@@ -82,11 +82,11 @@ def csvw_to_pandas_kwargs(spec, extensions=False):
         the spec given as closely as possible.
     """
     md = CSVWMetadata(spec, extensions=extensions)
-    kw = tddaserial_to_pandas_read_csv_args(md)
+    kw = serial_to_pandas_read_csv_args(md)
     return kw
 
 
-def tddaserial_to_pandas_read_csv_args(md):
+def serial_to_pandas_read_csv_args(md):
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
     kw = {}
@@ -164,6 +164,9 @@ def tddaserial_to_pandas_read_csv_args(md):
              trues.update(fmd.true_values)
         if fmd.false_values and fmd.fieldtype.lower().startswith('bool'):
              falses.update(fmd.false_values)
+    if any(f.name != f.csvname for f in md.fields):
+        kw['names'] = [f.name for f in md.fields]
+        kw['header'] = 0
     if trues:
         kw['true_values'] = list(trues)
     if falses:
@@ -176,7 +179,7 @@ def tddaserial_to_pandas_read_csv_args(md):
     return kw
 
 
-def pandas_read_csv_to_tddaserial(params, prefer_nullable=False):
+def pandas_read_csv_to_serial(params, prefer_nullable=False):
     """
     Given a dictionary of pandas.read_csv parameters
     (usually from a 'pandas.read_csv' block in a .serial file),
@@ -225,7 +228,7 @@ def pandas_read_csv_to_tddaserial(params, prefer_nullable=False):
         if isinstance(formats, dict):
             date_format = formats.get(name)
             if date_format:
-                fmt, type_ = pandas_date_format_to_tddaserial(date_format)
+                fmt, type_ = pandas_date_format_to_serial(date_format)
         if has_names or type_ or fmt:
             fields.append(
                 FieldMetadata(
@@ -523,7 +526,7 @@ def to_pandas_date_format(v):
     return v  # for now
 
 
-def pandas_date_format_to_tddaserial(fmt):
+def pandas_date_format_to_serial(fmt):
     if fmt == 'ISO8601':
         return DateFormat.ISO8601_UNSPECIFIED, FieldType.ISO8601
     else:
@@ -553,7 +556,7 @@ def pandas_df_to_csv(df, path=None,
                 If True, the .serial path will be the
                 path for the data with the extension swapped to .serial.
 
-    flavours:   By default, the .tddaserial file will include
+    flavours:   By default, the .serial file will include
                   the following three flavours:
                       tdda.serial
                       pandas.DataFrame.to_csv
@@ -563,13 +566,13 @@ def pandas_df_to_csv(df, path=None,
                   '*' can be used to specify that all possible
                   flavours should be written.
 
-    tddaserial_in_path: Path for an optional tdda serial file from which
-                        to read the write parameters.
-                        If set to True, the the path will be inferred,
-                        where possible.
+    serial_in_path: Path for an optional tdda serial file from which
+                    to read the write parameters.
+                    If set to True, the the path will be inferred,
+                    where possible.
 
     preferred_in_flavour: If there are multiple formats available
-                          in the tddaserial file, by default it will
+                          in the tdda.serial file, by default it will
                           use the first available of:
                              pandas.DataFrame.to_csv
                              pandas.read_csv
@@ -581,8 +584,8 @@ def pandas_df_to_csv(df, path=None,
 
     **kw: keyword parameters are passed straight to DataFrame.write_csv.
           Any specified here override those generated be reading
-          tddaserial_in_path. It is usually better not to mix
-          tddaserial_in_path and **kw, as it is easy to generate
+          serial_in_path. It is usually better not to mix
+          serial_in_path and **kw, as it is easy to generate
           incompatibilities.
 
     Returns:
@@ -634,7 +637,8 @@ def pandas_df_to_csv(df, path=None,
 
 
 
-def csv_to_pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
+def csv_to_pandas(path=None, md_path=None, md_file_type=None,
+                  find_md=False,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, verbosity=VERBOSITY,
@@ -646,22 +650,22 @@ def csv_to_pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
     Args:
 
        path     The path to the data file (usually CSV) to be read.
-                If this is None, the mdpath must be set and contain
+                If this is None, the md_path must be set and contain
                 the path to the data.
 
-       mdpath   The optional path to the associated metadata file.
+       md_path   The optional path to the associated metadata file.
 
-                If path is None, this must be set and contain the
-                path to the data (CSV file).
+                 If path is None, this must be set and contain the
+                 path to the data (CSV file).
 
-                If path is not None, the path in the metadata file
-                is ignored.
+                 If path is not None, the path in the metadata file
+                 is ignored.
 
-                If mdpath is None, path must not be None.
-                In this case, if findmd is set to True, this function
-                will try to find an associated metadata file and use
-                that if possible, and will raise an error if it cannot
-                be found.
+                 If md_path is None, path must not be None.
+                 In this case, if findmd is set to True, this function
+                 will try to find an associated metadata file and use
+                 that if possible, and will raise an error if it cannot
+                 be found.
 
        md_file_type   Optional specification of the kind of metadata file.
                       Should be one of
@@ -669,11 +673,11 @@ def csv_to_pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
                           'csvw'
                           'frictionless'
 
-       findmd   If this is set to True, the library will try to find
-                associated metadata based on filename conventions.
-                This should not be set if mdpath is provided.
-                If assocaited metadata cannot be found, an error
-                will be raised when this is set.
+       find_md   If this is set to True, the library will try to find
+                 associated metadata based on filename conventions.
+                 This should not be set if md_path is provided.
+                 If assocaited metadata cannot be found, an error
+                 will be raised when this is set.
 
        upgrade_types   If True (the default), this will upgrade
                        some columns read_csv will create as object
@@ -683,7 +687,7 @@ def csv_to_pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
                                columns with nulls but with no fractional
                                components will be upgraded to Ints.
 
-       return_md   If true, returns DataFrame and metadata (as tuple)
+       return_md     If true, returns DataFrame and metadata (as tuple)
 
        table_number  If set, use the specified table number (indexed
                      from zero) in the metadata
@@ -699,16 +703,16 @@ def csv_to_pandas(path=None, mdpath=None, md_file_type=None, findmd=False,
                 and can be used to override values from the
                 metadata file.
     """
-    md, path, mdpath = get_metadata_for_reader(
-         path=path, mdpath=mdpath, md_file_type=md_file_type,
-         findmd=findmd, table_number=table_number,
+    md, path, md_path = get_metadata_for_reader(
+         path=path, md_path=md_path, md_file_type=md_file_type,
+         find_md=find_md, table_number=table_number,
          use_table_name=use_table_name,
          preferred=preferred or 'pandas.read_csv',
          verbosity=verbosity
      )
 
     if md:
-        md_kw = tddaserial_to_pandas_read_csv_args(md)
+        md_kw = serial_to_pandas_read_csv_args(md)
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -753,5 +757,3 @@ def poss_upgrade_to_int(df, name):
             if n_same == field.shape[0]:
                 # no floats have fractional parts
                 df[name] = int_col
-
-

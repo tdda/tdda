@@ -99,8 +99,8 @@ class FieldMetadata:
                  true_values=None, false_values=None,
                  allow_extras=False, description=None, **kw):
         self.name = name
+        self.csvname = csvname or name
         self.fieldtype = fieldtype
-        self.csvname = None
         self.altnames = None
         self.format = format
         self.null_indicators = null_indicators
@@ -138,8 +138,11 @@ class FieldMetadata:
             )
 
     def unobjectify(self):
-        return {k: unobjectify(v) for k, v in self.__dict__.items()
+        d = {k: unobjectify(v) for k, v in self.__dict__.items()
                 if nonnull(v)}
+        if d['csvname'] == d['name']:
+            del d['csvname']
+        return d
 
 
 class SerialMetadata:
@@ -154,13 +157,21 @@ class SerialMetadata:
         date_format=None,
         datetime_format=None,
         null_indicators=None,
-        header_row_count=1,
+        header_row_count=None,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
         verbosity=VERBOSITY,
         libs=None,
     ):
-        self.fields = fields or []
+        if isinstance(fields, list):
+            self.fields = fields
+            self._fields_as_list = True
+        else:
+            self.fields = []
+            if isinstance(fields, dict):
+                for extname, f in fields.items():
+                    f['csvname'] = extname
+                    self.fields.append(f)
         self.path = path
         self.encoding = encoding
         self.delimiter = delimiter
@@ -253,7 +264,8 @@ class SerialMetadata:
         nulls = m.get('null_indicators')
         if type(nulls) == list and len(nulls) == 1:
             m['null_indicators'] = nulls[0]
-        d[TDDASERIAL.key] = m
+        if m:
+            d[TDDASERIAL.key] = m
         for (lib, params) in self.libs.items():
             d[lib] = {
                 k: unobjectify(v)

@@ -13,7 +13,7 @@ from tdda.serial.base import FieldType
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.polarsio import (
     csv_to_polars,
-    tddaserial_to_polars_read_csv_args,
+    serial_to_polars_read_csv_args,
 #    polars_df_to_csv,
 #    polars_df_to_metadata,
 #    polars_dtype_to_fieldtype,
@@ -74,22 +74,24 @@ def testwarn():
 
 
 class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
-    def test_base_tddaserial(self):
+    def test_base_serial(self):
         md = load_metadata(epath('base-csv.serial'))
         warn, buf = testwarn()
-        kw = tddaserial_to_polars_read_csv_args(md, warner=warn,
+        kw = serial_to_polars_read_csv_args(md, warner=warn,
                                                 serializable=True)
         self.assertStringCorrect(json.dumps(kw, indent=4),
                                  tdpath('base-csv-pl-from-serial.json'))
         self.assertEqual(buf, [
             'Polars does not understand escape characters.\n'
-            'Ignoring escape value: \\'
+            'Ignoring escape value: \\.\n',
+            'Field bool2 booleans yes, no will not be understood by Polars.\n'
+            'If they are present, you may need to set them to pl.String.\n'
         ])
 
-    def test_base_polars_tddaserial(self):
+    def test_base_polars_serial(self):
         md = load_metadata(epath('base-csv-polars.serial'))
         warn, buf = testwarn()
-        kw = tddaserial_to_polars_read_csv_args(md, warner=warn,
+        kw = serial_to_polars_read_csv_args(md, warner=warn,
                                                 serializable=True)
         self.assertStringCorrect(json.dumps(kw, indent=4),
                                  tdpath('base-csv-pl-from-serial2.json'))
@@ -98,7 +100,7 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
     def test_simple(self):
         md = load_metadata(tdpath('simple-metadata.json'))
         warn, buf = testwarn()
-        kw = tddaserial_to_polars_read_csv_args(md, warner=warn,
+        kw = serial_to_polars_read_csv_args(md, warner=warn,
                                                 serializable=True)
         self.assertStringCorrect(json.dumps(kw, indent=4),
                                  tdpath('simple-csv-pl-from-csvw.json'))
@@ -107,7 +109,7 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
     def test_isodate_tsv(self):
         md = load_metadata(tdpath('isodt-tsv-metadata.json'))
         warn,  buf = testwarn()
-        kw = tddaserial_to_polars_read_csv_args(md, warner=warn,
+        kw = serial_to_polars_read_csv_args(md, warner=warn,
                                                 serializable=True)
         self.assertStringCorrect(json.dumps(kw, indent=4),
                                  tdpath('isodate-tsv-pl-from-csvw.json'))
@@ -118,10 +120,10 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 #     dfEqual = dfEqual
 
 #     def test_isodate2pd(self):
-#         mdpath = tdpath('isod-metadata.json')
+#         md_path = tdpath('isod-metadata.json')
 #         csvpath = tdpath('isod.csv')
 
-#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(mdpath))
+#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(md_path))
 
 #         self.assertEqual(df.row.dtype, 'Int64')
 #         self.assertEqual(df.date.dtype, 'datetime64[ns]')
@@ -136,8 +138,8 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 #         self.dfEqual(df, expected)
 
 #     def test_simple2metadata(self):
-#         mdpath = tdpath('simple-metadata.json')
-#         md = CSVWMetadata(mdpath)
+#         md_path = tdpath('simple-metadata.json')
+#         md = CSVWMetadata(md_path)
 #         self.assertStringCorrect(str(md), tdpath('expected/simple-md.json'),
 #                                  ignore_substrings=[
 #                                     'metadata_source_path',
@@ -146,10 +148,10 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 #                                  ignore_patterns=TDDASERIAL_PATTERNS)
 
 #     def test_simple2pd(self):
-#         mdpath = tdpath('simple-metadata.json')
+#         md_path = tdpath('simple-metadata.json')
 #         csvpath = tdpath('simple.csv')
 
-#         kw = csvw_to_polars_kwargs(mdpath)
+#         kw = csvw_to_polars_kwargs(md_path)
 #         self.assertEqual(kw, {
 #             'date_format': {
 #                 'LastIn2024': 'ISO8601',
@@ -191,10 +193,10 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 #         self.dfEqual(df, expected)
 
 #     def test_isodate_tsv2pd(self):
-#         mdpath = tdpath('isodt-tsv-metadata.json')
+#         md_path = tdpath('isodt-tsv-metadata.json')
 #         csvpath = tdpath('isodt.tsv')
 
-#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(mdpath))
+#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(md_path))
 
 #         expected = pd.DataFrame({
 #             'row': pd.Series([1, 15], dtype='Int64'),
@@ -206,10 +208,10 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 #         self.dfEqual(df, expected)
 
 #     def test_eurodate2pd(self):
-#         mdpath = tdpath('eurod-metadata.json')
+#         md_path = tdpath('eurod-metadata.json')
 #         csvpath = tdpath('eurod.csv')
-#         # kw = csvw_to_polars_kwargs(mdpath)
-#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(mdpath))
+#         # kw = csvw_to_polars_kwargs(md_path)
+#         df = pd.read_csv(csvpath, **csvw_to_polars_kwargs(md_path))
 
 #         expected = pd.DataFrame({
 #             'row': pd.Series([1, 15], dtype='Int64'),
@@ -337,10 +339,10 @@ class TestPolarsLoad(ReferenceTestCase):
         # Test loading of small.csv with correct CSVW associated
         # metadata. All types now come in correctly
         csvpath = tdpath('small.csv')
-        mdpath = tdpath('small-metadata.json')
-        md = load_metadata(mdpath)
+        md_path = tdpath('small-metadata.json')
+        md = load_metadata(md_path)
         warn, buf = testwarn()
-        df = csv_to_polars(csvpath, mdpath, warner=warn)
+        df = csv_to_polars(csvpath, md_path, warner=warn)
 
         # Cannot read non ISO-8601 dates
         # tdda.serial gets it to read these as strings
@@ -350,8 +352,8 @@ class TestPolarsLoad(ReferenceTestCase):
     def test_load_latin1(self):
         # Read sig_latin1.csv correctly as iso-8859-1,
         # as specified in csvw metadata file
-        mdpath = tdpath('sig-latin1-metadata.json')
-        df = csv_to_polars(mdpath=mdpath)
+        md_path = tdpath('sig-latin1-metadata.json')
+        df = csv_to_polars(md_path=md_path)
         refpath = tdpath('sig-latin1.parquet')
         rf = pl.read_parquet(refpath)
 
@@ -362,7 +364,7 @@ class TestPolarsLoad(ReferenceTestCase):
         self.assertEqual(df['sig'][0], '¤¦¨¼½¾')
 
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, encoding='iso-8859-15', warner=warn)
+        df = csv_to_polars(md_path=md_path, encoding='iso-8859-15', warner=warn)
         self.assertEqual(buf, [])
         # Check read *incorrectly* when latin9 specified
         self.assertNotEqual(df['sig'][0], '¤¦¨¼½¾')
@@ -373,9 +375,9 @@ class TestPolarsLoad(ReferenceTestCase):
     def test_load_cp1252(self):
         # Read sig_cp1252.csv correctly as cp1252
         # as specified in csvw metadata file
-        mdpath = tdpath('sig-cp1252-metadata.json')
+        md_path = tdpath('sig-cp1252-metadata.json')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(buf, [])
         refpath = tdpath('sig-cp1252.parquet')
         rf = pl.read_parquet(refpath)
@@ -386,9 +388,9 @@ class TestPolarsLoad(ReferenceTestCase):
         # Read sig_utf16.csv correctly as utf-16.
         # This includes all the characters that differ among
         # latin1 (iso-8859-1), latin9 (iso-8859-15), and cp1252.
-        mdpath = tdpath('sig-equiv-utf16-metadata.json')
+        md_path = tdpath('sig-equiv-utf16-metadata.json')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(buf, [])
         refpath = tdpath('sig-equiv-utf16.parquet')
         rf = pl.read_parquet(refpath)
@@ -399,9 +401,9 @@ class TestPolarsLoad(ReferenceTestCase):
         # Read sig_utf16.csv correctly as utf-8.
         # This includes all the characters that differ among
         # latin1 (iso-8859-1), latin9 (iso-8859-15), and cp1252.
-        mdpath = tdpath('sig-equiv-utf8-metadata.json')
+        md_path = tdpath('sig-equiv-utf8-metadata.json')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(buf, [])
         refpath = tdpath('sig-equiv-utf8.parquet')
         rf = pl.read_parquet(refpath)
@@ -414,9 +416,9 @@ class TestPolarsLoad(ReferenceTestCase):
         # Those that csvmetadata fully supports should be loaded
         # correctly, with others loading as strings.
         #
-        mdpath = tdpath('all-csvw-types-metadata.json')
+        md_path = tdpath('all-csvw-types-metadata.json')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(buf, [])
         refpath = tdpath('all-csvw-types.parquet')
         rf = pl.read_parquet(refpath)
@@ -431,9 +433,9 @@ class TestPolarsLoad(ReferenceTestCase):
         #   - double quoted all values
         #   - used NULL as the null marker
         #
-        mdpath = tdpath('small2-metadata.json')
+        md_path = tdpath('small2-metadata.json')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(len(buf), 4)  # 4 bad date fields
         self.assertTrue(df.equals(self.dfisodates))
 
@@ -441,10 +443,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
     @tag
     def test_load_nulls1(self):
-        mdpath = tdpath('nulls1-metadata.json')
+        md_path = tdpath('nulls1-metadata.json')
         refpath = tdpath('nulls1.parquet')
         warn, buf = testwarn()
-        df = csv_to_polars(mdpath=mdpath, warner=warn)
+        df = csv_to_polars(md_path=md_path, warner=warn)
         self.assertEqual(len(df), 31)  # two blank lines at end
 
         df = df[:29]  # truncate
@@ -455,8 +457,8 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test_load_base_serial_explicit(self):
 #         # Bypass tdda serial and read metadata directly from file
-#         mdpath = epath('base-csv-polars.serial')
-#         with open(mdpath) as f:
+#         md_path = epath('base-csv-polars.serial')
+#         with open(md_path) as f:
 #             d = json.load(f)
 #         params = d['polars.read_csv']
 #         df = pl.read_csv(epath('base.csv'), **params)
@@ -480,7 +482,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertEqual(details.cols, ['index', 'string_torture'])
 #         self.assertEqual(details.rows, [[5, None, '']])
 
-#     def test_load_base_with_tddaserial_metadata(self):
+#     def test_load_base_with_serial_metadata(self):
 #         # Same as previous but using read_with_tdda_serial
 #         # using the polars-specific metadata
 #         df = csv_to_polars(epath('base.csv'), epath('base-csv.serial'))
@@ -493,7 +495,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertEqual(details.cols, ['index', 'string_torture'])
 #         self.assertEqual(details.rows, [[5, None, '']])
 
-#     def test_load_base_psv_with_tddaserial(self):
+#     def test_load_base_psv_with_serial(self):
 #         # Same as previous but using pipe-separators
 #         df = csv_to_polars(epath('base.psv'), epath('base-psv.serial'))
 #         diffs = pd_diff(df, self.ref_base_df,
@@ -600,7 +602,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         test = this_function_name()  # function name
 #         csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         resultspath = self.fullpath(f'{test}/result.json')
-#         df = csv_to_polars(csvpath, findmd=True)
+#         df = csv_to_polars(csvpath, find_md=True)
 #         string_to_int(df, 'GID')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
 #                   'inventory_date']
@@ -618,11 +620,11 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test012(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/csv-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         csvpath = self.fullpath('test012/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -642,10 +644,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test013(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}-user-metadata.json')
+#         md_path = self.fullpath(f'{test}-user-metadata.json')
 #         resultspath = self.fullpath(f'{test}.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath('tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -664,10 +666,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test014(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/linked-metadata.json')
+#         md_path = self.fullpath(f'{test}/linked-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -687,10 +689,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test015(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/csv-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -710,10 +712,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test016(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/csv-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -733,10 +735,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test017(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/csv-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -756,10 +758,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test018(self):
 #         test = this_function_name()  # function name
-#         mdpath = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
 #         resultspath = self.fullpath(f'{test}/result.json')
 
-#         df, md = csv_to_polars(mdpath=mdpath, return_md=True)
+#         df, md = csv_to_polars(md_path=md_path, return_md=True)
 #         string_to_int(df, 'GID')
 #         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
@@ -791,10 +793,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test023(self):
 #         test = this_function_name()
-#         mdpath = self.fullpath(f'{test}-user-metadata.json')
+#         md_path = self.fullpath(f'{test}-user-metadata.json')
 #         resultspath = self.fullpath(f'{test}.json')
 
-#         df = csv_to_polars(mdpath=mdpath)
+#         df = csv_to_polars(md_path=md_path)
 #         self.assertEqual(list(df), [0, 1, 2, 3, 4])
 #         # This is what Polars does:  ^^^
 #         # CSVW wants _col.1 to _col.5 apparently.
@@ -817,10 +819,10 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #     def test027(self):
 #         test = this_function_name()
-#         mdpath = self.fullpath(f'{test}-user-metadata.json')
+#         md_path = self.fullpath(f'{test}-user-metadata.json')
 #         resultspath = self.fullpath(f'{test}.json')
 
-#         df = csv_to_polars(mdpath=mdpath)
+#         df = csv_to_polars(md_path=md_path)
 #         fields = ['GID', 'on_street', 'species', 'trim_cycle',
 #                   'inventory_date']
 #         ref_df = csvw_bare_json_to_df(resultspath, fields)
@@ -859,10 +861,10 @@ class TestPolarsLoad(ReferenceTestCase):
 #     def test030(self):
 #         test = this_function_name()
 #         csvpath = self.fullpath('countries.csv')
-#         mdpath = self.fullpath('countries.json')
+#         md_path = self.fullpath('countries.json')
 #         resultspath = self.fullpath(f'{test}.json')  # contains two tables
 
-#         df = csv_to_polars(csvpath, mdpath, table_number=0)
+#         df = csv_to_polars(csvpath, md_path, table_number=0)
 #         fields = fields_from(csvpath)
 #         ref_fields = [
 #             'http://www.geonames.org/ontology#countryCode',
@@ -878,7 +880,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
 #         slice_csvpath = self.fullpath('country_slice.csv')
-#         df2 = csv_to_polars(slice_csvpath, mdpath, table_number=1)
+#         df2 = csv_to_polars(slice_csvpath, md_path, table_number=1)
 #         slice_fields = fields_from(slice_csvpath)
 #         ref_df2 = csvw_json_to_df(resultspath, slice_fields, table_number=1)
 #         ref_df2['countryRef'] = (
@@ -895,9 +897,9 @@ class TestPolarsLoad(ReferenceTestCase):
 #         test = this_function_name()
 #         csvpath = self.fullpath(f'{test}/events-listing.csv')
 #         resultspath = self.parquet_path(f'{test}-result.parquet')
-#         mdpath = self.fullpath(f'{test}/csv-metadata.json')
+#         md_path = self.fullpath(f'{test}/csv-metadata.json')
 
-#         df, md = csv_to_polars(csvpath, mdpath, return_md=True, verbosity=1)
+#         df, md = csv_to_polars(csvpath, md_path, return_md=True, verbosity=1)
 #         self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
 
 #         # Compare against known correct result (not from csvw project)
@@ -910,10 +912,10 @@ class TestPolarsLoad(ReferenceTestCase):
 #         test = this_function_name()
 #         f = self.fullpath
 #         pqp = self.parquet_path
-#         mdpath = f(f'{test}/csv-metadata.json')
+#         md_path = f(f'{test}/csv-metadata.json')
 #         sdf, md = csv_to_polars(
 #             f(f'{test}/senior-roles.csv'),
-#             mdpath,
+#             md_path,
 #             use_table_name=True,
 #             upgrade_possible_ints=True,
 #             return_md=True,
@@ -922,7 +924,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'))
 #         jdf = csv_to_polars(
 #             f(f'{test}/junior-roles.csv'),
-#             mdpath,
+#             md_path,
 #             use_table_name=True,
 #             upgrade_possible_ints=True,
 #             verbosity=1,
@@ -931,7 +933,7 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #         pdf = csv_to_polars(
 #             f(f'{test}/gov.uk/data/professions.csv'),
-#             mdpath,
+#             md_path,
 #             use_table_name=True,
 #             upgrade_possible_ints=True,
 #             verbosity=1,
@@ -940,7 +942,7 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #         odf = csv_to_polars(
 #             f(f'{test}/gov.uk/data/organizations.csv'),
-#             mdpath,
+#             md_path,
 #             use_table_name=True,
 #             upgrade_possible_ints=True,
 #             verbosity=1,
@@ -957,7 +959,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         md = load_metadata(
 #             self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
 #         )
-#         df = csv_to_polars(csvpath, findmd=True)
+#         df = csv_to_polars(csvpath, find_md=True)
 #         self.assertDataFrameCorrect(df, resultspath)
 
 
@@ -1040,20 +1042,20 @@ class TestPolarsLoad(ReferenceTestCase):
 #         # Read back correctly using various metadata in .serial file
 
 #         dfa = csv_to_polars(tdpath('tiny1cd3.csv'),
-#                          mdpath=tdpath('tiny1cd3.serial'),
+#                          md_path=tdpath('tiny1cd3.serial'),
 #                          upgrade_types=False,
 #                          preferred='polars.read_csv')
 
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1cd3.csv'),
-#                          mdpath=tdpath('tiny1cd3.serial'),
+#                          md_path=tdpath('tiny1cd3.serial'),
 #                          upgrade_types=False,
 #                          preferred='tdda.serial')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1cd-polars.csv'),
-#                          mdpath=tdpath('tiny1cd-polars.serial'),
+#                          md_path=tdpath('tiny1cd-polars.serial'),
 #                          upgrade_types=False)
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
@@ -1080,19 +1082,19 @@ class TestPolarsLoad(ReferenceTestCase):
 #         # Read back correctly using various metadata in .serial file
 
 #         dfa = csv_to_polars(tdpath('tiny1nd3.csv'),
-#                          mdpath=tdpath('tiny1nd3.serial'),
+#                          md_path=tdpath('tiny1nd3.serial'),
 #                          upgrade_types=False,
 #                          preferred='polars.read_csv')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1nd3.csv'),
-#                          mdpath=tdpath('tiny1nd3.serial'),
+#                          md_path=tdpath('tiny1nd3.serial'),
 #                          upgrade_types=False,
 #                          preferred='tdda.serial')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1nd3.csv'),
-#                          mdpath=tdpath('tiny1nd-polars.serial'),
+#                          md_path=tdpath('tiny1nd-polars.serial'),
 #                          upgrade_types=False)
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
@@ -1120,19 +1122,19 @@ class TestPolarsLoad(ReferenceTestCase):
 #         # Read back correctly using various metadata in .serial file
 
 #         dfa = csv_to_polars(tdpath('tiny1cn3.csv'),
-#                          mdpath=tdpath('tiny1cn3.serial'),
+#                          md_path=tdpath('tiny1cn3.serial'),
 #                          upgrade_types=False,
 #                          preferred='polars.read_csv')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1cn3.csv'),
-#                          mdpath=tdpath('tiny1cn3.serial'),
+#                          md_path=tdpath('tiny1cn3.serial'),
 #                          upgrade_types=False,
 #                          preferred='tdda.serial')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1cn3.csv'),
-#                          mdpath=tdpath('tiny1cn-polars.serial'),
+#                          md_path=tdpath('tiny1cn-polars.serial'),
 #                          upgrade_types=False)
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
@@ -1159,19 +1161,19 @@ class TestPolarsLoad(ReferenceTestCase):
 #         # Read back correctly using various metadata in .serial file
 
 #         dfa = csv_to_polars(tdpath('tiny1nn3.csv'),
-#                             mdpath=tdpath('tiny1nn3.serial'),
+#                             md_path=tdpath('tiny1nn3.serial'),
 #                             upgrade_types=False,
 #                             preferred='polars.read_csv')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1nn3.csv'),
-#                             mdpath=tdpath('tiny1nn3.serial'),
+#                             md_path=tdpath('tiny1nn3.serial'),
 #                             upgrade_types=False,
 #                             preferred='tdda.serial')
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
 #         dfa = csv_to_polars(tdpath('tiny1nn3.csv'),
-#                             mdpath=tdpath('tiny1nn-polars.serial'),
+#                             md_path=tdpath('tiny1nn-polars.serial'),
 #                             upgrade_types=False)
 #         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 

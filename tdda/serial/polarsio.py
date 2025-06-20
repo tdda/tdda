@@ -1,6 +1,7 @@
+import copy
 import polars as pl
 
-from tdda.serial.base import VERBOSITY
+from tdda.serial.base import VERBOSITY, SerialMetadata
 from tdda.serial.reader import get_metadata_for_reader
 from tdda.utils import listify, warn as warn
 
@@ -53,6 +54,12 @@ POLARS_DTYPE_MAP = {
 }
 
 
+POLARS_DTYPE_MAP = {
+    k: eval(f'pl.{k}')
+    for k in POLARS_DTYPES
+}
+
+
 FIELDTYPE_TO_POLARS_DTYPE = {
     'bool': pl.Boolean,
     'int': pl.Int64,
@@ -68,7 +75,8 @@ def pl_dtype_to_str(t):
     return str(t).split('.')[-1] if t else str(t)
 
 
-def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
+def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
+                                   map_other_bools_to_string=False):
     if warner is not None:
         Warn = warner
     else:
@@ -83,7 +91,7 @@ def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
                 if dtype:
                     o[k] = dtype
                 else:
-                    Warn(f'Polars type "{dtype}" not known')
+                    Warn(f'Polars type "{dtype}" not known.\n')
         return params
 
     kw = {}
@@ -95,7 +103,7 @@ def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
 
     if md.escape_char:
         Warn('Polars does not understand escape characters.\n'
-             f'Ignoring escape value: {md.escape_char}')
+             f'Ignoring escape value: {md.escape_char}.\n')
 
     if md.null_indicators is not None:
         kw['null_values'] = listify(md.null_indicators)  # Can do per field
@@ -125,12 +133,61 @@ def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
     else:
         fields = {}
 
+    booleans = [
+        f.format
+        for f in md.fields
+        if getattr(f, 'format', None) and f.fieldtype == 'bool'
+    ]
+    bool_str_fields = []
+    if booleans:
+        for b in booleans:
+            parts = b.split('|')
+            if len(parts) == 2:
+                trues.add(parts[0])
+                falses.add(parts[1])
+            else:
+                Warn(f'*** Warning: Boolean specification {b} not understood;'
+                       ' ignoring.\n')
+            non_pl_bools = ', '.join(
+                [v for c in true_values if v.lower() != 'true']
+                + [v for c in true_values if v.lower() != 'false']
+            )
+            bool_str_fields = [f.name for f in fields if f.fieldtype == 'bool']
+            if non_pl_bools and bool_fields:
+                if map_other_bools_to_string:
+                    m = ''
+                else:
+                    m = ('If they actually occur in the file, fields '
+                         'will need to be set to string.')
+                    bool_str_fields = []
+                Warn('Polars will not understand '
+                     f'the following boolean values:\n {non_pl_bools}.\n{m}\n')
+
     for field, fmd in fields.items():
         if fmd.fieldtype.startswith('date'):
             if fmd.format and not fmd.format.lower().startswith('iso'):
                 schema[field] = f(pl.String)
                 Warn(f'Field {field} date format {fmd.format} will not be '
                       'understood by Polars.\nSetting to pl.String.')
+        if fmd.fieldtype.lower().startswith('bool'):
+            bads = ', '.join(v for v in (listify(fmd.true_values)
+                                + listify(fmd.false_values))
+                          if v.lower not in ['true', 'false'])
+                   # What if swapped?
+            if any(bads):
+                start = (f'Field {field} booleans {bads} will not be '
+                          'understood by Polars.')
+                if map_other_bools_to_string:
+                    param = 'map_other_bools_to_string=True'
+                    Warn(f'{start}\nSetting to pl.String ({param}).\n')
+                    schema[field] = f(pl.String)
+                else:
+                    Warn(f'{start}\nIf they are present, '
+                          'you may need to set them to pl.String.\n')
+
+    if any(f.name != f.csvname for f in md.fields):
+        kw['new_columns'] = [f.name for f in md.fields]
+
 
     # 'missing_utf8_is_empty_string'
     # infer_schema
@@ -158,11 +215,12 @@ def tddaserial_to_polars_read_csv_args(md, warner=None, serializable=False):
 
     return kw
 
-def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
+
+def csv_to_polars(path=None, md_path=None, md_file_type=None, find_md=False,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
-                  preferred=None, verbosity=VERBOSITY, warner=None,
-                  **kw):
+                  preferred=None, map_other_bools_to_string=False,
+                  verbosity=VERBOSITY, warner=None, **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -170,10 +228,10 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
     Args:
 
        path     The path to the data file (usually CSV) to be read.
-                If this is None, the mdpath must be set and contain
+                If this is None, the md_path must be set and contain
                 the path to the data.
 
-       mdpath   The optional path to the associated metadata file.
+       md_path   The optional path to the associated metadata file.
 
                 If path is None, this must be set and contain the
                 path to the data (CSV file).
@@ -181,8 +239,8 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
                 If path is not None, the path in the metadata file
                 is ignored.
 
-                If mdpath is None, path must not be None.
-                In this case, if findmd is set to True, this function
+                If md_path is None, path must not be None.
+                In this case, if find_md is set to True, this function
                 will try to find an associated metadata file and use
                 that if possible, and will raise an error if it cannot
                 be found.
@@ -193,9 +251,9 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
                           'csvw'
                           'frictionless'
 
-       findmd   If this is set to True, the library will try to find
+       find_md   If this is set to True, the library will try to find
                 associated metadata based on filename conventions.
-                This should not be set if mdpath is provided.
+                This should not be set if md_path is provided.
                 If assocaited metadata cannot be found, an error
                 will be raised when this is set.
 
@@ -217,21 +275,30 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
                   if present. This can be set to 'tdda.serial'
                   or 'csvw' to override that.
 
+       map_other_bools_to_string   If True, when metadata specifies
+                                   non-true/false values as bools
+                                   the boolean fields are read as strings.
+                                   Default: False
+
        verbosity   For metadata reader
 
        **kw     These keyword arguments are passed to pandas.read_csv,
                 and can be used to override values from the
                 metadata file.
     """
-    md, path, mdpath = get_metadata_for_reader(
-         path=path, mdpath=mdpath, md_file_type=md_file_type,
-         findmd=findmd, table_number=table_number,
+    md, path, md_path = get_metadata_for_reader(
+         path=path, md_path=md_path, md_file_type=md_file_type,
+         find_md=find_md, table_number=table_number,
          use_table_name=use_table_name,
          preferred=preferred or 'polars.read_csv',
-         verbosity=verbosity
+         verbosity=verbosity,
      )
     if md:
-        md_kw = tddaserial_to_polars_read_csv_args(md, warner=warner)
+        md_kw = serial_to_polars_read_csv_args(
+            md,
+            warner=warner,
+            map_other_bools_to_string=map_other_bools_to_string,
+        )
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -242,4 +309,12 @@ def csv_to_polars(path=None, mdpath=None, md_file_type=None, findmd=False,
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
-
+def as_polars_serial_lib_args(kw):
+    out = copy.deepcopy(kw)
+    dtypes = kw.get('schema')
+    if dtypes:
+        out['schema'] = {k: repr(v) for k, v in dtypes.items()}
+    dtypes = kw.get('schema_overrides')
+    if dtypes:
+        out['schema_overrides'] = {k: repr(v) for k, v in dtypes.items()}
+    return out

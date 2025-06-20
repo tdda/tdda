@@ -54,7 +54,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
                       to this table name
 
       preferred_serial_flavour: If multiple metadata flavours are found
-                                at the same level of a .tddaserial file,
+                                at the same level of a .serial file,
                                 the one to choose (or priority list).
 
       verbosity:   2: errors and warnings to stderr
@@ -113,7 +113,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
     return md
 
 
-def get_metadata_for_reader(path, mdpath, md_file_type, findmd,
+def get_metadata_for_reader(path, md_path, md_file_type, find_md,
                             table_number, use_table_name, preferred,
                             verbosity):
     """
@@ -132,10 +132,10 @@ def get_metadata_for_reader(path, mdpath, md_file_type, findmd,
         assert path is not None
         for_table_name = os.path.basename(path)
     if path is None:
-        if mdpath is None:
-            raise TDDASerialError('Must provide path or mdpath')
+        if md_path is None:
+            raise TDDASerialError('Must provide path or md_path')
         else:
-            md = load_metadata(mdpath, md_file_type=md_file_type,
+            md = load_metadata(md_path, md_file_type=md_file_type,
                                table_number=table_number,
                                for_table_name=for_table_name,
                                preferred_serial_flavour=preferred)
@@ -144,17 +144,17 @@ def get_metadata_for_reader(path, mdpath, md_file_type, findmd,
                 raise TDDASerialError('No data specified.')
 
 
-    if mdpath is None and findmd:
-        mdpath = find_associated_metadata_file(path)
-        if mdpath is None:
+    if md_path is None and find_md:
+        md_path = find_associated_metadata_file(path)
+        if md_path is None:
             raise TDDASerialError('Could not find any associated metadata '
                                    f'for {os.path.abspath(path)}')
 
-    if md is None and mdpath is not None:
-        md = load_metadata(mdpath, md_file_type=md_file_type,
+    if md is None and md_path is not None:
+        md = load_metadata(md_path, md_file_type=md_file_type,
                            table_number=table_number,
                            for_table_name=for_table_name, verbosity=verbosity)
-    return md, path, mdpath
+    return md, path, md_path
 
 
 def find_metadata_kind(mds, preferred=None):

@@ -1,9 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
     "writer": "tdda.serial-2.2.15",
-    "tdda.serial": {
-        "header_row_count": 1
-    },
     "pandas.DataFrame.to_csv": {},
     "pandas.read_csv": {
         "encoding": "UTF-8",
