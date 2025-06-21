@@ -1,0 +1,8 @@
+{
+    "separator": "\t",
+    "encoding": "utf-8",
+    "schema": {
+        "row": "Int64",
+        "time": "Datetime"
+    }
+}

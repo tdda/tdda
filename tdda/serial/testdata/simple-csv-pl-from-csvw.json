@@ -1,0 +1,12 @@
+{
+    "encoding": "utf-8",
+    "schema": {
+        "Index": "Int64",
+        "Odd": "Boolean",
+        "Even": "Boolean",
+        "Real": "Float64",
+        "Name": "String",
+        "LastInFeb": "Datetime",
+        "LastIn2024": "Datetime"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "separator": ",",
+    "schema_overrides": {
+        "stri": "String",
+        "strf": "String",
+        "nil_str": "String",
+        "nil_bool": "Boolean",
+        "date": "Date",
+        "datetime": "Datetime",
+        "datetimezone": "Datetime"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "separator": ",",
+    "quote_char": "\"",
+    "null_values": [
+        ""
+    ],
+    "encoding": "UTF-8",
+    "schema": {
+        "row": "Int64",
+        "int": "Int64",
+        "float": "Float64",
+        "bool1": "Boolean",
+        "bool2": "Boolean",
+        "bool3": "Boolean",
+        "stri": "String",
+        "strf": "String",
+        "string": "String",
+        "string_accents": "String",
+        "string_torture": "String",
+        "date": "Datetime",
+        "datetime": "Datetime",
+        "datetimezone": "Datetime",
+        "nil_bool": "Boolean",
+        "nil_str": "String",
+        "row2": "Int64"
+    }
+}
