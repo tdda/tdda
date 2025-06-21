@@ -637,6 +637,9 @@ class SameStructureDDiff:
             indexes = [
                 C.common(v, dim_if_not_bw=True) for v in L.index.to_list()
             ]
+            pl_indexes = [
+                C.common(v, plain=True) for v in L.index.to_list()
+            ]
             rows = []
             plain_rows = []
             for r in range(n):
@@ -661,57 +664,63 @@ class SameStructureDDiff:
                 if vertical:
                     rows.append([indexes[r]] + lstr)
                     rows.append([indexes[r]] + rstr)
-                    plain_rows.append([indexes[r]] + plstr)
-                    plain_rows.append([indexes[r]] + prstr)
+                    plain_rows.append([pl_indexes[r]] + plstr)
+                    plain_rows.append([pl_indexes[r]] + prstr)
                 else:
                     rows.append(
-                        [indexes[r]]
+                        [pl_indexes[r]]
                         + list(chain(*([L, R] for L, R in zip(lstr, rstr))))
                     )
                     plain_rows.append(
-                        [indexes[r]]
+                        [pl_indexes[r]]
                         + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
                     )
-
-            term_width = shutil.get_terminal_size((80, 20))[0]
+            n_table_cols = len(plain_rows[0])
             widths = [
                 max(len(row[i]) for row in plain_rows)
-                for i in range(m + 1)
+                for i in range(n_table_cols)
             ]
-            col_space = sum(widths)
-            table_width = col_space + m * 2
-            header_width = sum(len(name) for name in cols)
-            truncate = table_width > term_width and header_width > col_space
-            truncate = False
+            for i, col in enumerate(cols):
+                pL, pR = C.stripped_prefixes(pre='')
+                tL, tR = type_header(L[col]), type_header(R[col])
+                widths[1 + i * 2] = max(widths[1 + i * 2],
+                                        len(cols[i]),
+                                        len(pL),
+                                        len(tL))
+                widths[2 + i * 2] = max(widths[2 + i * 2],
+                                        len(cols[i]),
+                                        len(pR),
+                                        len(tR))
             index_head = 'index'
-            if truncate:
-                if widths[0] < 3:
-                    index_head = ''
-                elif widths[0] < 5:
-                    index_head = 'idx'
+            widths[0] = max(widths[0], len(index_head))
+            col_space = sum(widths)
+            table_width = col_space + (n_table_cols) * 3
+            header_width = sum(len(name) for name in cols)
 
-            truncated = ', cols truncated' if table_width > term_width else ''
             s = '' if n == 1 else 's'
             rows_desc = (
                 'all rows with differences'
                  if self.n_diff_rows <= n
                  else f'First {n:,} row{s} with differences'
             )
-            title = f'Value Differences ({rows_desc}{truncated})'
+            title = f'Value Differences ({rows_desc})'
             table = Table(
                 title=title,
                 title_style='bold',
+                width=table_width,
             )
             if not vertical:
                 index_head += '\n '
             table.add_column(index_head, justify='right')
             for i, col in enumerate(cols, 1):
                 if vertical:
+#                    table.add_column(col, justify='right', no_wrap=True)
                     table.add_column(col, justify='right', no_wrap=True)
                 else:
-                    pL, pR = C.stripped_prefixes()
-                    table.add_column(col + pL, justify='right', no_wrap=True)
-                    table.add_column(col + pR, justify='right', no_wrap=True)
+                    table.add_column('\n'.join((col, tL, pL)), justify='right',
+                                     no_wrap=True)
+                    table.add_column('\n'.join((col, tR, pR)), justify='right',
+                                     no_wrap=True)
             for row in rows:
                 table.add_row(*row)
             return table
@@ -873,3 +882,5 @@ def escaped_list(items):
     return ','.join(item.translate(ESC_MAP) for item in items)
 
 
+def type_header(col):
+    return str(col.dtype)

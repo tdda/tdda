@@ -173,8 +173,8 @@ class ReferenceTestConfig(BaseConfig):
         prefix = self.right_prefix if force_prefix else ''
         return f'{prefix}{value}'
 
-    def common(self, value, dim_if_not_bw=False):
-        if self.mono or (dim_if_not_bw and not self.bw):
+    def common(self, value, dim_if_not_bw=False, plain=False):
+        if (not plain) and (self.mono or (dim_if_not_bw and not self.bw)):
             return f'[dim]{value}[/dim]'
         else:
             return str(value)
