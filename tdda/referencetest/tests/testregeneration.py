@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #
 # Unit tests for reference data regeneration
 #
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import division
-
 import os
 import tempfile
-import unittest
 
-from tdda.referencetest.referencetest import ReferenceTest
+from tdda.referencetest import ReferenceTest, ReferenceTestCase
 
 
-class TestRegenerate(unittest.TestCase):
+class TestRegenerate(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmpdir = tempfile.gettempdir()
@@ -61,4 +54,4 @@ class TestRegenerate(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(testtdda=1)
+    ReferenceTestCase.main(testtdda=1)

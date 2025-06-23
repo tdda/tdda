@@ -155,11 +155,13 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
             bool_str_fields = [f.name for f in fields if f.fieldtype == 'bool']
             if non_pl_bools and bool_fields:
                 if map_other_bools_to_string:
-                    m = ''
+                    flist = '\,'.join(bool_str_fields)
+                    m = f'Mapping to String: {flist}'
                 else:
-                    m = ('If they actually occur in the file, fields '
-                         'will need to be set to string.')
                     bool_str_fields = []
+                    m = ('If they actually occur in the file, fields '
+                         'will need to be set to string.\n'
+                         '(Use map_other_bools_to_string=True.)')
                 Warn('Polars will not understand '
                      f'the following boolean values:\n {non_pl_bools}.\n{m}\n')
 
@@ -177,13 +179,14 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
             if any(bads):
                 start = (f'Field {field} booleans {bads} will not be '
                           'understood by Polars.')
+                param = 'map_other_bools_to_string=True'
                 if map_other_bools_to_string:
-                    param = 'map_other_bools_to_string=True'
                     Warn(f'{start}\nSetting to pl.String ({param}).\n')
                     schema[field] = f(pl.String)
                 else:
                     Warn(f'{start}\nIf they are present, '
-                          'you may need to set them to pl.String.\n')
+                          f'you may need to set them to pl.String.\n'
+                          f'(Use {param}.)\n')
 
     if any(f.name != f.csvname for f in md.fields):
         kw['new_columns'] = [f.name for f in md.fields]

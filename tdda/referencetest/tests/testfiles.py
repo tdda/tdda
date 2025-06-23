@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-
 #
 # Unit tests for file functions from tdda.referencetest.checkfiles
 #
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import division
-
 import os
-import unittest
 
+from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest.utils import normabspath
@@ -33,7 +27,7 @@ def check(compare, values, filename, diff=False, actual_path=None):
     return (code, errs)
 
 
-class TestFiles(unittest.TestCase):
+class TestFiles(ReferenceTestCase):
     def test_strings_against_files_ok(self):
         compare = FilesComparison()
         r1 = compare.check_string_against_file([], refloc('empty.txt'))
@@ -444,4 +438,4 @@ class TestFiles(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(testtdda=1)
+    ReferenceTestCase.main(testtdda=1)

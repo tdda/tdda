@@ -86,6 +86,7 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
             'Ignoring escape value: \\.\n',
             'Field bool2 booleans yes, no will not be understood by Polars.\n'
             'If they are present, you may need to set them to pl.String.\n'
+            '(Use map_other_bools_to_string=True.)\n'
         ])
 
     def test_base_polars_serial(self):

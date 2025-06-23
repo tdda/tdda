@@ -6,14 +6,14 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tdda.referencetest import ReferenceTestCase
 
 from tdda.referencetest.tests.testbase import *
 from tdda.referencetest.tests.teststrings import *
 from tdda.referencetest.tests.testfiles import *
 from tdda.referencetest.tests.testpandas import *
 from tdda.referencetest.tests.testregeneration import *
-from tdda.referencetest.tests.testdfcomparisons import *
+from tdda.referencetest.tests.testpddfcomparisons import *
 
 if __name__ == '__main__':
-    unittest.main()
+    ReferenceTestCase.main(testtdda=1)

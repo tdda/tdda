@@ -190,5 +190,6 @@ produced in the data output location, to check that they are as expected.
 
 from tdda.referencetest.referencetest import tag
 from tdda.referencetest.referencetestcase import (ReferenceTestCase,
+                                                  ReferenceTest,
                                                   TaggedTestLoader)
 from tdda.referencetest.captureoutput import CaptureOutput

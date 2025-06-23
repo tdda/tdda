@@ -30,7 +30,7 @@ else:
 
 
 def run_all_tests(module=None, argv=None):
-    ReferenceTestCase.main(module=module, argv=argv, testtdda=True)
+    ReferenceTestCase.main(module=module, argv=argv, testtdda=1)
 
 
 if __name__ == '__main__':

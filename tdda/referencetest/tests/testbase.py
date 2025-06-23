@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-
 #
 # Unit tests for base ReferenceTest class functionality
 #
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import division
-
 import os
-import unittest
 
-from tdda.referencetest.referencetest import ReferenceTest
+from tdda.referencetest import ReferenceTestCase, ReferenceTest
 
 
-class TestReferenceTest(unittest.TestCase):
+class TestReferenceTest(ReferenceTestCase):
     def testDefaultLocations(self):
         class ClassA(ReferenceTest):
             pass
@@ -65,4 +58,4 @@ class TestReferenceTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(testtdda=1)
+    ReferenceTestCase.main(testtdda=1)

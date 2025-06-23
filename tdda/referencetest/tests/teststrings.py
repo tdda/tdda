@@ -2,10 +2,6 @@
 # Unit tests for string functions from tdda.referencetest.checkfiles
 #
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import division
-
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
 
