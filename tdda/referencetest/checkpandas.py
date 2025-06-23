@@ -23,7 +23,7 @@ from tdda.referencetest.basecomparison import (
     SameStructureDDiff
 )
 from tdda.referencetest.pddates import infer_date_format
-from tdda.serial.io import pandas_read_df
+from tdda.serial.io import pandas_read_df, csv_to_pandas
 from tdda.utils import nvl, err
 
 from tdda.pd.utils import is_string_col, first_non_null
@@ -478,6 +478,14 @@ class PandasComparison(BaseComparison):
         """
         Function for constructing a pandas dataframe from a CSV file.
         """
+        if not os.path.exists(csvfile):
+            parts = csvfile.split(':')
+            if len(parts) == 2:  # path + md_path
+                path, md_path = parts
+                if os.path.exists(path):
+                    return csv_to_pandas(path, md_path)
+            elif csvfile.endswith(':'):  # find metadata
+                return csv_to_pandas(csvfile[:-1], find_md=True)
         if loader is None:
             loader = default_csv_loader
         return loader(csvfile, **kwargs)
@@ -636,7 +644,7 @@ def default_csv_loader(csvfile, **kwargs):
         del options['escapechar']
         df = pd.read_csv(csvfile, **options)
 
-    if infer_datetimes:  # We do it ourselves, now, instead of lettings
+    if infer_datetimes:  # We do it ourselves, now, instead of letting
         # pandas do it.
         colnames = df.columns.tolist()
         for c in colnames:
