@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #
 # Unit tests for functions from tdda.referencetest.checkpandas
 #
@@ -17,29 +15,24 @@ from tdda.referencetest.checkpandas import (
 )
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest import tag, ReferenceTestCase
+from tdda.referencetest.tests.dftesthelpers import PYTHON_DATA
 
 
 def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
+def PandasDataFrame(n):
+    return pd.DataFrame(getattr(PYTHON_DATA, f'df{n}'))
+
+
 @unittest.skipIf(pd is None, 'no pandas')
 class TestPandasDataFrames(ReferenceTestCase):
     def test_frames_ok(self):
         compare = PandasComparison(verbose=False)
-        df1 = pd.DataFrame(
-            {
-                'a': [1, 2, 3, 4, 5],
-                'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001],
-            }
-        )
-        df2 = pd.DataFrame(
-            {
-                'a': [1, 2, 3, 4, 5],
-                'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002],
-            }
-        )
-        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
+        df1 = PandasDataFrame(1)
+        df2 = PandasDataFrame(2)
+        df3 = PandasDataFrame(3)
         self.assertFalse(compare.check_dataframe(df1, df1))
         self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
         self.assertFalse(
@@ -50,19 +43,9 @@ class TestPandasDataFrames(ReferenceTestCase):
 
     def test_frames_fail(self):
         compare = PandasComparison(verbose=False)
-        df1 = pd.DataFrame(
-            {
-                'a': [1, 2, 3, 4, 5],
-                'b': [1.0001, 2.0001, 3.0001, 4.0001, 5.0001],
-            }
-        )
-        df2 = pd.DataFrame(
-            {
-                'a': [1, 2, 3, 4, 5],
-                'b': [1.0002, 2.0002, 3.0002, 4.0002, 5.0002],
-            }
-        )
-        df3 = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': [1, 2, 3, 4, 5]})
+        df1 = PandasDataFrame(1)
+        df2 = PandasDataFrame(2)
+        df3 = PandasDataFrame(3)
 
         self.assertFalse(
             compare.check_dataframe(df1, df2, precision=3)
@@ -75,8 +58,21 @@ class TestPandasDataFrames(ReferenceTestCase):
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
-        self.assertStringCorrect('\n'.join(s3), refloc('frames_fail3.txt'),
+        self.assertStringCorrect('\n'.join(s3), refloc('pd_frames_fail3.txt'),
                                  ignore_lines=['diff '])
+
+        n3m, s3m = compare.check_dataframe(df1, df3, precision=3,
+                                           type_matching='medium')
+        self.assertEqual(n3m, 1)
+        self.assertStringCorrect('\n'.join(s3m),
+                                 refloc('pd_frames_fail3m.txt'),
+                                 ignore_lines=['diff '])
+
+        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
+                                                 type_matching='loose'))
+        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
+                                                 type_matching='permissive'))
+
 
     def test_pandas_csv_ok(self):
         compare = PandasComparison(verbose=False)
@@ -164,10 +160,9 @@ class TestPandasDataFrames(ReferenceTestCase):
                 self.assertTrue(pandas_types_match(o, t, level))
 
         for t1 in (I, i64, i32):
-            for t1 in (I, i64, i32):
+            for t2 in (I, i64, i32):
                 for level in ('medium', 'permissive'):
-                    self.assertTrue(pandas_types_match(t, o, level))
-                    self.assertTrue(pandas_types_match(o, t, level))
+                    self.assertTrue(pandas_types_match(t1, t2, level))
 
         for level in ('medium', 'loose'):
             self.assertTrue(pandas_types_match(f64, f32, level))

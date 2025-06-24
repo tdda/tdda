@@ -20,10 +20,16 @@ from tdda.referencetest.basecomparison import (
     FailureDiffs,
     ColDiff,
     DiffCounts,
-    SameStructureDDiff
+    SameStructureDDiff,
+    create_row_diffs_mask,
+    valid_level,
+)
+from tdda.serial.pandasio import (
+    pandas_df_to_csv,
+    csv_to_pandas,
+    pandas_read_df
 )
 from tdda.referencetest.pddates import infer_date_format
-from tdda.serial.io import pandas_read_df, csv_to_pandas
 from tdda.utils import nvl, err
 
 from tdda.pd.utils import is_string_col, first_non_null
@@ -33,7 +39,6 @@ import numpy as np
 
 
 
-TDDA_DIFF = 'tdda diff'
 # TDDA_DIFF = 'diff'
 
 
@@ -52,61 +57,6 @@ class PandasComparison(BaseComparison):
     def __new__(cls, *args, **kwargs):
         return super(PandasComparison, cls).__new__(cls)
 
-    def write_temporaries(self, actual, expected, msgs, switches=None):
-        differ = tdda_differ = None
-        actual_path = self.actual_path
-        expected_path = self.expected_path
-        if actual_path and expected_path:
-            commonname = os.path.split(actual_path)[1]
-            differ = self.compare_with(actual_path, expected_path)
-            tdda_differ = self.compare_with(actual_path, expected_path,
-                                            custom_diff_cmd=TDDA_DIFF,
-                                            switches=switches)
-        else:
-            if actual_path:
-                commonname = os.path.split(actual_path)[1]
-            elif expected_path:
-                commonname = os.path.split(expected_path)[1]
-            else:
-                commonname = self.get_temp_filename()
-            if expected is not None and not expected_path:
-                # no expected file, so write it
-                tmpExpectedPath = os.path.join(
-                    self.tmp_dir, 'expected-' + commonname
-                )
-                expected_path = tmpExpectedPath
-                self._write_reference_dataframe(expected, tmpExpectedPath)
-                if actual_path:
-                    differ = self.compare_with(actual_path, tmpExpectedPath)
-                    tdda_differ = self.compare_with(
-                        actual_path, tmpExpectedPath,
-                        custom_diff_cmd=TDDA_DIFF,
-                        switches=switches)
-            if actual is not None and not actual_path:
-                # no actual file, so write it
-                tmpActualPath = os.path.join(
-                    self.tmp_dir, 'actual-' + commonname
-                )
-                self._write_reference_dataframe(actual, tmpActualPath)
-                if expected_path:
-                    differ = self.compare_with(tmpActualPath, expected_path)
-                    tdda_differ = self.compare_with(
-                        tmpActualPath, expected_path,
-                        custom_diff_cmd=TDDA_DIFF, switches=switches)
-
-        if differ:
-            self.info(msgs, differ)
-        if tdda_differ:
-            self.info(msgs, tdda_differ)
-
-        # if not actual_path or not expected_path:
-        #     if expected_path:
-        #         self.info(msgs, 'Expected file %s' % expected_path)
-        #     elif actual_path:
-        #         self.info(msgs,
-        #                   'Actual file %s' % os.path.normpath(actual_path))
-
-
     def same_structure_ddiff(self, df, ref_df, diffs):
         """
         Test two dataframes with the same structure for differences.
@@ -117,7 +67,7 @@ class PandasComparison(BaseComparison):
         Args:
             df         Actual/LHS data frame
             ref_df     Actual/RHS data frame
-            diffs      Diffs object for reporing
+            diffs      Diffs object for reporting
 
         Returns:
             number of different values
@@ -149,7 +99,6 @@ class PandasComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            #return self.same_structure_summary_diffs(df, ref_df, diffs)
             diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
             n_diffs = diffs.dfd.diff.n_diff_values
             if n_diffs:
@@ -252,216 +201,6 @@ class PandasComparison(BaseComparison):
                 return i
         return stop
 
-    def check_serialized_dataframe(
-        self,
-        actual_path,
-        expected_path,
-        loader=None,
-        check_data=None,
-        check_types=None,
-        check_order=None,
-        condition=None,
-        sortby=None,
-        precision=6,
-        msgs=None,
-        **kwargs,
-    ):
-        r"""
-        Checks two data frames on disk files are the same,
-        by comparing them as dataframes.
-
-        Args:
-
-            *actual_path*
-                            Pathname for actual CSV/Parquet file.
-            *expected_path*
-                            Pathname for expected CSV/Parquet file.
-            *loader*
-                            A function to use to read a CSV file to obtain
-                            a pandas dataframe. If None, then a default CSV
-                            loader is used, which takes the same parameters
-                            as the standard pandas pd.read_csv() function.
-
-            *check_data*
-                            Option to specify fields to use to compare cell
-                            values.
-            *check_types*
-                            Option to specify fields to use to compare types.
-
-            *check_order*
-                            Option to specify fields to use to compare field
-                            order.
-
-            *condition*
-                            Filter to be applied to datasets before comparing.
-                            It can be ``None``, or can be a function that takes
-                            a DataFrame as its single parameter and returns
-                            a vector of booleans (to specify which rows should
-                            be compared).
-            *sortby*
-                            Option to specify fields to sort by before
-                            comparing.
-            *precision*
-                            Number of decimal places to compare float values.
-            *msgs*
-                            Optional Diffs object.
-
-            *\*\*kwargs*
-                            Any additional named parameters are passed straight
-                            through to the loader function.
-
-        The other parameters are the same as those used by
-        :py:mod:`check_dataframe`.
-        Returns a tuple (failures, msgs), containing the number of failures,
-        and a Diffs object containing error messages.
-        """
-        ref_df = self.load_serialized_dataframe(
-            expected_path, loader=loader, **kwargs
-        )
-        df = self.load_serialized_dataframe(
-            actual_path, loader=loader, **kwargs
-        )
-        return self.check_dataframe(
-            df,
-            ref_df,
-            actual_path=actual_path,
-            expected_path=expected_path,
-            check_data=check_data,
-            check_types=check_types,
-            check_order=check_order,
-            condition=condition,
-            sortby=sortby,
-            precision=precision,
-            msgs=msgs,
-        )
-
-    check_csv_file = check_serialized_dataframe
-
-    def check_serialized_dataframes(
-        self,
-        actual_paths,
-        expected_paths,
-        check_data=None,
-        check_types=None,
-        check_order=None,
-        condition=None,
-        sortby=None,
-        msgs=None,
-        **kwargs,
-    ):
-        r"""
-        Wrapper around the check_serialized_dataframes() method,
-        used to compare collections of serialized data frames on disk
-        against reference counterparts
-
-            *actual_paths*
-                            List of pathnames for actual serialized data frames
-            *expected_paths*
-                            List of pathnames for expected serialized
-                            data frames.
-            *loader*
-                            A function to use to read a CSV file to obtain
-                            a pandas dataframe. If None, then a default CSV
-                            loader is used, which takes the same parameters
-                            as the standard pandas pd.read_csv() function.
-            *\*\*kwargs*
-                            Any additional named parameters are passed straight
-                            through to the loader function.
-
-            *check_data*
-                            Option to specify fields to use to compare cell
-                            values.
-            *check_types*
-                            Option to specify fields to use to compare types.
-
-            *check_order*
-                            Option to specify fields to use to compare field
-                            order.
-
-            *condition*
-                            Filter to be applied to datasets before comparing.
-                            It can be ``None``, or can be a function that takes
-                            a DataFrame as its single parameter and returns
-                            a vector of booleans (to specify which rows should
-                            be compared).
-            *sortby*
-                            Option to specify fields to sort by before
-                            comparing.
-            *precision*
-                            Number of decimal places to compare float values.
-            *msgs*
-                            Optional Diffs object.
-
-        The other parameters are the same as those used by
-        :py:mod:`check_dataframe`.
-        Returns a tuple (failures, msgs), containing the number of failures,
-        and a list of error messages.
-
-        Returns a tuple (failures, msgs), containing the number of failures,
-        and a Diffs object containing error messages.
-
-        Note that this function compares ALL of the pairs of actual/expected
-        files, and if there are any differences, then the number of failures
-        returned reflects the total number of differences found across all
-        of the files, and the msgs returned contains the error messages
-        accumulated across all of those comparisons. In other words, it
-        doesn't stop as soon as it hits the first error, it continues through
-        right to the end.
-        """
-        if msgs is None:
-            msgs = Diffs()
-        failures = 0
-        for actual_path, expected_path in zip(actual_paths, expected_paths):
-            try:
-                r = self.check_serialized_dataframe(
-                    actual_path,
-                    expected_path,
-                    check_data=check_data,
-                    check_types=check_types,
-                    check_order=check_order,
-                    sortby=sortby,
-                    condition=condition,
-                    msgs=msgs,
-                    **kwargs,
-                )
-                (n, msgs) = r
-                failures += n
-            except Exception as e:
-                self.info(
-                    msgs,
-                    'Error comparing %s and %s (%s %s)'
-                    % (
-                        os.path.normpath(actual_path),
-                        expected_path,
-                        e.__class__.__name__,
-                        str(e),
-                    ),
-                )
-                failures += 1
-        return (failures, msgs)
-
-    check_csv_files = check_serialized_dataframes
-
-    def failure(self, msgs, s):
-        """
-        Add a failure to the list of messages, and also display it immediately
-        if verbose is set. Also provide information about the two files
-        involved.
-        """
-        if self.actual_path and self.expected_path:
-            self.info(
-                msgs,
-                self.compare_with(
-                    os.path.normpath(self.actual_path), self.expected_path
-                ),
-            )
-        elif self.expected_path:
-            self.info(msgs, 'Expected file %s' % self.expected_path)
-        elif self.actual_path:
-            self.info(msgs, 'Actual file %s'
-                          % os.path.normpath(self.actual_path))
-        self.info(msgs, s)
-
     def all_fields_except(self, exclusions):
         """
         Helper function, for using with *check_data*, *check_types* and
@@ -473,22 +212,6 @@ class PandasComparison(BaseComparison):
         *exclusions* is a list of field names.
         """
         return lambda df: sorted(set(df) - set(exclusions))
-
-    def load_csv(self, csvfile, loader=None, **kwargs):
-        """
-        Function for constructing a pandas dataframe from a CSV file.
-        """
-        if not os.path.exists(csvfile):
-            parts = csvfile.split(':')
-            if len(parts) == 2:  # path + md_path
-                path, md_path = parts
-                if os.path.exists(path):
-                    return csv_to_pandas(path, md_path)
-            elif csvfile.endswith(':'):  # find metadata
-                return csv_to_pandas(csvfile[:-1], find_md=True)
-        if loader is None:
-            loader = default_csv_loader
-        return loader(csvfile, **kwargs)
 
     def load_serialized_dataframe(
         self, path, actual_df=None, loader=None, reset_index=True,
@@ -525,20 +248,8 @@ class PandasComparison(BaseComparison):
             writer = default_csv_writer
         writer(df, csvfile, **kwargs)
 
-    def _write_reference_dataframe(
-        self, df, path, writer=None, **kwargs
-    ):
-        """
-        Function for saving a Pandas DataFrame to a CSV file.
-        Used when regenerating DataFrame reference results.
-        """
-        ext = os.path.splitext(path)[1].lower()
-        if ext == '.parquet':
-            df.to_parquet(path)
-        else:
-            self.write_csv(df, path, writer, **kwargs)
-        if self.verbose:
-            print(f'*** Written {path}.')
+    def write_parquet(self, df, path):
+        df.to_parquet(path)
 
     def _write_reference_dataframe_from_file(
         self, actual_path, ref_path, writer=None, **kwargs
@@ -563,9 +274,12 @@ class PandasComparison(BaseComparison):
                 actual_path, ref_path, writer=writer, **kwargs
             )
 
-    @staticmethod
-    def _col_names(df):
-        return list(df)
+    def default_csv_loader(self, path, **kwargs):
+        return default_csv_loader(path, **kwargs)
+
+    def csv_to_dataframe(self, path, **kwargs):
+        return csv_to_pandas(path, **kwargs)
+
 
     @staticmethod
     def _replace_cats(df):
@@ -592,6 +306,7 @@ class PandasComparison(BaseComparison):
     @staticmethod
     def _apply_condition(df, condition):
         return df[condition(df)].reindex()
+
 
     ####
 
@@ -742,15 +457,11 @@ def loosen_pandas_type(t):
 
 
 def pandas_types_match(t1, t2, level=None):
-    if level == 'loose':
-        level = 'permissive'
-    if not (level is None or level in ('strict', 'medium', 'permissive')):
-        raise ValueError(f'Type match level must be one of strict, medium, '
-                         f'or permissive(/loose), not {level}')
+    level = valid_level(level)
     t1i = t1
     t2i = t2
     t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
-    if level is None or level == 'strict' or t1 == t2:
+    if level == 'strict' or t1 == t2:
         return t1 == t2
 
     t1loose = loosen_pandas_type(t1)
@@ -765,7 +476,7 @@ def pandas_types_match(t1, t2, level=None):
     ):
         return True
 
-    numeric_types = ('bool', 'boolean', 'int', 'float')
+    numeric_types = {'bool', 'boolean', 'int', 'float'}
     if (
         level == 'permissive'
         and t1loose in numeric_types
@@ -815,7 +526,7 @@ def same_structure_dataframe_diffs(df, ref_df):
     Returns:
         SameStructureDDiff  for df, ref_df
     """
-    assert list(df) == list(ref_df)
+    assert set(df) == set(ref_df)
     d = {}
     n_vals = 0   # total number of values with diffenrences
     for c in list(df):
@@ -868,24 +579,9 @@ def col_comparison(left, right):
     return df.to_string(index=False) if n > 0 else ''
 
 
-def create_row_diffs_mask(masks):
-    """
-    Combine all column diff masks efficiently for mask
-    showing all rows with differences.
-
-    Args:
-        masks: list of bool columns indicating column difference
-
-    Return:
-        combined mask
-    """
-    while len(masks) > 1:
-        last = [masks[-1]] if len(masks) % 2 == 1 else []
-        masks = [
-            (masks[2 * i] | masks[2 * i + 1])
-            for i in range(len(masks) // 2)
-        ] + last
-    return masks[0]
+def diff_dataframes(*args, **kwargs):
+    c = PandasComparison()
+    return c.check_dataframe(*args, **kwargs)
 
 
 def create_row_diff_counts(masks):
@@ -907,10 +603,3 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
-
-
-def diff_dataframes(*args, **kwargs):
-    c = PandasComparison()
-    return c.check_dataframe(*args, **kwargs)
-
-
