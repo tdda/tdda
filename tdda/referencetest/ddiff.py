@@ -6,7 +6,7 @@ from tdda.referencetest.checkpandas import (
     same_structure_dataframe_diffs
 )
 from tdda.state import get_config
-from tdda.utils import warn, err, stdout_console as console
+from tdda.utils import warn, error, stdout_console as console
 
 import argparse
 

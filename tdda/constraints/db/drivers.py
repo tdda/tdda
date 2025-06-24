@@ -42,7 +42,7 @@ from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (discover_parser, discover_flags,
                                     verify_parser, verify_flags)
 
-from tdda.utils import handle_tilde, cprint
+from tdda.utils import handle_tilde, cprint, TDDAError
 
 
 DATABASE_USAGE = '''
@@ -456,7 +456,7 @@ class DatabaseHandler:
         if dbtype in DATABASE_HANDLERS:
             return DATABASE_HANDLERS[dbtype]
         else:
-            raise Exception('Unsupported database type')
+            raise TDDAError('Unsupported database type')
 
     def __getattr__(self, name):
         return getattr(self.instance, name)
@@ -522,14 +522,14 @@ class SQLDatabaseHandler:
     def default_schema(self):
         if self.dbtype == 'mysql':
             if not self.schema:
-                raise Exception('No schema specified')
+                raise TDDAError('No schema specified')
             return self.schema
         elif self.dbtype in ('postgres', 'postgresql'):
             return self.schema or 'public'
         elif self.dbtype == 'sqlite':
             return None
         else:
-            raise Exception('Unrecognised database type %s' % self.dbtype)
+            raise TDDAError('Unrecognised database type %s' % self.dbtype)
 
     def split_name(self, name):
         parts = name.split('.')
@@ -540,7 +540,7 @@ class SQLDatabaseHandler:
             schema = parts[0]
             table = parts[1]
         else:
-            raise Exception('Bad table format %s' % name)
+            raise TDDAError('Bad table format %s' % name)
         return (schema, table)
 
     def resolve_table(self, name, quote=False):
@@ -574,14 +574,14 @@ class SQLDatabaseHandler:
                             WHERE (type = 'table' OR type='view')
                             AND name = '%s';''' % tablename
         else:
-            raise Exception('Unsupported database type %s' % self.dbtype)
+            raise TDDAError('Unsupported database type %s' % self.dbtype)
 
         dprint('DBConnector>>>', self.dbc)
         dprint('All SQL>>>', allsql)
         dprint('SQL>>>', sql)
         if self.execute_scalar(allsql) == 0:
             # no permission to see any tables, so wrong credentials
-            raise Exception('Permission denied')
+            raise TDDAError('Permission denied')
         return self.execute_scalar(sql) > 0
 
     def drop_table_if_exists(self, tablename):
@@ -626,7 +626,7 @@ class SQLDatabaseHandler:
             rows = self.execute_all(sql)
             return [r[1] for r in rows]
         else:
-            raise Exception('Unsupported database type')
+            raise TDDAError('Unsupported database type')
 
     def get_database_column_type(self, tablename, colname):
         typeMap = {
@@ -693,7 +693,7 @@ class SQLDatabaseHandler:
                     typeresult = row[2]
                     break
         else:
-            raise Exception('Unsupported database type')
+            raise TDDAError('Unsupported database type')
         dtype = typeMap[typeresult.lower()]
         return dtype
 
@@ -794,7 +794,7 @@ class SQLDatabaseHandler:
             # arranged for that in the database_connection_mongodb function.
             rexprs = ["(%s REGEXP '%s')" % (name, r) for r in rexes]
         else:
-            raise Exception('Unsupported database type')
+            raise TDDAError('Unsupported database type')
 
         sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL AND NOT(%s)'
                % (tablename, name, ' OR '.join(rexprs)))
@@ -817,7 +817,7 @@ class SQLDatabaseHandler:
             # arranged for that in the database_connection_mongodb function.
             rexprs = ["(%s REGEXP '%s')" % (qname, r) for r in rexes]
         else:
-            raise Exception('Unsupported database type')
+            raise TDDAError('Unsupported database type')
 
         return ' OR '.join(rexprs)
 
@@ -883,7 +883,7 @@ class MongoDBDatabaseHandler:
         collection = self.dbc.connection
         for p in parts:
             if p not in collection.collection_names():
-                raise Exception('collection %s does not exist' % tablename)
+                raise TDDAError('collection %s does not exist' % tablename)
             collection = collection[p]
         return collection
 

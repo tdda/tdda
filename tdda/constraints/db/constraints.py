@@ -38,7 +38,7 @@ from tdda.constraints.baseconstraints import (
 from tdda.constraints.db.drivers import DatabaseHandler
 from tdda.state import get_config
 from tdda.utils import (squote, remove_falsy_values, indicator_field_name,
-                        pass_fail_stats, OK, BAD)
+                        pass_fail_stats, OK, BAD, TDDAError)
 from tdda import rexpy
 
 
@@ -116,10 +116,10 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
                                                include_nulls=include_nulls)
 
     def calc_non_integer_values_count(self, colname):
-        raise Exception('database should not require non_integer_values_count')
+        raise TDDAError('database should not require non_integer_values_count')
 
     def calc_all_non_nulls_boolean(self, colname):
-        raise Exception('database should not require all_non_nulls_boolean')
+        raise TDDAError('database should not require all_non_nulls_boolean')
 
     def find_rexes(self, colname, values=None, seed=None):
         if not values:
@@ -212,7 +212,7 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         ver.detection_table = dest_name
 
         if dest_dbtype != self.dbtype:
-            raise Exception('Detect from RDBMS currently only supports'
+            raise TDDAError('Detect from RDBMS currently only supports'
                             'writing to same RDBMS.')
         self.drop_table_if_exists(raw_dest_name)
         exprs = [] if self.interleave else [
@@ -328,7 +328,7 @@ SELECT * FROM DETECTED
                 return a(f'({rex_sql} {ornull}')
             else:
                 return 'true'
-        raise Exception(f'Internal error: unknown constraint: {kind}')
+        raise TDDAError(f'Internal error: unknown constraint: {kind}')
 
     def detect_bad_field(self, field, kind, constraint):
         outname = self.quoted(self.out_field_name(field, kind))
@@ -371,7 +371,7 @@ SELECT * FROM DETECTED
                 return a(f'{rex_sql} {andnn}')
             else:
                 return 'false'
-        raise Exception(f'Internal error: unknown constraint: {kind}')
+        raise TDDAError(f'Internal error: unknown constraint: {kind}')
 
     def out_field_name(self, field, kind):
         return f'{field}_{kind}_{self.out_field_suffix}'
@@ -411,7 +411,7 @@ class DatabaseVerification(Verification):
                    f'WHERE {dbh.quoted(indicator_field)} = {bad_val}')
             if max_vals:
                 if not type(max_vals) == int and max_vals > 0:
-                    raise Exception(f'Internal error: Bad value for max_vals: '
+                    raise TDDAError(f'Internal error: Bad value for max_vals: '
                                     f'{max_vals}')
                 sql += f'\nLIMIT {max_vals}'
             result = self.dbh.execute_all(sql)

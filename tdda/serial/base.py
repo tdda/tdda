@@ -5,6 +5,10 @@ from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
 from tdda.utils import listify
 
+class TDDASerialError(Exception):
+    pass
+
+
 class MISSING:
     ERROR = 2
     WARNING = 1
@@ -67,10 +71,6 @@ VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 FIELDTYPES = tuple(FieldType.__dict__.values())
 
 
-class SerialMetadataError(Exception):
-    pass
-
-
 class FieldMetadata:
     """
     Container for data about a field (column) in a serial data source
@@ -128,7 +128,9 @@ class FieldMetadata:
             elif missing == MISSING.WARNING:
                 self.warnings.append(msg)
             elif missing != MISSING.ALLOWED:
-                raise Exception(f'Unknown value "{missing}" for missing')
+                raise TDDASerialError(
+                    f'Unknown value "{missing}" for missing'
+                )
         return d.get(k, None)
 
     def validate(self):
@@ -227,7 +229,9 @@ class SerialMetadata:
             elif missing == MISSING.WARNING:
                 self.warn(msg)
             elif missing != MISSING.ALLOWED:
-                raise Exception(f'Unknown value "{missing}" for missing.')
+                raise TDDASerialError(
+                    f'Unknown value "{missing}" for missing.'
+                )
         return d.get(k, None)
 
     def validate(self):
@@ -294,8 +298,10 @@ def unobjectify(o):
         return {k: unobjectify(v) for k, v in o.items() if nonnull(v)}
     if hasattr(o, 'unobjectify'):
         return o.unobjectify()
-    raise Exception('Attempt to unobjectify unexpected type.\n'
-                    f'Type: {type(o)}: Value: {repr(o)}')
+    raise TDDASerialError(
+        'Attempt to unobjectify unexpected type.\n'
+        f'Type: {type(o)}: Value: {repr(o)}'
+    )
 
 
 def nonnull(v):

@@ -54,7 +54,11 @@ TDDA_NF_MAP = None  # build lazily
 
 
 
-class XMLError(Exception):
+class TDDAError(Exception):
+    pass
+
+
+class XMLError(TDDAError):
     pass
 
 
@@ -718,6 +722,9 @@ def is_sequence(L):
     return ((hasattr(L, "__getitem__") or hasattr(L, "__iter__"))
             and not hasattr(L, "strip"))
 
+def is_parquet(path):
+    return os.splitext.path(path)[1] == '.parquet'
+
 
 class Dummy(object):
     """
@@ -888,7 +895,7 @@ def warn(*args, buf=None, **kw):
         stderr_console.print(*args, style='yellow', **kw)
 
 
-def err(*args, **kw):
+def error(*args, **kw):
     stderr_console.print(*args, style='red', **kw)
     sys.exit(1)
 

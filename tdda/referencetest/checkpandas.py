@@ -30,7 +30,7 @@ from tdda.serial.pandasio import (
     pandas_read_df
 )
 from tdda.referencetest.pddates import infer_date_format
-from tdda.utils import nvl, err
+from tdda.utils import nvl, error
 
 from tdda.pd.utils import is_string_col, first_non_null
 
@@ -200,18 +200,6 @@ class PandasComparison(BaseComparison):
             if v1 == v2 or (pd.isnull(v1) and pd.isnull(v2)):
                 return i
         return stop
-
-    def all_fields_except(self, exclusions):
-        """
-        Helper function, for using with *check_data*, *check_types* and
-        *check_order* parameters to assertion functions for Pandas DataFrames.
-
-        It returns the names of all of the fields in the DataFrame being
-        checked, apart from the ones given.
-
-        *exclusions* is a list of field names.
-        """
-        return lambda df: sorted(set(df) - set(exclusions))
 
     def load_serialized_dataframe(
         self, path, actual_df=None, loader=None, reset_index=True,
@@ -603,3 +591,5 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
+
+

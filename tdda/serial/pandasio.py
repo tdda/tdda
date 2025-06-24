@@ -16,11 +16,12 @@ from tdda.serial.base import (
     FieldMetadata,
     FieldType,
     SerialMetadata,
-    VERBOSITY
+    VERBOSITY,
+    TDDASerialError
 )
 from tdda.serial.reader import get_metadata_for_reader
 from tdda.serial.utils import find_associated_metadata_file
-from tdda.utils import nvl, err, warn, listify, Dummy
+from tdda.utils import nvl, error, warn, listify, Dummy
 from tdda.pd.utils import first_non_null
 
 
@@ -599,8 +600,8 @@ def pandas_df_to_csv(df, path=None,
         if serial_in == True:
             serial_in_path = find_associated_metadata_file(path)
             if not serial_in:
-                err(f'Cannot find input .serial metadata associated'
-                    f' with {path}')
+                error(f'Cannot find input .serial metadata associated'
+                      f' with {path}')
         else:
             serial_in_path = serial_in
 
@@ -615,8 +616,8 @@ def pandas_df_to_csv(df, path=None,
         if serial_out == True:
             serial_out_path = find_associated_metadata_file(path)
             if not serial_out:
-                err(f'Cannot find output .serial metadata associated'
-                    f' with {path}')
+                error(f'Cannot find output .serial metadata associated'
+                      f' with {path}')
         else:
             serial_out_path = serial_out
 
@@ -775,7 +776,7 @@ def pandas_read_df(path, nullable=False):
         else:
             return pd.read_parquet(path)
     else:
-        raise Exception(f'Unexpected extension {ext} in {path}.')
+        raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
 
 def pandas_write_df(df, path):
@@ -789,4 +790,4 @@ def pandas_write_df(df, path):
     elif ext == '.parquet':
         df.to_parquet(path, index=None)
     else:
-        raise Exception(f'Unexpected extension {ext} in {path}.')
+        raise TDDASerialError(f'Unexpected extension {ext} in {path}.')

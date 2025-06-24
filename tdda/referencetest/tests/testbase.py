@@ -4,7 +4,11 @@
 
 import os
 
+import pandas as pd
+import polars as pl
+
 from tdda.referencetest import ReferenceTestCase, ReferenceTest
+from tdda.referencetest.abstractdf import is_pandas_df, is_polars_df
 
 
 class TestReferenceTest(ReferenceTestCase):
@@ -55,6 +59,33 @@ class TestReferenceTest(ReferenceTestCase):
         self.assertEqual(
             c2._resolve_reference_path('x'), os.path.join('t2', 'x')
         )
+
+    def test_choose_common_df_lib(self):
+        c = ReferenceTest(None)  # None for assertTrue method; not used here
+        pddf = pd.DataFrame()
+        pldf = pl.DataFrame()
+
+        d, r, L = c.choose_common_df_lib(pddf, pddf)  # both pandas
+        self.assertIs(L, c.pandas)
+
+        d, r, L = c.choose_common_df_lib(pldf, pldf)  # both pandas
+        self.assertIs(L, c.polars)
+
+        d, r, L = c.choose_common_df_lib(pddf, pldf, 'pandas')
+        self.assertIs(L, c.pandas)
+        self.assertTrue(is_pandas_df(d))
+        self.assertTrue(is_pandas_df(r))
+
+        d, r, L = c.choose_common_df_lib(pddf, pldf, 'polars')
+        self.assertIs(L, c.polars)
+        self.assertTrue(is_polars_df(d))
+        self.assertTrue(is_polars_df(r))
+
+        # config default is polars
+        d, r, L = c.choose_common_df_lib(pddf, pldf)
+        self.assertIs(L, c.polars)
+        self.assertTrue(is_polars_df(d))
+        self.assertTrue(is_polars_df(r))
 
 
 if __name__ == '__main__':

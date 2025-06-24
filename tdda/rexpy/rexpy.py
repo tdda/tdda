@@ -19,7 +19,7 @@ from collections import Counter, defaultdict, namedtuple, OrderedDict
 from pprint import pprint
 
 from tdda import __version__
-from tdda.utils import nvl
+from tdda.utils import nvl, TDDAError
 
 isPython2 = sys.version_info[0] < 3
 str_type = unicode if isPython2 else str
@@ -154,12 +154,13 @@ class Size(object):
         for (k, v) in kwargs.items():
             if k in self.__dict__:
                 if v is None and k not in ('use_sampling', 'do_all'):
-                    raise Exception('Bad null value for parameter %s to Size.'
-                                    % k)
+                    raise TDDAError(
+                        'Bad null value for parameter %s to Size.' % k
+                    )
                 else:
                     self.__dict__[k] = v
             else:
-                raise Exception('Unknown parameter to Size: "%s" % k')
+                raise TDDAError('Unknown parameter to Size: "%s" % k')
 
 
 
@@ -386,7 +387,7 @@ class Categories(object):
             else:
                 self.Punctuation.set(r'\p{Punct}')
         else:
-            raise Exception('Unknown dialect: %s' % dialect)
+            raise TDDAError('Unknown dialect: %s' % dialect)
 
 
 
@@ -2382,13 +2383,13 @@ def get_params(args):
                 print(USAGE)
                 sys.exit(0)
             else:
-                raise Exception(USAGE)
+                raise TDDAError(USAGE)
         elif params['in_path'] == '':  # not previously set and not '-'
             params['in_path'] = a
         elif params['out_path'] is None:
             params['out_path'] = a
         else:
-            raise Exception(USAGE)
+            raise TDDAError(USAGE)
     params['in_path'] = params['in_path']  or None  # replace '' with None
     extras = params['extra_letters']
     if extras:

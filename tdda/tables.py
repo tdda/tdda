@@ -3,7 +3,7 @@ import regex as re
 
 from collections import OrderedDict, namedtuple
 
-from tdda.utils import XML
+from tdda.utils import XML, TDDAError
 
 
 RE_FLAGS = re.UNICODE | re.DOTALL
@@ -37,8 +37,8 @@ def colour_class(fn):
     ))
     cls = fns.get(fn)
     if fn is not None and fn != 'None' and cls is None:
-        raise Exception(('Unknown text colour function %s.\n'
-                               'Functions available:\n' % fn)
+        raise TDDAError(('Unknown text colour function %s.\n'
+                             'Functions available:\n' % fn)
                               + ('\n'.join('    %s: %s' % (k, v.__doc__)
                                            for (k, v) in fns.items())))
     return cls
@@ -202,7 +202,7 @@ class Table:
     def SortByRowHeader(self, reverse=False):
         """Sorts table by row header"""
         if len(self.rows) == 0:
-            raise Exception('Table contains no sortable values')
+            raise TDDAError('Table contains no sortable values')
 
         h = sorted(zip([c[0] for c in self.rows], self.rows, self.cellValues))
         h = list(reversed(h) if reverse else h)
@@ -231,7 +231,7 @@ class Table:
         elif type(annotation) == list:
             self.annotation.extend(annotation)
         else:
-            raise Exception('Unexpected annotation')
+            raise TDDAError('Unexpected annotation')
 
     def toString(self, format=True, transpose=False):
         # What would be required to make this stuff handle newlines
@@ -320,7 +320,7 @@ class Table:
         else:
             sep = ' '
             if transpose:  # *** SEE ABOVE (HACK)
-                raise Exception('No unformatted transpose Table.toString')
+                raise TDDAError('No unformatted transpose Table.toString')
             else:
                 if self.groupHeader is not None:
                     s.append(self.groupHeader)
@@ -416,7 +416,7 @@ class Table:
         else:
             sep = ' '
             if transpose:  # *** SEE ABOVE (HACK)
-                raise Exception('No unformatted transpose Table.toString')
+                raise TDDAError('No unformatted transpose Table.toString')
             else:
                 if self.groupHeader is not None:
                     s.append(self.groupHeader)

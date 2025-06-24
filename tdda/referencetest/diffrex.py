@@ -6,6 +6,7 @@ from collections import defaultdict, namedtuple
 
 from tdda.rexpy import extract
 from tdda.referencetest.utils import get_encoding, protected_readlines
+from tdda.utils import TDDAError
 
 LINE_NUMBER_RE = re.compile(r'^@@\s+\-(\d+)(,\d+)?\s+\+(\d+)(,\d+)?\s+@@$')
 TOGETHER = True
@@ -43,7 +44,7 @@ def find_diff_lines(left_path, right_path, filetype):
                 offset = 0
             m = re.match(LINE_NUMBER_RE, line)
             if not m:
-                raise Exception('Bad line %s' % line[:-1])
+                raise TDDAError('Bad line %s' % line[:-1])
             left_num, right_num = int(m.group(1)), int(m.group(3))
         elif line_source == '-':  # left
             L.append(line[1:-1])

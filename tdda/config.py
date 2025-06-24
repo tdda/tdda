@@ -54,6 +54,7 @@ class Config(BaseConfig):
         self._config_name = 'config'
         self.null_rep = '∅'
         self.colour = load and not testing
+        self.df_engine = 'pandas'
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
         if not testing and (load or load is None):

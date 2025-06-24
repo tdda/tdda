@@ -2,6 +2,7 @@
 numpy >= 1.23.5
 pytest >= 8.4.0
 pandas >= 2.0
+polars >= 1.30
 pyarrow >= 20.0.0
 pyyaml >= 6.0
 chardet >= 5.2

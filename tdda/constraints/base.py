@@ -23,7 +23,8 @@ from tdda.utils import (
     json_sanitize, strip_lines,
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val, indicator_field_name,
-    rednz, redblack, coloured_tick_cross, print_stderr
+    rednz, redblack, coloured_tick_cross, print_stderr,
+    TDDAError,
 )
 from tdda.version import version
 
@@ -100,7 +101,7 @@ class SafeMarks:
     nothing = '-'
 
 
-class InvalidConstraintSpecification(Exception):
+class InvalidConstraintSpecification(TDDAError):
     pass
 
 
@@ -861,14 +862,14 @@ class Verification(object):
         self.report_path = kwargs.get('report_path', outpath)
 
         if report not in ('all', 'fields', 'records'):
-            raise Exception('Value for report must be one of "all", "fields"'
+            raise TDDAError('Value for report must be one of "all", "fields"'
                             ' or "records", not "%s".' % report)
         if (not outpath and not detect and not in_place
             and not getattr(self, 'is_db', None)
         ):
             if any((write_all_records, per_constraint,
                     output_fields, index)):
-                raise Exception('You have specified detection parameters '
+                raise TDDAError('You have specified detection parameters '
                                 'without specifying\na detection output path.')
 
     def indicator_field_name(self, field, constraint):

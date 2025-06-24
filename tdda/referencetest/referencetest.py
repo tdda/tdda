@@ -8,7 +8,13 @@ import sys
 import tempfile
 
 from tdda.referencetest.checkpandas import PandasComparison
+from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.referencetest.checkfiles import FilesComparison
+from tdda.state import get_config
+from tdda.utils import TDDAError, nvl, error
+from tdda.referencetest.abstractdf import (
+    df_type, df_definite, is_pandas_df, is_polars_df
+)
 
 
 # DEFAULT_FAIL_DIR is the default location for writing failing output
@@ -198,6 +204,9 @@ class ReferenceTest(object):
         self.pandas = PandasComparison(
             print_fn=self.call_print_fn, verbose=self.verbose
         )
+        self.polars = PolarsComparison(
+            print_fn=self.call_print_fn, verbose=self.verbose
+        )
         self.files = FilesComparison(
             print_fn=self.call_print_fn,
             verbose=self.verbose,
@@ -213,7 +222,7 @@ class ReferenceTest(object):
 
         *exclusions* is a list of field names.
         """
-        return self.pandas.all_fields_except(exclusions)
+        return all_fields_except(exclusions)
 
     def set_data_location(self, location, kind=None):
         """
@@ -253,7 +262,8 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         type_matching=None,
-        fuzzy_nulls=False
+        fuzzy_nulls=False,
+        engine=None,
     ):
         """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
@@ -327,10 +337,13 @@ class ReferenceTest(object):
             *type_matching*  'strict', 'medium', 'permissive' (or 'loose')
                 (default: strict).
 
+            *engine*  Polars or Pandas
+
         Raises :py:class:`NotImplementedError` if Pandas is not available.
 
         """
-        r = self.pandas.check_dataframe(
+        df, ref_df, lib = self.choose_common_df_lib(df, ref_df, engine)
+        r = lib.check_dataframe(
             df,
             ref_df,
             actual_path=actual_path,
@@ -342,7 +355,8 @@ class ReferenceTest(object):
             sortby=sortby,
             precision=precision,
             type_matching=type_matching,
-            fuzzy_nulls=fuzzy_nulls
+            fuzzy_nulls=fuzzy_nulls,
+            engine=None,
         )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
@@ -364,6 +378,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        engine=None,
         **kwargs,
     ):
         """
@@ -392,7 +407,7 @@ class ReferenceTest(object):
 
             *csv_read_fn*:
                 (Optional) function to read a CSV file to obtain
-                a pandas DataFrame. If ``None``, then a default
+                a DataFrame. If ``None``, then a default
                 CSV loader is used.
 
                 The default CSV loader function is a wrapper around Pandas
@@ -415,10 +430,11 @@ class ReferenceTest(object):
 
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
+        lib = self.get_df_lib(df=df, engine=engine)
         if self._should_regenerate(kind):
-            self.pandas._write_reference_dataframe(df, expected_path)
+            lib._write_reference_dataframe(df, expected_path)
         else:
-            ref_df = self.pandas.load_serialized_dataframe(
+            ref_df = lib.load_serialized_dataframe(
                 expected_path, actual_df=df, loader=csv_read_fn
             )
             self.assertDataFramesEqual(
@@ -434,6 +450,7 @@ class ReferenceTest(object):
                 precision=precision,
                 type_matching=type_matching,
                 fuzzy_nulls=fuzzy_nulls,
+                engine=engine
             )
 
     def assertStoredDataFrameCorrect(
@@ -448,6 +465,7 @@ class ReferenceTest(object):
         condition=None,
         sortby=None,
         precision=None,
+        engine=None,
         **kwargs,
     ):
         r"""Check that a DataFrame on disk (as a parquet file,
@@ -471,7 +489,7 @@ class ReferenceTest(object):
 
             *csv_read_fn*:
                 (Optional) function to read a CSV file to obtain
-                a pandas DataFrame. If ``None``, then a default
+                a DataFrame. If ``None``, then a default
                 CSV loader is used if it is a CSV file.
 
                 The default CSV loader function is a wrapper around Pandas
@@ -499,11 +517,12 @@ class ReferenceTest(object):
         if kind == 'parquet':
             kind = 'csv'  # it's just a key; can be parquet
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
+        lib = self.get_df_lib(engine=engine)
         if self._should_regenerate(kind):
-            self.pandas._write_reference_dataframe_from_file(actual_path,
-                                                             expected_path)
+            lib._write_reference_dataframe_from_file(actual_path,
+                                                     expected_path)
         else:
-            r = self.pandas.check_serialized_dataframe(
+            r = lib.check_serialized_dataframe(
                 actual_path,
                 expected_path,
                 check_data=check_data,
@@ -532,6 +551,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         fuzzy_nulls=False,
+        engine=None,
         **kwargs,
     ):
         """
@@ -550,6 +570,7 @@ class ReferenceTest(object):
             sortby=sortby,
             precision=precision,
             fuzzy_nulls=fuzzy_nulls,
+            engine=engine,
             **kwargs,
         )
 
@@ -566,6 +587,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         fuzzy_nulls=False,
+        engine=None,
         **kwargs,
     ):
         r"""Check that a set of serialized datafames in files
@@ -586,7 +608,7 @@ class ReferenceTest(object):
 
             *csv_read_fn*:
                 (Optional) function to read a CSV file to obtain
-                a pandas DataFrame. If ``None``, then a default
+                a DataFrame. If ``None``, then a default
                 CSV loader is used.
 
                 The default CSV loader function is a wrapper around Pandas
@@ -616,11 +638,12 @@ class ReferenceTest(object):
             kind = 'csv'  # it's just a key; can be parquet
 
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
+        lib = get_df_lib(engine=engine)
         if self._should_regenerate(kind):
-            self.pandas._write_reference_dataframes_from_files(actual_paths,
+            lib._write_reference_dataframes_from_files(actual_paths,
                                                                expected_paths)
         else:
-            r = self.pandas.check_serialized_dataframes(
+            r = lib.check_serialized_dataframes(
                 actual_paths,
                 expected_paths,
                 check_data=check_data,
@@ -651,6 +674,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         fuzzy_nulls=False,
+        engine=None,
         **kwargs,
     ):
         """
@@ -668,6 +692,7 @@ class ReferenceTest(object):
             sortby=sortby,
             precision=precision,
             fuzzy_nulls=fuzzy_nulls,
+            engine=engine,
             **kwargs,
         )
 
@@ -990,7 +1015,8 @@ class ReferenceTest(object):
         """
         Internal method for regenerating reference data for a Pandas dataset
         """
-        self.pandas._write_reference_dataframe(df, reference_path)
+        lib = self.get_df_lib(df)
+        lib._write_reference_dataframe(df, reference_path)
 
     def _write_reference_result(
         self, result, reference_path, binary=False, lstrip=False, rstrip=False
@@ -1015,6 +1041,28 @@ class ReferenceTest(object):
         fn = self.print_fn or self._default_print_fn
         fn(*args, **kwargs)
 
+    def choose_common_df_lib(self, ldf, rdf, engine=None):
+        le, re = df_type(ldf), df_type(rdf)
+        if le == re == 'pandas':
+            return ldf, rdf, self.pandas
+        if le == re == 'polars':
+            return ldf, rdf, self.polars
+
+        engine = get_preferred_df_engine(engine)
+        lib = self.polars if engine == 'polars' else self.pandas
+        return df_definite(ldf, engine), df_definite(rdf, engine), lib
+
+    def get_df_lib(self, df=None, engine=None):
+        if is_pandas_df(df):
+            return self.pandas
+        elif is_polars_df(df):
+            return self.polars
+        elif df is None:
+            engine = get_preferred_df_engine(engine)
+            return self.polars if engine == 'polars' else self.pandas
+        else:
+            error('Unrecognized DataFrame.')
+
     @staticmethod
     def _default_print_fn(*args, **kwargs):
         # Sometimes the framework needs to print messages. By default, it
@@ -1026,6 +1074,16 @@ class ReferenceTest(object):
 
     # Default print function
     print_fn = _default_print_fn
+
+
+def get_preferred_df_engine(engine):
+    if engine is None:
+        config = get_config()
+        engine = config.get('df_engine')
+    if not engine in ('polars', 'pandas'):
+        error(f'Unknown dataframe engine: {engine}')
+    return engine
+
 
 
 # Magic so that an instance of this class can masquerade as a module,

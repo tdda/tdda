@@ -118,6 +118,7 @@ import unittest
 
 from tdda.state import get_testing, set_testing
 from tdda.referencetest.referencetest import ReferenceTest, tag
+from tdda.utils import TDDAError
 
 
 class ReferenceTestCase(unittest.TestCase, ReferenceTest):
@@ -253,7 +254,7 @@ def _set_flags_from_argv(argv=None):
                         for kind in r.split(','):
                             ReferenceTestCase.set_regeneration(kind)
                 else:
-                    raise Exception('--write option requires parameters; '
+                    raise TDDAError('--write option requires parameters; '
                                     'use --write-all to regenerate all '
                                     'reference results')
             rest = rest[:idx]

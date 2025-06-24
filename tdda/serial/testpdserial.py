@@ -774,7 +774,6 @@ class TestCSVWTests(ReferenceTestCase):
     def test026(self):
         pass
 
-
     def test027(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}-user-metadata.json')
@@ -784,7 +783,6 @@ class TestCSVWTests(ReferenceTestCase):
         fields = ['GID', 'on_street', 'species', 'trim_cycle',
                   'inventory_date']
         ref_df = csvw_bare_json_to_df(resultspath, fields)
-
         # medium because of object/string comparisons
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 

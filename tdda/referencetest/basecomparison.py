@@ -26,8 +26,19 @@ from itertools import chain
 from rich.table import Table
 
 from tdda.state import get_config
-from tdda.utils import Dummy, nvl
-
+from tdda.utils import Dummy, nvl, error
+from tdda.referencetest.utils import (
+    all_fields_except,
+)
+from tdda.referencetest.abstractdf import (
+    is_pandas_df,
+    is_polars_df,
+    df_type,
+    col_names,
+    get_diffs_df_with_cols_and_index,
+    get_diffs_df_with_cols,
+    df_to_lists,
+)
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
@@ -185,6 +196,7 @@ class BaseComparison(object):
         type_matching=None,
         create_temporaries=True,
         fuzzy_nulls=False,
+        engine=None,
         quick=True
     ):
         """
@@ -261,6 +273,8 @@ class BaseComparison(object):
                      harder to find detailed differences even when
                      types are not exactly the same etc.
 
+            *engine* preferred engine if data frames use different engines
+
         Returns:
 
             A FailureDiffs named tuple with:
@@ -286,8 +300,8 @@ class BaseComparison(object):
         self.precision = nvl(precision, 7)
         self.fuzzy_nulls = fuzzy_nulls
         if bool(fuzzy_nulls) and not fuzzy_nulls in (True, 'object'):
-            err(f'fuzzy_nulls value {fuzzy_nulls} unknown. '
-                 ' Should be True, False or "object"')
+            error(f'fuzzy_nulls value {fuzzy_nulls} unknown. '
+                  ' Should be True, False or "object"')
 
         check_types = self.resolve_option_flag(check_types, ref_df)
         check_extra_cols = self.resolve_option_flag(check_extra_cols, df)
@@ -798,8 +812,6 @@ class BaseComparison(object):
             loader = self.default_csv_loader
         return loader(csvfile, **kwargs)
 
-
-
     ####
 
 
@@ -908,13 +920,19 @@ class SameStructureDDiff:
         prefix = vertical and (C.mono or C.bw)
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
-            L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
-            R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
-            indexes = L.index.to_list()
+            L, indexes = get_diffs_df_with_cols_and_index(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+            R = get_diffs_df_with_cols(
+                ref_df, cols, self.row_diff_counts.rowdiffs, n
+            )
             plain_rows = []
+            L_table, R_table = df_to_lists(L), df_to_lists(R)
             for r in range(n):
-                l_vals = [py_val(L.iat[r, c]) for c in range(m)]
-                r_vals = [py_val(R.iat[r, c]) for c in range(m)]
+                #l_vals = [py_val(L.iat[r, c]) for c in range(m)]
+                #r_vals = [py_val(R.iat[r, c]) for c in range(m)]
+                l_vals = L_table[r]
+                r_vals = R_table[r]
                 if vertical:
                     plain_rows.append([indexes[r]] + l_vals)
                     plain_rows.append([indexes[r]] + r_vals)
@@ -946,19 +964,23 @@ class SameStructureDDiff:
         prefix = vertical and (C.mono or C.bw)
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
-            L = df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
-            R = ref_df[cols][self.row_diff_counts.rowdiffs > 0].head(n)
+            L, row_indexes = get_diffs_df_with_cols_and_index(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+            R = get_diffs_df_with_cols(
+                ref_df, cols, self.row_diff_counts.rowdiffs, n
+            )
             indexes = [
-                C.common(v, dim_if_not_bw=True) for v in L.index.to_list()
+                C.common(v, dim_if_not_bw=True) for v in row_indexes
             ]
             pl_indexes = [
-                C.common(v, plain=True) for v in L.index.to_list()
+                C.common(v, plain=True) for v in row_indexes
             ]
-            rows = []
-            plain_rows = []
+            rows, plain_rows = [], []
+            L_table, R_table = df_to_lists(L), df_to_lists(R)
             for r in range(n):
-                l_vals = [py_val(L.iat[r, c]) for c in range(m)]
-                r_vals = [py_val(R.iat[r, c]) for c in range(m)]
+                l_vals = L_table[r]
+                r_vals = R_table[r]
                 lstr = [
                     C.common(left) if left == right
                                    else C.left_diff(left, prefix)
@@ -1199,13 +1221,6 @@ def create_row_diffs_mask(masks):
     return masks[0]
 
 
-def col_names(df):
-    if is_pandas_df(df):
-        return list(df)
-    elif is_polars_df(df):
-        return df.columns
-
-
 def valid_level(level):
     if level == 'loose':
         return 'permissive'
@@ -1217,9 +1232,3 @@ def valid_level(level):
     return level
 
 
-def is_pandas_df(df):
-    return isinstance(df, pd.DataFrame)
-
-
-def is_polars_df(df):
-    return isinstance(df, pl.DataFrame)

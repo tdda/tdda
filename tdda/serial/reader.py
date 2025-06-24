@@ -10,11 +10,11 @@ import polars as pl
 from tdda.serial.base import (
     CONTEXT_KEY,
     URI,
-    SerialMetadataError,
     VERBOSITY,
     TDDASERIAL,
     METADATA_FLAVOURS,
     SerialMetadata,
+    TDDASerialError,
 )
 from tdda.serial.csvw import CSVWConstants, CSVWMetadata
 
@@ -22,12 +22,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
-from tdda.utils import err, is_sequence
-
-
-class TDDASerialError(Exception):
-    pass
-
+from tdda.utils import error, is_sequence
 
 
 def load_metadata(path, md_file_type=None, table_number=None,
@@ -68,7 +63,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
     if ext == '.serial':  # tdda.serial file
         md = json.loads(text)
         if not isinstance(md, dict):
-            err(f'{path} does not appear to be a tdda.serial file.')
+            error(f'{path} does not appear to be a tdda.serial file.')
         kw = md.get('tdda.serial') or {}
         libs = {}
         for flavour in METADATA_FLAVOURS:

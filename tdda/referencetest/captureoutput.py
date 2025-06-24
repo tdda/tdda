@@ -5,6 +5,8 @@ captureoutput.py: CaptureOutput
 
 import sys
 
+from tdda.utils import TDDAError
+
 
 class CaptureOutput(object):
     """
@@ -26,7 +28,7 @@ class CaptureOutput(object):
             self.saved = sys.stderr
             sys.stderr = self
         else:
-            raise Exception('Unsupported capture stream %s' % stream)
+            raise TDDAError('Unsupported capture stream %s' % stream)
         self.out = []
         self.echo = echo
 

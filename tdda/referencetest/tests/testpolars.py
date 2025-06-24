@@ -252,7 +252,6 @@ class TestPolarsDataFrames(ReferenceTestCase):
 
 
 
-@unittest.skipIf(pl is None, 'No Polars')
 class TestPolarsHelperFunctions(ReferenceTestCase):
     def testRound(self):
         df = pl.DataFrame({'f': [1.125, 1.25], 's': ['a', 'b'],

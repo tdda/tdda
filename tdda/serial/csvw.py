@@ -6,9 +6,11 @@ from tdda.serial.base import (
     SerialMetadata,
     FieldMetadata,
     MISSING,
-    RE_ISO8601
+    RE_ISO8601,
+    TDDASerialError
 )
 from tdda.utils import nvl
+
 
 
 # From https://w3c.github.io/csvw/primer/#datatypes
@@ -185,8 +187,10 @@ class CSVWMetadata(SerialMetadata):
                 self._schema = self._csvw.get('tableSchema')
                 n = 0
         except KeyError:
-            raise Exception('Could not find schema information in CSVW file\n'
-                            "at ['tables'][{n}]['tableSchema'].")
+            raise TDDASerialError(
+                'Could not find schema information in CSVW file\n'
+                "at ['tables'][{n}]['tableSchema']."
+            )
 
         if type(self._schema) is str:
             path = os.path.join(nvl(self.metadata_source_dir, ''),
