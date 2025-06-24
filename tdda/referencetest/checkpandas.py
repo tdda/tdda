@@ -99,10 +99,13 @@ class PandasComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
-            n_diffs = diffs.dfd.diff.n_diff_values
-            if n_diffs:
-                diffs.append(str(diffs.dfd.diff))
+            D = same_structure_dataframe_diffs(df, ref_df)
+            n_diffs = D.n_diff_values
+            if n_diffs > 0:
+                diffs.dfd.diff = D
+                n_diffs = diffs.dfd.diff.n_diff_values
+                if n_diffs:
+                    diffs.append(str(diffs.dfd.diff))
             return n_diffs
 
     def same_structure_summary_diffs(self, df, ref_df, diffs):

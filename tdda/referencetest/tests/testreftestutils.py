@@ -8,6 +8,7 @@ import polars as pl
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.utils import *
 from tdda.referencetest.abstractdf import *
+from tdda.utils import TDDAError
 
 
 class TestReferenceTest(ReferenceTestCase):

@@ -442,7 +442,6 @@ class TestPolarsLoad(ReferenceTestCase):
 
         # self.assertDataFramesEqual(df, self.correct_df)
 
-    @tag
     def test_load_nulls1(self):
         md_path = tdpath('nulls1-metadata.json')
         refpath = tdpath('nulls1.parquet')

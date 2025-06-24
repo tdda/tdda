@@ -1,4 +1,6 @@
 import copy
+import os
+
 import polars as pl
 
 from tdda.serial.base import VERBOSITY, SerialMetadata
@@ -321,3 +323,32 @@ def as_polars_serial_lib_args(kw):
     if dtypes:
         out['schema_overrides'] = {k: repr(v) for k, v in dtypes.items()}
     return out
+
+
+def polars_read_df(path, nullable=False):
+    """
+    Reads a pandas data frame from parquet or csv, as the extension suggests.
+    Prefers nullable types.
+    """
+    _, ext = os.path.splitext(path)
+    if ext == '.csv':
+        return csv_to_polars(path)
+    elif ext == '.parquet':
+        # return pd.read_parquet(path, use_nullable_dtype=True)
+        return pl.read_parquet(path)
+    else:
+        raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
+
+
+def polars_write_df(df, path):
+    """
+    Writes a pandas data frame as parquet or csv, as the extension suggests.
+    Does not write the index.
+    """
+    _, ext = os.path.splitext(path)
+    if ext == '.csv':
+        df.write_csv(path)
+    elif ext == '.parquet':
+        df.write_parquet(path)
+    else:
+        raise TDDASerialError(f'Unexpected extension {ext} in {path}.')

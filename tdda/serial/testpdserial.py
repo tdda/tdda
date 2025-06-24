@@ -426,7 +426,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertEqual(diffs.count, 1)
         details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
-        self.assertEqual(details.rows, [[5, None, '']])
+        self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_with_pandas_specific_serial_metadata(self):
         # Same as previous but using read_with_tdda_serial
@@ -438,7 +438,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertEqual(diffs.count, 1)
         details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
-        self.assertEqual(details.rows, [[5, None, '']])
+        self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_with_serial_metadata(self):
         # Same as previous but using read_with_tdda_serial
@@ -446,12 +446,11 @@ class TestPandasLoad(ReferenceTestCase):
         df = csv_to_pandas(epath('base.csv'), epath('base-csv.serial'))
         diffs = pd_diff(df, self.ref_base_df,
                         type_matching='medium', precision=6,
-
                         create_temporaries=False)
         self.assertEqual(diffs.count, 1)
         details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
-        self.assertEqual(details.rows, [[5, None, '']])
+        self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_psv_with_serial(self):
         # Same as previous but using pipe-separators
@@ -462,7 +461,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertEqual(diffs.count, 1)
         details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
-        self.assertEqual(details.rows, [[5, None, '']])
+        self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_tsv_with_pandas_serial(self):
         # Same as previous but using read_with_tdda_serial
@@ -474,7 +473,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertEqual(diffs.count, 1)
         details = diffs.details(df, self.ref_base_df)
         self.assertEqual(details.cols, ['index', 'string_torture'])
-        self.assertEqual(details.rows, [[5, None, '']])
+        self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_csv_with_pandas_serial_dot_null(self):
         # Using ∙ (bullet operator) as null marker

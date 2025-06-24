@@ -27,10 +27,8 @@ from rich.table import Table
 
 from tdda.state import get_config
 from tdda.utils import Dummy, nvl, error
-from tdda.referencetest.utils import (
-    all_fields_except,
-)
 from tdda.referencetest.abstractdf import (
+    all_fields_except,
     is_pandas_df,
     is_polars_df,
     df_type,

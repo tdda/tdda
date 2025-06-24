@@ -24,7 +24,7 @@ PQ_REF4_PATH = os.path.join(TESTDATA, 'four-squares.parquet')
 CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
 
 
-class TestOne(ReferenceTestCase):
+class TestPandasDataFrameComparisons(ReferenceTestCase):
     f, t = False, True
     m10000000 = pd.Series([t, f, f, f, f, f, f, f])
     m01000000 = pd.Series([f, t, f, f, f, f, f, f])
@@ -104,6 +104,7 @@ class TestOne(ReferenceTestCase):
         self.assertStringCorrect(str(r.diffs.dfd),
             fp('ddiff-col-types-int-str.txt'))
 
+    @tag
     def testDiffColTypeInMemIntFloat(self):
         c = PandasComparison(verbose=False)
         actual = four_squares()
@@ -334,14 +335,14 @@ class TestOne(ReferenceTestCase):
     def testSameStructureDataFrameDiffs2(self):
         ref_df = pd.DataFrame({
             'a': [1,2,3],
-            'b': ["one", "two", "three"],
+            'b': ['one', 'two', 'three'],
             'c': [1.0, 2.0, 3.0],
             'd': [False, True, False],
         })
 
         df = pd.DataFrame({
             'a': [3,2,1],                     # two diffs
-            'b': ["one", "two", "three"],     # same
+            'b': ['one', 'two', 'three'],     # same
             'c': [1.0, None, 3.0],            # one diff
             'd': [True, True, False],         # one diff
         })

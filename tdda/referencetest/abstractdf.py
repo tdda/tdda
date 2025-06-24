@@ -3,6 +3,9 @@ import inspect
 import pandas as pd
 import polars as pl
 
+from tdda.utils import TDDAError
+
+
 def col_names(df):
     if is_pandas_df(df):
         return list(df)
@@ -101,4 +104,14 @@ def pandas_df_to_lists(df):
     return list(map(list, zip(*L)))
 
 
+def all_fields_except(exclusions):
+    """
+    Helper function, for using with *check_data*, *check_types* and
+    *check_order* parameters to assertion functions for Pandas DataFrames.
 
+    It returns the names of all of the fields in the DataFrame being
+    checked, apart from the ones given.
+
+    *exclusions* is a list of field names.
+    """
+    return lambda df: sorted(set(col_names(df)) - set(exclusions))

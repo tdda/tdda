@@ -13,7 +13,8 @@ from tdda.referencetest.basecomparison import (
 
 from tdda.serial.polarsio import (
     csv_to_polars,
-#    polars_df_to_csv
+    polars_read_df,
+    polars_write_df
 )
 
 import polars as pl
@@ -67,10 +68,12 @@ class PolarsComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            diffs.dfd.diff = same_structure_dataframe_diffs(df, ref_df)
-            n_diffs = diffs.dfd.diff.n_diff_values
-            if n_diffs:
-                diffs.append(str(diffs.dfd.diff))
+            D = same_structure_dataframe_diffs(df, ref_df)
+            n_diffs = D.n_diff_values
+            if n_diffs > 0:
+                diffs.dfd.diff = D
+                if n_diffs:
+                    diffs.append(str(diffs.dfd.diff))
             return n_diffs
 
     def load_serialized_dataframe(
@@ -178,7 +181,7 @@ def round_df(df, n):
     if not floats:
         return df
     return pl.DataFrame({
-         c: (df[c].round(n) if c in floats else df[c])
+         c: (df[c].round(n, mode='half_to_even') if c in floats else df[c])
          for c in df.columns
     })
 
@@ -231,8 +234,11 @@ def single_col_diffs(L, R):
         (diffs,    boolean mask with 1's where there are differences
          n)        number of differences
     """
-    different = ~(L.eq(R) | (L.is_null() & R.is_null()))
-    if different.dtype == pl.Boolean():
+    if polars_types_match(L.dtype, R.dtype, level='loose'):
+        different = ~(L.eq(R) | (L.is_null() & R.is_null()))
+    else:
+        different = ~(L.is_null() & R.is_null())
+    if different.dtype == pl.Boolean:
         different = different.fill_null(True)
     return ColDiff(different, different.sum())
 
@@ -250,7 +256,7 @@ def create_row_diff_counts(masks):
     """
     counts = [m.cast(pl.Int64) for m in masks]
     while len(counts) > 1:
-        last = [counts[-1].cast(Int64)] if len(counts) % 2 == 1 else []
+        last = [counts[-1].cast(pl.Int64)] if len(counts) % 2 == 1 else []
         counts = [
             (counts[2 * i] + counts[2 * i + 1])
             for i in range(len(counts) // 2)

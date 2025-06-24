@@ -112,16 +112,3 @@ def protected_readlines(path, filetype):
 
 def normabspath(p):
     return os.path.normpath(os.path.abspath(p))
-
-
-def all_fields_except(exclusions):
-    """
-    Helper function, for using with *check_data*, *check_types* and
-    *check_order* parameters to assertion functions for Pandas DataFrames.
-
-    It returns the names of all of the fields in the DataFrame being
-    checked, apart from the ones given.
-
-    *exclusions* is a list of field names.
-    """
-    return lambda df: sorted(set(col_names(df)) - set(exclusions))

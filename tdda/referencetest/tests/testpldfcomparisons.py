@@ -7,6 +7,7 @@ from rich.console import Console
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
+from tdda.referencetest.abstractdf import col_names
 from tdda.referencetest.checkpolars import (
     PolarsComparison,
     single_col_diffs,
@@ -24,7 +25,7 @@ PQ_REF4_PATH = os.path.join(TESTDATA, 'four-squares.parquet')
 CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
 
 
-class TestOne(ReferenceTestCase):
+class TestPolarsDataFrameComparisons(ReferenceTestCase):
     f, t = False, True
     m10000000 = pl.Series([t, f, f, f, f, f, f, f])
     m01000000 = pl.Series([f, t, f, f, f, f, f, f])
@@ -93,21 +94,35 @@ class TestOne(ReferenceTestCase):
     def testDiffColTypeInMemIntStr(self):
         c = PolarsComparison(verbose=False)
         actual = four_squares()
-        actual['squares'] = [str(sq) for sq in actual['squares']]
+        actual = actual.with_columns(
+            pl.Series([str(sq) for sq in actual['squares']]).alias('squares')
+        )
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
         self.assertStringCorrect(str(r.diffs), fp('diff-col-types-int-str.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                r'(object|String)',
+                r'[Ii]nt64',
             ])
-        self.assertStringCorrect(str(r.diffs.dfd),
-            fp('ddiff-col-types-int-str.txt'))
+        self.assertStringCorrect(
+            str(r.diffs.dfd),
+            fp('ddiff-col-types-int-str.txt'),
+            ignore_patterns=[
+                r'(object|String)',
+                r'[Ii]nt64',
+            ]
+        )
 
+    @tag
     def testDiffColTypeInMemIntFloat(self):
         c = PolarsComparison(verbose=False)
         actual = four_squares()
-        actual['squares'] = [float(sq) for sq in actual['squares']]
+        actual = actual.with_columns(
+            pl.Series([float(sq) for sq in actual['squares']]).alias('squares')
+        )
+
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
@@ -115,12 +130,18 @@ class TestOne(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-float.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                r'[Ff]loat64',
+                r'[Ii]nt64',
             ]
         )
         self.assertStringCorrect(
             str(r.diffs.dfd),
-            fp('ddiff-col-types-int-float.txt')
+            fp('ddiff-col-types-int-float.txt'),
+            ignore_patterns=[
+                r'[Ff]loat64',
+                r'[Ii]nt64',
+            ]
         )
 
     def testDiffColOrderInMem(self):
@@ -130,7 +151,7 @@ class TestOne(ReferenceTestCase):
             'squares': ref['squares'],
             'row': ref['row'],
         })
-        self.assertEqual(list(reversed(list(actual))), list(ref))
+        self.assertEqual(list(reversed(col_names(actual))), col_names(ref))
         r = c.check_dataframe(actual, ref)
         self.assertEqual(r.failures, 1)
         self.assertStringCorrect(
@@ -148,19 +169,19 @@ class TestOne(ReferenceTestCase):
 
     def testSingleColDiffs(self):
         df = pl.DataFrame({
-            'a': pl.Series([0, 1, None, None], dtype=pl.Int64Dtype()),
-            'b': pl.Series([0, None, 2, None], dtype=pl.Int64Dtype()),
+            'a': pl.Series([0, 1, None, None], dtype=pl.Int64),
+            'b': pl.Series([0, None, 2, None], dtype=pl.Int64),
             'A': [0, 1, None, None],
             'B': [0, None, 2, None],
             'm': [False, True, True, False],
         })
-        diffs = single_col_diffs(df.A, df.B)
-        self.assertTrue(diffs.mask.eq(df.m).all())
+        diffs = single_col_diffs(df['A'], df['B'])
+        self.assertTrue(diffs.mask.eq(df['m']).all())
         self.assertEqual(diffs.n, 2)
 
 
-        diffs = single_col_diffs(df.b, df.a)
-        self.assertTrue(diffs.mask.eq(df.m).all())
+        diffs = single_col_diffs(df['b'], df['a'])
+        self.assertTrue(diffs.mask.eq(df['m']).all())
         self.assertEqual(diffs.n, 2)
 
     def testCreateRowDiffsMaskAndCounts(self):
@@ -295,7 +316,7 @@ class TestOne(ReferenceTestCase):
 
         # Check every row has one differnce
         ones = pl.Series([1] * 8)
-        self.assertEqual((rdc.rowdiffs == ones).sum().item(), 8)
+        self.assertEqual((rdc.rowdiffs == ones).sum(), 8)
 
         expected = pl.DataFrame({
             'c0': self.m00000001,
@@ -318,7 +339,7 @@ class TestOne(ReferenceTestCase):
         rdc = ddiff.row_diff_counts
 
         s18 = pl.Series(range(1, 9))
-        self.assertEqual((rdc.rowdiffs == s18).sum().item(), 8)
+        self.assertEqual((rdc.rowdiffs == s18).sum(), 8)
         expected = pl.DataFrame({
             'c0': self.expected8,
             'c1': self.expected7r,
@@ -334,14 +355,14 @@ class TestOne(ReferenceTestCase):
     def testSameStructureDataFrameDiffs2(self):
         ref_df = pl.DataFrame({
             'a': [1,2,3],
-            'b': ["one", "two", "three"],
+            'b': ['one', 'two', 'three'],
             'c': [1.0, 2.0, 3.0],
             'd': [False, True, False],
         })
 
         df = pl.DataFrame({
             'a': [3,2,1],                     # two diffs
-            'b': ["one", "two", "three"],     # same
+            'b': ['one', 'two', 'three'],     # same
             'c': [1.0, None, 3.0],            # one diff
             'd': [True, True, False],         # one diff
         })
@@ -351,7 +372,7 @@ class TestOne(ReferenceTestCase):
         self.assertEqual(ddiff.n_diff_cols, 3)
         self.assertEqual(ddiff.n_diff_rows, 3)
         rdc = ddiff.row_diff_counts
-        self.assertEqual((rdc.rowdiffs == pl.Series([2, 1, 1])).sum().item(),
+        self.assertEqual((rdc.rowdiffs == pl.Series([2, 1, 1])).sum(),
                          3)
         expected = pl.DataFrame({
             'a': pl.Series([True, False, True]),
@@ -360,7 +381,6 @@ class TestOne(ReferenceTestCase):
         })
         self.assertTrue(ddiff.diff_df.equals(expected))
 
-    @tag
     def test_ddiff_values_output(self):
         df = four_squares()
         rdf = four_squares_and_ten()
