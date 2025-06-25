@@ -43,6 +43,8 @@ FieldDiff = namedtuple('FieldDiff', 'actual expected')
 ColDiff = namedtuple('ColDiff', 'mask n')
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
+QualifiedTypeRE = re.compile('^([A-Za-z0-9]+).*$')
+
 DEFAULT_DIFF_ROWS = 10
 
 ESC_MAP = str.maketrans({
@@ -800,12 +802,12 @@ class BaseComparison(object):
         """
         if not os.path.exists(csvfile):
             parts = csvfile.split(':')
-            if len(parts) == 2:  # path + md_path
+            if csvfile.endswith(':'):  # find metadata
+                return self.csv_to_dataframe(csvfile[:-1], find_md=True)
+            elif len(parts) == 2:  # path + md_path
                 path, md_path = parts
                 if os.path.exists(path):
-                    return self.csv_to_dataframe(path, md_path)
-            elif csvfile.endswith(':'):  # find metadata
-                return self.csv_to_dataframe(csvfile[:-1], find_md=True)
+                    return self.csv_to_dataframe(path, md_path=md_path)
         if loader is None:
             loader = self.default_csv_loader
         return loader(csvfile, **kwargs)
@@ -968,6 +970,7 @@ class SameStructureDDiff:
             R = get_diffs_df_with_cols(
                 ref_df, cols, self.row_diff_counts.rowdiffs, n
             )
+            pL, pR = C.stripped_prefixes(pre=' ' if vertical else '')
             indexes = [
                 C.common(v, dim_if_not_bw=True) for v in row_indexes
             ]
@@ -996,10 +999,10 @@ class SameStructureDDiff:
                     C.right_annotated(right, prefix) for right in r_vals
                 ]
                 if vertical:
-                    rows.append([indexes[r]] + lstr)
-                    rows.append([indexes[r]] + rstr)
-                    plain_rows.append([pl_indexes[r]] + plstr)
-                    plain_rows.append([pl_indexes[r]] + prstr)
+                    rows.append([f'{indexes[r]}{pL}'] + lstr)
+                    rows.append([f'{indexes[r]}{pR}'] + rstr)
+                    plain_rows.append([f'{pl_indexes[r]}{pL}'] + plstr)
+                    plain_rows.append([f'{pl_indexes[r]}{pR}'] + prstr)
                 else:
                     rows.append(
                         [pl_indexes[r]]
@@ -1009,27 +1012,47 @@ class SameStructureDDiff:
                         [pl_indexes[r]]
                         + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
                     )
-            n_table_cols = len(plain_rows[0])
-            widths = [
-                max(len(row[i]) for row in plain_rows)
-                for i in range(n_table_cols)
-            ]
-            for i, col in enumerate(cols):
-                pL, pR = C.stripped_prefixes(pre='')
-                tL, tR = type_header(L[col]), type_header(R[col])
-                widths[1 + i * 2] = max(widths[1 + i * 2],
+            type_headers = []
+            if vertical:
+                n_table_cols = len(plain_rows[0])
+                widths = [
+                    max(len(row[i]) for row in plain_rows)
+                    for i in range(n_table_cols)
+                ]
+                for i, col in enumerate(cols):
+                    tL, tR = type_header(L[col]), type_header(R[col])
+                    type_headers.append(f'{tL}\n{tR}')
+                    widths[1 + i] = max(widths[1 + i],
                                         len(cols[i]),
-                                        len(pL),
-                                        len(tL))
-                widths[2 + i * 2] = max(widths[2 + i * 2],
-                                        len(cols[i]),
-                                        len(pR),
+                                        len(tL),
                                         len(tR))
-            index_head = 'index'
-            widths[0] = max(widths[0], len(index_head))
-            col_space = sum(widths)
-            table_width = col_space + (n_table_cols) * 3
-            header_width = sum(len(name) for name in cols)
+                index_head = 'index'
+                widths[0] = max(widths[0], len(index_head))
+                col_space = sum(widths)
+                table_width = col_space + (n_table_cols) * 3
+                header_width = sum(len(name) for name in cols)
+            else:
+                n_table_cols = len(plain_rows[0])
+                widths = [
+                    max(len(row[i]) for row in plain_rows)
+                    for i in range(n_table_cols)
+                ]
+                for i, col in enumerate(cols):
+                    tL, tR = type_header(L[col]), type_header(R[col])
+                    type_headers.extend([tL, tR])
+                    widths[1 + i * 2] = max(widths[1 + i * 2],
+                                            len(cols[i]),
+                                            len(pL),
+                                            len(tL))
+                    widths[2 + i * 2] = max(widths[2 + i * 2],
+                                            len(cols[i]),
+                                            len(pR),
+                                            len(tR))
+                index_head = 'index'
+                widths[0] = max(widths[0], len(index_head))
+                col_space = sum(widths)
+                table_width = col_space + (n_table_cols) * 3
+                header_width = sum(len(name) for name in cols)
 
             s = '' if n == 1 else 's'
             rows_desc = (
@@ -1043,18 +1066,23 @@ class SameStructureDDiff:
                 title_style='bold',
                 width=table_width,
             )
-            if not vertical:
+            if vertical:
+                index_head += f'\n{pL}\n{pR}'
+            else:
                 index_head += '\n '
-            table.add_column(index_head, justify='right')
-            for i, col in enumerate(cols, 1):
+            table.add_column(index_head, justify='right', no_wrap=True)
+            for i, col in enumerate(cols):
                 if vertical:
-#                    table.add_column(col, justify='right', no_wrap=True)
-                    table.add_column(col, justify='right', no_wrap=True)
+                    tH = type_headers[i]
+                    table.add_column('\n'.join((col, tH)),
+                                     justify='right',
+                                     min_width=widths[i + 1])
                 else:
+                    (tL, tR) = type_headers[2 * i:2 * i + 2]
                     table.add_column('\n'.join((col, tL, pL)), justify='right',
-                                     no_wrap=True)
+                                     min_width=widths[2 * i + 1])
                     table.add_column('\n'.join((col, tR, pR)), justify='right',
-                                     no_wrap=True)
+                                     min_width=widths[2 * i + 2])
             for row in rows:
                 table.add_row(*row)
             return table
@@ -1195,8 +1223,12 @@ def escaped_list(items):
     return ','.join(item.translate(ESC_MAP) for item in items)
 
 
-def type_header(col):
-    return str(col.dtype)
+def type_header(col, suffix=''):
+    t = str(col.dtype)
+    m = re.match(QualifiedTypeRE, t)
+    if m:
+        t = m.group(1)
+    return f'{t}{suffix}'
 
 
 def create_row_diffs_mask(masks):

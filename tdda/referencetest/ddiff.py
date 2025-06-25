@@ -1,10 +1,8 @@
 import os
 import sys
 
-from tdda.referencetest.checkpandas import (
-    PandasComparison,
-    same_structure_dataframe_diffs
-)
+from tdda.referencetest.checkpandas import PandasComparison
+from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
 from tdda.utils import warn, error, stdout_console as console
 
@@ -20,10 +18,19 @@ USAGE: tdda diff LEFT.parquet RIGHT.parquet [MAX_DIFFS [DPS]]
 DEFAULT_PRECISION = 7
 DEFAULT_DPS = 7
 
+ENGINES = {
+    'pandas': 'pandas',
+    'polars': 'polars',
+
+    'pd': 'pandas',
+    'pl': 'polars',
+}
+
 
 TDDA_DIFF_HELP = '''
 Notes
 '''
+
 
 class TDDADiff:
     def __init__(self, args, config=None):
@@ -32,7 +39,11 @@ class TDDADiff:
         self.process_args()
 
     def ddiff(self):
-        c = PandasComparison()
+        c = (
+            PandasComparison()
+            if self.engine == 'pandas'
+            else PolarsComparison()
+        )
         dfL = c.load_serialized_dataframe(self.left)
         dfR = c.load_serialized_dataframe(self.right)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
@@ -119,6 +130,13 @@ class TDDADiff:
         elif self.permissive or self.loose:
             self.type_checking = 'permissive'
 
+        engine = ENGINES.get(self.engine, self.config.df_engine)
+        if engine is None:
+            warn(f'Engine "{self.engine}" unknown. Using {c.engine} '
+                 'from config.')
+        else:
+            self.engine = self.config.df_engine = engine
+
     def error(self, msg):
         print(msg, file=sys.stderr)
         sys.exit(1)
@@ -204,12 +222,17 @@ class TDDADiff:
         parser.add_argument('--permissive', action='store_true',
             help='Use loose (permissive) type comparisons')
 
+        parser.add_argument('--engine', '-e', type=str, action='store',
+            help='Dataframe engine (pandas or polars)')
+
         return parser
 
 
 def ddiff_helper(args):
     tddadiff = TDDADiff(args)
     tddadiff.ddiff()
+
+
 
 
 if __name__ == '__main__':
