@@ -157,7 +157,7 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
             bool_str_fields = [f.name for f in fields if f.fieldtype == 'bool']
             if non_pl_bools and bool_fields:
                 if map_other_bools_to_string:
-                    flist = '\,'.join(bool_str_fields)
+                    flist = ','.join(bool_str_fields)
                     m = f'Mapping to String: {flist}'
                 else:
                     bool_str_fields = []
