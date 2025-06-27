@@ -5,9 +5,9 @@ import polars as pl
 from rich import print as rprint
 from rich.console import Console
 
+from tdda.abstractdf import col_names
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
-from tdda.referencetest.abstractdf import col_names
 from tdda.referencetest.checkpolars import (
     PolarsComparison,
     single_col_diffs,

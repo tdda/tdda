@@ -41,7 +41,7 @@ from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.pd.constraints import verify_df, load_df
 
 from tdda.state import get_config
-from tdda.utils import handle_tilde, nvl, cprint
+from tdda.utils import handle_tilde, nvl, cprint, tdda_path_info
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True,
@@ -113,7 +113,8 @@ class PandasVerifier:
 
     def verify(self):
         params = pd_verify_params(self.argv[1:])
-        path = handle_tilde(params['df_path'])
+        inpath = params['df_path']
+        path = tdda_path_info(inpath).path
         if path is not None and path != '-' and not os.path.isfile(path):
             print('%s does not exist' % path)
             sys.exit(1)

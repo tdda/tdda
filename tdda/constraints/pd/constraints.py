@@ -62,7 +62,7 @@ from tdda.constraints.baseconstraints import (
 from tdda.pd.utils import (
     is_string_col, is_string_dtype, is_categorical_dtype,
 )
-from tdda.referencetest.abstractdf import csv_to_dataframe
+from tdda.abstractdf import csv_to_dataframe
 
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
@@ -1216,7 +1216,9 @@ def file_format(path):
         return 'csv'
     else:
         (stem, ext) = os.path.splitext(path)
-        return ext[1:] if ext else 'csv'
+        if not ext:
+            return 'csv'
+        return 'parquet' if ext[1:].lower() == 'parquet' else 'csv'
 
 
 def load_df(path, md_path=None, find_md=False):
@@ -1243,38 +1245,9 @@ def load_df(path, md_path=None, find_md=False):
 
     if ext == '.parquet':
         return pd.read_parquet(path, dtype_backend='numpy_nullable')
-
-    if md_path is None:
-        md_type, _ = find_metadata_type_from_path(path)
-        if md_type:
-            # path is a metadata file of a known type
-            # load the metadata from it and get the file path, if any
-            # from the metadata file
-            metadata = load_metadata(path)
-            if metadata and metadata.path:
-                print('** Using metadata %s.  '
-                      'Use --no-csv-metadata to override.' % path,
-                      file=sys.stderr)
-                kw = serial_to_pandas_read_csv_args(metadata)
-                # return default_csv_loader(metadata.path, **kw)
-                return csv_to_dataframe(metadata.path, **kw)
-
-        if find_md:
-            # no explicit metadata path provided
-            md_path = find_associated_metadata_file(path)
-            if md_path:
-                return csv_to_dataframe(path, md_path)
-            elif infer_metadata:
-                # infer metadata
-                pass
-        # Told not to look for apparent metadata or infer metadata
-        return default_csv_loader(path)
-
-    else:  # explicit metadatapath provided
-        # metadata = load_metadata(md_path)
-        # kw = serial_to_pandas_read_csv_args(metadata)
-        # return default_csv_loader(path, **kw)
-        return csv_to_dataframe(path, md_path)
+    else:
+        return csv_to_dataframe(path, md_path, find_md=find_md,
+                                infer_datetime_formats=True)
 
 def save_df(df, path, index=False):
     if path == '-' or path is None:

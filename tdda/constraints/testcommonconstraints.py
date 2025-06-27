@@ -75,7 +75,7 @@ class TestCommonConstraints(ReferenceTestCase):
                         md_path=tdpath('ddd-pandas-minimal.serial'),
                         verbose=False)
         self.assertStringCorrect(str(report),
-                                 reportpath('ddd10-dates-fail.txt'))
+                                 reportpath('ddd10-all-correct.txt'))
 
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
                         md_path=tdpath('ddd.serial'),

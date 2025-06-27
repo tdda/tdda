@@ -7,8 +7,8 @@ import os
 import pandas as pd
 import polars as pl
 
+from tdda.abstractdf import is_pandas_df, is_polars_df
 from tdda.referencetest import ReferenceTestCase, ReferenceTest
-from tdda.referencetest.abstractdf import is_pandas_df, is_polars_df
 
 
 class TestReferenceTest(ReferenceTestCase):

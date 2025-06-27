@@ -12,7 +12,7 @@ from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.state import get_config
 from tdda.utils import TDDAError, nvl, error
-from tdda.referencetest.abstractdf import (
+from tdda.abstractdf import (
     df_type, df_definite, is_pandas_df, is_polars_df
 )
 

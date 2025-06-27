@@ -24,7 +24,11 @@ def is_string_dtype(dtype):
     Given column dtype, test whether it is a string type
     --- object or categorical
     """
-    return dtype == np.dtype('O') or is_categorical_dtype(dtype)
+    return dtype == (
+        np.dtype('O')
+        or is_categorical_dtype(dtype)
+        or str(dtype) == 'string'
+    )
 
 
 def is_string_col(col):

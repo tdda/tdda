@@ -5,9 +5,9 @@
 import pandas as pd
 import polars as pl
 
+from tdda.abstractdf import *
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.utils import *
-from tdda.referencetest.abstractdf import *
 from tdda.utils import TDDAError
 
 

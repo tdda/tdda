@@ -53,6 +53,8 @@ NAN = float('nan')
 TDDA_NF_MAP = None  # build lazily
 
 
+TDDAPathInfo = namedtuple('TDDAPathInfo',
+                          'path stem ext md_path find_md combined')
 
 class TDDAError(Exception):
     pass
@@ -907,4 +909,24 @@ def listify(v):
         else [] if v is None
         else [v]
     )
+
+
+def tdda_path_info(inpath):
+    inpath = handle_tilde(inpath)
+    if ':' in inpath  and not os.path.exists(inpath):
+        if inpath.endswith(':'):
+            path = inpath[:-1]
+            stem, ext = os.path.splitext(path)
+            return TDDAPathInfo(path, stem, ext, None, True, inpath)
+        parts = inpath.split(':')
+        if len(parts) == 2:
+            path, md_path = parts
+            stem, ext = os.path.splitext(path)
+            return TDDAPathInfo(path, stem, ext, handle_tilde(md_path),
+                                False, inpath)
+        # else
+            # ignore for now
+
+    stem, ext = os.path.splitext(inpath)
+    return TDDAPathInfo(inpath, stem, ext, None, False, inpath)
 

@@ -27,7 +27,8 @@ from tdda.referencetest.basecomparison import (
 from tdda.serial.pandasio import (
     pandas_df_to_csv,
     csv_to_pandas,
-    pandas_read_df
+    pandas_read_df,
+    infer_dates
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.utils import nvl, error
@@ -317,8 +318,6 @@ class PandasNotImplemented(object):
 
 def default_csv_loader(csvfile, **kwargs):
     """
-    **NO LONGER USED. REMOVE SOON**
-
     Default function for reading a csv file.
 
     Wrapper around the standard pandas pd.read_csv() function, but with
@@ -355,23 +354,9 @@ def default_csv_loader(csvfile, **kwargs):
 
     if infer_datetimes:  # We do it ourselves, now, instead of letting
         # pandas do it.
-        colnames = df.columns.tolist()
-        for c in colnames:
-            if is_string_col(df[c]):
-                fmt = infer_date_format(df[c])
-                if fmt:
-                    try:
-                        datecol = pd.to_datetime(df[c], format=fmt)
-                        if datecol.dtype == np.dtype('datetime64[ns]'):
-                            df[c] = datecol
-                    except Exception as e:
-                        pass
-        ndf = pd.DataFrame()
-        for c in colnames:
-            ndf[c] = df[c]
-        return ndf
-    else:
-        return df
+        df = infer_dates(df)
+
+    return df
 
 
 def default_csv_writer(df, csvfile, **kwargs):

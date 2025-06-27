@@ -225,7 +225,8 @@ def csv_to_polars(path=None, md_path=None, md_file_type=None, find_md=False,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, map_other_bools_to_string=False,
-                  verbosity=VERBOSITY, warner=None, **kw):
+                  verbosity=VERBOSITY, warner=None,
+                  infer_datetime_formats=False, **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -325,14 +326,14 @@ def as_polars_serial_lib_args(kw):
     return out
 
 
-def polars_read_df(path, nullable=False):
+def polars_read_df(path, nullable=False, **kw):
     """
     Reads a pandas data frame from parquet or csv, as the extension suggests.
     Prefers nullable types.
     """
     _, ext = os.path.splitext(path)
     if ext == '.csv':
-        return csv_to_polars(path)
+        return csv_to_polars(path, **kw)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
         return pl.read_parquet(path)

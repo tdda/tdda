@@ -14,6 +14,8 @@ from tdda.constraints.pd.discover import PandasDiscoverer
 from tdda.constraints.pd.verify import PandasVerifier
 from tdda.constraints.pd.detect import PandasDetector
 
+from tdda.utils import tdda_path_info
+
 
 class TDDAPandasExtension(ExtensionBase):
     def __init__(self, argv, verbose=False):
@@ -23,9 +25,9 @@ class TDDAPandasExtension(ExtensionBase):
         for a in self.argv:
             if a == '-':
                 return True
-            (stem, ext) = os.path.splitext(a)
-            if (ext in ('.csv', '.psv', '.tsv', '.parquet',
-                        '.json', '.yaml')):
+            info = tdda_path_info(a)
+            if (info.ext in ('.csv', '.psv', '.tsv', '.parquet',
+                             '.json', '.yaml')):
                 return True
         return False
 

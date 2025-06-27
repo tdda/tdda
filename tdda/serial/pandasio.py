@@ -22,8 +22,8 @@ from tdda.serial.base import (
 from tdda.serial.reader import get_metadata_for_reader
 from tdda.serial.utils import find_associated_metadata_file
 from tdda.utils import nvl, error, warn, listify, Dummy
-from tdda.pd.utils import first_non_null
-
+from tdda.pd.utils import first_non_null, is_string_col
+from tdda.referencetest.pddates import infer_date_format
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 DTYPE_RE = re.compile(r'^([A-Za-z])([0-9]+)?(\[[a-z]+(,?)(.*)\])$')
@@ -658,7 +658,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, verbosity=VERBOSITY,
-                  **kw):
+                  infer_datetime_formats=False, **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -760,6 +760,9 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
         for k in df:
             if not k in (specified_types or []):
                 poss_upgrade_to_int(df, k)
+
+    if infer_datetime_formats:
+        df = infer_dates(df, specified_types)
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
@@ -782,14 +785,34 @@ def poss_upgrade_to_int(df, name):
                 df[name] = int_col
 
 
-def pandas_read_df(path, nullable=False):
+def infer_dates(df, specified_types=None):
+    colnames = df.columns.tolist()
+    for c in colnames:
+        spec = (specified_types or {}).get(c)
+        if is_string_col(df[c]) and spec not in ('string', 'object'):
+            fmt = infer_date_format(df[c])
+            if fmt:
+                try:
+                    datecol = pd.to_datetime(df[c], format=fmt)
+                    if datecol.dtype == np.dtype('datetime64[ns]'):
+                        df[c] = datecol
+                except Exception as e:
+                    pass
+    # ndf = pd.DataFrame()
+    # for c in colnames:
+    #     ndf[c] = df[c]
+    # return ndf
+    return df
+
+
+def pandas_read_df(path, nullable=False, **kw):
     """
     Reads a pandas data frame from parquet or csv, as the extension suggests.
     Prefers nullable types.
     """
     _, ext = os.path.splitext(path)
     if ext == '.csv':
-        return csv_to_pandas(path)
+        return csv_to_pandas(path, nullable=nullable, **kw)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
         if nullable:
@@ -812,3 +835,4 @@ def pandas_write_df(df, path):
         df.to_parquet(path, index=None)
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
+

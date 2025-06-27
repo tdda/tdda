@@ -64,7 +64,7 @@ from tdda.referencetest.pddates import (
     Separators,
     get_date_separators
 )
-from tdda.referencetest.checkpandas import default_csv_loader
+from tdda.serial import csv_to_pandas
 from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 TDDA_MD_IGNORES = [
@@ -1291,7 +1291,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
         v = detect(csv_path, constraints_path=reftddafile1k,
-                                outpath=outfile, verbose=False)
+                   outpath=outfile, verbose=False)
         passingConstraints = 53
         failingConstraints = 19
         passingRecords = 24883
@@ -1310,6 +1310,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
         self.assertTextFileCorrect(outfile, refpath)
 
+    @tag
     def testDetect25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
@@ -1338,7 +1339,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
         # Also check that's the same as the CSV equivalent,
         # appropriately read!
-        from_csv_df = default_csv_loader(refcsvpath)
+        from_csv_df = csv_to_pandas(refcsvpath)
         self.assertDataFramesEqual(expected_df, from_csv_df,
                                    outfile, refcsvpath)
 
