@@ -1,9 +1,7 @@
 import sys
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
+import polars as pl
 
 if pd is not None:
     from tdda.constraints.pd.constraints import (discover_df,
@@ -41,8 +39,10 @@ def source_kind(src):
             return 'parquet'
         else:  # for now, assume anything else is a flat file
             return 'flat'
-    elif pd and isinstance(src, pd.DataFrame):
+    elif isinstance(src, pd.DataFrame):
         return 'pandas'
+    elif isinstance(src, pl.DataFrame):
+        return 'polars'
     else:
         return None
 
@@ -104,7 +104,7 @@ def discover(indata, constraints_path=None,
 
 
 def verify(indata, constraints_path, outdata=None, verbose=True,
-           backend=DEFAULT_BACKEND, mdpath=None, **kwargs):
+           backend=DEFAULT_BACKEND, md_path=None, **kwargs):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -127,7 +127,7 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
             Backend to use.
             Currently only pandas is supported.
 
-        *mdpath*:
+        *md_path*:
             Path to metadata for indata (if any)
 
         *kwargs*:
@@ -141,7 +141,7 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
         return verify_df(indata, constraints_path, verbose=verbose, **kwargs)
     elif kind in ('parquet', 'flat') and backend == 'pandas':
         return verify_df_from_file(indata, constraints_path, verbose=verbose,
-                                   mdpath=mdpath, **kwargs)
+                                   md_path=md_path, **kwargs)
     else:
         print('Unsupported verification mode (%s)' % kind, file=sys.stderr)
         sys.exit(1)

@@ -20,7 +20,7 @@ Parameters:
   * constraints.tdda, if provided, is a JSON .tdda file constaining
     constraints.
 
-  * name of output file (.csv, .parqet)
+  * name of output file (.csv, .parquet)
     where detection results are to be written.
     Can be - (or missing) to write to standard output.
 

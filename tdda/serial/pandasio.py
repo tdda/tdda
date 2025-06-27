@@ -40,6 +40,16 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
 }
 
 
+FIELDTYPE_TO_OLD_PANDAS_DTYPE = {
+    'bool': 'object',
+    'int': None,
+    'string': 'object',
+    'number': 'float',
+    'float': 'float',
+    'datetime': 'datetime',  # not passed to Pandas
+    'date': 'date',          # not passed to Pandas
+}
+
 PANDAS_DTYPE_TO_FIELDTYPE = {
     'boolean': 'bool',
     'bool': 'bool',
@@ -88,7 +98,7 @@ def csvw_to_pandas_kwargs(spec, extensions=False):
     return kw
 
 
-def serial_to_pandas_read_csv_args(md):
+def serial_to_pandas_read_csv_args(md, nullable=True):
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
     kw = {}
@@ -96,11 +106,15 @@ def serial_to_pandas_read_csv_args(md):
         f.name: f for f in md.fields
                 if f.fieldtype and f.fieldtype.startswith('date')
     }
+    type_map = (
+        FIELDTYPE_TO_PANDAS_DTYPE if nullable
+                                  else FIELDTYPE_TO_OLD_PANDAS_DTYPE
+    )
     kw['dtype'] = {
-        f.name: FIELDTYPE_TO_PANDAS_DTYPE.get(f.fieldtype)
+        f.name: type_map.get(f.fieldtype)
         for f in md.fields
         if f.name not in date_fields
-        and FIELDTYPE_TO_PANDAS_DTYPE.get(f.fieldtype) is not None
+        and type_map.get(f.fieldtype) is not None
     } or None
     if any(v.format for v in date_fields):
         kw['date_format'] = {name: to_pandas_date_format(f.format)
@@ -640,7 +654,7 @@ def pandas_df_to_csv(df, path=None,
 
 
 def csv_to_pandas(path=None, md_path=None, md_file_type=None,
-                  find_md=False,
+                  find_md=False, nullable=True,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, verbosity=VERBOSITY,
@@ -681,6 +695,9 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                  If assocaited metadata cannot be found, an error
                  will be raised when this is set.
 
+       nullable  Set to False to use traditional Pandas
+                 non-nullable types for floats etc.
+
        upgrade_types   If True (the default), this will upgrade
                        some columns read_csv will create as object
                        (dtype object) to stricter types.
@@ -714,7 +731,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
      )
 
     if md:
-        md_kw = serial_to_pandas_read_csv_args(md)
+        md_kw = serial_to_pandas_read_csv_args(md, nullable=nullable)
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -723,18 +740,22 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     df = pd.read_csv(path, **kw)
 
     specified_types = kw.get('dtype')
+    dates = []
     if upgrade_types and specified_types:
-        dates = (kw.get('date_format') or {}).keys()
+        dfmt = kw.get('date_format')
+        if isinstance(dfmt, dict):
+            dates = list(dfmt.keys())
+            # should be using these!
         for k in df:
-            df[k].dtype == np.dtype('O')
-            specified_type = specified_types.get(k)
-            try:
-                if specified_type:
-                    df[k] = df[k].astype(specified_type)
-                elif k in dates:
-                    df[k] = df[k].astype('datetime64[ns]')
-            except ValueError:  # probably time-zone aware date
-                pass
+            if df[k].dtype == np.dtype('O'):
+                specified_type = specified_types.get(k)
+                try:
+                    if specified_type:
+                        df[k] = df[k].astype(specified_type)
+                    elif k in dates:
+                        df[k] = df[k].astype('datetime64[ns]')
+                except ValueError:  # probably time-zone aware date
+                    pass
     if upgrade_possible_ints:
         for k in df:
             if not k in (specified_types or []):

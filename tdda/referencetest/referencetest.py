@@ -1048,7 +1048,7 @@ class ReferenceTest(object):
         if le == re == 'polars':
             return ldf, rdf, self.polars
 
-        engine = get_preferred_df_engine(engine)
+        engine = get_preferred_engine(engine)
         lib = self.polars if engine == 'polars' else self.pandas
         return df_definite(ldf, engine), df_definite(rdf, engine), lib
 
@@ -1058,7 +1058,7 @@ class ReferenceTest(object):
         elif is_polars_df(df):
             return self.polars
         elif df is None:
-            engine = get_preferred_df_engine(engine)
+            engine = get_preferred_engine(engine)
             return self.polars if engine == 'polars' else self.pandas
         else:
             error('Unrecognized DataFrame.')
@@ -1076,7 +1076,7 @@ class ReferenceTest(object):
     print_fn = _default_print_fn
 
 
-def get_preferred_df_engine(engine):
+def get_preferred_engine(engine):
     if engine is None:
         config = get_config()
         engine = config.get('df_engine')

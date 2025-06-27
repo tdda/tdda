@@ -99,7 +99,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
             kind = 'frictionless'
     else:
         raise TDDASerialError(f'Unexpected file extension {ext} for metadata '
-                               f'file.\nExpected .json or .yaml.')
+                               f'file.\nExpected .serial, .json, or .yaml.')
     if md_file_type and kind != md_file_type:
         raise TDDASerialError(
                   f'Expected {md_file_type} file; found {kind} file.'
@@ -138,12 +138,19 @@ def get_metadata_for_reader(path, md_path, md_file_type, find_md,
             if path is None:
                 raise TDDASerialError('No data specified.')
 
-
-    if md_path is None and find_md:
-        md_path = find_associated_metadata_file(path)
-        if md_path is None:
-            raise TDDASerialError('Could not find any associated metadata '
-                                   f'for {os.path.abspath(path)}')
+    if md_path is None:
+        if path.endswith(':'):  # find metadata
+            path = path[:-1]
+            find_md = True
+        if find_md:
+            md_path = find_associated_metadata_file(path)
+            if md_path is None:
+                raise TDDASerialError('Could not find any associated metadata '
+                                       f'for {os.path.abspath(path)}')
+        else:
+            parts = path.split(':')
+            if len(parts) == 2:  # path + md_path
+                path, md_path = parts
 
     if md is None and md_path is not None:
         md = load_metadata(md_path, md_file_type=md_file_type,
@@ -190,8 +197,3 @@ def find_metadata_kind(mds, preferred=None):
                 return kind, md
         dicts.extend([v for v in md.values() if isinstance(v, dict)])
     return find_metadata_kind(dicts, preferred)
-
-
-
-
-

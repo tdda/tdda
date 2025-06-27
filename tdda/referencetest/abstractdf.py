@@ -3,7 +3,10 @@ import inspect
 import pandas as pd
 import polars as pl
 
-from tdda.utils import TDDAError
+from tdda.state import get_config
+from tdda.utils import TDDAError, nvl, error
+
+from tdda.serial import csv_to_pandas, csv_to_polars
 
 
 def col_names(df):
@@ -99,6 +102,7 @@ def df_to_lists(df, *args, **kwargs):
 def polars_df_to_lists(df):
     return df.rows()
 
+
 def pandas_df_to_lists(df):
     L = [df[c].to_list() for c in df]
     return list(map(list, zip(*L)))
@@ -115,3 +119,23 @@ def all_fields_except(exclusions):
     *exclusions* is a list of field names.
     """
     return lambda df: sorted(set(col_names(df)) - set(exclusions))
+
+
+def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
+                     find_md=False, nullable=True, engine=None):
+    """
+    Load a csv file to a DataFrame of a type (Pandas or Polars)
+    determined by engine or config.
+    """
+    config = get_config()
+    engine = nvl(engine, config.engine)
+    if engine == 'polars':
+        return csv_to_polars(path=path, md_path=md_path,
+                             md_file_type=md_file_type,
+                             find_md=find_md)
+    elif engine == 'pandas':
+        return csv_to_pandas(path=path, md_path=md_path,
+                             md_file_type=md_file_type,
+                             find_md=find_md, nullable=nullable)
+    else:
+        error(f'Unknown DateFrame engine: {engine}.')

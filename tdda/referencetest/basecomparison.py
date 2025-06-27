@@ -43,7 +43,7 @@ FieldDiff = namedtuple('FieldDiff', 'actual expected')
 ColDiff = namedtuple('ColDiff', 'mask n')
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
-QualifiedTypeRE = re.compile('^([A-Za-z0-9]+).*$')
+QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
 DEFAULT_DIFF_ROWS = 10
 
@@ -800,14 +800,15 @@ class BaseComparison(object):
         """
         Function for constructing a pandas dataframe from a CSV file.
         """
-        if not os.path.exists(csvfile):
-            parts = csvfile.split(':')
-            if csvfile.endswith(':'):  # find metadata
-                return self.csv_to_dataframe(csvfile[:-1], find_md=True)
-            elif len(parts) == 2:  # path + md_path
-                path, md_path = parts
-                if os.path.exists(path):
-                    return self.csv_to_dataframe(path, md_path=md_path)
+        # if not os.path.exists(csvfile):
+        #     parts = csvfile.split(':')
+        #     if csvfile.endswith(':'):  # find metadata
+        #         return self.csv_to_dataframe(csvfile[:-1], find_md=True)
+        #     elif len(parts) == 2:  # path + md_path
+        #         path, md_path = parts
+        #         if os.path.exists(path):
+        #             return self.csv_to_dataframe(path, md_path=md_path)
+        # Now handled by csv_to_pandas
         if loader is None:
             loader = self.default_csv_loader
         return loader(csvfile, **kwargs)

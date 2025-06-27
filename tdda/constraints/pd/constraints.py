@@ -62,6 +62,7 @@ from tdda.constraints.baseconstraints import (
 from tdda.pd.utils import (
     is_string_col, is_string_dtype, is_categorical_dtype,
 )
+from tdda.referencetest.abstractdf import csv_to_dataframe
 
 
 from tdda.referencetest.checkpandas import (default_csv_loader,
@@ -1218,32 +1219,19 @@ def file_format(path):
         return ext[1:] if ext else 'csv'
 
 
-def load_df(path, mdpath=None, ignore_apparent_metadata=False,
-            infer_metadata=True):
+def load_df(path, md_path=None, find_md=False):
     """
     Loads a pandas DataFrame from a path or stream.
 
     Args:
         path is usually a file path to be read, but can be a stream
 
-        mdpath is an optional path to an associated metadata file to use
-
-        ignore_apparent_metadata  Ordinarily, if a CSV file is provided
-                                  as path, and there is "next to it"
-                                  a file that looks likes a metadata file
-                                  (same stem name with an extension fitting
-                                  a recommended pattern for csvw, csvmetadata
-                                  or frictionless), that metadata will be read
-                                   and used.
-                                  Setting this to True prevents that.
+        md_path is an optional path to an associated metadata file to use
 
         infer_metadata  If a CSV file ('.csv', '.psv', '.tsv' or '.txt' file)
                         is given and no metadata file is provided, this
-                        function will ordinarily try to infer the file
-                        format using the csvmetadata library.
-                        Setting this to False overrides that behaviour,
-                        forcing the default Pandas CSV reader to be used
-                        with few TDDA's default arguments for it.
+                        setting will cause the software to look for
+                        metadata using known patterns.
     """
     if isinstance(path, StringIO):  # stream
         return default_csv_loader(path)
@@ -1256,7 +1244,7 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
     if ext == '.parquet':
         return pd.read_parquet(path, dtype_backend='numpy_nullable')
 
-    if mdpath is None:
+    if md_path is None:
         md_type, _ = find_metadata_type_from_path(path)
         if md_type:
             # path is a metadata file of a known type
@@ -1268,15 +1256,14 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
                       'Use --no-csv-metadata to override.' % path,
                       file=sys.stderr)
                 kw = serial_to_pandas_read_csv_args(metadata)
-                return default_csv_loader(metadata.path, **kw)
+                # return default_csv_loader(metadata.path, **kw)
+                return csv_to_dataframe(metadata.path, **kw)
 
-        if not ignore_apparent_metadata:
+        if find_md:
             # no explicit metadata path provided
-            mdpath = find_associated_metadata_file(path)
-            if mdpath:
-                metadata = load_metadata(path)
-                kw = serial_to_pandas_read_csv_args(metadata)
-                return default_csv_loader(path, **kw)
+            md_path = find_associated_metadata_file(path)
+            if md_path:
+                return csv_to_dataframe(path, md_path)
             elif infer_metadata:
                 # infer metadata
                 pass
@@ -1284,10 +1271,10 @@ def load_df(path, mdpath=None, ignore_apparent_metadata=False,
         return default_csv_loader(path)
 
     else:  # explicit metadatapath provided
-        metadata = load_metadata(mdpath)
-        kw = serial_to_pandas_read_csv_args(metadata)
-        return default_csv_loader(path, **kw)
-
+        # metadata = load_metadata(md_path)
+        # kw = serial_to_pandas_read_csv_args(metadata)
+        # return default_csv_loader(path, **kw)
+        return csv_to_dataframe(path, md_path)
 
 def save_df(df, path, index=False):
     if path == '-' or path is None:

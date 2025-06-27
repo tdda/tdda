@@ -130,12 +130,12 @@ class TDDADiff:
         elif self.permissive or self.loose:
             self.type_checking = 'permissive'
 
-        engine = ENGINES.get(self.engine, self.config.df_engine)
+        engine = ENGINES.get(self.engine, self.config.engine)
         if engine is None:
             warn(f'Engine "{self.engine}" unknown. Using {c.engine} '
                  'from config.')
         else:
-            self.engine = self.config.df_engine = engine
+            self.engine = self.config.engine = engine
 
     def error(self, msg):
         print(msg, file=sys.stderr)

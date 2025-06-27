@@ -11,16 +11,16 @@ from tdda.referencetest.checkpandas import diff_dataframes
 from tdda.serial.examples.helpers import generate_base_python_lists
 
 
-def read_csv_explicit(datapath, mdpath):
-    with open(mdpath) as f:
+def read_csv_explicit(datapath, md_path):
+    with open(md_path) as f:
         d = json.load(f)
     params = d['pandas.read_csv']
     df = pd.read_csv(datapath, **params)
     return df
 
 
-def read_with_tdda_serial(datapath, mdpath, **kw):
-    df = csv_to_pandas(datapath, mdpath, upgrade_types=False, **kw)
+def read_with_tdda_serial(datapath, md_path, **kw):
+    df = csv_to_pandas(datapath, md_path, upgrade_types=False, **kw)
     return df
 
 

@@ -266,7 +266,8 @@ class PandasComparison(BaseComparison):
             )
 
     def default_csv_loader(self, path, **kwargs):
-        return default_csv_loader(path, **kwargs)
+        # return default_csv_loader(path, **kwargs)
+        return csv_to_pandas(path, **kwargs)
 
     def csv_to_dataframe(self, path, **kwargs):
         return csv_to_pandas(path, **kwargs)
@@ -316,6 +317,8 @@ class PandasNotImplemented(object):
 
 def default_csv_loader(csvfile, **kwargs):
     """
+    **NO LONGER USED. REMOVE SOON**
+
     Default function for reading a csv file.
 
     Wrapper around the standard pandas pd.read_csv() function, but with

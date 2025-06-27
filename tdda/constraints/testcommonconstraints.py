@@ -65,19 +65,20 @@ class TestCommonConstraints(ReferenceTestCase):
     def testSimpleAllCorrectVerificationFromCSVFile(self):
         # CSV file with full pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        mdpath=tdpath('ddd-pandas.tddaserial'), verbose=False)
+                        md_path=tdpath('ddd-pandas.serial'), verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
 
         # CSV file with only the elevens field dtype.
+        # So dates fail
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        mdpath=tdpath('ddd-pandas-minimal.tddaserial'),
+                        md_path=tdpath('ddd-pandas-minimal.serial'),
                         verbose=False)
         self.assertStringCorrect(str(report),
-                                 reportpath('ddd10-all-correct.txt'))
+                                 reportpath('ddd10-dates-fail.txt'))
 
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        mdpath=tdpath('ddd.tddaserial'),
+                        md_path=tdpath('ddd.serial'),
                         verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
@@ -85,7 +86,7 @@ class TestCommonConstraints(ReferenceTestCase):
         # CSV file with only the elevens field dtype.
         # and no format or writer
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        mdpath=tdpath('ddd-pandas-really-minimal.tddaserial'),
+                        md_path=tdpath('ddd-pandas-really-minimal.serial'),
                         verbose=False)
 
 

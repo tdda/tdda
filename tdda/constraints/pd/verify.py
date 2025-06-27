@@ -45,7 +45,7 @@ from tdda.utils import handle_tilde, nvl, cprint
 
 
 def verify_df_from_file(df_path, constraints_path, verbose=True,
-                        mdpath=None, **kwargs):
+                        md_path=None, **kwargs):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -64,7 +64,7 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
         *verbose*:
             Controls level of output reporting
 
-        *mdpath*:
+        *md_path*:
             Metadata path for serial data (if any)
 
         *kwargs*:
@@ -82,8 +82,8 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
         stem, ext = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    df = load_df(df_path, mdpath=mdpath)
-    v = verify_df(df, constraints_path, mdpath=mdpath, **kwargs)
+    df = load_df(df_path, md_path=md_path)
+    v = verify_df(df, constraints_path, md_path=md_path, **kwargs)
     if verbose:
         cprint(v)
     return v
