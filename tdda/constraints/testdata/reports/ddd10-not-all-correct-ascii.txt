@@ -1,9 +1,5 @@
 FIELDS:
 
-basedate:time-before-now: 3 failures  0 passes  min X  max X  sign X  transform -
-
-evendates:time-before-now: 3 failures  0 passes  min X  max X  sign X  transform -
-
 index: 1 failure  5 passes  type OK  min OK  max X  sign OK  max_nulls OK  no_duplicates OK
 
 evennulls: 0 failures  3 passes  type OK  min OK  max OK
@@ -34,10 +30,18 @@ basedate: 1 failure  3 passes  type OK  min OK  max X  max_nulls OK
 
 evendates: 1 failure  2 passes  type OK  min OK  max X
 
+DATASET:
+
+Extra (disallowed) fields: None
+Missing (required) fields: None
+
 SUMMARY:
 
-Constrained Fields: 17
-Failing Fields: 12 (70.59%)
+Constrained Fields: 15
+Failing Fields: 10 (66.67%)
 
-Constraints: 76
-Failing Constraints: 16 (21.05%)
+Constraints: 72
+Failing Constraints: 11 (15.28%)
+
+Extra (disallowed) fields: 0
+Missing (required) fields: 0

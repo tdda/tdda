@@ -471,6 +471,9 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
         else:
             return good_none
 
+    def verify_fields(self, constraints):
+        pass
+
     def get_min(self, colname):
         """Looks up cached minimum of column, or calculates and caches it"""
         return self.get_cached_value('min', colname, self.calc_min)

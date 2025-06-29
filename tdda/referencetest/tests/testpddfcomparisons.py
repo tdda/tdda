@@ -104,7 +104,6 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertStringCorrect(str(r.diffs.dfd),
             fp('ddiff-col-types-int-str.txt'))
 
-    @tag
     def testDiffColTypeInMemIntFloat(self):
         c = PandasComparison(verbose=False)
         actual = four_squares()

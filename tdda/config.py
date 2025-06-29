@@ -38,9 +38,8 @@ class BaseConfig:
                     return v
             else:
                 return preferred
-        v = getattr(self, key, None)
-        if v is not None:
-            return v
+        if hasattr(self, key):
+            return getattr(self, key)
         if raiseOnFailure:
             raise AttributeError(f'No atttibute {key} in {self._config_name}')
         else:
@@ -204,3 +203,7 @@ class ConstraintsConfig(BaseConfig):
         self.report_formats = []
         self.write_all_records = False
         self.int_bools = False
+        self.verify_required_fields = None
+        self.verify_allowed_fields = None
+        self.write_required_fields = False
+        self.write_allowed_fields = False

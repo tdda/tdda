@@ -239,6 +239,14 @@ class TestDetectionReports(ReferenceTestCase):
         )
 
     def testDetectionTrainBads(self):
+        paths = [
+            swap_ext(self.actual_train_detect_bads_path, fmt)
+            for fmt in self.formats
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                os.unlink(path)
+
         # No failures
         self.assertEqual(self.train_bads_detection.failures, 0)
 
@@ -246,11 +254,17 @@ class TestDetectionReports(ReferenceTestCase):
         self.assertFalse(os.path.exists(self.actual_train_detect_bads_path))
 
         # And no reports
-        for fmt in self.formats:
-            path = swap_ext(self.actual_train_detect_bads_path, fmt)
+        for path in paths:
             self.assertFalse(os.path.exists(path))
 
     def testDetectionTrainFull(self):
+        paths = [
+            swap_ext(self.actual_train_detect_full_path, fmt)
+            for fmt in self.formats
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                os.unlink(path)
         # No failures
         self.assertEqual(self.train_full_detection.failures, 0)
 
@@ -258,8 +272,7 @@ class TestDetectionReports(ReferenceTestCase):
         self.assertFalse(os.path.exists(self.actual_train_detect_full_path))
 
         # And no reports
-        for fmt in self.formats:
-            path = swap_ext(self.actual_train_detect_full_path, fmt)
+        for path in paths:
             self.assertFalse(os.path.exists(path))
 
 

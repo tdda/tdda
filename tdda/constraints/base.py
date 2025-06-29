@@ -183,6 +183,8 @@ class DatasetConstraints(object):
         self.dataset = None
         self.n_records = None
         self.n_selected = None
+        self.allowed_fields = None
+        self.required_fields = None
         if loadpath:
             self.fields = Fields()
             self.load(loadpath)
@@ -268,6 +270,9 @@ class DatasetConstraints(object):
                     )
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
+        dataset = in_constraints.get('dataset', {})
+        self.allowed_fields = dataset.get('allowed_fields', None)
+        self.required_fields = dataset.get('required_fields', None)
         metadata = in_constraints.get('creation_metadata', {})
         for (k, v) in metadata.items():
             if k in METADATA_KEYS and v is not None:
@@ -832,6 +837,7 @@ class Verification(object):
                  write_all_records=False, per_constraint=False,
                  output_fields=None, index=False,
                  in_place=False, colour=False,
+                 verify_allowed_fields=None, verify_required_fields=None,
                  **kwargs):
         config = get_config()
         self.constraints = constraints
@@ -855,6 +861,16 @@ class Verification(object):
         cconfig = get_config().constraints
         self.detect_passes = cconfig.get('detect_passes')
         self.int_bools = cconfig.get('int_bools')
+
+        self.verify_allowed_fields = nvl(
+            cconfig.get('verify_allowed_fields', verify_allowed_fields),
+            self.constraints.allowed_fields is not None
+        )
+        self.verify_required_fields = nvl(
+            cconfig.get('verify_required_fields', verify_required_fields),
+            self.constraints.allowed_fields is not None
+        )
+
         if self.int_bools:
             self.bad_val = 0 if self.detect_passes else 1
         else:
@@ -909,7 +925,48 @@ class Verification(object):
                 field_stats['_values'].failures
             )
 
+        if self.verify_allowed_fields or (
+            self.verify_allowed_fields is None
+            and self.allowed_fields is not None
+        ):
+            stats['extras'] = len(self.extra_fields)
+        if self.verify_required_fields or (
+            self.verify_required_fields is None
+            and self.required_fields is not None
+        ):
+            stats['missing'] = len(self.missing_fields)
 
+    def apply_required_and_allowed_constraints(self):
+        if self.verify_required_fields:
+            if self.missing_fields:
+                self.failures += 1
+            else:
+                self.failures += 1
+        else:
+            self.missing_fields = None  # No longer relevant
+
+        if self.verify_allowed_fields:
+            if self.extra_fields:
+                self.failures += 1
+            else:
+                self.passes += 1
+        else:
+            self.extra_fields = None  # No longer relevant
+
+
+    def dataset_constraints_results(self):
+        out = []
+        if self.verify_allowed_fields:
+            if self.extra_fields or self.report not in ('fields', 'records'):
+                out.append('Extra (disallowed) fields: %s'
+                           % (', '.join(self.extra_fields) or 'None'))
+
+        if self.verify_required_fields:
+            if self.missing_fields or self.report not in ('fields', 'records'):
+                out.append('Missing (required) fields: %s'
+                           % (', '.join(self.missing_fields) or 'None'))
+        s = '\n'.join(out)
+        return ('DATASET:\n\n%s\n\n' % s) if s else ''
 
     def to_string(self, colour=None, ascii=None):
         """
@@ -935,44 +992,59 @@ class Verification(object):
         fields = '\n\n'.join('%s: %s  %s  %s'
                            % (field,
                               richbad(plural(ver.failures, 'failure'),
-                                       colour, ver.failures > 0),
+                                      colour, ver.failures > 0),
                               richgood(plural(ver.passes, 'pass', 'es'),
-                                     colour, ver.failures == 0),
+                                       colour, ver.failures == 0),
                               '  '.join('%s %s' % (c, tcn(s, ascii, colour))
                                        for (c, s) in ver.items()))
                            for field, ver in field_items)
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else '\n'
 
-        out = ['%sSUMMARY:\n' % fields_part]
-        if self.report == 'records' and 'records' in self.summary_stats:
-            sr = self.summary_stats['records']
+        dataset_part = self.dataset_constraints_results()
+
+        out = ['%s%sSUMMARY:\n' % (fields_part, dataset_part)]
+        ss = self.summary_stats
+        if self.report == 'records' and 'records' in ss:
+            sr = ss['records']
             out.extend(
               [f'Records: {sr.total:,}',
                'Failing Records: %s'
                 % richgoodbad(f'{sr.failures:,} ({sr.bad_pc})',
                              colour, sr.failures == 0), ''])
 
-        sf = self.summary_stats['fields']
+        sf = ss['fields']
         out.extend(
             [f'Constrained Fields: {sf.total:,}',
              'Failing Fields: %s'
              % richgoodbad(f'{sf.failures:,} ({sf.bad_pc})',
                            colour, sf.failures == 0), ''])
 
-        if 'values' in self.summary_stats:
-            sv = self.summary_stats['values']
+        if 'values' in ss:
+            sv = ss['values']
             out.extend(
                 [f'Constrained Values: {sv.total:,}',
                  'Failing Values: %s'
                  % richgoodbad(f'{sv.failures:,} ({sv.bad_pc})',
                                colour, sv.failures == 0), ''])
 
-        sc = self.summary_stats['constraints']
+        sc = ss['constraints']
         out.extend(
             [f'Constraints: {sc.total:,}',
              'Failing Constraints: %s'
              % richgoodbad(f'{sc.failures:,} ({sc.bad_pc})',
                            colour, sc.failures == 0)])
+
+        lines = []
+        if self.verify_allowed_fields:
+            n_extras = ss["extras"]
+            lines.append(f'Extra (disallowed) fields: %s'
+                         % richgoodbad(f'{n_extras}', colour, n_extras == 0))
+        if self.verify_required_fields:
+            n_missing = ss["missing"]
+            lines.append(f'Missing (required) fields: %s'
+                         % richgoodbad(f'{n_missing}', colour, n_missing == 0))
+        if lines:
+            out.extend([''] + lines)
         return '\n'.join(out)
     __str__ = to_string
 
@@ -1207,7 +1279,8 @@ def constraint_class(kind):
 
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
-           detected_records_writer=None, **kwargs):
+           detected_records_writer=None,
+           verify_allowed_fields=None, verify_required_fields=None, **kwargs):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
@@ -1237,6 +1310,9 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
                             DataFrame. If not provided, Verification
                             is used.
 
+        detected_records_writer  Function for writing failing records
+                                 when detect is used.
+
         kwargs              Any keyword arguments provided are passed to
                             the VerificationClass chosen.
 
@@ -1250,9 +1326,27 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
               or kwargs.get('detect') is not None
               or kwargs.get('in_place') is not None)
 
-    allfields = sorted(constraints.fields.keys(),
-                       key=lambda f: fieldnames.index(f) if f in fieldnames
-                                                         else -1)
+    config = get_config()
+
+    constrained_fields = constraints.fields
+    results.extra_fields = [
+        f for f in fieldnames
+        if f in (set(fieldnames)
+                 - set(constrained_fields)
+                 - set(constraints.allowed_fields or [])
+        )
+    ]
+    if constraints.required_fields:
+        results.missing_fields = [
+            f for f in constraints.required_fields
+            if f not in set(fieldnames)
+        ]
+    else:
+        results.missing_fields = [
+            f for f in constrained_fields
+            if f in (set(constrained_fields) - set(fieldnames))
+        ]
+    allfields = [f for f in constrained_fields if f in set(fieldnames)]
 
     if outpath:
         # empty (and then remove) the detection output file first,
@@ -1290,6 +1384,8 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
         results.failures += failures       # all constraints
         results.passes += passes
         results.fields[name] = field_results
+
+    results.apply_required_and_allowed_constraints()
 
     if detect:
         if detected_records_writer and results.failures > 0:

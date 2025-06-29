@@ -1310,7 +1310,6 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
         self.assertTextFileCorrect(outfile, refpath)
 
-    @tag
     def testDetect25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')

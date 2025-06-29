@@ -115,7 +115,6 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             ]
         )
 
-    @tag
     def testDiffColTypeInMemIntFloat(self):
         c = PolarsComparison(verbose=False)
         actual = four_squares()
