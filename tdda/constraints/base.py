@@ -839,6 +839,8 @@ class Verification(object):
                  in_place=False, colour=False,
                  verify_allowed_fields=None, verify_required_fields=None,
                  **kwargs):
+        print('vaf:',  verify_allowed_fields)
+        print('vaf:', verify_required_fields)
         config = get_config()
         self.constraints = constraints
         self.n_source_records = n_source_records
@@ -941,7 +943,7 @@ class Verification(object):
             if self.missing_fields:
                 self.failures += 1
             else:
-                self.failures += 1
+                self.passes += 1
         else:
             self.missing_fields = None  # No longer relevant
 
@@ -1280,7 +1282,7 @@ def constraint_class(kind):
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
            detected_records_writer=None,
-           verify_allowed_fields=None, verify_required_fields=None, **kwargs):
+           **kwargs):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by

@@ -9,6 +9,7 @@ import os
 import sys
 
 from tdda.state import set_load
+from tdda.utils import error
 
 
 def help_defaults(help=True, seven=True, colour=True, config=True,
@@ -46,6 +47,22 @@ def help_defaults(help=True, seven=True, colour=True, config=True,
     return ''.join(o.rstrip() for o in out) + '\n'
 
 
+VERIFY_FIELDS_HELP = '''
+  * --vrf --verify-required-fields
+      Force Verification of required field
+  * --vaf --verify-allowed-fields
+      Force verification of allowed fields
+  * --varf, --vraf
+      Force verification of allowed and required fields
+  * --no-vr
+      Force no verification of not verify required fields
+  * --no-va
+      Force no verification of allowed fields
+  * --no-varf, --no-vraf
+      Force no verification  of allowed and required fields
+'''
+
+
 DISCOVER_HELP = '''
 Optional flags are:
 
@@ -58,17 +75,21 @@ Optional flags are:
       are: html, text, txt, json, yaml, toml, mmarkdown, and md.
   * -o or --report-path PATH''' + help_defaults()
 
+
 VERIFY_HELP = ('''
 Optional flags are:
 
   * -a, --all
       Report all fields, even if there are no failures
   * -f, --fields
-      Report only fields with failures'''
+      Report only fields with failures
+'''
+      + VERIFY_FIELDS_HELP
       + help_defaults(epsilon=True)
 )
 
-DETECT_HELP = '''
+
+DETECT_HELP = ('''
 Optional flags are:
 
   * -o, --report-path PATH
@@ -110,7 +131,10 @@ Optional flags are:
       Include a row-number index in the output file.
       The row number is automatically included if no output fields are
       specified. Rows are usually numbered from 1, unless the
-      input file already has an index.''' + help_defaults(epsilon=True)
+      input file already has an index.'''
+      + VERIFY_FIELDS_HELP
+      + help_defaults(epsilon=True)
+)
 
 
 def discover_parser(usage=''):
@@ -162,6 +186,7 @@ def verify_parser(usage=''):
     parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
                         help='"sloppy" means consider all numeric types '
                              'equivalent')
+    add_verify_fields_flags(parser)
     return parser
 
 
@@ -211,6 +236,7 @@ def detect_parser(usage=''):
     parser.add_argument('--int', dest='int_bools', action='store_true',
                         help='Write out boolean fields as integers, with '
                              '1 for true and 0 for false.')
+    add_verify_fields_flags(parser)
     return parser
 
 
@@ -225,12 +251,30 @@ def verify_flags(parser, args, params):
         'ascii': False,
     })
     add_flags(flags, params, epsilon=True)
+    va = nva = vr = nvr = False
     if flags.all:
         params['report'] = 'all'
     elif flags.fields:
         params['report'] = 'fields'
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
+    if flags.verify_allowed_fields or flags.varf:
+        params['verify_allowed_fields'] = True
+        va = True
+    if flags.no_verify_allowed_fields or flags.no_varf:
+        params['verify_allowed_fields'] = False
+        nva = True
+    if flags.verify_required_fields or flags.varf:
+        params['verify_required_fields'] = True
+        vr = True
+    if flags.no_verify_required_fields or flags.no_varf:
+        params['verify_required_fields'] = False
+        nvr = True
+
+    if (va and nva):
+        error('Inconsistent settings for verify-allowed-fields')
+    if (vr and nvr):
+        error('Inconsistent settings for verify-required-fields')
     return flags
 
 
@@ -326,3 +370,25 @@ def add_flags(flags, params, epsilon=False):
     if epsilon:
         if flags.epsilon is not None:
             params['epsilon'] = float(flags.epsilon)
+
+
+def add_verify_fields_flags(parser):
+
+    parser.add_argument('--verify-required-fields', '--vrf',
+                        action='store_true',
+                        help='Force verify of required fields')
+    parser.add_argument('--verify-allowed-fields', '--vaf',
+                        action='store_true',
+                        help='Force verify of allowed fields')
+    parser.add_argument('--no-verify-required-fields', '--no-vrf',
+                        action='store_true',
+                        help='Force no verication of required fields')
+    parser.add_argument('--no-verify-allowed-fields', '--no-vaf',
+                        action='store_true',
+                        help='Force no verification of allowed fields')
+    parser.add_argument('--varf', '--vraf', action='store_true',
+       help='Force verification of allowed and required fields'
+    )
+    parser.add_argument('--no-varf', '--no-vraf', action='store_true',
+       help='Force no verification of allowed and required fields'
+    )
