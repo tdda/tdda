@@ -41,7 +41,7 @@ Constrained Fields: 15
 Failing Fields: 10 (66.67%)
 
 Constraints: 72
-Failing Constraints: 11 (15.28%)
+Failing Constraints: 10 (13.89%)
 
 Extra (disallowed) fields: 0
 Missing (required) fields: 0

@@ -839,8 +839,6 @@ class Verification(object):
                  in_place=False, colour=False,
                  verify_allowed_fields=None, verify_required_fields=None,
                  **kwargs):
-        print('vaf:',  verify_allowed_fields)
-        print('vaf:', verify_required_fields)
         config = get_config()
         self.constraints = constraints
         self.n_source_records = n_source_records
