@@ -135,7 +135,9 @@ def get_metadata_for_reader(path, md_path, md_file_type, find_md,
 
     if md_path is None:
         pi = tdda_path_info(path)
-        path, md_path, find_md = pi.path, pi.md_path, pi.find_md
+        path, md_path, find_md = pi.path, pi.md_path, find_md or pi.find_md
+        if md_path is None and find_md:
+            md_path = find_associated_metadata_file(path)
     if md is None and md_path is not None:
         md = load_metadata(md_path, md_file_type=md_file_type,
                            table_number=table_number,

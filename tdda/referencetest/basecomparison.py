@@ -403,6 +403,8 @@ class BaseComparison(object):
                 rest = [f for f in df_names
                         if f in set(df_names) - set(cols)]
                 switches.append('--xfields \'%s\'' % escaped_list(rest))
+        if type_matching != 'loose':
+            switches.append(f'--{type_matching}')
         if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
         return FailureDiffs(failures=0 if state.same else 1, diffs=diffs)
@@ -617,6 +619,7 @@ class BaseComparison(object):
         condition=None,
         sortby=None,
         precision=6,
+        type_matching=None,
         msgs=None,
         **kwargs,
     ):
@@ -686,6 +689,7 @@ class BaseComparison(object):
             condition=condition,
             sortby=sortby,
             precision=precision,
+            type_matching=type_matching,
             msgs=msgs,
         )
 
@@ -700,6 +704,7 @@ class BaseComparison(object):
         check_order=None,
         condition=None,
         sortby=None,
+        type_matching=None,
         msgs=None,
         **kwargs,
     ):
@@ -774,6 +779,7 @@ class BaseComparison(object):
                     check_types=check_types,
                     check_order=check_order,
                     sortby=sortby,
+                    type_matching=type_matching,
                     condition=condition,
                     msgs=msgs,
                     **kwargs,

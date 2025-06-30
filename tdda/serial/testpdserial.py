@@ -409,8 +409,12 @@ class TestPandasLoad(ReferenceTestCase):
     def test_load_nulls1(self):
         md_path = os.path.join(TESTDATADIR, 'nulls1-metadata.json')
         refpath = os.path.join(TESTDATADIR, 'nulls1.parquet')
-        df = csv_to_pandas(md_path=md_path)
+
+        df = csv_to_pandas(md_path=md_path, backend='pandas')
         rf = pd.read_parquet(refpath, dtype_backend='numpy_nullable')
+        self.assertDataFramesEqual(df, rf, type_matching='loose')
+
+        df = csv_to_pandas(md_path=md_path, backend='numpy_nullable')
         self.assertDataFramesEqual(df, rf, type_matching='loose')
 
     def test_load_base_serial_explicit(self):
@@ -856,9 +860,8 @@ class TestCSVWTests(ReferenceTestCase):
 
         df, md = csv_to_pandas(csvpath, md_path, return_md=True, verbosity=1)
         self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
-
         # Compare against known correct result (not from csvw project)
-        self.assertDataFrameCorrect(df, resultspath)
+        self.assertDataFrameCorrect(df, resultspath, type_matching='loose')
 
     def test033(self):
         pass  # same as 32 for our purposes
@@ -877,6 +880,7 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'))
+
         jdf = csv_to_pandas(
             f(f'{test}/junior-roles.csv'),
             md_path,
@@ -884,7 +888,8 @@ class TestCSVWTests(ReferenceTestCase):
             upgrade_possible_ints=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'))
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'),
+                                    type_matching='loose')
 
         pdf = csv_to_pandas(
             f(f'{test}/gov.uk/data/professions.csv'),
@@ -893,7 +898,8 @@ class TestCSVWTests(ReferenceTestCase):
             upgrade_possible_ints=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(jdf, pqp(f'{test}-professions.parquet'))
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-professions.parquet'),
+                                    type_matching='loose')
 
         odf = csv_to_pandas(
             f(f'{test}/gov.uk/data/organizations.csv'),
@@ -902,7 +908,8 @@ class TestCSVWTests(ReferenceTestCase):
             upgrade_possible_ints=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(jdf, pqp(f'{test}-organizations.parquet'))
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-organizations.parquet'),
+                                    type_matching='loose')
 
     def test035(self):
         pass  # same as 34 for our purposes
@@ -911,9 +918,10 @@ class TestCSVWTests(ReferenceTestCase):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')
         resultspath = self.parquet_path(f'{test}-result.parquet')
-        md = load_metadata(
-            self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
-        )
+        # md is this:
+        # md = load_metadata(
+        #     self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
+        # )
         df = csv_to_pandas(csvpath, find_md=True)
         self.assertDataFrameCorrect(df, resultspath)
 
@@ -1167,7 +1175,7 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         self.assertEqual(diff_dataframes(df2, df).failures, 0)
 
     def testTinyParquetSmallWideD(self):
-        df, _ = small_wide_pd_df(prefer_nullable=False)
+        df, _ = small_wide_pd_df()
         path = tmppath('small_wide-d.parquet')
         df.to_parquet(path)
         df2 = pd.read_parquet(path)
@@ -1181,7 +1189,7 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         self.assertEqual(diffs2.failures, 0)
 
     def testTinyParquetSmallWideN(self):
-        df, _ = small_wide_pd_df(prefer_nullable=True)
+        df, _ = small_wide_pd_df()
         path = tmppath('small_wide-n.parquet')
         df.to_parquet(path)
         df2 = pd.read_parquet(path)
@@ -1225,10 +1233,9 @@ class TestPandasToMetadata(ReferenceTestCase):
     def testSimpleDtypeFieldtypeMappingNotPreferNullable(self):
         # WITHOUT preferring nullable types:
 
-        df, expected_types = small_wide_pd_df(prefer_nullable=False)
+        df, expected_types = small_wide_pd_df()
         actual = {
-            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col],
-                                           prefer_nullable=False)
+            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col])
             for col in df
         }
 
@@ -1325,9 +1332,9 @@ def this_function_name():
     return inspect.stack()[1][3]
 
 
-def small_wide_pd_df(with_col=True, prefer_nullable=True):
+def small_wide_pd_df(with_col=True):
     """
-    Generates a dataframe and ites expected types.
+    Generates a dataframe and its expected types.
     """
     df = pd.DataFrame({
        'null': pd.Series([None] * 3, dtype='O'),
@@ -1402,7 +1409,8 @@ def small_wide_pd_df(with_col=True, prefer_nullable=True):
     # Similarly, with no values, or of not prefer_nullable
     # the whole-number floats
     # remain as float
-    if not prefer_nullable or not with_col:
+#    if not with_col:
+    if True:
         for k in ('F', 'Fn', 'un', 'in'):
             types[k] = FieldType.FLOAT
 

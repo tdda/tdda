@@ -262,9 +262,7 @@ def pandas_read_csv_to_serial(params, backend=None):
         if isinstance(dtypes, dict):
             dtype = dtypes.get(name)
             if dtype:
-                type_ = pandas_dtype_to_fieldtype(
-                    dtype, backend=backend
-                )
+                type_ = pandas_dtype_to_fieldtype(dtype)
         if isinstance(formats, dict):
             date_format = formats.get(name)
             if date_format:
@@ -290,7 +288,7 @@ def pandas_read_csv_to_serial(params, backend=None):
     return kw
 
 
-def pandas_dtype_to_fieldtype(dtype, col=None, backend=None):
+def pandas_dtype_to_fieldtype(dtype, col=None):
     """
     Converts a pandas dtype to a serial.base.FieldType
 
@@ -302,25 +300,18 @@ def pandas_dtype_to_fieldtype(dtype, col=None, backend=None):
 
         col     (Optional) the column of values (a pd.Series, typically)
 
-        prefer_nullable:  If True, will demote floats to ints where possible
+        backend:  Preferred backend for pandas
 
     Returns:
 
         The fieldtype (a value from FieldType) if recognized,
         or None if no recognized dtype is found.
     """
-    backend = get_concrete_backend(backend)
-    prefer_nullable = backend != 'pandas'
     dt = str(dtype) if type(dtype) is not str else dtype
     dtl = dt.lower()
     if dtl.startswith('int') or dtl.startswith('uint'):
         return FieldType.INT
     elif dtl.startswith('float'):
-        if prefer_nullable and (col is not None):
-            nonnull = col.dropna()
-            if nonnull.size > 0:
-                if (nonnull.astype(int) == nonnull).sum() == len(nonnull):
-                    return FieldType.INT
         return FieldType.FLOAT
     elif dt.startswith('string'):
         return FieldType.STRING
@@ -517,7 +508,7 @@ def pandas_col_to_field_metadata(field, fieldtype=None,
 
         fmt:               Optional format informaiton for the field
 
-        prefer_nullable:   promote int-ish floats to ints
+        backend:           Preferred pandas backend
 
     Returns:
 
@@ -527,8 +518,7 @@ def pandas_col_to_field_metadata(field, fieldtype=None,
     if fieldtype:
         fieldtype = fieldtype
     else:
-        fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field,
-                                              backend=backend)
+        fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field)
 
     if not fmt:
         if fieldtype == FieldType.DATE:
@@ -756,11 +746,10 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
      )
     if md:
         md_kw = serial_to_pandas_read_csv_args(md, backend=backend)
-    else:
-        if 'dtype_backend' not in kw:
-            backend = get_concrete_backend(backend)
-            if backend != 'pandas':
-                kw = {'dtype_backend': backend}
+        # if 'dtype_backend' not in kw:
+        #     backend = get_concrete_backend(backend)
+        #     if backend != 'pandas':
+        #        kw = {'dtype_backend': backend}
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -844,6 +833,7 @@ def pandas_read_df(path, backend=None, **kw):
         return csv_to_pandas(path, bankend=backend, **kw)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
+        backend = get_concrete_backend(backend)
         if backend == 'pandas':
             return pd.read_parquet(path)
         else:

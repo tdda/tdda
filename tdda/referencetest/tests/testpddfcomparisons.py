@@ -57,7 +57,8 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertDataFramesEqual(four_squares(), four_squares())
 
     def testNoDiffsMemParquet(self):
-        self.assertDataFrameCorrect(four_squares(), PQ_REF4_PATH)
+        self.assertDataFrameCorrect(four_squares(), PQ_REF4_PATH,
+                                    type_matching='loose')
 
     def testNoDiffsMemCSV(self):
         self.assertDataFrameCorrect(four_squares(), CSV_REF4_PATH)
@@ -68,11 +69,13 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
     def testNoDiffsParquetCSV(self):
         self.assertOnDiskDataFrameCorrect(PQ_REF4_PATH, CSV_REF4_PATH,
-                                          engine='pandas')
+                                          engine='pandas',
+                                          type_matching='loose')
 
     def testNoDiffsCSVParquet(self):
         self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, PQ_REF4_PATH,
-                                          engine='pandas')
+                                          engine='pandas',
+                                          type_matching='loose')
 
     def testNoDiffsCSVCSV(self):
         self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, CSV_REF4_PATH,
