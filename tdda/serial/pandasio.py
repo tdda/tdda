@@ -24,12 +24,27 @@ from tdda.serial.utils import find_associated_metadata_file
 from tdda.utils import nvl, error, warn, listify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col
 from tdda.referencetest.pddates import infer_date_format
+from tdda.state import get_config
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 DTYPE_RE = re.compile(r'^([A-Za-z])([0-9]+)?(\[[a-z]+(,?)(.*)\])$')
 
+DEFAULT_BACKEND = 'numpy_nullable'
+BACKENDS = ['numpy_nullable', 'pyarrow', 'pandas']
 
-FIELDTYPE_TO_PANDAS_DTYPE = {
+
+FIELDTYPE_TO_PANDAS_OLD_DTYPE = {
+    'bool': 'object',
+    'int': None,
+    'string': 'object',
+    'number': 'float',
+    'float': 'float',
+    'datetime': 'datetime',  # not passed to Pandas
+    'date': 'date',          # not passed to Pandas
+}
+
+
+FIELDTYPE_TO_PANDAS_NULLABLE_DTYPE = {
     'bool': 'boolean',
     'int': 'Int64',
     'string': 'string',
@@ -40,15 +55,24 @@ FIELDTYPE_TO_PANDAS_DTYPE = {
 }
 
 
-FIELDTYPE_TO_OLD_PANDAS_DTYPE = {
-    'bool': 'object',
-    'int': None,
-    'string': 'object',
-    'number': 'float',
-    'float': 'float',
-    'datetime': 'datetime',  # not passed to Pandas
-    'date': 'date',          # not passed to Pandas
+FIELDTYPE_TO_PYARROW_DTYPE = {
+    'bool': 'bool[pyarrow]',
+    'int': 'int64[pyarrow]',
+    'string': 'string[pyarrow]',  # same as string
+    'number': 'double[pyarrow]',
+    'float': 'double[pyarrow]',
+    'datetime': 'timestamp[ns][pyarrow]',  # is actually read as datetime64[ns]
+    'date': 'date64[pyarrow]',
 }
+
+
+FIELDTYPE_MAP_MAP = {
+    'pandas': FIELDTYPE_TO_PANDAS_OLD_DTYPE,
+    'numpy_nullable': FIELDTYPE_TO_PANDAS_NULLABLE_DTYPE,
+    'pyarrow': FIELDTYPE_TO_PYARROW_DTYPE,
+}
+
+
 
 PANDAS_DTYPE_TO_FIELDTYPE = {
     'boolean': 'bool',
@@ -98,7 +122,8 @@ def csvw_to_pandas_kwargs(spec, extensions=False):
     return kw
 
 
-def serial_to_pandas_read_csv_args(md, nullable=True):
+def serial_to_pandas_read_csv_args(md, backend=None):
+    backend = get_concrete_backend(backend)
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
     kw = {}
@@ -106,18 +131,16 @@ def serial_to_pandas_read_csv_args(md, nullable=True):
         f.name: f for f in md.fields
                 if f.fieldtype and f.fieldtype.startswith('date')
     }
-    type_map = (
-        FIELDTYPE_TO_PANDAS_DTYPE if nullable
-                                  else FIELDTYPE_TO_OLD_PANDAS_DTYPE
-    )
+    type_map = FIELDTYPE_MAP_MAP[backend]
     kw['dtype'] = {
         f.name: type_map.get(f.fieldtype)
         for f in md.fields
         if f.name not in date_fields
         and type_map.get(f.fieldtype) is not None
     } or None
-    if any(v.format for v in date_fields):
-        kw['date_format'] = {name: to_pandas_date_format(f.format)
+    dfmt = md.date_format
+    if any(v.format for v in date_fields) or dfmt:
+        kw['date_format'] = {name: to_pandas_date_format(f.format or dfmt)
                              for name, f in date_fields.items()}
     if date_fields:
         kw['parse_dates'] = list(date_fields)
@@ -195,7 +218,7 @@ def serial_to_pandas_read_csv_args(md, nullable=True):
     return kw
 
 
-def pandas_read_csv_to_serial(params, prefer_nullable=False):
+def pandas_read_csv_to_serial(params, backend=None):
     """
     Given a dictionary of pandas.read_csv parameters
     (usually from a 'pandas.read_csv' block in a .serial file),
@@ -233,13 +256,14 @@ def pandas_read_csv_to_serial(params, prefer_nullable=False):
             if isinstance(source, dict):
                 names.update(set(source))
     fields = []
+    backend = get_concrete_backend(backend)
     for name in names:
         type_ = fmt = None
         if isinstance(dtypes, dict):
             dtype = dtypes.get(name)
             if dtype:
                 type_ = pandas_dtype_to_fieldtype(
-                    dtype, prefer_nullable=prefer_nullable
+                    dtype, backend=backend
                 )
         if isinstance(formats, dict):
             date_format = formats.get(name)
@@ -266,7 +290,7 @@ def pandas_read_csv_to_serial(params, prefer_nullable=False):
     return kw
 
 
-def pandas_dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
+def pandas_dtype_to_fieldtype(dtype, col=None, backend=None):
     """
     Converts a pandas dtype to a serial.base.FieldType
 
@@ -285,7 +309,8 @@ def pandas_dtype_to_fieldtype(dtype, col=None, prefer_nullable=True):
         The fieldtype (a value from FieldType) if recognized,
         or None if no recognized dtype is found.
     """
-
+    backend = get_concrete_backend(backend)
+    prefer_nullable = backend != 'pandas'
     dt = str(dtype) if type(dtype) is not str else dtype
     dtl = dt.lower()
     if dtl.startswith('int') or dtl.startswith('uint'):
@@ -478,7 +503,7 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
 
 
 def pandas_col_to_field_metadata(field, fieldtype=None,
-                                 fmt=None, prefer_nullable=False):
+                                 fmt=None, backend=None):
     """
     Produces a FieldMetadata object for the pandas series provided
     in field.
@@ -503,7 +528,7 @@ def pandas_col_to_field_metadata(field, fieldtype=None,
         fieldtype = fieldtype
     else:
         fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field,
-                                              prefer_nullable=prefer_nullable)
+                                              backend=backend)
 
     if not fmt:
         if fieldtype == FieldType.DATE:
@@ -654,7 +679,7 @@ def pandas_df_to_csv(df, path=None,
 
 
 def csv_to_pandas(path=None, md_path=None, md_file_type=None,
-                  find_md=False, nullable=True,
+                  find_md=False, backend=None,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, verbosity=VERBOSITY,
@@ -729,9 +754,13 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
          preferred=preferred or 'pandas.read_csv',
          verbosity=verbosity
      )
-
     if md:
-        md_kw = serial_to_pandas_read_csv_args(md, nullable=nullable)
+        md_kw = serial_to_pandas_read_csv_args(md, backend=backend)
+    else:
+        if 'dtype_backend' not in kw:
+            backend = get_concrete_backend(backend)
+            if backend != 'pandas':
+                kw = {'dtype_backend': backend}
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -805,20 +834,20 @@ def infer_dates(df, specified_types=None):
     return df
 
 
-def pandas_read_df(path, nullable=False, **kw):
+def pandas_read_df(path, backend=None, **kw):
     """
     Reads a pandas data frame from parquet or csv, as the extension suggests.
     Prefers nullable types.
     """
     _, ext = os.path.splitext(path)
     if ext == '.csv':
-        return csv_to_pandas(path, nullable=nullable, **kw)
+        return csv_to_pandas(path, bankend=backend, **kw)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
-        if nullable:
-            return pd.read_parquet(path, dtype_backend='numpy_nullable')
-        else:
+        if backend == 'pandas':
             return pd.read_parquet(path)
+        else:
+            return pd.read_parquet(path, dtype_backend=backend)
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
@@ -836,3 +865,12 @@ def pandas_write_df(df, path):
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
+
+def get_concrete_backend(backend):
+    if backend is None:
+        c = get_config()
+        backend = c.get('pandas_backend')
+    if backend not in BACKENDS:
+        error(f'Pandas backend {backend} unknown.\n'
+              f'Should be one of: {" ".join(BACKENDS)}.')
+    return backend

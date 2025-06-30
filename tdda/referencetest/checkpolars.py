@@ -117,7 +117,7 @@ class PolarsComparison(BaseComparison):
 
     def load_serialized_dataframe(
         self, path, actual_df=None, loader=None, reset_index=True,
-        nullable=True, **kwargs
+        backend=None, **kwargs
     ):
         """
         Function for constructing a pandas dataframe from a serialized

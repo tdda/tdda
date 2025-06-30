@@ -180,7 +180,7 @@ class SerialMetadata:
         self.quote_char = quote_char
         self.escape_char = escape_char
         self.stutter_quotes = stutter_quotes
-        self.date_format = None
+        self.date_format = date_format
         self.null_indicators = null_indicators
 
         self.accept_percentages_as_floats = accept_percentages_as_floats

@@ -122,7 +122,7 @@ def all_fields_except(exclusions):
 
 
 def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
-                     find_md=False, nullable=True, engine=None,
+                     find_md=False, pandas_backend=None, engine=None,
                      infer_datetime_formats=False):
     """
     Load a csv file to a DataFrame of a type (Pandas or Polars)
@@ -138,7 +138,7 @@ def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
     elif engine == 'pandas':
         return csv_to_pandas(path=path, md_path=md_path,
                              md_file_type=md_file_type,
-                             find_md=find_md, nullable=nullable,
+                             find_md=find_md, backend=pandas_backend,
                              infer_datetime_formats=infer_datetime_formats)
     else:
         error(f'Unknown DateFrame engine: {engine}.')

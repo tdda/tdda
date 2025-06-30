@@ -54,6 +54,7 @@ class Config(BaseConfig):
         self.null_rep = '∅'
         self.colour = load and not testing
         self.engine = 'pandas'
+        self.pandas_backend = 'numpy_nullable'
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
         if not testing and (load or load is None):

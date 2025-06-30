@@ -35,7 +35,7 @@ from tdda.constraints.flags import discover_parser, discover_flags
 from tdda.constraints.pd.constraints import (discover_df, load_df,
                                              write_constraints)
 
-from tdda.utils import handle_tilde, nvl
+from tdda.utils import handle_tilde, nvl, tdda_path_info
 
 
 def discover_df_from_file(df_path, constraints_path, report_path=None,
@@ -78,7 +78,8 @@ def discover_df_from_file(df_path, constraints_path, report_path=None,
         df_path = StringIO(sys.stdin.read())
         md_df_path = None
     df = load_df(df_path)
-    return discover_df(df, constraints_path, df_path=md_df_path, report_path=report_path,
+    return discover_df(df, constraints_path, df_path=md_df_path,
+                       report_path=report_path,
                        report_formats=report_formats, **kwargs)
 
 
@@ -107,9 +108,10 @@ class PandasDiscoverer:
 
     def discover(self):
         params = pd_discover_params(self.argv[1:])
-        path = handle_tilde(params['df_path'])
-        if path is not None and path != '-' and not os.path.isfile(path):
-            print('%s does not exist' % path)
+        path = params.get('df_path')
+        pi = tdda_path_info(path)
+        if path is not None and pi.path != '-' and not os.path.isfile(pi.path):
+            print('%s does not exist' % pi.path)
             sys.exit(1)
         return discover_df_from_file(verbose=self.verbose, **params)
 

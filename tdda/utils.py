@@ -929,4 +929,3 @@ def tdda_path_info(inpath):
 
     stem, ext = os.path.splitext(inpath)
     return TDDAPathInfo(inpath, stem, ext, None, False, inpath)
-

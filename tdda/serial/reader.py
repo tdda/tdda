@@ -22,7 +22,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
-from tdda.utils import error, is_sequence
+from tdda.utils import error, is_sequence, tdda_path_info
 
 
 def load_metadata(path, md_file_type=None, table_number=None,
@@ -85,9 +85,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:
-                raise TDDASerialError(
-                    f'Unrecognized metadata content in {path}'
-                )
+                error(f'Unrecognized metadata content in {path}')
             if kind == 'csvw':
                 md = CSVWMetadata(path, table_number=table_number,
                                   for_table_name=for_table_name,
@@ -98,13 +96,10 @@ def load_metadata(path, md_file_type=None, table_number=None,
             md = yaml.load(f, yaml.SafeLoader)
             kind = 'frictionless'
     else:
-        raise TDDASerialError(f'Unexpected file extension {ext} for metadata '
-                               f'file.\nExpected .serial, .json, or .yaml.')
+        error(f'Unexpected file extension {ext} for metadata '
+              f'file.\nExpected .serial, .json, or .yaml.')
     if md_file_type and kind != md_file_type:
-        raise TDDASerialError(
-                  f'Expected {md_file_type} file; found {kind} file.'
-              )
-
+        error(f'Expected {md_file_type} file; found {kind} file.')
     return md
 
 
@@ -128,7 +123,7 @@ def get_metadata_for_reader(path, md_path, md_file_type, find_md,
         for_table_name = os.path.basename(path)
     if path is None:
         if md_path is None:
-            raise TDDASerialError('Must provide path or md_path')
+            error('Must provide path or md_path')
         else:
             md = load_metadata(md_path, md_file_type=md_file_type,
                                table_number=table_number,
@@ -136,22 +131,11 @@ def get_metadata_for_reader(path, md_path, md_file_type, find_md,
                                preferred_serial_flavour=preferred)
             path = md._fullpath
             if path is None:
-                raise TDDASerialError('No data specified.')
+                error('No data specified.')
 
     if md_path is None:
-        if path.endswith(':'):  # find metadata
-            path = path[:-1]
-            find_md = True
-        if find_md:
-            md_path = find_associated_metadata_file(path)
-            if md_path is None:
-                raise TDDASerialError('Could not find any associated metadata '
-                                       f'for {os.path.abspath(path)}')
-        else:
-            parts = path.split(':')
-            if len(parts) == 2:  # path + md_path
-                path, md_path = parts
-
+        pi = tdda_path_info(path)
+        path, md_path, find_md = pi.path, pi.md_path, pi.find_md
     if md is None and md_path is not None:
         md = load_metadata(md_path, md_file_type=md_file_type,
                            table_number=table_number,
