@@ -403,8 +403,8 @@ class BaseComparison(object):
                 rest = [f for f in df_names
                         if f in set(df_names) - set(cols)]
                 switches.append('--xfields \'%s\'' % escaped_list(rest))
-        if type_matching != 'loose':
-            switches.append(f'--{type_matching}')
+        config = get_config
+        switches.append(f'--{type_matching}')
         if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
         return FailureDiffs(failures=0 if state.same else 1, diffs=diffs)
@@ -1259,13 +1259,13 @@ def create_row_diffs_mask(masks):
 
 
 def valid_level(level):
-    if level == 'loose':
-        return 'permissive'
+    if level == 'permissive':
+        return 'loose'
     elif level is None:
         return 'strict'
-    if not (level is None or level in ('strict', 'medium', 'permissive')):
+    if not (level is None or level in ('strict', 'medium', 'loose')):
         raise ValueError(f'Type match level must be one of strict, medium, '
-                         f'or permissive(/loose), not {level}')
+                         f'or loose(/permissive), not {level}')
     return level
 
 

@@ -5,6 +5,7 @@ from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
 from tdda.utils import warn, error, stdout_console as console
+from tdda.state import get_config
 
 import argparse
 
@@ -35,7 +36,8 @@ Notes
 class TDDADiff:
     def __init__(self, args, config=None):
         self.args = args
-        self.type_checking = 'medium'
+        self.dconfig = get_config().tddadiff
+        self.type_checking = self.dconfig.type_checking
         self.process_args()
 
     def ddiff(self):
@@ -121,14 +123,14 @@ class TDDADiff:
             + (self.medium and 1)
             + ((self.permissive or self.loose) and 1)
         ) > 1:
-            warn('Only one of --strict, --medium and --permissive should '
+            warn('Only one of --strict, --medium and --loose should '
                  'be given.\nUsing medium (default).')
         elif self.strict:
             self.type_checking = 'strict'
         elif self.medium:
             self.type_checking = 'medium'
         elif self.permissive or self.loose:
-            self.type_checking = 'permissive'
+            self.type_checking = 'loose'
 
         engine = ENGINES.get(self.engine, self.config.engine)
         if engine is None:

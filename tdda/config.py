@@ -57,6 +57,7 @@ class Config(BaseConfig):
         self.pandas_backend = 'numpy_nullable'
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
+        self.tddadiff = TDDADiffConfig()
         if not testing and (load or load is None):
             self.load(complain=complain)
 
@@ -149,6 +150,7 @@ class ReferenceTestConfig(BaseConfig):
         self.right_prefix = '> '
         self.vertical = False
         self.force_val_prefixes = False
+        self.type_checking = 'strict'
 
     def left_diff(self, value, force_prefix=None):
         annotated = self.left_annotated(value, force_prefix)
@@ -208,3 +210,12 @@ class ConstraintsConfig(BaseConfig):
         self.verify_allowed_fields = None
         self.write_required_fields = False
         self.write_allowed_fields = False
+
+
+class TDDADiffConfig(BaseConfig):
+    def __init__(self):
+        self._part = 'tddadiff'
+        self._config_name = 'config.tddadiff'
+
+        self.type_checking = 'medium'
+

@@ -178,7 +178,7 @@ class TestPolarsDataFrames(ReferenceTestCase):
         for D, L in zip(dtypes, ltypes):
             self.assertEqual(loosen_polars_type(D, 'medium'), L)
 
-        for level in ('strict', 'medium', 'permissive'):
+        for level in ('strict', 'medium', 'loose'):
             for t in dtypes:
                 self.assertTrue(polars_types_match(t, t, level))
 

@@ -165,7 +165,7 @@ def loosen_polars_type(t, level):
     elif t in ('Categorical', 'Enum', 'Utf8'):
         t = 'String'
 
-    if level == 'permissive':
+    if level == 'loose':
         if t in {'Float', 'Int', 'Boolean'}:
             return 'Numeric'
 
