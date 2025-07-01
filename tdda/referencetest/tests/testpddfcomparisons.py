@@ -60,7 +60,6 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertDataFrameCorrect(four_squares(), PQ_REF4_PATH,
                                     type_matching='medium')
 
-    @tag
     def testNoDiffsMemCSV(self):
         self.assertDataFrameCorrect(four_squares(), CSV_REF4_PATH,
                                     backend='o')
