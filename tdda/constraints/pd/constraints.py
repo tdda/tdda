@@ -72,9 +72,13 @@ from tdda import rexpy
 from tdda.serial.reader import load_metadata
 from tdda.serial.utils import (
     find_associated_metadata_file,
-    find_metadata_type_from_path
+    find_metadata_type_from_path,
+    get_backend,
+    OG_BACKEND
 )
-from tdda.serial.pandasio import serial_to_pandas_read_csv_args
+from tdda.serial.pandasio import (
+    serial_to_pandas_read_csv_args
+)
 from tdda.utils import indicator_field_name, pass_fail_stats, handle_tilde
 
 # pd.tslib is deprecated in newer versions of Pandas
@@ -174,8 +178,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
 
     def calc_all_non_nulls_boolean(self, colname):
         nn = self.df[colname].dropna()
-        return all(type(v) is bool for i, v in nn.iteritems())
-        #return all(type(v) is bool for v in nn.to_list())
+        return all(type(v) is bool for v in nn.to_list())
 
     # def allowed_values_exclusions(self):
     #     # remarkably, Pandas returns various kinds of nulls as
@@ -677,6 +680,7 @@ def pandas_tdda_type(x):
     if type(x) == str:
         return 'string'
     dt = getattr(x, 'dtype', None)
+    dts = str(dt).lower()
     if dt == np.dtype('O'):
         # objects could be either strings or booleans-with-nulls or dates
         for v in x:
@@ -690,14 +694,13 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    if is_categorical_dtype(dt) or str(dt) == 'string':
+    if (is_categorical_dtype(dt) or dts.startswith('string')):
         return 'string'
-    dts = str(dt).lower()
     if type(x) == bool or 'bool' in dts:
         return 'bool'
     if type(x) in (int, long_type) or 'int' in dts:
         return 'int'
-    if type(x) == float or 'float' in dts:
+    if type(x) == float or 'float' in dts or 'double' in dts:
         return 'real'
     if ('date' in dts
                 or isinstance(x, datetime.datetime)
@@ -716,7 +719,8 @@ def pandas_tdda_type(x):
 
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,
-              repair=True, report='all', **kwargs):
+              repair=True, report='all', engine=None, backend=None,
+              **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -842,6 +846,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     for a slightly fuller example.
 
     """
+    backend = get_backend(backend)
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
     if isinstance(constraints_path, dict):
@@ -849,7 +854,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
         constraints.initialize_from_dict(native_definite(constraints_path))
     else:
         constraints = DatasetConstraints(loadpath=constraints_path)
-    if repair:
+    if repair and backend == OG_BACKEND:
         pdv.repair_field_types(constraints)
     n_records = df.shape[0]
     return pdv.verify(constraints,
@@ -861,7 +866,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
               outpath=None, write_all_records=False, per_constraint=False,
               output_fields=None, index=False, in_place=False,
               rownumber_is_index=True, int_bools=False,
-              repair=True, report='records',
+              repair=True, report='records', backend=None,
               **kwargs):
     """
     Check the records from the Pandas DataFrame provided, to detect
@@ -1043,7 +1048,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
 def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
                 group_rexes=True, report_path=None, report_formats=None,
-                verbose=None):
+                engine=None, backend=None, verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1221,7 +1226,7 @@ def file_format(path):
         return 'parquet' if ext[1:].lower() == 'parquet' else 'csv'
 
 
-def load_df(path, md_path=None, find_md=False):
+def load_df(path, md_path=None, find_md=False, backend=None):
     """
     Loads a pandas DataFrame from a path or stream.
 
@@ -1235,6 +1240,7 @@ def load_df(path, md_path=None, find_md=False):
                         setting will cause the software to look for
                         metadata using known patterns.
     """
+    backend = get_backend(backend)
     if isinstance(path, StringIO):  # stream
         return default_csv_loader(path)
     exists = os.path.exists(os.path.expanduser(path))
@@ -1244,10 +1250,11 @@ def load_df(path, md_path=None, find_md=False):
     path = handle_tilde(path)
 
     if ext == '.parquet':
-        return pd.read_parquet(path, dtype_backend='numpy_nullable')
+        return pd.read_parquet(path, dtype_backend=backend)
     else:
         return csv_to_dataframe(path, md_path, find_md=find_md,
-                                infer_datetime_formats=True)
+                                infer_datetime_formats=True,
+                                backend=backend)
 
 def save_df(df, path, index=False):
     if path == '-' or path is None:

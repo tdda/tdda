@@ -122,7 +122,7 @@ def all_fields_except(exclusions):
 
 
 def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
-                     find_md=False, pandas_backend=None, engine=None,
+                     find_md=False, backend=None, engine=None,
                      infer_datetime_formats=False):
     """
     Load a csv file to a DataFrame of a type (Pandas or Polars)
@@ -138,8 +138,33 @@ def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
     elif engine == 'pandas':
         return csv_to_pandas(path=path, md_path=md_path,
                              md_file_type=md_file_type,
-                             find_md=find_md, backend=pandas_backend,
+                             find_md=find_md, backend=backend,
                              infer_datetime_formats=infer_datetime_formats)
     else:
         error(f'Unknown DateFrame engine: {engine}.')
+
+def get_sceq(df):
+    """
+    Return scale equal function for df
+    """
+    return pd_sceq if df_type(df) == 'pandas' else pl_sceq
+
+
+def pd_sceq(L, R):
+    if pd.isnull(L):
+        return pd.isnull(R)
+    elif pd.isnull(R):
+        return False
+    else:
+        return L == R
+
+
+def pl_sceq(L, R):
+    return L == R
+
+
+def get_engine_and_backend(engine=None, backend=None):
+    config = get_config()
+    return config.get('engine', engine), config.get('pandas_backend', backend)
+
 

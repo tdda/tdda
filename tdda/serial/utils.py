@@ -2,6 +2,23 @@ import os
 import re
 
 from tdda.serial.constants import TDDASERIAL
+from tdda.state import get_config
+from tdda.utils import error
+
+BACKENDS = ['numpy_nullable', 'pyarrow', 'original']
+OG_BACKEND = 'original'
+
+BACKEND_MAP = {
+    'original': 'original',
+    'numpy_nullable': 'numpy_nullable',
+    'pyarrow': 'pyarrow',
+
+    'o': 'original',
+    'n': 'numpy_nullable',
+    'a': 'pyarrow',
+}
+
+
 
 METADATA_STYLE_MAP = {
     r'^(.*)-(metadata)(\.json)$': 'csvw',
@@ -64,3 +81,13 @@ def find_associated_metadata_file(path):
                 if os.path.exists(md_path):
                     return md_path
     return None
+
+
+def get_backend(backend):
+    if backend is None:
+        c = get_config()
+        backend = c.get('pandas_backend')
+    if backend not in BACKEND_MAP:
+        error(f'Pandas backend {backend} unknown.\n'
+              f'Should be one of: {" ".join(BACKENDS)}.')
+    return BACKEND_MAP[backend]

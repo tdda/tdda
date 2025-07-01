@@ -20,7 +20,9 @@ from tdda.serial.base import (
     TDDASerialError
 )
 from tdda.serial.reader import get_metadata_for_reader
-from tdda.serial.utils import find_associated_metadata_file
+from tdda.serial.utils import (
+    find_associated_metadata_file, get_backend, OG_BACKEND
+)
 from tdda.utils import nvl, error, warn, listify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col
 from tdda.referencetest.pddates import infer_date_format
@@ -28,10 +30,6 @@ from tdda.state import get_config
 
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 DTYPE_RE = re.compile(r'^([A-Za-z])([0-9]+)?(\[[a-z]+(,?)(.*)\])$')
-
-DEFAULT_BACKEND = 'numpy_nullable'
-BACKENDS = ['numpy_nullable', 'pyarrow', 'pandas']
-
 
 FIELDTYPE_TO_PANDAS_OLD_DTYPE = {
     'bool': 'object',
@@ -67,7 +65,7 @@ FIELDTYPE_TO_PYARROW_DTYPE = {
 
 
 FIELDTYPE_MAP_MAP = {
-    'pandas': FIELDTYPE_TO_PANDAS_OLD_DTYPE,
+    OG_BACKEND: FIELDTYPE_TO_PANDAS_OLD_DTYPE,
     'numpy_nullable': FIELDTYPE_TO_PANDAS_NULLABLE_DTYPE,
     'pyarrow': FIELDTYPE_TO_PYARROW_DTYPE,
 }
@@ -123,7 +121,7 @@ def csvw_to_pandas_kwargs(spec, extensions=False):
 
 
 def serial_to_pandas_read_csv_args(md, backend=None):
-    backend = get_concrete_backend(backend)
+    backend = get_backend(backend)
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
     kw = {}
@@ -256,7 +254,7 @@ def pandas_read_csv_to_serial(params, backend=None):
             if isinstance(source, dict):
                 names.update(set(source))
     fields = []
-    backend = get_concrete_backend(backend)
+    backend = get_backend(backend)
     for name in names:
         type_ = fmt = None
         if isinstance(dtypes, dict):
@@ -743,18 +741,24 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
          use_table_name=use_table_name,
          preferred=preferred or 'pandas.read_csv',
          verbosity=verbosity
-     )
+    )
+    backend = get_backend(backend)
     if md:
         md_kw = serial_to_pandas_read_csv_args(md, backend=backend)
         # if 'dtype_backend' not in kw:
-        #     backend = get_concrete_backend(backend)
-        #     if backend != 'pandas':
+        #     backend = get_backend(backend)
+        #     if backend != OG_BACKEND:
         #        kw = {'dtype_backend': backend}
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
     elif md:
         kw = md_kw
+    else:
+        if not 'backend' in kw:
+            backend = get_backend(backend)
+            if backend and backend != OG_BACKEND:
+                kw['dtype_backend'] = backend
     df = pd.read_csv(path, **kw)
 
     specified_types = kw.get('dtype')
@@ -830,11 +834,11 @@ def pandas_read_df(path, backend=None, **kw):
     """
     _, ext = os.path.splitext(path)
     if ext == '.csv':
-        return csv_to_pandas(path, bankend=backend, **kw)
+        return csv_to_pandas(path, backend=backend, **kw)
     elif ext == '.parquet':
         # return pd.read_parquet(path, use_nullable_dtype=True)
-        backend = get_concrete_backend(backend)
-        if backend == 'pandas':
+        backend = get_backend(backend)
+        if backend == OG_BACKEND:
             return pd.read_parquet(path)
         else:
             return pd.read_parquet(path, dtype_backend=backend)
@@ -854,13 +858,3 @@ def pandas_write_df(df, path):
         df.to_parquet(path, index=None)
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
-
-
-def get_concrete_backend(backend):
-    if backend is None:
-        c = get_config()
-        backend = c.get('pandas_backend')
-    if backend not in BACKENDS:
-        error(f'Pandas backend {backend} unknown.\n'
-              f'Should be one of: {" ".join(BACKENDS)}.')
-    return backend

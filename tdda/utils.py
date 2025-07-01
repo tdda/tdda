@@ -11,6 +11,8 @@ import types
 import unicodedata
 import yaml
 
+from fnmatch import fnmatch
+
 
 #jythonc needs explicit import of utf-8 and iso-8859-1/latin1 encoding packages
 import encodings.aliases     # type:ignore
@@ -929,3 +931,12 @@ def tdda_path_info(inpath):
 
     stem, ext = os.path.splitext(inpath)
     return TDDAPathInfo(inpath, stem, ext, None, False, inpath)
+
+
+def globlike_match(patterns, names):
+    if patterns is None or names is None:
+        return []
+    if isinstance(patterns, str):
+        patterns = [patterns]
+    return [name for name in names if any(fnmatch(name, p) for p in patterns)]
+

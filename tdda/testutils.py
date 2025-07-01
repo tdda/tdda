@@ -10,7 +10,7 @@ from tdda.utils import (
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
     json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
-    normal_form_tdda, is_sequence, listify
+    normal_form_tdda, is_sequence, listify, globlike_match
 )
 from unicodedata import normalize
 
@@ -451,6 +451,20 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(type(listify(())), list)
 
         self.assertEqual(listify({'foo': 1}), [{'foo': 1}])
+
+    def testGloblikeMatch(self):
+        names = [f'a{i}' for i in range(21)]
+        self.assertEqual(globlike_match(None, names), [])
+        self.assertEqual(globlike_match('*', names), names)
+        self.assertEqual(globlike_match(['*'], names), names)
+        self.assertEqual(globlike_match('a2?', names), ['a20'])
+        self.assertEqual(globlike_match('a*2*', names), ['a2', 'a12', 'a20'])
+        self.assertEqual(globlike_match(['a*2*', 'a10'], names),
+                                        ['a2', 'a10', 'a12', 'a20'])
+        self.assertEqual(globlike_match(['a1[23]'], names),
+                                        ['a12', 'a13'])
+
+
 
 
 

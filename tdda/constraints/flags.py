@@ -10,6 +10,7 @@ import sys
 
 from tdda.state import set_load
 from tdda.utils import error
+from tdda.commonflags import add_pandas_flags, process_pandas_flags
 
 
 def help_defaults(help=True, seven=True, colour=True, config=True,
@@ -151,6 +152,7 @@ def discover_parser(usage=''):
                         help='Report formats to write.')
     parser.add_argument('-o', '--report-path', action='store',
                         help='Path for reports')
+    add_pandas_flags(parser)
     return parser
 
 
@@ -166,6 +168,8 @@ def discover_flags(parser, args, params):
         params['report_formats'] = []
     if flags.report_path:
         params['report_path'] = flags.report_path
+
+    params['engine'], params['backend'] = process_pandas_flags(flags)
 
     return flags
 
@@ -275,6 +279,9 @@ def verify_flags(parser, args, params):
         error('Inconsistent settings for verify-allowed-fields')
     if (vr and nvr):
         error('Inconsistent settings for verify-required-fields')
+
+    params['engine'], params['backend'] = process_pandas_flags(flags)
+
     return flags
 
 
@@ -327,6 +334,8 @@ def detect_flags(parser, args, params):
         params['report_formats'] = flags.report
     else:
         params['report_formats'] = []
+
+    params['engine'], params['backend'] = process_pandas_flags(flags)
 
     return flags
 
@@ -392,3 +401,5 @@ def add_verify_fields_flags(parser):
     parser.add_argument('--no-varf', '--no-vraf', action='store_true',
        help='Force no verification of allowed and required fields'
     )
+
+    add_pandas_flags(parser)

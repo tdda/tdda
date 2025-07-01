@@ -410,7 +410,7 @@ class TestPandasLoad(ReferenceTestCase):
         md_path = os.path.join(TESTDATADIR, 'nulls1-metadata.json')
         refpath = os.path.join(TESTDATADIR, 'nulls1.parquet')
 
-        df = csv_to_pandas(md_path=md_path, backend='pandas')
+        df = csv_to_pandas(md_path=md_path, backend='original')
         rf = pd.read_parquet(refpath, dtype_backend='numpy_nullable')
         self.assertDataFramesEqual(df, rf, type_matching='loose')
 
@@ -801,7 +801,7 @@ class TestCSVWTests(ReferenceTestCase):
         string_to_float(ref_df, 'longitude')
 
         # medium because of object/string comparisons
-        self.assertDataFramesEqual(df, ref_df)
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test029(self):
         test = this_function_name()
@@ -815,7 +815,7 @@ class TestCSVWTests(ReferenceTestCase):
         string_to_float(ref_df, 'longitude')
 
         # medium because of object/string comparisons
-        self.assertDataFramesEqual(df, ref_df)
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test030(self):
         test = this_function_name()

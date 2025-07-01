@@ -58,14 +58,15 @@ class TestCommonConstraints(ReferenceTestCase):
     def testSimpleAllNotCorrectVerificationFromCSVFile(self):
         # CSV file. Elevens is read as integers with no metadata
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        verbose=False)
+                        backend='o', verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-elevens-wrong-type.txt'))
 
     def testSimpleAllCorrectVerificationFromCSVFile(self):
         # CSV file with full pandas tddaserial metadata.
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
-                        md_path=tdpath('ddd-pandas.serial'), verbose=False)
+                        md_path=tdpath('ddd-pandas.serial'),
+                        backend='o', verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
 
@@ -73,7 +74,7 @@ class TestCommonConstraints(ReferenceTestCase):
         # So dates fail
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
                         md_path=tdpath('ddd-pandas-minimal.serial'),
-                        verbose=False)
+                        backend='o', verbose=False)
         self.assertStringCorrect(str(report),
                                  reportpath('ddd10-all-correct.txt'))
 
@@ -87,7 +88,7 @@ class TestCommonConstraints(ReferenceTestCase):
         # and no format or writer
         report = verify(tdpath('ddd.csv'), tdpath('ddd.tdda'),
                         md_path=tdpath('ddd-pandas-really-minimal.serial'),
-                        verbose=False)
+                        backend='o', verbose=False)
 
 
 

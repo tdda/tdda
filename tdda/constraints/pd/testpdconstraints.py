@@ -1047,7 +1047,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(df, constraints_path)
+        v = verify(df, constraints_path, backend='original')
         # expect 3 failures:
         #   - the pandas CSV reader will have read 'elevens' as an int
         #   - the pandas CSV reader will have read the date columns as strings
@@ -1056,19 +1056,29 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 
     def testDDD_csv(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
+        o_constraints_path = os.path.join(TESTDATADIR, 'dddo.tdda')
+        v = verify(csv_path, o_constraints_path, backend='original',
+                   verbose=False)
+        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.failures, 0)
+
+        for backend in ('numpy_nullable', 'pyarrow'):
+            n_constraints_path = os.path.join(TESTDATADIR, 'dddn.tdda')
+            # Constraints for nullable backends
+            v = verify(csv_path, n_constraints_path, backend=backend,
+                       verbose=False)
+            self.assertEqual(v.passes, 61)
+            self.assertEqual(v.failures, 0)
+
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
-        v = verify(csv_path, constraints_path, verbose=False)
-        # expect 1 failure:
-        #   - the enhanced CSV reader will have initially read 'elevens' as
-        #     an int field and then (correctly) converted it to string, but
-        #     it doesn't know that it would need to pad with initial zeros,
-        #     so that means it will have computed its minimum as being '0'
-        #     not '00', so the minimum string length won't be the same as
-        #     Miro would compute (since Miro has the advantage of having
-        #     additional metadata available when it read the CSV file, to
-        #     tell it that 'elevens' is a string field.
-        self.assertEqual(v.passes, 60)
-        self.assertEqual(v.failures, 1)
+        for backend in ('numpy_nullable', 'pyarrow'):
+            # Find and use metadata
+            # This doesn't work with pandas bcause evennulls and
+            # oddnulls end up as strings not booleans.
+            v = verify(csv_path + ':', constraints_path, backend=backend,
+                       verbose=False)
+            self.assertEqual(v.passes, 61)
+            self.assertEqual(v.failures, 0)
 
     def testDDD_discover_and_verify1(self):
         # both discovery and verification done using Pandas
@@ -1081,11 +1091,11 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
 
         c = discover(csv_path, constraints_path=actual_constraints,
                      report_formats=report_formats,
-                     group_rexes=True, verbose=False)
+                     group_rexes=True, backend='original', verbose=False)
         with open(actual_constraints2, 'w') as f:
             f.write(c.to_json())
         v = verify(csv_path, actual_constraints2,
-                   report='fields', verbose=False)
+                   report='fields', backend='original', verbose=False)
         self.assertFileCorrect(actual_constraints, ref_constraints_tdda,
                                ignore_patterns=TDDA_MD_IGNORES)
         self.assertEqual(v.passes, 61)
@@ -1206,7 +1216,8 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover(csv_path, constraints_path=tddafile1k, verbose=False)
+        c = discover(csv_path, constraints_path=tddafile1k,
+                     backend='original', verbose=False)
         self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
@@ -1238,9 +1249,16 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
     def testVerify1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify(csv_path, constraints_path=reftddafile1k, verbose=False)
+        v = verify(csv_path, constraints_path=reftddafile1k,
+                   backend='original', verbose=False)
         self.assertEqual(v.passes, 72)
         self.assertEqual(v.failures, 0)
+
+        for backend in ('numpy_nullable', 'pyarrow'):
+            v = verify(csv_path, constraints_path=reftddafile1k,
+                       backend=backend, verbose=False)
+            self.assertEqual(v.passes, 70)
+            self.assertEqual(v.failures, 2)
 
     def testVerify1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
@@ -1252,7 +1270,8 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
     def testVerify25kAgainst1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify(csv_path, constraints_path=reftddafile1k, verbose=False)
+        v = verify(csv_path, constraints_path=reftddafile1k,
+                   backend='original', verbose=False)
 
         passingConstraints = 53
         failingConstraints = 19
@@ -1264,6 +1283,18 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
         self.assertEqual(expected, (53, 19), "NUMBERS DIFFER FROM README!")
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        v = verify(csv_path, constraints_path=reftddafile1k,
+                   backend='numpy_nullable', verbose=False)
+        self.assertEqual(v.passes, 51)
+        self.assertEqual(v.failures, 21)
+
+        v = verify(csv_path, constraints_path=reftddafile1k,
+                   backend='pyarrow', verbose=False)
+        self.assertEqual(v.passes, 51)
+        self.assertEqual(v.failures, 21)
+
+
 
     def testVerify25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
@@ -1291,7 +1322,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
         v = detect(csv_path, constraints_path=reftddafile1k,
-                   outpath=outfile, verbose=False)
+                   outpath=outfile, backend='original', verbose=False)
         passingConstraints = 53
         failingConstraints = 19
         passingRecords = 24883
@@ -1338,7 +1369,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
         # Also check that's the same as the CSV equivalent,
         # appropriately read!
-        from_csv_df = csv_to_pandas(refcsvpath)
+        from_csv_df = csv_to_pandas(refcsvpath, backend='original')
         self.assertDataFramesEqual(expected_df, from_csv_df,
                                    outfile, refcsvpath)
 
@@ -1347,7 +1378,8 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv')
         tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
         reftddafile = os.path.join(TESTDATADIR, 'ref-accounts25k.tdda')
-        c = discover(csv_path, constraints_path=tddafile, verbose=False)
+        c = discover(csv_path, constraints_path=tddafile, backend='original',
+                     verbose=False)
         self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
                                    ignore_lines=[
                                        '"local_time":',
@@ -1548,7 +1580,11 @@ class CommandLineHelper:
         rmdirs(cls.test_tmpdir, cls.test_dirs)
 
     def testDiscoverCmd(self):
-        argv = ['tdda', 'discover', self.e92csv, self.e92tdda]
+        try:
+            os.remove(self.e92tdda)
+        except:
+            pass
+        argv = ['tdda', 'discover', self.e92csv, self.e92tdda, '-B', 'o']
         self.execute_command(argv)
         self.assertTextFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
                                    rstrip=True,
@@ -1600,7 +1636,7 @@ class CommandLineHelper:
         self.assertEqual(len(result.splitlines()), 41)
 
         argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
-                '--fields', '--type_checking', 'strict']
+                '--fields', '--type_checking', 'strict', '-B' 'o']
         result = self.execute_command(argv)
         # 5 type-failures (plus min_length on elevens, considered as an int)
         self.assertTrue(result.strip().endswith(
@@ -1608,7 +1644,7 @@ class CommandLineHelper:
            'Failing Constraints: 6 (9.84%)'
         ))
         argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
-                '--fields', '--type_checking', 'sloppy']
+                '--fields', '--type_checking', 'sloppy', '-B', 'original']
         result = self.execute_command(argv)
         # 1 failure, because elevens is treated as an int, so min_length fails
         self.assertTrue(result.strip().endswith(
@@ -1646,7 +1682,7 @@ class CommandLineHelper:
     def testDetectE118Cmd(self):
         argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
                 self.e92bads1, '--per-constraint', '--output-fields',
-                '--index']
+                '--index', '-B', 'o']
         result = self.execute_command(argv)
         self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads1))
@@ -1656,7 +1692,7 @@ class CommandLineHelper:
     def testDetectE118CmdInterleaved(self):
         argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
                 self.e92bads3, '--per-constraint', '--output-fields',
-                '--interleave']
+                '--interleave', '-B' 'o']
         result = self.execute_command(argv)
         self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads3))

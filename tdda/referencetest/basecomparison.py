@@ -36,6 +36,7 @@ from tdda.abstractdf import (
     get_diffs_df_with_cols_and_index,
     get_diffs_df_with_cols,
     df_to_lists,
+    get_sceq,
 )
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
@@ -197,6 +198,7 @@ class BaseComparison(object):
         create_temporaries=True,
         fuzzy_nulls=False,
         engine=None,
+        backend=None,
         quick=True
     ):
         """
@@ -281,7 +283,6 @@ class BaseComparison(object):
               .failures     the number of failures
               .diffs        a Diffs object with information about
                             the failures
-
         All of the 'Option' parameters can be of any of the following:
 
             - ``None`` (to apply that kind of comparison to all fields)
@@ -962,6 +963,7 @@ class SameStructureDDiff:
             return None
 
     def details_table(self, df, ref_df, target_rows=None):
+        eq = get_sceq(df)
         target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
         cols = col_names(self.diff_df)
@@ -990,12 +992,12 @@ class SameStructureDDiff:
                 l_vals = L_table[r]
                 r_vals = R_table[r]
                 lstr = [
-                    C.common(left) if left == right
+                    C.common(left) if eq(left, right)
                                    else C.left_diff(left, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
                 rstr = [
-                    C.common(right) if left == right
+                    C.common(right) if eq(left, right)
                                     else C.right_diff(right, prefix)
                     for (left, right) in zip(l_vals, r_vals)
                 ]

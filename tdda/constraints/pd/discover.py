@@ -39,7 +39,8 @@ from tdda.utils import handle_tilde, nvl, tdda_path_info
 
 
 def discover_df_from_file(df_path, constraints_path, report_path=None,
-                          report_formats=None, verbose=True, **kwargs):
+                          report_formats=None, engine=None, backend=None,
+                          verbose=True, **kwargs):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -77,7 +78,7 @@ def discover_df_from_file(df_path, constraints_path, report_path=None,
     if df_path == '-':
         df_path = StringIO(sys.stdin.read())
         md_df_path = None
-    df = load_df(df_path)
+    df = load_df(df_path, backend=backend)
     return discover_df(df, constraints_path, df_path=md_df_path,
                        report_path=report_path,
                        report_formats=report_formats, **kwargs)

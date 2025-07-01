@@ -5,7 +5,8 @@ from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
 from tdda.utils import warn, error, stdout_console as console
-from tdda.state import get_config
+from tdda.commonflags import process_pandas_flags, add_pandas_flags
+
 
 import argparse
 
@@ -18,15 +19,6 @@ USAGE: tdda diff LEFT.parquet RIGHT.parquet [MAX_DIFFS [DPS]]
 
 DEFAULT_PRECISION = 7
 DEFAULT_DPS = 7
-
-ENGINES = {
-    'pandas': 'pandas',
-    'polars': 'polars',
-
-    'pd': 'pandas',
-    'pl': 'polars',
-}
-
 
 TDDA_DIFF_HELP = '''
 Notes
@@ -51,7 +43,8 @@ class TDDADiff:
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
                                    check_data=self.fields,
                                    type_matching=self.type_checking,
-                                   precision=self.precision)
+                                   precision=self.precision,
+                                   backend=self.backend)
 
         if result.failures > 0:
             print(result.diffs)
@@ -132,12 +125,8 @@ class TDDADiff:
         elif self.permissive or self.loose:
             self.type_checking = 'loose'
 
-        engine = ENGINES.get(self.engine, self.config.engine)
-        if engine is None:
-            warn(f'Engine "{self.engine}" unknown. Using {c.engine} '
-                 'from config.')
-        else:
-            self.engine = self.config.engine = engine
+        self.engine, self.backend = process_pandas_flags(self)
+
 
     def error(self, msg):
         print(msg, file=sys.stderr)
@@ -223,10 +212,7 @@ class TDDADiff:
 
         parser.add_argument('--permissive', action='store_true',
             help='Use loose (permissive) type comparisons')
-
-        parser.add_argument('--engine', '-e', type=str, action='store',
-            help='Dataframe engine (pandas or polars)')
-
+        add_pandas_flags(parser)
         return parser
 
 

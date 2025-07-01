@@ -207,7 +207,7 @@ class PandasComparison(BaseComparison):
 
     def load_serialized_dataframe(
         self, path, actual_df=None, loader=None, reset_index=True,
-        pandas_backend=None, **kwargs
+        backend=None, **kwargs
     ):
         """
         Function for constructing a pandas dataframe from a serialized
@@ -216,7 +216,7 @@ class PandasComparison(BaseComparison):
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:
-                df = pandas_read_df(path, backend=pandas_backend)
+                df = pandas_read_df(path, backend=backend)
                 if reset_index and not df.index.is_monotonic_increasing:
                     df.reset_index(drop=True, inplace=True)
                 return df
@@ -228,7 +228,7 @@ class PandasComparison(BaseComparison):
                     print(self.compare_with(tmp_path, path))
                 raise
         else:
-            return self.load_csv(path, loader, **kwargs)
+            return self.load_csv(path, loader, backend=backend, **kwargs)
 
     def write_csv(self, df, csvfile, writer=None, **kwargs):
         """
@@ -301,7 +301,6 @@ class PandasComparison(BaseComparison):
 
 
     ####
-
 
 class PandasNotImplemented(object):
     """

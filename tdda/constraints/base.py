@@ -24,7 +24,7 @@ from tdda.utils import (
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val, indicator_field_name,
     rednz, redblack, coloured_tick_cross, print_stderr,
-    TDDAError,
+    TDDAError, globlike_match
 )
 from tdda.version import version
 
@@ -273,6 +273,7 @@ class DatasetConstraints(object):
         dataset = in_constraints.get('dataset', {})
         self.allowed_fields = dataset.get('allowed_fields', None)
         self.required_fields = dataset.get('required_fields', None)
+
         metadata = in_constraints.get('creation_metadata', {})
         for (k, v) in metadata.items():
             if k in METADATA_KEYS and v is not None:
@@ -1327,18 +1328,20 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
               or kwargs.get('in_place') is not None)
 
     config = get_config()
-
     constrained_fields = constraints.fields
+    glob_matches = globlike_match(constraints.allowed_fields, fieldnames)
     results.extra_fields = [
         f for f in fieldnames
-        if f in (set(fieldnames)
+        if f in set(fieldnames)
                  - set(constrained_fields)
                  - set(constraints.allowed_fields or [])
-        )
+                 - set(glob_matches)
     ]
     if constraints.required_fields:
+        results.required_fields = globlike_match(constraints.required_fields,
+                                                 constrained_fields)
         results.missing_fields = [
-            f for f in constraints.required_fields
+            f for f in results.required_fields
             if f not in set(fieldnames)
         ]
     else:

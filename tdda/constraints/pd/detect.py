@@ -46,7 +46,7 @@ from tdda.utils import handle_tilde, nvl, cprint, print_stderr
 
 
 def detect_df_from_file(df_path, constraints_path, outpath=None,
-                        verbose=True, **kwargs):
+                        backend=None, verbose=True, **kwargs):
     """
     Check the records from the Pandas DataFrame provided, to detect
     records that fail any of the constraints in the JSON ``.tdda`` file
@@ -86,9 +86,9 @@ def detect_df_from_file(df_path, constraints_path, outpath=None,
         (stem, ext) = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    df = load_df(df_path)
+    df = load_df(df_path, backend=backend)
     v = detect_df(df, constraints_path, outpath=outpath,
-                  rownumber_is_index=False, **kwargs)
+                  rownumber_is_index=False, backend=backend, **kwargs)
     if verbose:
         cprint(v)
     return v

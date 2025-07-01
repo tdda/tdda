@@ -264,6 +264,7 @@ class ReferenceTest(object):
         type_matching=None,
         fuzzy_nulls=False,
         engine=None,
+        backend=None,
     ):
         """Check that an in-memory Pandas `DataFrame` matches an in-memory
         reference one.
@@ -356,7 +357,8 @@ class ReferenceTest(object):
             precision=precision,
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
-            engine=None,
+            engine=engine,
+            backend=backend
         )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
@@ -379,6 +381,7 @@ class ReferenceTest(object):
         type_matching=None,
         fuzzy_nulls=False,
         engine=None,
+        backend=None,
         **kwargs,
     ):
         """
@@ -435,7 +438,8 @@ class ReferenceTest(object):
             lib._write_reference_dataframe(df, expected_path)
         else:
             ref_df = lib.load_serialized_dataframe(
-                expected_path, actual_df=df, loader=csv_read_fn
+                expected_path, actual_df=df, loader=csv_read_fn,
+                backend=backend
             )
             self.assertDataFramesEqual(
                 df,
@@ -450,7 +454,8 @@ class ReferenceTest(object):
                 precision=precision,
                 type_matching=type_matching,
                 fuzzy_nulls=fuzzy_nulls,
-                engine=engine
+                engine=engine,
+                backend=backend,
             )
 
     def assertStoredDataFrameCorrect(
