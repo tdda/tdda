@@ -5,11 +5,15 @@ import tempfile
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.serial.base import RE_ISO8601, URI
+from tdda.serial.base import (
+    RE_ISO8601, URI, SerialMetadata, FieldMetadata,
+    DateFormat, is_iso8601_format
+)
 from tdda.serial.csvw import csvw_date_format_to_md_date_format
 from tdda.serial.reader import (
     find_metadata_kind,
 )
+from tdda.utils import testwarn
 
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
@@ -85,6 +89,146 @@ class TestDateSanityRE(ReferenceTestCase):
                                          '%m-%d-%Y %H:%M:%S')
         self.assertEqual(map_date_format('dd-MM-yy HH:mm'),
                                          '%d-%m-%y %H:%M')
+
+    def testSingleDateFormat(self):
+        # Nothing. Use ISO 8601
+        isod = DateFormat.ISO8601_DATE
+        isodt = DateFormat.ISO8601_DATETIME
+        f1 = '%d/%m/%Y'
+        f2 = '%d/%m/%Y %H:%M:%S'
+        f3 = '%Y-%m-%d %H:%M:%S'
+        f4 = '%Y-%m-%dT%H:%M:%S'
+
+        m = SerialMetadata()
+        self.assertEqual(m.single_date_format(), isodt)
+
+        # dateformat set. Use that
+        m = SerialMetadata(date_format=f1)
+        self.assertEqual(m.single_date_format(), f1)
+
+        d1 = FieldMetadata('d1', fieldtype='date', format=f1)
+        d2 = FieldMetadata('d2', fieldtype='date', format=f1)
+        dt1 = FieldMetadata('dt1', fieldtype='datetime', format=f2)
+        dt2 = FieldMetadata('dt2', fieldtype='datetime', format=f2)
+        dt3 = FieldMetadata('dt3', fieldtype='datetime', format=f3)
+
+        dt4 = FieldMetadata('dt4', fieldtype='datetime', format=f4)
+        dt5 = FieldMetadata('dt5', fieldtype='datetime', format=f4)
+
+        dt6 = FieldMetadata('dt6', fieldtype='datetime', format=isodt)
+        dt7 = FieldMetadata('dt7', fieldtype='datetime', format=isodt)
+
+        # Default and fields: default wins
+        m = SerialMetadata(date_format=f1, fields=[dt1, dt2])
+        self.assertEqual(m.single_date_format(), f1)
+
+        # Same format for multiple fields
+        m = SerialMetadata(fields=[dt4, dt5])
+        self.assertEqual(m.single_date_format(), f4)
+
+        # Most frequent, no ties wins
+        m = SerialMetadata(fields=[dt1, dt4, dt5])
+        warn, buf = testwarn()
+        self.assertEqual(m.single_date_format(warner=warn), f4)
+        self.assertEqual(
+            buf, ['Multiple data formats; using mode (%Y-%m-%dT%H:%M:%S).']
+        )
+
+        # iso8601 beats ties
+        m = SerialMetadata(fields=[dt1, dt4, dt5, dt6, dt7])
+        warn, buf = testwarn()
+        self.assertEqual(m.single_date_format(warner=warn), isodt)
+        self.assertEqual(
+            buf, ['Multiple data formats; using ISO 8601.']
+        )
+
+        # Ties result in iso8601
+        m = SerialMetadata(fields=[dt1, dt4])
+        warn, buf = testwarn()
+        self.assertEqual(m.single_date_format(warner=warn), isodt)
+        self.assertEqual(
+            buf, ['Multiple data formats; using ISO 8601.']
+        )
+
+    @tag
+    def testIsIso8601Format(self):
+
+        # Boolean values, including names
+        self.assertEqual(is_iso8601_format('iso8601'), True)
+        self.assertEqual(is_iso8601_format('iso8601-date'), True)
+        self.assertEqual(is_iso8601_format('iso8601-datetime'), True)
+        self.assertEqual(is_iso8601_format('iso8601-datetime-tz'), True)
+
+        self.assertEqual(is_iso8601_format('ISO8601'), True)
+        self.assertEqual(is_iso8601_format('ISO8601-date'), True)
+        self.assertEqual(is_iso8601_format('ISO8601-datetime'), True)
+        self.assertEqual(is_iso8601_format('ISO8601-datetime-TZ'), True)
+
+        self.assertEqual(is_iso8601_format('iso-8601'), False)
+        self.assertEqual(is_iso8601_format('iso-8601date'), False)
+        self.assertEqual(is_iso8601_format('iso8601-date-time'), False)
+        self.assertEqual(is_iso8601_format('iso8601-datetime-zone'), False)
+
+        self.assertEqual(is_iso8601_format('%Y-%m-%d'), True)
+        self.assertEqual(is_iso8601_format('%Y/%m/%d'), True)
+        self.assertEqual(is_iso8601_format('%Y.%m.%d'), True)
+
+        self.assertEqual(is_iso8601_format('%Y-%m-%d %H:%M:%S'), True)
+        self.assertEqual(is_iso8601_format('%Y/%m/%dT%H:%M:%S'), True)
+        self.assertEqual(is_iso8601_format('%Y.%m.%d %H:%M:%S.%f'), True)
+        self.assertEqual(is_iso8601_format('%Y.%m.%dT%H:%M:%S.%f'), True)
+
+        self.assertEqual(is_iso8601_format('%Y-%m-%d%h:%m:%s'), False)
+        self.assertEqual(is_iso8601_format('%Y/%m/%d:%h:%m:%s'), False)
+        self.assertEqual(is_iso8601_format('%Y.%m.%d %h:%m:%s,%f'), False)
+        self.assertEqual(is_iso8601_format('%Y.%m.%dT%h:%m:%s-%f'), False)
+
+
+        # Boolean values, excluding names
+        self.assertEqual(is_iso8601_format('iso8601', inc_names=False), False)
+        self.assertEqual(is_iso8601_format('iso8601-date',
+                                           inc_names=False), False)
+        self.assertEqual(is_iso8601_format('iso8601-datetime',
+                                           inc_names=False), False)
+        self.assertEqual(is_iso8601_format('iso8601-datetime-tz',
+                                           inc_names=False), False)
+
+        self.assertEqual(is_iso8601_format('%Y-%m-%d', inc_names=False), True)
+
+        # Specific values
+        self.assertEqual(
+            is_iso8601_format('iso8601', return_specific=True),
+            'iso8601'
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-date', return_specific=True),
+            'iso8601-date'
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-datetime', return_specific=True),
+            'iso8601-datetime'
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-datetime-tz', return_specific=True),
+            'iso8601-datetime-tz'
+        )
+
+        self.assertEqual(
+            is_iso8601_format('%Y-%m-%d', return_specific=True),
+            'iso8601-date'
+        )
+
+        self.assertEqual(
+            is_iso8601_format('%Y-%m-%d', return_specific=True),
+            'iso8601-date'
+        )
+
+        self.assertEqual(
+            is_iso8601_format('%Y/%m/%dT%H:%M:%S', return_specific=True),
+            'iso8601-datetime'
+        )
+
+        # Timezones not actually handled yet.
 
 
 class TestFindMetadata(ReferenceTestCase):

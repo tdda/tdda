@@ -15,7 +15,7 @@ from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.pandasio import (
     csv_to_pandas,
     csvw_to_pandas_kwargs,
-    pandas_df_to_csv,
+    pandas_to_csv,
     pandas_df_to_metadata,
     pandas_dtype_to_fieldtype,
 )
@@ -979,7 +979,8 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df = tiny_pandas_df(nulls=False, nullable_types=False)
         csv_path = tmppath('tiny1cd3.csv')
         md_path = tmppath('tiny1cd3.serial')
-        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        pandas_to_csv(df, csv_path, md_outpath=md_path,
+                      flavours=THREE_FLAVOURS)
 
         # Right CSV written
         self.assertFileCorrect(csv_path, tdpath('tiny1cd3.csv'))
@@ -990,13 +991,13 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
 
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1cd.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cd.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=PANDAS2)
         self.assertFileCorrect(csv_path, tdpath('tiny1cd-pandas.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cd-pandas.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1027,17 +1028,17 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df = tiny_pandas_df(nulls=True, nullable_types=False)
         csv_path = tmppath('tiny1nd3.csv')
         md_path = tmppath('tiny1nd3.serial')
-        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=THREE_FLAVOURS)
         self.assertFileCorrect(csv_path, tdpath('tiny1nd3.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1nd.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=PANDAS2)
         self.assertFileCorrect(csv_path, tdpath('tiny1nd-pandas.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd-pandas.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1067,17 +1068,17 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df = tiny_pandas_df(nulls=False, nullable_types=True)
         csv_path = tmppath('tiny1cn3.csv')
         md_path = tmppath('tiny1cn3.serial')
-        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=THREE_FLAVOURS)
         self.assertFileCorrect(csv_path, tdpath('tiny1cn3.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cn3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1cn.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cn.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=PANDAS2)
         self.assertFileCorrect(csv_path, tdpath('tiny1cn-pandas.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cn-pandas.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1106,17 +1107,17 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df = tiny_pandas_df(nulls=True, nullable_types=True)
         csv_path = tmppath('tiny1nn3.csv')
         md_path = tmppath('tiny1nn3.serial')
-        pandas_df_to_csv(df, csv_path, md_path, flavours=THREE_FLAVOURS)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=THREE_FLAVOURS)
         self.assertFileCorrect(csv_path, tdpath('tiny1nn3.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nn3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1nn.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nn.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_df_to_csv(df, csv_path, md_path, flavours=PANDAS2)
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=PANDAS2)
         self.assertFileCorrect(csv_path, tdpath('tiny1nn-pandas.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nn-pandas.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)

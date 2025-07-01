@@ -25,7 +25,7 @@ from tdda.referencetest.basecomparison import (
     valid_level,
 )
 from tdda.serial.pandasio import (
-    pandas_df_to_csv,
+    pandas_to_csv,
     csv_to_pandas,
     pandas_read_df,
     infer_dates

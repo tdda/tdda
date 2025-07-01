@@ -1,9 +1,12 @@
 import json
+import re
 import sys
+
+from collections import Counter
 
 from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
-from tdda.utils import listify
+from tdda.utils import listify, nvl, warn
 
 class TDDASerialError(Exception):
     pass
@@ -40,6 +43,14 @@ class DateFormat:
     EURO_DATETIME = 'eu-datetime'
 
 
+ISO8601_NAMED_FORMATS = {
+    DateFormat.ISO8601_DATE,
+    DateFormat.ISO8601_DATETIME,
+    DateFormat.ISO8601_DATETIME_TZ,
+    DateFormat.ISO8601_UNSPECIFIED,
+}
+
+
 class Defaults:
     ENCODING = 'UTF-8'
     DELIMITER = ','
@@ -53,7 +64,7 @@ class Defaults:
 
 
 CONTEXT_KEY = '@context'
-RE_ISO8601 = r'^%Y.%m.%d([T ]%H.%M.%S(\.%f)?)?$'
+RE_ISO8601 = re.compile(r'^%Y.%m.%d([T ]%H.%M.%S(\.%f)?)?$')
 
 
 # Allowed keys in .serial files
@@ -174,6 +185,7 @@ class SerialMetadata:
                 for extname, f in fields.items():
                     f['csvname'] = extname
                     self.fields.append(f)
+            self._fields_as_list = False
         self.path = path
         self.encoding = encoding
         self.delimiter = delimiter
@@ -280,10 +292,87 @@ class SerialMetadata:
     def to_json(self, indent=4):
         return json.dumps(self.unobjectify(), indent=indent)
 
-
     def write(self, path=None):
         with open(path, 'w') as f:
             f.write(self.to_json())
+
+    def single_date_format(self, warner=None):
+        """
+        Get a single date/time format from serial metadata.
+        This is typically needed for write parameters.
+
+        Roughly this:
+            Uses the default, if set
+            Otherwise looks at fields:
+                If there's a mode it uses that
+                If there's a tied, it uses iso8601datetime
+        """
+        Warn = nvl(warner, warn)
+        default = DateFormat.ISO8601_DATETIME
+        if self.date_format:
+            return self.date_format
+        formats = Counter()
+        for f in self.fields:
+            if f.fieldtype.startswith('date') and f.format:
+                fmt = f.format
+                if fmt and fmt.startswith('iso'):
+                    fmt = default
+                formats[fmt] += 1
+        if len(formats) == 1:
+            return list(formats)[0]
+        elif len(formats) == 0:
+            return default
+
+        m = max(v for v in formats.values())
+        formats = {k: v for k, v in formats.items() if v == m}
+        if len(formats) == 1:
+            mode = list(formats)[0]
+            Warn(f'Multiple data formats; using mode ({mode}).')
+            return mode
+        else:
+            Warn(f'Multiple data formats; using ISO 8601.')
+            return default
+
+    def single_null_format(self, warner=None):
+        Warn = nvl(warner, warn)
+        if self.null_indicators is None:
+            # look at fields
+            nulls = Counter()
+            for f in self.fields:
+                N = f.fieldtype.null_indicators
+                if N is not None:
+                    if isinstance(N, str):
+                        nulls[N] += 1
+                    else:
+                        for nul in N:
+                            nulls[N] += 1
+            if len(nulls) == 0:
+                return None
+            elif len(nulls) == 1:
+                return list(nulls.values())[0]
+            else:
+                m = max(v for v in nulls.values())
+                nulls = {k: v for k, v in nulls.items() if v == m}
+                if len(nulls) == 1:
+                    mode = list(nulls)[0]
+                    Warn(f'Multiple null indicators; using mode ({mode}).')
+                    return mode
+                else:
+                    null = sorted(nulls.values())[0]
+                    Warn(f'Multiple null indicators found; using {null}.')
+                    return null
+
+        elif isinstance(self.null_indicators, 'str'):
+            return self.null_indicators
+        elif len(self.null_indicators) == 0:
+            return None
+        elif len(self.null_indicators) == 1:
+            return self.null_indicators[0]
+        else:  # multiple null indicators
+            null = self.null_indicators[0]
+            Warn(f'Multiple null indicators: using first ("{null}").')
+            return self.null_indicators[0]
+
 
     def __str__(self):
         return self.to_json()
@@ -313,3 +402,20 @@ def nonnull(v):
 
 def writer():
     return f'{TDDASERIAL.key}-{VERSION}'
+
+
+def is_iso8601_format(fmt, inc_names=True, return_specific=False):
+    if inc_names:
+        if fmt.lower() in ISO8601_NAMED_FORMATS:
+            return fmt.lower() if return_specific else True
+    m = re.match(RE_ISO8601, fmt)
+    if m:
+        if return_specific:
+            if m.group(1):
+                return DateFormat.ISO8601_DATETIME
+            else:
+                return DateFormat.ISO8601_DATE
+        else:
+            return True
+    else:
+        return False

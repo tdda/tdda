@@ -103,9 +103,10 @@ def load_metadata(path, md_file_type=None, table_number=None,
     return md
 
 
-def get_metadata_for_reader(path, md_path, md_file_type, find_md,
-                            table_number, use_table_name, preferred,
-                            verbosity):
+def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
+                            table_number=None, use_table_name=None,
+                            preferred=TDDASERIAL.key,
+                            verbosity=VERBOSITY):
     """
     Helper function for csv reader functions.
 

@@ -892,10 +892,10 @@ def richprint(*args, **kw):
     stdout_console.print(*args, **kw)
 
 
-def warn(*args, buf=None, **kw):
+def warn(*args, buf=None, verbose=True, **kw):
     if buf:
         buf.append(args)
-    else:
+    elif verbose:
         stderr_console.print(*args, style='yellow', **kw)
 
 
@@ -940,3 +940,8 @@ def globlike_match(patterns, names):
         patterns = [patterns]
     return [name for name in names if any(fnmatch(name, p) for p in patterns)]
 
+
+def testwarn():
+    buf = []
+    f = lambda *args, **kw: buf.extend(args)
+    return f, buf

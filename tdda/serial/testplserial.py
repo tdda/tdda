@@ -21,6 +21,7 @@ from tdda.serial.polarsio import (
 from tdda.serial.reader import (
     load_metadata,
 )
+from tdda.utils import testwarn
 
 from rich import print as rprint
 
@@ -65,12 +66,6 @@ def dfEqual(self, df, exp):
             ('types', col, str(df[col].dtype)),
             ('types', col, str(exp[col].dtype))
         )
-
-
-def testwarn():
-    buf = []
-    f = lambda *args, **kw: buf.extend(args)
-    return f, buf
 
 
 class TestPolarsKeywordArgsGeneration(ReferenceTestCase):

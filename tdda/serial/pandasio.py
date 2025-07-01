@@ -24,7 +24,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file, get_backend, OG_BACKEND
 )
 from tdda.utils import nvl, error, warn, listify, Dummy
-from tdda.pd.utils import first_non_null, is_string_col
+from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
 from tdda.referencetest.pddates import infer_date_format
 from tdda.state import get_config
 
@@ -120,11 +120,30 @@ def csvw_to_pandas_kwargs(spec, extensions=False):
     return kw
 
 
+def to_common_pandas_rw_args(md):
+    kw = {}
+    if md.delimiter:
+        kw['sep'] = md.delimiter
+
+    if md.encoding:
+        kw['encoding'] = md.encoding
+
+    if md.escape_char:
+        kw['escapechar'] = md.escape_char
+
+    if md.quote_char:
+        kw['quotechar'] = md.quote_char
+
+    if md.stutter_quotes in (True, False):
+        kw['doublequote'] = md.stutter_quotes
+
+    return kw
+
 def serial_to_pandas_read_csv_args(md, backend=None):
     backend = get_backend(backend)
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
-    kw = {}
+    kw = to_common_pandas_rw_args(md)
     date_fields = {
         f.name: f for f in md.fields
                 if f.fieldtype and f.fieldtype.startswith('date')
@@ -147,28 +166,12 @@ def serial_to_pandas_read_csv_args(md, backend=None):
         kw['names'] = [v.name for v in md.fields]
         kw['header'] = 0
 
-    if md.delimiter:
-        kw['sep'] = md.delimiter
-
-    if md.encoding:
-        kw['encoding'] = md.encoding
-
     if md.header_row_count == 0:
         kw['header'] = None
-
-    if md.escape_char:
-        kw['escapechar'] = md.escape_char
-
-    if md.quote_char:
-        kw['quotechar'] = md.quote_char
-
-    if md.stutter_quotes in (True, False):
-        kw['doublequote'] = md.stutter_quotes
 
     if md.null_indicators is not None:
         kw['na_values'] = listify(md.null_indicators)
         kw['keep_default_na'] = False
-
 
     # CSVW-style booleans
     booleans = [
@@ -213,6 +216,38 @@ def serial_to_pandas_read_csv_args(md, backend=None):
     if date_formats:
         kw['date_format'] = date_formats
         kw['parse_dates'] = date_fields
+    return kw
+
+
+def serial_to_pandas_write_csv_args(md, backend=None):
+    backend = get_backend(backend)
+    if PANDAS.write_key in md.libs:
+        return md.libs[PANDAS.write_key]
+
+    kw = to_common_pandas_rw_args(md)
+    kw['date_format'] = to_pandas_date_format(md.single_date_format())
+
+    if date_fields:
+        kw['parse_dates'] = list(date_fields)
+
+    null = md.single_null_format()
+    if null is not None:
+        kw['na_rep'] = null
+
+    if md.header_row_count == 0:
+        kw['header'] = None
+    elif md.head_row_count == 1:
+        kw['header'] = 0
+
+    if md.stutter_quotes in (True, False):
+        kw['doublequote'] = md.stutter_quotes
+
+    if md.null_indicators is not None:
+        kw['na_values'] = listify(md.null_indicators)
+        kw['keep_default_na'] = False
+
+    # Possibly map to csv names
+    # Possibly check for nulls in string fields
     return kw
 
 
@@ -562,109 +597,6 @@ def pandas_date_format_to_serial(fmt):
         return fmt
 
 
-def pandas_df_to_csv(df, path=None,
-                     serial_out=None,
-                     flavours=None,
-                     serial_in=None,
-                     preferred_in_flavour=None,
-                     find_safe_null=False,
-                     **kw):
-    """
-    Write pandas dataframe provided to flat file to the path or buffer
-    provided with options to use a tdda serial file to specify the format
-    or to write a companion .serial file.
-
-    Args:
-        df: the dataframe to write
-
-    path_or_buf: the path, path object, or buf for writing
-
-    serial_out: An optional tdda serial file to write with the
-                format used.
-                This can be a path or True.
-                If True, the .serial path will be the
-                path for the data with the extension swapped to .serial.
-
-    flavours:   By default, the .serial file will include
-                  the following three flavours:
-                      tdda.serial
-                      pandas.DataFrame.to_csv
-                      pandas.read_csv
-                  If a single flavour, or a list of flavours is provided,
-                  that flavour or flavours will be written.
-                  '*' can be used to specify that all possible
-                  flavours should be written.
-
-    serial_in_path: Path for an optional tdda serial file from which
-                    to read the write parameters.
-                    If set to True, the the path will be inferred,
-                    where possible.
-
-    preferred_in_flavour: If there are multiple formats available
-                          in the tdda.serial file, by default it will
-                          use the first available of:
-                             pandas.DataFrame.to_csv
-                             pandas.read_csv
-                             tdda.serial
-                          failing which, anything it can find.
-
-                          If a preferred_flavour is specified,
-                          that will be used if available.
-
-    **kw: keyword parameters are passed straight to DataFrame.write_csv.
-          Any specified here override those generated be reading
-          serial_in_path. It is usually better not to mix
-          serial_in_path and **kw, as it is easy to generate
-          incompatibilities.
-
-    Returns:
-        Object with:
-            .serial_out_path  (if written, else None)
-            .path             (path written to)
-    """
-    serial_in_path = serial_out_path = None
-    if serial_in:
-        if serial_in == True:
-            serial_in_path = find_associated_metadata_file(path)
-            if not serial_in:
-                error(f'Cannot find input .serial metadata associated'
-                      f' with {path}')
-        else:
-            serial_in_path = serial_in
-
-    # TODO: worry about usecols
-
-    md_in = None
-    if serial_in_path:
-        md = load_metadata(serial_in_path,
-                           preferred_serial_flavour=preferred_in_flavour)
-
-    if serial_out:
-        if serial_out == True:
-            serial_out_path = find_associated_metadata_file(path)
-            if not serial_out:
-                error(f'Cannot find output .serial metadata associated'
-                      f' with {path}')
-        else:
-            serial_out_path = serial_out
-
-    if find_safe_null:
-        kw['na_rep'] = find_safe_null_rep(df)
-
-    if path:  # if None, just write the metadata
-        df.to_csv(path, **kw)  # write the csv
-
-    if serial_out_path:
-        md_out = pandas_df_to_metadata(df, outpath=serial_out_path,
-                                       flavours=flavours,
-                                       **kw)
-
-    d = Dummy()
-    d.serial_out_path = serial_out_path
-    d.out_path = path
-    return d
-
-
 
 def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                   find_md=False, backend=None,
@@ -788,6 +720,120 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
+def pandas_to_csv(df, path=None,
+                  md_inpath=None,
+                  md_outpath=None,
+                  auto_md_inpath=False,
+                  auto_md_outpath=False,
+                  flavours=None,
+                  preferred_in_flavour=None,
+                  in_table_number=None,
+                  find_safe_null=False,
+                  **kw_overrides):
+    """
+    Write pandas dataframe provided to flat file to the path or buffer
+    provided with options to use a tdda serial file to specify the format
+    or to write a companion .serial file.
+
+    Args:
+        df: the dataframe to write
+
+    path_or_buf: the path, path object, or buf for writing
+
+    md_inpath:  An optional tdda serial (or csvw) file to write
+                alongside the CSV data.
+
+    md_outpath: An optional tdda serial file to write with the
+                format used.
+                This can be a path or True.
+                If True, the .serial path will be the
+                path for the data with the extension swapped to .serial.
+
+    auto_md_inpath: If true, will choose the inpath for metadata
+                    automatically
+
+    auto_md_outpath: If true, will choose the outpath for metadata
+                     automatically
+
+    flavours:   By default, the .serial file will include
+                  the following three flavours:
+                      tdda.serial
+                      pandas.DataFrame.to_csv
+                      pandas.read_csv
+                  If a single flavour, or a list of flavours is provided,
+                  that flavour or flavours will be written.
+                  '*' can be used to specify that all possible
+                  flavours should be written.
+
+    preferred_in_flavour: If there are multiple formats available
+                          in the tdda.serial file, by default it will
+                          use the first available of:
+                             pandas.DataFrame.to_csv
+                             pandas.read_csv
+                             tdda.serial
+                          failing which, anything it can find.
+
+                          If a preferred_flavour is specified,
+                          that will be used if available.
+
+    find_safe_null: If true, a null representation will be chosen
+                    that is safe for this data (not present in any
+                    string column).
+
+    **kw_overrides: keyword parameters are passed straight to DataFrame.to_csv.
+          Any specified here override those generated be reading
+          in_mdpath. It is usually better not to mix
+          in_mdpath and **overrides, as it is easy to generate
+          incompatibilities. Any na_rep specified as an override
+          will be replaced if find_safe_null is set and the nominated
+          null indicator is not, in fact safe. (A warning is issued.)
+
+    Returns:
+        Object with:
+            .md_out_path    (if written, else None)
+            .out_path       (path data written to, if any)
+            .md_inpath      (the path from which metadata for writing was read)
+            .to_csv_kwargs  (the keyword args used to write the CSV file)
+    """
+
+    md_in, path, md_inpath = get_metadata_for_reader(
+         path=path, md_path=md_inpath,
+         find_md=auto_md_inpath, table_number=in_table_number,
+         preferred=preferred_in_flavour or 'pandas.write_csv'
+    )
+
+    if md_in:
+        kw = serial_to_pandas_write_csv_args(md)
+    else:
+        kw = {}
+
+    if find_safe_null:
+        spec = overrides.get('na_rep')
+        null = find_safe_null_rep(df, preferred=overrides.get('na_rep'))
+        kw['na_rep'] = null
+        if specified_null is not None and spec != null:
+            warn(f'Specified null rep "{spec}" was not safe. '
+                 f'Using "{null}".\n(Safe null rep was requested.)')
+
+
+    kw.update(kw_overrides)  # overrides passed in
+
+    if path:  # if None, just write the metadata
+        df.to_csv(path, **kw)  # write the csv
+
+    if md_outpath:
+        md_out = pandas_df_to_metadata(df, outpath=md_outpath,
+                                       flavours=flavours,
+                                       **kw)
+
+    d = Dummy()
+    d.md_outpath = md_outpath
+    d.out_path = path
+    d.md_inpath = md_inpath
+    d.write_args = kw
+    return d
+
+
 def poss_upgrade_to_int(df, name):
     field = df[name]
     if str(field.dtype).startswith('float'):
@@ -846,15 +892,18 @@ def pandas_read_df(path, backend=None, **kw):
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
 
-def pandas_write_df(df, path):
+def pandas_write_df(df, path, **kw):
     """
     Writes a pandas data frame as parquet or csv, as the extension suggests.
     Does not write the index.
     """
     _, ext = os.path.splitext(path)
+    if 'index' not in kw:
+        kw = kw.copy()
+        kw['index'] = None
     if ext == '.csv':
-        df.to_csv(path, index=None)
+        df.to_csv(path, **kw)
     elif ext == '.parquet':
-        df.to_parquet(path, index=None)
+        df.to_parquet(path, **kw)
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
