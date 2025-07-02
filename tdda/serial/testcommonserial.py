@@ -229,6 +229,49 @@ class TestDateSanityRE(ReferenceTestCase):
 
         # Timezones not actually handled yet.
 
+    def testSingleNullIndicator(self):
+        m = SerialMetadata()
+        self.assertEqual(m.single_null_indicator(), '')
+        self.assertEqual(m.single_null_indicator(default='.'), '.')
+
+        m = SerialMetadata(null_indicators='.')
+        self.assertEqual(m.single_null_indicator(), '.')
+        self.assertEqual(m.single_null_indicator(default='NULL'), '.')
+
+        m = SerialMetadata(null_indicators=['.', 'null'])
+        warner, buf = testwarn()
+        self.assertEqual(m.single_null_indicator(warner=warner), '.')
+        self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
+
+        warner, buf = testwarn()
+        self.assertEqual(m.single_null_indicator(default='NULL',
+                                                 warner=warner), '.')
+        self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
+
+        f1 = FieldMetadata('f1', fieldtype='int', null_indicators='.')
+        f2 = FieldMetadata('f2', fieldtype='int', null_indicators='.')
+        f3 = FieldMetadata('f3', fieldtype='int', null_indicators='')
+        f4 = FieldMetadata('f4', fieldtype='int', null_indicators=['', '.'])
+        f5 = FieldMetadata('f5', fieldtype='int', null_indicators='NULL')
+
+        m = SerialMetadata(fields=[f1])
+        self.assertEqual(m.single_null_indicator(), '.')
+
+        m = SerialMetadata(fields=[f1, f2, f3])
+        warner, buf = testwarn()
+        self.assertEqual(m.single_null_indicator(warner=warner), '.')
+        self.assertEqual(buf, ['Multiple null indicators; using mode (".").'])
+
+        m = SerialMetadata(fields=[f1, f3])
+        warner, buf = testwarn()
+        self.assertEqual(m.single_null_indicator(warner=warner), '')
+        self.assertEqual(buf, ['Multiple null indicators; using "".'])
+
+        m = SerialMetadata(null_indicators='nil', fields=[f1, f3])
+        warner, buf = testwarn()
+        self.assertEqual(m.single_null_indicator(warner=warner), 'nil')
+        self.assertEqual(buf, [])
+
 
 class TestFindMetadata(ReferenceTestCase):
     def test_find_metadata_empty(self):

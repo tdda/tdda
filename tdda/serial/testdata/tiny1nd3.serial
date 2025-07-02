@@ -4,11 +4,6 @@
     "tdda.serial": {
         "fields": [
             {
-                "name": "",
-                "fieldtype": "int",
-                "description": "Pandas Index"
-            },
-            {
                 "name": "b",
                 "fieldtype": "bool"
             },
@@ -38,7 +33,9 @@
         "header_row_count": 1,
         "header_row": 0
     },
-    "pandas.DataFrame.to_csv": {},
+    "pandas.DataFrame.to_csv": {
+        "index": "False"
+    },
     "pandas.read_csv": {
         "encoding": "UTF-8",
         "delimiter": ",",
@@ -50,7 +47,7 @@
         "keep_default_na": false,
         "header": 0,
         "date_format": "ISO8601",
-        "index_col": 0,
+        "index_col": false,
         "dtype": {
             "i": "float64",
             "f": "float64"

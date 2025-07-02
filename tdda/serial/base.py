@@ -365,45 +365,45 @@ class SerialMetadata:
             Warn(f'Multiple data formats; using ISO 8601.')
             return default
 
-    def single_null_format(self, warner=None):
+    def single_null_indicator(self, default='', warner=None):
         Warn = nvl(warner, warn)
         if self.null_indicators is None:
             # look at fields
             nulls = Counter()
             for f in self.fields:
-                N = f.fieldtype.null_indicators
+                N = f.null_indicators
                 if N is not None:
                     if isinstance(N, str):
                         nulls[N] += 1
                     else:
-                        for nul in N:
-                            nulls[N] += 1
+                        for null in N:
+                            nulls[null] += 1
             if len(nulls) == 0:
-                return None
+                return default
             elif len(nulls) == 1:
-                return list(nulls.values())[0]
+                return list(nulls)[0]
             else:
                 m = max(v for v in nulls.values())
                 nulls = {k: v for k, v in nulls.items() if v == m}
                 if len(nulls) == 1:
                     mode = list(nulls)[0]
-                    Warn(f'Multiple null indicators; using mode ({mode}).')
+                    Warn(f'Multiple null indicators; using mode ("{mode}").')
                     return mode
                 else:
-                    null = sorted(nulls.values())[0]
-                    Warn(f'Multiple null indicators found; using {null}.')
+                    null = sorted(list(nulls))[0]
+                    Warn(f'Multiple null indicators; using "{null}".')
                     return null
 
-        elif isinstance(self.null_indicators, 'str'):
+        elif isinstance(self.null_indicators, str):
             return self.null_indicators
         elif len(self.null_indicators) == 0:
-            return None
+            return default
         elif len(self.null_indicators) == 1:
             return self.null_indicators[0]
         else:  # multiple null indicators
             null = self.null_indicators[0]
             Warn(f'Multiple null indicators: using first ("{null}").')
-            return self.null_indicators[0]
+            return null
 
 
     def __str__(self):

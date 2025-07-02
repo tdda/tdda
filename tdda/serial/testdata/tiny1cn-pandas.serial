@@ -1,7 +1,9 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
     "writer": "tdda.serial-2.2.15",
-    "pandas.DataFrame.to_csv": {},
+    "pandas.DataFrame.to_csv": {
+        "index": "True"
+    },
     "pandas.read_csv": {
         "encoding": "UTF-8",
         "delimiter": ",",

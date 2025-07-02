@@ -139,6 +139,12 @@ def to_common_pandas_rw_args(md):
 
     return kw
 
+
+def serial_type_to_pandas_dtype(fieldtype, backend=None):
+    type_map = FIELDTYPE_MAP_MAP[get_backend(backend)]
+    return type_map.get(fieldtype)
+
+
 def serial_to_pandas_read_csv_args(md, backend=None):
     backend = get_backend(backend)
     if PANDAS.read_key in md.libs:
@@ -148,12 +154,15 @@ def serial_to_pandas_read_csv_args(md, backend=None):
         f.name: f for f in md.fields
                 if f.fieldtype and f.fieldtype.startswith('date')
     }
-    type_map = FIELDTYPE_MAP_MAP[backend]
-    kw['dtype'] = {
-        f.name: type_map.get(f.fieldtype)
+    dtypes = {
+        f.name: serial_type_to_pandas_dtype(f.fieldtype, backend)
         for f in md.fields
-        if f.name not in date_fields
-        and type_map.get(f.fieldtype) is not None
+    }
+    kw['dtype'] = {
+        name: dtype
+        for name, dtype in dtypes.items()
+        if name not in date_fields
+        and dtype is not None
     } or None
     dfmt = md.date_format
     if any(v.format for v in date_fields) or dfmt:
@@ -227,24 +236,23 @@ def serial_to_pandas_write_csv_args(md, backend=None):
     kw = to_common_pandas_rw_args(md)
     kw['date_format'] = to_pandas_date_format(md.single_date_format())
 
+    date_fields = [f for f in md.fields if f.datatype.startswith('date')]
     if date_fields:
         kw['parse_dates'] = list(date_fields)
 
-    null = md.single_null_format()
+    null = md.single_null_indicator()
     if null is not None:
         kw['na_rep'] = null
 
     if md.header_row_count == 0:
         kw['header'] = None
-    elif md.head_row_count == 1:
+    elif md.header_row_count == 1:
         kw['header'] = 0
 
     if md.stutter_quotes in (True, False):
         kw['doublequote'] = md.stutter_quotes
 
-    if md.null_indicators is not None:
-        kw['na_values'] = listify(md.null_indicators)
-        kw['keep_default_na'] = False
+    kw['na_rep'] = md.single_null_indicator()
 
     # Possibly map to csv names
     # Possibly check for nulls in string fields
@@ -499,7 +507,7 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
                    delimiter=kw.get('sep', Defaults.DELIMITER),
                    quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
                    escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
-                   null_indicators=kw.get('na_values',
+                   null_indicators=kw.get('na_rep',
                                           Defaults.NULL_INDICATORS),
                    header_row_count=header_row_count,
                    datetime_format=kw.get('date_format',
@@ -803,12 +811,14 @@ def pandas_to_csv(df, path=None,
     )
 
     if md_in:
-        kw = serial_to_pandas_write_csv_args(md)
+        kw = serial_to_pandas_write_csv_args(md_in)
     else:
         kw = {}
+    if not kw.get('index'):
+        kw['index'] = False
 
     if find_safe_null:
-        spec = overrides.get('na_rep')
+        spec = kw_overrides.get('na_rep')
         null = find_safe_null_rep(df, preferred=overrides.get('na_rep'))
         kw['na_rep'] = null
         if specified_null is not None and spec != null:

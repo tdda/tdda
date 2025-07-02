@@ -4,11 +4,6 @@
     "tdda.serial": {
         "fields": [
             {
-                "name": "",
-                "fieldtype": "int",
-                "description": "Pandas Index"
-            },
-            {
                 "name": "b",
                 "fieldtype": "bool"
             },
