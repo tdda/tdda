@@ -3,10 +3,11 @@ import re
 import sys
 
 from collections import Counter
+import csv
 
 from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
-from tdda.utils import listify, nvl, warn
+from tdda.utils import listify, nvl, warn, swap_ext
 
 class TDDASerialError(Exception):
     pass
@@ -76,10 +77,12 @@ METADATA_FLAVOURS = [
 ]
 
 
-
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
 
 FIELDTYPES = tuple(FieldType.__dict__.values())
+
+QUOTING_CODES = None
+QUOTING_NAMES = None
 
 
 class FieldMetadata:
@@ -171,6 +174,10 @@ class SerialMetadata:
         datetime_format=None,
         null_indicators=None,
         header_row_count=None,
+        header_row=None,
+        quoting=None,
+        decimal_point=None,
+        dps=None,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
         verbosity=VERBOSITY,
@@ -201,12 +208,16 @@ class SerialMetadata:
         )
 
         self.header_row_count = header_row_count
+        self.header_row = header_row
         self.comment_prefix = None
         self.line_terminators = None
         self.skip_blank_rows = None
         self.skip_initial_space = None
         self.skip_columns = None
         self.skip_rows = None
+        self.quoting = quoting_as_name(quoting)
+        self.decimal_point = decimal_point
+        self.dps = dps
 
         self.libs = libs or {}
 
@@ -217,6 +228,11 @@ class SerialMetadata:
         self.metadata_source_path = None
         self.valid = None
         self._verbosity = verbosity
+
+        if self.header_row_count is None and self.header_row:
+            self.header_row_count = 1
+        if self.header_row is None and header_row_count:
+            self.header_row = 0
 
 #        self.metametadata = {
 #            'creationhash': ''
@@ -278,10 +294,14 @@ class SerialMetadata:
                                   and nonnull(v)
         }
         nulls = m.get('null_indicators')
+        quoting = m.get('quoting')
+        if quoting:
+            m['quoting'] = quoting_as_name(quoting)
         if type(nulls) == list and len(nulls) == 1:
             m['null_indicators'] = nulls[0]
         if m:
             d[TDDASERIAL.key] = m
+
         for (lib, params) in self.libs.items():
             d[lib] = {
                 k: unobjectify(v)
@@ -292,9 +312,21 @@ class SerialMetadata:
     def to_json(self, indent=4):
         return json.dumps(self.unobjectify(), indent=indent)
 
-    def write(self, path=None):
-        with open(path, 'w') as f:
+    def write(self, path, use_serial_ext=True, verbose=0):
+        """
+        Writes metadata to file.
+
+        Args:
+            path: path to write to. If this does not end in '.serial'
+                  is will be changed to .serial unless keep_ext is set to True
+
+            use_serial_ext: Set to True to keep the extension provided in path.
+        """
+        outpath = swap_ext(path, '.serial') if use_serial_ext else path
+        with open(outpath, 'w') as f:
             f.write(self.to_json())
+        if verbose:
+            print(f'Written {outpath}.')
 
     def single_date_format(self, warner=None):
         """
@@ -419,3 +451,34 @@ def is_iso8601_format(fmt, inc_names=True, return_specific=False):
             return True
     else:
         return False
+
+
+def get_quoting_codes():
+    global QUOTING_CODES, QUOTING_NAMES
+
+    QUOTING_CODES = {
+        k: v for k, v in csv.__dict__.items()
+        if k.startswith('QUOTE_')
+    }
+    QUOTING_CODES['STRING_ONLY'] = -1
+    QUOTING_NAMES = {
+        v: k for k, v in QUOTING_CODES.items()
+    }
+
+
+def quoting_as_code(name):
+    if name is None:
+        return None
+    if QUOTING_CODES is None:
+        get_quoting_codes()
+
+    return name if isinstance(name, int) else QUOTING_CODES[name]
+
+
+def quoting_as_name(code):
+    if code is None:
+        return None
+    if QUOTING_NAMES is None:
+        get_quoting_codes()
+
+    return code if isinstance(code, str) else QUOTING_NAMES[code]

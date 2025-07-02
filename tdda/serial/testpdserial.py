@@ -991,7 +991,8 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
 
 
-        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path,
+                      flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1cd.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cd.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1028,12 +1029,14 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df = tiny_pandas_df(nulls=True, nullable_types=False)
         csv_path = tmppath('tiny1nd3.csv')
         md_path = tmppath('tiny1nd3.serial')
+
         pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=THREE_FLAVOURS)
         self.assertFileCorrect(csv_path, tdpath('tiny1nd3.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path,
+                      flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1nd.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1073,7 +1076,8 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         self.assertFileCorrect(md_path, tdpath('tiny1cn3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path,
+                      flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1cn.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1cn.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
@@ -1112,7 +1116,8 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         self.assertFileCorrect(md_path, tdpath('tiny1nn3.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
-        pandas_to_csv(df, csv_path, md_outpath=md_path, flavours=['tdda.serial'])
+        pandas_to_csv(df, csv_path, md_outpath=md_path,
+                      flavours=['tdda.serial'])
         self.assertFileCorrect(csv_path, tdpath('tiny1nn.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nn.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)

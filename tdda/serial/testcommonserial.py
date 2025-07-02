@@ -150,7 +150,6 @@ class TestDateSanityRE(ReferenceTestCase):
             buf, ['Multiple data formats; using ISO 8601.']
         )
 
-    @tag
     def testIsIso8601Format(self):
 
         # Boolean values, including names

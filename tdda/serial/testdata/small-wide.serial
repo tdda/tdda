@@ -116,6 +116,7 @@
         "quote_char": "\"",
         "escape_char": "\\",
         "null_indicators": "",
-        "header_row_count": 1
+        "header_row_count": 1,
+        "header_row": 0
     }
 }
