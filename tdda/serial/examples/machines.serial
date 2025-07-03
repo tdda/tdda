@@ -7,7 +7,7 @@
         "quote_char": "\"",
         "escape_char": "\\",
         "stutter_quotes": false,
-        "null_indicators": "",
+        "null_indicator": "",
         "accept_percentages_as_floats": false,
         "header_row_count": 1,
         "map_missing_trailing_cols_to_null": false,

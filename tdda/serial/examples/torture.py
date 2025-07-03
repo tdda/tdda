@@ -204,7 +204,7 @@ def generate_one(parts, csv_kw, *, ext=None, diff_csv_names=None, header=None,
             header_row = 0 if header else None,
             quoting=csv_kw['quoting'],
             decimal_point=dp,
-            null_indicators=null,
+            null_indicator=null,
             dps=dps,
     )
     md.write(outpath, use_serial_ext=True, verbose=True)

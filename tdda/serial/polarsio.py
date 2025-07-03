@@ -107,8 +107,8 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
         Warn('Polars does not understand escape characters.\n'
              f'Ignoring escape value: {md.escape_char}\n')
 
-    if md.null_indicators is not None:
-        kw['null_values'] = listify(md.null_indicators)  # Can do per field
+    if md.null_indicator is not None:
+        kw['null_values'] = listify(md.null_indicator)  # Can do per field
 
     if md.header_row_count == 0:
         kw['has_header'] = False

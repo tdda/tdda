@@ -9,13 +9,11 @@
         "delimiter": ",",
         "quotechar": "\"",
         "escapechar": "\\",
-        "na_values": [
-            ""
-        ],
+        "na_values": "",
         "keep_default_na": false,
         "header": 0,
         "date_format": "ISO8601",
-        "index_col": false,
+        "index_col": null,
         "dtype": {
             "i": "float64",
             "f": "float64"

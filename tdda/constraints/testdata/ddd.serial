@@ -68,7 +68,7 @@
         "delimiter": ",",
         "quote_char": "\"",
         "date_format": "iso8601datetime",
-        "null_indicators": "",
+        "null_indicator": "",
         "header_row_count": 1,
         "stutter_quotes": false,
         "escape_char": "\\",

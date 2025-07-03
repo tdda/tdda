@@ -723,6 +723,10 @@ def squote(string, escape=True):
 
 
 def is_sequence(L):
+    """
+    Tests whether L is a list, tuple or something similar
+    (in particular, that it can be indexed).
+    """
     return ((hasattr(L, "__getitem__") or hasattr(L, "__iter__"))
             and not hasattr(L, "strip"))
 
@@ -905,12 +909,23 @@ def error(*args, **kw):
 
 
 def listify(v):
+    """
+    If v is not a list, convert it to a list.
+    In particularly, turn a scalar, v, into [v]
+    """
     return (
         v if isinstance(v, list)
         else list(v) if isinstance(v, tuple)
         else [] if v is None
         else [v]
     )
+
+
+def delistify(L):
+    """
+    Turn L into a scalar if it is a singleton list (or similar).
+    """
+    return L[0] if (is_sequence(L) and len(L) == 1) else L
 
 
 def tdda_path_info(inpath):

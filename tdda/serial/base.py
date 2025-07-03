@@ -59,7 +59,7 @@ class Defaults:
     ESCAPE_CHAR = '\\'
     STUTTER = False
     HEADER_ROW_COUNT = 1
-    NULL_INDICATORS = ['']
+    NULL_INDICATOR = ''
     DATE_FORMAT = DateFormat.ISO8601_DATE
     DATETIME_FORMAT = DateFormat.ISO8601_DATETIME
 
@@ -103,13 +103,13 @@ class FieldMetadata:
                  Used mainly with date and datetime columns.
                  OPTIONAL
 
-        null_indicators: values to be interpreted as NULL (missing/NA) values.
+        null_indicator: values to be interpreted as NULL (missing/NA) values.
                      OPTIONAL.
 
 
     """
     def __init__(self, name, fieldtype=None, csvname=None,
-                 format=None, null_indicators=None,
+                 format=None, null_indicator=None,
                  true_values=None, false_values=None,
                  allow_extras=False, description=None, **kw):
         self.name = name
@@ -117,7 +117,7 @@ class FieldMetadata:
         self.fieldtype = fieldtype
         self.altnames = None
         self.format = format
-        self.null_indicators = null_indicators
+        self.null_indicator = null_indicator
         self.true_values = listify(true_values)
         self.false_values = listify(false_values)
         self.description = description
@@ -172,7 +172,7 @@ class SerialMetadata:
         stutter_quotes=None,
         date_format=None,
         datetime_format=None,
-        null_indicators=None,
+        null_indicator=None,
         header_row_count=None,
         header_row=None,
         quoting=None,
@@ -200,7 +200,7 @@ class SerialMetadata:
         self.escape_char = escape_char
         self.stutter_quotes = stutter_quotes
         self.date_format = date_format
-        self.null_indicators = null_indicators
+        self.null_indicator = null_indicator
 
         self.accept_percentages_as_floats = accept_percentages_as_floats
         self.map_missing_trailing_cols_to_null = (
@@ -293,12 +293,12 @@ class SerialMetadata:
                                   and k != 'libs'
                                   and nonnull(v)
         }
-        nulls = m.get('null_indicators')
+        nulls = m.get('null_indicator')
         quoting = m.get('quoting')
         if quoting:
             m['quoting'] = quoting_as_name(quoting)
         if type(nulls) == list and len(nulls) == 1:
-            m['null_indicators'] = nulls[0]
+            m['null_indicator'] = nulls[0]
         if m:
             d[TDDASERIAL.key] = m
 
@@ -367,11 +367,11 @@ class SerialMetadata:
 
     def single_null_indicator(self, default='', warner=None):
         Warn = nvl(warner, warn)
-        if self.null_indicators is None:
+        if self.null_indicator is None:
             # look at fields
             nulls = Counter()
             for f in self.fields:
-                N = f.null_indicators
+                N = f.null_indicator
                 if N is not None:
                     if isinstance(N, str):
                         nulls[N] += 1
@@ -394,14 +394,14 @@ class SerialMetadata:
                     Warn(f'Multiple null indicators; using "{null}".')
                     return null
 
-        elif isinstance(self.null_indicators, str):
-            return self.null_indicators
-        elif len(self.null_indicators) == 0:
+        elif isinstance(self.null_indicator, str):
+            return self.null_indicator
+        elif len(self.null_indicator) == 0:
             return default
-        elif len(self.null_indicators) == 1:
-            return self.null_indicators[0]
+        elif len(self.null_indicator) == 1:
+            return self.null_indicator[0]
         else:  # multiple null indicators
-            null = self.null_indicators[0]
+            null = self.null_indicator[0]
             Warn(f'Multiple null indicators: using first ("{null}").')
             return null
 

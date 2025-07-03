@@ -354,7 +354,7 @@ class CSVWMetadata(SerialMetadata):
     def get_non_dialect_attrs(self):
         nulls = self._csvw.get('null')
         if nulls:
-            self.null_indicators = nulls
+            self.null_indicator = nulls
 
     def get_fields_metadata(self):
 

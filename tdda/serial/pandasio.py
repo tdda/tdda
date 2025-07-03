@@ -23,7 +23,7 @@ from tdda.serial.reader import get_metadata_for_reader
 from tdda.serial.utils import (
     find_associated_metadata_file, get_backend, OG_BACKEND
 )
-from tdda.utils import nvl, error, warn, listify, Dummy
+from tdda.utils import nvl, error, warn, listify, delistify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
 from tdda.referencetest.pddates import infer_date_format
 from tdda.state import get_config
@@ -93,6 +93,7 @@ PANDAS_DTYPE_TO_FIELDTYPE = {
 
 
 DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
+WriteInfo = namedtuple('WriteInfo', 'path md_outpath md_inpath kw')
 
 
 class PANDAS:
@@ -178,8 +179,8 @@ def serial_to_pandas_read_csv_args(md, backend=None):
     if md.header_row_count == 0:
         kw['header'] = None
 
-    if md.null_indicators is not None:
-        kw['na_values'] = listify(md.null_indicators)
+    if md.null_indicator is not None:
+        kw['na_values'] = delistify(md.null_indicator)
         kw['keep_default_na'] = False
 
     # CSVW-style booleans
@@ -402,7 +403,7 @@ def pandas_write_to_read_params(df, **kw):
         'delimiter': kw.get('sep', Defaults.DELIMITER),
         'quotechar': kw.get('quotechar', Defaults.QUOTE_CHAR),
         'escapechar': kw.get('escapechar', Defaults.ESCAPE_CHAR),
-        'na_values': kw.get('na_rep', Defaults.NULL_INDICATORS),
+        'na_values': delistify(kw.get('na_rep', Defaults.NULL_INDICATOR)),
         'keep_default_na': False,  # because we're specifying na_rep
         'header': None if kw.get('header') == False else 0,
         'date_format': date_format,
@@ -411,7 +412,7 @@ def pandas_write_to_read_params(df, **kw):
     if idx is None or idx == True:
         d['index_col'] = 0       # Use column 0 and index
     else:
-        d['index_col'] = False   # Do not use any column as index
+        d['index_col'] = None   # Do not use any column as index
                                  #
                                  # Why yes, in Python 0 == False == 0
                                  # So Pandas must be checking the type
@@ -459,7 +460,7 @@ def is_dtype_datelike(t):
     return False
 
 
-def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
+def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
     """
     Create SerialMetadata for writing DataFrame df from pandas.
 
@@ -470,9 +471,9 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
                   If None, not written.
                   Always returned.
 
-        flavours: the flavours to include.
-                  If no flavours are provided, this will write the tdda.serial
-                  form and pandas read and write flavours.
+        flavour: the flavour or flavours to include.
+                 Can be a string (for a single flavour) or a list
+                 If no flavours are provided, this will write the tdda.serial.
 
         kw:       the parameters used with df.to_csv
 
@@ -496,9 +497,9 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
     elif header == 0:  # also False
         header_row_count = 0
 
-    flavours = listify(flavours)
+    flavours = listify(flavour)
     if not flavours:
-        flavours = [TDDASERIAL.key, PANDAS.write_key, PANDAS.read_key]
+        flavours = [TDDASERIAL.key]  # , PANDAS.write_key, PANDAS.read_key]
     if TDDASERIAL.key in flavours:
         md = SerialMetadata(
                    fields,
@@ -507,8 +508,8 @@ def pandas_df_to_metadata(df, outpath=None, flavours=None, **kw):
                    delimiter=kw.get('sep', Defaults.DELIMITER),
                    quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
                    escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
-                   null_indicators=kw.get('na_rep',
-                                          Defaults.NULL_INDICATORS),
+                   null_indicator=kw.get('na_rep',
+                                          Defaults.NULL_INDICATOR),
                    header_row_count=header_row_count,
                    datetime_format=kw.get('date_format',
                                           DateFormat.ISO8601_UNSPECIFIED),
@@ -733,7 +734,7 @@ def pandas_to_csv(df, path=None,
                   md_outpath=None,
                   auto_md_inpath=False,
                   auto_md_outpath=False,
-                  flavours=None,
+                  flavour=None,
                   preferred_in_flavour=None,
                   in_table_number=None,
                   find_safe_null=False,
@@ -763,15 +764,9 @@ def pandas_to_csv(df, path=None,
     auto_md_outpath: If true, will choose the outpath for metadata
                      automatically
 
-    flavours:   By default, the .serial file will include
-                  the following three flavours:
-                      tdda.serial
-                      pandas.DataFrame.to_csv
-                      pandas.read_csv
-                  If a single flavour, or a list of flavours is provided,
-                  that flavour or flavours will be written.
-                  '*' can be used to specify that all possible
-                  flavours should be written.
+    flavour:   By default, the .serial file will include only tdda.serial.
+               Either a single flavour (as a string)
+               or a list of flavours can be provided.
 
     preferred_in_flavour: If there are multiple formats available
                           in the tdda.serial file, by default it will
@@ -833,15 +828,10 @@ def pandas_to_csv(df, path=None,
 
     if md_outpath:
         md_out = pandas_df_to_metadata(df, outpath=md_outpath,
-                                       flavours=flavours,
+                                       flavour=flavour,
                                        **kw)
 
-    d = Dummy()
-    d.md_outpath = md_outpath
-    d.out_path = path
-    d.md_inpath = md_inpath
-    d.write_args = kw
-    return d
+    return WriteInfo(path, md_outpath, md_inpath, kw)
 
 
 def poss_upgrade_to_int(df, name):

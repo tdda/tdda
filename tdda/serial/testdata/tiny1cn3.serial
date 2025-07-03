@@ -34,7 +34,7 @@
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "null_indicators": "",
+        "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0
     },
@@ -46,9 +46,7 @@
         "delimiter": ",",
         "quotechar": "\"",
         "escapechar": "\\",
-        "na_values": [
-            ""
-        ],
+        "na_values": "",
         "keep_default_na": false,
         "header": 0,
         "date_format": "ISO8601",

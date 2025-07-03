@@ -234,11 +234,11 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(m.single_null_indicator(), '')
         self.assertEqual(m.single_null_indicator(default='.'), '.')
 
-        m = SerialMetadata(null_indicators='.')
+        m = SerialMetadata(null_indicator='.')
         self.assertEqual(m.single_null_indicator(), '.')
         self.assertEqual(m.single_null_indicator(default='NULL'), '.')
 
-        m = SerialMetadata(null_indicators=['.', 'null'])
+        m = SerialMetadata(null_indicator=['.', 'null'])
         warner, buf = testwarn()
         self.assertEqual(m.single_null_indicator(warner=warner), '.')
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
@@ -248,11 +248,11 @@ class TestDateSanityRE(ReferenceTestCase):
                                                  warner=warner), '.')
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
 
-        f1 = FieldMetadata('f1', fieldtype='int', null_indicators='.')
-        f2 = FieldMetadata('f2', fieldtype='int', null_indicators='.')
-        f3 = FieldMetadata('f3', fieldtype='int', null_indicators='')
-        f4 = FieldMetadata('f4', fieldtype='int', null_indicators=['', '.'])
-        f5 = FieldMetadata('f5', fieldtype='int', null_indicators='NULL')
+        f1 = FieldMetadata('f1', fieldtype='int', null_indicator='.')
+        f2 = FieldMetadata('f2', fieldtype='int', null_indicator='.')
+        f3 = FieldMetadata('f3', fieldtype='int', null_indicator='')
+        f4 = FieldMetadata('f4', fieldtype='int', null_indicator=['', '.'])
+        f5 = FieldMetadata('f5', fieldtype='int', null_indicator='NULL')
 
         m = SerialMetadata(fields=[f1])
         self.assertEqual(m.single_null_indicator(), '.')
@@ -267,7 +267,7 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(m.single_null_indicator(warner=warner), '')
         self.assertEqual(buf, ['Multiple null indicators; using "".'])
 
-        m = SerialMetadata(null_indicators='nil', fields=[f1, f3])
+        m = SerialMetadata(null_indicator='nil', fields=[f1, f3])
         warner, buf = testwarn()
         self.assertEqual(m.single_null_indicator(warner=warner), 'nil')
         self.assertEqual(buf, [])
