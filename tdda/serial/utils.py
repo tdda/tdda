@@ -3,7 +3,7 @@ import re
 
 from tdda.serial.constants import TDDASERIAL
 from tdda.state import get_config
-from tdda.utils import error
+from tdda.utils import error, swap_ext
 
 BACKENDS = ['numpy_nullable', 'pyarrow', 'original']
 OG_BACKEND = 'original'
@@ -91,3 +91,8 @@ def get_backend(backend):
         error(f'Pandas backend {backend} unknown.\n'
               f'Should be one of: {" ".join(BACKENDS)}.')
     return BACKEND_MAP[backend]
+
+
+def choose_md_path(path, flavour=None):
+    # TODO: use flavour for csvw etc.
+    return swap_ext(path, '.serial')

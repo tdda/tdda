@@ -78,6 +78,7 @@ METADATA_FLAVOURS = [
 
 
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
+                  # 3 for extra information
 
 FIELDTYPES = tuple(FieldType.__dict__.values())
 

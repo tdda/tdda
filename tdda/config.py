@@ -6,6 +6,8 @@ import tomli
 
 DATETIME_RE ='^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
+DEFAULT_IN_METADATA = './_write.serial'
+
 class BaseConfig:
     def override(self, d, complain):
         for k, v in d.items():
@@ -58,6 +60,7 @@ class Config(BaseConfig):
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
         self.tddadiff = TDDADiffConfig()
+        self.serial = SerialConfig()
         if not testing and (load or load is None):
             self.load(complain=complain)
 
@@ -219,3 +222,29 @@ class TDDADiffConfig(BaseConfig):
 
         self.type_checking = 'medium'
 
+
+class SerialConfig(BaseConfig):
+    def __init__(self):
+        self._part = 'serial'
+        self._config_name = 'config.serial'
+
+        self.md_inpath = [DEFAULT_IN_METADATA]
+
+
+    def _get_inpath_list(self, csvpath=None):
+        path = self.md_inpath
+        paths = [m] if isinstance(path,  str) else (path or [])
+        paths = [os.path.expanduser(p) for p in paths]
+        if csvpath:
+            dir_ = os.path.dirname(os.path.abspath(csvpath))
+            paths = [p if os.path.isabs(p)
+                       else os.path.join(dir_, os.path.basename(p))
+                     for p in paths]
+        return paths
+
+    def _md_inpath(self, csvpath=None):
+        paths = self._get_inpath_list(csvpath)
+        for p in paths:
+            if os.path.exists(p):
+                return p
+        return None

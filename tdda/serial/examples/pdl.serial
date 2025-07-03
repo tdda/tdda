@@ -1,0 +1,8 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "encoding": "latin-1",
+        "delimiter": "|",
+        "null_indicator": "."
+    }
+}

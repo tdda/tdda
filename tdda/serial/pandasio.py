@@ -19,9 +19,9 @@ from tdda.serial.base import (
     VERBOSITY,
     TDDASerialError
 )
-from tdda.serial.reader import get_metadata_for_reader
+from tdda.serial.reader import get_metadata_for_reader, get_metadata_for_writer
 from tdda.serial.utils import (
-    find_associated_metadata_file, get_backend, OG_BACKEND
+    find_associated_metadata_file, get_backend, OG_BACKEND, choose_md_path,
 )
 from tdda.utils import nvl, error, warn, listify, delistify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
@@ -509,7 +509,7 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
                    quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
                    escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
                    null_indicator=kw.get('na_rep',
-                                          Defaults.NULL_INDICATOR),
+                       delistify(Defaults.NULL_INDICATOR)),
                    header_row_count=header_row_count,
                    datetime_format=kw.get('date_format',
                                           DateFormat.ISO8601_UNSPECIFIED),
@@ -670,7 +670,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                   if present. This can be set to 'tdda.serial'
                   or 'csvw' to override that.
 
-       verbosity   For metadata reader
+       verbosity   For metadata Reader
 
        **kw     These keyword arguments are passed to pandas.read_csv,
                 and can be used to override values from the
@@ -799,9 +799,9 @@ def pandas_to_csv(df, path=None,
             .to_csv_kwargs  (the keyword args used to write the CSV file)
     """
 
-    md_in, path, md_inpath = get_metadata_for_reader(
+    md_in, path, md_inpath = get_metadata_for_writer(
          path=path, md_path=md_inpath,
-         find_md=auto_md_inpath, table_number=in_table_number,
+         find_md=auto_md_inpath,
          preferred=preferred_in_flavour or 'pandas.write_csv'
     )
 
@@ -826,6 +826,8 @@ def pandas_to_csv(df, path=None,
     if path:  # if None, just write the metadata
         df.to_csv(path, **kw)  # write the csv
 
+    if auto_md_outpath and not md_outpath:
+        md_outpath = choose_md_path(path, flavour)
     if md_outpath:
         md_out = pandas_df_to_metadata(df, outpath=md_outpath,
                                        flavour=flavour,

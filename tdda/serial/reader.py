@@ -22,6 +22,7 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path
 )
+from tdda.state import get_config
 from tdda.utils import error, is_sequence, tdda_path_info
 
 
@@ -103,12 +104,14 @@ def load_metadata(path, md_file_type=None, table_number=None,
     return md
 
 
-def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
-                            table_number=None, use_table_name=None,
-                            preferred=TDDASERIAL.key,
-                            verbosity=VERBOSITY):
+def _get_metadata(rw, path, md_path, md_file_type=None, find_md=False,
+                  table_number=None, use_table_name=None,
+                  preferred=TDDASERIAL.key,
+                  verbosity=VERBOSITY):
     """
-    Helper function for csv reader functions.
+    Internal helper function for csv read and write functions.
+    Users should normally use get_metadata_for_reader or
+    get_metadata_for writer.
 
     Finds the metadata from the path, if available, or the path
     from the metadata, adhering to the preferences specified.
@@ -117,6 +120,8 @@ def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
     Returns a tuple consisting of the metadata, the data path and the metadata
     path. If one of the input paths was None, it will now be updated.
     """
+    assert rw in ('r', 'w')
+    is_for_reader = rw == 'r'
     md = None
     for_table_name = None
     if use_table_name:
@@ -135,15 +140,39 @@ def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
                 error('No data specified.')
 
     if md_path is None:
-        pi = tdda_path_info(path)
-        path, md_path, find_md = pi.path, pi.md_path, find_md or pi.find_md
-        if md_path is None and find_md:
-            md_path = find_associated_metadata_file(path)
+        if is_for_reader:
+            pi = tdda_path_info(path)
+            path, md_path, find_md = pi.path, pi.md_path, find_md or pi.find_md
+            if md_path is None and find_md:
+                md_path = find_associated_metadata_file(path)
+        else:
+            s_config = get_config().serial
+            md_path = s_config._md_inpath(path)
     if md is None and md_path is not None:
         md = load_metadata(md_path, md_file_type=md_file_type,
                            table_number=table_number,
                            for_table_name=for_table_name, verbosity=verbosity)
     return md, path, md_path
+
+
+def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
+                            table_number=None, use_table_name=None,
+                            preferred=TDDASERIAL.key,
+                            verbosity=VERBOSITY):
+    return _get_metadata(rw='r', path=path, md_path=md_path,
+                         md_file_type=md_file_type, find_md=find_md,
+                         table_number=table_number,
+                         use_table_name=use_table_name,
+                         preferred=preferred, verbosity=verbosity)
+
+
+def get_metadata_for_writer(path, md_path, md_file_type=None, find_md=False,
+                            table_number=None, use_table_name=None,
+                            preferred=TDDASERIAL.key,
+                            verbosity=VERBOSITY):
+    return _get_metadata(rw='w', path=path, md_path=md_path,
+                         md_file_type=md_file_type, find_md=find_md,
+                         preferred=preferred, verbosity=verbosity)
 
 
 def find_metadata_kind(mds, preferred=None):
