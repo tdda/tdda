@@ -228,7 +228,7 @@ class SerialConfig(BaseConfig):
         self._part = 'serial'
         self._config_name = 'config.serial'
 
-        self.md_inpath = [DEFAULT_IN_METADATA]
+        self.md_inpath = [DEFAULT_IN_METADATA]  # list/single dir/None
 
 
     def _get_inpath_list(self, csvpath=None):
