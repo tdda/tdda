@@ -37,6 +37,28 @@ METADATA_STYLES = (
 )
 
 
+class PYTHON_TEMPLATES:
+    PANDAS_READ = '''
+import pandas as pd
+
+def read_data(inpath):
+    return pd.read_csv(
+        %s
+    )
+
+'''
+
+    POLARS_READ = '''
+import polars as pl
+
+def read_data(inpath):
+    return pl.read_csv(
+        %s
+    )
+
+'''
+
+
 def find_metadata_type_from_path(path):
     """
     Check whether path follows a known pattern for a metadata file path

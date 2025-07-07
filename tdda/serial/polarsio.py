@@ -3,7 +3,7 @@ import os
 
 import polars as pl
 
-from tdda.serial.base import VERBOSITY, SerialMetadata
+from tdda.serial.metadata import VERBOSITY, SerialMetadata
 from tdda.serial.reader import get_metadata_for_reader
 from tdda.utils import listify, warn as warn
 

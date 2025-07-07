@@ -10,7 +10,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.referencetest.checkpandas import diff_dataframes as pd_diff
 
-from tdda.serial.base import FieldType
+from tdda.serial.metadata import FieldType
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.pandasio import (
     csv_to_pandas,
@@ -859,7 +859,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/csv-metadata.json')
 
         df, md = csv_to_pandas(csvpath, md_path, return_md=True, verbosity=1)
-        self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
+        self.assertEqual(len(md._warnings), 5)  # 5 virtual fields
         # Compare against known correct result (not from csvw project)
         self.assertDataFrameCorrect(df, resultspath, type_matching='loose')
 

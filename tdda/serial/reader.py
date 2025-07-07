@@ -7,7 +7,7 @@ import pandas as pd
 import polars as pl
 
 
-from tdda.serial.base import (
+from tdda.serial.metadata import (
     CONTEXT_KEY,
     URI,
     VERBOSITY,
@@ -71,7 +71,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
             spec = md.get(flavour)
             if spec:
                 libs[flavour] = spec
-        md = SerialMetadata(libs=libs, **kw)
+        md = SerialMetadata(libs=libs, source='tdda.serial', **kw)
     elif ext == '.json' or text.startswith('{'):
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)

@@ -5,7 +5,7 @@ import tempfile
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.serial.base import (
+from tdda.serial.metadata import (
     RE_ISO8601, URI, SerialMetadata, FieldMetadata,
     DateFormat, is_iso8601_format
 )

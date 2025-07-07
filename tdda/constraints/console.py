@@ -40,7 +40,8 @@ HELP="""Use
     tdda help          to print this help
     tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
     tdda test          to run the tdda library's tests.
-    tdda diff a b      to compare two parquet or CSV files (EXPERIMENTAL)"""
+    tdda diff          to compare two parquet or CSV files (EXPERIMENTAL)
+    tdda serial        to convert or view .serial and CSVW metadata"""
 
 
 STANDARD_EXTENSIONS = [
@@ -95,6 +96,25 @@ def help(extensions, cmd=None, stream=sys.stdout):
                 '(number of rows and columns, column names, loose column '
                 'types).\n'
                 '[reference files]\n', file=stream)
+        elif cmd == 'serial':
+            print(
+                'tdda serial  -- to convert or interrogate metadata files.\n\n'
+                'Use tdda serial [--to FORMAT] in.serial  out.serial\n'
+                'to convert metadata in.serial to out.serial in the output\n'
+                'format specified (or tdda.serial if none is specified).\n'
+                'Input and output metdata can also be CSVW files (.json)\n'
+                'Supported formats:\n'
+                '  SHORT FORM  LONG FORM\n'
+                '  .           tdda.serial\n'
+                '  pd.r        pandas.read_csv\n'
+                '  pd.w        pandas.DataFrame.to_csv\n'
+                '  pl.r        polars.read_csv\n'
+                '  pl.w        polars.DataFrame.write_csv\n'
+                '  csv.r       python.csv.reader\n'
+                '  csv.w       python.csv.writier\n'
+                '  csvw        CSVW\n'
+                'Multiple formats can be separated by commas.\n',
+                file=stream)
         else:
             print('\nNo help available for %s. Try one of the following:\n'
                   '    tdda help discover\n'
@@ -204,6 +224,9 @@ def main_with_argv(argv, verbose=True):
     elif name == 'diff':
         from tdda.referencetest.ddiff import ddiff_helper
         ddiff_helper(argv[2:])
+    elif name == 'serial':
+        from tdda.serial.console import serial_helper
+        serial_helper(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
         help(extensions, cmd, stream=sys.stderr)

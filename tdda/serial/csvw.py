@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-from tdda.serial.base import (
+from tdda.serial.metadata import (
     SerialMetadata,
     FieldMetadata,
     MISSING,
@@ -99,10 +99,10 @@ class CSVWMetadata(SerialMetadata):
              a json.load such a (valid) CSVW).
 
     Validation Properties:
-            .valid     is True if no errors were encountered
-            .errors    is a list of (textual) errors (if any)
-            .warnings  is a list of (textual) warnings generated
-                       while reading the CSVW information
+            .valid      is True if no errors were encountered
+            ._errors    is a list of (textual) errors (if any)
+            ._warnings  is a list of (textual) warnings generated
+                        while reading the CSVW information
 
     """
     def __init__(self, spec, extensions=False, table_number=None,
@@ -113,7 +113,7 @@ class CSVWMetadata(SerialMetadata):
         self._csvw_language = None
         self._extensions = extensions
         self._fullpath = None
-        self._flavour = 'csvw'
+        self._source = 'csvw'
         self.metadata_source_dir = None
         self.table_number = table_number
         self.for_table_name = for_table_name

@@ -1,4 +1,4 @@
-from . import base
+# from . import metadata
 
 CSVMETADATA = 'csvmetadata'
 CSVW = 'csvw'
@@ -14,7 +14,7 @@ from tdda.serial.polarsio import (
     csv_to_polars,
     serial_to_polars_read_csv_args
 )
-from tdda.serial.base import (
+from tdda.serial.metadata import (
     DateFormat,
     FieldMetadata,
     FieldType,

@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 import sys
@@ -77,6 +78,27 @@ METADATA_FLAVOURS = [
 ]
 
 
+
+METADATA_FLAVOUR_MAP = {
+    'tdda.serial': 'tdda.serial',
+    'pandas.read_csv': 'pandas.read_csv',
+    'pandas.DataFrame.to_csv': 'pandas.DataFrame.to_csv',
+    'polars.read_csv': 'polars.write_csv',
+    'polars.DataFrame.to_csv': 'polars.DataFrame.to_csv',
+    'csvw': 'csvw',
+    'python.csv.reader': 'python.csv.reader',
+    'python.csv.writer': 'python.csv.writer',
+
+    '.': 'tdda.serial',
+    'pd.r': 'pandas.read_csv',
+    'pd.w': 'pandas.DataFrame.to_csv',
+    'pl.r': 'pandas.read_csv',
+    'pl.w': 'pandas.DataFrame.to_csv',
+    'csv.r': 'python.csv.reader',
+    'csv.w': 'python.csv.writer',
+}
+
+
 VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
                   # 3 for extra information
 
@@ -130,8 +152,8 @@ class FieldMetadata:
                 msg = f'Unexpected kwarg to FieldMetadata for {name}: "{k}"'
                 raise KeyError(msg)
 
-        self.errors = []
-        self.warnings = []
+        self._errors = []
+        self._warnings = []
 
         self.valid = None
 
@@ -139,9 +161,9 @@ class FieldMetadata:
         if not k in d:
             msg = f'Key "{k}" not found for field {self.name}'
             if missing == MISSING.ERROR:
-                self.errors.append(msg)
+                self._errors.append(msg)
             elif missing == MISSING.WARNING:
-                self.warnings.append(msg)
+                self._warnings.append(msg)
             elif missing != MISSING.ALLOWED:
                 raise TDDASerialError(
                     f'Unknown value "{missing}" for missing'
@@ -150,7 +172,7 @@ class FieldMetadata:
 
     def validate(self):
         if self.fieldtype not in FIELDTYPES:
-            self.errors.append(
+            self._errors.append(
                 f'Unknown field type "{self.fieldtype}" for field {self.name}'
             )
 
@@ -160,6 +182,19 @@ class FieldMetadata:
         if d['csvname'] == d['name']:
             del d['csvname']
         return d
+
+    def __deepcopy__(self, memo):
+        md = FieldMetadata(self.name)
+        for k, v in self.__dict__.items():
+            if not k.startswith('_'):
+                md.__dict__[k] = copy.deepcopy(v, memo)
+        return md
+
+    def __repr__(self):
+        parts = ', '.join(f'{k}={repr(v)}'
+                               for k, v in self.__dict__.items()
+                               if v is not None and v != [])
+        return f'FieldMetadata({parts})'
 
 
 class SerialMetadata:
@@ -183,6 +218,7 @@ class SerialMetadata:
         map_missing_trailing_cols_to_null = None,
         verbosity=VERBOSITY,
         libs=None,
+        source=None,
     ):
         if isinstance(fields, list):
             self.fields = fields
@@ -222,8 +258,8 @@ class SerialMetadata:
 
         self.libs = libs or {}
 
-        self.errors = []
-        self.warnings = []
+        self._errors = []
+        self._warnings = []
 
         self.metadata_source = None
         self.metadata_source_path = None
@@ -243,12 +279,14 @@ class SerialMetadata:
             self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
                            for f in self.fields]
 
+        self._source = source
+
 
     def error(self, msg):
-        self.errors.append(msg)
+        self._errors.append(msg)
 
     def warn(self, msg):
-        self.warnings.append(msg)
+        self._warnings.append(msg)
 
     def get_val(self, d, k, missing=MISSING.ALLOWED):
         if not k in d:
@@ -266,19 +304,19 @@ class SerialMetadata:
     def validate(self):
         valid = True
         if self._verbosity > 0:
-            for msg in self.errors:
+            for msg in self._errors:
                 print(f'** FATAL ERROR: {msg}', file=sys.stderr)
                 valid = False
             for field in self.fields:
                 field.validate()
-                for msg in field.errors:
+                for msg in field._errors:
                     print(f'** FATAL ERROR: {msg}', file=sys.stderr)
                     valid = False
         if self._verbosity > 1:
-            for msg in self.warnings:
+            for msg in self._warnings:
                 print(f'** WARNING: {msg}', file=sys.stderr)
             for field in self.fields:
-                for msg in field.warnings:
+                for msg in field._warnings:
                     print(f'** WARNING: {msg}', file=sys.stderr)
 
         self.valid = valid
@@ -406,6 +444,20 @@ class SerialMetadata:
             Warn(f'Multiple null indicators: using first ("{null}").')
             return null
 
+    def __deepcopy__(self, memo):
+        md = SerialMetadata()
+        for k, v in self.__dict__.items():
+            if not k.startswith('_'):
+                md.__dict__[k] = copy.deepcopy(v, memo)
+        return md
+
+    def copy_serial(self, inc_libs=False):
+        md = SerialMetadata()
+        exclusions = [] if not inc_libs else ['libs']
+        for k, v in self.__dict__.items():
+            if not k.startswith('_') and not k in exclusions:
+                md.__dict__[k] = copy.deepcopy(v)
+        return md
 
     def __str__(self):
         return self.to_json()
@@ -483,3 +535,17 @@ def quoting_as_name(code):
         get_quoting_codes()
 
     return code if isinstance(code, str) else QUOTING_NAMES[code]
+
+
+def get_metadata_flavour(flavour):
+    out_flavour = METADATA_FLAVOUR_MAP.get((flavour or '.').lower())
+    if flavour and out_flavour is None:
+        error(f'Unknown metadata flavour: {flavour}')
+    return out_flavour
+
+
+def get_metadata_flavours(flavours):
+    return [
+       get_metadata_flavour(f)
+       for f in (flavours or '.').strip().split(',')
+    ]

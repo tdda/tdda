@@ -9,7 +9,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 # from tdda.referencetest.checkpandas import diff_dataframes as pd_diff
 
-from tdda.serial.base import FieldType
+from tdda.serial.metadata import FieldType
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.polarsio import (
     csv_to_polars,

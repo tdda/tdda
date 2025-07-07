@@ -9,7 +9,7 @@ from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import FailureDiffs
 from tdda.referencetest.checkpandas import loosen_pandas_type
 
-from tdda.serial.base import TDDASERIAL
+from tdda.serial.metadata import TDDASERIAL
 
 
 ReadWriteDiff = namedtuple('ReadWriteDiff', 'read write Comparison')
