@@ -266,9 +266,11 @@ class CSVWMetadata(SerialMetadata):
         instead, if there is one.
         """
         self._dialect = dialect = self._csvw.get('dialect', {})
+        if not dialect and hasattr(self, '_table') and self._table is not None:
+            self._dialect = dialect = self._table.get('dialect', {})
         dcreplaces = self._csvw.get('dc:replaces')
 
-        # Pull stiff out of dcreplaces if necessary
+        # Pull stuff out of dcreplaces if necessary
         if dcreplaces:
             replaces = json.loads(dcreplaces)
             resources = replaces.get('resources')

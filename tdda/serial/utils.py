@@ -118,3 +118,26 @@ def get_backend(backend):
 def choose_md_path(path, flavour=None):
     # TODO: use flavour for csvw etc.
     return swap_ext(path, '.serial')
+
+
+def fill_template(template, kw, flavour=None, dtypes=None):
+    def f(x):
+        s12 = ' ' * 12
+        s8 = ' ' * 8
+        joint = f',\n{s12}'
+        if isinstance(x, dict) and len(x) > 1:
+            prefix = ''
+            if flavour == 'polars' and dtypes:
+                vals = list(dtypes.values())
+                if any (v in vals for v in x.values()):
+                    prefix = 'pl.'
+            pairs = joint.join(f'{repr(k)}: {prefix}{repr(v)}'
+                               for k, v in x.items())
+            return '{\n%s%s\n%s}' % (s12, pairs, s8)
+        elif isinstance(x, list) and len(x) > 1:
+            L = joint.join(f'{repr(v)}' for v in x)
+            return '[\n%s%s\n%s]' % (s12, L, s8)
+        else:
+            return repr(x)
+    args = ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
+    return (template % args).lstrip()

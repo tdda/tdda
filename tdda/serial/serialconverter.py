@@ -121,4 +121,5 @@ def serial_helper(args):
 
 
 if __name__ == '__main__':
+
     serial_helper(sys.argv)

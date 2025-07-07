@@ -92,8 +92,8 @@ METADATA_FLAVOUR_MAP = {
     '.': 'tdda.serial',
     'pd.r': 'pandas.read_csv',
     'pd.w': 'pandas.DataFrame.to_csv',
-    'pl.r': 'pandas.read_csv',
-    'pl.w': 'pandas.DataFrame.to_csv',
+    'pl.r': 'polars.read_csv',
+    'pl.w': 'polars.DataFrame.to_csv',
     'csv.r': 'python.csv.reader',
     'csv.w': 'python.csv.writer',
 }
@@ -405,6 +405,9 @@ class SerialMetadata:
             return default
 
     def single_null_indicator(self, default='', warner=None):
+        """
+        Get a single null indicator (for writing, mostly)
+        """
         Warn = nvl(warner, warn)
         if self.null_indicator is None:
             # look at fields

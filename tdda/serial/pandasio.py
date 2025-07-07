@@ -22,7 +22,7 @@ from tdda.serial.metadata import (
 from tdda.serial.reader import get_metadata_for_reader, get_metadata_for_writer
 from tdda.serial.utils import (
     find_associated_metadata_file, get_backend, OG_BACKEND, choose_md_path,
-    PYTHON_TEMPLATES
+    PYTHON_TEMPLATES, fill_template
 )
 from tdda.utils import nvl, error, warn, listify, delistify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
@@ -732,9 +732,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
 
 def serial_to_pandas_read_csv_python(md, backend=None):
     backend = get_backend(backend)
-    print('>>>', backend)
-    if md:
-        kw = serial_to_pandas_read_csv_args(md, backend=backend)
+    kw = serial_to_pandas_read_csv_args(md, backend=backend)
         # if 'dtype_backend' not in kw:
         #     backend = get_backend(backend)
         #     if backend != OG_BACKEND:
@@ -744,24 +742,6 @@ def serial_to_pandas_read_csv_python(md, backend=None):
         if backend and backend != OG_BACKEND:
             kw['dtype_backend'] = backend
     return fill_template(PYTHON_TEMPLATES.PANDAS_READ, kw)
-
-
-def fill_template(template, kw):
-    def f(x):
-        s12 = ' ' * 12
-        s8 = ' ' * 8
-        joint = f',\n{s12}'
-        if isinstance(x, dict) and len(x) > 1:
-            pairs = joint.join(f'{repr(k)}: {repr(v)}' for k, v in x.items())
-            return '{\n%s%s\n%s}' % (s12, pairs, s8)
-        elif isinstance(x, list) and len(x) > 1:
-            L = joint.join(f'{repr(v)}' for v in x)
-            return '[\n%s%s\n%s]' % (s12, L, s8)
-        else:
-            return repr(x)
-    args = ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
-    return (template % args).lstrip()
-
 
 
 def pandas_to_csv(df, path=None,

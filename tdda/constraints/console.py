@@ -225,8 +225,8 @@ def main_with_argv(argv, verbose=True):
         from tdda.referencetest.ddiff import ddiff_helper
         ddiff_helper(argv[2:])
     elif name == 'serial':
-        from tdda.serial.console import serial_helper
-        serial_helper(argv[2:])
+        from tdda.serial.converter import serial_cli
+        serial_cli(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
         help(extensions, cmd, stream=sys.stderr)

@@ -5,8 +5,9 @@ import polars as pl
 
 from tdda.serial.metadata import VERBOSITY, SerialMetadata
 from tdda.serial.reader import get_metadata_for_reader
-from tdda.utils import listify, warn as warn
+from tdda.serial.utils import PYTHON_TEMPLATES, fill_template
 
+from tdda.utils import listify, warn
 
 class POLARS:
     read_key = 'polars.read_csv'
@@ -78,7 +79,13 @@ def pl_dtype_to_str(t):
 
 
 def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
-                                   map_other_bools_to_string=False):
+                                   map_other_bools_to_string=False,
+                                   backend=None):
+    """
+    Convert metadata to dictionary of keyword arguments for Polars.
+
+    backend: not used by Polars
+    """
     if warner is not None:
         Warn = warner
     else:
@@ -353,3 +360,13 @@ def polars_write_df(df, path):
         df.write_parquet(path)
     else:
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
+
+
+def serial_to_polars_read_csv_python(md, backend=None):
+    """
+    backend is not used for polars.
+    """
+    kw = serial_to_polars_read_csv_args(md, backend=backend)
+    return fill_template(PYTHON_TEMPLATES.POLARS_READ, kw,
+                         flavour='polars',
+                         dtypes=FIELDTYPE_TO_POLARS_DTYPE)
