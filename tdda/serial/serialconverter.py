@@ -30,16 +30,31 @@ PYTHON_WRITER = {
 
 
 class SerialConverter:
-    def __init__(self, args, config=None):
+    def __init__(self, inpath=None, outpath=None,
+                 out_format=None, backend=None,
+                 args=None, config=None):
+        self.inpath = inpath
+        self.outpath = outpath
+        self.out_formats = self.handle_formats(out_format)
+        self.backend = backend
         self.args = args
         self.sconfig = get_config().serial
-        self.process_args()
+        if self.args is not None:
+            self.process_args()
+        self.post_process()
+
+    def handle_formats(self, out_formats):
+        fmt = out_formats or []
+        if isinstance(fmt, str):
+            fmt  = [fmt]
+        return get_metadata_flavours(out_formats)  # standardize
 
     def process_args(self):
         parser = self.parser()
         flags, more = parser.parse_known_args(self.args)
         self.__dict__.update(vars(flags))
 
+    def post_process(self):
         _, ext = os.path.splitext(self.outpath)
         if ext == '.serial':
             self.broad_out = 'tdda.serial'
@@ -50,7 +65,8 @@ class SerialConverter:
         else:
             warn('Non-standard output extension {ext}. Continuing.')
 
-        self.out_formats = get_metadata_flavours(self.to)
+        if hasattr(self, 'to'):
+            self.out_formats = get_metadata_flavours(self.to)
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
 
@@ -80,16 +96,17 @@ class SerialConverter:
 
         return parser
 
-    def convert(self):
-        print(f'IN: {self.inpath}')
-        print(f'OUT: {self.outpath}')
-        print(f'FORMAT: {self.out_formats}')
-        print(f'BACKEND: {self.backend}')
+    def convert(self, verbose=False):
+        if verbose:
+            print(f'IN: {self.inpath}')
+            print(f'OUT: {self.outpath}')
+            print(f'FORMAT: {self.out_formats}')
+            print(f'BACKEND: {self.backend}')
 
         md_in = load_metadata(self.inpath)
         md_out = (
             md_in.copy_serial() if 'tdda.serial' in self.out_formats
-            else SerialMetadata
+            else SerialMetadata()
         )
         for fmt in self.out_formats:
             if fmt == 'tdda.serial':

@@ -908,17 +908,18 @@ def error(*args, **kw):
     sys.exit(1)
 
 
-def listify(v):
+def listify(v, sort=False):
     """
     If v is not a list, convert it to a list.
     In particularly, turn a scalar, v, into [v]
     """
-    return (
+    L = (
         v if isinstance(v, list)
         else list(v) if isinstance(v, tuple)
         else [] if v is None
         else [v]
     )
+    return sorted(L) if sort else L
 
 
 def delistify(L):

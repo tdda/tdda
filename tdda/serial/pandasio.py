@@ -203,8 +203,8 @@ def serial_to_pandas_read_csv_args(md, backend=None):
             if trues.intersection(falses):
                 print(f'*** Conflicting values for booleans.')
             else:
-                kw['true_values'] = list(trues)
-                kw['false_values'] = list(falses)
+                kw['true_values'] = sorted(list(trues))
+                kw['false_values'] = sorted(list(falses))
     names = []
     dtypes = {}
     date_formats = {}
@@ -219,9 +219,9 @@ def serial_to_pandas_read_csv_args(md, backend=None):
         kw['names'] = [f.name for f in md.fields]
         kw['header'] = 0
     if trues:
-        kw['true_values'] = list(trues)
+        kw['true_values'] = sorted(list(trues))
     if falses:
-        kw['false_values'] = list(falses)
+        kw['false_values'] = sorted(list(falses))
     if dtypes:
         kw['dtype'] = dtypes
     if date_formats:
