@@ -393,32 +393,6 @@ class TestFindMetadata(ReferenceTestCase):
         self.assertEqual(md, {'sep': ","})
 
 
-def tiny_python_values(nulls=False):
-    """
-    Generate tiny 5x2 or 5x3 set of values for a DataFrame
-    with Python booleans, integers, floats, strings and dates.
-
-    If nulls is True, the second row (row 1) is all null
-    and there are three rows.
-
-    Otherwise, there are two, non-null rows.
-    """
-    values = {
-        'b': [False, True],
-        'i': [0, 1],
-        'f': [0.5, 1.5],
-        's': ['', 'a'],
-#        'd': [datetime.date(1970, 1, 1), datetime.date(1999, 12, 31)]
-        't': [datetime.datetime(1970, 1, 1), datetime.datetime(1999, 12, 31)]
-    }
-    if nulls:
-        values = {
-            k: v[:1] + [None] + v[1:]
-            for k, v in values.items()
-        }
-    return values
-
-
 def ntype(name):
     d = {
         'b': 'boolean',

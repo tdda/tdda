@@ -9,7 +9,7 @@
         "dtype": {
             "IAmBoolean": "boolean",
             "IAmInt": "Int64",
-            "f": "float",
+            "f": "Float64",
             "IAmString": "string"
         },
         "date_format": {

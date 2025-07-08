@@ -50,9 +50,12 @@ from tdda.serial.testserial import (
     tdpath,
     epath,
     tmppath,
-
-    tiny_python_values,
 )
+
+from tdda.serial.datautils import (
+    tiny_polars_df,
+)
+
 
 
 def dfEqual(self, df, exp):

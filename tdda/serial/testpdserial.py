@@ -49,8 +49,11 @@ from tdda.serial.testserial import (
     epath,
     tmppath,
 
-    tiny_python_values,
 )
+from tdda.serial.datautils import (
+    tiny_pandas_df,
+)
+
 
 
 def dfEqual(self, df, exp):
@@ -86,7 +89,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
                 'Index': 'Int64',
                 'Name': 'string',
                 'Odd': 'boolean',
-                'Real': 'float'},
+                'Real': 'Float64'},
             'encoding': 'utf-8',
             'parse_dates': ['LastInFeb', 'LastIn2024']
         })
@@ -158,7 +161,7 @@ class TestConversion(ReferenceTestCase):
                  'Index': 'Int64',
                  'Name': 'string',
                  'Odd': 'boolean',
-                 'Real': 'float'
+                 'Real': 'Float64'
             },
             'encoding': 'utf-8',
             'parse_dates': [
@@ -172,7 +175,7 @@ class TestConversion(ReferenceTestCase):
             'Index': pd.Series([0, 1, 2], dtype='Int64'),
             'Odd': pd.Series([False, True, False], dtype='boolean'),
             'Even': pd.Series([True, False, True], dtype='boolean'),
-            'Real': pd.Series([0.0, 1.125, 2.25], dtype='float64'),
+            'Real': pd.Series([0.0, 1.125, 2.25], dtype='Float64'),
             'Name': pd.Series(['zero', 'one', 'two'], dtype='string'),
             'LastInFeb': pd.Series([
                 datetime.datetime(2024, 2, 20),
@@ -1038,7 +1041,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         pandas_to_csv(df, csv_path, md_outpath=md_path,
                       flavour='tdda.serial')
         self.assertFileCorrect(csv_path, tdpath('tiny1nd.csv'))
-        self.assertFileCorrect(md_path, tdpath('tiny1nd.serial'),
+        self.assertFileCorrect(md_path, tdpath('tiny1nd-i-as-float.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 
         pandas_to_csv(df, csv_path, md_outpath=md_path, flavour=PANDAS2)
@@ -1423,31 +1426,6 @@ def small_wide_pd_df(with_col=True):
             types[k] = FieldType.FLOAT
 
     return (df, types)
-
-
-def tiny_pandas_df(nulls=False, nullable_types=False):
-    if nullable_types:
-        return pd.DataFrame({
-            k: pd.Series(v, dtype=ntype(k))
-            for k, v in tiny_python_values(nulls=nulls).items()
-        })
-    else:
-        return pd.DataFrame(tiny_python_values(nulls=nulls))
-
-
-def ntype(name):
-    d = {
-        'b': 'boolean',
-        'i': 'Int64',
-        'f': 'float',
-        'r': 'float',
-        's': 'string',
-        'd': 'datetime64[ns]',
-        't': 'datetime64[ns]',
-    }
-    return d[name[:1].lower()]
-
-
 
 
 def remove_common_key_vals(left, right):

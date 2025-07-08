@@ -7,7 +7,7 @@ from tdda.serial.metadata import VERBOSITY, SerialMetadata
 from tdda.serial.reader import get_metadata_for_reader
 from tdda.serial.utils import PYTHON_TEMPLATES, fill_template
 
-from tdda.utils import listify, warn
+from tdda.utils import listify, warn, nvl
 
 class POLARS:
     read_key = 'polars.read_csv'
@@ -86,10 +86,7 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
 
     backend: not used by Polars
     """
-    if warner is not None:
-        Warn = warner
-    else:
-        Warn = warn
+    Warn = nvl(warner, warn)
     f = pl_dtype_to_str if serializable else lambda x: x
     params = md.libs.get(POLARS.read_key)
     if params:
@@ -362,11 +359,11 @@ def polars_write_df(df, path):
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
 
-def serial_to_polars_read_csv_python(md, backend=None):
+def serial_to_polars_read_csv_python(md, backend=None, warner=None):
     """
     backend is not used for polars.
     """
-    kw = serial_to_polars_read_csv_args(md, backend=backend)
+    kw = serial_to_polars_read_csv_args(md, backend=backend, warner=warner)
     return fill_template(PYTHON_TEMPLATES.POLARS_READ, kw,
                          flavour='polars',
                          dtypes=FIELDTYPE_TO_POLARS_DTYPE)

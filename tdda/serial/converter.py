@@ -15,7 +15,7 @@ from tdda.serial.polarsio import (
     serial_to_polars_read_csv_args,
     serial_to_polars_read_csv_python,
 )
-from tdda.utils import error, warn
+from tdda.utils import error, warn, nvl
 
 
 CONVERTER = {
@@ -97,7 +97,8 @@ class SerialConverter:
 
         return parser
 
-    def convert(self, debug=False):
+    def convert(self, debug=False, warner=None):
+        Warn = nvl(warner, warn)
         if debug:
             print(f'IN: {self.inpath}')
             print(f'OUT: {self.outpath}')
@@ -118,7 +119,8 @@ class SerialConverter:
                 convert = CONVERTER[fmt]
                 if not getattr(md_out, 'libs', None):
                     md_out.libs = {}
-                md_out.libs[fmt] = convert(md_in)
+                md_out.libs[fmt] = convert(md_in, backend=self.backend,
+                                           warner=Warn)
 
         if self.broad_out == 'tdda.serial':
             md_out.write(self.outpath)
@@ -128,9 +130,10 @@ class SerialConverter:
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
-                f.write(python_writer(md_out, self.backend))
+                f.write(python_writer(md_out, backend=self.backend,
+                                      warner=Warn))
         else:
-            warn('Surprising to get here.')
+            Warn('Surprising to get here.')
 
 
 def serial_cli(args):

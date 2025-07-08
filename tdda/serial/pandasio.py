@@ -47,8 +47,8 @@ FIELDTYPE_TO_PANDAS_NULLABLE_DTYPE = {
     'bool': 'boolean',
     'int': 'Int64',
     'string': 'string',
-    'number': 'float',
-    'float': 'float',
+    'number': 'Float64',
+    'float': 'Float64',
     'datetime': 'datetime',  # not passed to Pandas
     'date': 'date',          # not passed to Pandas
 }
@@ -147,7 +147,8 @@ def serial_type_to_pandas_dtype(fieldtype, backend=None):
     return type_map.get(fieldtype)
 
 
-def serial_to_pandas_read_csv_args(md, backend=None):
+def serial_to_pandas_read_csv_args(md, backend=None, warner=None):
+    Warn = nvl(warner, warn)
     backend = get_backend(backend)
     if PANDAS.read_key in md.libs:
         return md.libs[PANDAS.read_key]
@@ -222,6 +223,17 @@ def serial_to_pandas_read_csv_args(md, backend=None):
         kw['true_values'] = sorted(list(trues))
     if falses:
         kw['false_values'] = sorted(list(falses))
+
+    if (
+        (trues or falses)
+        and backend == 'pyarrow'
+        and any(v == 'bool[pyarrow]' for v in dtypes.values())
+   ):
+        Warn(
+           'PyArrow backend does not understand alternate booleans.\n'
+           'If they are really present, you may have to read as strings.')
+        print(dtypes)
+        print(any(v == 'bool[pyarrow]' for v in dtypes.values()))
     if dtypes:
         kw['dtype'] = dtypes
     if date_formats:
@@ -261,7 +273,7 @@ def serial_to_pandas_write_csv_args(md, backend=None):
     return kw
 
 
-def pandas_read_csv_to_serial(params, backend=None):
+def pandas_read_csv_to_serial(params, backend=None, warner=None):
     """
     Given a dictionary of pandas.read_csv parameters
     (usually from a 'pandas.read_csv' block in a .serial file),
@@ -269,6 +281,7 @@ def pandas_read_csv_to_serial(params, backend=None):
     and return these as a pair of dicts---the first with the general
     parameters and the second with the FieldMetadata dictionaries
     """
+    Warn = nvl(warner, warn)
     kw = {}
     kw['delimiter'] = params.get('sep')
     if 'header' in params:
@@ -282,7 +295,7 @@ def pandas_read_csv_to_serial(params, backend=None):
         elif isinstance(header, int):
             kw['header_row_count'] = header + 1
         else:
-            warn(f'Value of {header} for header not recognized. Ignoring.')
+            Warn(f'Value of {header} for header not recognized. Ignoring.')
     kw['escape_char'] = params.get('escapechar')
     kw['quote_char'] = params.get('quotechar')
     kw['stutter_quotes'] = params.get('doublequote')
@@ -397,7 +410,8 @@ def pandas_dtype_to_fieldtype(dtype, col=None):
         return None
 
 
-def pandas_write_to_read_params(df, **kw):
+def pandas_write_to_read_params(df, warner=None, **kw):
+    Warn = nvl(warner, warn)
     date_format = kw.get('date_format', 'ISO8601')
     d = {
         'encoding': kw.get('encoding', Defaults.ENCODING),
@@ -432,7 +446,7 @@ def pandas_write_to_read_params(df, **kw):
         elif is_dtype_datelike(t):
             dts.append(col)
         elif t != 'object':
-            warn(f'Unhandled pandas dtype "{t}"')
+            Warn(f'Unhandled pandas dtype "{t}"')
         if t == 'object':
             v = first_non_null(df[col])
             if type(v) in (datetime.date, datetime.datetime):
@@ -613,7 +627,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                   upgrade_types=True, upgrade_possible_ints=False,
                   return_md=False, table_number=None, use_table_name=False,
                   preferred=None, verbosity=VERBOSITY,
-                  infer_datetime_formats=False, **kw):
+                  infer_datetime_formats=False, warner=None, **kw):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -686,7 +700,8 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     )
     backend = get_backend(backend)
     if md:
-        md_kw = serial_to_pandas_read_csv_args(md, backend=backend)
+        md_kw = serial_to_pandas_read_csv_args(md, backend=backend,
+                                               warner=warner)
         # if 'dtype_backend' not in kw:
         #     backend = get_backend(backend)
         #     if backend != OG_BACKEND:
@@ -730,9 +745,9 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
-def serial_to_pandas_read_csv_python(md, backend=None):
+def serial_to_pandas_read_csv_python(md, backend=None, warner=None):
     backend = get_backend(backend)
-    kw = serial_to_pandas_read_csv_args(md, backend=backend)
+    kw = serial_to_pandas_read_csv_args(md, backend=backend, warner=warner)
         # if 'dtype_backend' not in kw:
         #     backend = get_backend(backend)
         #     if backend != OG_BACKEND:
@@ -753,6 +768,7 @@ def pandas_to_csv(df, path=None,
                   preferred_in_flavour=None,
                   in_table_number=None,
                   find_safe_null=False,
+                  warner=None,
                   **kw_overrides):
     """
     Write pandas dataframe provided to flat file to the path or buffer
@@ -813,7 +829,7 @@ def pandas_to_csv(df, path=None,
             .md_inpath      (the path from which metadata for writing was read)
             .to_csv_kwargs  (the keyword args used to write the CSV file)
     """
-
+    Warn = nvl(warner, warn)
     md_in, path, md_inpath = get_metadata_for_writer(
          path=path, md_path=md_inpath,
          find_md=auto_md_inpath,
@@ -832,7 +848,7 @@ def pandas_to_csv(df, path=None,
         null = find_safe_null_rep(df, preferred=overrides.get('na_rep'))
         kw['na_rep'] = null
         if specified_null is not None and spec != null:
-            warn(f'Specified null rep "{spec}" was not safe. '
+            Warn(f'Specified null rep "{spec}" was not safe. '
                  f'Using "{null}".\n(Safe null rep was requested.)')
 
 
@@ -853,7 +869,7 @@ def pandas_to_csv(df, path=None,
 
 def poss_upgrade_to_int(df, name):
     field = df[name]
-    if str(field.dtype).startswith('float'):
+    if str(field.dtype).lower().startswith('float'):
         n_nulls = sum(field.isnull())
         if n_nulls > 0:
             # Could be float as result of nulls

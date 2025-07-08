@@ -8,7 +8,7 @@ import csv
 
 from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
-from tdda.utils import listify, nvl, warn, swap_ext
+from tdda.utils import listify, nvl, warn, swap_ext, error
 
 class TDDASerialError(Exception):
     pass
@@ -475,7 +475,9 @@ def unobjectify(o):
         return {k: unobjectify(v) for k, v in o.items() if nonnull(v)}
     if hasattr(o, 'unobjectify'):
         return o.unobjectify()
-    raise TDDASerialError(
+    if o.__class__.__name__.endswith('DataTypeClass'):  # Polars Datatype
+        return str(o)
+    error(
         'Attempt to unobjectify unexpected type.\n'
         f'Type: {type(o)}: Value: {repr(o)}'
     )

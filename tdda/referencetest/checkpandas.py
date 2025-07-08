@@ -439,6 +439,8 @@ def pandas_types_match(t1, t2, level=None):
     t2i = t2
     t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
     if level == 'strict' or t1 == t2:
+        if t1.lower() == t2.lower() and t1.lower().startswith('float'):
+            return True   # Float64 and float64 are not meaningfully different
         return t1 == t2
 
     t1loose = loosen_pandas_type(t1)
@@ -537,10 +539,19 @@ def single_col_diffs(L, R):
         (diffs,    boolean mask with 1's where there are differences
          n)        number of differences
     """
+    if 'string' in (str(L.dtype), str(R.dtype)):
+        # "eq not implemented for
+        #  <class 'pandas.core.arrays.string_.StringArray'>"
+        L, R = L.astype('string'), R.astype('string')
     different = ~(L.eq(R) | (L.isnull() & R.isnull()))
     if different.dtype == pd.BooleanDtype():
         different = different.fillna(True)
-    return ColDiff(different, different.sum().item())
+    d = different.sum()
+    try:
+        d = d.item()
+    except AttributeError:
+        pass
+    return ColDiff(different, d)
 
 
 def col_comparison(left, right):
