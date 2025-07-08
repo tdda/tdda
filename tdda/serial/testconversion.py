@@ -2,7 +2,7 @@ import copy
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.serial.serialconverter import SerialConverter
+from tdda.serial.converter import SerialConverter
 from tdda.serial.metadata import SerialMetadata
 from tdda.serial.reader import load_metadata
 
@@ -53,7 +53,9 @@ class TestDateSerialConversions(ReferenceTestCase):
     def testSerialToPandasWeirdCLI(self):
         outpath = tmppath('weird-pd1.serial')
         refpath = tdpath('weird-pd1-ref.serial')
-        c = SerialConverter(args=[self.weird_serial, outpath, '--to', 'pd.r'])
+        c = SerialConverter(
+            cli_args=[self.weird_serial, outpath, '--to', 'pd.r']
+        )
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 

@@ -3,6 +3,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.serial.testcommonserial import *
 from tdda.serial.testpdserial import *
 from tdda.serial.testplserial import *
+from tdda.serial.testconversion import *
 
 
 if __name__ == '__main__':

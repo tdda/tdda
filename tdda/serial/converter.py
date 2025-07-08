@@ -32,20 +32,28 @@ PYTHON_WRITER = {
 
 
 class SerialConverter:
-    def __init__(self, inpath=None, outpath=None, out_formats=None,
-                 backend=None, cli_args=None, config=None):
-        self.sconfig = get_config().serial
+    def __init__(self, inpath=None, outpath=None,
+                 out_format=None, backend=None,
+                 cli_args=None, config=None):
         self.inpath = inpath
         self.outpath = outpath
-        self.to = out_formats
+        self.out_formats = self.handle_formats(out_format)
         self.backend = backend
-        if cli_args is not None:
-            self.process_args(cli_args)
+        self.cli_args = cli_args
+        self.sconfig = get_config().serial
+        if self.cli_args is not None:
+            self.process_args()
         self.validate()
 
-    def process_args(self, cli_args=None):
+    def handle_formats(self, out_formats):
+        fmt = out_formats or []
+        if isinstance(fmt, str):
+            fmt  = [fmt]
+        return get_metadata_flavours(out_formats)  # standardize
+
+    def process_args(self):
         parser = self.parser()
-        flags, more = parser.parse_known_args(cli_args)
+        flags, more = parser.parse_known_args(self.cli_args)
         self.__dict__.update(vars(flags))
 
     def validate(self):
@@ -59,7 +67,8 @@ class SerialConverter:
         else:
             warn('Non-standard output extension {ext}. Continuing.')
 
-        self.out_formats = get_metadata_flavours(self.to)
+        if hasattr(self, 'to'):
+            self.out_formats = get_metadata_flavours(self.to)
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
 
@@ -98,7 +107,7 @@ class SerialConverter:
         md_in = load_metadata(self.inpath)
         md_out = (
             md_in.copy_serial() if 'tdda.serial' in self.out_formats
-            else SerialMetadata
+            else SerialMetadata()
         )
         for fmt in self.out_formats:
             if fmt == 'tdda.serial':
@@ -118,7 +127,6 @@ class SerialConverter:
             pass
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
-                print('>>>', fmt)
                 python_writer = PYTHON_WRITER.get(fmt)
                 f.write(python_writer(md_out, self.backend))
         else:
