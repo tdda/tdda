@@ -1,0 +1,41 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "boolean",
+                        "name": "IAmBoolean"
+                    },
+                    {
+                        "datatype": "int",
+                        "name": "IAmInt"
+                    },
+                    {
+                        "datatype": "float",
+                        "name": "f"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "IAMString"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "IAmDate",
+                        "format": "dd/MM/yyyy"
+                    }
+                ]
+            },
+            "dialect": {
+                "encoding": "latin-1",
+                "delimiter": ";",
+                "quoteChar": "'",
+                "header": true,
+                "headerRowCount": 1
+            },
+            "url": "tiny1nd-weird.ssv"
+        }
+    ]
+}

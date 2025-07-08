@@ -1,0 +1,41 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "b",
+                "fieldtype": "bool",
+                "format": "Yes|n"
+            },
+            {
+                "name": "i",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "number"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            },
+            {
+                "name": "t",
+                "fieldtype": "date",
+                "format": "%d/%m/%Y"
+            }
+        ],
+        "encoding": "latin-1",
+        "delimiter": ";",
+        "quote_char": "'",
+        "null_indicator": ".",
+        "header_row_count": 1,
+        "metadata_source": "http://www.w3.org/ns/csvw",
+        "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/testdata/tiny1nd-weird-no-rename-metadata.json",
+        "valid": true,
+        "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/testdata",
+        "table_number": 0,
+        "n_tables": 1
+    }
+}

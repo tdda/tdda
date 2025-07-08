@@ -1,0 +1,18 @@
+import polars as pl
+
+def read_data(inpath):
+    return pl.read_csv(
+        inpath,
+        separator=';',
+        quote_char="'",
+        null_values=['.'],
+        encoding='latin-1',
+        schema={
+            'b': pl.Boolean,
+            'i': pl.Int64,
+            'f': pl.Float64,
+            's': pl.String,
+            't': pl.String
+        }
+    )
+
