@@ -34,12 +34,14 @@ PYTHON_WRITER = {
 class SerialConverter:
     def __init__(self, inpath=None, outpath=None,
                  out_format=None, backend=None,
+                 map_other_bools_to_string=False,
                  cli_args=None, config=None):
         self.inpath = inpath
         self.outpath = outpath
         self.out_formats = self.handle_formats(out_format)
         self.backend = backend
         self.cli_args = cli_args
+        self.map_other_bools_to_string = map_other_bools_to_string
         self.sconfig = get_config().serial
         if self.cli_args is not None:
             self.process_args()
@@ -110,6 +112,7 @@ class SerialConverter:
             md_in.copy_serial() if 'tdda.serial' in self.out_formats
             else SerialMetadata()
         )
+        kw = {}
         for fmt in self.out_formats:
             if fmt == 'tdda.serial':
                 pass
@@ -119,8 +122,10 @@ class SerialConverter:
                 convert = CONVERTER[fmt]
                 if not getattr(md_out, 'libs', None):
                     md_out.libs = {}
+                if self.map_other_bools_to_string:
+                    kw['map_other_bools_to_string'] = True
                 md_out.libs[fmt] = convert(md_in, backend=self.backend,
-                                           warner=Warn)
+                                           warner=Warn, **kw)
 
         if self.broad_out == 'tdda.serial':
             md_out.write(self.outpath)
@@ -131,7 +136,7 @@ class SerialConverter:
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
                 f.write(python_writer(md_out, backend=self.backend,
-                                      warner=Warn))
+                                      warner=Warn, **kw))
         else:
             Warn('Surprising to get here.')
 

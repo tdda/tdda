@@ -319,7 +319,7 @@ class CSVWMetadata(SerialMetadata):
         dialect = self._dialect
         self.delimiter = self.get_val(dialect, 'delimiter')
         self.encoding = self.get_val(dialect, 'encoding')
-        nulls = self.get_val(dialect, 'null')
+        self.null_indicator = self.get_val(dialect, 'null')
         self._double_quote = self.get_val(dialect, 'doubleQuote')
         self.header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')

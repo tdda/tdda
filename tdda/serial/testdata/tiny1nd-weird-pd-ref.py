@@ -2,6 +2,7 @@ import pandas as pd
 
 def read_data(inpath):
     return pd.read_csv(
+        inpath,
         sep=';',
         encoding='latin-1',
         escapechar='`',
@@ -31,7 +32,6 @@ def read_data(inpath):
         false_values=[
             'No',
             'n'
-        ],
-        dtype_backend='numpy_nullable'
+        ]
     )
 

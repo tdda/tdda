@@ -219,7 +219,15 @@ class SerialMetadata:
         verbosity=VERBOSITY,
         libs=None,
         source=None,
+        extra_kwargs='warn',
+        **kw
     ):
+        if kw:
+            if extra_kwargs in ('error', 'warn'):
+                from pprint import pformat
+                s = pformat(kw)
+                report = error if extra_kwargs == 'error' else warn
+                report(f'Unexpected arguments for Serial Metadata:\n{s}')
         if isinstance(fields, list):
             self.fields = fields
             self._fields_as_list = True

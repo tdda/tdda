@@ -702,10 +702,6 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     if md:
         md_kw = serial_to_pandas_read_csv_args(md, backend=backend,
                                                warner=warner)
-        # if 'dtype_backend' not in kw:
-        #     backend = get_backend(backend)
-        #     if backend != OG_BACKEND:
-        #        kw = {'dtype_backend': backend}
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -717,7 +713,6 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
             if backend and backend != OG_BACKEND:
                 kw['dtype_backend'] = backend
     df = pd.read_csv(path, **kw)
-
     specified_types = kw.get('dtype')
     dates = []
     if upgrade_types and specified_types:
@@ -752,7 +747,7 @@ def serial_to_pandas_read_csv_python(md, backend=None, warner=None):
         #     backend = get_backend(backend)
         #     if backend != OG_BACKEND:
         #        kw = {'dtype_backend': backend}
-    if not 'backend' in kw:
+    if not md and 'backend' not in kw:
         backend = get_backend(backend)
         if backend and backend != OG_BACKEND:
             kw['dtype_backend'] = backend

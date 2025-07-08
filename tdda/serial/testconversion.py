@@ -1,6 +1,7 @@
 import copy
 
 import pandas as pd
+import polars as pl
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -9,13 +10,19 @@ from tdda.serial.converter import SerialConverter
 from tdda.serial.metadata import SerialMetadata
 from tdda.serial.reader import load_metadata
 
-from tdda.serial.datautils import tiny_pandas_df
+from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
 
 
 from tdda.serial.testserial import (
     TESTDATADIR,
     tdpath,
     tmppath,
+)
+
+from tdda.serial import (
+    serial_to_pandas_read_csv_args,
+    serial_to_polars_read_csv_args,
+    csv_to_polars,
 )
 
 from tdda.utils import testwarn
@@ -183,6 +190,80 @@ class TestDateSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
         self.assertEqual(len(buf), 3)  # Escape; Booleans; date format
 
+    def testCSVWToSerial(self):
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        outpath = tmppath('tiny1nd-weird-no-rename-from-csvw.serial')
+        refpath =  tdpath('tiny1nd-weird-no-rename-from-csvw.serial')
+
+        c = SerialConverter(csvwpath, outpath)
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, refpath)
+        self.assertEqual(buf, [])
+
+
+    def testCSVWToSerialPandas(self):
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        outpath_pd = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
+        refpath_pd =  tdpath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
+
+        outpath_py = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.py')
+        refpath_py =  tdpath('tiny1nd-weird-no-rename-from-csvw-pd.py')
+
+        c = SerialConverter(csvwpath, outpath_pd, out_format='pd.r')
+        c.convert()
+        self.assertFileCorrect(outpath_pd, refpath_pd, ignore_lines=self.IGL)
+
+        c = SerialConverter(csvwpath, outpath_py, out_format='pd.r')
+        c.convert()
+        self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
+
+        df = csv_to_pandas(tdpath('tiny1nd-weird.ssv'), refpath_pd)
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+    @tag
+    def testCSVWToSerialPolars(self):
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        outpath_pl = tmppath('tiny1nd-weird-no-rename-from-csvw-pl.serial')
+        refpath_pl =  tdpath('tiny1nd-weird-no-rename-from-csvw-pl.serial')
+        refpath_pl2 = tdpath('tiny1nd-weird-no-rename-from-csvw-pl2.serial')
+
+        outpath_py = tmppath('tiny1nd-weird-no-rename-from-csvw-pl.py')
+        refpath_py =  tdpath('tiny1nd-weird-no-rename-from-csvw-pl.py')
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_pl, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl, refpath_pl, ignore_lines=self.IGL)
+        self.assertEqual(buf, [
+  'Polars will not understand the following boolean values:\n'
+  ' Yes, n.\n'
+  'If they actually occur in the file, fields will need to be set to string.\n'
+  '(Use map_other_bools_to_string=True.)\n',
+  'Field t date format %d/%m/%Y will not be understood by Polars.\n'
+  'Setting to pl.String.']
+        )
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_py, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
+        self.assertEqual(len(buf), 2)  # boleans, date
+
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_pl, out_format='pl.r',
+                            map_other_bools_to_string=True)
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl, refpath_pl2, ignore_lines=self.IGL)
+
+        Warn, buf = testwarn()
+        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2,
+                           warner=Warn)
+        ref_df = tiny_polars_df(nulls=True, sNullNull=True,
+                                euroStrDates=True, sBools=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
 
 

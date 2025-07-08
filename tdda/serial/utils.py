@@ -43,6 +43,7 @@ import pandas as pd
 
 def read_data(inpath):
     return pd.read_csv(
+        inpath,
         %s
     )
 
@@ -53,6 +54,7 @@ import polars as pl
 
 def read_data(inpath):
     return pl.read_csv(
+        inpath,
         %s
     )
 

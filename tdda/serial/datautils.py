@@ -1,8 +1,10 @@
 import datetime
 
 import pandas as pd
+import polars as pl
 
-def tiny_python_values(nulls=False):
+def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
+                       sBools=False):
     """
     Generate tiny 5x2 or 5x3 set of values for a DataFrame
     with Python booleans, integers, floats, strings and dates.
@@ -12,13 +14,24 @@ def tiny_python_values(nulls=False):
 
     Otherwise, there are two, non-null rows.
     """
+    nil = None if sNullNull else ''
+    if euroStrDates:
+        d1 = '31/01/1970'
+        d2 = '31/12/1999'
+    else:
+        d1 = datetime.datetime(1970, 1, 31)
+        d2 = datetime.datetime(1999, 12, 31)
+    if sBools:
+        f, t = 'n', 'Yes'
+    else:
+        f, t = False, True
     values = {
-        'b': [False, True],
+        'b': [f, t],
         'i': [0, 1],
         'f': [0.5, 1.5],
-        's': ['', 'a'],
+        's': [nil, 'a'],
 #        'd': [datetime.date(1970, 1, 1), datetime.date(1999, 12, 31)]
-        't': [datetime.datetime(1970, 1, 31), datetime.datetime(1999, 12, 31)]
+        't': [d1, d2]
     }
     if nulls:
         values = {
@@ -38,8 +51,10 @@ def tiny_pandas_df(nulls=False, nullable_types=False):
         return pd.DataFrame(tiny_python_values(nulls=nulls))
 
 
-def tiny_polars_df(nulls=False, nullable_types=False):
-    return pl.DataFrame(tiny_python_values(nulls=nulls))
+def tiny_polars_df(nulls=False, sNullNull=False, euroStrDates=False,
+                   sBools=False):
+    return pl.DataFrame(tiny_python_values(nulls=nulls, sNullNull=sNullNull,
+                        euroStrDates=euroStrDates, sBools=sBools))
 
 
 

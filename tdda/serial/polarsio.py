@@ -56,11 +56,7 @@ POLARS_DTYPE_MAP = {
     for k in POLARS_DTYPES
 }
 
-
-POLARS_DTYPE_MAP = {
-    k: eval(f'pl.{k}')
-    for k in POLARS_DTYPES
-}
+POLARS_REV_DTYPES = [(v, k) for k, v in POLARS_DTYPE_MAP.items()]
 
 
 FIELDTYPE_TO_POLARS_DTYPE = {
@@ -78,6 +74,13 @@ def pl_dtype_to_str(t):
     return str(t).split('.')[-1] if t else str(t)
 
 
+def str_to_pl_dtype(s):
+    for (t, st) in POLARS_REV_DTYPES:
+        if s == st:
+            return t
+    return s
+
+
 def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
                                    map_other_bools_to_string=False,
                                    backend=None):
@@ -87,17 +90,20 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
     backend: not used by Polars
     """
     Warn = nvl(warner, warn)
-    f = pl_dtype_to_str if serializable else lambda x: x
+    f = pl_dtype_to_str if serializable else str_to_pl_dtype
     params = md.libs.get(POLARS.read_key)
     if params:
-        o = params.get('schema_overrides')
-        if o:
-            for k, v in o.items():
-                dtype = f(POLARS_DTYPE_MAP.get(v))
-                if dtype:
-                    o[k] = dtype
-                else:
-                    Warn(f'Polars type "{dtype}" not known.\n')
+        for s in ('schema', 'schema_overrides'):
+            o = params.get(s)
+            if o:
+                out = o.copy()
+                for k, v in o.items():
+                    d = POLARS_DTYPE_MAP.get(v, v)
+                    if d:
+                        out[k] = f(d)
+                    else:
+                        Warn(f'Polars type "{v}" not known.\n')
+                params[s] = out
         return params
 
     kw = {}
@@ -145,6 +151,7 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
         if getattr(f, 'format', None) and f.fieldtype == 'bool'
     ]
     bool_str_fields = []
+    trues, falses = set(), set()
     if booleans:
         for b in booleans:
             parts = b.split('|')
@@ -155,14 +162,18 @@ def serial_to_polars_read_csv_args(md, warner=None, serializable=False,
                 Warn(f'*** Warning: Boolean specification {b} not understood;'
                        ' ignoring.\n')
             non_pl_bools = ', '.join(
-                [v for c in true_values if v.lower() != 'true']
-                + [v for c in true_values if v.lower() != 'false']
+                [v for v in trues if v.lower() != 'true']
+                + [v for v in falses if v.lower() != 'false']
             )
-            bool_str_fields = [f.name for f in fields if f.fieldtype == 'bool']
-            if non_pl_bools and bool_fields:
+            bool_str_fields = [
+                f.name for f in md.fields if f.fieldtype == 'bool'
+            ]
+            if non_pl_bools and bool_str_fields:
                 if map_other_bools_to_string:
                     flist = ','.join(bool_str_fields)
                     m = f'Mapping to String: {flist}'
+                    for field in bool_str_fields:
+                        schema[field] = f(pl.String)
                 else:
                     bool_str_fields = []
                     m = ('If they actually occur in the file, fields '
@@ -302,7 +313,8 @@ def csv_to_polars(path=None, md_path=None, md_file_type=None, find_md=False,
          use_table_name=use_table_name,
          preferred=preferred or 'polars.read_csv',
          verbosity=verbosity,
-     )
+    )
+
     if md:
         md_kw = serial_to_polars_read_csv_args(
             md,
@@ -359,11 +371,12 @@ def polars_write_df(df, path):
         raise TDDASerialError(f'Unexpected extension {ext} in {path}.')
 
 
-def serial_to_polars_read_csv_python(md, backend=None, warner=None):
+def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     """
     backend is not used for polars.
     """
-    kw = serial_to_polars_read_csv_args(md, backend=backend, warner=warner)
+    kw = serial_to_polars_read_csv_args(md, backend=backend, warner=warner,
+                                        **kw)
     return fill_template(PYTHON_TEMPLATES.POLARS_READ, kw,
                          flavour='polars',
                          dtypes=FIELDTYPE_TO_POLARS_DTYPE)

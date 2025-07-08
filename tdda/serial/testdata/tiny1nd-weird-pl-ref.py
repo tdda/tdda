@@ -2,6 +2,7 @@ import polars as pl
 
 def read_data(inpath):
     return pl.read_csv(
+        inpath,
         separator=';',
         quote_char="'",
         null_values=['.'],
