@@ -36,12 +36,12 @@ class SerialConverter:
     def __init__(self, inpath=None, outpath=None,
                  out_format=None, backend=None,
                  map_other_bools_to_string=False,
-                 gen=False, cli_args=None, config=None):
+                 generate=False, cli_args=None, config=None):
         self.inpath = inpath
         self.outpath = outpath
         self.out_formats = self.handle_formats(out_format)
         self.backend = backend
-        self.generate = gen
+        self.generate = generate
         self.cli_args = cli_args
         self.map_other_bools_to_string = map_other_bools_to_string
         self.sconfig = get_config().serial
@@ -74,7 +74,7 @@ class SerialConverter:
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
 
-        if getattr(self, 'gen', False):
+        if getattr(self, 'generate', False):
             self.generate = True
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
@@ -102,7 +102,7 @@ class SerialConverter:
                  ' a or pyarrow,'
                  ' o or original')
 
-        parser.add_argument('--gen', '-g', action='store_true',
+        parser.add_argument('--generate', '--gen', '-g', action='store_true',
             help='Generate a bare-bones tdda.serial file for a '
                  'CSV file provided')
 
