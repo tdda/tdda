@@ -73,6 +73,9 @@ class SerialConverter:
 
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
+
+        if getattr(self, 'gen', False):
+            self.generate = True
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
 
@@ -114,15 +117,17 @@ class SerialConverter:
             print(f'BACKEND: {self.backend}')
             print(f'GENERATE: {self.generate}')
 
-        md_in = load_metadata(self.inpath)
+        if not self.generate:
+            md_in = load_metadata(self.inpath)
         md_out = (
-            md_in.copy_serial() if 'tdda.serial' in self.out_formats
+            md_in.copy_serial()
+            if 'tdda.serial' in self.out_formats and not self.generate
             else SerialMetadata()
         )
         kw = {}
         for fmt in self.out_formats:
             if self.generate:
-                md_out = self.create_from_flat_file()
+                md_out = self.infer_from_flat_file()
             elif fmt == 'tdda.serial':
                 pass
             elif fmt == 'csvw':

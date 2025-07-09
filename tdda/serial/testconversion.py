@@ -28,7 +28,7 @@ from tdda.serial import (
 from tdda.utils import testwarn
 
 
-class TestDateSerialConversions(ReferenceTestCase):
+class TestSerialConversions(ReferenceTestCase):
     tiny1nd_serial = tdpath('tiny1nd.serial')
     weird_serial = tdpath('tiny1nd-weird.serial')
     IGL = ['tdda.serial-', 'writer']
@@ -180,6 +180,7 @@ class TestDateSerialConversions(ReferenceTestCase):
         )
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
+
 
     def testSerialToPandasWeirdPythonCLI(self):
         name = 'tiny1nd_weird_pd.py'
@@ -385,6 +386,17 @@ class TestDateSerialConversions(ReferenceTestCase):
                                  tdpath('tiny1nd-weird-inferred.serial'),
                                  ignore_lines=self.IGL)
 
+    def testInferMetadataWeirdCLI(self):
+        inpath = tdpath('tiny1nd-weird.ssv')
+        outpath = tmppath('tiny1nd-weird-inferred2.serial')
+        c = SerialConverter(cli_args=[inpath, outpath, '-g'])
+        c.convert()
+        self.assertFileCorrect(outpath,
+                               tdpath('tiny1nd-weird-inferred.serial'),
+                               ignore_lines=self.IGL)
+
+
+
     def testTypeInference(self):
         self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
         self.assertEqual(guess_type(['1000', '-1', '0']), FieldType.INT)
@@ -411,6 +423,12 @@ class TestDateSerialConversions(ReferenceTestCase):
             guess_type(['2000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
                         '999-999-999 99:99:99ksjdhfkZ']),
             FieldType.DATETIME
+        )
+
+        self.assertEqual(
+            guess_type(['20000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
+                        '999-999-999 99:99:99ksjdhfkZ']),
+            FieldType.STRING
         )
 
 
