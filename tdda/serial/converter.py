@@ -16,6 +16,7 @@ from tdda.serial.polarsio import (
     serial_to_polars_read_csv_python,
 )
 from tdda.utils import error, warn, nvl
+from tdda.serial.infer import infer_format_from_flat_file
 
 
 CONVERTER = {
@@ -35,11 +36,12 @@ class SerialConverter:
     def __init__(self, inpath=None, outpath=None,
                  out_format=None, backend=None,
                  map_other_bools_to_string=False,
-                 cli_args=None, config=None):
+                 gen=False, cli_args=None, config=None):
         self.inpath = inpath
         self.outpath = outpath
         self.out_formats = self.handle_formats(out_format)
         self.backend = backend
+        self.generate = gen
         self.cli_args = cli_args
         self.map_other_bools_to_string = map_other_bools_to_string
         self.sconfig = get_config().serial
@@ -97,6 +99,10 @@ class SerialConverter:
                  ' a or pyarrow,'
                  ' o or original')
 
+        parser.add_argument('--gen', '-g', action='store_true',
+            help='Generate a bare-bones tdda.serial file for a '
+                 'CSV file provided')
+
         return parser
 
     def convert(self, debug=False, warner=None):
@@ -106,6 +112,7 @@ class SerialConverter:
             print(f'OUT: {self.outpath}')
             print(f'FORMAT: {self.out_formats}')
             print(f'BACKEND: {self.backend}')
+            print(f'GENERATE: {self.generate}')
 
         md_in = load_metadata(self.inpath)
         md_out = (
@@ -114,7 +121,9 @@ class SerialConverter:
         )
         kw = {}
         for fmt in self.out_formats:
-            if fmt == 'tdda.serial':
+            if self.generate:
+                md_out = self.create_from_flat_file()
+            elif fmt == 'tdda.serial':
                 pass
             elif fmt == 'csvw':
                 pass
@@ -135,10 +144,15 @@ class SerialConverter:
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
+                if python_writer is None:
+                    error('No target library/format (e.g. pd.r) specified')
                 f.write(python_writer(md_out, backend=self.backend,
                                       warner=Warn, **kw))
         else:
             Warn('Surprising to get here.')
+
+    def infer_from_flat_file(self):
+        return infer_format_from_flat_file(self.inpath)
 
 
 def serial_cli(args):

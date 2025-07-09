@@ -1,0 +1,37 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "Index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "Odd",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "Even",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "Real",
+                "fieldtype": "float"
+            },
+            {
+                "name": "Name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "LastInFeb",
+                "fieldtype": "date"
+            },
+            {
+                "name": "LastIn2024\n",
+                "fieldtype": "datetime"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ","
+    }
+}

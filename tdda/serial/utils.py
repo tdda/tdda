@@ -143,3 +143,22 @@ def fill_template(template, kw, flavour=None, dtypes=None):
             return repr(x)
     args = ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
     return (template % args).lstrip()
+
+
+def non_chars(lines, n):
+    """
+    Find n characters not in line (a string).
+
+    Return as tuple
+    """
+    n_found = 0
+    c = 0x80
+    out = []
+    while n_found < n:
+        if all(chr(c) not in line for line in lines):
+            out.append(chr(c))
+            n_found += 1
+        c += 1
+    return tuple(out)
+
+

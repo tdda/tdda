@@ -7,10 +7,10 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial import csv_to_pandas
 from tdda.serial.converter import SerialConverter
-from tdda.serial.metadata import SerialMetadata
-from tdda.serial.reader import load_metadata
-
 from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
+from tdda.serial.metadata import SerialMetadata, FieldType
+from tdda.serial.reader import load_metadata
+from tdda.serial.infer import infer_format_from_flat_file, guess_type
 
 
 from tdda.serial.testserial import (
@@ -27,10 +27,12 @@ from tdda.serial import (
 
 from tdda.utils import testwarn
 
+
 class TestDateSerialConversions(ReferenceTestCase):
     tiny1nd_serial = tdpath('tiny1nd.serial')
     weird_serial = tdpath('tiny1nd-weird.serial')
     IGL = ['tdda.serial-', 'writer']
+
     def testDeepCopy(self):
         md = load_metadata(self.tiny1nd_serial)
         md2 = copy.deepcopy(md)
@@ -50,8 +52,9 @@ class TestDateSerialConversions(ReferenceTestCase):
                                  ignore_lines=self.IGL)
 
     def testSerialToPandas(self):
-        outpath = tmppath('tiny1nd-weird-pd.serial')
-        refpath =  tdpath('tiny1nd-weird-pd-ref.serial')
+        name = 'tiny1nd-weird-pd.serial'
+        outpath = tmppath(name)
+        refpath =  tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r')
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
@@ -62,35 +65,39 @@ class TestDateSerialConversions(ReferenceTestCase):
 
 
     def testSerialToPandasWeird(self):
-        outpath = tmppath('tiny1nd-weird-pd.serial')
-        refpath = tdpath('tiny1nd-weird-pd-ref.serial')
+        name = 'tiny1nd-weird-pd.serial'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r')
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
         df = csv_to_pandas(tdpath('tiny1nd-weird.ssv:'))
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
-        ref_df.columns=['IAmBoolean', 'IAmInt', 'f', 'IAmString', 'IAmDate']
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True,
+                                longNames=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPandasWeirdOriginal(self):
-        outpath = tmppath('tiny1nd-weird-original-pd.serial')
-        refpath = tdpath('tiny1nd-weird-pd-original-ref.serial')
+        name = 'tiny1nd-weird-original-pd.serial'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r',
                             backend='o')
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
-        refpath2 = tdpath('tiny1nd-weird-pd-original-ref-no-bool-type.serial')
+        refpath2 = tdpath('tiny1nd-weird-pd-original-no-bool-type.serial')
         df = csv_to_pandas(tdpath('tiny1nd-weird.ssv'), refpath2)
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
-        ref_df.columns=['IAmBoolean', 'IAmInt', 'f', 'IAmString', 'IAmDate']
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True,
+                                longNames=True)
+
         self.assertDataFramesEqual(df, ref_df, type_matching='loose')
 
 
     def testSerialToPandasWeird_PyArrow(self):
-        outpath = tmppath('tiny1nd-weird-pd.serial')
-        refpath = tdpath('tiny1nd-weird-pd-pyarrow-ref.serial')
+        name = 'tiny1nd-weird-pd-pyarrow.serial'
+        outpath = tmppath(name)
+        refpath =  tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r',
                             backend='pyarrow')
         c.convert()
@@ -119,8 +126,8 @@ class TestDateSerialConversions(ReferenceTestCase):
             dtype='boolean[pyarrow]'
         )
 
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
-        ref_df.columns = ['IAmBoolean','IAmInt', 'f', 'IAmString', 'IAmDate']
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True,
+                                longNames=True)
         for (col, typ) in [('IAmBoolean', 'bool[pyarrow]'),
                            ('IAmInt', 'int64[pyarrow]'),
                            ('f', 'double[pyarrow]')]:
@@ -128,8 +135,9 @@ class TestDateSerialConversions(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPandasWeird_Python_PyArrow(self):
-        outpath = tmppath('tiny1nd-weird-pd.serial')
-        refpath = tdpath('tiny1nd-weird-pd-pyarrow-ref.py')
+        name = 'tiny1nd_weird_pd_pyarrow.py'
+        outpath = tmppath(name)
+        refpath =  tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r',
                             backend='pyarrow')
         c.convert()
@@ -137,19 +145,36 @@ class TestDateSerialConversions(ReferenceTestCase):
         # the PyArrow backend can't read the Yes/n booleans.
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
+        # Would now try running the generated code.
+
+        # But this fails, because the PyArrow backend can't read
+        # Yes/n booleans.
+        # Not much point checking for the Exception here
+
     def testSerialToPandasWeird_Python_Original(self):
-        outpath = tmppath('tiny1nd-weird-pd-original.serial')
-        refpath = tdpath('tiny1nd-weird-pd-original-ref.py')
+        name = 'tiny1nd_weird_pd_original.py'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pd.r',
                             backend='o')
         c.convert()
-        # The Python code generated here does not work because
-        # the PyArrow backend can't read the Yes/n booleans.
-        self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
+        self.assertFileCorrect(outpath, refpath)
+
+        # Now actually run the generated code (well, code that's
+        # identical to the generated code)
+
+        from tdda.serial.testdata.tiny1nd_weird_pd_original import read_data
+        df = read_data(tdpath('tiny1nd-weird.ssv'))
+
+        # Dataframe is correct except for string IAmBoolean
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=False,
+                                sBools=True, longNames=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPandasWeirdCLI(self):
-        outpath = tmppath('tiny1nd-weird-pd.serial')
-        refpath = tdpath('tiny1nd-weird-pd-ref.serial')
+        name = 'tiny1nd-weird-pd.serial'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(
             cli_args=[self.weird_serial, outpath, '--to', 'pd.r']
         )
@@ -157,17 +182,26 @@ class TestDateSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
     def testSerialToPandasWeirdPythonCLI(self):
-        outpath = tmppath('tiny1nd-weird-pd.py')
-        refpath = tdpath('tiny1nd-weird-pd-ref.py')
+        name = 'tiny1nd_weird_pd.py'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(
             cli_args=[self.weird_serial, outpath, '--to', 'pd.r']
         )
         c.convert()
-        self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
+        self.assertFileCorrect(outpath, refpath)
+
+        # Run the 'generated' code
+        from tdda.serial.testdata.tiny1nd_weird_pd import read_data
+        df = read_data(tdpath('tiny1nd-weird.ssv'))
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True,
+                                longNames=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPolarsWeird(self):
-        outpath = tmppath('tiny1nd-weird-pl.serial')
-        refpath = tdpath('tiny1nd-weird-pl-ref.serial')
+        name = 'tiny1nd-weird-pl.serial'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pl.r')
         Warn, buf = testwarn()
         c.convert(warner=Warn)
@@ -182,8 +216,9 @@ class TestDateSerialConversions(ReferenceTestCase):
         ])
 
     def testSerialToPolarsPythonWeird(self):
-        outpath = tmppath('tiny1nd-weird-pl.py')
-        refpath = tdpath('tiny1nd-weird-pl-ref.py')
+        name = 'tiny1nd_weird_pl.py'
+        outpath = tmppath(name)
+        refpath = tdpath(name)
         c = SerialConverter(self.weird_serial, outpath, out_format='pl.r')
         Warn, buf = testwarn()
         c.convert(warner=Warn)
@@ -201,14 +236,13 @@ class TestDateSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-
     def testCSVWToSerialPandas(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath_pd = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
         refpath_pd =  tdpath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
 
-        outpath_py = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.py')
-        refpath_py =  tdpath('tiny1nd-weird-no-rename-from-csvw-pd.py')
+        outpath_py = tmppath('tiny1nd_weird_no_rename_from_csvw_pd.py')
+        refpath_py =  tdpath('tiny1nd_weird_no_rename_from_csvw_pd.py')
 
         c = SerialConverter(csvwpath, outpath_pd, out_format='pd.r')
         c.convert()
@@ -222,15 +256,19 @@ class TestDateSerialConversions(ReferenceTestCase):
         ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    @tag
-    def testCSVWToSerialPolars(self):
-        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
-        outpath_pl = tmppath('tiny1nd-weird-no-rename-from-csvw-pl.serial')
-        refpath_pl =  tdpath('tiny1nd-weird-no-rename-from-csvw-pl.serial')
-        refpath_pl2 = tdpath('tiny1nd-weird-no-rename-from-csvw-pl2.serial')
+        from tdda.serial.testdata.tiny1nd_weird_no_rename_from_csvw_pd import (
+            read_data
+        )
+        df = read_data(tdpath('tiny1nd-weird.ssv'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-        outpath_py = tmppath('tiny1nd-weird-no-rename-from-csvw-pl.py')
-        refpath_py =  tdpath('tiny1nd-weird-no-rename-from-csvw-pl.py')
+    def testCSVWToSerialPolars(self):
+        # Without different field names in CSVW from flat file
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+
+        name = 'tiny1nd-weird-no-rename-from-csvw-pl.serial'
+        outpath_pl = tmppath(name)
+        refpath_pl =  tdpath(name)
 
         Warn, buf = testwarn()
         c = SerialConverter(csvwpath, outpath_pl, out_format='pl.r')
@@ -245,18 +283,30 @@ class TestDateSerialConversions(ReferenceTestCase):
   'Setting to pl.String.']
         )
 
+    def testCSVWToSerialPolarsPython(self):
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        py_name = 'tiny1nd_weird_no_rename_from_csvw_pl.py'
+        outpath_py = tmppath(py_name)
+        refpath_py =  tdpath(py_name)
+
         Warn, buf = testwarn()
         c = SerialConverter(csvwpath, outpath_py, out_format='pl.r')
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
-        self.assertEqual(len(buf), 2)  # boleans, date
+        self.assertEqual(len(buf), 2)  # booleans, date
+        # ^^^ Code doesn't work because of booleans. But does warn.
 
+    def testCSVWToSerialPolars2(self):
+        csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        name2 = 'tiny1nd-weird-no-rename-from-csvw-pl2.serial'
+        outpath_pl2 = tmppath(name2)
+        refpath_pl2 =  tdpath(name2)
 
         Warn, buf = testwarn()
-        c = SerialConverter(csvwpath, outpath_pl, out_format='pl.r',
+        c = SerialConverter(csvwpath, outpath_pl2, out_format='pl.r',
                             map_other_bools_to_string=True)
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath_pl, refpath_pl2, ignore_lines=self.IGL)
+        self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
 
         Warn, buf = testwarn()
         df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2,
@@ -265,6 +315,103 @@ class TestDateSerialConversions(ReferenceTestCase):
                                 euroStrDates=True, sBools=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
+    def testCSVWToSerialPolarsWithRename(self):
+        csvwpath = tdpath('tiny1nd-weird-metadata.json')
+
+        name = 'tiny1nd-weird-from-csvw-pl.serial'
+        outpath_pl = tmppath(name)
+        refpath_pl =  tdpath(name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_pl, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl, refpath_pl, ignore_lines=self.IGL)
+        self.assertEqual(buf, [
+  'Polars will not understand the following boolean values:\n'
+  ' Yes, n.\n'
+  'If they actually occur in the file, fields will need to be set to string.\n'
+  '(Use map_other_bools_to_string=True.)\n',
+  'Field IAmDate date format %d/%m/%Y will not be understood by Polars.\n'
+  'Setting to pl.String.']
+        )
+
+    def testCSVWToSerialPolarsWithRenamePython(self):
+        csvwpath = tdpath('tiny1nd-weird-metadata.json')
+        py_name = 'tiny1nd_weird_from_csvw_pl.py'
+        outpath_py = tmppath(py_name)
+        refpath_py =  tdpath(py_name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_py, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_py, refpath_py)
+        self.assertEqual(len(buf), 2)  # booleans, date
+        # ^^^ Code doesn't work because of booleans. But does warn.
+
+    def testCSVWToSerialPolarsWithRename2(self):
+        csvwpath = tdpath('tiny1nd-weird-metadata.json')
+        name2 = 'tiny1nd-weird-from-csvw-pl2.serial'
+        outpath_pl2 = tmppath(name2)
+        refpath_pl2 =  tdpath(name2)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(csvwpath, outpath_pl2, out_format='pl.r',
+                            map_other_bools_to_string=True)
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
+
+        Warn, buf = testwarn()
+        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2,
+                           warner=Warn)
+        ref_df = tiny_polars_df(nulls=True, sNullNull=True,
+                                euroStrDates=True, sBools=True,
+                                longNames=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+    def testInferMetadataSimple(self):
+        md = infer_format_from_flat_file(tdpath('simple.csv'))
+        self.assertStringCorrect(md.to_json(), tdpath('simple-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def testInferMetadataMinimal(self):
+        md = infer_format_from_flat_file(tdpath('minimal.csv'))
+        self.assertStringCorrect(md.to_json(),
+                                 tdpath('minimal-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def testInferMetadataWeird(self):
+        md = infer_format_from_flat_file(tdpath('tiny1nd-weird.ssv'))
+        self.assertStringCorrect(md.to_json(),
+                                 tdpath('tiny1nd-weird-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def testTypeInference(self):
+        self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
+        self.assertEqual(guess_type(['1000', '-1', '0']), FieldType.INT)
+        self.assertEqual(guess_type(['1000', '-1', '0', '0.5', '2.1e3']),
+                                     FieldType.FLOAT)
+        self.assertEqual(guess_type(['inf', 'nan', 'nan']),
+                                    FieldType.FLOAT)   # !!!
+
+        self.assertEqual(
+            guess_type(['2000.01.01', '31-12-2000', '12/31/2000',
+                        '999-999-999']),  # !!!
+            FieldType.DATE
+        )
+
+        self.assertEqual(
+            guess_type(['2000.01.01', '31-12-2000', '12/31/2000',
+                        '999-999-999',
+                        '2000.jan.01', '31-feb-2000', 'dec-31/2000',
+                        'zzz-999-999']),  # !!!
+            FieldType.DATE
+        )
+
+        self.assertEqual(
+            guess_type(['2000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
+                        '999-999-999 99:99:99ksjdhfkZ']),
+            FieldType.DATETIME
+        )
 
 
 if __name__ == '__main__':

@@ -1,10 +1,17 @@
 import datetime
 
+from collections import namedtuple
+
 import pandas as pd
 import polars as pl
 
+
+Names = namedtuple('Names', 'b i f s t')
+
+LONG_NAMES = ['IAmBoolean', 'IAmInt', 'f', 'IAmString', 'IAmDate']
+
 def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
-                       sBools=False):
+                       sBools=False, longNames=False):
     """
     Generate tiny 5x2 or 5x3 set of values for a DataFrame
     with Python booleans, integers, floats, strings and dates.
@@ -25,13 +32,17 @@ def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
         f, t = 'n', 'Yes'
     else:
         f, t = False, True
+
+    if longNames:
+        names = Names(*LONG_NAMES)
+    else:
+        names = Names('b', 'i', 'f', 's', 't')
     values = {
-        'b': [f, t],
-        'i': [0, 1],
-        'f': [0.5, 1.5],
-        's': [nil, 'a'],
-#        'd': [datetime.date(1970, 1, 1), datetime.date(1999, 12, 31)]
-        't': [d1, d2]
+        names.b: [f, t],
+        names.i: [0, 1],
+        names.f: [0.5, 1.5],
+        names.s: [nil, 'a'],
+        names.t: [d1, d2]
     }
     if nulls:
         values = {
@@ -41,20 +52,27 @@ def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
     return values
 
 
-def tiny_pandas_df(nulls=False, nullable_types=False):
+def tiny_pandas_df(nulls=False, nullable_types=False,  sNullNull=False,
+                   euroStrDates=False, sBools=False, longNames=False):
     if nullable_types:
-        return pd.DataFrame({
+        df = pd.DataFrame({
             k: pd.Series(v, dtype=pd_nullable_type(k))
             for k, v in tiny_python_values(nulls=nulls).items()
         })
+        if longNames:
+            df.columns = LONG_NAMES
+        return df
     else:
-        return pd.DataFrame(tiny_python_values(nulls=nulls))
+        return pd.DataFrame(tiny_python_values(nulls=nulls, sNullNull=sNullNull,
+                        euroStrDates=euroStrDates, sBools=sBools,
+                        longNames=longNames))
 
 
 def tiny_polars_df(nulls=False, sNullNull=False, euroStrDates=False,
-                   sBools=False):
+                   sBools=False, longNames=False):
     return pl.DataFrame(tiny_python_values(nulls=nulls, sNullNull=sNullNull,
-                        euroStrDates=euroStrDates, sBools=sBools))
+                        euroStrDates=euroStrDates, sBools=sBools,
+                        longNames=longNames))
 
 
 

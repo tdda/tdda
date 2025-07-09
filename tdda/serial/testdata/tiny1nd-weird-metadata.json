@@ -7,7 +7,8 @@
                 "columns": [
                     {
                         "datatype": "boolean",
-                        "name": "IAmBoolean"
+                        "name": "IAmBoolean",
+                        "format": "Yes|n"
                     },
                     {
                         "datatype": "int",
@@ -19,7 +20,7 @@
                     },
                     {
                         "datatype": "string",
-                        "name": "IAMString"
+                        "name": "IAmString"
                     },
                     {
                         "datatype": "date",
@@ -33,7 +34,8 @@
                 "delimiter": ";",
                 "quoteChar": "'",
                 "header": true,
-                "headerRowCount": 1
+                "headerRowCount": 1,
+                "null": "."
             },
             "url": "tiny1nd-weird.ssv"
         }

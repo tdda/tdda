@@ -1,0 +1,19 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "polars.read_csv": {
+        "separator": ";",
+        "quote_char": "'",
+        "null_values": [
+            "."
+        ],
+        "encoding": "latin-1",
+        "schema": {
+            "IAmBoolean": "Boolean",
+            "IAmInt": "Int64",
+            "f": "Float64",
+            "IAmString": "String",
+            "IAmDate": "String"
+        }
+    }
+}

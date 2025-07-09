@@ -562,3 +562,5 @@ def get_metadata_flavours(flavours):
        get_metadata_flavour(f)
        for f in (flavours or '.').strip().split(',')
     ]
+
+
