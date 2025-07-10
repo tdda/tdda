@@ -94,9 +94,10 @@ class CSVWMetadata(SerialMetadata):
     to SerialMetadata.
 
     Args:
-        spec should either be a path to a CSVW file (usually .json)
+        spec should normally either be a path to a CSVW file (usually .json)
              or a dictionary of the form returned by performing
              a json.load such a (valid) CSVW).
+             If None, minimal initialization is performed
 
     Validation Properties:
             .valid      is True if no errors were encountered
@@ -105,7 +106,7 @@ class CSVWMetadata(SerialMetadata):
                         while reading the CSVW information
 
     """
-    def __init__(self, spec, extensions=False, table_number=None,
+    def __init__(self, spec=None, extensions=False, table_number=None,
                  for_table_name=None, verbosity=2):
         super().__init__(verbosity=verbosity)
         self._url = None
@@ -117,6 +118,9 @@ class CSVWMetadata(SerialMetadata):
         self.metadata_source_dir = None
         self.table_number = table_number
         self.for_table_name = for_table_name
+
+        if spec is None:  # Only normally used by to_csvw and tests
+            return
 
         self.read(spec)
         self.get_schema_and_columns()
@@ -149,6 +153,12 @@ class CSVWMetadata(SerialMetadata):
             self.metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
             self._csvw = spec
+
+    def to_csvw_json(self):
+        pass
+
+    def write_csvw(self, path):
+        pass
 
     def get_schema_and_columns(self):
         """
@@ -459,3 +469,15 @@ def csvw_date_format_to_md_date_format(fmt, extensions=False):
     return 'ISO8601' if (re.match(RE_ISO8601, outfmt) or fmt == '') else outfmt
 
 
+def to_csvw(md):
+    """
+    Converts a SerialMetadata object to a CSVWMetadata Object.
+
+    Args:
+        md: A SerialMetatadata object.
+
+    Returns:
+            A (braoadly equivalent) CSVWMetadata obkect
+    """
+    csvw = CSVWMetadata()
+    csvw.__dict__.update(md.__dict__)

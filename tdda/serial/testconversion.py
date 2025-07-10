@@ -7,6 +7,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial import csv_to_pandas
 from tdda.serial.converter import SerialConverter
+from tdda.serial.csvw import to_csvw
 from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
 from tdda.serial.metadata import SerialMetadata, FieldType
 from tdda.serial.reader import load_metadata
@@ -395,7 +396,12 @@ class TestSerialConversions(ReferenceTestCase):
                                tdpath('tiny1nd-weird-inferred.serial'),
                                ignore_lines=self.IGL)
 
-
+    @tag
+    def testConversionToCSVWObject(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        csvw = to_csvw(md)
+        print(md)
 
     def testTypeInference(self):
         self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
