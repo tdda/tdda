@@ -16,7 +16,7 @@ from tdda.serial.metadata import (
     SerialMetadata,
     TDDASerialError,
 )
-from tdda.serial.csvw import CSVWConstants, CSVWMetadata
+from tdda.serial.csvw import CSVWMetadata
 
 from tdda.serial.utils import (
     find_associated_metadata_file,

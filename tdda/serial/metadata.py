@@ -216,6 +216,8 @@ class SerialMetadata:
         dps=None,
         accept_percentages_as_floats = None,
         map_missing_trailing_cols_to_null = None,
+        true_values=None,
+        false_values=None,
         verbosity=VERBOSITY,
         libs=None,
         source=None,
@@ -251,7 +253,8 @@ class SerialMetadata:
         self.map_missing_trailing_cols_to_null = (
             map_missing_trailing_cols_to_null
         )
-
+        self.true_values = None
+        self.false_values = None
         self.header_row_count = header_row_count
         self.header_row = header_row
         self.comment_prefix = None
@@ -263,6 +266,7 @@ class SerialMetadata:
         self.quoting = quoting_as_name(quoting)
         self.decimal_point = decimal_point
         self.dps = dps
+        self.trim = None
 
         self.libs = libs or {}
 
@@ -359,7 +363,7 @@ class SerialMetadata:
     def to_json(self, indent=4):
         return json.dumps(self.unobjectify(), indent=indent)
 
-    def write(self, path, use_serial_ext=True, verbose=0):
+    def write(self, path, use_serial_ext=True, indent=4, verbose=0):
         """
         Writes metadata to file.
 
@@ -371,7 +375,7 @@ class SerialMetadata:
         """
         outpath = swap_ext(path, '.serial') if use_serial_ext else path
         with open(outpath, 'w') as f:
-            f.write(self.to_json())
+            f.write(self.to_json(indent=indent))
         if verbose:
             print(f'Written {outpath}.')
 

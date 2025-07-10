@@ -19,11 +19,13 @@ BACKEND_MAP = {
 }
 
 
-
+CSVW_MD_RE = r'^(.*?)[-.]((csv[-.]?)?metadata)(\.json)$'
+TDDA_SERIAL_RE = r'^(.*)(\.serial)$'
+FRICTIONLESS_MD_RE = r'^(.*\.).*(package|resource|schema).*(\.json)'
 METADATA_STYLE_MAP = {
-    r'^(.*)-(metadata)(\.json)$': 'csvw',
-    r'^(.*)(\.serial)$': 'tdda.serial',
-    r'^(.*\.).*(package|resource|schema).*(\.json)': 'frictionless',
+    CSVW_MD_RE: 'csvw',
+    TDDA_SERIAL_RE: 'tdda.serial',
+    FRICTIONLESS_MD_RE: 'frictionless',
 }
 
 METADATA_STYLES = (

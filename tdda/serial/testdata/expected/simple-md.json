@@ -26,12 +26,12 @@
             {
                 "name": "LastInFeb",
                 "fieldtype": "date",
-                "format": "ISO8601"
+                "format": "iso8601"
             },
             {
                 "name": "LastIn2024",
                 "fieldtype": "datetime",
-                "format": "ISO8601"
+                "format": "iso8601"
             }
         ],
         "encoding": "utf-8",

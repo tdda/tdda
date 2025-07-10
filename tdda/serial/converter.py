@@ -4,8 +4,9 @@ import sys
 
 from tdda.state import get_config
 
+from tdda.serial.csvw import serial_to_csvw
+from tdda.serial.infer import infer_format_from_flat_file
 from tdda.serial.metadata import SerialMetadata, get_metadata_flavours
-from tdda.serial.reader import load_metadata
 from tdda.serial.pandasio import (
     serial_to_pandas_read_csv_args,
     serial_to_pandas_write_csv_args,
@@ -15,8 +16,8 @@ from tdda.serial.polarsio import (
     serial_to_polars_read_csv_args,
     serial_to_polars_read_csv_python,
 )
+from tdda.serial.reader import load_metadata
 from tdda.utils import error, warn, nvl
-from tdda.serial.infer import infer_format_from_flat_file
 
 
 CONVERTER = {
@@ -36,7 +37,8 @@ class SerialConverter:
     def __init__(self, inpath=None, outpath=None,
                  out_format=None, backend=None,
                  map_other_bools_to_string=False,
-                 generate=False, cli_args=None, config=None):
+                 generate=False, cli_args=None,
+                 for_csv=None, config=None):
         self.inpath = inpath
         self.outpath = outpath
         self.out_formats = self.handle_formats(out_format)
@@ -45,6 +47,7 @@ class SerialConverter:
         self.cli_args = cli_args
         self.map_other_bools_to_string = map_other_bools_to_string
         self.sconfig = get_config().serial
+        self.for_csv = for_csv
         if self.cli_args is not None:
             self.process_args()
         self.validate()
@@ -74,6 +77,8 @@ class SerialConverter:
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
 
+        self.for_csv = getattr(self, 'for', None)
+
         if getattr(self, 'generate', False):
             self.generate = True
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
@@ -95,6 +100,9 @@ class SerialConverter:
 
         parser.add_argument('--to', type=str,
             help='output format or formats (comma separated for multiple).')
+
+        parser.add_argument('--for', type=str,
+            help='csv file to use as url in written metadata')
 
         parser.add_argument('--backend', '-B', type=str,
             help='For Pandas, preferred backend.'
@@ -144,8 +152,8 @@ class SerialConverter:
         if self.broad_out == 'tdda.serial':
             md_out.write(self.outpath)
         elif self.broad_out == 'csvw':
-            #md_out.write(self.outpath)
-            pass
+            csvw = serial_to_csvw(md_out)
+            csvw.write_csvw(self.outpath, self.for_csv)
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
