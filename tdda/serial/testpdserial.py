@@ -141,8 +141,8 @@ class TestConversion(ReferenceTestCase):
         md = CSVWMetadata(md_path)
         self.assertStringCorrect(str(md), tdpath('expected/simple-md.json'),
                                  ignore_substrings=[
-                                    'metadata_source_path',
-                                    'metadata_source_dir'
+                                    '_metadata_source_path',
+                                    '_metadata_source_dir'
                                  ],
                                  ignore_patterns=TDDASERIAL_PATTERNS)
 

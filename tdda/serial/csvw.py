@@ -6,14 +6,13 @@ from tdda.serial.metadata import (
     DateFormat,
     FieldMetadata,
     FieldType,
-    MISSING,
     RE_ISO8601,
     SerialMetadata,
     TDDASerialError,
     writer,
 )
 from tdda.serial.utils import CSVW_MD_RE
-from tdda.utils import nvl, listify
+from tdda.utils import nvl, listify, warn, error
 
 
 
@@ -21,78 +20,78 @@ from tdda.utils import nvl, listify
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
 
 CSVW_TYPE_TO_FIELDTYPE = {
-    'boolean': 'bool',
-    'integer': 'int',
-    'string': 'string',
-    'number': 'number',
-    'datetime': 'datetime',
-    'date': 'date',
+    'boolean': FieldType.BOOL,
+    'integer': FieldType.INT,
+    'string': FieldType.STRING,
+    'number': FieldType.NUMBER,
+    'datetime': FieldType.DATETIME,
+    'date': FieldType.DATE,
 
-    'double': 'number',
-    'decimal': 'number',
-    'float': 'number',
+    'double': FieldType.NUMBER,
+    'decimal': FieldType.NUMBER,
+    'float': FieldType.NUMBER,
 
-    'long': 'int',
-    'int': 'int',
-    'short': 'int',
-    'byte': 'int',
+    'long': FieldType.INT,
+    'int': FieldType.INT,
+    'short': FieldType.INT,
+    'byte': FieldType.INT,
 
-    'unsignedLong': 'int',
-    'unsignedInt': 'int',
-    'unsignedShort': 'int',
-    'unsignedByte': 'int',
+    'unsignedLong': FieldType.INT,
+    'unsignedInt': FieldType.INT,
+    'unsignedShort': FieldType.INT,
+    'unsignedByte': FieldType.INT,
 
-    'nonNegativeInteger': 'int',
-    'nonPositiveInteger': 'int',
-    'negativeInteger': 'int',
-    'positiveInteger': 'int',
+    'nonNegativeInteger': FieldType.INT,
+    'nonPositiveInteger': FieldType.INT,
+    'negativeInteger': FieldType.INT,
+    'positiveInteger': FieldType.INT,
 
-    'normalizedString': 'string',
-    'anyURI': 'string',
-    'token': 'string',
-    'language': 'string',
-    'Name': 'string',
-    'NMTOKEN': 'string',
+    'normalizedString': FieldType.STRING,
+    'anyURI': FieldType.STRING,
+    'token': FieldType.STRING,
+    'language': FieldType.STRING,
+    'Name': FieldType.STRING,
+    'NMTOKEN': FieldType.STRING,
 
-    'xml': 'string',
-    'html': 'string',
-    'json': 'string',
+    'xml': FieldType.STRING,
+    'html': FieldType.STRING,
+    'json': FieldType.STRING,
 
     'dateTime': 'datetime',
 
     # Read as strings for now
 
-    'base64Binary': 'string',
-    'binary': 'string',
-    'hexBinary': 'string',
+    'base64Binary': FieldType.STRING,
+    'binary': FieldType.STRING,
+    'hexBinary': FieldType.STRING,
 
-    'anyAtomicType': 'string',
-    'dateTimeStamp': 'string',  # with timezone
+    'anyAtomicType': FieldType.STRING,
+    'dateTimeStamp': FieldType.STRING,  # with timezone
 
-    'duration': 'string',
-    'dayTimeDuration': 'string',
-    'yearMonthDuration': 'string',
-    'time': 'string',
+    'duration': FieldType.STRING,
+    'dayTimeDuration': FieldType.STRING,
+    'yearMonthDuration': FieldType.STRING,
+    'time': FieldType.STRING,
 
-    'QName': 'string',
+    'QName': FieldType.STRING,
 
-    'gDay': 'string',
-    'gMonth': 'string',
-    'gMonthDay': 'string',
-    'gYear': 'string',
-    'gYearMonth': 'string',
+    'gDay': FieldType.STRING,
+    'gMonth': FieldType.STRING,
+    'gMonthDay': FieldType.STRING,
+    'gYear': FieldType.STRING,
+    'gYearMonth': FieldType.STRING,
 }
 
 
 FIELDTYPE_TO_CSVW = {
-    'bool': 'boolean',
-    'int': 'integer',
-    'float': 'float',
-    'number': 'number',
-    'string': 'string',
-    'date': 'date',
-    'datetime': 'datetime',
-    'datetime_tz': 'datetime',
+    FieldType.BOOL: 'boolean',
+    FieldType.INT: 'integer',
+    FieldType.FLOAT: 'float',
+    FieldType.NUMBER: 'number',
+    FieldType.STRING: 'string',
+    FieldType.DATE: 'date',
+    FieldType.DATETIME: 'datetime',
+    FieldType.DATETIME_WITH_TIMEZONE: 'datetime',
 }
 
 
@@ -131,7 +130,7 @@ class CSVWMetadata(SerialMetadata):
         self._extensions = extensions
         self._fullpath = None
         self._source = 'csvw'
-        self.metadata_source_dir = None
+        self._metadata_source_dir = None
         self.table_number = table_number
         self.for_table_name = for_table_name
 
@@ -165,8 +164,8 @@ class CSVWMetadata(SerialMetadata):
         if type(spec) == str:
             with open(spec) as f:
                 self._csvw = json.load(f)
-            self.metadata_source_path = os.path.abspath(spec)
-            self.metadata_source_dir = os.path.dirname(os.path.abspath(spec))
+            self._metadata_source_path = os.path.abspath(spec)
+            self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
             self._csvw = spec
 
@@ -223,7 +222,7 @@ class CSVWMetadata(SerialMetadata):
             ('null', '_null'),
             ('doubleQuote', 'stutter'),
             ('quoteChar', 'quote_char'),
-            ('commentPrefix', 'comment_prefix'),
+            ('commentPrefix', 'comment_char'),
             ('lineTerminators', 'line_terminator'),
             ('skipRows', 'skip_row_count'),
             ('skipColumns', 'skip_columns_count'),
@@ -317,9 +316,9 @@ class CSVWMetadata(SerialMetadata):
                     table = tables[n]
                 else:
                     self.n_tables = 0
-                    loc = self.metadata_source_path
+                    loc = self._metadata_source_path
                     sloc = f' in {loc}' if loc else ''
-                    raise Exception(f'No table {n} found{sloc}.')
+                    error(f'No table {n} found{sloc}.')
                 self._table = table
                 self._schema = self._table.get('tableSchema')
             else:
@@ -327,13 +326,13 @@ class CSVWMetadata(SerialMetadata):
                 self._schema = self._csvw.get('tableSchema')
                 n = 0
         except KeyError:
-            raise TDDASerialError(
+            error(
                 'Could not find schema information in CSVW file\n'
                 "at ['tables'][{n}]['tableSchema']."
             )
 
         if type(self._schema) is str:
-            path = os.path.join(nvl(self.metadata_source_dir, ''),
+            path = os.path.join(nvl(self._metadata_source_dir, ''),
                                  self._schema)
             with open(path) as f:
                 self._schema = json.load(f)
@@ -378,7 +377,7 @@ class CSVWMetadata(SerialMetadata):
             context = value
 
         if context == CSVW.CONTEXT:
-            self.metadata_source = context
+            self._metadata_source = context
         else:
             self.warn('Unexpected value "{context}" for purported CSVW source.')
         if properties:
@@ -392,10 +391,10 @@ class CSVWMetadata(SerialMetadata):
         )
         if not self._url:
             self.warn('Mandatory property "url" not found in CSVW file.')
-        if (getattr(self, 'metadata_source_dir', None)
+        if (getattr(self, '_metadata_source_dir', None)
                and self._url
                and not '://' in self._url):
-            self._fullpath = os.path.join(self.metadata_source_dir, self._url)
+            self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
         """
@@ -465,7 +464,7 @@ class CSVWMetadata(SerialMetadata):
         header = self.get_val(dialect, 'header')
         if header and not self.header_row_count:
             self.header_row_count = 1
-        self.comment_prefix = self.get_val(dialect, 'commentPrefix')
+        self.comment_char = self.get_val(dialect, 'commentPrefix')
         self.line_terminators = self.get_val(dialect, 'lineTerminators')
         self.quote_char = self.get_val(dialect, 'quoteChar')
         self.skip_blank_rows = self.get_val(dialect, 'skipRows')

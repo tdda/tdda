@@ -30,6 +30,7 @@ class FieldType:
     DATE = 'date'
     DATETIME = 'datetime'
     DATETIME_WITH_TIMEZONE = 'datetime_tz'
+    TIME = 'time'
     ISO8601 = 'iso8601'
 
     STRING = 'string'
@@ -134,19 +135,28 @@ class FieldMetadata:
     def __init__(self, name, fieldtype=None, csvname=None,
                  format=None, null_indicator=None,
                  true_values=None, false_values=None,
-                 allow_extras=False, description=None, **kw):
+                 allow_extra_keys=False, description=None,
+                 thou_sep=None, dp=None, examples=None,
+                 rdf_type=None, **kw):
         self.name = name
         self.csvname = csvname or name
         self.fieldtype = fieldtype
         self.altnames = None
+        if format:
+            if fieldtype and fieldtype.startswith('date'):
+                self._date_format = format  # TODO start using this
         self.format = format
         self.null_indicator = null_indicator
         self.true_values = listify(true_values)
         self.false_values = listify(false_values)
         self.description = description
+        self.thou_sep = thou_sep
+        self.dp = dp
+        self.examples = examples
+        self.rdf_type = rdf_type
 
         for k, v in kw.items():
-            if allow_extras:
+            if allow_extra_keys:
                 self.__dict__[k] = v
             else:
                 msg = f'Unexpected kwarg to FieldMetadata for {name}: "{k}"'
@@ -178,7 +188,7 @@ class FieldMetadata:
 
     def unobjectify(self):
         d = {k: unobjectify(v) for k, v in self.__dict__.items()
-                if nonnull(v)}
+                if nonnull(v) and not k.startswith('_')}
         if d['csvname'] == d['name']:
             del d['csvname']
         return d
@@ -218,6 +228,8 @@ class SerialMetadata:
         map_missing_trailing_cols_to_null = None,
         true_values=None,
         false_values=None,
+        thou_sep=None,
+        dp=None,
         verbosity=VERBOSITY,
         libs=None,
         source=None,
@@ -257,7 +269,7 @@ class SerialMetadata:
         self.false_values = None
         self.header_row_count = header_row_count
         self.header_row = header_row
-        self.comment_prefix = None
+        self.comment_char = None
         self.line_terminators = None
         self.skip_blank_rows = None
         self.skip_initial_space = None
@@ -265,16 +277,18 @@ class SerialMetadata:
         self.skip_rows = None
         self.quoting = quoting_as_name(quoting)
         self.decimal_point = decimal_point
-        self.dps = dps
         self.trim = None
+        self.thou_sep = thou_sep
+        self.dp = dp
+        self.dps = dps
 
         self.libs = libs or {}
 
         self._errors = []
         self._warnings = []
 
-        self.metadata_source = None
-        self.metadata_source_path = None
+        self._metadata_source = None
+        self._metadata_source_path = None
         self.valid = None
         self._verbosity = verbosity
 

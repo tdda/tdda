@@ -1,0 +1,26 @@
+name: simple3x2
+type: table
+path: simple3x2.psv
+scheme: file
+format: csv
+mediatype: text/csv
+encoding: latin-1
+dialect:
+  header: true
+  header_rows:
+    - 0
+  csv:
+    delimiter: '|'
+    quoteChar: '"'
+    doubleQuote: false
+    escapeChar: \
+schema:
+  fields:
+    - name: n
+      type: integer
+    - name: f
+      type: number
+    - name: s
+      type: string
+  missingValues:
+    - .
