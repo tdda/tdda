@@ -73,6 +73,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
                 libs[flavour] = spec
         md = SerialMetadata(libs=libs, source='tdda.serial', **kw)
     elif ext == '.json' or text.startswith('{'):
+        kind, _ = find_metadata_type_from_path(path)
         structured = json.loads(text)
         kind, md = find_metadata_kind(structured)
         if kind == TDDASERIAL.key:

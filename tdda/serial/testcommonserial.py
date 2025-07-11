@@ -13,6 +13,7 @@ from tdda.serial.csvw import csvw_date_format_to_md_date_format
 from tdda.serial.reader import (
     find_metadata_kind,
 )
+from tdda.serial.utils import find_metadata_type_from_path
 from tdda.utils import testwarn
 
 
@@ -302,6 +303,11 @@ class TestFindMetadata(ReferenceTestCase):
         kind, md = find_metadata_kind(d)
         self.assertEqual(kind, 'pandas.read_csv')
         self.assertEqual(md, {'sep': '|'})
+
+    @tag
+    def testDetectMetadataKindFromPath(self):
+        f = find_metadata_kind_from_path
+        self.assertEqual(f('foo-metadata.json'), 'csvw')
 
     def test_find_metadata_priority(self):
         d = {
