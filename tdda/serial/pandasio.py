@@ -232,8 +232,6 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None):
         Warn(
            'PyArrow backend does not understand alternate booleans.\n'
            'If they are really present, you may have to read as strings.')
-        print(dtypes)
-        print(any(v == 'bool[pyarrow]' for v in dtypes.values()))
     if dtypes:
         kw['dtype'] = dtypes
     if date_formats:
@@ -712,9 +710,8 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
             backend = get_backend(backend)
             if backend and backend != OG_BACKEND:
                 kw['dtype_backend'] = backend
-    print(kw)
-    print(path)
-    return
+    # print(kw)
+    # print(path)
     df = pd.read_csv(path, **kw)
     specified_types = kw.get('dtype')
     dates = []
