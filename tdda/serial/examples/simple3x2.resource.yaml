@@ -7,7 +7,6 @@ mediatype: text/csv
 encoding: utf-8
 dialect:
   header: true
-  missingValues: ''
   header_rows:
     - 0
   csv:
@@ -23,3 +22,4 @@ schema:
       type: number
     - name: s
       type: string
+  missingValues: []
