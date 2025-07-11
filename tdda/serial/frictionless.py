@@ -548,6 +548,13 @@ def load_json_or_yaml(path):
             return json.load(f)
 
 
-def write_json_or_yaml(d, path):
-    # yaml.dump(d, default_flow_style=False)
-    pass
+def write_json_or_yaml(d, path, indent=None, verbose=False):
+    with open(path, 'w') as f:
+        if isyaml(path):
+            f.write(yamldump(d, default_flow_style=False,
+                    indent=nvl(indent, 2)))
+        else:
+            f.write(json.dumps(d, dumper=YAMLDumper, indent=nvl(indent, 4)))
+    if verbose:
+        print(f'Written {path}.')
+

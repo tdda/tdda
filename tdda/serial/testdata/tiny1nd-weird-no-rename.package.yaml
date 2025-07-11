@@ -1,0 +1,38 @@
+resources:
+- dialect:
+    csv:
+      delimiter: ;
+      doubleQuote: false
+      escapeChar: \
+      quoteChar: ''''
+    header: true
+    header_rows:
+    - 0
+  encoding: latin1
+  format: csv
+  mediatype: text/csv
+  name: tiny1nd
+  path: tiny1nd-weird.ssv
+  schema:
+    fields:
+    - falseValues:
+      - 'No'
+      - n
+      name: b
+      trueValues:
+      - 'Yes'
+      - y
+      type: boolean
+    - name: i
+      type: integer
+    - name: f
+      type: number
+    - name: s
+      type: string
+    - format: '%d/%M/%Y'
+      name: t
+      type: date
+    missingValues:
+    - .
+  scheme: file
+  type: table

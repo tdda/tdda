@@ -433,10 +433,12 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
                                ignore_lines=self.IGL)
 
-    def testFrictionlessPackageToSerial(self):
-        frictionlesspath = tdpath('tiny1nd-weird-no-rename.package.json')
+    @tag
+    def testFrictionlessPackageToSerialYAML(self):
+        frictionlesspath = tdpath(f'tiny1nd-weird-no-rename.package.yaml')
         name = 'tiny1nd-weird-no-rename-from-fless-package.serial'
-        outpath = tmppath(name)
+        yname = 'tiny1nd-weird-no-rename-from-fless-yaml.package.serial'
+        outpath = tmppath(yname)
         refpath =  tdpath(name)
 
         c = SerialConverter(frictionlesspath, outpath)
@@ -445,10 +447,40 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    def testFrictionlessResourceToSerial(self):
-        frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.json')
+    @tag
+    def testFrictionlessResourceToSerialYAML(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.yaml')
         name = 'tiny1nd-weird-no-rename-from-fless-resource.serial'
-        outpath = tmppath(name)
+        yname = 'tiny1nd-weird-no-rename-from-fless-yaml.resource.serial'
+        outpath = tmppath(yname)
+        refpath =  tdpath(name)
+
+        c = SerialConverter(frictionlesspath, outpath)
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, refpath)
+        self.assertEqual(buf, [])
+
+    @tag
+    def testFrictionlessPackageToSerialJSON(self):
+        frictionlesspath = tdpath(f'tiny1nd-weird-no-rename.package.json')
+        name =  'tiny1nd-weird-no-rename-from-fless-package.serial'
+        jname = 'tiny1nd-weird-no-rename-from-fless-json.package.serial'
+        outpath = tmppath(jname)
+        refpath =  tdpath(name)
+
+        c = SerialConverter(frictionlesspath, outpath)
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, refpath)
+        self.assertEqual(buf, [])
+
+    @tag
+    def testFrictionlessResourceToSerialJSON(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.json')
+        name =  'tiny1nd-weird-no-rename-from-fless-resource.serial'
+        jname = 'tiny1nd-weird-no-rename-from-fless-json.resource.serial'
+        outpath = tmppath(jname)
         refpath =  tdpath(name)
 
         c = SerialConverter(frictionlesspath, outpath)
