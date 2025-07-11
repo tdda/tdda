@@ -136,7 +136,7 @@ class FrictionlessMetadata(SerialMetadata):
                  'Continuing.')
         self.encoding = r.get('encoding')
 
-    def field_to_frictionless_json(self, field):
+    def field_to_frictionless_dict(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
         self.set_if_non_null(d, 'type',
@@ -157,23 +157,25 @@ class FrictionlessMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'description', 'description')
         return d
 
-    def to_frictionless_json(self, csvfile=None, lang=None, indent=4,
+    def to_frictionless_dict(self, csvfile=None, lang=None,
                              resource_type=None):
         csv = {}
         self.set_if_attr_non_null(csv, 'delimiter')
-        self.set_if_attr_non_null(csv, 'quote_char', 'quoteChar')
-        self.set_if_attr_non_null(csv, 'stutter', 'doubleQuote')
-        self.set_if_attr_non_null(csv, 'escape_char', 'escapeChar')
+        self.set_if_attr_non_null(csv, 'quoteChar', 'quote_char')
+        self.set_if_attr_non_null(csv, 'doubleQuote', 'stutter_quotes')
+        self.set_if_attr_non_null(csv, 'escapeChar', 'escape_char')
         dialect = {}
-        self.set_if_attr_non_null(dialect, 'header')
-        if self.header:
-            dialect['header_rows'] = list(range(nvl(self.num_header_rows, 1)))
+        self.set_if_attr_non_null(dialect, 'header', 'header_row')
+        if self.header_row_count > 0:
+            dialect['header'] = True
+            dialect['headerRows'] = list(range(nvl(self.header_row_count, 1)))
         if csv:
             dialect['csv'] = csv
+        name = nvl(csvfile, nvl(self.path, 'data.csv'))
         d = {
-            'path': nvl(csvfile, nvl(self.path, 'data.csv')),
-            'name': os.path.basename(path).splitext()[0],
+            'name': os.path.splitext(os.path.basename(name))[0],
             'type': 'table',
+            'path': nvl(csvfile, nvl(self.path, 'data.csv')),
             'scheme': 'file',
             'format': 'csv',
             'mediatype': 'text/csv',
@@ -181,15 +183,15 @@ class FrictionlessMetadata(SerialMetadata):
         if self.encoding:
             self.set_if_attr_non_null(d, 'encoding')
         if dialect:
-            self.set_if_non_null(d, dialect)
+            self.set_if_non_null(d, 'dialect', dialect)
 
         schema = {}
         fields = [
-            self.field_to_frictionless_json(field) for field in self.fields
+            self.field_to_frictionless_dict(field) for field in self.fields
         ]
         if fields:
             schema['fields'] = fields
-        if self.null_indicator:
+        if listify(self.null_indicator) != []:
             schema['missingValues'] = listify(self.null_indicator)
         for key, attr in (
             ('commentPrefix', 'comment_prefix'),
@@ -197,7 +199,7 @@ class FrictionlessMetadata(SerialMetadata):
         ):
             self.set_if_attr_non_null(schema, key, attr)
 
-        if self.trim in (True, start):
+        if self.trim in (True, 'start'):
             schema['skipInitialSpace'], True
 
 
@@ -206,18 +208,14 @@ class FrictionlessMetadata(SerialMetadata):
             d = {
                 'resources': [d]
             }
-        return json.dumps(d, indent=indent)
+        return d
 
-    def write_frictionless(self, path, csvfile=None, lang=None, indent=4):
+    def write_frictionless(self, path, csvfile=None, indent=None, lang=None):
         if not csvfile:
             csvfile = self.choose_csv_from_frictionless_name(path)
-        if isyaml(path):
-            converter = self.to_frictionless_yaml
-        else:
-            converter = self.to_frictionless_json
-        out = converter(csvfile=csvfile, lang=lang, indent=indent)
-        with open(path, 'w') as f:
-            f.write(out)
+        d = self.to_frictionless_dict(csvfile=csvfile, lang=lang)
+        write_json_or_yaml(d, path, indent=indent)
+
 
     def set_if_attr_non_null(self, d, key, attribute=None):
         """
@@ -336,12 +334,11 @@ class FrictionlessMetadata(SerialMetadata):
         self.comment_char = dialect.get('commentChar')
         self.skip_blank_rows = dialect.get('skipBlankRows')
         self._comment_rows = dialect.get('commentRows')  # list of rows
-
         self._descriptor = csv.get('descriptor')               # str|dict
         self.delimiter = csv.get('delimiter')                  # str
         self.line_terminator = csv.get('lineTerminator')       # ? str
         self.quote_char = csv.get('quoteChar')                 # str
-        self.stutter = csv.get('doubleQuote')                  # bool
+        self.stutter_quotes = csv.get('doubleQuote')           # bool
         self.escape_char = csv.get('escapeChar')               # str
         self.null_sequence = csv.get('nullSequence')           # str
         self.skip_initial_space = csv.get('skipInitialSpace')  # bool
@@ -527,9 +524,9 @@ def write_json_or_yaml(d, path, indent=None, verbose=False):
     with open(path, 'w') as f:
         if isyaml(path):
             f.write(yamldump(d, default_flow_style=False,
-                    indent=nvl(indent, 2)))
+                    indent=nvl(indent, 2), sort_keys=False))
         else:
-            f.write(json.dumps(d, dumper=YAMLDumper, indent=nvl(indent, 4)))
+            f.write(json.dumps(d, indent=nvl(indent, 4)))
     if verbose:
         print(f'Written {path}.')
 

@@ -710,8 +710,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
             backend = get_backend(backend)
             if backend and backend != OG_BACKEND:
                 kw['dtype_backend'] = backend
-    # print(kw)
-    # print(path)
+
     df = pd.read_csv(path, **kw)
     specified_types = kw.get('dtype')
     dates = []

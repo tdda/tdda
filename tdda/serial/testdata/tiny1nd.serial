@@ -21,8 +21,8 @@
             },
             {
                 "name": "t",
-                "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "fieldtype": "date",
+                "format": "iso8601-date"
             }
         ],
         "encoding": "UTF-8",

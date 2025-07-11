@@ -3,12 +3,11 @@ resources:
     csv:
       delimiter: ;
       doubleQuote: false
-      escapeChar: \
       quoteChar: ''''
     header: true
     header_rows:
     - 0
-  encoding: latin1
+  encoding: latin-1
   format: csv
   mediatype: text/csv
   name: tiny1nd
@@ -29,7 +28,7 @@ resources:
       type: number
     - name: s
       type: string
-    - format: '%d/%M/%Y'
+    - format: '%d/%m/%Y'
       name: t
       type: date
     missingValues:

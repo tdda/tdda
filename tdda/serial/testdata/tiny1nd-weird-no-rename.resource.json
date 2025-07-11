@@ -5,7 +5,7 @@
     "scheme": "file",
     "format": "csv",
     "mediatype": "text/csv",
-    "encoding": "latin1",
+    "encoding": "latin-1",
     "dialect": {
         "header": true,
         "header_rows": [
@@ -14,8 +14,7 @@
         "csv": {
             "delimiter": ";",
             "quoteChar": "'",
-            "doubleQuote": false,
-            "escapeChar": "\\"
+            "doubleQuote": false
         }
     },
     "schema": {
@@ -41,7 +40,7 @@
             {
                 "name": "t",
                 "type": "date",
-                "format": "%d/%M/%Y"
+                "format": "%d/%m/%Y"
             }
         ],
         "missingValues": ["."]

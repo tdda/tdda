@@ -5,6 +5,7 @@ import sys
 from tdda.state import get_config
 
 from tdda.serial.csvw import serial_to_csvw
+from tdda.serial.frictionless import serial_to_frictionless
 from tdda.serial.infer import infer_format_from_flat_file
 from tdda.serial.metadata import SerialMetadata, get_metadata_flavours
 from tdda.serial.pandasio import (
@@ -67,7 +68,6 @@ class SerialConverter:
     def validate(self):
         kind, parts = find_metadata_type_from_path(self.outpath)
         _, ext = os.path.splitext(self.outpath)
-
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
 

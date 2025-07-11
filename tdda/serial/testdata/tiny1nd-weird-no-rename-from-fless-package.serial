@@ -30,19 +30,18 @@
             {
                 "name": "t",
                 "fieldtype": "date",
-                "format": "%d/%M/%Y"
+                "format": "%d/%m/%Y"
             }
         ],
         "path": "tiny1nd-weird.ssv",
-        "encoding": "latin1",
+        "encoding": "latin-1",
         "delimiter": ";",
         "quote_char": "'",
-        "escape_char": "\\",
+        "stutter_quotes": false,
         "null_indicator": ".",
         "header_row_count": 1,
         "table_number": 0,
         "n_resources": 1,
-        "header": true,
-        "stutter": false
+        "header": true
     }
 }

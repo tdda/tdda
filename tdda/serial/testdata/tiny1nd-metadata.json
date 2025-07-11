@@ -23,7 +23,7 @@
                 },
                 {
                     "name": "t",
-                    "datatype": "datetime"
+                    "datatype": "date"
                 }
             ]
         }

@@ -869,7 +869,6 @@ class TestCSVWTests(ReferenceTestCase):
     def test033(self):
         pass  # same as 32 for our purposes
 
-    @tag
     def test034(self):
         test = this_function_name()
         f = self.fullpath

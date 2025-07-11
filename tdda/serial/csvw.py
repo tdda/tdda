@@ -221,7 +221,7 @@ class CSVWMetadata(SerialMetadata):
             ('header', None),
             ('headerRowCount', 'header_row_count'),
             ('null', '_null'),
-            ('doubleQuote', 'stutter'),
+            ('doubleQuote', 'stutter_quotes'),
             ('quoteChar', 'quote_char'),
             ('commentPrefix', 'comment_char'),
             ('lineTerminators', 'line_terminator'),
@@ -460,7 +460,7 @@ class CSVWMetadata(SerialMetadata):
         self.delimiter = self.get_val(dialect, 'delimiter')
         self.encoding = self.get_val(dialect, 'encoding')
         self.null_indicator = self.get_val(dialect, 'null')
-        self.stutter = self.get_val(dialect, 'doubleQuote')
+        self.stutter_quotes = self.get_val(dialect, 'doubleQuote')
         self.header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')
         if header and not self.header_row_count:

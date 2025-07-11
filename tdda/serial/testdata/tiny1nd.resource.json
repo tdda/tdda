@@ -8,13 +8,12 @@
     "encoding": "utf-8",
     "dialect": {
         "header": true,
-        "header_rows": [
+        "headerRows": [
             0
         ],
         "csv": {
             "delimiter": ",",
             "quoteChar": "\"",
-            "doubleQuote": false,
             "escapeChar": "\\"
         }
     },
@@ -41,6 +40,8 @@
                 "type": "date"
             }
         ],
-        "missingValues": [""]
+        "missingValues": [
+            ""
+        ]
     }
 }
