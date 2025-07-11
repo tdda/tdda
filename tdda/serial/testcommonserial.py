@@ -304,10 +304,60 @@ class TestFindMetadata(ReferenceTestCase):
         self.assertEqual(kind, 'pandas.read_csv')
         self.assertEqual(md, {'sep': '|'})
 
-    @tag
     def testDetectMetadataKindFromPath(self):
-        f = find_metadata_kind_from_path
-        self.assertEqual(f('foo-metadata.json'), 'csvw')
+        # CSVW
+        self.assertEqual(find_metadata_type_from_path('foo-metadata.json'),
+                         ('csvw', ('foo', 'metadata', None, '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo-csvmetadata.json'),
+                         ('csvw', ('foo', 'csvmetadata', 'csv', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo-csv-metadata.json'),
+                         ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')))
+
+        self.assertEqual(find_metadata_type_from_path('foo.metadata.json'),
+                         ('csvw', ('foo', 'metadata', None, '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo.csvmetadata.json'),
+                         ('csvw', ('foo', 'csvmetadata', 'csv', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo.csv.metadata.json'),
+                         ('csvw', ('foo', 'csv.metadata', 'csv.', '.json')))
+
+        self.assertEqual(find_metadata_type_from_path('foo.csv-metadata.json'),
+                         ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')))
+
+
+        self.assertEqual(find_metadata_type_from_path(
+            'foo.bar-baz.csv-metadata.json'),
+            ('csvw', ('foo.bar-baz', 'csv-metadata', 'csv-', '.json')))
+        self.assertEqual(find_metadata_type_from_path(
+            'foo-bar.baz.csv-metadata.json'),
+            ('csvw', ('foo-bar.baz', 'csv-metadata', 'csv-', '.json')))
+
+        self.assertEqual(find_metadata_type_from_path('foo.resource.json'),
+                         ('frictionless', ('foo', 'resource', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo.package.json'),
+                         ('frictionless', ('foo', 'package', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo.schema.json'),
+                         ('frictionless', ('foo', 'schema', '.json')))
+
+        self.assertEqual(find_metadata_type_from_path('foo-resource.json'),
+                         ('frictionless', ('foo', 'resource', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo-package.json'),
+                         ('frictionless', ('foo', 'package', '.json')))
+        self.assertEqual(find_metadata_type_from_path('foo-schema.json'),
+                         ('frictionless', ('foo', 'schema', '.json')))
+
+        self.assertEqual(find_metadata_type_from_path(
+            'foo.bar-baz.resource.json'),
+            ('frictionless', ('foo.bar-baz', 'resource', '.json')))
+        self.assertEqual(find_metadata_type_from_path(
+            'foo-bar.baz.resource.json'),
+            ('frictionless', ('foo-bar.baz', 'resource', '.json')))
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo.json'),
+            (None, None)
+        )
+
+
 
     def test_find_metadata_priority(self):
         d = {

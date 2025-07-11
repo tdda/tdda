@@ -71,7 +71,7 @@ RE_ISO8601 = re.compile(r'^%Y.%m.%d([T ]%H.%M.%S(\.%f)?)?$')
 
 
 # Allowed keys in .serial files
-METADATA_FLAVOURS = [
+SERIAL_METADATA_FLAVOURS = [
     TDDASERIAL.key,
     'csvw',
     'pandas.read_csv',
@@ -80,7 +80,7 @@ METADATA_FLAVOURS = [
 
 
 
-METADATA_FLAVOUR_MAP = {
+SERIAL_METADATA_FLAVOUR_MAP = {
     'tdda.serial': 'tdda.serial',
     'pandas.read_csv': 'pandas.read_csv',
     'pandas.DataFrame.to_csv': 'pandas.DataFrame.to_csv',
@@ -569,7 +569,7 @@ def quoting_as_name(code):
 
 
 def get_metadata_flavour(flavour):
-    out_flavour = METADATA_FLAVOUR_MAP.get((flavour or '.').lower())
+    out_flavour = SERIAL_METADATA_FLAVOUR_MAP.get((flavour or '.').lower())
     if flavour and out_flavour is None:
         error(f'Unknown metadata flavour: {flavour}')
     return out_flavour

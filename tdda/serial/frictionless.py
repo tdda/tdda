@@ -19,13 +19,14 @@ from tdda.serial.metadata import (
 from tdda.serial.utils import FRICTIONLESS_MD_RE
 from tdda.utils import nvl, listify, warn, error
 
+FRICTIONLESS_TELL_KEYS = ('package', 'resource', 'schema')
 
 FRICTIONLESS_TYPE_TO_FIELDTYPE = {
     'boolean': FieldType.BOOL,
     'integer': FieldType.INT,
 
     'string': FieldType.STRING,
-    'number': FieldType.Number,
+    'number': FieldType.NUMBER,
 
     'datetime': FieldType.DATETIME,
     'date': FieldType.DATE,
@@ -101,7 +102,7 @@ class FrictionlessMetadata(SerialMetadata):
 
         self.get_dialect()
         self.get_non_dialect_attrs()
-        self.get_schema _and_fields_metadata()
+        self.get_schema_and_fields_metadata()
 
         self.validate()
 
@@ -426,8 +427,6 @@ class FrictionlessMetadata(SerialMetadata):
         self.null_indicator = self._schema.get('missingValues')
         self.primary_key = self._schema.get('primaryKey')
         self.foreign_keys = self._schema.get('foreignKeys')
-
-
 
     def choose_csv_from_frictionless_name(self, frictionless_name):
         sep = self.delimiter or ','

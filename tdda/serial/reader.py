@@ -12,11 +12,15 @@ from tdda.serial.metadata import (
     URI,
     VERBOSITY,
     TDDASERIAL,
-    METADATA_FLAVOURS,
+    SERIAL_METADATA_FLAVOURS,
     SerialMetadata,
     TDDASerialError,
 )
 from tdda.serial.csvw import CSVWMetadata
+from tdda.serial.frictionless import (
+    FrictionlessMetadata,
+    FRICTIONLESS_TELL_KEYS
+)
 
 from tdda.serial.utils import (
     find_associated_metadata_file,
@@ -67,7 +71,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
             error(f'{path} does not appear to be a tdda.serial file.')
         kw = md.get('tdda.serial') or {}
         libs = {}
-        for flavour in METADATA_FLAVOURS:
+        for flavour in SERIAL_METADATA_FLAVOURS:
             spec = md.get(flavour)
             if spec:
                 libs[flavour] = spec
@@ -75,13 +79,18 @@ def load_metadata(path, md_file_type=None, table_number=None,
     elif ext == '.json' or text.startswith('{'):
         kind, _ = find_metadata_type_from_path(path)
         structured = json.loads(text)
-        kind, md = find_metadata_kind(structured)
+        if kind is None:
+            kind, md = find_metadata_kind(structured)
         if kind == TDDASERIAL.key:
             md = SerialMetadata(**md)
         elif kind == 'csvw':
             md = CSVWMetadata(path, table_number=table_number,
                               for_table_name=for_table_name,
                               verbosity=verbosity)
+        elif kind == 'frictionless':
+            md = FrictionlessMetadata(path, table_number=table_number,
+                                      for_table_name=for_table_name,
+                                      verbosity=verbosity)
         elif kind:
             md = SerialMetadata(libs={kind: md})
         else:
@@ -94,9 +103,10 @@ def load_metadata(path, md_file_type=None, table_number=None,
                                   verbosity=verbosity)
 
     elif ext == '.yaml':
-        with open(path) as f:
-            md = yaml.load(f, yaml.SafeLoader)
-            kind = 'frictionless'
+        md = FrictionlessMetadata(path, table_number=table_number,
+                                  for_table_name=for_table_name,
+                                  verbosity=verbosity)
+        kind = 'frictionless'
     else:
         error(f'Unexpected file extension {ext} for metadata '
               f'file.\nExpected .serial, .json, or .yaml.')
@@ -204,13 +214,16 @@ def find_metadata_kind(mds, preferred=None):
             if preferred in md:
                 kind = preferred
                 return preferred, md[preferred]
-        for k in METADATA_FLAVOURS:
+        for k in SERIAL_METADATA_FLAVOURS:
             if k in md:
                 return k, md[k]
-            if CONTEXT_KEY in md:
-                context = md.get(CONTEXT_KEY)
-                if context == URI.CSVW:
-                    kind = 'csvw'
-                return kind, md
+        if CONTEXT_KEY in md:
+            context = md.get(CONTEXT_KEY)
+            if context == URI.CSVW:
+                kind = 'csvw'
+            return kind, md
+        for key in FRICTIONLESS_TELL_KEYS:
+            if key in md:
+                return key, md[key]
         dicts.extend([v for v in md.values() if isinstance(v, dict)])
     return find_metadata_kind(dicts, preferred)

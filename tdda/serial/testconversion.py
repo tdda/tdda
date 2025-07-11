@@ -9,6 +9,10 @@ from tdda.serial import csv_to_pandas
 from tdda.serial.converter import SerialConverter
 from tdda.serial.csvw import serial_to_csvw, CSVWMetadata
 from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
+from tdda.serial.frictionless import (
+    serial_to_frictionless,
+    FrictionlessMetadata
+)
 from tdda.serial.metadata import SerialMetadata, FieldType
 from tdda.serial.reader import load_metadata
 from tdda.serial.infer import infer_format_from_flat_file, guess_type
@@ -227,6 +231,21 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
         self.assertEqual(len(buf), 3)  # Escape; Booleans; date format
 
+    def testInferMetadataWeird(self):
+        md = infer_format_from_flat_file(tdpath('tiny1nd-weird.ssv'))
+        self.assertStringCorrect(md.to_json(),
+                                 tdpath('tiny1nd-weird-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def testInferMetadataWeirdCLI(self):
+        inpath = tdpath('tiny1nd-weird.ssv')
+        outpath = tmppath('tiny1nd-weird-inferred2.serial')
+        c = SerialConverter(cli_args=[inpath, outpath, '-g'])
+        c.convert()
+        self.assertFileCorrect(outpath,
+                               tdpath('tiny1nd-weird-inferred.serial'),
+                               ignore_lines=self.IGL)
+
     def testCSVWToSerial(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath = tmppath('tiny1nd-weird-no-rename-from-csvw.serial')
@@ -381,20 +400,6 @@ class TestSerialConversions(ReferenceTestCase):
                                  tdpath('minimal-inferred.serial'),
                                  ignore_lines=self.IGL)
 
-    def testInferMetadataWeird(self):
-        md = infer_format_from_flat_file(tdpath('tiny1nd-weird.ssv'))
-        self.assertStringCorrect(md.to_json(),
-                                 tdpath('tiny1nd-weird-inferred.serial'),
-                                 ignore_lines=self.IGL)
-
-    def testInferMetadataWeirdCLI(self):
-        inpath = tdpath('tiny1nd-weird.ssv')
-        outpath = tmppath('tiny1nd-weird-inferred2.serial')
-        c = SerialConverter(cli_args=[inpath, outpath, '-g'])
-        c.convert()
-        self.assertFileCorrect(outpath,
-                               tdpath('tiny1nd-weird-inferred.serial'),
-                               ignore_lines=self.IGL)
     def testConversionToCSVWObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
@@ -428,6 +433,200 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
                                ignore_lines=self.IGL)
 
+    def testFrictionlessToSerial(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename.package.json')
+        outpath = tmppath('tiny1nd-weird-no-rename-from-fless.serial')
+        refpath =  tdpath('tiny1nd-weird-no-rename-from-fless.serial')
+
+        c = SerialConverter(frictionlesspath, outpath)
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, refpath)
+        self.assertEqual(buf, [])
+
+    def atestFrictionlessToSerialPandas(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        outpath_pd = tmppath(
+            'tiny1nd-weird-no-rename-from-fless-pd.serial'
+        )
+        refpath_pd =  tdpath(
+            'tiny1nd-weird-no-rename-from-fless-pd.serial'
+        )
+
+        outpath_py = tmppath('tiny1nd_weird_no_rename_from_fless_pd.py')
+        refpath_py =  tdpath('tiny1nd_weird_no_rename_from_fless_pd.py')
+
+        c = SerialConverter(frictionlesspath, outpath_pd, out_format='pd.r')
+        c.convert()
+        self.assertFileCorrect(outpath_pd, refpath_pd, ignore_lines=self.IGL)
+
+        c = SerialConverter(frictionlesspath, outpath_py, out_format='pd.r')
+        c.convert()
+        self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
+
+        df = csv_to_pandas(tdpath('tiny1nd-weird.ssv'), refpath_pd)
+        ref_df = tiny_pandas_df(nulls=True, nullable_types=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+        from tdda.serial.testdata.tiny1nd_weird_no_rename_from_fless_pd import (
+            read_data
+        )
+        df = read_data(tdpath('tiny1nd-weird.ssv'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+    def atestFrictionlessToSerialPolars(self):
+        # Without different field names in Frictionless from flat file
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+
+        name = 'tiny1nd-weird-no-rename-from-fless-pl.serial'
+        outpath_pl = tmppath(name)
+        refpath_pl =  tdpath(name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_pl, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl, refpath_pl, ignore_lines=self.IGL)
+        self.assertEqual(buf, [
+  'Polars will not understand the following boolean values:\n'
+  ' Yes, n.\n'
+  'If they actually occur in the file, fields will need to be set to string.\n'
+  '(Use map_other_bools_to_string=True.)\n',
+  'Field t date format %d/%m/%Y will not be understood by Polars.\n'
+  'Setting to pl.String.']
+        )
+
+    def atestFrictionlessToSerialPolarsPython(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        py_name = 'tiny1nd_weird_no_rename_from_fless_pl.py'
+        outpath_py = tmppath(py_name)
+        refpath_py =  tdpath(py_name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_py, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
+        self.assertEqual(len(buf), 2)  # booleans, date
+        # ^^^ Code doesn't work because of booleans. But does warn.
+
+    def atestFrictionlessToSerialPolars2(self):
+        frictionlesspath = tdpath('tiny1nd-weird-no-rename-metadata.json')
+        name2 = 'tiny1nd-weird-no-rename-from-fless-pl2.serial'
+        outpath_pl2 = tmppath(name2)
+        refpath_pl2 =  tdpath(name2)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_pl2, out_format='pl.r',
+                            map_other_bools_to_string=True)
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
+
+        Warn, buf = testwarn()
+        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2,
+                           warner=Warn)
+        ref_df = tiny_polars_df(nulls=True, sNullNull=True,
+                                euroStrDates=True, sBools=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+    def atestFrictionlessToSerialPolarsWithRename(self):
+        frictionlesspath = tdpath('tiny1nd-weird-metadata.json')
+
+        name = 'tiny1nd-weird-from-fless-pl.serial'
+        outpath_pl = tmppath(name)
+        refpath_pl =  tdpath(name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_pl, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl, refpath_pl, ignore_lines=self.IGL)
+        self.assertEqual(buf, [
+  'Polars will not understand the following boolean values:\n'
+  ' Yes, n.\n'
+  'If they actually occur in the file, fields will need to be set to string.\n'
+  '(Use map_other_bools_to_string=True.)\n',
+  'Field IAmDate date format %d/%m/%Y will not be understood by Polars.\n'
+  'Setting to pl.String.']
+        )
+
+    def atestFrictionlessToSerialPolarsWithRenamePython(self):
+        frictionlesspath = tdpath('tiny1nd-weird-metadata.json')
+        py_name = 'tiny1nd_weird_from_fless_pl.py'
+        outpath_py = tmppath(py_name)
+        refpath_py =  tdpath(py_name)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_py, out_format='pl.r')
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_py, refpath_py)
+        self.assertEqual(len(buf), 2)  # booleans, date
+        # ^^^ Code doesn't work because of booleans. But does warn.
+
+    def atestFrictionlessToSerialPolarsWithRename2(self):
+        frictionlesspath = tdpath('tiny1nd-weird-metadata.json')
+        name2 = 'tiny1nd-weird-from-fless-pl2.serial'
+        outpath_pl2 = tmppath(name2)
+        refpath_pl2 =  tdpath(name2)
+
+        Warn, buf = testwarn()
+        c = SerialConverter(frictionlesspath, outpath_pl2, out_format='pl.r',
+                            map_other_bools_to_string=True)
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
+
+        Warn, buf = testwarn()
+        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2,
+                           warner=Warn)
+        ref_df = tiny_polars_df(nulls=True, sNullNull=True,
+                                euroStrDates=True, sBools=True,
+                                longNames=True)
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+
+    def atestInferMetadataSimple(self):
+        md = infer_format_from_flat_file(tdpath('simple.csv'))
+        self.assertStringCorrect(md.to_json(), tdpath('simple-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def atestInferMetadataMinimal(self):
+        md = infer_format_from_flat_file(tdpath('minimal.csv'))
+        self.assertStringCorrect(md.to_json(),
+                                 tdpath('minimal-inferred.serial'),
+                                 ignore_lines=self.IGL)
+
+    def atestConversionToFrictionlessObject(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        frictionless = serial_to_frictionless(md)
+        # Just check this hasn't broken anything serious
+        self.assertStringCorrect(frictionless.to_json(), tiny1nd_serial,
+                                 ignore_lines=self.IGL)
+
+    def atestConversionToFrictionless_t1nds(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        frictionless_md = serial_to_frictionless(md)
+        frictionless_json = frictionless_md.to_frictionless_json('tiny1nd.csv')
+        self.assertStringCorrect(frictionless_json,
+                                 tdpath('tiny1nd-metadata.json'),
+                                 ignore_lines=self.IGL)
+
+    def atestConversionToFrictionless_t1nds_file(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        frictionless_md = serial_to_frictionless(md)
+        outpath = tmppath('tiny1nd-metadata.json')
+        frictionless_md.write_frictionless(outpath)
+        self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
+                               ignore_lines=self.IGL)
+
+    def atestConversionToFrictionless_t1nds_file_cli(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        outpath = tmppath('tiny1nd.csvmetadata.json')
+        c = SerialConverter(cli_args=[tiny1nd_serial, outpath])
+        c.convert()
+        self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
+                               ignore_lines=self.IGL)
+
+
+class TestSerialUtilityFunction(ReferenceTestCase):
     def testTypeInference(self):
         self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
         self.assertEqual(guess_type(['1000', '-1', '0']), FieldType.INT)
@@ -520,6 +719,60 @@ class TestSerialConversions(ReferenceTestCase):
             f'b.txt'
         )
 
+    def testFrictionlessNameInference(self):
+        for sep, L in ((',', 'c'), ('\t', 't'), ('|', 'p'), (';', 's')):
+            m = FrictionlessMetadata()
+            m.delimiter = sep
+            expected = f'a.{L}sv'
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('a.json'),
+                expected
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('/d/a.json'),
+                expected
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('~/d/a.json'),
+                expected
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('b.package.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('b.resource.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('b.schema.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_frictionless_name('b-package.json'),
+                f'b.{L}sv'
+            )
+
+        m = FrictionlessMetadata()
+        m.delimiter = '/'
+        expected = f'a.txt'
+        self.assertEqual(
+            m.choose_csv_from_frictionless_name('a.json'),
+            expected
+        )
+        self.assertEqual(
+            m.choose_csv_from_frictionless_name('/d/a.json'),
+            expected
+        )
+        self.assertEqual(
+            m.choose_csv_from_frictionless_name('~/d/a.json'),
+           expected
+           )
+
+        self.assertEqual(
+            m.choose_csv_from_frictionless_name('b.resource.json'),
+            f'b.txt'
+        )
 
 
 if __name__ == '__main__':
