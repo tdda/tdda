@@ -192,7 +192,8 @@ class CSVWMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'dc:description', 'description')
         return d
 
-    def to_csvw_json(self, csvfile=None, lang=None, indent=4):
+    def to_csvw_json(self, csvfile=None, lang=None, indent=4,
+                     resource_type=None):
         csvfile = nvl(csvfile, 'data.csv')
         dialect = {}
 

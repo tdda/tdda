@@ -17,6 +17,7 @@ from tdda.serial.polarsio import (
     serial_to_polars_read_csv_python,
 )
 from tdda.serial.reader import load_metadata
+from tdda.serial.utils import find_metadata_type_from_path
 from tdda.utils import error, warn, nvl
 
 
@@ -64,25 +65,36 @@ class SerialConverter:
         self.__dict__.update(vars(flags))
 
     def validate(self):
+        kind, parts = find_metadata_type_from_path(self.outpath)
         _, ext = os.path.splitext(self.outpath)
-        if ext == '.serial':
-            self.broad_out = 'tdda.serial'
-        elif ext in ('.json', '.csvw'):
-            self.broad_out = 'csvw'
-        elif ext == '.py':
-            self.broad_out = 'python'
-        else:
-            warn('Non-standard output extension {ext}. Continuing.')
 
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
+
+        if 'csvw' in self.out_formats and len(self.out_formats) > 1:
+            error('You cannot combine csvw with other output formats.')
+        if (
+            len(self.out_formats) > 1
+            and ('frictionless' in self.out_formats
+                 or 'frictionless.resource' in self.out_formats
+                 or 'frictionless.package' in self.out_formats)
+        ):
+            error('You cannot combine frictionless with other output formats.')
+
+        if ext == '.py':
+            self.broad_out = 'python'
+        elif kind:
+            self.broad_out = kind
+        elif ext in ('.csvw'):
+            self.broad_out = 'csvw'
+        else:
+            warn('Cannot infer output format. Use --to FMT to specify.')
+
 
         self.for_csv = getattr(self, 'for', None)
 
         if getattr(self, 'generate', False):
             self.generate = True
-        if 'csvw' in self.out_formats and len(self.out_formats) > 1:
-            error('You cannot combine csvw with other output formats.')
 
     def parser(self):
         formatter = argparse.RawDescriptionHelpFormatter
@@ -91,7 +103,8 @@ class SerialConverter:
                                          formatter_class=formatter)
 
         parser.add_argument('inpath',
-            help='input metadata file (.serial or csw')
+            help='input metadata file (.serial, csvw (json), '
+                 'or frictionless (yaml/json)')
         parser.add_argument('outpath', nargs='?',
                             help='output metadata file (if any)')
 
@@ -154,6 +167,9 @@ class SerialConverter:
         elif self.broad_out == 'csvw':
             csvw = serial_to_csvw(md_out)
             csvw.write_csvw(self.outpath, self.for_csv)
+        elif self.broad_out == 'frictionless':
+            fless = serial_to_frictionless(md_out)
+            fless.write_frictionless(self.outpath, self.for_csv)
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)

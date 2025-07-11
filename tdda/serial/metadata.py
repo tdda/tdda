@@ -80,13 +80,16 @@ SERIAL_METADATA_FLAVOURS = [
 
 
 
-SERIAL_METADATA_FLAVOUR_MAP = {
+METADATA_FLAVOUR_MAP = {
     'tdda.serial': 'tdda.serial',
     'pandas.read_csv': 'pandas.read_csv',
     'pandas.DataFrame.to_csv': 'pandas.DataFrame.to_csv',
     'polars.read_csv': 'polars.write_csv',
     'polars.DataFrame.to_csv': 'polars.DataFrame.to_csv',
     'csvw': 'csvw',
+    'frictionless.package': 'frictionless.package',
+    'frictionless.resource': 'frictionless.resource',
+    'frictionless': 'frictionless',
     'python.csv.reader': 'python.csv.reader',
     'python.csv.writer': 'python.csv.writer',
 
@@ -97,6 +100,14 @@ SERIAL_METADATA_FLAVOUR_MAP = {
     'pl.w': 'polars.DataFrame.to_csv',
     'csv.r': 'python.csv.reader',
     'csv.w': 'python.csv.writer',
+
+    'fless': 'frictionless',
+    'fless.r':  'frictionless.resource',
+    'fless.p':  'frictionless.package',
+
+    'fl': 'frictionless',
+    'fl.r':  'frictionless.resource',
+    'fl.p':  'frictionless.package',
 }
 
 
@@ -570,7 +581,7 @@ def quoting_as_name(code):
 
 
 def get_metadata_flavour(flavour):
-    out_flavour = SERIAL_METADATA_FLAVOUR_MAP.get((flavour or '.').lower())
+    out_flavour = METADATA_FLAVOUR_MAP.get((flavour or '.').lower())
     if flavour and out_flavour is None:
         error(f'Unknown metadata flavour: {flavour}')
     return out_flavour
