@@ -5,8 +5,7 @@
         "fields": [
             {
                 "name": "b",
-                "fieldtype": "bool",
-                "format": "Yes|n"
+                "fieldtype": "string"
             },
             {
                 "name": "i",
@@ -14,25 +13,19 @@
             },
             {
                 "name": "f",
-                "fieldtype": "number"
+                "fieldtype": "float"
             },
             {
                 "name": "s",
                 "fieldtype": "string"
             },
             {
-                "name": "t",
-                "fieldtype": "date",
-                "format": "%d/%m/%Y"
+                "name": "t\n",
+                "fieldtype": "date"
             }
         ],
-        "encoding": "latin-1",
+        "encoding": "UTF-8",
         "delimiter": ";",
-        "quote_char": "'",
-        "null_indicator": ".",
-        "header_row_count": 1,
-        "valid": true,
-        "table_number": 0,
-        "n_tables": 1
+        "null_indicator": "."
     }
 }

@@ -1,0 +1,558 @@
+import json
+import os
+import re
+
+from yaml import load as yamlload, dump as yamldump
+try:
+    from yaml import CLoader as YAMLLoader, CDumper as YAMLDumper
+except ImportError:
+    from yaml import YAMLLoader, YAMLDumper
+
+from tdda.serial.metadata import (
+    DateFormat,
+    FieldMetadata,
+    FieldType,
+    RE_ISO8601,
+    SerialMetadata,
+    writer,
+)
+from tdda.serial.utils import FRICTIONLESS_MD_RE
+from tdda.utils import nvl, listify, warn, error
+
+
+FRICTIONLESS_TYPE_TO_FIELDTYPE = {
+    'boolean': FieldType.BOOL,
+    'integer': FieldType.INT,
+
+    'string': FieldType.STRING,
+    'number': FieldType.Number,
+
+    'datetime': FieldType.DATETIME,
+    'date': FieldType.DATE,
+
+    'time': FieldType.TIME,
+
+    'object': FieldType.STRING,     # JSON
+    'year': FieldType.INT,
+    'yearmonth': FieldType.STRING,  # YYYY-MM
+
+    'duration': FieldType.STRING,
+    'geopoint': FieldType.STRING,
+    'geojson': FieldType.STRING,
+    'any': FieldType.STRING,
+    'array': FieldType.STRING,      # JSON array
+}
+
+
+FIELDTYPE_TO_FRICTIONLESS = {
+    FieldType.BOOL: 'boolean',
+    FieldType.INT: 'integer',
+    FieldType.FLOAT: 'number',
+    FieldType.NUMBER: 'number',
+    FieldType.STRING: 'string',
+    FieldType.DATE: 'date',
+    FieldType.DATETIME: 'datetime',
+    FieldType.DATETIME_WITH_TIMEZONE: 'datetime',
+}
+
+
+class FrictionlessMetadata(SerialMetadata):
+    """
+    Subclass of SerialMetadata specifically for Frictionless Metadata provided
+    in Frictionless format.
+
+    Imports the information from a frictionless YAML.JSON file
+    (typically foo.resource.yaml or similar for file foo.csv)
+    to SerialMetadata.
+
+    Args:
+        spec should normally either be a path to a Frictionless file
+            (.yaml or .json)
+             or a dictionary of the form returned by performing
+             a load on such a (valid) Frictionless file).
+             If None, minimal initialization is performed
+
+    Validation Properties:
+            .valid      is True if no errors were encountered
+            ._errors    is a list of (textual) errors (if any)
+            ._warnings  is a list of (textual) warnings generated
+                        while reading the Frictionless information
+
+    """
+    def __init__(self, spec=None, extensions=False, table_number=None,
+                 for_table_name=None, verbosity=2):
+        super().__init__(verbosity=verbosity)
+        self._url = None
+        self._frictionless_base_url = None
+        self._frictionless_language = None
+        self._extensions = extensions
+        self._fullpath = None
+        self._source = 'frictionless'
+        self._metadata_source_dir = None
+        self.table_number = table_number
+        self.for_table_name = for_table_name
+
+        if spec is None:  # Only normally used by to_frictionless and tests
+            return
+
+        self.read(spec)
+        self.get_schema_and_fields()
+        self.get_resource_metadata()
+
+        self.get_dialect()
+        self.get_non_dialect_attrs()
+        self.get_schema _and_fields_metadata()
+
+        self.validate()
+
+    def read(self, spec):
+        """
+        Reads the Frictionless spec from the file if spec is a path to a file
+        Stores spec in ._frictionless.
+
+        Args:
+            spec: path to Frictionless file or JSON-read contents thereof
+                  (or equivalent)
+        """
+        if type(spec) == str:
+            load_json_or_yaml(spec)
+            self._metadata_source_path = os.path.abspath(spec)
+            self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
+        else:
+            self._frictionless = spec
+
+    def get_resource_metadata(self):
+        r = self._resource
+        self._resource_name = getattr(r, 'name', None)
+        self.path = getattr(r, 'path', None)
+        self._scheme = getattr(r, 'scheme')  # file
+        self._format = getattr(r, 'format')  # csv
+        if self._format and self._format != 'csv':
+            warn(f'The format is "{self._format}"; expected "csv". '
+                 'Continuing.')
+        self._media_type = getattr(r, 'mediatype')  # text/csv
+        if self._mediatype and self._mediatype != 'text/csv':
+            warn(f'The mormat is "{self._format}"; expected "text/csv". '
+                 'Continuing.')
+        self.encoding = getattr(r, 'encoding')
+
+    def field_to_frictionless_json(self, field):
+        d = {}
+        self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
+        self.set_if_non_null(d, 'datatype',
+                             FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype))
+        self.set_if_attr_non_null(d, 'titles', 'name')
+        fmt = field.format
+        if fmt is None and field.fieldtype.startswith('date'):
+            fmt = self.date_format
+            d['format'] = serial_date_format_to_frictionless(fmt,
+                                                             field.fieldtype)
+        elif field.true_values and field.false_values:
+            d['format'] = booleans_to_frictionless(
+                field.true_values, field.false_values
+            )
+        elif (
+            field.fieldtype == FieldType.BOOL
+            and self.true_values
+            and self.false_values
+        ):
+            d['format'] = booleans_to_frictionless(self.true_values,
+                                                   self.false_values)
+        self.set_if_attr_non_null(d, 'dc:description', 'description')
+        return d
+
+    def to_frictionless_json(self, csvfile=None, lang=None, indent=4):
+        csvfile = nvl(csvfile, 'data.csv')
+        dialect = {}
+
+        table_info = {}
+        for key, attr in (
+            ('dc:description', 'description'),
+            ('dc:title', 'title'),
+        ):
+            self.set_if_attr_non_null(table_info, key, attr)
+        columns = [
+            self.field_to_frictionless_json(field) for field in self.fields
+        ]
+        if columns:
+            table_info['columns'] = columns
+
+        self._null = self.single_null_indicator()
+        self._trim = (   # can be 'true', 'false', 'start' or 'end'
+            'true' if self.trim == True else
+            'false' if self.trim == False
+            else self.trim
+        )
+        for key, attr in (
+            ('encoding', None),
+            ('delimiter', None),
+            ('header', None),
+            ('headerRowCount', 'header_row_count'),
+            ('null', '_null'),
+            ('doubleQuote', 'stutter'),
+            ('quoteChar', 'quote_char'),
+            ('commentPrefix', 'comment_prefix'),
+            ('lineTerminators', 'line_terminator'),
+            ('skipRows', 'skip_row_count'),
+            ('skipColumns', 'skip_columns_count'),
+            ('lineTerminators', 'line_terminator'),
+            ('trim', '_trim'),
+            # 'date_format'
+            # 'true_value'
+            # 'false_value'
+        ):
+            self.set_if_attr_non_null(dialect, key, attr)
+
+        d = {
+            'dc:conformsTo': 'data-package',
+            'dc:creator': getattr(self, 'creator', writer()),
+            'tables': [
+                table_info
+            ],
+            'dialect': dialect,
+            'url': csvfile,
+        }
+        return json.dumps(d, indent=indent)
+
+    def write_frictionless(self, path, csvfile=None, lang=None, indent=4):
+        if not csvfile:
+            csvfile = self.choose_csv_from_frictionless_name(path)
+        if isyaml(path):
+            converter = self.to_frictionless_yaml
+        else:
+            converter = self.to_frictionless_json
+        out = converter(csvfile=csvfile, lang=lang, indent=indent)
+        with open(path, 'w') as f:
+            f.write(out)
+
+    def set_if_attr_non_null(self, d, key, attribute=None):
+        """
+        Set item key in dictionary d to the value of
+        the given attribute of self, which defaults to key.
+
+        Args:
+            d          dictionary
+            key        key to set
+            attribute  attribute in self to look up (defaults to key)
+
+        Returns:
+            None
+        """
+        value = getattr(self, nvl(attribute, key), None)
+        if value is not None:
+            d[key] = value
+
+    def set_if_non_null(self, d, key, value):
+        """
+        Set item key in dictionary d to value, if it is not null.
+
+        Args:
+            d          dictionary
+            key        key to set
+            value      the value to which to set the key in d
+
+        Returns:
+            None
+        """
+        if value is not None:
+            d[key] = value
+
+    def get_schema_and_fields(self):
+        """
+        Sets _schema and _columns from Frictionless.
+
+        Could be in a resource in a package
+        or in a resource not in a package
+        or without any wrapper
+        """
+        if 'package' in self._frictionless:
+            package = self._frictionless.get('package')
+            resources = package.get('resources')
+            if resources:
+                N = self.n_resources = len(resources)
+                if (N > 1
+                        and self.resource_number is None
+                        and not self.for_resource_name):
+                    self.warn(f'Only processing first resource of {N}.')
+                name = self.for_resource_name
+                if name:
+                    L = len(name)
+                    for i, t in enumerate(resources):
+                        if t.get('name', '')[-L:] == name:
+                            n = self.resource_number = i
+                            break
+                    else:
+                        raise KeyError(f'No resource for {name} found.')
+                else:
+                    n = self.resource_number = nvl(self.resource_number, 0)
+                if len(resources) > n:
+                    self._resource = resources[n]
+                else:
+                    self.n_resources = 0
+                    loc = self._metadata_source_path
+                    sloc = f' in {loc}' if loc else ''
+                    error(f'No resource {n} found{sloc}.')
+            else:
+                error('No resources in package.')
+        elif 'resource' in self._frictionless:
+            self._resource = self._frictionless.get('resource')
+        elif 'schema' in self._frictionless:
+            self._resource = self._frictionless
+        else:
+            error('No package, resource or schema found')
+        self._schema = self._resource.get('schema')
+        if not self._schema:
+            error('Could not find schema.')
+
+        if type(self._schema) is str:  # TODO
+            path = os.path.join(nvl(self._metadata_source_dir, ''),
+                                self._schema)
+            self._schema = load_json_or_yaml(path)
+
+        self._fields = self._schema.get('fields')
+
+    def get_url(self):
+        self._url = self._frictionless.get('url') or (
+            self._table.get('url') if self._table else None
+        )
+        if not self._url:
+            self.warn(
+                'Mandatory property "url" not found in Frictionless file.'
+            )
+        if (getattr(self, '_metadata_source_dir', None)
+               and self._url
+               and not '://' in self._url):
+            self._fullpath = os.path.join(self._metadata_source_dir,
+                                          self._url)
+
+    def get_dialect(self):
+        """
+        Reads the dialect parameter from the first tableSchema
+        of the first table in the frictionless spec.
+
+        If there no dialect section, reads it from 'dc:replaces'
+        instead, if there is one.
+        """
+        self._dialect = dialect = self._resource.get('dialect', {})
+        csv = self._dialect.get('csv', {})
+
+        self.header = dialect.get('header')
+        self._headerRows = dialect.get('headerRows')
+        if self._headeRows is not None:
+            self.num_header_rows = len(self._header_rows)
+        self._header_join = dialect.get('headerJoin')
+        self._headerCase = dialect.get('headerCase')
+        self.comment_char = dialect.get('commentChar')
+        self.skip_blank_rows = dialect.get('skipBlankRows')
+        self._commentRows = dialect.get('commentRows')  # list of rows
+
+        self._descriptor = csv.get('descriptor')               # str|dict
+        self.delimiter = csv.get('delimiter')                  # str
+        self.line_terminator = csv.get('lineTerminator')       # ? str
+        self.quote_char = csv.get('quoteChar')                 # str
+        self.stutter = csv.get('doubleQuote')                  # bool
+        self.escape_char = csv.get('escapeChar')               # str
+        self.null_sequence = csv.get('nullSequence')           # str
+        self.skip_initial_space = csv.get('skipInitialSpace')  # bool
+        self.comment_char = csv.get('commentChar')             # str
+
+        if self.null_sequence:  # don't understand what this is
+            warn(f'*****\nNULL SEQUENCE FOUND: "{self.null_sequnce}"!!!\n****')
+
+        self.header_row_count = (
+            0 if self.header == False
+            else nvl(self.header_row_count, 1)
+        )
+
+
+    def get_schema_and_fields_metadata(self):
+        fields = self._schema.get('fields') or []
+        self.fields = []
+        for i, f in enumerate(fields, 1):
+            name = f.get('name')
+            if not name:
+                error(f'No name for field {i}; skipping.')
+            csvname = name
+            description = f.get('description')
+            examples = f.get('examples')
+            raw_fieldtype = f.get('type')
+            fieldtype = FRICTIONLESS_TYPE_TO_FIELDTYPE.get(raw_fieldtype)
+
+            true_values = false_values = None
+            dps = dp = thou_sep = None
+            if fieldtype == FieldType.BOOL:
+                true_values = f.get('trueValues')
+                false_values = f.get('falseValues')
+            if fieldtype in (FieldType.INT, FieldType.FLOAT, FieldType.NUMBER):
+                thou_sep = f.get('groupChar')
+                if fieldtype in (FieldType.FLOAT, FieldType.NUMBER):
+                    dp = f.get('decimal')
+            fmt = f.get('format')
+
+            titles = f.get_val(f, 'titles')
+            altnames = None
+            null_indicator = f.get('missingValues')
+            if titles:
+                if isinstance(titles, list):
+                    altnames = titles
+                elif isinstance(titles, dict):
+                    altnames = titles
+                elif type(titles) is str:
+                    altnames = [titles]
+                else:
+                    self.warn(f'Did not understand value "{titles}"'
+                              f'of type "{type(titles)}" '
+                              f'for titles of column {name}; ignoring.')
+            description = f.get_val(f, 'dc:description')
+            rdf_type = f.get('rdfType')
+
+            field = FieldMetadata(
+                name,
+                fieldtype=fieldtype,
+                csvname=csvname,
+                format=fmt,
+                null_indicator=null_indicator,
+                true_values=true_values,
+                false_values=false_values,
+                description=description,
+                thou_sep=thou_sep,
+                dp=dp,
+                dps=dps,
+                examples=examples,
+                altnames=altnames,
+                rdf_type=rdf_type,
+            )
+            self.fields.append(field)
+        self.null_indicator = self._schema.get('missingValues')
+        self.primary_key = self._schema.get('primaryKey')
+        self.foreign_keys = self._schema.get('foreignKeys')
+
+
+
+    def choose_csv_from_frictionless_name(self, frictionless_name):
+        sep = self.delimiter or ','
+        ext = {
+            ',': 'csv',
+            '\t': 'tsv',
+            '|': 'psv',
+            ';': 'ssv'
+        }.get(sep, 'txt')
+        base_name = os.path.basename(frictionless_name)
+        m = re.match(FRICTIONLESS_MD_RE, base_name)
+        stem = m.group(1) if m else os.path.splitext(base_name)[0]
+        return f'{stem}.{ext}'
+
+
+
+
+
+def booleans_to_frictionless(true_values, false_values):
+    trues, falses = listify(true_values), listify(false_values)
+    if len(trues) > 1:
+        warn(f'Several true values: using {trues[0]}')
+    if len(falses) > 1:
+        warn(f'Several false values: using {falses[0]}')
+    print(f'>>>{repr(true_values)} --- {repr(false_values)}')
+    return f'{trues[0]}|{falses[0]}'
+
+
+class FrictionlessMultiMetadata:
+    def __init__(self, spec, extensions=False):
+        table = FrictionlessMetadata(spec, extensions)
+        self.tables = [table]
+        n_tables = table.n_tables
+        if n_tables > 1:
+            self.tables.extend([
+                FrictionlessMetadata(spec, extensions, table_number=i)
+                for i in range(1, n_tables + 1)
+            ])
+
+
+def frictionless_date_format_to_serial(fmt, extensions=False):
+    """
+    Converts Frictionless date formats to nearest equivalent Python
+    data format.
+    """
+    if '%' in fmt:
+        return fmt
+    outfmt = (
+        fmt.replace('dd', 'd')
+           .replace('d', '%d')
+           .replace('MM', 'M')
+           .replace('M', '%m')
+           .replace('yyyy', '%Y')
+           .replace('yy', '%y')
+           .replace('HH', '%H')
+           .replace('mm', '%M')
+           .replace('SSS', 'S')
+           .replace('SS', 'S')
+           .replace('S', '%f')
+           .replace('ss', '%S')
+    )
+    if extensions:
+        outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
+    # TODO: why? Just leave?
+    return (
+        DateFormat.ISO8601_UNSPECIFIED
+        if (re.match(RE_ISO8601, outfmt) or fmt == '')
+        else outfmt
+    )
+
+
+def serial_date_format_to_frictionless(fmt, extensions=False, fieldtype=None):
+    if fmt == DateFormat.ISO8601_UNSPECIFIED:
+        return (
+            'yyyy-mm-dd' if fieldtype == 'date' else
+            'yyyy-mm-ddTHH:MM:SS+ZZ:zz' if fieldtype == 'datetime_tz' else
+            'yyyy-mm-ddTHH:MM:SS'
+        )
+
+    outfmt = (
+        fmt.replace('%S', 'ss')
+           .replace('%f', 'SS')
+           .replace('%M', 'mm')
+           .replace('%H', 'HH')
+           .replace('%y', 'yy')
+           .replace('%Y', 'yyyy')
+           .replace('%m', 'MM')
+           .replace('%d', 'dd')
+    )
+    if extensions:
+        outfmt = outfmt.replace('%:z', '+ZZ:zz')
+    return outfmt
+
+
+def serial_to_frictionless(md):
+    """
+    Converts a SerialMetadata object to a FrictionlessMetadata Object.
+
+    Args:
+        md: A SerialMetatadata object.
+
+    Returns:
+            A (braoadly equivalent) FrictionlessMetadata obkect
+    """
+    frictionless = FrictionlessMetadata()
+    frictionless.__dict__.update(md.__dict__)
+    return frictionless
+
+
+def isyaml(path):
+    if path.lower().endswith('yaml'):
+        return True
+    elif path.lower().endswith('json'):
+        return False
+    error('Frictionless files should be .yaml or .json')
+
+
+def load_json_or_yaml(path):
+    with open(path) as f:
+        if isyaml(path):
+            return yamlload(f, Loader=YAMLLoader)
+        else:
+            return json.load(f)
+
+
+def write_json_or_yaml(d, path):
+    # yaml.dump(d, default_flow_style=False)
+    pass

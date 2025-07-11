@@ -3,13 +3,16 @@ import os
 import re
 
 from tdda.serial.metadata import (
-    SerialMetadata,
+    DateFormat,
     FieldMetadata,
-    MISSING,
+    FieldType,
     RE_ISO8601,
-    TDDASerialError
+    SerialMetadata,
+    TDDASerialError,
+    writer,
 )
-from tdda.utils import nvl
+from tdda.serial.utils import CSVW_MD_RE
+from tdda.utils import nvl, listify, warn, error
 
 
 
@@ -17,70 +20,82 @@ from tdda.utils import nvl
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
 
 CSVW_TYPE_TO_FIELDTYPE = {
-    'boolean': 'bool',
-    'integer': 'int',
-    'string': 'string',
-    'number': 'number',
-    'datetime': 'datetime',
-    'date': 'date',
+    'boolean': FieldType.BOOL,
+    'integer': FieldType.INT,
+    'string': FieldType.STRING,
+    'number': FieldType.NUMBER,
+    'datetime': FieldType.DATETIME,
+    'date': FieldType.DATE,
 
-    'double': 'number',
-    'decimal': 'number',
-    'float': 'number',
+    'double': FieldType.NUMBER,
+    'decimal': FieldType.NUMBER,
+    'float': FieldType.NUMBER,
 
-    'long': 'int',
-    'int': 'int',
-    'short': 'int',
-    'byte': 'int',
+    'long': FieldType.INT,
+    'int': FieldType.INT,
+    'short': FieldType.INT,
+    'byte': FieldType.INT,
 
-    'unsignedLong': 'int',
-    'unsignedInt': 'int',
-    'unsignedShort': 'int',
-    'unsignedByte': 'int',
+    'unsignedLong': FieldType.INT,
+    'unsignedInt': FieldType.INT,
+    'unsignedShort': FieldType.INT,
+    'unsignedByte': FieldType.INT,
 
-    'nonNegativeInteger': 'int',
-    'nonPositiveInteger': 'int',
-    'negativeInteger': 'int',
-    'positiveInteger': 'int',
+    'nonNegativeInteger': FieldType.INT,
+    'nonPositiveInteger': FieldType.INT,
+    'negativeInteger': FieldType.INT,
+    'positiveInteger': FieldType.INT,
 
-    'normalizedString': 'string',
-    'anyURI': 'string',
-    'token': 'string',
-    'language': 'string',
-    'Name': 'string',
-    'NMTOKEN': 'string',
+    'normalizedString': FieldType.STRING,
+    'anyURI': FieldType.STRING,
+    'token': FieldType.STRING,
+    'language': FieldType.STRING,
+    'Name': FieldType.STRING,
+    'NMTOKEN': FieldType.STRING,
 
-    'xml': 'string',
-    'html': 'string',
-    'json': 'string',
+    'xml': FieldType.STRING,
+    'html': FieldType.STRING,
+    'json': FieldType.STRING,
 
     'dateTime': 'datetime',
 
     # Read as strings for now
 
-    'base64Binary': 'string',
-    'binary': 'string',
-    'hexBinary': 'string',
+    'base64Binary': FieldType.STRING,
+    'binary': FieldType.STRING,
+    'hexBinary': FieldType.STRING,
 
-    'anyAtomicType': 'string',
-    'dateTimeStamp': 'string',  # with timezone
+    'anyAtomicType': FieldType.STRING,
+    'dateTimeStamp': FieldType.STRING,  # with timezone
 
-    'duration': 'string',
-    'dayTimeDuration': 'string',
-    'yearMonthDuration': 'string',
-    'time': 'string',
+    'duration': FieldType.STRING,
+    'dayTimeDuration': FieldType.STRING,
+    'yearMonthDuration': FieldType.STRING,
+    'time': FieldType.STRING,
 
-    'QName': 'string',
+    'QName': FieldType.STRING,
 
-    'gDay': 'string',
-    'gMonth': 'string',
-    'gMonthDay': 'string',
-    'gYear': 'string',
-    'gYearMonth': 'string',
+    'gDay': FieldType.STRING,
+    'gMonth': FieldType.STRING,
+    'gMonthDay': FieldType.STRING,
+    'gYear': FieldType.STRING,
+    'gYearMonth': FieldType.STRING,
 }
 
 
-class CSVWConstants:
+FIELDTYPE_TO_CSVW = {
+    FieldType.BOOL: 'boolean',
+    FieldType.INT: 'integer',
+    FieldType.FLOAT: 'float',
+    FieldType.NUMBER: 'number',
+    FieldType.STRING: 'string',
+    FieldType.DATE: 'date',
+    FieldType.DATETIME: 'datetime',
+    FieldType.DATETIME_WITH_TIMEZONE: 'datetime',
+}
+
+
+class CSVW:
     CONTEXT = 'http://www.w3.org/ns/csvw'
 
 
@@ -115,7 +130,7 @@ class CSVWMetadata(SerialMetadata):
         self._extensions = extensions
         self._fullpath = None
         self._source = 'csvw'
-        self.metadata_source_dir = None
+        self._metadata_source_dir = None
         self.table_number = table_number
         self.for_table_name = for_table_name
 
@@ -149,16 +164,130 @@ class CSVWMetadata(SerialMetadata):
         if type(spec) == str:
             with open(spec) as f:
                 self._csvw = json.load(f)
-            self.metadata_source_path = os.path.abspath(spec)
-            self.metadata_source_dir = os.path.dirname(os.path.abspath(spec))
+            self._metadata_source_path = os.path.abspath(spec)
+            self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
             self._csvw = spec
 
-    def to_csvw_json(self):
-        pass
+    def field_to_csvw_json(self, field):
+        d = {}
+        self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
+        self.set_if_non_null(d, 'datatype',
+                             FIELDTYPE_TO_CSVW.get(field.fieldtype))
+        self.set_if_attr_non_null(d, 'titles', 'name')
+        fmt = field.format
+        if fmt is None and field.fieldtype.startswith('date'):
+            fmt = self.date_format
+            d['format'] = serial_date_format_to_csvw(fmt, field.fieldtype)
+        elif field.true_values and field.false_values:
+            d['format'] = booleans_to_csvw(
+                field.true_values, field.false_values
+            )
+        elif (
+            field.fieldtype == FieldType.BOOL
+            and self.true_values
+            and self.false_values
+        ):
+            d['format'] = booleans_to_csvw(self.true_values, self.false_values)
+        self.set_if_attr_non_null(d, 'dc:description', 'description')
+        return d
 
-    def write_csvw(self, path):
-        pass
+    def to_csvw_json(self, csvfile=None, lang=None, indent=4):
+        csvfile = nvl(csvfile, 'data.csv')
+        dialect = {}
+
+        table_info = {}
+        for key, attr in (
+            ('dc:description', 'description'),
+            ('dc:title', 'title'),
+        ):
+            self.set_if_attr_non_null(table_info, key, attr)
+        columns = [
+            self.field_to_csvw_json(field) for field in self.fields
+        ]
+        if columns:
+            table_info['columns'] = columns
+
+        self._null = self.single_null_indicator()
+        self._trim = (    # can be 'true', 'false', 'start' or 'end' in csvw
+            'true' if self.trim == True else
+            'false' if self.trim == False
+            else self.trim
+        )
+        for key, attr in (
+            ('encoding', None),
+            ('delimiter', None),
+            ('header', None),
+            ('headerRowCount', 'header_row_count'),
+            ('null', '_null'),
+            ('doubleQuote', 'stutter'),
+            ('quoteChar', 'quote_char'),
+            ('commentPrefix', 'comment_char'),
+            ('lineTerminators', 'line_terminator'),
+            ('skipRows', 'skip_row_count'),
+            ('skipColumns', 'skip_columns_count'),
+            ('lineTerminators', 'line_terminator'),
+            ('trim', '_trim'),
+            # 'date_format'
+            # 'true_value'
+            # 'false_value'
+        ):
+            self.set_if_attr_non_null(dialect, key, attr)
+
+        context = (
+            [CSVW.CONTEXT, {'@language': lang}] if lang
+            else CSVW.CONTEXT
+        )
+        d = {
+            '@context': context,
+            'dc:conformsTo': 'data-package',
+            'dc:creator': getattr(self, 'creator', writer()),
+            'tables': [
+                table_info
+            ],
+            'dialect': dialect,
+            'url': csvfile,
+        }
+        return json.dumps(d, indent=indent)
+
+    def write_csvw(self, path, csvfile=None, lang=None, indent=4):
+        if not csvfile:
+            csvfile = self.choose_csv_from_csvw_name(path)
+        out = self.to_csvw_json(csvfile=csvfile, lang=lang, indent=indent)
+        with open(path, 'w') as f:
+            f.write(out)
+
+    def set_if_attr_non_null(self, d, key, attribute=None):
+        """
+        Set item key in dictionary d to the value of
+        the given attribute of self, which defaults to key.
+
+        Args:
+            d          dictionary
+            key        key to set
+            attribute  attribute in self to look up (defaults to key)
+
+        Returns:
+            None
+        """
+        value = getattr(self, nvl(attribute, key), None)
+        if value is not None:
+            d[key] = value
+
+    def set_if_non_null(self, d, key, value):
+        """
+        Set item key in dictionary d to value, if it is not null.
+
+        Args:
+            d          dictionary
+            key        key to set
+            value      the value to which to set the key in d
+
+        Returns:
+            None
+        """
+        if value is not None:
+            d[key] = value
 
     def get_schema_and_columns(self):
         """
@@ -187,9 +316,9 @@ class CSVWMetadata(SerialMetadata):
                     table = tables[n]
                 else:
                     self.n_tables = 0
-                    loc = self.metadata_source_path
+                    loc = self._metadata_source_path
                     sloc = f' in {loc}' if loc else ''
-                    raise Exception(f'No table {n} found{sloc}.')
+                    error(f'No table {n} found{sloc}.')
                 self._table = table
                 self._schema = self._table.get('tableSchema')
             else:
@@ -197,13 +326,13 @@ class CSVWMetadata(SerialMetadata):
                 self._schema = self._csvw.get('tableSchema')
                 n = 0
         except KeyError:
-            raise TDDASerialError(
+            error(
                 'Could not find schema information in CSVW file\n'
                 "at ['tables'][{n}]['tableSchema']."
             )
 
         if type(self._schema) is str:
-            path = os.path.join(nvl(self.metadata_source_dir, ''),
+            path = os.path.join(nvl(self._metadata_source_dir, ''),
                                  self._schema)
             with open(path) as f:
                 self._schema = json.load(f)
@@ -221,7 +350,7 @@ class CSVWMetadata(SerialMetadata):
     def get_context(self):
         """
         CSVW files have a mandatory @context property that should have
-        the value http://www.w3.org/ns/csvw (CSVWConstants.CONTEXT).
+        the value http://www.w3.org/ns/csvw (CSVW.CONTEXT).
 
         That can be stored as a string or as the first item in a list.
         The value is a list, the second element should be a dictionary
@@ -247,8 +376,8 @@ class CSVWMetadata(SerialMetadata):
         else:
             context = value
 
-        if context == CSVWConstants.CONTEXT:
-            self.metadata_source = context
+        if context == CSVW.CONTEXT:
+            self._metadata_source = context
         else:
             self.warn('Unexpected value "{context}" for purported CSVW source.')
         if properties:
@@ -262,10 +391,10 @@ class CSVWMetadata(SerialMetadata):
         )
         if not self._url:
             self.warn('Mandatory property "url" not found in CSVW file.')
-        if (getattr(self, 'metadata_source_dir', None)
+        if (getattr(self, '_metadata_source_dir', None)
                and self._url
                and not '://' in self._url):
-            self._fullpath = os.path.join(self.metadata_source_dir, self._url)
+            self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
         """
@@ -330,12 +459,12 @@ class CSVWMetadata(SerialMetadata):
         self.delimiter = self.get_val(dialect, 'delimiter')
         self.encoding = self.get_val(dialect, 'encoding')
         self.null_indicator = self.get_val(dialect, 'null')
-        self._double_quote = self.get_val(dialect, 'doubleQuote')
+        self.stutter = self.get_val(dialect, 'doubleQuote')
         self.header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')
         if header and not self.header_row_count:
             self.header_row_count = 1
-        self.comment_prefix = self.get_val(dialect, 'commentPrefix')
+        self.comment_char = self.get_val(dialect, 'commentPrefix')
         self.line_terminators = self.get_val(dialect, 'lineTerminators')
         self.quote_char = self.get_val(dialect, 'quoteChar')
         self.skip_blank_rows = self.get_val(dialect, 'skipRows')
@@ -404,13 +533,14 @@ class CSVWMetadata(SerialMetadata):
                 fmt = field.get_val(f, 'format')
             if fmt:
                 if fieldtype.startswith('date'):
-                    fmt = csvw_date_format_to_md_date_format(
+                    self._csvw_date_format = fmt
+                    fmt = csvw_date_format_to_serial(
                         fmt,
                         extensions=self._extensions
                     )
                 field.format = fmt
             elif fieldtype and fieldtype.startswith('date'):
-                field.format = 'ISO8601'  # too pandas specific
+                field.format = DateFormat.ISO8601_UNSPECIFIED
 
 
             titles = field.get_val(f, 'titles')
@@ -429,6 +559,32 @@ class CSVWMetadata(SerialMetadata):
             if description:
                 field.description = description
 
+    def choose_csv_from_csvw_name(self, csvw_name):
+        sep = self.delimiter or ','
+        ext = {
+            ',': 'csv',
+            '\t': 'tsv',
+            '|': 'psv',
+            ';': 'ssv'
+        }.get(sep, 'txt')
+        base_name = os.path.basename(csvw_name)
+        m = re.match(CSVW_MD_RE, base_name)
+        stem = m.group(1) if m else os.path.splitext(base_name)[0]
+        return f'{stem}.{ext}'
+
+
+
+
+
+def booleans_to_csvw(true_values, false_values):
+    trues, falses = listify(true_values), listify(false_values)
+    if len(trues) > 1:
+        warn(f'Several true values: using {trues[0]}')
+    if len(falses) > 1:
+        warn(f'Several false values: using {falses[0]}')
+    print(f'>>>{repr(true_values)} --- {repr(false_values)}')
+    return f'{trues[0]}|{falses[0]}'
+
 
 class CSVWMultiMetadata:
     def __init__(self, spec, extensions=False):
@@ -442,8 +598,7 @@ class CSVWMultiMetadata:
             ])
 
 
-
-def csvw_date_format_to_md_date_format(fmt, extensions=False):
+def csvw_date_format_to_serial(fmt, extensions=False):
     """
     Converts CSVW date formats to nearest equivalent Python
     data format.
@@ -466,10 +621,38 @@ def csvw_date_format_to_md_date_format(fmt, extensions=False):
     )
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
-    return 'ISO8601' if (re.match(RE_ISO8601, outfmt) or fmt == '') else outfmt
+    # TODO: why? Just leave?
+    return (
+        DateFormat.ISO8601_UNSPECIFIED
+        if (re.match(RE_ISO8601, outfmt) or fmt == '')
+        else outfmt
+    )
 
 
-def to_csvw(md):
+def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
+    if fmt == DateFormat.ISO8601_UNSPECIFIED:
+        return (
+            'yyyy-mm-dd' if fieldtype == 'date' else
+            'yyyy-mm-ddTHH:MM:SS+ZZ:zz' if fieldtype == 'datetime_tz' else
+            'yyyy-mm-ddTHH:MM:SS'
+        )
+
+    outfmt = (
+        fmt.replace('%S', 'ss')
+           .replace('%f', 'SS')
+           .replace('%M', 'mm')
+           .replace('%H', 'HH')
+           .replace('%y', 'yy')
+           .replace('%Y', 'yyyy')
+           .replace('%m', 'MM')
+           .replace('%d', 'dd')
+    )
+    if extensions:
+        outfmt = outfmt.replace('%:z', '+ZZ:zz')
+    return outfmt
+
+
+def serial_to_csvw(md):
     """
     Converts a SerialMetadata object to a CSVWMetadata Object.
 
@@ -481,3 +664,4 @@ def to_csvw(md):
     """
     csvw = CSVWMetadata()
     csvw.__dict__.update(md.__dict__)
+    return csvw

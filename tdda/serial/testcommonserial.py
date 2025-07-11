@@ -9,7 +9,7 @@ from tdda.serial.metadata import (
     RE_ISO8601, URI, SerialMetadata, FieldMetadata,
     DateFormat, is_iso8601_format
 )
-from tdda.serial.csvw import csvw_date_format_to_md_date_format
+from tdda.serial.csvw import csvw_date_format_to_serial
 from tdda.serial.reader import (
     find_metadata_kind,
 )
@@ -59,8 +59,8 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertIsNone(re.match(RE_ISO8601, 'yyyy-MM-dd'))
 
     def testDateFormatsMapping(self):
-        map_date_format = csvw_date_format_to_md_date_format
-        self.assertEqual(map_date_format('yyyy-MM-dd'), 'ISO8601')
+        map_date_format = csvw_date_format_to_serial
+        self.assertEqual(map_date_format('yyyy-MM-dd'), 'iso8601')
         self.assertEqual(map_date_format('yyyyMMdd'), '%Y%m%d')
         self.assertEqual(map_date_format('dd-MM-yyyy'), '%d-%m-%Y')
         self.assertEqual(map_date_format('d-M-yyyy'), '%d-%m-%Y')
@@ -75,12 +75,12 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(map_date_format('MM.dd.yyyy'), '%m.%d.%Y')
         self.assertEqual(map_date_format('M.d.yyyy'), '%m.%d.%Y')
 
-        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss.S'), 'ISO8601')
-        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss'), 'ISO8601')
+        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss.S'), 'iso8601')
+        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm'), '%Y-%m-%dT%H:%M')
 
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'ISO8601')
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'ISO8601')
+        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'iso8601')
+        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'),
                                          '%Y-%m-%d %H:%M')
 

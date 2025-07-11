@@ -7,7 +7,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial import csv_to_pandas
 from tdda.serial.converter import SerialConverter
-from tdda.serial.csvw import to_csvw
+from tdda.serial.csvw import serial_to_csvw, CSVWMetadata
 from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
 from tdda.serial.metadata import SerialMetadata, FieldType
 from tdda.serial.reader import load_metadata
@@ -395,13 +395,38 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath,
                                tdpath('tiny1nd-weird-inferred.serial'),
                                ignore_lines=self.IGL)
-
-    @tag
     def testConversionToCSVWObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
-        csvw = to_csvw(md)
-        print(md)
+        csvw = serial_to_csvw(md)
+        # Just check this hasn't broken anything serious
+        self.assertStringCorrect(csvw.to_json(), tiny1nd_serial,
+                                 ignore_lines=self.IGL)
+
+    def testConversionToCSVW_t1nds(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        csvw_md = serial_to_csvw(md)
+        csvw_json = csvw_md.to_csvw_json('tiny1nd.csv')
+        self.assertStringCorrect(csvw_json, tdpath('tiny1nd-metadata.json'),
+                                 ignore_lines=self.IGL)
+
+    def testConversionToCSVW_t1nds_file(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        md = load_metadata(self.tiny1nd_serial)
+        csvw_md = serial_to_csvw(md)
+        outpath = tmppath('tiny1nd-metadata.json')
+        csvw_md.write_csvw(outpath)
+        self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
+                               ignore_lines=self.IGL)
+
+    def testConversionToCSVW_t1nds_file_cli(self):
+        tiny1nd_serial = tdpath('tiny1nd.serial')
+        outpath = tmppath('tiny1nd.csvmetadata.json')
+        c = SerialConverter(cli_args=[tiny1nd_serial, outpath])
+        c.convert()
+        self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
+                               ignore_lines=self.IGL)
 
     def testTypeInference(self):
         self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
@@ -436,6 +461,65 @@ class TestSerialConversions(ReferenceTestCase):
                         '999-999-999 99:99:99ksjdhfkZ']),
             FieldType.STRING
         )
+
+    def testCSVWNameInference(self):
+        for sep, L in ((',', 'c'), ('\t', 't'), ('|', 'p'), (';', 's')):
+            m = CSVWMetadata()
+            m.delimiter = sep
+            expected = f'a.{L}sv'
+            self.assertEqual(m.choose_csv_from_csvw_name('a.json'), expected)
+            self.assertEqual(m.choose_csv_from_csvw_name('/d/a.json'),
+                             expected)
+            self.assertEqual(m.choose_csv_from_csvw_name('~/d/a.json'),
+                             expected)
+
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b.metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-csvmetadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-csv-metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b.csv.metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-csv.metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-csv.metadata.json'),
+                f'b.{L}sv'
+            )
+            self.assertEqual(
+                m.choose_csv_from_csvw_name('b-psv.metadata.json'),
+                f'b-psv.{L}sv'
+            )
+
+        m = CSVWMetadata()
+        m.delimiter = '/'
+        expected = f'a.txt'
+        self.assertEqual(m.choose_csv_from_csvw_name('a.json'), expected)
+        self.assertEqual(m.choose_csv_from_csvw_name('/d/a.json'),
+                         expected)
+        self.assertEqual(m.choose_csv_from_csvw_name('~/d/a.json'),
+                         expected)
+
+        self.assertEqual(
+            m.choose_csv_from_csvw_name('b-metadata.json'),
+            f'b.txt'
+        )
+
 
 
 if __name__ == '__main__':

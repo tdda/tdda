@@ -1,0 +1,6 @@
+╭─ Error ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ [dialect-error] Dialect is not valid: cannot retrieve metadata "{"delimiter": ",", "quoteChar": "\"", "escapeChar": "\\",                 │
+│ "missingValues": "",  "header": true, "header_rows": [0]}, "doubleQuote": false" because "[Errno 2] No such file or directory:            │
+│ '{"delimiter": ",", "quoteChar": "\\"", "escapeChar": "\\\\", "missingValues": "",  "header": true, "header_rows": [0]}, "doubleQuote":   │
+│ false'"                                                                                                                                   │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

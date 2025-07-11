@@ -1,0 +1,25 @@
+name: simple3x2
+type: table
+path: simple3x2.csv
+scheme: file
+format: csv
+mediatype: text/csv
+encoding: utf-8
+dialect:
+  header: true
+  missingValues: ''
+  header_rows:
+    - 0
+  csv:
+    delimiter: ','
+    quoteChar: '"'
+    doubleQuote: false
+    escapeChar: \
+schema:
+  fields:
+    - name: n
+      type: integer
+    - name: f
+      type: number
+    - name: s
+      type: string
