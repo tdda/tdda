@@ -8,10 +8,8 @@ resources:
     encoding: utf-8
     dialect:
       header: true
-      missingValues: ''
       header_rows:
         - 0
-      a: false
       csv:
         delimiter: ','
         quoteChar: '"'
@@ -25,3 +23,4 @@ resources:
           type: number
         - name: s
           type: string
+      missingValues: []
