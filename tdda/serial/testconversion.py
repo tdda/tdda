@@ -485,6 +485,9 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
+    def atestFrictionlessToSerial1(self):
+        c = SerialConverter(frictionlesspath, outpath_pd, out_format='fl')
+
     def atestFrictionlessToSerialPandas(self):
         frictionlesspath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath_pd = tmppath(
@@ -621,7 +624,6 @@ class TestSerialConversions(ReferenceTestCase):
                                 longNames=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    @tag
     def testConversionToFrictionlessObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)

@@ -130,8 +130,8 @@ class FrictionlessMetadata(SerialMetadata):
         if self._format and self._format != 'csv':
             warn(f'The format is "{self._format}"; expected "csv". '
                  'Continuing.')
-        self._media_type = r.get('mediaType')   # text/csv
-        if self._media_type and self._media_type != 'text/csv':
+        self._mediatype = r.get('mediaType')   # text/csv
+        if self._mediatype and self._mediatype != 'text/csv':
             warn(f'The format is "{self._format}"; expected "text/csv". '
                  'Continuing.')
         self.encoding = r.get('encoding')
@@ -139,7 +139,7 @@ class FrictionlessMetadata(SerialMetadata):
     def field_to_frictionless_json(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
-        self.set_if_non_null(d, 'datatype',
+        self.set_if_non_null(d, 'type',
                              FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype))
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
@@ -148,70 +148,64 @@ class FrictionlessMetadata(SerialMetadata):
             d['format'] = serial_date_format_to_frictionless(fmt,
                                                              field.fieldtype)
         elif field.true_values and field.false_values:
-            d['format'] = booleans_to_frictionless(
-                field.true_values, field.false_values
-            )
-        elif (
-            field.fieldtype == FieldType.BOOL
-            and self.true_values
-            and self.false_values
-        ):
-            d['format'] = booleans_to_frictionless(self.true_values,
-                                                   self.false_values)
-        self.set_if_attr_non_null(d, 'dc:description', 'description')
+            d['trueValues'] = listify(field.true_values)
+            d['falseValues'] = listify(field.false_values)
+        elif field.fieldtype == FieldType.BOOL:
+            if self.true_values and self.false_values:
+                d['trueValues'] = listify(self.true_values)
+                d['falseValues'] = listify(self.false_values)
+        self.set_if_attr_non_null(d, 'description', 'description')
         return d
 
-    def to_frictionless_json(self, csvfile=None, lang=None, indent=4):
-        csvfile = nvl(csvfile, 'data.csv')
+    def to_frictionless_json(self, csvfile=None, lang=None, indent=4,
+                             resource_type=None):
+        csv = {}
+        self.set_if_attr_non_null(csv, 'delimiter')
+        self.set_if_attr_non_null(csv, 'quote_char', 'quoteChar')
+        self.set_if_attr_non_null(csv, 'stutter', 'doubleQuote')
+        self.set_if_attr_non_null(csv, 'escape_char', 'escapeChar')
         dialect = {}
+        self.set_if_attr_non_null(dialect, 'header')
+        if self.header:
+            dialect['header_rows'] = list(range(nvl(self.num_header_rows, 1)))
+        if csv:
+            dialect['csv'] = csv
+        d = {
+            'path': nvl(csvfile, nvl(self.path, 'data.csv')),
+            'name': os.path.basename(path).splitext()[0],
+            'type': 'table',
+            'scheme': 'file',
+            'format': 'csv',
+            'mediatype': 'text/csv',
+        }
+        if self.encoding:
+            self.set_if_attr_non_null(d, 'encoding')
+        if dialect:
+            self.set_if_non_null(d, dialect)
 
-        table_info = {}
-        for key, attr in (
-            ('dc:description', 'description'),
-            ('dc:title', 'title'),
-        ):
-            self.set_if_attr_non_null(table_info, key, attr)
-        columns = [
+        schema = {}
+        fields = [
             self.field_to_frictionless_json(field) for field in self.fields
         ]
-        if columns:
-            table_info['columns'] = columns
-
-        self._null = self.single_null_indicator()
-        self._trim = (   # can be 'true', 'false', 'start' or 'end'
-            'true' if self.trim == True else
-            'false' if self.trim == False
-            else self.trim
-        )
+        if fields:
+            schema['fields'] = fields
+        if self.null_indicator:
+            schema['missingValues'] = listify(self.null_indicator)
         for key, attr in (
-            ('encoding', None),
-            ('delimiter', None),
-            ('header', None),
-            ('headerRowCount', 'header_row_count'),
-            ('null', '_null'),
-            ('doubleQuote', 'stutter'),
-            ('quoteChar', 'quote_char'),
             ('commentPrefix', 'comment_prefix'),
             ('lineTerminators', 'line_terminator'),
-            ('skipRows', 'skip_row_count'),
-            ('skipColumns', 'skip_columns_count'),
-            ('lineTerminators', 'line_terminator'),
-            ('trim', '_trim'),
-            # 'date_format'
-            # 'true_value'
-            # 'false_value'
         ):
-            self.set_if_attr_non_null(dialect, key, attr)
+            self.set_if_attr_non_null(schema, key, attr)
 
-        d = {
-            'dc:conformsTo': 'data-package',
-            'dc:creator': getattr(self, 'creator', writer()),
-            'tables': [
-                table_info
-            ],
-            'dialect': dialect,
-            'url': csvfile,
-        }
+        if self.trim in (True, start):
+            schema['skipInitialSpace'], True
+
+
+        d['schema'] = schema
+        if resource_type == 'package':
+            d = {
+                'resources': [d]
+            }
         return json.dumps(d, indent=indent)
 
     def write_frictionless(self, path, csvfile=None, lang=None, indent=4):
@@ -495,26 +489,7 @@ def frictionless_date_format_to_serial(fmt, extensions=False):
 
 
 def serial_date_format_to_frictionless(fmt, extensions=False, fieldtype=None):
-    if fmt == DateFormat.ISO8601_UNSPECIFIED:
-        return (
-            'yyyy-mm-dd' if fieldtype == 'date' else
-            'yyyy-mm-ddTHH:MM:SS+ZZ:zz' if fieldtype == 'datetime_tz' else
-            'yyyy-mm-ddTHH:MM:SS'
-        )
-
-    outfmt = (
-        fmt.replace('%S', 'ss')
-           .replace('%f', 'SS')
-           .replace('%M', 'mm')
-           .replace('%H', 'HH')
-           .replace('%y', 'yy')
-           .replace('%Y', 'yyyy')
-           .replace('%m', 'MM')
-           .replace('%d', 'dd')
-    )
-    if extensions:
-        outfmt = outfmt.replace('%:z', '+ZZ:zz')
-    return outfmt
+    return fmt
 
 
 def serial_to_frictionless(md):
