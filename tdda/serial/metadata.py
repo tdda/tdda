@@ -136,12 +136,12 @@ class FieldMetadata:
                  format=None, null_indicator=None,
                  true_values=None, false_values=None,
                  allow_extra_keys=False, description=None,
-                 thou_sep=None, dp=None, examples=None,
-                 rdf_type=None, **kw):
+                 thou_sep=None, dp=None, dps=None, examples=None,
+                 rdf_type=None, alt_names=None, **kw):
         self.name = name
         self.csvname = csvname or name
         self.fieldtype = fieldtype
-        self.altnames = None
+        self.alt_names = None
         if format:
             if fieldtype and fieldtype.startswith('date'):
                 self._date_format = format  # TODO start using this
@@ -152,6 +152,7 @@ class FieldMetadata:
         self.description = description
         self.thou_sep = thou_sep
         self.dp = dp
+        self.dps = dps
         self.examples = examples
         self.rdf_type = rdf_type
 
@@ -165,7 +166,7 @@ class FieldMetadata:
         self._errors = []
         self._warnings = []
 
-        self.valid = None
+        self._valid = None
 
     def get_val(self, d, k, missing=MISSING.ALLOWED):
         if not k in d:
@@ -289,7 +290,7 @@ class SerialMetadata:
 
         self._metadata_source = None
         self._metadata_source_path = None
-        self.valid = None
+        self._valid = None
         self._verbosity = verbosity
 
         if self.header_row_count is None and self.header_row:
@@ -345,7 +346,7 @@ class SerialMetadata:
                 for msg in field._warnings:
                     print(f'** WARNING: {msg}', file=sys.stderr)
 
-        self.valid = valid
+        self._valid = valid
 
     def unobjectify(self):
         d = {

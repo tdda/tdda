@@ -115,7 +115,7 @@ class CSVWMetadata(SerialMetadata):
              If None, minimal initialization is performed
 
     Validation Properties:
-            .valid      is True if no errors were encountered
+            ._valid     is True if no errors were encountered
             ._errors    is a list of (textual) errors (if any)
             ._warnings  is a list of (textual) warnings generated
                         while reading the CSVW information

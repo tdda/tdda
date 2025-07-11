@@ -6,7 +6,14 @@
             {
                 "name": "b",
                 "fieldtype": "bool",
-                "format": "Yes|n"
+                "true_values": [
+                    "Yes",
+                    "y"
+                ],
+                "false_values": [
+                    "No",
+                    "n"
+                ]
             },
             {
                 "name": "i",
@@ -23,15 +30,19 @@
             {
                 "name": "t",
                 "fieldtype": "date",
-                "format": "%d/%m/%Y"
+                "format": "%d/%M/%Y"
             }
         ],
-        "encoding": "latin-1",
+        "path": "tiny1nd-weird.ssv",
+        "encoding": "latin1",
         "delimiter": ";",
         "quote_char": "'",
+        "escape_char": "\\",
         "null_indicator": ".",
         "header_row_count": 1,
         "table_number": 0,
-        "n_tables": 1
+        "n_resources": 1,
+        "header": true,
+        "stutter": false
     }
 }

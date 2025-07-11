@@ -1040,7 +1040,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
 
         pandas_to_csv(df, csv_path, md_outpath=md_path,
                       flavour='tdda.serial')
-        self.assertFileCorrect(csv_path, tdpath('tiny1nd.csv'))
+        self.assertFileCorrect(csv_path, tdpath('tiny1nd-pandas.csv'))
         self.assertFileCorrect(md_path, tdpath('tiny1nd-i-as-float.serial'),
                                ignore_patterns=TDDASERIAL_PATTERNS)
 

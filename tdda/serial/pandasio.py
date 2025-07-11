@@ -174,7 +174,7 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None):
     if date_fields:
         kw['parse_dates'] = list(date_fields)
 
-    if any(v.altnames for v in md.fields):
+    if any(v.alt_names for v in md.fields):
         kw['names'] = [v.name for v in md.fields]
         kw['header'] = 0
 

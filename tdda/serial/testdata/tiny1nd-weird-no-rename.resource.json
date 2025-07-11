@@ -1,19 +1,19 @@
 {
     "name": "tiny1nd",
     "type": "table",
-    "path": "tiny1nd.csv",
+    "path": "tiny1nd-weird.ssv",
     "scheme": "file",
     "format": "csv",
     "mediatype": "text/csv",
-    "encoding": "utf-8",
+    "encoding": "latin1",
     "dialect": {
         "header": true,
         "header_rows": [
             0
         ],
         "csv": {
-            "delimiter": ",",
-            "quoteChar": "\"",
+            "delimiter": ";",
+            "quoteChar": "'",
             "doubleQuote": false,
             "escapeChar": "\\"
         }
@@ -22,7 +22,9 @@
         "fields": [
             {
                 "name": "b",
-                "type": "boolean"
+                "type": "boolean",
+                "trueValues": ["Yes", "y"],
+                "falseValues": ["No", "n"]
             },
             {
                 "name": "i",
@@ -38,9 +40,10 @@
             },
             {
                 "name": "t",
-                "type": "date"
+                "type": "date",
+                "format": "%d/%M/%Y"
             }
         ],
-        "missingValues": [""]
+        "missingValues": ["."]
     }
 }

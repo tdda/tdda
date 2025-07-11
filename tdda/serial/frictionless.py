@@ -74,7 +74,7 @@ class FrictionlessMetadata(SerialMetadata):
              If None, minimal initialization is performed
 
     Validation Properties:
-            .valid      is True if no errors were encountered
+            ._valid     is True if no errors were encountered
             ._errors    is a list of (textual) errors (if any)
             ._warnings  is a list of (textual) warnings generated
                         while reading the Frictionless information
@@ -101,7 +101,6 @@ class FrictionlessMetadata(SerialMetadata):
         self.get_resource_metadata()
 
         self.get_dialect()
-        self.get_non_dialect_attrs()
         self.get_schema_and_fields_metadata()
 
         self.validate()
@@ -116,7 +115,7 @@ class FrictionlessMetadata(SerialMetadata):
                   (or equivalent)
         """
         if type(spec) == str:
-            load_json_or_yaml(spec)
+            self._frictionless = load_json_or_yaml(spec)
             self._metadata_source_path = os.path.abspath(spec)
             self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
@@ -124,18 +123,18 @@ class FrictionlessMetadata(SerialMetadata):
 
     def get_resource_metadata(self):
         r = self._resource
-        self._resource_name = getattr(r, 'name', None)
-        self.path = getattr(r, 'path', None)
-        self._scheme = getattr(r, 'scheme')  # file
-        self._format = getattr(r, 'format')  # csv
+        self._table_name = r.get('name')  # really resource name. But...
+        self.path = r.get('path')
+        self._scheme = r.get('scheme')  # file
+        self._format = r.get('format') # csv
         if self._format and self._format != 'csv':
             warn(f'The format is "{self._format}"; expected "csv". '
                  'Continuing.')
-        self._media_type = getattr(r, 'mediatype')  # text/csv
-        if self._mediatype and self._mediatype != 'text/csv':
-            warn(f'The mormat is "{self._format}"; expected "text/csv". '
+        self._media_type = r.get('mediaType')   # text/csv
+        if self._media_type and self._media_type != 'text/csv':
+            warn(f'The format is "{self._format}"; expected "text/csv". '
                  'Continuing.')
-        self.encoding = getattr(r, 'encoding')
+        self.encoding = r.get('encoding')
 
     def field_to_frictionless_json(self, field):
         d = {}
@@ -266,26 +265,25 @@ class FrictionlessMetadata(SerialMetadata):
         or in a resource not in a package
         or without any wrapper
         """
-        if 'package' in self._frictionless:
-            package = self._frictionless.get('package')
-            resources = package.get('resources')
-            if resources:
+        if 'resources' in self._frictionless:  # package
+            self._resources = resources = self._frictionless.get('resources')
+            if self._resources:
                 N = self.n_resources = len(resources)
                 if (N > 1
-                        and self.resource_number is None
-                        and not self.for_resource_name):
+                        and self.table_number is None
+                        and not self.for_table_name):
                     self.warn(f'Only processing first resource of {N}.')
-                name = self.for_resource_name
+                name = self.for_table_name
                 if name:
                     L = len(name)
                     for i, t in enumerate(resources):
                         if t.get('name', '')[-L:] == name:
-                            n = self.resource_number = i
+                            n = self.table_number = i
                             break
                     else:
                         raise KeyError(f'No resource for {name} found.')
                 else:
-                    n = self.resource_number = nvl(self.resource_number, 0)
+                    n = self.table_number = nvl(self.table_number, 0)
                 if len(resources) > n:
                     self._resource = resources[n]
                 else:
@@ -295,8 +293,6 @@ class FrictionlessMetadata(SerialMetadata):
                     error(f'No resource {n} found{sloc}.')
             else:
                 error('No resources in package.')
-        elif 'resource' in self._frictionless:
-            self._resource = self._frictionless.get('resource')
         elif 'schema' in self._frictionless:
             self._resource = self._frictionless
         else:
@@ -338,14 +334,14 @@ class FrictionlessMetadata(SerialMetadata):
         csv = self._dialect.get('csv', {})
 
         self.header = dialect.get('header')
-        self._headerRows = dialect.get('headerRows')
-        if self._headeRows is not None:
+        self._header_rows = dialect.get('headerRows')
+        if self._header_rows is not None:
             self.num_header_rows = len(self._header_rows)
         self._header_join = dialect.get('headerJoin')
-        self._headerCase = dialect.get('headerCase')
+        self._header_case = dialect.get('headerCase')
         self.comment_char = dialect.get('commentChar')
         self.skip_blank_rows = dialect.get('skipBlankRows')
-        self._commentRows = dialect.get('commentRows')  # list of rows
+        self._comment_rows = dialect.get('commentRows')  # list of rows
 
         self._descriptor = csv.get('descriptor')               # str|dict
         self.delimiter = csv.get('delimiter')                  # str
@@ -390,7 +386,7 @@ class FrictionlessMetadata(SerialMetadata):
                     dp = f.get('decimal')
             fmt = f.get('format')
 
-            titles = f.get_val(f, 'titles')
+            titles = f.get('titles')
             altnames = None
             null_indicator = f.get('missingValues')
             if titles:
@@ -404,7 +400,7 @@ class FrictionlessMetadata(SerialMetadata):
                     self.warn(f'Did not understand value "{titles}"'
                               f'of type "{type(titles)}" '
                               f'for titles of column {name}; ignoring.')
-            description = f.get_val(f, 'dc:description')
+            description = f.get('dc:description')
             rdf_type = f.get('rdfType')
 
             field = FieldMetadata(
@@ -420,7 +416,7 @@ class FrictionlessMetadata(SerialMetadata):
                 dp=dp,
                 dps=dps,
                 examples=examples,
-                altnames=altnames,
+                alt_names=altnames,
                 rdf_type=rdf_type,
             )
             self.fields.append(field)
