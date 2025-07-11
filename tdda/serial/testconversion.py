@@ -433,7 +433,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
                                ignore_lines=self.IGL)
 
-    @tag
     def testFrictionlessPackageToSerialYAML(self):
         frictionlesspath = tdpath(f'tiny1nd-weird-no-rename.package.yaml')
         name = 'tiny1nd-weird-no-rename-from-fless-package.serial'
@@ -447,7 +446,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    @tag
     def testFrictionlessResourceToSerialYAML(self):
         frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.yaml')
         name = 'tiny1nd-weird-no-rename-from-fless-resource.serial'
@@ -461,7 +459,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    @tag
     def testFrictionlessPackageToSerialJSON(self):
         frictionlesspath = tdpath(f'tiny1nd-weird-no-rename.package.json')
         name =  'tiny1nd-weird-no-rename-from-fless-package.serial'
@@ -475,7 +472,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    @tag
     def testFrictionlessResourceToSerialJSON(self):
         frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.json')
         name =  'tiny1nd-weird-no-rename-from-fless-resource.serial'
@@ -625,18 +621,8 @@ class TestSerialConversions(ReferenceTestCase):
                                 longNames=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    def atestInferMetadataSimple(self):
-        md = infer_format_from_flat_file(tdpath('simple.csv'))
-        self.assertStringCorrect(md.to_json(), tdpath('simple-inferred.serial'),
-                                 ignore_lines=self.IGL)
-
-    def atestInferMetadataMinimal(self):
-        md = infer_format_from_flat_file(tdpath('minimal.csv'))
-        self.assertStringCorrect(md.to_json(),
-                                 tdpath('minimal-inferred.serial'),
-                                 ignore_lines=self.IGL)
-
-    def atestConversionToFrictionlessObject(self):
+    @tag
+    def testConversionToFrictionlessObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
         frictionless = serial_to_frictionless(md)
