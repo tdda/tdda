@@ -148,11 +148,11 @@ class FieldMetadata:
                  true_values=None, false_values=None,
                  allow_extra_keys=False, description=None,
                  thou_sep=None, dp=None, dps=None, examples=None,
-                 rdf_type=None, alt_names=None, **kw):
+                 rdf_type=None, altnames=None, **kw):
         self.name = name
         self.csvname = csvname or name
         self.fieldtype = fieldtype
-        self.alt_names = None
+        self.altnames = None
         if format:
             if fieldtype and fieldtype.startswith('date'):
                 self._date_format = format  # TODO start using this
