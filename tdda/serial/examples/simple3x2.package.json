@@ -34,8 +34,7 @@
             "name": "s",
             "type": "string"
           }
-        ],
-        "missingValues": []
+        ]
       }
     }
   ]

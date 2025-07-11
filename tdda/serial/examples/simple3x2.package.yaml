@@ -23,4 +23,3 @@ resources:
           type: number
         - name: s
           type: string
-      missingValues: []
