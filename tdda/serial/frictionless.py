@@ -416,7 +416,7 @@ class FrictionlessMetadata(SerialMetadata):
                 dp=dp,
                 dps=dps,
                 examples=examples,
-                alt_names=altnames,
+                altnames=altnames,
                 rdf_type=rdf_type,
             )
             self.fields.append(field)
