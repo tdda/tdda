@@ -1,0 +1,47 @@
+{
+    "name": "tiny1nd",
+    "type": "table",
+    "path": "tiny1nd.csv",
+    "scheme": "file",
+    "format": "csv",
+    "mediatype": "text/csv",
+    "encoding": "UTF-8",
+    "dialect": {
+        "header": true,
+        "headerRows": [
+            0
+        ],
+        "csv": {
+            "delimiter": ",",
+            "quoteChar": "\"",
+            "escapeChar": "\\"
+        }
+    },
+    "schema": {
+        "fields": [
+            {
+                "name": "b",
+                "type": "boolean"
+            },
+            {
+                "name": "i",
+                "type": "integer"
+            },
+            {
+                "name": "f",
+                "type": "number"
+            },
+            {
+                "name": "s",
+                "type": "string"
+            },
+            {
+                "name": "t",
+                "type": "date"
+            }
+        ],
+        "missingValues": [
+            ""
+        ]
+    }
+}
