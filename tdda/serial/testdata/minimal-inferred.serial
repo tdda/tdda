@@ -23,7 +23,7 @@
                 "fieldtype": "string"
             },
             {
-                "name": "d\n",
+                "name": "d",
                 "fieldtype": "date"
             }
         ],

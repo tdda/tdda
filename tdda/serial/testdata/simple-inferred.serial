@@ -27,7 +27,7 @@
                 "fieldtype": "date"
             },
             {
-                "name": "LastIn2024\n",
+                "name": "LastIn2024",
                 "fieldtype": "datetime"
             }
         ],

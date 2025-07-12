@@ -42,7 +42,7 @@ class MetadataInferrer:
         self.encoding = 'UTF-8' if enc == 'ascii' else enc
         self.data = data = []
         with open(self.inpath, encoding=self.encoding) as f:
-            self.header = f.readline()
+            self.header = f.readline().rstrip()
             while not self.header.strip():
                 self.header = f.readline()
             for i in range(self.lines_to_use):

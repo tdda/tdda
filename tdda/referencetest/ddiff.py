@@ -71,6 +71,13 @@ class TDDADiff:
 
         self.__dict__.update(vars(flags))
 
+        if not self.left:
+            self.error('No input data specified.')
+
+        if not self.right:
+            self.error('No output data specified.')
+
+
         if self.dps and self.precision is None:
             self.precision = self.dps
 
