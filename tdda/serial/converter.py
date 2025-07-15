@@ -86,6 +86,9 @@ FLAGS:
                        n for numpy_nullable, a for pyarrow, o for original
 
   --generate, --gen, -g
+
+  --verbose, -v  Verbose
+  --Verbose, -V  More verbose
 '''
 
 
@@ -95,7 +98,7 @@ class SerialConverter:
                  out_format=None, backend=None,
                  map_other_bools_to_string=False,
                  generate=False, cli_args=None,
-                 for_csv=None, config=None):
+                 for_csv=None, config=None, verbosity=None):
         self.inpath = inpath
         self.outpath = outpath
         self.out_formats = self.handle_formats(out_format)
@@ -105,6 +108,7 @@ class SerialConverter:
         self.map_other_bools_to_string = map_other_bools_to_string
         self.sconfig = get_config().serial
         self.for_csv = for_csv
+        self.verbosity = nvl(verbosity, 1)
         if self.cli_args is not None:
             self.process_args()
         self.validate()
@@ -118,6 +122,10 @@ class SerialConverter:
     def process_args(self):
         parser = self.parser()
         flags, more = parser.parse_known_args(self.cli_args)
+        if flags.verbose or flags.Verbose:
+            flags.verbosity = 3 if flags.Verbose else 2
+        if flags.quiet:
+            flags.verbosity = 0
         self.__dict__.update(vars(flags))
 
     def validate(self):
@@ -190,6 +198,15 @@ class SerialConverter:
             help='Generate a bare-bones tdda.serial file for a '
                  'CSV file provided')
 
+        parser.add_argument('--quiet', '-q', action='store_true',
+            help='Be quiet')
+
+        parser.add_argument('--verbose', '-v', action='store_true',
+            help='Be verbose')
+
+        parser.add_argument('--Verbose', '-V', action='store_true',
+            help='Be more verbose')
+
         return parser
 
     def convert(self, debug=False, warner=None):
@@ -244,7 +261,8 @@ class SerialConverter:
             Warn('Surprising to get here.')
 
     def infer_from_flat_file(self):
-        return infer_format_from_flat_file(self.inpath)
+        return infer_format_from_flat_file(self.inpath,
+                                           verbosity=self.verbosity)
 
 
 def serial_cli(args):

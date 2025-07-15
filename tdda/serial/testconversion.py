@@ -16,7 +16,7 @@ from tdda.serial.frictionless import (
 )
 from tdda.serial.metadata import SerialMetadata, FieldType
 from tdda.serial.reader import load_metadata
-from tdda.serial.infer import infer_format_from_flat_file, guess_type
+from tdda.serial.infer import infer_format_from_flat_file, analyse_values
 
 
 from tdda.serial.testserial import (
@@ -233,7 +233,8 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(len(buf), 3)  # Escape; Booleans; date format
 
     def testInferMetadataWeird(self):
-        md = infer_format_from_flat_file(tdpath('tiny1nd-weird.ssv'))
+        md = infer_format_from_flat_file(tdpath('tiny1nd-weird.ssv'),
+                                         verbosity=0)
         self.assertStringCorrect(md.to_json(),
                                  tdpath('tiny1nd-weird-inferred.serial'),
                                  ignore_lines=self.IGL)
@@ -241,7 +242,7 @@ class TestSerialConversions(ReferenceTestCase):
     def testInferMetadataWeirdCLI(self):
         inpath = tdpath('tiny1nd-weird.ssv')
         outpath = tmppath('tiny1nd-weird-inferred2.serial')
-        c = SerialConverter(cli_args=[inpath, outpath, '-g'])
+        c = SerialConverter(cli_args=[inpath, outpath, '-g', '-q'])
         c.convert()
         self.assertFileCorrect(outpath,
                                tdpath('tiny1nd-weird-inferred.serial'),
@@ -391,12 +392,12 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testInferMetadataSimple(self):
-        md = infer_format_from_flat_file(tdpath('simple.csv'))
+        md = infer_format_from_flat_file(tdpath('simple.csv'), verbosity=1)
         self.assertStringCorrect(md.to_json(), tdpath('simple-inferred.serial'),
-                                 ignore_lines=self.IGL)
+                                 ignore_lines=self.IGL,)
 
     def testInferMetadataMinimal(self):
-        md = infer_format_from_flat_file(tdpath('minimal.csv'))
+        md = infer_format_from_flat_file(tdpath('minimal.csv'), verbosity=1)
         self.assertStringCorrect(md.to_json(),
                                  tdpath('minimal-inferred.serial'),
                                  ignore_lines=self.IGL)
@@ -678,36 +679,61 @@ class TestSerialConversions(ReferenceTestCase):
 
 class TestSerialUtilityFunction(ReferenceTestCase):
     def testTypeInference(self):
-        self.assertEqual(guess_type(['True', 'false', 'TRUE']), FieldType.BOOL)
-        self.assertEqual(guess_type(['1000', '-1', '0']), FieldType.INT)
-        self.assertEqual(guess_type(['1000', '-1', '0', '0.5', '2.1e3']),
-                                     FieldType.FLOAT)
-        self.assertEqual(guess_type(['inf', 'nan', 'nan']),
-                                    FieldType.FLOAT)   # !!!
+        self.assertEqual(
+            analyse_values('b', ['True', 'false', 'TRUE']).most_likely_type,
+            FieldType.BOOL
+        )
+        self.assertEqual(
+            analyse_values('t', ['1000', '-1', '0']).most_likely_type,
+            FieldType.INT
+        )
+        self.assertEqual(
+            analyse_values('f', ['1000', '-1', '0', '0.5', '2.1e3'])
+                .most_likely_type,
+            FieldType.FLOAT
+        )
+        self.assertEqual(
+            analyse_values('f', ['inf', 'nan', 'nan']).most_likely_type,
+            FieldType.FLOAT
+        )   # !!!
 
         self.assertEqual(
-            guess_type(['2000.01.01', '31-12-2000', '12/31/2000',
-                        '999-999-999']),  # !!!
+            analyse_values('d', ['2000.01.01', '31-12-2000', '12/31/2000',
+                                 '999-999-999']).most_likely_type,  # !!!
             FieldType.DATE
         )
 
         self.assertEqual(
-            guess_type(['2000.01.01', '31-12-2000', '12/31/2000',
-                        '999-999-999',
-                        '2000.jan.01', '31-feb-2000', 'dec-31/2000',
-                        'zzz-999-999']),  # !!!
+            analyse_values('d', ['2000.01.01', '31-12-2000', '12/31/2000',
+                                 '999-999-999',
+                                 '2000.jan.01', '31-feb-2000', 'dec-31/2000',
+                                 'zzz-999-999']).most_likely_type,  # !!!
             FieldType.DATE
         )
 
         self.assertEqual(
-            guess_type(['2000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
-                        '999-999-999 99:99:99ksjdhfkZ']),
+            analyse_values('d',
+                ['2000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
+                '999-999-999 99:99:99ksjdhfkZ']).most_likely_type,
             FieldType.DATETIME
         )
 
         self.assertEqual(
-            guess_type(['20000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
-                        '999-999-999 99:99:99ksjdhfkZ']),
+            analyse_values('d',
+                ['20000.01.01T12:34:56', '31-12-2000 12:34:56+0100',
+                 '999-999-999 99:99:99ksjdhfkZ'])
+                .most_likely_type,
+            FieldType.DATETIME
+        )
+
+        self.assertEqual(
+            analyse_values(
+                'b', ['true', 'false', 'false', '']).most_likely_type,
+            FieldType.BOOL
+        )
+
+        self.assertEqual(
+            analyse_values('b', ['Yes', 'n', '']).most_likely_type,
             FieldType.STRING
         )
 

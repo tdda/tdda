@@ -23,8 +23,8 @@ CSVW_MD_RE = r'^(.*?)[-.]((csv[-.]?)?metadata)(\.json)$'
 TDDA_SERIAL_RE = r'^(.*)(\.serial)$'
 FRICTIONLESS_MD_RE = r'^(.*)[-.].*(package|resource|schema).*(\.json|\.yaml)'
 METADATA_STYLE_MAP = {
-    CSVW_MD_RE: 'csvw',
     TDDA_SERIAL_RE: 'tdda.serial',
+    CSVW_MD_RE: 'csvw',
     FRICTIONLESS_MD_RE: 'frictionless',
 }
 
@@ -163,4 +163,14 @@ def non_chars(lines, n):
         c += 1
     return tuple(out)
 
+
+def dict_max_items(d):
+    """
+    Filter dictionary d, with integer values, to only those
+    items with the maximum value (typically highest frequency)
+    """
+    if not d:
+        return d
+    m = max(d.values())
+    return {k: v for k, v in d.items() if v == m}
 
