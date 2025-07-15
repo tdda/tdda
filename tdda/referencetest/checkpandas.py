@@ -32,6 +32,7 @@ from tdda.serial.pandasio import (
 )
 from tdda.referencetest.pddates import infer_date_format
 from tdda.utils import nvl, error
+from tdda.utils import debug
 
 from tdda.pd.utils import is_string_col, first_non_null
 
@@ -213,6 +214,8 @@ class PandasComparison(BaseComparison):
         Function for constructing a pandas dataframe from a serialized
         dataframe in a file (parquet or CSV)
         """
+        if isinstance(path, pd.DataFrame):
+            return path
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:

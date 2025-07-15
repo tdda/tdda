@@ -27,6 +27,7 @@ from rich.table import Table
 
 from tdda.state import get_config
 from tdda.utils import Dummy, nvl, error
+from tdda.utils import debug
 from tdda.abstractdf import (
     all_fields_except,
     is_pandas_df,
@@ -949,7 +950,7 @@ class SameStructureDDiff:
                         [indexes[r]]
                         + list(chain(*([L, R] for L, R in zip(l_vals, r_vals))))
                     )
-            index_head = 'index'
+            index_head = 'row'
 
             s = '' if n == 1 else 's'
             rows_desc = (

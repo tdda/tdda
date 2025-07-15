@@ -4,7 +4,8 @@ import sys
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
-from tdda.utils import warn, error, stdout_console as console
+from tdda.utils import nvl, warn, error, stdout_console as console
+from tdda.utils import debug
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
 
 
@@ -26,11 +27,27 @@ Notes
 
 
 class TDDADiff:
-    def __init__(self, args, config=None):
-        self.args = args
+    def __init__(self, left=None, right=None, precision=None,
+                 vertical=False, fields=None, xfields=None,
+                 type_checking=None, maxdiffs=None,
+                 engine=None, backend=None,
+                 cli_args=None, config=None, verbosity=1):
+        self.args = cli_args
         self.dconfig = get_config().tddadiff
         self.type_checking = self.dconfig.type_checking
-        self.process_args()
+        self.left = left
+        self.right = right
+        self.precision = precision
+        self.vertical = vertical
+        self.fields = fields
+        self.xfields = xfields
+        self.maxdiffs = maxdiffs
+        self.engine = engine
+        self.backend = backend
+        self.verbosity = verbosity
+        if cli_args:
+            self.process_args()
+
 
     def ddiff(self):
         c = (
@@ -55,6 +72,8 @@ class TDDADiff:
                 if table:
                     print()
                     console.print(table)
+        elif self.verbosity > 1:
+            print('No differences.')
 
 
     def process_args(self):
@@ -224,9 +243,8 @@ class TDDADiff:
 
 
 def ddiff_helper(args):
-    tddadiff = TDDADiff(args)
+    tddadiff = TDDADiff(cli_args=args)
     tddadiff.ddiff()
-
 
 
 

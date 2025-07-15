@@ -909,6 +909,14 @@ def error(*args, **kw):
     sys.exit(1)
 
 
+def debug(*args, buf=None, verbose=True, **kw):
+    if buf:
+        buf.append(args)
+    elif verbose:
+        stderr_console.print(*args, style='blue', **kw)
+
+
+
 def listify(v, sort=False):
     """
     If v is not a list, convert it to a list.
@@ -962,3 +970,15 @@ def testwarn():
     buf = []
     f = lambda *args, **kw: buf.extend(args)
     return f, buf
+
+
+def find_free_name(names, candidate=None):
+    candidate = candidate or 'f'
+    if candidate not in names:
+        return candidate
+
+    n = 1
+    c = 'f{candidate}_{n}'
+    while c in names:
+        n += 1
+    return c

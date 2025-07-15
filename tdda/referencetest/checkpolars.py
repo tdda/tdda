@@ -16,7 +16,7 @@ from tdda.serial.polarsio import (
     polars_read_df,
     polars_write_df
 )
-
+from tdda.utils import debug
 import polars as pl
 
 
@@ -123,6 +123,8 @@ class PolarsComparison(BaseComparison):
         Function for constructing a pandas dataframe from a serialized
         dataframe in a file (parquet or CSV)
         """
+        if isinstance(path, pl.DataFrame):
+            return pathf
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:
