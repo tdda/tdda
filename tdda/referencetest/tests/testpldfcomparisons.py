@@ -95,7 +95,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         c = PolarsComparison(verbose=False)
         actual = four_squares()
         actual = actual.with_columns(
-            pl.Series([str(sq) for sq in actual['squares']]).alias('squares')
+            pl.Series([str(sq) for sq in actual['nsq']]).alias('nsq')
         )
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
@@ -119,7 +119,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         c = PolarsComparison(verbose=False)
         actual = four_squares()
         actual = actual.with_columns(
-            pl.Series([float(sq) for sq in actual['squares']]).alias('squares')
+            pl.Series([float(sq) for sq in actual['nsq']]).alias('nsq')
         )
 
         expected = four_squares()
@@ -147,8 +147,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         c = PolarsComparison(verbose=False)
         ref = four_squares()
         actual = pl.DataFrame({
-            'squares': ref['squares'],
-            'row': ref['row'],
+            'nsq': ref['nsq'],
+            'n': ref['n'],
         })
         self.assertEqual(list(reversed(col_names(actual))), col_names(ref))
         r = c.check_dataframe(actual, ref)
@@ -396,15 +396,15 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
 
 def four_squares():
     return pl.DataFrame({
-        'row': [0, 1, 2, 3],
-        'squares': [0, 1, 4, 9],
+        'n': [0, 1, 2, 3],
+        'nsq': [0, 1, 4, 9],
     })
 
 
 def four_squares_and_ten():
     return pl.DataFrame({
-        'row': [0, 1, 2, 3],
-        'squares': [0, 1, 10, 9],
+        'n': [0, 1, 2, 3],
+        'nsq': [0, 1, 10, 9],
     })
 
 def write_ref():

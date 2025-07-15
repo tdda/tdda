@@ -30,7 +30,7 @@ class TDDADiff:
     def __init__(self, left=None, right=None, precision=None,
                  vertical=False, fields=None, xfields=None,
                  type_checking=None, maxdiffs=None,
-                 engine=None, backend=None,
+                 engine=None, backend=None, key=None, auto_key=False,
                  cli_args=None, config=None, verbosity=1):
         self.args = cli_args
         self.dconfig = get_config().tddadiff
@@ -44,6 +44,8 @@ class TDDADiff:
         self.maxdiffs = maxdiffs
         self.engine = engine
         self.backend = backend
+        self.key = key
+        self.auto_key = auto_key
         self.verbosity = verbosity
         if cli_args:
             self.process_args()
@@ -61,7 +63,7 @@ class TDDADiff:
                                    check_data=self.fields,
                                    type_matching=self.type_checking,
                                    precision=self.precision,
-                                   backend=self.backend)
+                                   backend=self.backend, key=self.key)
 
         if result.failures > 0:
             print(result.diffs)

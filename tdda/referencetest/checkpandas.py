@@ -59,7 +59,7 @@ class PandasComparison(BaseComparison):
     def __new__(cls, *args, **kwargs):
         return super(PandasComparison, cls).__new__(cls)
 
-    def same_structure_ddiff(self, df, ref_df, diffs):
+    def same_structure_ddiff(self, df, ref_df, diffs, key=None):
         """
         Test two dataframes with the same structure for differences.
 
@@ -101,7 +101,7 @@ class PandasComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            D = same_structure_dataframe_diffs(df, ref_df)
+            D = same_structure_dataframe_diffs(df, ref_df, key=key)
             n_diffs = D.n_diff_values
             if n_diffs > 0:
                 diffs.dfd.diff = D
@@ -494,7 +494,7 @@ def diff_masks(df, ref_df, only_diffs=False):
     return diffs
 
 
-def same_structure_dataframe_diffs(df, ref_df):
+def same_structure_dataframe_diffs(df, ref_df, key=None):
     """
     Compute differences between each pair of columns in two data frames.
 
@@ -527,7 +527,7 @@ def same_structure_dataframe_diffs(df, ref_df):
         row_diff_counts = None
     return SameStructureDDiff(df.shape,
                               pd.DataFrame(d), row_diff_counts,
-                              n_vals, n_cols, n_rows)
+                              n_vals, n_cols, n_rows, key=key)
 
 
 def single_col_diffs(L, R):

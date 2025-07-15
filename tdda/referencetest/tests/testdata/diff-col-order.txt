@@ -1,9 +1,9 @@
 Data frames have different column structure.
 Different column ordering between data frames.
-  Actual ordering: squares row
-Expected ordering: row squares
+  Actual ordering: nsq n
+Expected ordering: n nsq
 Compare with:
-    diff /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/actual-df001.parquet /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/expected-df001.parquet
+    diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df001.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df001.parquet
 
 Compare with:
-    tdda diff /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/actual-df001.parquet /var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/expected-df001.parquet --strict
+    tdda diff /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/actual-df001.parquet /var/folders/w7/lhtph66x7h33t9pns0616qk00000gn/T/expected-df001.parquet --strict

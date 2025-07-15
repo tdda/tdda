@@ -59,7 +59,7 @@ def get_diffs_df_with_cols_and_index(df, *args, **kwargs):
                       df, *args, **kwargs)
 
 
-def polars_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n):
+def polars_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n, key=None):
     idx = '_tdda_idx_'
     nc = '_tdda_nc_'
     out_df = (
@@ -72,9 +72,14 @@ def polars_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n):
     return out_df.select(cols), out_df[idx].to_list()
 
 
-def pandas_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n):
-    out_df = get_diffs_df_with_cols(df, cols, rowdiffs, n)
-    return out_df, out_df.index.to_list()
+def pandas_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n, key=None):
+    if key is None:
+        out_df = get_diffs_df_with_cols(df, cols, rowdiffs, n)
+        return out_df, out_df.index.to_list()
+    else:
+        cols = cols if key is None else [c for c in cols if c != key]
+        out_df = get_diffs_df_with_cols(df, cols, rowdiffs, n)
+        return out_df, out_df[key].to_list()
 
 
 def get_diffs_df_with_cols(df, *args, **kwargs):

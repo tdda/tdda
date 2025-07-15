@@ -97,7 +97,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
     def testDiffColTypeInMemIntStr(self):
         c = PandasComparison(verbose=False)
         actual = four_squares()
-        actual['squares'] = [str(sq) for sq in actual['squares']]
+        actual['nsq'] = [str(sq) for sq in actual['nsq']]
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
@@ -111,7 +111,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
     def testDiffColTypeInMemIntFloat(self):
         c = PandasComparison(verbose=False)
         actual = four_squares()
-        actual['squares'] = [float(sq) for sq in actual['squares']]
+        actual['nsq'] = [float(sq) for sq in actual['nsq']]
         expected = four_squares()
         r = c.check_dataframe(actual, expected)
         self.assertEqual(r.failures, 1)
@@ -131,8 +131,8 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         c = PandasComparison(verbose=False)
         ref = four_squares()
         actual = pd.DataFrame({
-            'squares': ref['squares'],
-            'row': ref['row'],
+            'nsq': ref['nsq'],
+            'n': ref['n'],
         })
         self.assertEqual(list(reversed(list(actual))), list(ref))
         r = c.check_dataframe(actual, ref)
@@ -379,15 +379,15 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
 def four_squares():
     return pd.DataFrame({
-        'row': [0, 1, 2, 3],
-        'squares': [0, 1, 4, 9],
+        'n': [0, 1, 2, 3],
+        'nsq': [0, 1, 4, 9],
     })
 
 
 def four_squares_and_ten():
     return pd.DataFrame({
-        'row': [0, 1, 2, 3],
-        'squares': [0, 1, 10, 9],
+        'n': [0, 1, 2, 3],
+        'nsq': [0, 1, 10, 9],
     })
 
 def write_ref():

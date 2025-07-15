@@ -972,13 +972,13 @@ def testwarn():
     return f, buf
 
 
-def find_free_name(names, candidate=None):
-    candidate = candidate or 'f'
-    if candidate not in names:
-        return candidate
-
+def find_free_name(names, candidates=None):
+    candidates = candidates or ['f']
+    for c in candidates:
+        if c not in names:
+            return c
     n = 1
-    c = 'f{candidate}_{n}'
+    c = 'f{candidates[0]}_{n}'
     while c in names:
         n += 1
     return c
