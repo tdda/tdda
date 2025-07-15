@@ -138,6 +138,7 @@ def _get_metadata(rw, path, md_path, md_file_type=None, find_md=False,
     if use_table_name:
         assert path is not None
         for_table_name = os.path.basename(path)
+
     if path is None:
         if md_path is None:
             error('Must provide path or md_path')
@@ -156,9 +157,23 @@ def _get_metadata(rw, path, md_path, md_file_type=None, find_md=False,
             path, md_path, find_md = pi.path, pi.md_path, find_md or pi.find_md
             if md_path is None and find_md:
                 md_path = find_associated_metadata_file(path)
+            elif path is not None:
+                kind, _ = find_metadata_type_from_path(path)
+                if kind:
+                    md = load_metadata(path, md_file_type=md_file_type,
+                                       table_number=table_number,
+                                       for_table_name=for_table_name,
+                                       preferred_serial_flavour=preferred)
+                    actual_path = getattr(md, '_fullpath', md.path)
+                    if actual_path is None:
+                        error('No data specified.')
+                    path, md_path, = actual_path, path
+
         else:
             s_config = get_config().serial
             md_path = s_config._md_inpath(path)
+
+
     if md is None and md_path is not None:
         md = load_metadata(md_path, md_file_type=md_file_type,
                            table_number=table_number,

@@ -34,6 +34,61 @@ PYTHON_WRITER = {
     'polars.read_csv': serial_to_polars_read_csv_python,
 }
 
+USAGE = '''
+tdda serial [FLAGS] INPATH OUTPUT
+
+  INPATH     A source metadata file or a flat file for metadata generation
+
+             The extension partly determines the format:
+                .serial                 --- tdda.serial
+                .yaml                   --- Frictionless
+                .json                   --- CSVW or Frictionless
+                .csv, .psv, .tsv, .txt  --- flat file input for generation
+
+  OUTPUT        Can be either another metadata file, with an extention
+                as above, or a .py file for a stand-alone
+                Python script to be generated.
+
+FLAGS:
+
+  --to TO  Destination format/flavour specifer.
+
+           TO                          FORMAT and FLAVOUR
+           --------------------------  ---------------------
+           tdda.serial                 tdda.serial (default)
+           .                           tdda.serial
+
+           pandas.read_csv             pandas.read_csv (tdda.serial)
+           pd.r                        pandas.read_csv (tdda.serial)
+
+           pandas.DataFrame.to_csv     pandas.DataFrame.to_csv (tdda.serial)
+           pd.w                        pandas.DataFrame.to_csv (tdda.serial)
+
+           polars.read_csv             polars.read_csv (tdda.serial)
+           pl.r                        polars.read_csv (tdda.serial)
+
+           polars.DataFrame.write_csv  polars.DataFrame.write_csv (tdda.serial)
+           pl.w                        polars.DataFrame.write_csv (tdda.serial)
+
+           csvw                        CSVW
+
+           frictionless                Frictionless
+           fless                       Frictionless
+           fl                          Frictionless
+           fl.r                        Frictionless resource
+           fl.p                        Frictionless package
+
+
+  --for FILE    Filename for data to use when generating CSVW or Frictionless
+                data. (Can also be used for tdda.serial and .py output)
+
+  --backend BE, -b BE  Backend target dtypes when writing pandas flavours
+                       n for numpy_nullable, a for pyarrow, o for original
+
+  --generate, --gen, -g
+'''
+
+
 
 class SerialConverter:
     def __init__(self, inpath=None, outpath=None,
@@ -66,8 +121,12 @@ class SerialConverter:
         self.__dict__.update(vars(flags))
 
     def validate(self):
+        if not self.outpath:
+            suf = USAGE if self.cli_args else None
+            error(f'No destination specified.{suf}')
         kind, parts = find_metadata_type_from_path(self.outpath)
         _, ext = os.path.splitext(self.outpath)
+        ext = ext
         if hasattr(self, 'to'):
             self.out_formats = get_metadata_flavours(self.to)
 
@@ -90,11 +149,15 @@ class SerialConverter:
         else:
             warn('Cannot infer output format. Use --to FMT to specify.')
 
-
         self.for_csv = getattr(self, 'for', None)
 
-        if getattr(self, 'generate', False):
+        _, in_ext = os.path.splitext(self.inpath)
+        is_flat_file = in_ext in ('.csv', '.psv', '.tsv', '.txt')
+        if getattr(self, 'generate', False) or is_flat_file:
             self.generate = True
+
+        if self.inpath == self.outpath:
+            error('inpath and outpath cannot be the same.')
 
     def parser(self):
         formatter = argparse.RawDescriptionHelpFormatter
@@ -103,10 +166,10 @@ class SerialConverter:
                                          formatter_class=formatter)
 
         parser.add_argument('inpath',
-            help='input metadata file (.serial, csvw (json), '
-                 'or frictionless (yaml/json)')
+            help='input file (.serial, csvw (json), '
+                 'frictionless (yaml/json) or flat file (.csv, .psv etc.)')
         parser.add_argument('outpath', nargs='?',
-                            help='output metadata file (if any)')
+                            help='output metadata file or python script)')
 
         parser.add_argument('-?', '--?', action='help',
                             help='same as -h or --help')
@@ -119,9 +182,9 @@ class SerialConverter:
 
         parser.add_argument('--backend', '-B', type=str,
             help='For Pandas, preferred backend.'
-                 ' n or numpy_nullable,'
-                 ' a or pyarrow,'
-                 ' o or original')
+                 ' n (or numpy_nullable),'
+                 ' a (or pyarrow),'
+                 ' o (or original).')
 
         parser.add_argument('--generate', '--gen', '-g', action='store_true',
             help='Generate a bare-bones tdda.serial file for a '
