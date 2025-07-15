@@ -240,6 +240,9 @@ def detect_parser(usage=''):
     parser.add_argument('--int', dest='int_bools', action='store_true',
                         help='Write out boolean fields as integers, with '
                              '1 for true and 0 for false.')
+
+    parser.add_argument('--key', nargs='*',
+                        help='Key or key fields to use when reporting failures')
     add_verify_fields_flags(parser)
     return parser
 
@@ -326,6 +329,9 @@ def detect_flags(parser, args, params):
         params['interleave'] = True
     elif flags.no_interleave:
         params['interleave'] = False
+
+    if flags.key:
+        params['key'] = flags.key
     params['in_place'] = False  # Only applicable in API case
 
     # Notice the confusing similarity of these parameters,

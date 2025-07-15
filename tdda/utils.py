@@ -25,6 +25,7 @@ import encodings.iso8859_1   # type:ignore
 from collections import namedtuple
 
 import numpy as np
+import pandas as pd
 
 import rich
 rprint = rich.print
@@ -548,7 +549,7 @@ def dict_to_toml(d, path=None):
 
 
 def json_sanitize(v):
-    if repr(v) == 'nan':
+    if repr(v) in ('nan', 'NaT', '<NA>'):
         return None
     elif v is None or type(v) in (str, int, float, bool):
         return v

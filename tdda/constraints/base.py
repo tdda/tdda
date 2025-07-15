@@ -1638,7 +1638,7 @@ def write_text_detect_report(d, outpath, config):
     indent = '  '
     ffv = config.format_failure_values
     with open(outpath, 'w') as f:
-        f.write('TDDA FAILURES REPORT')
+        f.write('TDDA FAILURES REPORT\n\n')
         f.write('FIELDS:\n')
         for field, constraints in d['fields'].items():
             f.write(f'\nField: {field}\n')

@@ -4,6 +4,9 @@ import re
 import sys
 import tomli
 
+import pandas as pd
+
+
 DATETIME_RE ='^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
 DEFAULT_IN_METADATA = './_write.serial'
@@ -91,7 +94,7 @@ class Config(BaseConfig):
     def format_value(self, v):
         if isinstance(v, list) or isinstance(v, tuple):
             return f'[{(self.format_value(V) for V in v)}]'
-        if v is None:
+        if pd.isnull(v):
             return self.null_rep
         if type(v) is str:
             m = re.match(DATETIME_RE, v)

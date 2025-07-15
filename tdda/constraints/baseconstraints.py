@@ -666,7 +666,10 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
             rex_constraint = RexConstraint(self.find_rexes(fieldname,
                                                            values=uniqs,
                                                            seed=self.seed))
-
+        if no_duplicates_constraint:
+            # If all values are different, makes little sense to
+            # have allowed values in most cases.
+            allowed_values_constraint = None
         constraints = [c for c in [type_constraint,
                                    min_constraint, max_constraint,
                                    min_length_constraint,
