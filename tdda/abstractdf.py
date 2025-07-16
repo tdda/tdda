@@ -26,6 +26,7 @@ def is_polars_df(df):
     return isinstance(df, pl.DataFrame)
 
 
+
 def df_type(df):
     if isinstance(df, pd.DataFrame):
         return 'pandas'
@@ -168,8 +169,11 @@ def pl_sceq(L, R):
     return L == R
 
 
+def calc_nunique(col):
+    return col.nunique()
+
+
 def get_engine_and_backend(engine=None, backend=None):
     config = get_config()
     return config.get('engine', engine), config.get('pandas_backend', backend)
-
 

@@ -17,11 +17,21 @@ from tdda.referencetest.basecomparison import (
     DataFrameDiffs,
     create_row_diffs_mask
 )
+from tdda.referencetest.ddiff import find_common_key, check_is_usable_key
+from tdda.serial import csv_to_pandas
+from tdda.utils import nvl
 
 
 TESTDATA = os.path.join(os.path.dirname(__file__), 'testdata')
 PQ_REF4_PATH = os.path.join(TESTDATA, 'four-squares.parquet')
 CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
+TDDADIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+CTESTDATA = os.path.join(TDDADIR, 'constraints', 'testdata')
+
+E92PATH = os.path.join(CTESTDATA, 'elements92.csv')
+E118PATH = os.path.join(CTESTDATA, 'elements118.csv')
+
+
 
 
 class TestPandasDataFrameComparisons(ReferenceTestCase):
@@ -373,8 +383,129 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertStringCorrect(str(diff), fp('ddiff-1-details.txt'))
         self.assertStringCorrect(result, fp('ddiff-1-rich-table.txt'))
 
+    def test_find_common_single_key45(self):
+        n4 = n_squares(4)
+        n5 = n_squares(5)
+        # Different sizes, 'n' (first col) good in each
+        self.assertEqual(find_common_key(n4, n5), 'n')
+        self.assertEqual(find_common_key(n5, n4), 'n')
+
+    def test_find_common_single_key35(self):
+
+        n4 = n_squares(4)
+        n3 = n_squares(5, lambda n: n % 2)
+
+        # Different sizes, 'n' (first col) good in each
+        # Some missing in n3
+
+        self.assertEqual(find_common_key(n4, n3), 'n')
+        self.assertEqual(find_common_key(n3, n4), 'n')
+
+    def test_find_common_single_key4_dup_str(self):
+
+        # k no good in n4a. Use n.
+
+        n4a = n_squares(4)
+        n4a.insert(0, 'k', ['a', 'b', 'c', 'a'])
+        n3k = n_squares(3)
+        n3k.insert(0, 'k', ['b', 'c', 'd'])
+
+        self.assertEqual(find_common_key(n3k, n4a), 'n')
+        self.assertEqual(find_common_key(n4a, n3k), 'n')
+
+    def test_find_common_single_key4_null(self):
+
+        n3k = n_squares(3)
+        n3k.insert(0, 'k', ['b', 'c', 'd'])
+
+        # # k is None in n4n
+        n4n = n_squares(4)
+        n4n.insert(0, 'k', ['a', 'b', 'c', None])
+
+        self.assertEqual(find_common_key(n3k, n4n), 'n')
+        self.assertEqual(find_common_key(n4n, n3k), 'n')
+
+    def test_find_common_single_key4_str(self):
+        # String key k is usable in both
+        n3k = n_squares(3)
+        n3k.insert(0, 'k', ['b', 'c', 'z'])
+        n4k = n_squares(4)
+        n4k.insert(0, 'k', ['a', 'b', 'c', 'd'])
+
+        self.assertEqual(find_common_key(n3k, n4k), 'k')
+        self.assertEqual(find_common_key(n4k, n3k), 'k')
+
+    def test_find_common_single_key4_str(self):
+        # n has dups; fall back to nsq
+        n4 = n_squares(4)
+        n4dup = n_squares(4)
+        n4dup['n'] = [1, 1, 2, 3]
+        self.assertEqual(find_common_key(n4, n4dup), 'nsq')
+
+    def test_find_common_single_elements(self):
+        e92 = csv_to_pandas(E92PATH)
+        e118 = csv_to_pandas(E118PATH)
+        self.assertEqual(find_common_key(e92, e118), 'Z')
+
+        del e92['Z']
+        self.assertEqual(find_common_key(e92, e118), 'Name')
+        del e118['Name']
+        self.assertEqual(find_common_key(e92, e118), 'Symbol')
+        del e92['Symbol']
+        self.assertIsNone(find_common_key(e92, e118, verbosity=0))
+
+    def test_find_common_dual_key(self):
+        e92 = csv_to_pandas(E92PATH)
+        e118 = csv_to_pandas(E118PATH)
+        e92['Group'] = e92['Group'].fillna(e92['Z'])
+        e118['Group'] = e118['Group'].fillna(e118['Z'])
+        for k in ('Z', 'Name', 'Symbol'):
+            del e92[k]
+        self.assertEqual(find_common_key(e92, e118), ['Group', 'Period'])
+
+        del e92['Period']
+        del e118['Group']
+        self.assertEqual(find_common_key(e92, e118, verbosity=0), None)
+
+        e92 = e92.query('Density > 0').reset_index()
+        e118 = e118.query('Density > 0').reset_index()
+        self.assertEqual(find_common_key(e92, e118, verbosity=0), 'index')
+
+        del e92['index']
+        del e118['index']
+        self.assertEqual(find_common_key(e92, e118),
+                         ['Density', 'AtomicWeight'])
+        del e118['AtomicWeight']
+        self.assertEqual(find_common_key(e92, e118),
+                         ['Density', 'RelativeAtomicMass'])
+
+        del e92['Density']
+        self.assertEqual(find_common_key(e92, e118),
+                         ['RelativeAtomicMass', 'Etymology'])
+        del e118['Etymology']
+        self.assertEqual(find_common_key(e92, e118, verbosity=0), None)
+
+    def test_check_is_usable_key(self):
+        e92 = csv_to_pandas(E92PATH)
+        e118 = csv_to_pandas(E118PATH)
+        self.assertTrue(check_is_usable_key(e92, e118, 'Z'))
+        self.assertTrue(check_is_usable_key(e92, e118, 'Name'))
+        self.assertTrue(check_is_usable_key(e92, e118, 'Symbol'))
+
+        self.assertFalse(check_is_usable_key(e92, e118, ['Period', 'Group']))
+        self.assertFalse(check_is_usable_key(e92, e118, ['RelativeAtomicMass',
+                                                         'Density']))
 
 
+
+def n_squares(n=4, filter_fn=None):
+    all_true = lambda x: True
+    filter_fn = nvl(filter_fn, all_true)
+
+    return pd.DataFrame({
+        'n': list(i for i in range(n) if filter_fn(i)),
+        'nsq': list(i^2 for i in range(n) if filter_fn(i)),
+    })
 
 
 def four_squares():

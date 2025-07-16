@@ -1,12 +1,19 @@
 import os
 import sys
 
+import numpy as np
+import pandas as pd
+
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
-from tdda.utils import nvl, warn, error, stdout_console as console
-from tdda.utils import debug
+from tdda.utils import (
+    nvl, warn, error, stdout_console as console, is_sequence,
+    find_free_name
+)
+from tdda.utils import debug, listify
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
+from tdda.abstractdf import col_names, calc_nunique
 
 
 import argparse
@@ -242,6 +249,134 @@ class TDDADiff:
             help='Use loose (permissive) type comparisons')
         add_pandas_flags(parser)
         return parser
+
+
+def find_usable_key(left, right, key=None, verbosity=1):
+    """
+    If key is supplied, this adds a row number to (copied of) the
+    left and right DataFrames, at the start.
+
+    If key is Truthy, this tries to find a common key to use for the outer
+    join for diffing. If it fails, it falls back to using row index.
+
+    If key is Falsy:
+        If the DataFrames have the same length, this does nothing.
+        If they have different lengths, a row number is added to them both.
+
+    Args:
+        left:   a DataFrame (currently Pandas)
+        right:  a DataFrame (currently Pandas)
+        key:    One of:
+
+                    a field in left and right, to use as a join key
+
+                    a list of fields, in left and right, to use as a join key
+
+                    True: meaning that a join key should be found
+
+                    None (or other falsy value) means just use row number
+                    as the join key.
+
+       Returns:
+            (left, right, key):  The left and right and DataFrames are
+                                 copies of left and right with an extra
+                                 column, if that has been created.
+
+                                 The key is the key found, to be used,
+                                 if a key is created and found.
+    """
+    nL, nR = left.shape[0], right.shape[0]
+    if isinstance(key, str) or is_sequence(key):
+        check_is_usable_key(left, right, key, raise_if_not=True)
+        mode = 'key'   # key provided
+    elif key == True:
+
+        mode = 'find'   # try to find a key
+    elif key:
+        error(f'Unexpected value for key value: {repr(key)}')
+    elif nL == nR:
+        mode = 'common'  # same length, no key needed
+    else:
+        mode = 'rownum'  # Add row number and use as key
+
+    if mode == 'find':
+        key = find_common_key(left, right, verbosity=verbosity)
+        if key is None:
+            mode = 'common' if nL == nR else 'rownum'
+
+    if key or nL != nR:
+        all_names = set(col_names(left)) | set(col_names(right))
+        key = find_free_name(all_names, ['Row', 'ROW', 'row', 'Row#'])
+        L = pd.DataFrame({key: pd.Series(np.arange(left.shape[0]),
+                                         dtype='Int64')})
+        for k in left:
+            L[k] = left[k]
+        R = pd.DataFrame({key: pd.Series(np.arange(right.shape[0]),
+                                         dtype='Int64')})
+        for k in right:
+            R[k] = right[k]
+        left, right = L, R
+
+        left.columns = [name + '_L' for name in left]
+        right.columns = [name + '_R' for name in right]
+
+        keyL, keyR = key + '_L', key + '_R'
+        dfj = left.merge(right, left_on=keyL, right_on=keyR, how='outer')
+
+        L = dfj[left.columns]
+        R = dfj[right.columns]
+        L.columns = [c[:-2] for c in L]
+        R.columns = [c[:-2] for c in R]
+    else:
+        L, R = left, right
+
+    return L, R, key
+
+
+def find_common_key(left, right, verbosity=1):
+    nL, nR = left.shape[0], right.shape[0]
+    right_cols = set(col_names(right))
+    shared_cols = [k for k in col_names(left) if k in right_cols]
+    distincts = {}
+    for key in shared_cols:
+        ndL = calc_nunique(left[key])
+        if ndL == nL:
+            ndR = calc_nunique(right[key])
+            if ndR == nR:
+                return key
+        distincts[key] = ndL
+    if len(distincts) >= 2:
+        cands = sorted(shared_cols, key = lambda k: -distincts[k])
+        for i, key1 in enumerate(cands[:-1]):
+            for key2 in cands[i + 1:]:
+                keys = [key1, key2]
+                L = left[keys].groupby(keys).count().reset_index()
+                if L.shape[0] == nL:
+                    R = right[keys].groupby(keys).count().reset_index()
+                    if R.shape[0] == nR:
+                        return keys
+
+    warn('No usable key find. Use row number.', verbose=verbosity > 0)
+    return None
+
+
+def check_is_usable_key(left, right, key, raise_if_not=False):
+    keys = listify(key)
+    str_key = ','.join(key)
+    nL, nR = left.shape[0], right.shape[0]
+    L = left[keys].groupby(keys).count().reset_index()
+    if L.shape[0] == nL:
+        R = right[keys].groupby(keys).count().reset_index()
+        if R.shape[0] == nR:
+            return True
+        elif raise_if_not:
+             error(f'{str_key} is not a primary key for in right DataFrame.')
+        else:
+            return False
+    elif raise_if_not:
+        error(f'{str_key} is not a primary key for in left DataFrame.')
+    return False
+
 
 
 def ddiff_helper(args):
