@@ -16,7 +16,11 @@ from tdda.serial.frictionless import (
 )
 from tdda.serial.metadata import SerialMetadata, FieldType
 from tdda.serial.reader import load_metadata
-from tdda.serial.infer import infer_format_from_flat_file, analyse_values
+from tdda.serial.infer import (
+    analyse_values,
+    careful_split,
+    infer_format_from_flat_file,
+)
 
 
 from tdda.serial.testserial import (
@@ -239,6 +243,34 @@ class TestSerialConversions(ReferenceTestCase):
                                  tdpath('tiny1nd-weird-inferred.serial'),
                                  ignore_lines=self.IGL)
 
+    #@tag
+    def testInferMetadataTiny1cdq(self):
+        md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'),
+                                         verbosity=0)
+        # self.assertStringCorrect(md.to_json(),
+        #                          tdpath('tiny1nd-weird-inferred.serial'),
+        #                          ignore_lines=self.IGL)
+
+
+    def test_careful_split(self):
+        # Trivial cases
+        c = lambda s: careful_split(s, ',', '"', '\\')
+        self.assertEqual(c(''), [''])
+        self.assertEqual(c('1'), ['1'])
+        self.assertEqual(c('1,2',), ['1', '2'])
+        self.assertEqual(c('"a"'), ['"a"'])
+        self.assertEqual(c('"a","b"'), ['"a"', '"b"'])
+
+        self.assertEqual(c('"a,b"'), ['"a,b"'])
+        self.assertEqual(c('"a,b","1,2,3"'), ['"a,b"', '"1,2,3"'])
+
+        self.assertEqual(c('"a""b","1,2,3"'), ['"a""b"', '"1,2,3"'])
+        self.assertEqual(c('"a\"b","1,2,3"'), ['"a\"b"', '"1,2,3"'])
+
+        # escape handling done before
+        self.assertEqual(c(r'"a\,b","1,2,3"'), [r'"a\,b"', '"1,2,3"'])
+
+    @tag
     def testInferMetadataWeirdCLI(self):
         inpath = tdpath('tiny1nd-weird.ssv')
         outpath = tmppath('tiny1nd-weird-inferred2.serial')

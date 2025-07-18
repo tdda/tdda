@@ -79,7 +79,10 @@ from tdda.serial.utils import (
 from tdda.serial.pandasio import (
     serial_to_pandas_read_csv_args
 )
-from tdda.utils import indicator_field_name, pass_fail_stats, handle_tilde
+from tdda.utils import (
+    indicator_field_name, pass_fail_stats, handle_tilde,
+    warn
+)
 
 # pd.tslib is deprecated in newer versions of Pandas
 if hasattr(pd, 'Timestamp'):
@@ -239,6 +242,11 @@ class PandasConstraintDetector(BaseConstraintDetector):
             self.date_cols = []
             self.out_df = None
 
+    def remove_if_exists(self, name):
+        if name in self.out_df:
+            del self.df[name]
+        warn(f'Updating old field {name}.')
+
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'min')
         c = self.df[colname]
@@ -357,7 +365,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif len(output_fields) == 0:
             output_fields = list(self.df)
 
-        nfailname = 'n_failures'
+        nfailname = (
+            'n_failures' if 'n_failures' not in self.df else 'n_tdda_failures'
+        )
         nf = len(list(out_df))   # ok fields
         fails = (nf - out_df.sum(axis=1).astype(float)
                     - out_df.isnull().sum(axis=1).astype(float))
@@ -377,7 +387,10 @@ class PandasConstraintDetector(BaseConstraintDetector):
         if output_fields:
             for fname in reversed(output_fields):
                 if fname in list(self.df):
-                    out_df.insert(0, fname, self.df[fname])
+                    if fname in list(self.out_df):
+                        warn(f'Replacing old field {fname}.')
+                    else:
+                        out_df.insert(0, fname, self.df[fname])
                 else:
                     raise Exception('DataFrame has no column %s' % fname)
 
@@ -1331,6 +1344,10 @@ def is_pd_index_trivial(df):
     return True
 
 
+def verification_field(col, ctype):
+    return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
+
+
 def df_fuzzy_gt(a, b, epsilon):
     """
     Returns a >~ b (a is greater than or approximately equal to b)
@@ -1372,10 +1389,6 @@ def is_ver_field(v, f):
 
     v = v[:-3]
     return v in STANDARD_CONSTRAINT_SUFFIXES
-
-
-def verification_field(col, ctype):
-    return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
 
 
 # for backwards compatibility (old name for function)

@@ -7,7 +7,7 @@ from collections import namedtuple, Counter
 TypeStats = namedtuple('TypeStats', 'field stats')
 
 from tdda.serial.metadata import SerialMetadata, FieldMetadata, FieldType
-from tdda.utils import warn, error, nvl
+from tdda.utils import warn, error, nvl, debug
 from tdda.referencetest.utils import FileType
 from tdda.serial.utils import non_chars, dict_max_items
 
@@ -89,19 +89,27 @@ class MetadataInferrer:
         )
         self.print(f'Inferred header: {self.sep} ({M} occurrences).', 2)
 
-        m = max((n_dquotes, n_squotes))
+        self.quote_char = quote = "'" if n_squotes > n_dquotes else '"'
+        # But apostrophes...quoted or not.
 
         sep_replacement, qq_replacement = non_chars(lines, 2)
         restorations = self.restorations = {}
 
+        escaped_sep = f'\\{sep}'
         for i, line in enumerate(lines):
-            escaped_sep = f'\\{sep}'
             if escaped_sep in line:
                 lines[i] = line.replace(escaped_sep, sep_replacement)
                 restorations[sep_replacement] = sep
 
+        data = [L.split() for L in self.data]
+        fieldnames = header.split(sep)
+        if quote and any(f.startswith(quote) and not f.endswith(quote)
+                         for f in fieldnames):
+            fieldnames = careful_split(header, sep, quote, '\\')
+        self.n_fieldnames = len(fieldnames)
+
         escape = stutter = quote_char = quoting = None
-        self.quote_char = quote = '"'
+        m = max((n_dquotes, n_squotes))
         if m > 0:
             stuttered = quote * 2
             escaped = f'\\{quote}'
@@ -109,13 +117,13 @@ class MetadataInferrer:
             for i, line in enumerate(lines):
                 # Crudely handle escaping and stuttering (all lines)
                 if stuttered in line:
+                    # HERE!
                     lines[i] = line.replace(stuttered, qq_replacement)
                     stutter = True
                 if escaped in header:
                     lines[i] = line.replace(escaped, sep_replacement)
                     escape = '\\'
             self.header = header = lines[0]
-            fieldnames = header.split(sep)
             plain_fieldnames, _ = self.dequote(fieldnames)
             if plain_fieldnames != fieldnames:
                 self.quote_char = quote
@@ -142,11 +150,12 @@ class MetadataInferrer:
     def infer_fields(self):
         sep = self.sep
         combined = [
-            self.dequote(row.split(self.sep))
+            self.dequote_and_split(row)
             for row in self.data
         ]
-        quoted = [row[1] for row in combined]
-        data = [row[0] for row in combined]
+        is_quoted = [row[2] for row in combined]
+        data = [row[1] for row in combined]
+        raw = [row[0] for row in combined]
         m = min(len(row) for row in data)
         M = max(len(row) for row in data)
         nFields = len(self.fieldnames)
@@ -165,35 +174,19 @@ class MetadataInferrer:
         n = max(nFields, M)
 
         # Number quoted by column index
-        nQuoted = {
-            i: sum((row[i] if i < len(row) else 0) for row in quoted)
+        n_quoted = {
+            i: sum((row[i] if i < len(row) else 0) for row in is_quoted)
             for i in range(n)
         }
-        self.print(f'Number quoted by col index: {nQuoted}', 2)
-        totalQuoted = sum(nQuoted.values())
-        self.print(f'Total number quoted: {totalQuoted}', 2)
+        self.print(f'Number quoted by col index: {n_quoted}', 2)
+        total_quoted = sum(n_quoted.values())
+        self.print(f'Total number quoted: {total_quoted}', 2)
 
         n_cols = max(len(row) for row in data)
         n_fields = len(self.fieldnames)
         if n_fields < n_cols:
             error(f'Found more data columns ({n_cols}) than fieldnames '
                   f'({n_fields}). Giving up.')
-
-        # n_nulls = {
-        #     nil: count(nil, data)
-        #     for nil in NULLS
-        # }
-        # m = max(n_nulls.values())
-        # if m > 0:
-        #     cands = [k for k, v in n_nulls.items() if v == m]
-        #     nil = cands[0]
-        #     if len(cands) > 1:
-        #         nils = '\n    '.join(nil for nil in cands)
-        #         warn(f'Multiple possible null values found:\n{nils}\n'
-        #              f'Assuming {nil}')
-        # else:
-        #     nil = None
-        # typemap = {}
 
         type_info = {
             col: analyse_values(col, [row[i] for row in data if len(row) > i])
@@ -227,6 +220,30 @@ class MetadataInferrer:
                           fieldtype=type_info[name].most_likely_type)
             for name in self.fieldnames
         ]
+        self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
+
+    def dequote_and_split(self, line):
+        raw_row = line.split(self.sep)
+        q = self.quote_char
+        if len(raw_row) > self.n_fieldnames:
+            pass
+            # more values than fields in header
+            error('Too many values')
+        elif q is not None and any(v.startswith(q) and not v.endswith(q)
+                                   for v in raw_row):
+            raw_row = careful_split(line, self.sep, self.quote_char,
+                                self.escape_char)
+            if raw_row is None:
+                error('Can\'t split line')
+        deq_row = [self.dequote(v) for v in raw_row] if q else raw_row[:]
+        return raw_row, deq_row, [r == q for r, q in zip (raw_row, deq_row)]
+
+    def infer_quoting(self, data, quoted, n_quoted):
+        debug('DATA:\n', data)
+        debug('QUOTED:\n', quoted)
+        debug('N QUOTED:\n', n_quoted)
+        debug('QUOTE CHAR:', self.quote_char)
+
 
     def describe_null(self):
         if self.null in KNOWN_NULLS:
@@ -242,7 +259,7 @@ class MetadataInferrer:
         # Return list of dequoted values and list of booleans
         # saying whether each was quoted
         q = self.quote_char or '"'
-        quoted = [
+        is_quoted = [
             s.startswith(q) and s.endswith(q)
             for s in row
         ]
@@ -252,7 +269,7 @@ class MetadataInferrer:
         ]
         for k, v in self.restorations.items():
             out = [s.replace(k, v) for s in out]
-        return out, quoted
+        return out, is_quoted
 
 
 def infer_format_from_flat_file(path, lines_to_use=1000, verbosity=None):
@@ -262,6 +279,28 @@ def infer_format_from_flat_file(path, lines_to_use=1000, verbosity=None):
 
 def count(char, lines):
     return sum(sum(c == char for c in line) for line in lines)
+
+
+def careful_split(line, sep, quote, escape):
+    pos = 0
+    out = []
+    parts = line.split(sep)
+    i = field = 0
+    out = []
+    while i < len(parts):
+        part = parts[i]
+        while part.startswith(quote) and not part.endswith(quote):
+            i += 1
+            if i < len(parts):
+                part += f',{parts[i]}'
+            else:
+                warn('Unbalanced quotes found')
+                return None
+        out.append(part)
+        i += 1
+
+    return out
+
 
 
 class TypeStats:
@@ -389,4 +428,3 @@ def analyse_values(fieldname, values):
 
     stats.summarize()
     return stats
-
