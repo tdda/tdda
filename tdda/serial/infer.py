@@ -56,7 +56,7 @@ class MetadataInferrer:
     def read(self):
         enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
         self.encoding = 'UTF-8' if enc == 'ascii' else enc
-        self.data = data = []
+        self.datalines = datalines = []
         with open(self.inpath, encoding=self.encoding) as f:
             self.header = f.readline().rstrip()
             while not self.header.strip():
@@ -64,33 +64,14 @@ class MetadataInferrer:
             for i in range(self.lines_to_use):
                 line = f.readline().strip()
                 if line:
-                    data.append(line)
+                    datalines.append(line)
 
     def process(self):
         header = self.header
-        lines = [header] + self.data
-        n_commas = count(',', lines)
-        n_pipes = count('|', lines)
-        n_tabs = count('\t', lines)
-        n_semis = count(';', lines)
-        n_dquotes = count('"', lines)
-        n_squotes = count("'", lines)
+        self.all_lines = lines = [self.header] + self.datalines
 
-        M = max((n_commas, n_pipes, n_tabs, n_semis))
-        if M == 0:
-            error('Separator does not appear to be comma, pipe, tab'
-                  ' or semicolon. Abandoning.')
-
-        self.sep = sep = (
-            ',' if n_commas == M else
-            '|' if n_pipes == M else
-            '\t' if n_tabs == M else
-            ';'
-        )
-        self.print(f'Inferred header: {self.sep} ({M} occurrences).', 2)
-
-        self.quote_char = quote = "'" if n_squotes > n_dquotes else '"'
-        # But apostrophes...quoted or not.
+        self.sep = sep = self.find_separator()
+        self.quote_char = quote = self.find_quote_char()
 
         sep_replacement, qq_replacement = non_chars(lines, 2)
         restorations = self.restorations = {}
@@ -101,51 +82,65 @@ class MetadataInferrer:
                 lines[i] = line.replace(escaped_sep, sep_replacement)
                 restorations[sep_replacement] = sep
 
-        data = [L.split() for L in self.data]
-        fieldnames = header.split(sep)
-        if quote and any(f.startswith(quote) and not f.endswith(quote)
-                         for f in fieldnames):
-            fieldnames = careful_split(header, sep, quote, '\\')
+        fieldnames = self.find_fieldnames()
         self.n_fieldnames = len(fieldnames)
 
-        escape = stutter = quote_char = quoting = None
-        m = max((n_dquotes, n_squotes))
-        if m > 0:
-            stuttered = quote * 2
-            escaped = f'\\{quote}'
-            quote = '"' if n_dquotes > n_squotes else "'"
-            for i, line in enumerate(lines):
-                # Crudely handle escaping and stuttering (all lines)
-                if stuttered in line:
-                    # HERE!
-                    lines[i] = line.replace(stuttered, qq_replacement)
-                    stutter = True
-                if escaped in header:
-                    lines[i] = line.replace(escaped, sep_replacement)
-                    escape = '\\'
-            self.header = header = lines[0]
-            plain_fieldnames, _ = self.dequote(fieldnames)
-            if plain_fieldnames != fieldnames:
-                self.quote_char = quote
-            else:
-                plain_fieldnames = fieldnames
-        else:
+        escape = stutter = quoting = None
+        plain_fieldnames, _ = self.dequote(fieldnames)
+        if plain_fieldnames != fieldnames:
+            self.quote_char = quote
             plain_fieldnames = header.split(sep)
         if quote:
             restorations[qq_replacement] = quote
-
-        self.print(f'Inferred quote: {quote} ({m} occurrences).', 2)
 
         self.fieldnames = plain_fieldnames
         self.data = lines[1:]
 
         self.escape = escape
         self.stutter = stutter
-        self.quote_char = quote_char
 
         self.print(f'Inferred escape: {escape}.', 2)
         self.print(f'Inferred stutter: {stutter}.', 2)
         self.infer_fields()
+
+    def find_separator(self):
+        lines = self.all_lines
+        n_commas = count(',', lines)
+        n_pipes = count('|', lines)
+        n_tabs = count('\t', lines)
+        n_semis = count(';', lines)
+
+        M = max((n_commas, n_pipes, n_tabs, n_semis))
+        if M == 0:
+            error('Separator does not appear to be comma, pipe, tab'
+                  ' or semicolon. Abandoning.')
+
+        sep = (
+            ',' if n_commas == M else
+            '|' if n_pipes == M else
+            '\t' if n_tabs == M else
+            ';'
+        )
+        self.print(f'Inferred separator: {sep} ({M} occurrences).', 2)
+        return sep
+
+    def find_quote_char(self):
+        lines = self.all_lines
+        n_dquotes = count('"', lines)
+        n_squotes = count("'", lines)
+        quote = "'" if n_squotes > n_dquotes else '"'
+        self.n_quotes = n_squotes if n_squotes > n_dquotes else n_dquotes
+        # But apostrophes...quoted or not.
+        return quote
+
+    def find_fieldnames(self):
+        fieldnames = self.header.split(self.sep)
+        quote = self.quote_char
+        if quote and any(f.startswith(quote) and not f.endswith(quote)
+                         for f in fieldnames):
+            return careful_split(self.header, sep, quote, '\\')
+        else:
+            return fieldnames
 
     def infer_fields(self):
         sep = self.sep
@@ -153,9 +148,9 @@ class MetadataInferrer:
             self.dequote_and_split(row)
             for row in self.data
         ]
-        is_quoted = [row[2] for row in combined]
-        data = [row[1] for row in combined]
-        raw = [row[0] for row in combined]
+        is_quoted = [r[2] for r in combined]
+        data = [r[1] for r in combined]
+        raw = [r[0] for r in combined]
         m = min(len(row) for row in data)
         M = max(len(row) for row in data)
         nFields = len(self.fieldnames)
@@ -175,7 +170,7 @@ class MetadataInferrer:
 
         # Number quoted by column index
         n_quoted = {
-            i: sum((row[i] if i < len(row) else 0) for row in is_quoted)
+            i: sum((q[i] if i < len(q) else 0) for q in is_quoted)
             for i in range(n)
         }
         self.print(f'Number quoted by col index: {n_quoted}', 2)
@@ -235,14 +230,20 @@ class MetadataInferrer:
                                 self.escape_char)
             if raw_row is None:
                 error('Can\'t split line')
-        deq_row = [self.dequote(v) for v in raw_row] if q else raw_row[:]
-        return raw_row, deq_row, [r == q for r, q in zip (raw_row, deq_row)]
+        if q:
+            deq_row, is_quoted = self.dequote(raw_row)
+        else:
+            deq_row = raw_row[:]
+            is_quoted = [False] * len(deq_row)
+        return raw_row, deq_row, is_quoted
 
     def infer_quoting(self, data, quoted, n_quoted):
+        return
         debug('DATA:\n', data)
         debug('QUOTED:\n', quoted)
         debug('N QUOTED:\n', n_quoted)
         debug('QUOTE CHAR:', self.quote_char)
+        debug(self.fields)
 
 
     def describe_null(self):
@@ -269,6 +270,9 @@ class MetadataInferrer:
         ]
         for k, v in self.restorations.items():
             out = [s.replace(k, v) for s in out]
+        print(out)
+        print(is_quoted)
+        print()
         return out, is_quoted
 
 

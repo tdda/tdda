@@ -243,7 +243,7 @@ class TestSerialConversions(ReferenceTestCase):
                                  tdpath('tiny1nd-weird-inferred.serial'),
                                  ignore_lines=self.IGL)
 
-    #@tag
+    @tag
     def testInferMetadataTiny1cdq(self):
         md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'),
                                          verbosity=0)
@@ -270,7 +270,6 @@ class TestSerialConversions(ReferenceTestCase):
         # escape handling done before
         self.assertEqual(c(r'"a\,b","1,2,3"'), [r'"a\,b"', '"1,2,3"'])
 
-    @tag
     def testInferMetadataWeirdCLI(self):
         inpath = tdpath('tiny1nd-weird.ssv')
         outpath = tmppath('tiny1nd-weird-inferred2.serial')

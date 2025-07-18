@@ -32,6 +32,7 @@
             }
         ],
         "encoding": "UTF-8",
-        "delimiter": ","
+        "delimiter": ",",
+        "quote_char": "\""
     }
 }
