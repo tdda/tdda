@@ -270,9 +270,6 @@ class MetadataInferrer:
         ]
         for k, v in self.restorations.items():
             out = [s.replace(k, v) for s in out]
-        print(out)
-        print(is_quoted)
-        print()
         return out, is_quoted
 
 
