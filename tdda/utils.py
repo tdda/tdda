@@ -781,10 +781,10 @@ def tdda_nf_map():
         '\u201D': '"',  # RIGHT DOUBLE QUOTATION MARK
 
         # Handled by NFKC/D
-        #'\u00A0',  # NO-BREAK SPACE
-        #'\u2002',  # EN SPACE
+        # '\u00A0',  # NO-BREAK SPACE
+        # '\u2002',  # EN SPACE
         # '\u2003',  # EM SPACE
-        #'\u2007',  # FIGURE SPACE
+        # '\u2007',  # FIGURE SPACE
         # '\u2008',  # PUNCTUATION SPACE
 
         '\u0009': ' ',  # TAB  # unicodedata.name does not recognize!
@@ -832,10 +832,10 @@ def tdda_nf_map():
     return str.maketrans(strmap)
 
 
-def normal_form_tdda(s, remove_accents=True, strip=True,
-                     standardize_space=True, nfkd=False):
+def normal_form_kt(s, remove_accents=True, strip=False,
+                   standardize_space=False, nfkd=False):
     """
-    Maps a string to TDDA normal form (NFT), which is normal
+    Maps a string to TDDA normal form (NFKT), which is normal
     Unicode Normal Form KC (or KD, if specified)
     with some extra mappings of commonly confused characters
     and the option to strip accents, and to normalize and trim space.

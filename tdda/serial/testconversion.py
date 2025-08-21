@@ -243,7 +243,6 @@ class TestSerialConversions(ReferenceTestCase):
                                  tdpath('tiny1nd-weird-inferred.serial'),
                                  ignore_lines=self.IGL)
 
-    @tag
     def testInferMetadataTiny1cdq(self):
         md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'),
                                          verbosity=0)
