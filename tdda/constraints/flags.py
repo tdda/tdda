@@ -71,6 +71,10 @@ Optional flags are:
       Include regular expression generation. Disabled by default.
   * -X or --no-rex
       Exclude regular expression generation (the default)
+  * -g or --group-rex
+      Group regular expressions when generated (the default)
+  * -G or --no-group-rex
+      Do not group regular expressions when generated
   * -r or --report FORMAT1 FORMAT2 ...
       Write constraints reports in the formats listed. Allowed formats
       are: html, text, txt, json, yaml, toml, mmarkdown, and md.
@@ -148,6 +152,10 @@ def discover_parser(usage=''):
                         help='include regular expression generation')
     parser.add_argument('-X', '--no-rex', action='store_true',
                         help='exclude regular expression generation')
+    parser.add_argument('-g', '--group-rex', action='store_true',
+                        help='group regular expression generation')
+    parser.add_argument('-G', '--no-group-rex', action='store_true',
+                        help='do not group regular expression generation')
     parser.add_argument('-r', '--report', nargs='*',
                         help='Report formats to write.')
     parser.add_argument('-o', '--report-path', action='store',
@@ -161,7 +169,8 @@ def discover_flags(parser, args, params):
     if len(more) > 0:
         print(parser.epilog, file=sys.stderr)
         sys.exit(1)
-    params['inc_rex'] = flags.rex
+    params['inc_rex'] = flags.rex or flags.group_rex or flags.no_group_rex
+    params['group_rexes'] = not flags.no_group_rex
     if flags.report is not None:
         params['report_formats'] = flags.report
     else:

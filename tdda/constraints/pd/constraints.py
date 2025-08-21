@@ -1075,6 +1075,10 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
             If ``True``, include discovery of regular expressions
             for string fields, using rexpy (default: ``False``).
 
+        *group_rexes*:
+            If ``False``, do not group any regular expressions generated.
+            (default: ``True``).
+
         *df_path*:
             The path from which the dataframe was loaded, if any.
 
