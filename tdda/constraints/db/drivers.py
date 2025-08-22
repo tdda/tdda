@@ -89,7 +89,9 @@ def get_db_handler(table, dbtype=None, **kw):
                 .cursor  containing the cursor
              and methods for executing queries.
     """
-    (table, dbtype) = parse_table_name(table, dbtype)
+    (table, dbtype, conn_file) = parse_table_name(table, dbtype)
+    if conn_file:
+        kw['conn_file'] = conn_file
     db = database_connection(table=table, dbtype=dbtype, **kw)
     return SQLDatabaseHandler(dbtype, db)
 
@@ -112,7 +114,9 @@ def get_db_connector(table, dbtype=None, **kw):
     Returns: A DBConnector, with a .connection attribute
              and other attributes for the connection properties.
     """
-    (table, dbtype) = parse_table_name(table, dbtype)
+    (table, dbtype, conn_file) = parse_table_name(table, dbtype)
+    if conn_file:
+        kw['conn_file'] = conn_file
     return database_connection(table=table, dbtype=dbtype, **kw)
 
 
@@ -138,12 +142,19 @@ def parse_table_name(table, dbtype):
     split a qualified table name into its two parts: the database type
     and the table name.
     """
+    conn_file = None
     if ':' in table:
         parts = table.split(':')
         if dbtype is None:
-            dbtype = parts[0].lower()
+            dbkey = parts[0]
+            conn_file = connection_file(dbkey)
+            if os.path.exists(conn_file):
+                with open(conn_file) as f:
+                    j = json.load(f)
+                if 'dbtype' in j:
+                    dbtype = j.get('dbtype')
         table = parts[1]
-    return (table, dbtype)
+    return (table, dbtype, conn_file)
 
 
 def applicable(argv):
@@ -153,7 +164,7 @@ def applicable(argv):
     """
     for i, a in enumerate(argv):
         if ':' in a:
-            (table, dbtype) = parse_table_name(a, None)
+            (table, dbtype, conn_file) = parse_table_name(a, None)
             if dbtype in DATABASE_HANDLERS:
                 return True
         elif a in ('-dbtype', '--dbtype'):

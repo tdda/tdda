@@ -1201,6 +1201,7 @@ class Verification(object):
         self.fill_in_missing_db_rex_failures()
         self.to_table(d, d_raw)
         d = json_sanitize(d)
+
         for fmt in self.detect_report_formats:
             outpath = swap_ext(nvl(self.report_path, self.outpath), f'.{fmt}')
             if fmt == 'json':

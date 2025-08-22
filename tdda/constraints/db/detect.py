@@ -46,10 +46,10 @@ def detect_database_table_cli(table, constraints_path, destination,
     Not implemented
     """
     if destination:
-        (table, dbtype) = parse_table_name(table, dbtype)
+        (table, dbtype, conn_file) = parse_table_name(table, dbtype)
         dest_pair = parse_table_name(destination, dbtype)
         dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                                  host=host, port=port,
+                                  host=host, port=port, conn_file=conn_file,
                                   user=user, password=password)
         cprint(detect_db_table(dbtype, dbc, table, constraints_path,
                                destination=dest_pair, **kwargs))

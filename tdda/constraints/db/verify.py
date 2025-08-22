@@ -42,9 +42,9 @@ def verify_database_table_cli(table, constraints_path,
 
     Prints results to stdout.
     """
-    (table, dbtype) = parse_table_name(table, dbtype)
+    (table, dbtype, conn_file) = parse_table_name(table, dbtype)
     db = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                             host=host, port=port,
+                             host=host, port=port, conn_file=conn_file,
                              user=user, password=password)
     cprint(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
 

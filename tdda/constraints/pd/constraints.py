@@ -74,14 +74,15 @@ from tdda.serial.utils import (
     find_associated_metadata_file,
     find_metadata_type_from_path,
     get_backend,
-    OG_BACKEND
+    OG_BACKEND,
 )
 from tdda.serial.pandasio import (
     serial_to_pandas_read_csv_args
 )
 from tdda.utils import (
     indicator_field_name, pass_fail_stats, handle_tilde,
-    warn
+    warn,
+    json_sanitize,
 )
 
 # pd.tslib is deprecated in newer versions of Pandas

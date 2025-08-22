@@ -45,9 +45,9 @@ def discover_constraints_from_database(table, constraints_path=None,
     Writes constraints as JSON to the specified file (or to stdout).
     """
     database = db
-    (table, dbtype) = parse_table_name(table, dbtype)
+    (table, dbtype, conn_file) = parse_table_name(table, dbtype)
     dbc = database_connection(table=table, conn=conn, dbtype=dbtype,
-                              db=database,
+                              db=database, conn_file=conn_file,
                               host=host, port=port,
                               user=user, password=password)
     constraints = discover_db_table(dbtype, dbc, table, **kwargs)

@@ -557,7 +557,7 @@ def json_sanitize(v):
         return [json_sanitize(u) for u in v]
     elif isinstance(v, dict):
         return {str(k): json_sanitize(u) for k, u in v.items()}
-    elif hasattr(v, '__dict__'):
+    elif hasattr(v, '__dict__') and v.__dict__:
         return json_sanitize(v.__dict__)
     else:
         s = str(v)
