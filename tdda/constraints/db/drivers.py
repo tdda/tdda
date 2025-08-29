@@ -11,6 +11,8 @@ import os
 import re
 import sys
 
+from tdda.config import cross_platform_dot_file
+
 try:
     import pgdb
 except ImportError:
@@ -311,7 +313,7 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
 
 def connection_file(suffix):
     suf = f'_{suffix}' if suffix else ''
-    return handle_tilde(f'~/.tdda_db_conn{suf}')
+    return cross_platform_dot_file(f'~/.tdda_db_conn{suf}')
 
 
 def database_connection_postgres(host, port, database, user, password):

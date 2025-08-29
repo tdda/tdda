@@ -512,13 +512,14 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     constraints on a single database table.
     """
     def __init__(self, dbtype, dbc, tablename, inc_rex=False,
-                 group_rexes=True, seed=None):
+                 group_rexes=True, no_md=False, seed=None):
         DatabaseHandler.__init__(self, dbtype, dbc)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
                                           group_rexes=group_rexes,
+                                          no_md=no_md,
                                           seed=seed)
         self.tablename = tablename
 
@@ -678,6 +679,7 @@ def detect_db_table(dbtype, dbc, tablename, constraints_path, destination,
 
 def discover_db_table(dbtype, dbc, tablename, inc_rex=False, group_rexes=True,
                       report_path=None, report_formats=None, seed=None,
+                      no_md=False,
                       **kw):
     """
     Automatically discover potentially useful constraints that characterize
@@ -794,7 +796,9 @@ def discover_db_table(dbtype, dbc, tablename, inc_rex=False, group_rexes=True,
     """
     disco = DatabaseConstraintDiscoverer(dbtype, dbc, tablename,
                                          inc_rex=inc_rex,
-                                         group_rexes=group_rexes, seed=seed)
+                                         group_rexes=group_rexes,
+                                         no_md=no_md,
+                                         seed=seed)
     if not disco.table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)

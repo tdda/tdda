@@ -938,9 +938,10 @@ class FilesComparison(BaseComparison):
         enc = get_encoding(expected_path, encoding)
 
         commonname = None
-        differ = None
+        raw_differ = rec_differ = None
         raw_actual_path = actual_path
         raw_expected_path = expected_path
+        raw = None
 
         if create_temporaries:
             if raw_actual_path and raw_expected_path:
@@ -969,7 +970,7 @@ class FilesComparison(BaseComparison):
 
         if raw_actual_path and raw_expected_path:
             raw = 'raw' if (preprocess or reconstruction) else None
-            differ = self.compare_with(
+            raw_differ = self.compare_with(
                 raw_actual_path,
                 raw_expected_path,
                 qualifier=raw,
@@ -986,13 +987,12 @@ class FilesComparison(BaseComparison):
             elif not create_temporaries:
                 self.info(msgs, 'No files available for comparison')
 
-        if differ:
-            self.info(msgs, differ)
 
         if reconstruction and create_temporaries:
             # show diffs after ignores and removals have been collapsed
-            if differ:
-                differ = '***\n' + differ + '***\n\n'
+            differ = ''
+            if raw_differ:
+                differ = '***\n' + raw_differ + '***\n\n'
             diffActual = os.path.join(self.tmp_dir, 'actual-' + commonname)
             diffExpected = os.path.join(self.tmp_dir, 'expected-' + commonname)
             guide = expected_path or actual_path
@@ -1006,12 +1006,29 @@ class FilesComparison(BaseComparison):
                 (differ or '') + reconstruction.expected_lines(),
                 guide=guide,
             )
-            self.info(
-                msgs,
-                self.compare_with(
-                    diffActual, diffExpected, qualifier='post-processed'
-                ),
+            actualsSame = (
+                '\n'.join(actual).strip()
+                    == reconstruction.actual_lines().strip()
             )
+            expectedsSame = (
+                '\n'.join(expected).strip()
+                    == reconstruction.expected_lines().strip()
+            )
+            bothSame = (actualsSame and expectedsSame)
+            if bothSame:
+                # Don't print second diff line and take the 'raw'
+                # out ot raw_differ
+                raw_differ = self.compare_with(
+                    raw_actual_path, raw_expected_path,
+                    qualifier=None, binary=binary,
+                )
+            else:
+                rec_differ = self.compare_with(
+                        diffActual, diffExpected, qualifier='post-processed'
+                )
+
+        self.info(msgs, raw_differ)
+        self.info(msgs, rec_differ)
 
         if ignore_substrings or ignore_patterns or remove_lines:
             self.info(msgs, 'Note exclusions:')

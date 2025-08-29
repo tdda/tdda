@@ -10,7 +10,7 @@ from tdda.utils import (
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
     json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
-    normal_form_kt, is_sequence, listify, globlike_match
+    normal_form_tk, is_sequence, listify, globlike_match
 )
 from unicodedata import normalize
 
@@ -285,7 +285,7 @@ class TestXMLGeneration(ReferenceTestCase):
         refpath = os.path.join(TESTDIR, 'jsd.json')
         self.assertStringCorrect(dict_to_json(json_sanitize(jsd)), refpath)
 
-    def test_normal_form_kt(self):
+    def test_normal_form_tk(self):
         en_dash = unicodedata.lookup('EN DASH')
         em_dash = unicodedata.lookup('EM DASH')
         minus_sign = unicodedata.lookup('MINUS SIGN')
@@ -392,13 +392,13 @@ class TestXMLGeneration(ReferenceTestCase):
             unicodedata.lookup('LATIN SMALL LIGATURE IJ'): 'ij',
         }
         for raw, expected in mapping.items():
-            self.assertEqual((raw, normal_form_kt(raw, strip=False)),
+            self.assertEqual((raw, normal_form_tk(raw, strip=False)),
                              (raw, expected))
             if expected != ' ':
-                self.assertEqual((raw, normal_form_kt(raw, strip=True)),
+                self.assertEqual((raw, normal_form_tk(raw, strip=True)),
                                  (raw, expected))
 
-        self.assertEqual(normal_form_kt(
+        self.assertEqual(normal_form_tk(
                              '  The — em-dash  – and en-dash - and  '
                              '“various” ‘quotes’ etc … ⋮ ⋯ ⋱  ',
                              strip=True, standardize_space=True),
@@ -425,7 +425,7 @@ class TestXMLGeneration(ReferenceTestCase):
                 'ff fi fl ffi ffl st oe ae OE AE ij',
         }
         for k, v in accents.items():
-            self.assertEqual((k, normal_form_kt(k, standardize_space=True,
+            self.assertEqual((k, normal_form_tk(k, standardize_space=True,
                                                 strip=True)),
                              (k, v)
             )

@@ -78,7 +78,9 @@ Optional flags are:
   * -r or --report FORMAT1 FORMAT2 ...
       Write constraints reports in the formats listed. Allowed formats
       are: html, text, txt, json, yaml, toml, mmarkdown, and md.
-  * -o or --report-path PATH''' + help_defaults()
+  * -o or --report-path PATH
+  * --no-md
+      Do not create (creation) metadata''' + help_defaults()
 
 
 VERIFY_HELP = ('''
@@ -160,6 +162,8 @@ def discover_parser(usage=''):
                         help='Report formats to write.')
     parser.add_argument('-o', '--report-path', action='store',
                         help='Path for reports')
+    parser.add_argument('--no-md', action='store_true',
+                        help='Do not create metadata')
     add_pandas_flags(parser)
     return parser
 
@@ -177,6 +181,8 @@ def discover_flags(parser, args, params):
         params['report_formats'] = []
     if flags.report_path:
         params['report_path'] = flags.report_path
+    if flags.no_md:
+        params['no_md'] = flags.no_md
 
     params['engine'], params['backend'] = process_pandas_flags(flags)
 

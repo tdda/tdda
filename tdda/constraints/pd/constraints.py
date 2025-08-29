@@ -647,10 +647,11 @@ class PandasConstraintDiscoverer(PandasConstraintCalculator,
     A :py:class:`PandasConstraintDiscoverer` object is used to discover
     constraints on a Pandas DataFrame.
     """
-    def __init__(self, df, inc_rex=False, group_rexes=True):
+    def __init__(self, df, inc_rex=False, group_rexes=True, no_md=False):
         PandasConstraintCalculator.__init__(self, df)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
-                                          group_rexes=group_rexes)
+                                          group_rexes=group_rexes,
+                                          no_md=no_md)
 
 
 def pandas_types_compatible(x, y, colname=None):
@@ -1062,7 +1063,7 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
 def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
                 group_rexes=True, report_path=None, report_formats=None,
-                engine=None, backend=None, verbose=None):
+                engine=None, backend=None, no_md=False, verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1205,7 +1206,8 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
     for a slightly fuller example.
     """
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex,
-                                       group_rexes=group_rexes)
+                                       group_rexes=group_rexes,
+                                       no_md=no_md)
     constraints = disco.discover()
     if constraints:
         constraints.set_dates_user_host_creator()

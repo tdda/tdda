@@ -46,7 +46,7 @@ class BaseConfig:
         if hasattr(self, key):
             return getattr(self, key)
         if raiseOnFailure:
-            raise AttributeError(f'No atttibute {key} in {self._config_name}')
+            raise AttributeError(f'No attribute {key} in {self._config_name}')
         else:
             return None
 
@@ -68,7 +68,7 @@ class Config(BaseConfig):
             self.load(complain=complain)
 
     def load(self, complain=True):
-        config_path = os.path.expanduser('~/.tdda.toml')
+        config_path = cross_platform_dot_file('~/.tdda.toml')
         if os.path.exists(config_path):
             with open(config_path, 'rb') as f:
                 d = tomli.load(f)
@@ -251,3 +251,14 @@ class SerialConfig(BaseConfig):
             if os.path.exists(p):
                 return p
         return None
+
+
+def cross_platform_dot_file(unix_dot_path):
+    path = os.path.expanduser(unix_dot_path)
+    if not os.path.exists(path):
+        d, f = os.path.split(path)
+        assert f.startswith('.')
+        alt_path = os.path.join(d, f[1:])
+        if os.path.exists(alt_path):
+            return alt_path
+    return path

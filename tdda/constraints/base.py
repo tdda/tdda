@@ -171,7 +171,8 @@ class DatasetConstraints(object):
     Container for constraints pertaining to a dataset.
     Currently only supports per-field constraints.
     """
-    def __init__(self, per_field_constraints=None, loadpath=None):
+    def __init__(self, per_field_constraints=None, loadpath=None,
+                 no_md=False):
         self.as_at = None
         self.local_time = None
         self.utc_time = None
@@ -185,6 +186,7 @@ class DatasetConstraints(object):
         self.n_selected = None
         self.allowed_fields = None
         self.required_fields = None
+        self.no_md = no_md
         if loadpath:
             self.fields = Fields()
             self.load(loadpath)
@@ -320,6 +322,8 @@ class DatasetConstraints(object):
             (f, v.to_dict_value()) for f, v in self.fields.items()
         ))
         metadata = self.get_metadata(tddafile=tddafile)
+        if self.no_md:
+            metadata = None
         d = outdict()
         if metadata:
             d['creation_metadata'] = metadata

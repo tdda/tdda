@@ -1092,7 +1092,7 @@ class ReferenceTest(object):
 def get_preferred_engine(engine):
     if engine is None:
         config = get_config()
-        engine = config.get('df_engine')
+        engine = config.get('engine')
     if not engine in ('polars', 'pandas'):
         error(f'Unknown dataframe engine: {engine}')
     return engine

@@ -832,11 +832,11 @@ def tdda_nf_map():
     return str.maketrans(strmap)
 
 
-def normal_form_kt(s, remove_accents=True, strip=False,
+def normal_form_tk(s, remove_accents=True, strip=False,
                    standardize_space=False, nfkd=False):
     """
-    Maps a string to TDDA normal form (NFKT), which is normal
-    Unicode Normal Form KC (or KD, if specified)
+    Maps a string to TDDA normal form (NFTK), which is normal
+    Unicode Normal Form TKC (or TKD, if specified)
     with some extra mappings of commonly confused characters
     and the option to strip accents, and to normalize and trim space.
 
@@ -982,3 +982,7 @@ def find_free_name(names, candidates=None):
     while c in names:
         n += 1
     return c
+
+
+def is_windows():
+    return sys.platform.startswith('win')
