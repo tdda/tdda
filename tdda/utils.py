@@ -55,6 +55,13 @@ NAN = float('nan')
 
 TDDA_NF_MAP = None  # build lazily
 
+ALT_NULL_REP = '∅'
+ALT_OTHER_REP = '★'
+U_ALT_NULL_REP = u'∅'
+ENDASH = '–'  # chr(0x2013)
+MINUS_SIGN = '−'  # chr(0x2212)
+
+
 
 TDDAPathInfo = namedtuple('TDDAPathInfo',
                           'path stem ext md_path find_md combined')
@@ -986,3 +993,132 @@ def find_free_name(names, candidates=None):
 
 def is_windows():
     return sys.platform.startswith('win')
+
+
+def dict_to_tex_macros(d, outpath=None, verbose=False):
+    defs = ''.join(
+        '\\def\\%s{%s}\n' % (tex_name(k), tex_encode(v))
+        for k, v in d.items()
+    )
+    if outpath:
+        with open(outpath, 'w') as f:
+            f.write(defs)
+        if verbose:
+            print(f'Written {outpath}.')
+    return defs
+
+
+def tex_encode(s, number=False, para=False):
+    if not type(s) is str:
+        print('tex_encode: input type (%s); expected type (%s)'
+              % (type(s), str))
+        print(s)
+        raise Exception('Wrong type sent to tex_encode')
+    if s is None:
+        return r'\hbox{$\varnothing$}'
+    s = s.replace('\\', r'\verb+\+')
+    s = s.replace('&', r'\&')
+    s = s.replace('{', r'\{')
+    s = s.replace('}', r'\}')
+    s = s.replace('^', r'\^')
+    s = s.replace('_', r'\_')
+    s = s.replace('$', r'\$')
+    s = s.replace('£', r'\pounds{}')
+    s = s.replace('#', r'\#')
+    s = s.replace('<=', r'$\le$')
+    s = s.replace('>=', r'$\ge$')
+    s = s.replace('≤', r'$\le$')
+    s = s.replace('≥', r'$\ge$')
+    s = s.replace(ALT_NULL_REP, r'\hbox{$\varnothing$}')
+    s = s.replace(ALT_OTHER_REP, r'\hbox{$\bigstar$}')
+
+    s = s.replace('<', '$<$')
+    s = s.replace('>', '$>$')
+    s = s.replace(r'$\le$ x $<$', r'$\le x <$')
+    s = s.replace('·', r'$\cdot$')
+    s = s.replace('%', r'\%')
+    s = s.replace('~', r'$\sim$')
+    s = s.replace('©', r'\copyright{}')
+    s = s.replace(ENDASH, '--')
+    s = s.replace(MINUS_SIGN, '--')
+    s = s.replace('—', '---')
+    s = s.replace('⎵', r'\textvisiblespace{}')
+
+    if number and s.startswith('-'):
+        s = '$%s$' % s
+    elif s.startswith('-'):
+        plain = (
+            s.replace(',', '')
+             .replace(' ', '')
+             .replace('%', '')
+             .replace('--', '-')
+             .replace(r'\$', '')
+             .replace(r'\pounds{}', '')
+        )
+        try:
+            x = float(plain)
+            s = '$%s$' % s
+        except ValueError:
+            pass
+    return s + ('\n\n' if para else '')
+
+
+DIGITS = {
+    '1': 'One',
+    '2': 'Two',
+    '3': 'Three',
+    '4': 'Four',
+    '5': 'Five',
+    '6': 'Six',
+    '7': 'Seven',
+    '8': 'Eight',
+    '9': 'Nine',
+    '0': 'Zero'
+}
+
+TENS = {
+    '10': 'Ten',
+    '20': 'Twenty',
+    '30': 'Thirty',
+    '40': 'Forty',
+    '50': 'Fifty',
+    '60': 'Sixty',
+    '70': 'Seventy',
+    '80': 'Eighty',
+    '90': 'Ninety',
+}
+
+def tex_name(name):
+    out = camelName(name)
+    return remap(powers_of_ten(out), DIGITS)
+
+
+def remap(s, d):
+    return ''.join(d.get(c, c) for c in s)
+
+
+def powers_of_ten(s):
+    r =  (
+        s.replace('000000', 'mn')
+         .replace('00000', 'xxk')
+         .replace('0000', 'xk')
+         .replace('000', 'k')
+         .replace('00', 'Hundred')
+    )
+    for (tens, name) in TENS.items():
+        r = r.replace(tens, name)
+    return r
+
+
+def camelName(name):
+    out = []
+    cap = False
+    for c in name:
+        if cap:
+            c = c.upper()
+        cap = False
+        if c in '-_':
+            cap = True
+        else:
+            out.append(c)
+    return ''.join(out) if out else 'v'

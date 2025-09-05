@@ -10,7 +10,8 @@ from tdda.utils import (
     tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
     json_sanitize, swap_ext_q,
     CONSTRAINTSDIR, PDCONSTRAINTSDIR,
-    normal_form_tk, is_sequence, listify, globlike_match
+    normal_form_tk, is_sequence, listify, globlike_match,
+    tex_name, tex_encode
 )
 from unicodedata import normalize
 
@@ -467,6 +468,36 @@ class TestXMLGeneration(ReferenceTestCase):
                                         ['a12', 'a13'])
 
 
+    def testTeXName(self):
+        cases = {
+            'a': 'a',
+            'Z': 'Z',
+            'a-b': 'aB',
+            'A-B': 'AB',
+            '_ab': 'Ab',
+            '--ab': 'Ab',
+            '_-_ab': 'Ab',
+            '-_-ab': 'Ab',
+            'a1': 'aOne',
+            'B2': 'BTwo',
+            'x12345678910': 'xOneTwoThreeFourFiveSixSevenEightNineTen',
+            'the_big_out10': 'theBigOutTen',
+            'The-Kebab-Shak20': 'TheKebabShakTwenty',
+            'ab102030405060708090100':
+                'abTenTwentyThirtyFortyFiftySixtySeventyEightyNinetyOneHundred',
+            'from_low_-1000_to_high_20000':
+                'fromLowOnekToHighTwoxk',
+
+            # These aren't great
+            '': 'v',
+            '_': 'v',
+            '-': 'v',
+        }
+        for k, v in cases.items():
+            self.assertEqual(
+                (k, tex_name(k)),
+                (k, v)
+            )
 
 
 

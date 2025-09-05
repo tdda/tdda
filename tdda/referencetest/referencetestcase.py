@@ -112,13 +112,15 @@ and graph results)
 
 """
 
+import datetime
+import json
 import os
 import sys
 import unittest
 
 from tdda.state import get_testing, set_testing
 from tdda.referencetest.referencetest import ReferenceTest, tag
-from tdda.utils import TDDAError
+from tdda.utils import TDDAError, nvl
 
 
 class ReferenceTestCase(unittest.TestCase, ReferenceTest):
@@ -144,7 +146,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         ReferenceTest.__init__(self, self.assertTrue)
 
     @staticmethod
-    def main(module=None, argv=None, testtdda=False, **kw):
+    def main(module=None, argv=None, testtdda=False, report=None, **kw):
         """
         Wrapper around the :py:func:`unittest.main()` entry point.
 
@@ -153,19 +155,24 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check = _set_flags_from_argv(argv)
+        argv, tagged, check, r = _set_flags_from_argv(argv)
+        report = nvl(r, report)
+        if 'TDDAREPORT' in os.environ:
+            report = True
         if testtdda:
             saved = set_testing(True)
         try:
-            _run_tests(module=module, argv=argv, tagged=tagged, check=check,
-                       **kw)
+            _run_tests(module=module, argv=argv, tagged=tagged,
+                       check=check, report=report, **kw)
         finally:
             if testtdda:
                 if saved is not None:
                     set_testing(saved)
 
 
-def _run_tests(module=None, argv=None, tagged=False, check=False, **kw):
+
+def _run_tests(module=None, argv=None, tagged=False, check=False,
+               report=None, **kw):
     """
     Run tests
     """
@@ -174,9 +181,29 @@ def _run_tests(module=None, argv=None, tagged=False, check=False, **kw):
     loader = (TaggedTestLoader(check) if tagged or check
               else unittest.defaultTestLoader)
     if module is None:
-        unittest.main(argv=argv, testLoader=loader, **kw)
+        t = unittest.main(argv=argv, testLoader=loader, exit=False, **kw)
+        result = t.__dict__['result']
+        module = t.__dict__['module']
+        path = getattr(module, '__file__', None)
+        if path:
+            outpath = os.path.splitext(path)[0] + '-results.json'
+            ok = result.failures == result.errors == []
+            d = {
+                'date': datetime.datetime.now()
+                        .isoformat(sep='t', timespec='seconds'),
+                'run': result.testsRun,
+                'failures': len(result.failures),
+                'errors': len(result.errors),
+                'skipped': len(result.skipped),
+                'result':  'PASS' if ok else 'FAIL'
+            }
+        if report:
+            with open(outpath, 'w') as f:
+                json.dump(d, f)
+        sys.exit(0 if ok else 1)
     else:
         unittest.main(module=module, argv=argv, testLoader=loader, **kw)
+
 
 
 def _set_flags_from_argv(argv=None):
@@ -213,6 +240,7 @@ def _set_flags_from_argv(argv=None):
     tagged = False
     check = False
     regenerate = False
+    report = None
 
     for i, arg in enumerate(rest):
         if arg.startswith('-') and not arg.startswith('--'):
@@ -226,6 +254,9 @@ def _set_flags_from_argv(argv=None):
                 elif flag == '0':
                     check = True
                     arg = arg.replace('0', '')
+                elif flag == 'r':
+                    report = True
+                    arg = arg.replace('r', '')
             rest[i] = '' if arg == '-' else arg
         else:
             break
@@ -244,6 +275,12 @@ def _set_flags_from_argv(argv=None):
                 regenerate = True
                 rest = rest[:idx] + rest[idx+1:]
                 break
+
+    for reportflag in ('-report', '--report'):
+        if reportflag in rest:
+            idx = rest.index(reportflag)
+            report = True
+            rest = rest[:idx] + rest[idx+1:]
 
     for writeflag in ('-w', '--w', '--write'):
         if writeflag in rest:
@@ -272,7 +309,7 @@ def _set_flags_from_argv(argv=None):
 
     if regenerate:
         ReferenceTestCase.set_regeneration()
-    return (argv[:1] + rest, tagged, check)
+    return (argv[:1] + rest, tagged, check, report)
 
 
 class TaggedTestLoader(unittest.TestLoader):
