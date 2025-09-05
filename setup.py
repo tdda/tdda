@@ -13,7 +13,6 @@ with open(version_file) as f:
         __version__ = '%s.%s.%02d' % (m.group(1), m.group(2), int(m.group(3)))
     else:
         __version__ = '0.0.0'  # unknown
-from tdda.version import version as __version__
 
 def read(fname):
     # read contents of file
