@@ -997,7 +997,7 @@ def is_windows():
 
 def dict_to_tex_macros(d, outpath=None, verbose=False):
     defs = ''.join(
-        '\\def\\%s{%s}\n' % (tex_name(k), tex_encode(v))
+        '\\def\\%s{%s}\n' % (tex_name(k), tex_encode(str(v)))
         for k, v in d.items()
     )
     if outpath:
