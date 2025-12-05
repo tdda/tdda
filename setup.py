@@ -60,7 +60,7 @@ setup(
                                     ['init']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
-        'tdda': ['README.md', 'LICENSE.txt', 'templates'],
+        'tdda': ['README.md', 'LICENSE.txt', 'templates/tdda/css'],
         'tdda.serial': data(['tdda', 'serial'], ['testdata']),
     },
     entry_points = {
