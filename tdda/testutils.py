@@ -114,6 +114,7 @@ class TestTDDAUtils(ReferenceTestCase):
         self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
 
 
+@tag
 class TestXMLGeneration(ReferenceTestCase):
     def testSimpleXMLGen(self):
         x = XML()
@@ -176,6 +177,49 @@ class TestXMLGeneration(ReferenceTestCase):
 </foo>
 '''.strip())
         self.assertEqual(type(stripped), str)
+
+    def testHTML5ExternalCSS(self):
+        x = XML(html=5, title='Test Page', css=['style.css', 'theme.css'])
+        x.WriteElement('h1', 'Hello World')
+        x.CloseXML()
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-ext.html'))
+
+    def testHTML5InlineCSS(self):
+        x = XML(html=5, title='Test Page', css='body { margin: 0; }')
+        x.WriteElement('p', 'Content')
+        x.CloseXML()
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-inline.html'))
+
+    def testHTML5EmptyElements(self):
+        x = XML(html=5, omitHeader=1)
+        x.OpenElement('div', '', {})
+        # Non-void empty elements should use open/close tags
+        x.WriteElement('td', '', {})
+        x.WriteElement('span', '', {})
+        x.WriteElement('div', '', {})
+        # Void elements should self-close
+        x.WriteElement('input', '', {'type': 'text'})
+        x.WriteElement('br', '', {})
+        x.WriteElement('hr', '', {})
+        x.WriteElement('img', '', {'src': 'test.png'})
+        x.CloseElement('div')
+        x.CloseXML()
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-empty-elements.html'))
+
+    def testHTML5TableFormatting(self):
+        x = XML(html=5, omitHeader=1)
+        x.OpenElement('table')
+        x.OpenElement('tr')
+        # Pattern that causes missing newline: OpenElement + CloseElement with tight=True
+        x.OpenElement('td')
+        x.WriteContent('Cell 1')
+        x.CloseElement('td', tight=True)  # This causes missing newline!
+        x.WriteElement('td', 'Cell 2')
+        x.WriteElement('td', '')  # Empty cell
+        x.CloseElement('tr')
+        x.CloseElement('table')
+        x.CloseXML()
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-table-formatting.html'))
 
     def testSQuote(self):
         self.assertEqual(squote(''), "''")

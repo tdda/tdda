@@ -37,6 +37,8 @@ from tdda.serial import (
 
 from tdda.utils import testwarn
 
+TDDA_SERIAL_VERSION_RE = r'tdda\.serial\-[0-9]+.[0-9]+\.[0-9]+'
+
 
 class TestSerialConversions(ReferenceTestCase):
     tiny1nd_serial = tdpath('tiny1nd.serial')
@@ -286,7 +288,8 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(csvwpath, outpath)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
+        self.assertFileCorrect(outpath, refpath,
+            ignore_patterns=[TDDA_SERIAL_VERSION_RE])
         self.assertEqual(buf, [])
 
     def testCSVWToSerialPandas(self):
@@ -475,7 +478,8 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
+        self.assertFileCorrect(outpath, refpath,
+            ignore_patterns=[TDDA_SERIAL_VERSION_RE])
         self.assertEqual(buf, [])
 
     def testFrictionlessResourceToSerialYAML(self):
@@ -488,7 +492,8 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
+        self.assertFileCorrect(outpath, refpath,
+            ignore_patterns=[TDDA_SERIAL_VERSION_RE])
         self.assertEqual(buf, [])
 
     def testFrictionlessPackageToSerialJSON(self):
@@ -501,7 +506,8 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
+        self.assertFileCorrect(outpath, refpath,
+            ignore_patterns=[TDDA_SERIAL_VERSION_RE])
         self.assertEqual(buf, [])
 
     def testFrictionlessResourceToSerialJSON(self):
@@ -514,7 +520,8 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
+        self.assertFileCorrect(outpath, refpath,
+            ignore_patterns=[TDDA_SERIAL_VERSION_RE])
         self.assertEqual(buf, [])
 
     def testFrictionlessToSerialPandas(self):

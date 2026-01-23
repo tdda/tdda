@@ -82,7 +82,7 @@ class XML:
                  inputEncoding=DEFAULT_INPUT_ENCODING,
                  headerAttr={}, useHardTabs=True,
                  float_precision=None, debug=False,
-                 altnbsp=None):
+                 altnbsp=None, hardTabs=True):
         """Initialize XML.
 
            An XML declaration is put in unless
@@ -127,6 +127,7 @@ class XML:
                                                        else None)
         self.altnbsp = None
         self.debug = debug
+        self.hardTabs = hardTabs
         if output:
             self.output = output
             if output.lower() == 'stdout':
@@ -136,7 +137,7 @@ class XML:
         if indentLevel == 0 and not(omitHeader):
             extraAttr = ''
             if html == 5:
-                self.xmlbuf.append('<!DOCTYPE html lang="en">\n')
+                self.xmlbuf.append('<!DOCTYPE html>\n')
             else:
                 if headerAttr:
                     extraAttr = ''.join([' %s="%s"' % (key, headerAttr[key])
@@ -146,8 +147,9 @@ class XML:
         self.inputEncoding = inputEncoding
 
         if self.html:
-            self.WriteElement('html', leave='open')
-            if title or css:
+            html_attrs = {'lang': 'en'} if html == 5 else {}
+            self.WriteElement('html', '', html_attrs, leave='open')
+            if title or css or html == 5:
                 self.WriteElement('head', leave='open')
                 if html == 5:
                     self.WriteElement('meta', '', {'charset': 'UTF-8'})
@@ -156,10 +158,9 @@ class XML:
                 if css:
                     if type(css) in (list, tuple):  # list of URLs
                         for c in css:
-                            self.WriteElement('style', '',
-                                               {'type': 'text/css',
-                                                'href': c,
-                                                'rel': 'stylesheet'},
+                            self.WriteElement('link', '',
+                                               {'rel': 'stylesheet',
+                                                'href': c},
                                                entitize=0)
                     else:  # in-line CSS
                         self.WriteElement('style', css, {'type': 'text/css'},
@@ -200,6 +201,13 @@ class XML:
                      openclose=False):
         if type(content) == bytes:
             content = content.decode(self.inputEncoding)
+        # In HTML mode, non-void elements should use open/close tags even when empty
+        if self.html and not openclose:
+            # HTML void elements that can self-close
+            void_elements = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
+                           'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
+            if name.lower() not in void_elements:
+                openclose = True
         self.xmlbuf.append(
             xml_element(
                 name, content, attributes, leave=leave, entitize=entitize,
@@ -246,8 +254,11 @@ class XML:
         self.xmlbuf.append('?>\n')
 
     def IndentString(self):
-        return (self.tab * ((self.indentLevel * self.tabSize) // 8)
-                + ' ' * ((self.indentLevel * self.tabSize) % 8))
+        if self.hardTabs:
+            return (self.tab * ((self.indentLevel * self.tabSize) // 8)
+                    + ' ' * ((self.indentLevel * self.tabSize) % 8))
+        else:
+            return ' ' * (self.indentLevel * self.tabSize)
 
     def Push(self, name, tight=False):
         if not tight:
@@ -287,7 +298,7 @@ class XML:
                 raise XMLError('Attempt to close %s with %s%s'
                                % (stored, element, info))
         if tight:
-            self.xmlbuf.append('</' + stored + '>')
+            self.xmlbuf.append('</' + stored + '>\n')
         else:
             self.ForceNL(forceNL)
             self.xmlbuf.append(self.IndentString() + '</' + stored + '>\n')
