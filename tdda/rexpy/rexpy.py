@@ -21,11 +21,30 @@ from pprint import pprint
 from tdda import __version__
 from tdda.utils import nvl, TDDAError
 
+
 isPython2 = sys.version_info[0] < 3
 str_type = unicode if isPython2 else str
 bytes_type = str if isPython2 else bytes
 INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
 UNESCAPES = '''!"%',/:;<=>@_` '''
+
+VERBOSITY_LEVEL_RE = r'^-v(-?[0-9]+)$'
+
+class VERBOSITY:
+    PASSES        = 0b1        # 1; old verbose
+    ALL           = 0b01       # 2; same as MAX
+    INPUTS        = 0b100
+    SORTED        = 0b1000
+    RLE           = 0b10000
+    VRLE          = 0b100000
+    MERGED        = 0b1000000
+    SPECIALIZED   = 0b10000000
+    MERGED_REX    = 0b100000000
+    MERGED_FRAGS  = 0b1000000000
+    ALIGNED       = 0b10000000000
+    PREPROCESSING = 0b1000000000000
+    DETAIL        = 0b10000000000000
+    MAX           = -1
 
 
 ########################################
@@ -117,7 +136,7 @@ MAX_VRLE_RANGE = 2  # Meaning that it will only produce patterns like
                     # x{m,n} when n - m ≤ 2
 
 VARIABLE_LENGTH_FRAGS = False
-VERBOSITY = 0
+DEFAULT_VERBOSITY = 0
 
 MAX_PATTERNS = None
 MIN_DIFF_STRINGS_PER_PATTERN = 1
@@ -125,7 +144,6 @@ MIN_STRINGS_PER_PATTERN = 1
 
 USE_SAMPLING = True
 
-VERBOSITY = 0
 RE_FLAGS = re.UNICODE | re.DOTALL
 
 DIALECTS = ['perl']
@@ -471,12 +489,12 @@ class Extractor(object):
                  min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
                  min_strings_per_pattern=MIN_STRINGS_PER_PATTERN,
                  size=None, seed=None, dialect=DEFAULT_DIALECT,
-                 verbose=VERBOSITY):
+                 verbose=DEFAULT_VERBOSITY):
         """
         Set class attributes and clean input strings.
         Also performs exraction unless extract=False.
         """
-        self.verbose = verbose
+        self.verbose = self.set_verbosity(verbose)
         self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
             self.by_length = Tree()         # Also store examples by length
@@ -519,6 +537,13 @@ class Extractor(object):
         if extract:
             self.extract()                  # Stores results
 
+    def set_verbosity(self, verbosity):
+        if type(verbosity) != int:
+            verbosity = int(bool(verbosity))
+        if verbosity == 2:  # old max
+            verbosity = VERBOSITY.MAX
+        return verbosity
+
     def extract(self):
         """
         Actually perform the regular expression 'extraction'.
@@ -532,14 +557,13 @@ class Extractor(object):
 
             attempt = 1
             failures = []
+            self.show_inputs()
             while attempt <= size.max_sampled_attempts + 1:
-#                print('!!!')
-#                print(self.examples.strings)
-                if self.verbose:
+                if self.show(VERBOSITY.PASSES):
                     strings = self.examples.strings
                     print('\n*** Pass %d (%s strings)'
                           % (attempt, len(strings)))
-                    if self.verbose > 1:
+                    if self.show(VERBOSITY.DETAIL):
                         print('Examples: %s ... %s' % (strings[:5],
                                                        strings[-5:]))
                 self.results = self.batch_extract()
@@ -547,7 +571,7 @@ class Extractor(object):
                              else size.do_all_exceptions)
                 failex, re_freqs = self.check_fn(self.results.rex, maxN)
                 failex = self.clean(failex)
-                if self.verbose:
+                if self.show(VERBOSITY.PASSES):
                     print('%s REs:' % len(self.results.rex))
                     for r in self.results.rex:
                         print('    %s' % r)
@@ -557,12 +581,12 @@ class Extractor(object):
                     break
                 elif (len(failex.strings) <= size.do_all_exceptions
                       or attempt > size.max_sampled_attempts):
-                    if self.verbose:
+                    if self.show(VERBOSITY.PASSES):
                         print('\n\n\n*** Now doing all failures...')
                     self.examples.strings.extend(failex.strings)
                     self.examples.freqs.extend(failex.freqs)
                     self.examples.update()
-                    if self.verbose:
+                    if self.show(VERBOSITY.PASSES):
                         print('\n\n\n*** Total strings = %s'
                               % len(failex.strings))
                 else:
@@ -581,6 +605,22 @@ class Extractor(object):
             self.convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
+
+    def show(self, verbosity):
+        """
+        Returns whether to show something at the verbosity level provided.
+        Usually verbosity is a value from (or a combined value from)
+        the levels in VERBOSITY
+        """
+        return self.verbose & verbosity
+
+    def show_inputs(self):
+        if self.show(VERBOSITY.INPUTS):
+            print('INPUTS:')
+            for s in self.examples.strings:
+                print(s)
+            print()
+
 
     def check_for_failures(self, rexes, maxExamples):
         """
@@ -658,7 +698,7 @@ class Extractor(object):
                         self.n_stripped += n
 
 
-        if self.verbose > 1:
+        if self.show(VERBOSITY.INPUTS):
             print('Examples:')
             pprint([(k, v) for (k, v) in counter.items()])
             print()
@@ -673,6 +713,7 @@ class Extractor(object):
         freqs = self.examples.freqs
         # First, run-length encode each (distinct) example
         rles = [self.run_length_encode_coarse_classes(s) for s in examples]
+        self.poss_show_items(VERBOSITY.RLE, rles, 'RLEs')
         rle_freqs = IDCounter()
         example2r_id = ilist([1]) * len(examples)  # same length as rles
         r_id2v_id = {}
@@ -697,29 +738,43 @@ class Extractor(object):
                                            # initially added
             # Note, these totals include repeats.
 
+        self.poss_show_items(VERBOSITY.VRLE, vrles, 'VRLEs')
+
         # For each example, record the id of the VRLE to which it belongs
         # and stash that away inside the Examples object.
         for i, r_id in enumerate(example2r_id):
             example2v_id[i] = r_id2v_id[r_id]
         self.examples.example2v_id = example2v_id
-#        self.examples.example2r_id = example2r_id  # probably don't need
 
         # Refine the fragments in the VRLEs
         for vrle in vrles:
             grouped = self.refine_fragments(vrle, vrle_freqs.ids[vrle])
             refined.append(grouped)
 
-#        self.examples.rle_freqs = rle_freqs  # probably don't need
         self.examples.vrle_freqs = vrle_freqs
 
         merged = self.merge_patterns(refined)
+        self.poss_show_items(VERBOSITY.MERGED, merged, 'Merged VRLEs')
         if self.specialize:
             merged = self.specialize_patterns(merged)
+            self.poss_show_items(VERBOSITY.SPECIALIZED, merged,
+                                 'Specializsed, merged VRLEs')
         mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
+        self.poss_show_items(VERBOSITY.MERGED_REX, mergedrex,
+                             'Merged Rexes')
         mergedfrags = [self.vrle2refrags(m) for m in merged]
+        self.poss_show_items(VERBOSITY.MERGED_FRAGS, mergedfrags,
+                             'Merged Frags')
         return ResultsSummary(rles, rle_freqs, vrles, vrle_freqs,
                               merged, mergedrex, mergedfrags,
                               extractor=self)
+
+    def poss_show_items(self, mask, items, header):
+        if self.show(mask):
+            print(f'{header}:')
+            for items in items:
+                print(items)
+            print()
 
     def convert_rex_to_dialect(self):
         self.results.convert_to_dialect(self)
@@ -787,7 +842,7 @@ class Extractor(object):
                 new_parts.extend(self.merge_fixed_only_present_at_pos(part))
             else:
                 raise ValueError('Level out of range (%d)' % level)
-        if self.verbose > 1:
+        if self.show(VERBOSITY.ALIGNED):
             print('\nOUT:')
             print(self.aligned_parts(new_parts))
         return new_parts
@@ -2060,7 +2115,7 @@ def extract(examples, tag=False, encoding=None, as_object=False,
             max_patterns=MAX_PATTERNS,
             min_diff_strings_per_pattern=MIN_DIFF_STRINGS_PER_PATTERN,
             min_strings_per_pattern=MIN_STRINGS_PER_PATTERN, size=None,
-            seed=None, dialect=DEFAULT_DIALECT, verbose=VERBOSITY):
+            seed=None, dialect=DEFAULT_DIALECT, verbose=DEFAULT_VERBOSITY):
     """
     Extract regular expression(s) from examples and return them.
 
@@ -2298,41 +2353,42 @@ def rexpy_streams(in_path=None, out_path=None, skip_header=False,
         False:            to return the strings as a list
     """
     verbose = kwargs.get('verbose', 0)
+    show_pp = show(verbose, VERBOSITY.PREPROCESSING)
     if type(in_path) in (list, tuple):
         strings = in_path
     elif in_path:
-        if verbose:
+        if show_pp:
             print('Reading file %s.' % in_path)
         with open(in_path) as f:
             strings = f.read().splitlines()
-        if verbose:
+        if show(verbose, VERBOSTY.PREPROCESSING):
             print('Read file %s' % in_path)
     else:
-        if verbose:
+        if show_pp:
             print('Ingesting strings')
         strings = [s.strip() for s in sys.stdin.readlines()]
         if strings and type(strings[0]) == bytes_type:
             strings = [s.decode('UTF-8') for s in strings]
-        if verbose:
+        if show_pp:
             print('Ingested strings.')
     if skip_header:
         strings = strings[1:]
-    if verbose:
+    if show_pp:
         print('Extracting strings')
     patterns = extract(strings, **kwargs)
-    if verbose:
+    if show_pp:
          print('Extracted strings')
     if quote:
         patterns = [dquote(p) for p in patterns]
     if out_path is False:
         return patterns
     elif out_path:
-        if verbose:
+        if show_pp:
             print('Writing results to %s.' % out_path)
         with open(out_path, 'w') as f:
             for p in patterns:
                 f.write(p + '\n')
-        if verbose:
+        if show_pp:
             print('Written results to %s.' % out_path)
     else:
         for p in patterns:
@@ -2350,6 +2406,7 @@ def get_params(args):
         'verbose': 0,
         'variableLengthFrags': False,
     }
+    params['verbose'] = 0
     for a in args:
         if a.startswith('-'):
             if a == '-':
@@ -2383,7 +2440,11 @@ def get_params(args):
                 print(USAGE)
                 sys.exit(0)
             else:
-                raise TDDAError(USAGE)
+                m = re.match(VERBOSITY_LEVEL_RE, a)
+                if m:
+                    params['verbose'] |= int(str(m.group(1)))
+                else:
+                    raise TDDAError(USAGE)
         elif params['in_path'] == '':  # not previously set and not '-'
             params['in_path'] = a
         elif params['out_path'] is None:
@@ -2561,6 +2622,10 @@ def dquote(string):
 def usage_error():
     print(USAGE, file=sys.stderr)
     sys.exit(1)
+
+
+def show(verbosity, level):
+    return verbosity & level
 
 
 def main():

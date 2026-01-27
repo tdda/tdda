@@ -886,6 +886,7 @@ class TestExtraction(ReferenceTestCase):
         '(0141) 496 0236',
         '(0141) 496 0324'
     ]
+
     def test_tels1(self):
         x = extract(self.tels1)
         self.check_result(x, [r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'],
