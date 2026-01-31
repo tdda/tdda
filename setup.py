@@ -8,15 +8,19 @@ with open(version_file) as f:
     content = f.read().replace('\n', '')
     m = re.match('^TDDA_MAJOR_VERSION = ([0-9]+)'
                  '.*TDDA_MINOR_VERSION = ([0-9]+).*'
-                 'TDDA_EDIT = ([0-9]+).*$', content)
+                 'TDDA_EDIT = ([0-9]+).*'
+                 "TDDA_VERSION_QUALIFIER = '([a-zA-Z0-9]*)'.*$", content)
     if m:
-        __version__ = '%s.%s.%02d' % (m.group(1), m.group(2), int(m.group(3)))
+        __version__ = '%s.%s.%02d%s' % (m.group(1), m.group(2), int(m.group(3)),
+                                        m.group(4))
     else:
         __version__ = '0.0.0'  # unknown
+
 
 def read(fname):
     # read contents of file
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 def data(path, pathitems, exclusions=None):
     # build list of additional files to package up from a subdirectory
@@ -34,6 +38,7 @@ def data(path, pathitems, exclusions=None):
             else:
                 names.append(pathname)
     return names
+
 
 setup(
     name='tdda',

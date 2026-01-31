@@ -1,0 +1,159 @@
+usage: tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
+                   [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
+                   [-t {strict,sloppy}] [--write-all-records]
+                   [--per-constraint] [--no-per-constraint]
+                   [--no-original-fields] [--original-fields]
+                   [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
+                   [-r [REPORT ...]] [--interleave] [--no-interleave]
+                   [--index] [--int] [--key [KEY ...]]
+                   [--verify-required-fields] [--verify-allowed-fields]
+                   [--no-verify-required-fields] [--no-verify-allowed-fields]
+                   [--varf] [--no-varf] [--pandas] [--polars]
+                   [--backend BACKEND]
+                   input [constraints] [outpath]
+
+positional arguments:
+  input                 CSV, parquet
+  constraints           constraints file to verify against
+  outpath               file to write detection results to
+
+options:
+  -h, --help            show this help message and exit
+  -?, --?               same as -h or --help
+  -7, --ascii           report without using special characters
+  --no-config           Skip loading ~/.tdda.toml
+  --colour              Use colour in terminal output
+  --no-colour           Do not not use colour in terminal output
+  -epsilon, --epsilon EPSILON
+                        epsilon fuzziness
+  -o, --report-path REPORT_PATH
+                        Path for reports
+  -a, --all             report all fields, even if there are no failures
+  -f, --fields          report only fields with failures
+  -t, --type_checking {strict,sloppy}
+                        "sloppy" means consider all numeric types equivalent
+  --write-all-records   Include passing records
+  --per-constraint      Write one flag column per failing constraint in
+                        addition to n_failures. Set by default.
+  --no-per-constraint   Do not write out any per-constraint flag columns
+  --no-original-fields  Do not write out original fields columns
+  --original-fields     Write out original fields columns (default)
+  --no-output-fields    Do not write out any original fields in the output. By
+                        default, all original columns will be included.
+  --output-fields [OUTPUT_FIELDS ...]
+                        Specify original columns to write out.
+  -r, --report [REPORT ...]
+                        Report formats to write.
+  --interleave          Interleave ok columns with original fields.
+  --no-interleave       Do not interleave ok columns with original fields.
+  --index               Include a row-number index in the output file when
+                        detecting. Rows are usually numbered from 1, unless
+                        the input file already has an index.
+  --int                 Write out boolean fields as integers, with 1 for true
+                        and 0 for false.
+  --key [KEY ...]       Key or key fields to use when reporting failures
+  --verify-required-fields, --vrf
+                        Force verify of required fields
+  --verify-allowed-fields, --vaf
+                        Force verify of allowed fields
+  --no-verify-required-fields, --no-vrf
+                        Force no verication of required fields
+  --no-verify-allowed-fields, --no-vaf
+                        Force no verification of allowed fields
+  --varf, --vraf        Force verification of allowed and required fields
+  --no-varf, --no-vraf  Force no verification of allowed and required fields
+  --pandas, --pd        Use Pandas as DataFrame engine.
+  --polars, --pl        Use Polars as DataFrame engine.
+  --backend, -B BACKEND
+                        Pandas backend choice. (n for numpy_nullable, a for
+                        pyarrow, o for original).
+
+Parameters:
+
+  * input is one of:
+
+      - a csv file
+      - a .parquet file
+      - any of the other supported data sources
+
+  * constraints.tdda, if provided, is a JSON .tdda file constaining
+    constraints.
+
+  * name of output file (.csv, .parquet)
+    where detection results are to be written.
+    Can be - (or missing) to write to standard output.
+
+Optional flags are:
+
+  * -o, --report-path PATH
+      Path to which to write reports.
+      Unnecessary when records are written to file, but needed when
+      writing detected records to databases.
+      Extension does not matter (will be chosen to match report formats).
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+  * --write-all-records
+      Include passing records in the output.
+  * --per-constraint
+      Write one additional column per failing constraint, to show if a
+      constraint passed or failed, as well as the n_failures
+      total column for each row. This is set by default.
+  * --no-per-constraint
+      Disable the --per-constraint flag, so that the only constraint-based
+      column written out is the nfailures field.
+  * --original-fields
+      Do not write out any of the original columns. By default, all of the
+      original columns are written out, unless you use --output-fields.
+  * --no-original-fields
+      Do not write out any of the original columns. By default, all of the
+      original columns are written out, unless you use --output-fields.
+  * --output-fields FIELD1 FIELD2 ...
+      Specify original columns to write out.
+  * --interleave
+      In the output, place the verification fields immediately after
+      the original field to which they correspond.
+  * --no-interleave
+      In the output, place all the verification fields
+      at the end the original fields
+  * -r --report FORMAT1 FORMAT2 ...
+      Write reports in the formats listed. Allowed formats
+      are: html, text, txt, json, yaml, toml, mmarkdown, and md.
+  * --index
+      Include a row-number index in the output file.
+      The row number is automatically included if no output fields are
+      specified. Rows are usually numbered from 1, unless the
+      input file already has an index.
+  * --vrf --verify-required-fields
+      Force Verification of required field
+  * --vaf --verify-allowed-fields
+      Force verification of allowed fields
+  * --varf, --vraf
+      Force verification of allowed and required fields
+  * --no-vr
+      Force no verification of not verify required fields
+  * --no-va
+      Force no verification of allowed fields
+  * --no-varf, --no-vraf
+      Force no verification  of allowed and required fields
+
+  * --epsilon E
+      Use this value of epsilon for fuzziness in comparing numeric values.
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+  * --colour
+      Coloured output
+  * --no-colour
+      Monochrome output
+  * -N, --no-config
+      Do not configure using ~/tdda.toml: use all defaults
+
+Detect is available for the following:
+  - Flat files (filename.csv)
+  - Pandas DataFrames (filename.parquet)
+  - Tables from PostgreSQL databases (postgres:tablename)
+  - Tables from MySQL databases (mysql:tablename)
+  - Tables from SQLite databases (sqlite:tablename)
+  - Collections from MongoDB NoSQL databases (mongodb:collection)
+

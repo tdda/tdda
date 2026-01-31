@@ -17,6 +17,7 @@ import os
 
 dir_ = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(dir_)
+
 from tdda import __version__ as version
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -34,6 +35,7 @@ from tdda import __version__ as version
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'myst_parser'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -44,6 +46,7 @@ templates_path = ['_templates']
 source_suffix = {
     '.rst': 'restructuredtext',
     '.txt': 'restructuredtext',
+    '.md': 'markdown',
 }
 
 # The encoding of source files.
@@ -54,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'tdda'
-copyright = u'2016–2022, Stochastic Solutions Limited'
+copyright = u'2016–2026, Stochastic Solutions Limited'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -1,0 +1,97 @@
+
+usage: tdda verify [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
+                   [-epsilon EPSILON] [-a] [-f] [-r [REPORT ...]]
+                   [-t {strict,sloppy}] [--verify-required-fields]
+                   [--verify-allowed-fields] [--no-verify-required-fields]
+                   [--no-verify-allowed-fields] [--varf] [--no-varf]
+                   [--pandas] [--polars] [--backend BACKEND]
+                   input [constraints]
+
+positional arguments:
+  input                 CSV or parquet file
+  constraints           constraints file to verify against
+
+options:
+  -h, --help            show this help message and exit
+  -?, --?               same as -h or --help
+  -7, --ascii           report without using special characters
+  --no-config           Skip loading ~/.tdda.toml
+  --colour              Use colour in terminal output
+  --no-colour           Do not not use colour in terminal output
+  -epsilon, --epsilon EPSILON
+                        epsilon fuzziness
+  -a, --all             report all fields, even if there are no failures
+  -f, --fields          report only fields with failures
+  -r, --report [REPORT ...]
+                        Report formats to write.
+  -t, --type_checking {strict,sloppy}
+                        "sloppy" means consider all numeric types equivalent
+  --verify-required-fields, --vrf
+                        Force verify of required fields
+  --verify-allowed-fields, --vaf
+                        Force verify of allowed fields
+  --no-verify-required-fields, --no-vrf
+                        Force no verication of required fields
+  --no-verify-allowed-fields, --no-vaf
+                        Force no verification of allowed fields
+  --varf, --vraf        Force verification of allowed and required fields
+  --no-varf, --no-vraf  Force no verification of allowed and required fields
+  --pandas, --pd        Use Pandas as DataFrame engine.
+  --polars, --pl        Use Polars as DataFrame engine.
+  --backend, -B BACKEND
+                        Pandas backend choice. (n for numpy_nullable, a for
+                        pyarrow, o for original).
+
+Parameters:
+
+  * input is one of:
+
+      - a csv file. Can be - to read from standard input.
+      - a parquet file
+      - any of the other supported data sources
+
+  * constraints.tdda, if provided, is a JSON .tdda file constaining
+    constraints.
+
+If no constraints file is provided, a file with the same path as the
+input file, with a .tdda extension will be tried.
+
+Optional flags are:
+
+  * -a, --all
+      Report all fields, even if there are no failures
+  * -f, --fields
+      Report only fields with failures
+
+  * --vrf --verify-required-fields
+      Force Verification of required field
+  * --vaf --verify-allowed-fields
+      Force verification of allowed fields
+  * --varf, --vraf
+      Force verification of allowed and required fields
+  * --no-vr
+      Force no verification of not verify required fields
+  * --no-va
+      Force no verification of allowed fields
+  * --no-varf, --no-vraf
+      Force no verification  of allowed and required fields
+
+  * --epsilon E
+      Use this value of epsilon for fuzziness in comparing numeric values.
+  * -7, --ascii
+      Report in ASCII form, without using special characters.
+  * --colour
+      Coloured output
+  * --no-colour
+      Monochrome output
+  * -N, --no-config
+      Do not configure using ~/tdda.toml: use all defaults
+
+Verify is available for the following:
+  - Flat files (filename.csv)
+  - Pandas DataFrames (filename.parquet)
+  - Tables from PostgreSQL databases (postgres:tablename)
+  - Tables from MySQL databases (mysql:tablename)
+  - Tables from SQLite databases (sqlite:tablename)
+  - Collections from MongoDB NoSQL databases (mongodb:collection)
+

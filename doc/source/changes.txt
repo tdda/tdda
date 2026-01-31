@@ -6,6 +6,49 @@ Recent Changes
 This Version
 ------------
 
+* **3.0** Detect functionality now works with databases
+
+* **3.0** `tdda diff` for visually comparing data frames (Parquet & CSV files)
+
+* **3.0** Partial support for polars data frames
+
+* **3.0** Extra reporting options for `tdda discover` and `tdda detect`
+  (tables, HTML, Text, Markdown, JSON, YAML, TOML)
+
+* **3.0** `tddaserial`: metadata format for describing flat files
+  including:
+
+    - Support for writing `pandas.read_csv` arguments
+    - Support for writing `polars.read_csv` arguments
+    - Support for loading flat files to `pandas`
+    - Support for loading flat files to `polars`
+    - Support for reading and writing frictionless files
+    - Support for reading and writing CSVW files
+    - Experimental support for inferring metadata format
+    - Experimental support for translating between all `tdda serial` supported formats
+
+* **3.0** Remove deprecated `.feather` support (replaced by parquet.
+
+* **3.0** Configuration file for controlling some behaviours via `.toml` file
+
+* **3.0** Support for grouped regular expressions in rexpy and colouring
+
+* **3.0** `nfkt` normalization in `tdda.utils`
+
+* **3.0** `dict_to_tex` function in `tdda.utils` for test-driven document
+  development (TDDA) with TeX and LaTeX
+
+* **3.0** Some changes to switch names (`--write-all` to `--write-all-records`)
+
+* **3.0** Less over-entitization in HTML output
+
+* **3.0** Improved packaging support (thanks NSK!)
+
+
+
+Previous Versions
+-----------------
+
 * **2.2** Improvements to parquet file handling.
 
 * **2.2** Have not (as threatened) removed for feather files yet
@@ -28,15 +71,16 @@ This Version
   results using -W/--write-all etc.
 
 * **2.2** Renamed some methods and parameters for DataFrame assertions
-  and comparisons. In particular
-   - `assertOnDiskDataFrameCorrect` replaces assertCSVFileCorrect,
-     with the path name not being `ref_path` rather than `ref_csv`.
-     The old method remains, and calls the new method.
-     The new methods works with parquet files as well as with CSV files.
-   - `assertOnDiskDataFramesCorrect` replaces assertCSVFilesCorrect,
-     with the path name not being `ref_paths` rather than `ref_csvs`.
-     The old method remains, and calls the new method.
-     The new methods works with parquet files as well as with CSV files.
+  and comparisons. In particular:
+
+    - `assertOnDiskDataFrameCorrect` replaces assertCSVFileCorrect,
+      with the path name not being `ref_path` rather than `ref_csv`.
+      The old method remains, and calls the new method.
+      The new methods works with parquet files as well as with CSV files.
+    - `assertOnDiskDataFramesCorrect` replaces assertCSVFilesCorrect,
+      with the path name not being `ref_paths` rather than `ref_csvs`.
+      The old method remains, and calls the new method.
+      The new methods works with parquet files as well as with CSV files.
 
 * **2.2** Better reporting of differences between data frames when
   tests fail or comparisons show differences.
@@ -59,11 +103,6 @@ This Version
 * **2.2** Quite a lot of internal refactoring, making parameters
   and methods names more consistent, and better suited to a wider
   variety of file formats and back-end implementations.
-
-
-
-Previous Versions
------------------
 
 * **2.1** Upgrade pandas dependency to 2.0 and significantly
   improve compatibility with Pandas 2.0+.

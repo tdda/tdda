@@ -25,115 +25,50 @@ from tdda.constraints.base import Marks
 from tdda.constraints.pd.discover import pd_discover_parser
 from tdda.constraints.pd.verify import pd_verify_parser
 from tdda.constraints.pd.detect import pd_detect_parser
+from tdda.man.utils import print_help
 from tdda.referencetest.gentest import gentest_wrapper
+from tdda.utils import swap_ext
 
 from tdda import __version__
-
-
-HELP="""Use
-    tdda discover      to perform constraint discovery
-    tdda verify        to verify data against constraints
-    tdda detect        to detect failed constraints on data
-    tdda examples      to copy the example data and code
-    tdda gentest       to generate a reference test "automagically" (BETA)
-    tdda version       to print the TDDA version number
-    tdda help          to print this help
-    tdda help COMMAND  to print help on COMMAND (discover, verify or detect)
-    tdda test          to run the tdda library's tests.
-    tdda diff          to compare two parquet or CSV files (EXPERIMENTAL)
-    tdda serial        to convert or view .serial and CSVW metadata"""
-
 
 STANDARD_EXTENSIONS = [
     'tdda.constraints.pd.extension.TDDAPandasExtension',
     'tdda.constraints.db.extension.TDDADatabaseExtension',
 ]
 
+CONSTRAINTS_COMMANDS = ('discover', 'verify', 'detect')
+
 
 def help(extensions, cmd=None, stream=sys.stdout):
     if cmd:
-        if cmd in ('discover', 'verify', 'detect'):
-            # display detailed help for discover, verify or detect.
-            # note that we use the Pandas variant to show the details, but
-            # we also list the various input sources for all of the other
-            # extensions (like databases), as providing the full detail
-            # for everything would probably not be very helpful,
-            print(file=stream)
-            if cmd == 'discover':
-                pd_discover_parser().print_help(stream)
-            elif cmd == 'verify':
-                pd_verify_parser().print_help(stream)
-            elif cmd == 'detect':
-                pd_detect_parser().print_help(stream)
-            print('\n%s is available for the following:'
-                  % cmd.title(), file=stream)
-            for ext in extensions:
-                ext.help(stream)
-            print(file=stream)
-        elif cmd == 'examples':
-            print('\ntdda examples [module] [directory]\n\n'
-                  'Write out example code and data for a particular module '
-                  '(referencetest,\nconstraints or rexpy), to the specified '
-                  'directory.\n'
-                  '\nIf no module is specified, examples for all three are '
-                  'written out.\n'
-                  '\nIf no output directory is specified, the examples are '
-                  'written to a subdirectory\nof the current directory.\n'
-                  '\nTo write out all of the examples for all three modules to '
-                  'subdirectories\nwithin the current directory, just use:\n'
-                  '    tdda examples\n', file=stream)
-        elif cmd == 'gentest':
-            print('\ntdda gentest  -- to run the wizard\n'
-                  'tdda gentest \'quoted shell command\' test_outputfile.py '
-                  '[reference files]\n', file=stream)
-        elif cmd == 'diff':
-            print(
-                '\ntdda diff a b  -- compare csv or parquet files a and b.\n\n'
-                'This is experimental functionality.\n'
-                'Currently, it will always show summary differences, but\n'
-                'will only show differences in values if the data frames\n'
-                'that results from loading the files have the same structure\n'
-                '(number of rows and columns, column names, loose column '
-                'types).\n'
-                '[reference files]\n', file=stream)
-        elif cmd == 'serial':
-            print(
-                'tdda serial  -- to convert or interrogate metadata files.\n\n'
-                'Use tdda serial [--to FORMAT] in.serial  out.serial\n'
-                'to convert metadata in.serial to out.serial in the output\n'
-                'format specified (or tdda.serial if none is specified).\n'
-                'Input and output metdata can also be CSVW files (.json)\n'
-                'Supported formats:\n'
-                '  SHORT FORM  LONG FORM\n'
-                '  .           tdda.serial\n'
-                '  pd.r        pandas.read_csv\n'
-                '  pd.w        pandas.DataFrame.to_csv\n'
-                '  pl.r        polars.read_csv\n'
-                '  pl.w        polars.DataFrame.write_csv\n'
-                '  csv.r       python.csv.reader\n'
-                '  csv.w       python.csv.writier\n'
-                '  csvw        CSVW\n'
-                'Multiple formats can be separated by commas.\n',
-                file=stream)
+        if cmd in CONSTRAINTS_COMMANDS + (
+           'gentest', 'diff', 'serial', 'version',
+           'examples', 'help'
+        ):
+            print_help(cmd, stream)
         else:
             print('\nNo help available for %s. Try one of the following:\n'
                   '    tdda help discover\n'
                   '    tdda help verify\n'
                   '    tdda help detect\n'
                   '    tdda help examples\n' % cmd)
-    else:
-        print(HELP, file=stream)
-        print(file=stream)
-        print('Constraint discovery and verification is available for:\n',
-            file=stream)
-        for ext in extensions:
-            ext.help(stream=stream)
+        if cmd in CONSTRAINTS_COMMANDS:
+            print('\n%s is available for the following:'
+                  % cmd.title(), file=stream)
+            for ext in extensions:
+                ext.help(stream)
             print(file=stream)
-        print('Use "tdda help COMMAND" to get more detailed help about '
-              'a particular command.\nE.g. "tdda help verify"\n',
-              file=stream)
-    if os.name == 'nt' or True:
-        print('If this tick (%s) and cross (%s) are not being displayed '
+    else:
+        print_help('tdda', stream)
+        # print(file=stream)
+        # print('Constraint discovery and verification is available for:\n',
+        #     file=stream)
+        # for ext in extensions:
+        #     ext.help(stream=stream)
+        #     print(file=stream)
+    if os.name == 'nt':
+        print('\nNOTE\n\n'
+              'If this tick (%s) and cross (%s) are not being displayed '
               'correctly, you probably\nneed to use a different font, '
               'or use --ascii.\n'
               % (Marks.tick, Marks.cross))

@@ -91,26 +91,21 @@ or haven't (yet) told TDDA about any databases you might want to use.
 
 .. _optional_installations:
 
-Optional Installations for using Databases, Feather Files, Pandas
------------------------------------------------------------------
+Optional Installations for using Databases
+------------------------------------------
 
 Extra libraries are required to access some of the constraint-generation
 and verification functionality, depending on the data sources that you
 wish to use.
 
-* :py:mod:`pandas` (required for CSV files and :py:mod:`feather` files)
-* :py:mod:`feather-format` (required for :py:mod:`feather` files)
-* :py:mod:`pmmif` (makes :py:mod:`feather` file reading and writing more robust)
 * :py:mod:`pygresql` (required for PostgreSQL database tables)
-* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python` (required for MySQL database tables)
+* :py:mod:`MySQL-python` or :py:mod:`mysqlclient` or  :py:mod:`mysql-connector-python`
+  (required for MySQL/MariaDB database tables)
 * :py:mod:`pymongo` (required for MongoDB document collections)
 
 
 These can be installed with (some/all of)::
 
-    pip install pandas
-    pip install feather-format
-    pip install pmmif
     pip install pygresql
     pip install pymongo
 

@@ -8,6 +8,7 @@ import argparse
 import os
 import sys
 
+from tdda.man.utils import get_help
 from tdda.state import set_load
 from tdda.utils import error
 from tdda.commonflags import add_pandas_flags, process_pandas_flags
@@ -48,106 +49,10 @@ def help_defaults(help=True, seven=True, colour=True, config=True,
     return ''.join(o.rstrip() for o in out) + '\n'
 
 
-VERIFY_FIELDS_HELP = '''
-  * --vrf --verify-required-fields
-      Force Verification of required field
-  * --vaf --verify-allowed-fields
-      Force verification of allowed fields
-  * --varf, --vraf
-      Force verification of allowed and required fields
-  * --no-vr
-      Force no verification of not verify required fields
-  * --no-va
-      Force no verification of allowed fields
-  * --no-varf, --no-vraf
-      Force no verification  of allowed and required fields
-'''
-
-
-DISCOVER_HELP = '''
-Optional flags are:
-
-  * -x or --rex
-      Include regular expression generation. Disabled by default.
-  * -X or --no-rex
-      Exclude regular expression generation (the default)
-  * -g or --group-rex
-      Group regular expressions when generated (the default)
-  * -G or --no-group-rex
-      Do not group regular expressions when generated
-  * -r or --report FORMAT1 FORMAT2 ...
-      Write constraints reports in the formats listed. Allowed formats
-      are: html, text, txt, json, yaml, toml, mmarkdown, and md.
-  * -o or --report-path PATH
-  * --no-md
-      Do not create (creation) metadata''' + help_defaults()
-
-
-VERIFY_HELP = ('''
-Optional flags are:
-
-  * -a, --all
-      Report all fields, even if there are no failures
-  * -f, --fields
-      Report only fields with failures
-'''
-      + VERIFY_FIELDS_HELP
-      + help_defaults(epsilon=True)
-)
-
-
-DETECT_HELP = ('''
-Optional flags are:
-
-  * -o, --report-path PATH
-      Path to which to write reports.
-      Unnecessary when records are written to file, but needed when
-      writing detected records to databases.
-      Extension does not matter (will be chosen to match report formats).
-  * -a, --all
-      Report all fields, even if there are no failures
-  * -f, --fields
-      Report only fields with failures
-  * --write-all-records
-      Include passing records in the output.
-  * --per-constraint
-      Write one additional column per failing constraint, to show if a
-      constraint passed or failed, as well as the n_failures
-      total column for each row. This is set by default.
-  * --no-per-constraint
-      Disable the --per-constraint flag, so that the only constraint-based
-      column written out is the nfailures field.
-  * --original-fields
-      Do not write out any of the original columns. By default, all of the
-      original columns are written out, unless you use --output-fields.
-  * --no-original-fields
-      Do not write out any of the original columns. By default, all of the
-      original columns are written out, unless you use --output-fields.
-  * --output-fields FIELD1 FIELD2 ...
-      Specify original columns to write out.
-  * --interleave
-      In the output, place the verification fields immediately after
-      the original field to which they correspond.
-  * --no-interleave
-      In the output, place all the verification fields
-      at the end the original fields
-  * -r --report FORMAT1 FORMAT2 ...
-      Write reports in the formats listed. Allowed formats
-      are: html, text, txt, json, yaml, toml, mmarkdown, and md.
-  * --index
-      Include a row-number index in the output file.
-      The row number is automatically included if no output fields are
-      specified. Rows are usually numbered from 1, unless the
-      input file already has an index.'''
-      + VERIFY_FIELDS_HELP
-      + help_defaults(epsilon=True)
-)
-
-
 def discover_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(prog='tdda discover',
-                                     epilog=usage + DISCOVER_HELP,
+                                     epilog=usage + get_help('discover'),
                                      formatter_class=formatter)
     add_defaults(parser)
     parser.add_argument('-x', '--rex', action='store_true',
@@ -192,7 +97,7 @@ def discover_flags(parser, args, params):
 def verify_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(prog='tdda verify',
-                                     epilog=usage + VERIFY_HELP,
+                                     epilog=usage + get_help('verify'),
                                      formatter_class=formatter)
     add_defaults(parser, epsilon=True)
     parser.add_argument('-a', '--all', action='store_true',
@@ -212,7 +117,7 @@ def verify_parser(usage=''):
 def detect_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(prog='tdda detect',
-                                     epilog=usage + DETECT_HELP,
+                                     epilog=usage + get_help('detect'),
                                      formatter_class=formatter)
     add_defaults(parser, epsilon=True)
     parser.add_argument('-o', '--report-path', action='store',
