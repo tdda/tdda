@@ -17,7 +17,7 @@ def main():
                 f.write(line)
 
 
-diff form_outpath(inpath):
+def form_outpath(inpath):
     return swap_ext(inpath, 'txt').replace('tdda-', '')
 
 
