@@ -23,6 +23,7 @@ from tdda.referencetest.basecomparison import (
     SameStructureDDiff,
     create_row_diffs_mask,
     valid_level,
+        ROW_NUM_HEADER
 )
 from tdda.serial.pandasio import (
     pandas_to_csv,
@@ -563,7 +564,7 @@ def col_comparison(left, right):
     lefts = [repr(left.iloc[i]) for i in range(n)]
     rights = [repr(right.iloc[i]) for i in range(n)]
     df = pd.DataFrame({
-        'row': indexes,
+        ROW_NUM_HEADER: indexes,
         'actual': lefts,
         'expected': rights,
     })

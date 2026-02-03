@@ -1,5 +1,5 @@
-Automatic Constraint Generation, Data Verification & Anomaly Detection
-======================================================================
+Data Validation
+===============
 
 The TDDA library provides support for constraint generation,
 verification and anomaly detection for datasets, including ``.csv`` files

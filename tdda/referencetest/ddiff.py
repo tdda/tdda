@@ -13,7 +13,7 @@ from tdda.utils import (
 )
 from tdda.utils import debug, listify
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
-from tdda.abstractdf import col_names, calc_nunique
+from tdda.abstractdf import col_names, calc_nunique, filter_fields
 
 
 import argparse
@@ -38,7 +38,7 @@ class TDDADiff:
                  vertical=False, fields=None, xfields=None,
                  type_checking=None, maxdiffs=None,
                  engine=None, backend=None, key=None, auto_key=False,
-                 cli_args=None, config=None, verbosity=1):
+                 cli_args=None, config=None, quick=False, verbosity=1):
         self.args = cli_args
         self.dconfig = get_config().tddadiff
         self.type_checking = self.dconfig.type_checking
@@ -54,6 +54,9 @@ class TDDADiff:
         self.key = key
         self.auto_key = auto_key
         self.verbosity = verbosity
+        self.find_md = self.dconfig.infer_md
+        self.quick = quick
+
         if cli_args:
             self.process_args()
 
@@ -64,13 +67,17 @@ class TDDADiff:
             if self.engine == 'pandas'
             else PolarsComparison()
         )
-        dfL = c.load_serialized_dataframe(self.left)
-        dfR = c.load_serialized_dataframe(self.right)
+        dfL = c.load_serialized_dataframe(self.left, find_md=self.find_md)
+        dfR = c.load_serialized_dataframe(self.right, find_md=self.find_md)
+        dfL = filter_fields(dfL, self.fields, self.xfields)
+        dfR = filter_fields(dfR, self.fields, self.xfields)
+        dfL, dfR, key = find_usable_key(dfL, dfR, self.key)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
                                    check_data=self.fields,
                                    type_matching=self.type_checking,
                                    precision=self.precision,
-                                   backend=self.backend, key=self.key)
+                                   backend=self.backend, key=self.key,
+                                   quick=self.quick)
 
         if result.failures > 0:
             print(result.diffs)
@@ -141,11 +148,18 @@ class TDDADiff:
             p.vertical = True
 
         if self.fields:
-            self.fields = [f.strip() for f in self.fields.split(', ')]
+            self.fields = [f.strip() for f in self.fields.split(',')]
+
         if self.xfields:
-            self.fields = lambda df: (
-                set(df) - set(f.strip() for f in self.xfields.split(','))
-            )
+            self.xfields = [f.strip() for f in  self.xfields.split(', ')]
+
+        if self.key:
+            self.key = [f.strip() for f in  self.key.split(', ')]
+
+        if self.infer_md:
+            self.find_md = True
+        elif self.no_md:
+            self.find_md = False
 
         if (  (self.strict and 1)
             + (self.medium and 1)
@@ -192,6 +206,12 @@ class TDDADiff:
                  'considered equal if abs(a - b) < 1e-n,'
                  'where n is the specified precision')
 
+        parser.add_argument('--infer-md', action='store_true',
+            help='Attempt to find associated metadata for flat files.')
+
+        parser.add_argument('--no-md', '--no-infer-md', action='store_true',
+            help='Do not attempt to find associated metadata for flat files.')
+
         parser.add_argument('--maxdiffs', type=int, default=None,
             help='Maximum number of differences to show.')
 
@@ -233,6 +253,10 @@ class TDDADiff:
         parser.add_argument('--xfields', type=str, action='store',
             help='Check all fields except these (comma-separated list)')
 
+        parser.add_argument('--key', type=str, action='store',
+            help='Use these fields as join key (comma-separated list); '
+                 'OPTIONAL')
+
         parser.add_argument('--no-config', action='store_true',
             help='Use default configuration (ignore ~/.tdda.toml)')
 
@@ -253,19 +277,20 @@ class TDDADiff:
 
 def find_usable_key(left, right, key=None, verbosity=1):
     """
-    If key is supplied, this adds a row number to (copied of) the
+    If key is supplied, this adds a row number to (copies of) the
     left and right DataFrames, at the start.
 
-    If key is Truthy, this tries to find a common key to use for the outer
+    If key is True, this tries to find a common key to use for the outer
     join for diffing. If it fails, it falls back to using row index.
 
-    If key is Falsy:
+    If key is None/Falsy:
         If the DataFrames have the same length, this does nothing.
         If they have different lengths, a row number is added to them both.
 
     Args:
         left:   a DataFrame (currently Pandas)
         right:  a DataFrame (currently Pandas)
+
         key:    One of:
 
                     a field in left and right, to use as a join key
@@ -304,23 +329,26 @@ def find_usable_key(left, right, key=None, verbosity=1):
         if key is None:
             mode = 'common' if nL == nR else 'rownum'
 
-    if key or nL != nR:
+    if not key or nL != nR:
         all_names = set(col_names(left)) | set(col_names(right))
-        key = find_free_name(all_names, ['Row', 'ROW', 'row', 'Row#'])
-        L = pd.DataFrame({key: pd.Series(np.arange(left.shape[0]),
-                                         dtype='Int64')})
-        for k in left:
-            L[k] = left[k]
-        R = pd.DataFrame({key: pd.Series(np.arange(right.shape[0]),
-                                         dtype='Int64')})
-        for k in right:
-            R[k] = right[k]
-        left, right = L, R
+        if not key:
+            key = find_free_name(all_names, ['#Key'])
+            L = pd.DataFrame({key: pd.Series(np.arange(left.shape[0]),
+                                             dtype='Int64')})
+            R = pd.DataFrame({key: pd.Series(np.arange(right.shape[0]),
+                                             dtype='Int64')})
+            for k in left:
+                L[k] = left[k]
+            for k in right:
+                R[k] = right[k]
+            left, right = L, R
 
         left.columns = [name + '_L' for name in left]
         right.columns = [name + '_R' for name in right]
 
-        keyL, keyR = key + '_L', key + '_R'
+        key_list = key if type(key) == list else [key]
+        keyL = [k +  '_L' for k in key_list]
+        keyR = [k +  '_R' for k in key_list]
         dfj = left.merge(right, left_on=keyL, right_on=keyR, how='outer')
 
         L = dfj[left.columns]

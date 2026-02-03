@@ -48,6 +48,7 @@ DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
 DEFAULT_DIFF_ROWS = 10
+ROW_NUM_HEADER = '#'
 
 ESC_MAP = str.maketrans({
     '\\': r'\\',
@@ -973,7 +974,7 @@ class SameStructureDDiff:
                                  for L, R in zip(l_vals, r_vals))))
                     )
 
-            index_header = [] if self.key else ['row']
+            index_header = [] if self.key else [ROW_NUM_HEADER]
 
             s = '' if n == 1 else 's'
             rows_desc = (
@@ -1067,7 +1068,7 @@ class SameStructureDDiff:
                                    for L, R in zip(plstr, prstr))))
                         )
             type_headers = []
-            index_head = '' if self.key else 'row'
+            index_head = '' if self.key else ROW_NUM_HEADER
             if vertical:
                 n_table_cols = len(plain_rows[0])
                 widths = [

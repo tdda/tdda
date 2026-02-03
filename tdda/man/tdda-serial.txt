@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda serial  [22m− Converts, interrogates and creates serial metadata files.
+
+DESCRIPTION
+
+  Use tdda serial [‐‐to FORMAT] in.serial  out.serial
+  to convert metadata in.serial to out.serial in the output
+  format specified (or tdda.serial if none is specified).
+  Input and output metdata can also be CSVW files (.json)
+  Supported formats:
+
+  SHORT FORM  LONG FORM
+    [1m.         tdda.serial[0m
+    [1mpd.r      pandas.read_csv[0m
+    [1mpd.w      pandas.DataFrame.to_csv[0m
+    [1mpl.       polars.read_csv[0m
+    [1mpl.w      polars.DataFrame.write_csv[0m
+    [1mcsv.r     python.csv.reader[0m
+    [1ms[22m.wpython.csv.writier
+  csvwCSVW‘
+
+  Multiple formats can be separated by commas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

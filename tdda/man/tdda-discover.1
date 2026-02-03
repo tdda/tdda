@@ -1,66 +1,97 @@
+.nh
 .TH "TDDA DISCOVER" 1 "January 2026" "3.0" "tdda discover manual"
 .SH NAME
-tdda discover - automatically generate constraints satisfied by data
+\fBtdda discover\fR \- automatically generate constraints for data
 
 .SH SYNOPSIS
-tdda discover [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]"
-              [-x] [-X] [-g] [-G] [-r [REPORT ...]] [-o REPORT_PATH]
-              [--no-md] [--pandas] [--polars] [--backend BACKEND]
-              INPUTDATA [CONSTRAINTS]
+\fBtdda discover\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR] [\fB--colour\fR]
+              [\fB--no-colour\fR] [\fB-x\fR] [\fB-X\fR] [\fB-g\fR] [\fB-G\fR]
+              [\fB-r\fR \fIREPORT\fP ...] [\fB-o\fR \fIREPORT_PATH\fP]
+              [\fB--no-md\fR] [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+              \fIINPUT\fP [\fICONSTRAINTS\fP]
 
 .SH POSITIONAL ARGUMENTS
+\fIINPUT\fP is one of:
+  - a CSV file or other flat file (e.g. \fB\&.csv\fR, \fB\&.txt\fR, \fB\&.psv\fR)
+  - a data frame in a Parquet files (.parquet)
+    e.g. from pandas, polars, R
+  - Tables from PostgreSQL databases (e.g. \fBpostgres:tablename\fR)
+  - Tables from MySQL databases (e.g. \fBmysql:tablename\fR)
+  - Tables from SQLite databases (e.g. \fBsqlite:tablename\fR)
+  - Standard input (stdin): Use \fB-\fR to read from stdin
+    Metadata for flat files can also be specified or inferred.
 
-INPUTDATA Input data source. Typically:
-  - a Parquet (.parquet) containing a data frame
-  - CSV or other flat file, possibly with associated metadata
-  - a database table with a suitable db: prefix
+.PP
+(Use \fBtdda help serial\fR, \fBtdda serial --help\fR, or \fBman tdda-serial\fR
+for more information.)
 
-CONSTRAINTS Name of the (JSON) constraints file to create.
-  - Will use .tdda extension if no extention is specified.
-  - Can be missing or '-' to write to standard output.
+.PP
+\fICONSTRAINTS\fP Name of the (JSON) constraints file to create.
+  - Will use \fB\&.tdda\fR extension if no extention is specified.
+  - Can be missing or \fB-\fR to write to standard output.
 
 .SH DESCRIPTION
-
-The tdda discover command is used to find constraints that are satisfied
+The \fBtdda discover\fR command is used to find constraints that are satisfied
 (in most cases) by the input ("training") data provided.
 
 .SH OPTIONS
-
 The following options are available.
 
-* indicates options that are the default beaviours
+.PP
+\fB*\fR indicates options that are the default beaviours
 
-  -h, --help            Show this help message and exit
-  -?, --?               Same as -h or --help
-  -7, --ascii           Report without using special characters
-  -N, --no-config       Skip loading ~/.tdda.toml
-  --colour              Use colour in terminal output *
-  --no-colour           Do not not use colour in terminal output
-  -x, --rex             Include regular expression generation
-  -X, --no-rex          Exclude regular expression generation *
-  -g, --group-rex       Group regular expression generation
-  -G, --no-group-rex    Do not group regular expression generation *
+.PP
+\fB-h\fR, \fB--help\fR            Show this help message and exit
+.br
+\fB-?\fR, \fB--?\fR               Same as \fB-h\fR or \fB--help\fR
+.br
+\fB-7\fR, \fB--ascii\fR           Report without using special characters
+.br
+\fB-N\fR, \fB--noconfig\fR        Skip loading ~/.tdda.toml
+.br
+\fB--colour\fR              Use colour in terminal output *
+.br
+\fB--no-colour\fR           Do not not use colour in terminal output
+.br
+\fB-x\fR, \fB--rex\fR             Include regular expression generation
+.br
+\fB-X\fR, \fB--no-rex\fR          Exclude regular expression generation *
+.br
+\fB-g\fR, \fB--group-rex\fR       Group regular expression generation
+.br
+\fB-G\fR, \fB--no-group-rex\fR    Do not group regular expression generation *
 
-  -r, --report [REPORT ...]       Report formats to write.
-  -o, --report-path REPORT_PATH   Path for reports
+.PP
+\fB-r\fR, \fB--report\fR [\fIREPORT\fP ...]       Report formats to write.
+.br
+\fB-o\fR, \fB--report-path\fR \fIREPORT_PATH\fP   Path for reports
 
-  --no-md                 Do not create metadata in constraints file
-  --pandas, --pd          Use Pandas as DataFrame engine. *
-  --polars, --pl          Use Polars as DataFrame engine.
-  --backend, -B BACKEND   Backend choice for Pandas
-                          (When dataframe engine is Pandas)
-                            n for numpy_nullable *
-                            a for pyarrow
-                            o for original.
+.PP
+\fB--no-md\fR                 Do not create metadata in constraints file
+.br
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine. *
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine.
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                        (when dataframe engine is Pandas)
+.br
+                            \fBn\fR for numpy_nullable *
+.br
+                            \fBa\fR for pyarrow
+.br
+                            \fBo\fR for original.
 
 .SH EXAMPLES
-
 (The example data be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
 data for these examples.)
 
-1. tdda discover elements.parquet elements.tdda
+.PP
+1) \fBtdda discover elements.parquet elements.tdda\fR
 
+.PP
 This command will read data from elements.parquet and (attempt to
 find) constraints satifisfied by every record, and the data
 collectively.  By default this will may include minimum and maximum
@@ -68,6 +99,7 @@ constraints on field values or lengths, nullability constraints,
 uniqueness constraints, sign constraints, and allow-values
 constraints.
 
+.PP
 The results will be written to elements.tdda in a JSON format,
 including metadata.  The output constraints file, elements.tdda can be
 used with 'tdda verify', to which constriants another datasets with
@@ -76,60 +108,63 @@ which records and/or values fail to satisfy the constraints. The TDDA
 can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
-2. tdda discover elements.csv
+.PP
+2) \fBtdda discover elements.csv\fR
 
+.PP
 This command is almost the same as the first except that it reads data
 from the CSV file specified, and writes the constraints to the screen
 (standard output).
 
+.PP
 The CSV structure and field types will normally be inferred (possibly
 incorrectly) by TDDA, and if the inference is bad, the command may
 fail. If there is a file in the same directory with a name suggesting
 it is associated metadata describing the csv file, that will be
 used. Typical such files include:
 
-  elements.serial           - a tdda.serial metadata specification
-  elements.csv.serial       - a tdda.serial metadata specification
-  elements_metadata.json    - a CSVW (CSV on the Web) specification
-  elements.table.json       - a Frictionless table specification (JSON)
-  elements.table.yaml       - a Frictionless table specification (YAML)
+.PP
+\fBelements.serial\fR         - a \fBtdda.serial\fR metadata specification
+.br
+\fBelements.csv.serial\fR     - a \fBtdda.serial\fR metadata specification
+.br
+\fBelements_metadata.json\fR  - a CSVW (CSV on the Web) specification
+.br
+\fBelements.table.json\fR     - a Frictionless table specification (JSON)
+.br
+\fBelements.table.yaml\fR     - a Frictionless table specification (YAML)
 
-3. tdda discover --rex md.serial:elements.parquet
+.PP
+3) \fBtdda discover --rex md.serial:elements.parquet\fR
 
-This is similar to the last two except that
-
-  - regular expression inference is requested (--rex) for text fields.
+.PP
+This is similar to the last two except that:
+  - regular expression inference is requested (\fB--rex\fR) for text fields.
     Rexpy will be used to attempt to infer one or a few regular
     expressions that characterize each field in the input data.
-
-  - a metadata filed to be used to interpret the .csv file is provided
+  - a metadata filed to be used to interpret the \fB\&.csv\fR file is provided
     explicitly.
 
-4. tdda discover --rex postgres:elements
+.PP
+4) \fBtdda discover --rex postgres:elements\fR
 
+.PP
 This is similar again except that now the postgres:specifier will be
 interpreted as a database connection file in the user's home
-directory, with the name ~/.dbCredential.postgres. This file should
+directory, with the name \fB~/.dbCredential.postgres\fR\&. This file should
 contain connection information for a supported database. The extension
-'.postgres' does not itself mean that this is a PostgreSQL database,
+\fB\&.postgres\fR does not itself mean that this is a PostgreSQL database,
 though that is a common convention. Use one of
 
-   tdda help db
-   tdda help databse
+.PP
+\fBtdda help db\fR
+.br
+\fBtdda help database\fR
 
+.PP
 to get help with the database connection file format.
 
-.SH INPUT DATA SOURCES
-
-Discover can use for the following (subject to Python driver availability)
-  - Flat files (filename.csv, filename.txt, filename.psv etc.)
-  - DataFrames in Parquet Files (filename.parquet), e.g. pandas, polars
-  - Tables from PostgreSQL databases (postgres:tablename)
-  - Tables from MySQL databases (mysql:tablename)
-  - Tables from SQLite databases (sqlite:tablename)
-  - Collections from MongoDB NoSQL databases (mongodb:collection)
-
 .SH SEE ALSO
-  rexpy
-  tdda verify
-  tdda detect
+tdda-verify(1),
+tdda-detect(1),
+tdda-serial(1)

@@ -4,7 +4,7 @@ import os
 import polars as pl
 
 from tdda.serial.metadata import VERBOSITY, SerialMetadata
-from tdda.serial.reader import get_metadata_for_reader
+from tdda.serial.reader import get_metadata_for_reader, set_delimiter_from_path
 from tdda.serial.utils import PYTHON_TEMPLATES, fill_template
 
 from tdda.utils import listify, warn, nvl
@@ -327,6 +327,7 @@ def csv_to_polars(path=None, md_path=None, md_file_type=None, find_md=False,
     elif md:
         kw = md_kw
 
+    kw = set_delimiter_from_path(kw, path, 'separator')
     df = pl.read_csv(path, **kw)
     return DataFrameWithMetadata(df, md) if return_md else df
 

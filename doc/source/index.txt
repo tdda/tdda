@@ -113,6 +113,18 @@ Contents
    examples.txt
    changes.txt
 
+   tdda.md
+   tdda-discover.md
+   tdda-verify.md
+   tdda-detect.md
+   tdda-diff.md
+   tdda-serial.md
+   tdda-gentest.md
+   tdda-examples.md
+   tdda-version.md
+   tdda-help.md
+
+
 Resources
 =========
 

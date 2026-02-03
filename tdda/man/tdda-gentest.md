@@ -1,18 +1,23 @@
-.nh
-.TH "TDDA GENTEST" 1 "January 2026" "3.0" "tdda gentest manual"
-.SH NAME
-\fBtdda gentest\fR \- Gentest writes tests, so you don't have to.™
+# "TDDA GENTEST" 1 "January 2026" "3.0" "tdda gentest manual"
 
-.SH SYNOPSIS
-\fBtdda gentest\fR   Runs Wizard
+## NAME
 
-.PP
-\fBtdda gentest\fR   '\fISHELL COMMAND\fP\&' [\fIOPTIONS\fP]
-                 [\fItest_output.py\fP [\fIreference files\fP]]
+`tdda gentest` - Gentest writes tests, so you don't have to.™
 
-.SH DESCRIPTION
-.SH OPTIONS
--h, --help            show this help message and exit
+## SYNOPSIS
+
+`tdda gentest`   Runs Wizard
+
+`tdda gentest`   '*SHELL COMMAND*' [*OPTIONS*]
+                 [*test_output.py* [*reference files*]]
+
+
+## DESCRIPTION
+
+
+## OPTIONS
+
+  -h, --help            show this help message and exit
   -?, --?               Same as -h or --help
   -m, --max-files MAX_FILES
                         Max files to track
@@ -24,4 +29,6 @@
   -Z, --non-zero-exit   Do not require exit status to be 0
   -C, --no-clobber      Do not overwrite existing test script or reference directory
 
-.SH EXAMPLES
+
+## EXAMPLES
+

@@ -1,0 +1,198 @@
+NAME
+
+  [1mtdda discover [22m− automatically generate constraints for data
+
+SYNOPSIS
+
+  [1mtdda discover [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m] [[1m‐‐colour[22m]
+                [[1m‐‐no‐colour[22m] [[1m‐x[22m] [[1m‐X[22m] [[1m‐g[22m] [[1m‐G[22m]
+                [[1m‐r [4m[22mREPORT[24m ...] [[1m‐o [4m[22mREPORT_PATH[24m]
+                [[1m‐‐no‐md[22m] [[1m‐‐pandas[22m] [[1m‐‐polars[22m] [[1m‐‐backend [4m[22mBACKEND[24m]
+                [4mINPUT[24m [[4mCONSTRAINTS[24m]
+
+POSITIONAL ARGUMENTS
+
+  [4mINPUT[24m is one of:
+    ‐ a CSV file or other flat file (e.g. [1m.csv[22m, [1m.txt[22m, [1m.psv[22m)
+    ‐ a data frame in a Parquet files (.parquet)
+      e.g. from pandas, polars, R
+    ‐ Tables from PostgreSQL databases (e.g. [1mpostgres:tablename[22m)
+    ‐ Tables from MySQL databases (e.g. [1mmysql:tablename[22m)
+    ‐ Tables from SQLite databases (e.g. [1msqlite:tablename[22m)
+    ‐ Standard input (stdin): Use [1m‐ [22mto read from stdin
+      Metadata for flat files can also be specified or inferred.
+
+  (Use [1mtdda help serial[22m, [1mtdda serial ‐‐help[22m, or [1mman tdda‐serial[0m
+  for more information.)
+
+  [4mCONSTRAINTS[24m Name of the (JSON) constraints file to create.
+    ‐ Will use [1m.tdda [22mextension if no extention is specified.
+    ‐ Can be missing or [1m‐ [22mto write to standard output.
+
+DESCRIPTION
+
+  The [1mtdda discover [22mcommand is used to find constraints that are satisfied
+  (in most cases) by the input ("training") data provided.
+
+OPTIONS
+
+  The following options are available.
+
+  [1m* [22mindicates options that are the default beaviours
+
+  [1m‐h[22m, [1m‐‐help            [22mShow this help message and exit
+  [1m‐?[22m, [1m‐‐?               [22mSame as [1m‐h [22mor [1m‐‐help[0m
+  [1m‐7[22m, [1m‐‐ascii           [22mReport without using special characters
+  [1m‐N[22m, [1m‐‐noconfig        [22mSkip loading ˜/.tdda.toml
+  [1m‐‐colour              [22mUse colour in terminal output *
+  [1m‐‐no‐colour           [22mDo not not use colour in terminal output
+  [1m‐x[22m, [1m‐‐rex             [22mInclude regular expression generation
+  [1m‐X[22m, [1m‐‐no‐rex          [22mExclude regular expression generation *
+  [1m‐g[22m, [1m‐‐group‐rex       [22mGroup regular expression generation
+  [1m‐G[22m, [1m‐‐no‐group‐rex    [22mDo not group regular expression generation *
+
+  [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]       Report formats to write.
+  [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[24m   Path for reports
+
+  [1m‐‐no‐md                 [22mDo not create metadata in constraints file
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine. *
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                          (when dataframe engine is Pandas)
+                              [1mn [22mfor numpy_nullable *
+                              [1ma [22mfor pyarrow
+                              [1mo [22mfor original.
+
+EXAMPLES
+
+  (The example data be obtained by running ’tdda examples’, which will create
+  various directories, including constraints_examples, containing the source
+  data for these examples.)
+
+  1) [1mtdda discover elements.parquet elements.tdda[0m
+
+  This command will read data from elements.parquet and (attempt to
+  find) constraints satifisfied by every record, and the data
+  collectively.  By default this will may include minimum and maximum
+  constraints on field values or lengths, nullability constraints,
+  uniqueness constraints, sign constraints, and allow‐values
+  constraints.
+
+  The results will be written to elements.tdda in a JSON format,
+  including metadata.  The output constraints file, elements.tdda can be
+  used with ’tdda verify’, to which constriants another datasets with
+  the same structure, are satisified, or with ’tdda detect’, to find
+  which records and/or values fail to satisfy the constraints. The TDDA
+  can be edited (carefully) by hand, or programmatically, to add,
+  remove, tighten, or loosen constraints.
+
+  2) [1mtdda discover elements.csv[0m
+
+  This command is almost the same as the first except that it reads data
+  from the CSV file specified, and writes the constraints to the screen
+  (standard output).
+
+  The CSV structure and field types will normally be inferred (possibly
+  incorrectly) by TDDA, and if the inference is bad, the command may
+  fail. If there is a file in the same directory with a name suggesting
+  it is associated metadata describing the csv file, that will be
+  used. Typical such files include:
+
+  [1melements.serial         [22m‐ a [1mtdda.serial [22mmetadata specification
+  [1melements.csv.serial     [22m‐ a [1mtdda.serial [22mmetadata specification
+  [1melements_metadata.json  [22m‐ a CSVW (CSV on the Web) specification
+  [1melements.table.json     [22m‐ a Frictionless table specification (JSON)
+  [1melements.table.yaml     [22m‐ a Frictionless table specification (YAML)
+
+  3) [1mtdda discover ‐‐rex md.serial:elements.parquet[0m
+
+  This is similar to the last two except that:
+    ‐ regular expression inference is requested ([1m‐‐rex[22m) for text fields.
+      Rexpy will be used to attempt to infer one or a few regular
+      expressions that characterize each field in the input data.
+    ‐ a metadata filed to be used to interpret the [1m.csv [22mfile is provided
+      explicitly.
+
+  4) [1mtdda discover ‐‐rex postgres:elements[0m
+
+  This is similar again except that now the postgres:specifier will be
+  interpreted as a database connection file in the user’s home
+  directory, with the name [1m˜/.dbCredential.postgres[22m. This file should
+  contain connection information for a supported database. The extension
+  [1m.postgres [22mdoes not itself mean that this is a PostgreSQL database,
+  though that is a common convention. Use one of
+
+  [1mtdda help db[0m
+  [1mtdda help database[0m
+
+  to get help with the database connection file format.
+
+SEE ALSO
+
+  tdda verify
+  tdda detect
+  tdda serial
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

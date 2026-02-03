@@ -19,7 +19,11 @@ from tdda.serial.metadata import (
     VERBOSITY,
     TDDASerialError
 )
-from tdda.serial.reader import get_metadata_for_reader, get_metadata_for_writer
+from tdda.serial.reader import (
+    get_metadata_for_reader,
+    get_metadata_for_writer,
+    set_delimiter_from_path
+)
 from tdda.serial.utils import (
     find_associated_metadata_file, get_backend, OG_BACKEND, choose_md_path,
     PYTHON_TEMPLATES, fill_template
@@ -659,7 +663,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
        find_md   If this is set to True, the library will try to find
                  associated metadata based on filename conventions.
                  This should not be set if md_path is provided.
-                 If assocaited metadata cannot be found, an error
+                 If associated metadata cannot be found, an error
                  will be raised when this is set.
 
        nullable  Set to False to use traditional Pandas
@@ -710,6 +714,8 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
             backend = get_backend(backend)
             if backend and backend != OG_BACKEND:
                 kw['dtype_backend'] = backend
+
+    kw = set_delimiter_from_path(kw, path, 'sep')
 
     df = pd.read_csv(path, **kw)
     specified_types = kw.get('dtype')

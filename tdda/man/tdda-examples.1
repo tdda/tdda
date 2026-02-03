@@ -1,20 +1,57 @@
-tdda examples [module] [directory]
+.nh
+.TH "TDDA EXAMPLES" 1 "January 2026" "3.0" "tdda examples manual"
+.SH NAME
+\fBtdda\fR examples \- Creates example data for TDDA
 
+.SH SYNOPSIS
+\fBtdda examples\fR
+.br
+\fBtdda examples\fR \fIMODULE\fP
+.br
+\fBtdda examples\fR \fIMODULE\fP \fIDIRECTORY\fP
+.br
+\fBtdda examples\fR \fIDIRECTORY\fP
 
-Write out example code and data for a particular module
-(referencetest, constraints or rexpy), to the specified
-directory
+.SH POSITIONAL ARGUMENTS
+\fIMODULE\fP can be any of:
+  - referencetest
+  - constraints
+  - rexpy
+  - gentest
+If not specified, all four will be used created.
 
+.PP
+\fIDIRECTORY\fP If specified, the example directories will be
+            subdirectories of the specified directory
+            (which should exist).
 
+.SH DESCRIPTION
+Write out example code and data for all examples, by default,
+or for a particular module if specified.
+
+.PP
 If no module is specified, examples for all three are written out.
 
-
+.PP
 If no output directory is specified, the examples are
 written to a subdirectory of the current directory.
 
+.SH EXAMPLES
+a. \fBtdda examples\fR
+.br
+   Creates all four example directories in \fB\&.\fR
 
-To write out all of the examples for all three modules to
-subdirectories within the current directory, just use:
+.PP
+b. \fBtdda examples gentest\fR
+.br
+   Creates examples-gentest in \fB\&.\fR
 
-                      tdda examples
+.PP
+c. \fBtdda examples /tmp/tdda\fR
+.br
+   Creates all four as subdirectories of \fB/tmp/tdda\fR
 
+.PP
+d. \fBtdda examples rexpy t\fR
+.br
+   Creates examples-rexpy in subdirectory of \fB\&./t\fR

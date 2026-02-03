@@ -1,18 +1,25 @@
-tdda help serial
-tdda serial  -- to convert or interrogate metadata files.
+.nh
+.TH "TDDA SERIAL" 1 "January 2026" "3.0" "tdda serial manual"
+.SH NAME
+\fBtdda serial\fR  \- Converts, interrogates and creates serial metadata files.
 
+.SH DESCRIPTION
 Use tdda serial [--to FORMAT] in.serial  out.serial
 to convert metadata in.serial to out.serial in the output
 format specified (or tdda.serial if none is specified).
 Input and output metdata can also be CSVW files (.json)
 Supported formats:
-  SHORT FORM  LONG FORM
-  .           tdda.serial
-  pd.r        pandas.read_csv
-  pd.w        pandas.DataFrame.to_csv
-  pl.r        polars.read_csv
-  pl.w        polars.DataFrame.write_csv
-  csv.r       python.csv.reader
-  csv.w       python.csv.writier
-  csvw        CSVW
+
+.PP
+SHORT FORM  LONG FORM
+  \fB\&.\fR         \fBtdda.serial\fR
+  \fBpd.r\fR      \fBpandas.read_csv\fR
+  \fBpd.w\fR      \fBpandas.DataFrame.to_csv\fR
+  \fBpl.\fR       \fBpolars.read_csv\fR
+  \fBpl.w\fR      \fBpolars.DataFrame.write_csv\fR
+  \fBcsv.r\fR     \fBpython.csv.reader\fR
+  \fBs\fR\&.wpython.csv.writier\fB
+\fRcsvwCSVW`
+
+.PP
 Multiple formats can be separated by commas.

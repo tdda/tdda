@@ -1,0 +1,130 @@
+### Command: `tdda detect`
+
+
+#### NAME
+
+`tdda detect` - Detect data that does not obey supplied constraints
+
+#### SYNOPSIS
+```x
+tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
+            [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
+            [-t {strict,sloppy}] [--write-all-records]
+            [--per-constraint] [--no-per-constraint]
+            [--no-original-fields] [--original-fields]
+            [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
+            [-r [REPORT ...]] [--interleave] [--no-interleave]
+            [--index] [--int] [--key [KEY ...]]
+            [--verify-required-fields] [--verify-allowed-fields]
+            [--no-verify-required-fields] [--no-verify-allowed-fields]
+            [--varf] [--no-varf] [--pandas] [--polars]
+            [--backend BACKEND]
+            INPUT [CONSTRAINTS [OUTPUT]]
+```
+#### POSITIONAL ARGUMENTS
+
+*INPUT* is one of:
+  - a csv file or other flat file (e.g. .csv, .txt, .psv)
+  - a data frames in a Parquet files (.parquet)
+    e.g. from pandas, polars, R
+  - Tables from PostgreSQL databases (e.g. postgres:tablename)
+  - Tables from MySQL databases (e.g. mysql:tablename)
+  - Tables from SQLite databases (e.g. sqlite:tablename)
+  - Standard input, stdin. Use `-` to read specify this.
+
+Metadata for flat files can also be specified or inferred.
+Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial` for
+more information.
+
+*CONSTRAINTS*, if provided, is a JSON `.tdda` file containing
+constraints.
+
+If no constraints file is provided, a file with the same path as
+the input file, with a .tdda extension will be tried.
+
+*OUTPUT* specifies the destiation for detected records.
+
+This is usually a file if the the input was a file (e.g. a `.csv`
+file or a `parquet` file), but does not have to be the same type.
+If the input is a database table, the output is always a database
+table in the same database.
+
+#### DESCRIPTION
+
+The `tdda discover` command finds and reports data that fails to satisfy
+the constraints in the *CONSTAINTS* file specified. It also performs all
+the same functions as `tdda verify`.
+
+#### OPTIONS
+
+`-h`, `--help`              Show this help message and exit  
+`-?`, `--?`                 Same as `-h` or `--help`  
+`-7`, `--ascii`             Report without using special characters  
+`-N`, `--no-config`         Skip loading `~/.tdda.toml`  
+
+`--colour`                Use colour in terminal output  
+`--no-colour`             Do not not use colour in terminal output  
+
+`--epsilon` *EPSILON*       Epsilon fuzziness (tolerance for comparisons)  
+
+
+
+`-a`, `--all`               Report all fields, even if there are no  
+                        failures  
+`-f`, `--fields`            Report only fields with failures  
+
+`-r`, `--report` [*REPORT* ...]  
+                        Report formats to write.  
+`-t`, `--type_checking` {*strict*,*sloppy*}  
+                        "sloppy" means consider all numeric types  
+                        equivalent  
+`-o`, `--report-path` *REPORT_PATH*  
+                        Path for reports  
+
+`--write-all-records`   Include passing records  
+`--per-constraint   `   Write one flag column per failing constraint in  
+                      addition to n_failures. Set by default.  
+`--no-per-constraint`   Do not write out any per-constraint flag columns  
+`--no-original-field`s  Do not write out original fields columns  
+`--original-fields  `   Write out original fields columns (default)  
+`--no-output-fields `   Do not write out any original fields in the output. By  
+                      default, all original columns will be included.  
+`--output-fiel`ds [OUTPUT_FIELDS ...]  
+                      Specify original columns to write out.  
+`-`r, --report [REPORT ...]  
+                      Report formats to write.  
+`--interleave       `   Interleave ok columns with original fields.  
+`--no-interleave    `   Do not interleave ok columns with original fields.  
+`--index            `   Include a row-number index in the output file when  
+                      detecting. Rows are usually numbered from 1, unless  
+                      the input file already has an index.  
+`--int              `   Write out boolean fields as integers, with 1 for true  
+                      and 0 for false.  
+`--k`ey [KEY ...]       Key or key fields to use when reporting failures  
+
+`--verify-required-fields`, `--vrf`  
+                        Force verify of required fields  
+`--verify-allowed-fields`, `--vaf`  
+                        Force verify of allowed fields  
+`--no-verify-required-fields`, `--no-vrf`  
+                        Force no verication of required fields  
+`--no-verify-allowed-fields`, `--no-vaf`  
+                        Force no verification of allowed fields  
+`--varf`, `--vraf`          Force verification of allowed and required  
+                        fields  
+`--no-varf`, `--no-vraf`    Force no verification of allowed and required  
+                        fields  
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine.  
+`--polars`, `--pl`          Use Polars as DataFrame engine.  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+                        (When dataframe engine is Pandas)  
+                          `n` for numpy_nullable *  
+                          `a` for pyarrow  
+                          `o` for original.  
+
+#### SEE ALSO
+
+tdda-verify(1),
+tdda-discover(1),
+tdda-serial(1)

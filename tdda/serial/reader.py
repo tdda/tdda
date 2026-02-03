@@ -115,7 +115,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
     return md
 
 
-def _get_metadata(rw, path, md_path, md_file_type=None, find_md=False,
+def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
                   table_number=None, use_table_name=None,
                   preferred=TDDASERIAL.key,
                   verbosity=VERBOSITY):
@@ -181,7 +181,8 @@ def _get_metadata(rw, path, md_path, md_file_type=None, find_md=False,
     return md, path, md_path
 
 
-def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
+def get_metadata_for_reader(path, md_path=None, md_file_type=None,
+                            find_md=False,
                             table_number=None, use_table_name=None,
                             preferred=TDDASERIAL.key,
                             verbosity=VERBOSITY):
@@ -192,7 +193,8 @@ def get_metadata_for_reader(path, md_path, md_file_type=None, find_md=False,
                          preferred=preferred, verbosity=verbosity)
 
 
-def get_metadata_for_writer(path, md_path, md_file_type=None, find_md=False,
+def get_metadata_for_writer(path, md_path=None, md_file_type=None,
+                            find_md=False,
                             table_number=None, use_table_name=None,
                             preferred=TDDASERIAL.key,
                             verbosity=VERBOSITY):
@@ -242,3 +244,22 @@ def find_metadata_kind(mds, preferred=None):
                 return key, md[key]
         dicts.extend([v for v in md.values() if isinstance(v, dict)])
     return find_metadata_kind(dicts, preferred)
+
+
+def set_delimiter_from_path(kw, path, sep_key):
+    """
+    If no delimiter is set in kw (with sep_key), and the extension for
+    path is .csv, .tsv, or .psv, set the (field separation) delimit in
+    kw to the appropriate value.
+    """
+    kw = kw or {}
+    if not kw.get(sep_key):
+        ext = os.path.splitext(path)[1]
+        if ext == '.csv':
+            kw[sep_key] = ','
+        elif ext == '.tsv':
+            kw[sep_key] = '\t'
+        elif ext == '.psv':
+            kw[sep_key] = '|'
+    return kw
+

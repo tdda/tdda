@@ -1,97 +1,126 @@
+.nh
+.TH "TDDA VERIFY" 1 "January 2026" "3.0" "tdda verify manual"
+.SH NAME
+\fBtdda verify\fR \- Veriify that constraints are satisfied by data
 
-usage: tdda verify [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
-                   [-epsilon EPSILON] [-a] [-f] [-r [REPORT ...]]
-                   [-t {strict,sloppy}] [--verify-required-fields]
-                   [--verify-allowed-fields] [--no-verify-required-fields]
-                   [--no-verify-allowed-fields] [--varf] [--no-varf]
-                   [--pandas] [--polars] [--backend BACKEND]
-                   input [constraints]
+.SH SYNOPSIS
+\fBtdda verify\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR]
+            [\fB--colour\fR] [\fB--no-colour\fR]
+            [\fB-epsilon EPSILON\fR] [\fB-a\fR] [\fB-f\fR] [\fB-r\fR [\fIREPORT\fP ...]]
+            [\fB-t {strict,sloppy}\fR] [\fB--verify-required-fields\fR]
+            [\fB--verify-allowed-fields\fR] [\fB--no-verify-required-fields\fR]
+            [\fB--no-verify-allowed-fields\fR] [\fB--varf\fR] [\fB--no-varf\fR]
+            [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+            \fIINPUT\fP [\fICONSTRAINTS\fP]
 
-positional arguments:
-  input                 CSV or parquet file
-  constraints           constraints file to verify against
+.SH POSITIONAL ARGUMENTS
+\fIINPUT\fP is one of:
+  - a csv file or other flat file (e.g. .csv, .txt, .psv)
+  - a data frames in a Parquet files (.parquet)
+    e.g. from pandas, polars, R
+  - Tables from PostgreSQL databases (e.g. postgres:tablename)
+  - Tables from MySQL databases (e.g. mysql:tablename)
+  - Tables from SQLite databases (e.g. sqlite:tablename)
+  - Standard input, stdin. Use \fB-\fR to read specify this.
 
-options:
-  -h, --help            show this help message and exit
-  -?, --?               same as -h or --help
-  -7, --ascii           report without using special characters
-  --no-config           Skip loading ~/.tdda.toml
-  --colour              Use colour in terminal output
-  --no-colour           Do not not use colour in terminal output
-  -epsilon, --epsilon EPSILON
-                        epsilon fuzziness
-  -a, --all             report all fields, even if there are no failures
-  -f, --fields          report only fields with failures
-  -r, --report [REPORT ...]
+.PP
+Metadata for flat files can also be specified or inferred.
+Use \fBtdda help serial\fR, \fBtdda serial --help\fR, or \fBman tdda-serial\fR for
+more information.
+
+.PP
+\fICONSTRAINTS\fP, if provided, is a JSON .tdda file containing
+constraints.
+
+.PP
+If no constraints file is provided, a file with the same path as
+the input file, with a .tdda extension will be tried.
+
+.SH DESCRIPTION
+The \fBtdda verify\fR command is used to check that data conforms
+the the constraints specified. Any constraints not satisfied
+by the data are reported, together with summary statistics.
+
+.PP
+The \fBtdda verify\fR command does \fInot\fP report which records and
+values cause constraints to be violated: the companion command
+\fBtdda detect\fR performs this function.
+
+.SH OPTIONS
+\fB-h\fR, \fB--help\fR              Show this help message and exit
+.br
+\fB-?\fR, \fB--?\fR                 Same as \fB-h\fR or \fB--help\fR
+.br
+\fB-7\fR, \fB--ascii\fR             Report without using special characters
+.br
+\fB-N\fR, \fB--no-config\fR         Skip loading \fB~/.tdda.toml\fR
+
+.PP
+\fB--colour\fR                Use colour in terminal output
+.br
+\fB--no-colour\fR             Do not not use colour in terminal output
+
+.PP
+\fB--epsilon\fR \fIEPSILON\fP       Epsilon fuzziness (tolerance for comparisons)
+
+.PP
+\fB-a\fR, \fB--all\fR               Report all fields, even if there are no
+.br
+                        failures
+.br
+\fB-f\fR, \fB--fields\fR            Report only fields with failures
+
+.PP
+\fB-r\fR, \fB--report\fR [\fIREPORT\fP ...]
+.br
                         Report formats to write.
-  -t, --type_checking {strict,sloppy}
-                        "sloppy" means consider all numeric types equivalent
-  --verify-required-fields, --vrf
+.br
+\fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIsloppy\fP}
+.br
+                        "sloppy" means consider all numeric types
+.br
+                        equivalent
+
+.PP
+\fB--verify-required-fields\fR, \fB--vrf\fR
                         Force verify of required fields
-  --verify-allowed-fields, --vaf
+.br
+\fB--verify-allowed-fields\fR, \fB--vaf\fR
+.br
                         Force verify of allowed fields
-  --no-verify-required-fields, --no-vrf
+.br
+\fB--no-verify-required-fields\fR, \fB--no-vrf\fR
+.br
                         Force no verication of required fields
-  --no-verify-allowed-fields, --no-vaf
+.br
+\fB--no-verify-allowed-fields\fR, \fB--no-vaf\fR
+.br
                         Force no verification of allowed fields
-  --varf, --vraf        Force verification of allowed and required fields
-  --no-varf, --no-vraf  Force no verification of allowed and required fields
-  --pandas, --pd        Use Pandas as DataFrame engine.
-  --polars, --pl        Use Polars as DataFrame engine.
-  --backend, -B BACKEND
-                        Pandas backend choice. (n for numpy_nullable, a for
-                        pyarrow, o for original).
+.br
+\fB--varf\fR, \fB--vraf\fR          Force verification of allowed and required
+.br
+                        fields
+.br
+\fB--no-varf\fR, \fB--no-vraf\fR    Force no verification of allowed and required
+.br
+                        fields
 
-Parameters:
+.PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine.
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine.
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                        (When dataframe engine is Pandas)
+.br
+                          \fBn\fR for numpy_nullable *
+.br
+                          \fBa\fR for pyarrow
+.br
+                          \fBo\fR for original.
 
-  * input is one of:
-
-      - a csv file. Can be - to read from standard input.
-      - a parquet file
-      - any of the other supported data sources
-
-  * constraints.tdda, if provided, is a JSON .tdda file constaining
-    constraints.
-
-If no constraints file is provided, a file with the same path as the
-input file, with a .tdda extension will be tried.
-
-Optional flags are:
-
-  * -a, --all
-      Report all fields, even if there are no failures
-  * -f, --fields
-      Report only fields with failures
-
-  * --vrf --verify-required-fields
-      Force Verification of required field
-  * --vaf --verify-allowed-fields
-      Force verification of allowed fields
-  * --varf, --vraf
-      Force verification of allowed and required fields
-  * --no-vr
-      Force no verification of not verify required fields
-  * --no-va
-      Force no verification of allowed fields
-  * --no-varf, --no-vraf
-      Force no verification  of allowed and required fields
-
-  * --epsilon E
-      Use this value of epsilon for fuzziness in comparing numeric values.
-  * -7, --ascii
-      Report in ASCII form, without using special characters.
-  * --colour
-      Coloured output
-  * --no-colour
-      Monochrome output
-  * -N, --no-config
-      Do not configure using ~/tdda.toml: use all defaults
-
-Verify is available for the following:
-  - Flat files (filename.csv)
-  - Pandas DataFrames (filename.parquet)
-  - Tables from PostgreSQL databases (postgres:tablename)
-  - Tables from MySQL databases (mysql:tablename)
-  - Tables from SQLite databases (sqlite:tablename)
-  - Collections from MongoDB NoSQL databases (mongodb:collection)
-
+.SH SEE ALSO
+tdda-detect(1),
+tdda-discover(1),
+tdda-serial(1)

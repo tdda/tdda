@@ -224,6 +224,8 @@ class TDDADiffConfig(BaseConfig):
         self._config_name = 'config.tddadiff'
 
         self.type_checking = 'medium'
+        self.infer_md = True
+
 
 
 class SerialConfig(BaseConfig):

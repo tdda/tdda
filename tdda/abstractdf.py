@@ -177,3 +177,32 @@ def get_engine_and_backend(engine=None, backend=None):
     config = get_config()
     return config.get('engine', engine), config.get('pandas_backend', backend)
 
+
+def filter_fields(df, fields=None, xfields=None):
+    """
+    Return version of df containing only fields in fields (if provided)
+    and not including fields in xfields (if provided).
+
+    Will be the original dataframe if unchanged.
+    """
+    if fields:
+        keep = [f for f in df if f in set(fields)]
+        if len(keep) < len(list(df)):
+            df = df[keep]
+
+    if xfields:
+        subset = [f for f in df if f not in set(xfields)]
+        if len(subset) < len(list(df)):
+            df = df[subset]
+    return df
+
+
+def find_non_fields(df, fields):
+    """
+    Return any fields in the list/collection fields that are not in df
+    """
+    return [
+        f for f in list(df)
+        if f not in set(self.fields).intersection(set(df))
+    ]
+

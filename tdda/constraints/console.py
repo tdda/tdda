@@ -52,12 +52,12 @@ def help(extensions, cmd=None, stream=sys.stdout):
                   '    tdda help verify\n'
                   '    tdda help detect\n'
                   '    tdda help examples\n' % cmd)
-        if cmd in CONSTRAINTS_COMMANDS:
-            print('\n%s is available for the following:'
-                  % cmd.title(), file=stream)
-            for ext in extensions:
-                ext.help(stream)
-            print(file=stream)
+        # if cmd in CONSTRAINTS_COMMANDS:
+        #     print('\n%s is available for the following:'
+        #           % cmd.title(), file=stream)
+        #     for ext in extensions:
+        #         ext.help(stream)
+        #     print(file=stream)
     else:
         print_help('tdda', stream)
         # print(file=stream)
@@ -164,7 +164,7 @@ def main_with_argv(argv, verbose=True):
         serial_cli(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
-        help(extensions, cmd, stream=sys.stderr)
+        help(extensions, cmd, stream=sys.stdout)
     else:
         help(extensions, stream=sys.stderr)
         sys.exit(1)

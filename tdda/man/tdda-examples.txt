@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda [22mexamples − Creates example data for TDDA
+
+SYNOPSIS
+
+  [1mtdda examples[0m
+  [1mtdda examples [4m[22mMODULE[0m
+  [1mtdda examples [4m[22mMODULE[24m [4mDIRECTORY[0m
+  [1mtdda examples [4m[22mDIRECTORY[0m
+
+POSITIONAL ARGUMENTS
+
+  [4mMODULE[24m can be any of:
+    ‐ referencetest
+    ‐ constraints
+    ‐ rexpy
+    ‐ gentest
+  If not specified, all four will be used created.
+
+  [4mDIRECTORY[24m If specified, the example directories will be
+              subdirectories of the specified directory
+              (which should exist).
+
+DESCRIPTION
+
+  Write out example code and data for all examples, by default,
+  or for a particular module if specified.
+
+  If no module is specified, examples for all three are written out.
+
+  If no output directory is specified, the examples are
+  written to a subdirectory of the current directory.
+
+EXAMPLES
+
+  a. [1mtdda examples[0m
+     Creates all four example directories in [1m.[0m
+
+  b. [1mtdda examples gentest[0m
+     Creates examples‐gentest in [1m.[0m
+
+  c. [1mtdda examples /tmp/tdda[0m
+     Creates all four as subdirectories of [1m/tmp/tdda[0m
+
+  d. [1mtdda examples rexpy t[0m
+     Creates examples‐rexpy in subdirectory of [1m./t[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

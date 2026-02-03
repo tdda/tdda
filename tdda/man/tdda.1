@@ -1,27 +1,45 @@
-NAME
-     tdda - test-diven data analysis
+.nh
+.TH TDDA 1 "January 2026" "3.0" "tdda manual"
+.SH NAME
+\fBtdda\fR \- test-diven data analysis
 
-SYNOPSIS
-     tdda discover       to perform constraint discovery
-     tdda verify         to verify data against constraints
-     tdda detect         to detect failed constraints on data
+.SH SYNOPSIS
+\fBtdda discover\fR      Perform constraint discovery
+.br
+\fBtdda verify\fR        Verify data against constraints
+.br
+\fBtdda detect\fR        Detect failed constraints on data
 
-     tdda examples       to copy the example data and code
-     tdda gentest        to generate a reference test "automagically"
+.PP
+\fBtdda examples\fR      Copy the example data and code
+.br
+\fBtdda gentest\fR       Generate a reference test "automagically"
 
-     tdda diff           to compare two parquet or CSV files (EXPERIMENTAL)
-     tdda serial         to convert or view .serial, CSVW, and Frictionless  metadata
+.PP
+\fBtdda diff\fR          Compare two parquet or CSV files (EXPERIMENTAL)
+.br
+\fBtdda serial\fR        Convert or view .serial, CSVW,
+                   and Frictionless  metadata
 
-     tdda version        to print the TDDA version number
-     tdda help           to print this help
-     tdda help <command> to print help on <command> (discover, verify or detect)
+.PP
+\fBtdda version\fR       Print the TDDA version number
+.br
+\fBtdda help\fR          Print this help
+.br
+\fBtdda help COMMAND\fR  Print help on COMMAND (e.g. discover, verify)
 
-     tdda test           to run the tdda library's tests.
+.PP
+\fBtdda test\fR          Run the tdda library's tests.
 
-OPTIONS
-     -v, --version        Print version number (same as tdda version)
-     -h, -?, --help       Print this help
+.SH OPTIONS
+\fB-\fRv, \fB--version\fR       Print version number (same as tdda version)
+.br
+\fB-h\fR, \fB-?\fR, \fB--help\fR      Print this help
 
-SEE ALSO
-     rexpy(1)
-     tdda(3)
+.SH SEE ALSO
+rexpy(1),
+tdda(3)
+
+.PP
+TDDA Book
+\[la]https://book.tdda.info\[ra]

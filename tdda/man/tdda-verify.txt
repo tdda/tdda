@@ -1,0 +1,132 @@
+NAME
+
+  [1mtdda verify [22m− Veriify that constraints are satisfied by data
+
+SYNOPSIS
+
+  [1mtdda verify [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m]
+              [[1m‐‐colour[22m] [[1m‐‐no‐colour[22m]
+              [[1m‐epsilon EPSILON[22m] [[1m‐a[22m] [[1m‐f[22m] [[1m‐r [22m[[4mREPORT[24m ...]]
+              [[1m‐t {strict,sloppy}[22m] [[1m‐‐verify‐required‐fields[22m]
+              [[1m‐‐verify‐allowed‐fields[22m] [[1m‐‐no‐verify‐required‐fields[22m]
+              [[1m‐‐no‐verify‐allowed‐fields[22m] [[1m‐‐varf[22m] [[1m‐‐no‐varf[22m]
+              [[1m‐‐pandas[22m] [[1m‐‐polars[22m] [[1m‐‐backend [4m[22mBACKEND[24m]
+              [4mINPUT[24m [[4mCONSTRAINTS[24m]
+
+POSITIONAL ARGUMENTS
+
+  [4mINPUT[24m is one of:
+    ‐ a csv file or other flat file (e.g. .csv, .txt, .psv)
+    ‐ a data frames in a Parquet files (.parquet)
+      e.g. from pandas, polars, R
+    ‐ Tables from PostgreSQL databases (e.g. postgres:tablename)
+    ‐ Tables from MySQL databases (e.g. mysql:tablename)
+    ‐ Tables from SQLite databases (e.g. sqlite:tablename)
+    ‐ Standard input, stdin. Use [1m‐ [22mto read specify this.
+
+  Metadata for flat files can also be specified or inferred.
+  Use [1mtdda help serial[22m, [1mtdda serial ‐‐help[22m, or [1mman tdda‐serial [22mfor
+  more information.
+
+  [4mCONSTRAINTS[24m, if provided, is a JSON .tdda file containing
+  constraints.
+
+  If no constraints file is provided, a file with the same path as
+  the input file, with a .tdda extension will be tried.
+
+DESCRIPTION
+
+  The [1mtdda verify [22mcommand is used to check that data conforms
+  the the constraints specified. Any constraints not satisfied
+  by the data are reported, together with summary statistics.
+
+  The [1mtdda verify [22mcommand does [4mnot[24m report which records and
+  values cause constraints to be violated: the companion command
+  [1mtdda detect [22mperforms this function.
+
+OPTIONS
+
+  [1m‐h[22m, [1m‐‐help              [22mShow this help message and exit
+  [1m‐?[22m, [1m‐‐?                 [22mSame as [1m‐h [22mor [1m‐‐help[0m
+  [1m‐7[22m, [1m‐‐ascii             [22mReport without using special characters
+  [1m‐N[22m, [1m‐‐no‐config         [22mSkip loading [1m˜/.tdda.toml[0m
+
+  [1m‐‐colour                [22mUse colour in terminal output
+  [1m‐‐no‐colour             [22mDo not not use colour in terminal output
+
+  [1m‐‐epsilon [4m[22mEPSILON[24m       Epsilon fuzziness (tolerance for comparisons)
+
+  [1m‐a[22m, [1m‐‐all               [22mReport all fields, even if there are no
+                          failures
+  [1m‐f[22m, [1m‐‐fields            [22mReport only fields with failures
+
+  [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]
+                          Report formats to write.
+  [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4msloppy[24m}
+                          "sloppy" means consider all numeric types
+                          equivalent
+
+  [1m‐‐verify‐required‐fields[22m, [1m‐‐vrf[0m
+                          Force verify of required fields
+  [1m‐‐verify‐allowed‐fields[22m, [1m‐‐vaf[0m
+                          Force verify of allowed fields
+  [1m‐‐no‐verify‐required‐fields[22m, [1m‐‐no‐vrf[0m
+                          Force no verication of required fields
+  [1m‐‐no‐verify‐allowed‐fields[22m, [1m‐‐no‐vaf[0m
+                          Force no verification of allowed fields
+  [1m‐‐varf[22m, [1m‐‐vraf          [22mForce verification of allowed and required
+                          fields
+  [1m‐‐no‐varf[22m, [1m‐‐no‐vraf    [22mForce no verification of allowed and required
+                          fields
+
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine.
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                          (When dataframe engine is Pandas)
+                            [1mn [22mfor numpy_nullable *
+                            [1ma [22mfor pyarrow
+                            [1mo [22mfor original.
+
+SEE ALSO
+
+  tdda detect
+  tdda discover
+  tdda serial
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

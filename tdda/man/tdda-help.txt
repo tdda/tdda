@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda help [22m− Provides help on [1mtdda [22mand its sub‐commands.
+
+SYNOPSIS
+
+  [1mtdda help[0m
+  [1mtdda help [4m[22mCOMMAND[0m
+
+POSITIONAL ARGUMENTS
+
+  [4mCOMMAND[24m can be any of:
+  [1mdiscover[0m
+  [1mverify[0m
+  [1mdetect[0m
+  [1mgentest[0m
+  [1mdiff[0m
+  [1mexamples[0m
+  [1mhelp[0m
+  [1mversion[0m
+
+DESCRIPTION
+
+  Shows help on a tdda subcommand or topic.
+
+  Taking inspiration from [1mgit[22m, if the man pages are installed,
+  help on main commands can be obtained with
+
+  [1mman tdda‐COMMAND[0m
+
+  For example:
+
+  [1mman tdda‐discover[0m
+
+  Help can also be obtained on each command with [1m‐‐help[22m, [1m‐h [22mor [1m‐?[22m, e.g.
+
+  [1mtdda discover ‐‐help[0m
+
+EXAMPLES
+
+  [1mtdda help               [22mShows this help
+
+  [1mtdda help gentest       [22mShows help on gentest
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,8 +1,185 @@
-tdda diff a b  -- compare csv or parquet files a and b.
+.nh
+.TH "TDDA DIFF" 1 "January 2026" "3.0" "tdda diff manual"
+.SH NAME
+\fBtdda diff\fR  -- compare csv or parquet files
 
-This is experimental functionality.
-Currently, it will always show summary differences, but
-will only show differences in values if the data frames
-that results from loading the files have the same structure
-(number of rows and columns, column names, loose column types).
-[reference files]
+.SH SYNOPSIS
+\fBtdda diff\fR [\fB--fields\fR \fIFIELD1,FIELD2\fP,...]
+            [\fB--xfields\fR \fIFIELD1,FIELD2\fP,...  ]
+            [\fB--horizontal\fR] [\fB-H\fR] [\fB--vertical\fR] [\fB-V\fR]
+            [\fB--maxdiffs\fR \fIN\fP]
+            [\fB--mono\fR] [\fB--bw\fR] [\fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP]
+            [\fB--dps\fR \fIN\fP]  [\fB--precision\fR \fIN\fP]
+            [\fB--AE\fR] [\fB--LR\fR] [\fB--angles\fR] [\fB--pm\fR]
+            [\fB--prefixes\fR \fIPREFIXES\fP]
+            [\fB--no-config\fR]
+            [\fB--strict\fR] [\fB--medium\fR] [\fB--loose\fR] [\fB--permissive\fR]
+            \fILEFT\fP \fIRIGHT\fP [\fIOUTPATH\fP]
+
+.SH POSITIONAL ARGUMENTS
+\fILEFT\fP
+
+.PP
+\fIRIGHT\fP
+
+.PP
+\fIOUTPATH\fP
+
+.SH DESCRIPTION
+The \fBtdda diff\fR command compares two tabular datasets in CSV or Parquet
+files and shows some or all differences. It uses the same underlying
+functionality as the \fBtdda.referencetest\fR assertions such as
+\fBassertDataFramesEqual\fR, and provides similar control over what
+differences to consider, e.g. which fields, and strictness of type and
+numeric comparisons. It also provides a number of options for controlling
+the display of differences.
+
+.PP
+By default, comparisons are row-based and consider all fields (columns),
+as typed values after reading. Ke
+
+.SH OPTIONS
+\fB--fields\fR \fIFIELD1,FIELD2\fP,...
+.br
+  Check only these fields (comma-separated list)
+
+.PP
+\fB--xfields\fR \fIFIELD1,FIELD2\fP,...
+.br
+  Check all fields except these (comma-separated list)
+
+.PP
+\fB--horizontal\fR, \fB-H\fR,
+.br
+  Horizontal dispay (left and right, side by side)
+
+.PP
+\fB--vertical\fR, \fB-V\fR,
+.br
+  Vertical dispay (left above right)
+
+.PP
+\fB--maxdiffs\fR \fIN\fP
+.br
+  Maximum number of differences to show.
+
+.PP
+\fB--mono\fR
+.br
+  Show monochrome output. Also enables --LR by default
+
+.PP
+\fB--bw\fR
+.br
+  Show black and white output. Also enables --LR by default
+
+.PP
+\fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP
+.br
+  Use colours specified e.g. -c red-blue
+
+.PP
+\fB--dps\fR \fIN\fP
+.br
+  Number of decimal places to show for floating-point values.
+  Also sets precision if not specified separately
+
+.PP
+\fB--precision\fR \fIN\fP
+.br
+  Precision for floating point comparisons. Two floats \fBa\fR and \fBb\fR will be
+  considered equal if \fBabs(a - b) < 1e-\fR\fIN\fP\&.
+
+.PP
+\fB--AE\fR
+.br
+  Use \fBA:\fR and \fBE:\fR as labels for the two datasets (actual/expected)
+
+.PP
+\fB--LR\fR
+.br
+  Use \fBL:\fR and \fBR:\fR  as labels for the two datasets (left/right)
+
+.PP
+\fB--angles\fR
+.br
+  Use \fB<\fR and \fB>\fR as labels for the two datasets
+
+.PP
+\fB--pm\fR
+.br
+  Use \fB+\fR and \fB-\fR as labels for the two datasets
+
+.PP
+\fB--prefixes\fR \fIPREFIXES\fP
+.br
+  Use prefixes specified as labels for the two datasets
+  e.g. --prefixes "actual: -ref: "
+
+.PP
+\fB--no-config\fR
+.br
+  Use default configuration (ignore ~/.tdda.toml)
+
+.PP
+\fB--strict\fR
+.br
+  Use strict type comparisons
+
+.PP
+\fB--medium\fR
+.br
+  Use medium-strictness type comparisons
+
+.PP
+\fB--loose\fR
+.br
+  Use loose (permissive) type comparisons
+
+.PP
+\fB--permissive\fR
+.br
+  Use loose (permissive) type comparisons
+
+.PP
+\fB--help\fR, \fB-?\fR, \fB--?\fR
+.br
+  Show help on \fBtdda diff\fR\&.
+
+.SH EXAMPLES
+.IP "  1." 5
+tdda diff --mono a.csv b.csv
+
+.PP
+Difference summary:
+.br
+DataFrames have same structure, but different values.
+.br
+Total number of different values: 2 of 24 (8.33%).
+.br
+Total number of rows with differences: 2
+.br
+Total number of columns with differences: 2:
+.br
+           1: sq
+.br
+           1: name
+
+.PP
+\fBValue Differences (all rows with differences)\fP
+.br
+┏━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━┓
+.br
+┃      ┃    \fBsq\fP ┃    \fBsq\fP ┃   \fBname\fP ┃   \fBname\fP ┃
+.br
+┃      ┃ \fBInt64\fP ┃ \fBInt64\fP ┃ \fBstring\fP ┃ \fBstring\fP ┃
+.br
+┃  \fBrow\fP ┃     < ┃     > ┃      < ┃      > ┃
+.br
+┡━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━┩
+.br
+│    2 │     9 │     9 │  \fBthree\fP │  \fBThree\fP │
+.br
+│    3 │    \fB16\fP │    \fB15\fP │   four │   four │
+.br
+└──────┴───────┴───────┴────────┴────────┘

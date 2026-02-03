@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda gentest [22m− Gentest writes tests, so you don’t have to.â¢
+
+SYNOPSIS
+
+  [1mtdda gentest   [22mRuns Wizard
+
+  [1mtdda gentest   [22m’[4mSHELL[24m [4mCOMMAND[24m’ [[4mOPTIONS[24m]
+                   [[4mtest_output.py[24m [[4mreference[24m [4mfiles[24m]]
+
+DESCRIPTION
+
+OPTIONS
+
+  ‐h, ‐‐help            show this help message and exit
+    ‐?, ‐‐?               Same as ‐h or ‐‐help
+    ‐m, ‐‐max‐files MAX_FILES
+                          Max files to track
+    ‐r, ‐‐relative‐paths  Show relative paths wherever possible
+    ‐n, ‐‐iterations ITERATIONS
+                          Number of times to run the command (default 2)
+    ‐O, ‐‐no‐stdout       Do not generate a test checking output to STDOUT
+    ‐E, ‐‐no‐stderr       Do not generate a test checking output to STDERR
+    ‐Z, ‐‐non‐zero‐exit   Do not require exit status to be 0
+    ‐C, ‐‐no‐clobber      Do not overwrite existing test script or reference
+directory
+
+EXAMPLES
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

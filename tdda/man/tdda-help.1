@@ -1,1 +1,55 @@
-tdda help
+.nh
+.TH "TDDA HELP" 1 "January 2026" "3.0" "tdda help manual"
+.SH NAME
+\fBtdda help\fR \- Provides help on \fBtdda\fR and its sub-commands.
+
+.SH SYNOPSIS
+\fBtdda help\fR
+\fBtdda help\fR \fICOMMAND\fP
+
+.SH POSITIONAL ARGUMENTS
+\fICOMMAND\fP can be any of:
+.IP \(bu 2
+\fBdiscover\fR
+.IP \(bu 2
+\fBverify\fR
+.IP \(bu 2
+\fBdetect\fR
+.IP \(bu 2
+\fBgentest\fR
+.IP \(bu 2
+\fBdiff\fR
+.IP \(bu 2
+\fBexamples\fR
+.IP \(bu 2
+\fBhelp\fR
+.IP \(bu 2
+\fBversion\fR
+
+.SH DESCRIPTION
+Shows help on a tdda subcommand or topic.
+
+.PP
+Taking inspiration from \fBgit\fR, if the man pages are installed,
+help on main commands can be obtained with
+
+.PP
+\fBman tdda-COMMAND\fR
+
+.PP
+For example:
+
+.PP
+\fBman tdda-discover\fR
+
+.PP
+Help can also be obtained on each command with \fB--help\fR, \fB-h\fR or \fB-?\fR, e.g.
+
+.PP
+\fBtdda discover --help\fR
+
+.SH EXAMPLES
+\fBtdda help\fR               Shows this help
+
+.PP
+\fBtdda help gentest\fR       Shows help on gentest
