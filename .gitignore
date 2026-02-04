@@ -76,3 +76,5 @@ privatedata
 **/structure.txt
 **/scratch
 *.key
+/Makefile
+
