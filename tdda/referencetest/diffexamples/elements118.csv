@@ -1,0 +1,119 @@
+Z,Name,Symbol,Period,Group,ChemicalSeries,AtomicWeight,Etymology,RelativeAtomicMass,MeltingPointC,MeltingPointKelvin,BoilingPointC,BoilingPointF,Density,Description,Colour
+1,"Hydrogen","H",1,1,"Nonmetal",1.007947,"Greek hydrogenes",1.007947,-258.975,14.2,-252.87,-423.17,8.988e-05,"gas","colorless"
+2,"Helium","He",1,18,"Noble gas",4.0026022,"Greek helios",4.0026022,,,-268.93,-452.07,0.0001785,"noble gas",
+3,"Lithium","Li",2,1,"Alkali metal",6.9412,"Greek lithos",6.9412,180.7,453.9,1342.0,2448.0,0.534,"0.6","silvery white/gray"
+4,"Beryllium","Be",2,2,"Alkaline earth metal",9.0121823,"beryl",9.0121823,1287.0,1560.0,2469.0,4476.0,1.85,"5.5",
+5,"Boron","B",2,13,"Metalloid",10.8117,"borax",10.8117,2300.0,2570.0,3927.0,7101.0,2.34,"9.3","black/brown/ amorphous boron is a brown powder, metallic boron is black"
+6,"Carbon","C",2,14,"Nonmetal",12.01078,"Latin carbo",12.01078,3675.0,3948.0,4027.0,7280.0,2.267,"1-2 graphite","black"
+7,"Nitrogen","N",2,15,"Nonmetal",14.00672,"Greek nitron",14.00672,-209.86,63.3,-195.79,-320.42,0.0012506,"gas",
+8,"Oxygen","O",2,16,"Nonmetal",15.99943,"Greek oxys",15.99943,-222.65,50.5,-182.95,-297.31,0.001429,"gas",
+9,"Fluorine","F",2,17,"Halogen",18.99840325,"Latin fluo",18.99840325,-219.52,53.6,-188.12,-306.62,0.001696,"halogen gas","yellow-green or yellowish brown"
+10,"Neon","Ne",2,18,"Noble gas",20.17976,"Greek neos",20.17976,-248.447,24.7,-246.08,-410.94,0.0008999,"noble gas",
+11,"Sodium","Na",3,1,"Alkali metal",22.98976928,"Latin natrium",22.98976928,98.0,371.0,883.0,1621.0,0.971,"0.5","waxy, silvery white"
+12,"Magnesium","Mg",3,2,"Alkaline earth metal",24.30506,"Magnesia, Greece",24.30506,650.0,923.0,1090.0,1994.0,1.738,"2.5","silvery metallic"
+13,"Aluminium","Al",3,13,"Poor metal",26.98153868,"Latin alumen",26.98153868,660.25,933.4,2519.0,4566.0,2.698,"2.75","silvery"
+14,"Silicon","Si",3,14,"Metalloid",28.08553,"Latin silex",28.08553,1410.0,1680.0,3265.0,5909.0,2.3296,"6.5 metalloid","dark gray, bluish tinge"
+15,"Phosphorus","P",3,15,"Nonmetal",30.9737622,"Greek phosphoros",30.9737622,44.1,317.3,280.0,536.0,1.82,"nonmetal","waxy white/ red/ black/ colorless"
+16,"Sulfur","S",3,16,"Nonmetal",32.0655,"Latin sulfur",32.0655,115.36,388.51,444.6,832.3,2.067,"2","lemon yellow"
+17,"Chlorine","Cl",3,17,"Halogen",35.4532,"Greek chloros",35.4532,-100.84,172.0,-34.04,-29.27,0.003214,"halogen gas","yellowish green or greenish yellow"
+18,"Argon","Ar",3,18,"Noble gas",39.9481,"Greek argon",39.9481,-189.19,84.0,-185.85,-302.53,0.0017837,"noble gas",
+19,"Potassium","K",4,1,"Alkali metal",39.09831,"Latin kalium",39.09831,63.35,336.5,759.0,1398.0,0.862,"0.4","silvery white"
+20,"Calcium","Ca",4,2,"Alkaline earth metal",40.0784,"Latin calx",40.0784,839.0,1112.0,1484.0,2703.0,1.54,"1.75","gray"
+21,"Scandium","Sc",4,3,"Transition metal",44.9559126,"Scandinavia",44.9559126,1539.0,1812.0,2836.0,5136.0,2.989,"transition metal","soft, silvery, develops a slightly yellowish or pinkish cast when exposed to air"
+22,"Titanium","Ti",4,4,"Transition metal",47.8671,"the Titans",47.8671,1660.0,1930.0,3287.0,5949.0,4.54,"6","silvery metallic"
+23,"Vanadium","V",4,5,"Transition metal",50.94151,"Vanadis",50.94151,1902.0,2175.0,3407.0,6165.0,6.11,"7",
+24,"Chromium","Cr",4,6,"Transition metal",51.99616,"Greek chroma",51.99616,1857.0,2130.0,2671.0,4840.0,7.15,"8.5",
+25,"Manganese","Mn",4,7,"Transition metal",54.9380455,"Latin magnes",54.9380455,1246.0,1519.0,2061.0,3742.0,7.44,"6",
+26,"Iron","Fe",4,8,"Transition metal",55.8452,"Latin ferrum",55.8452,1535.0,1808.0,2861.0,5182.0,7.874,"metal",
+27,"Cobalt","Co",4,9,"Transition metal",58.69344,"from German kobold",58.9331955,1495.0,1768.0,2927.0,5301.0,8.86,,
+28,"Nickel","Ni",4,10,"Transition metal",58.9331955,"German kupfernickel",58.69342,1453.0,1726.0,2913.0,5275.0,8.912,,
+29,"Copper","Cu",4,11,"Transition metal",63.5463,"Latin Cuprum",63.5463,1084.6,1357.8,2562.0,4643.0,8.96,,
+30,"Zinc","Zn",4,12,"Transition metal",65.382,"German zink",65.4094,419.73,692.88,907.0,1665.0,7.134,"2.5",
+31,"Gallium","Ga",4,13,"Poor metal",69.7231,"Latin Gallia",69.7231,29.76,302.91,2204.0,3999.0,5.907,"1.5",
+32,"Germanium","Ge",4,14,"Metalloid",72.641,"Germany",72.641,938.3,1211.4,2833.0,5131.0,5.323,"6",
+33,"Arsenic","As",4,15,"Metalloid",74.921602,"Greek arsenikos",74.921602,817.0,1090.0,614.0,1137.0,5.776,"3.5","metallic gray, allotropic forms; yellow, black and grey"
+34,"Selenium","Se",4,16,"Nonmetal",78.963,"Greek selene",78.963,221.0,494.0,685.0,1265.0,4.809,"2","gray, metallic luster"
+35,"Bromine","Br",4,17,"Halogen",79.9041,"Greek bromos",79.9041,-7.1,266.0,58.8,137.8,3.122,"halogen","gas/liquid: red-brown solid: metallic luster"
+36,"Krypton","Kr",4,18,"Noble gas",83.7982,"Greek kryptos",83.7982,-157.22,116.0,-153.22,-243.8,0.003733,"noble gas",
+37,"Rubidium","Rb",5,1,"Alkali metal",85.46783,"Latin rubidus",85.46783,39.64,312.79,688.0,1270.0,1.532,"0.3","silvery-white"
+38,"Strontium","Sr",5,2,"Alkaline earth metal",87.621,"Gaelic Strontian",87.621,769.0,1042.0,1382.0,2520.0,2.64,"1.5","a soft silver-white or yellowish metallic element"
+39,"Yttrium","Y",5,3,"Transition metal",88.905852,"Ytterby, Sweden",88.905852,1526.0,1799.0,3336.0,6037.0,4.469,"transition metal","silvery metallic"
+40,"Zirconium","Zr",5,4,"Transition metal",91.2242,"zircon",91.2242,1852.0,2125.0,4409.0,7968.0,6.506,"5",
+41,"Niobium","Nb",5,5,"Transition metal",92.906382,"Niobe",92.906382,2468.0,2741.0,4744.0,8571.0,8.57,,
+42,"Molybdenum","Mo",5,6,"Transition metal",95.962,"Greek molybdos",95.942,2617.0,2890.0,4639.0,8382.0,10.22,,
+43,"Technetium","Tc",5,7,"Transition metal",98.0,"Greek technetos",98.0,2200.0,2470.0,4837.0,8810.0,11.5,,
+44,"Ruthenium","Ru",5,8,"Transition metal",101.072,"Latin Ruthenia",101.072,2250.0,2520.0,4150.0,7502.0,12.37,,
+45,"Rhodium","Rh",5,9,"Transition metal",102.905502,"Greek rhodon",102.905502,1966.0,2239.0,3695.0,6683.0,12.41,,
+46,"Palladium","Pd",5,10,"Transition metal",106.421,"Pallas and the traditional -dium ending",106.421,1552.0,1825.0,2963.0,5365.0,12.02,,
+47,"Silver","Ag",5,11,"Transition metal",107.86822,"Latin argentum",107.86822,961.0,1234.0,2162.0,3924.0,10.501,,
+48,"Cadmium","Cd",5,12,"Transition metal",112.4118,"from Greek kadmia",112.4118,321.18,594.33,767.0,1413.0,8.69,,
+49,"Indium","In",5,13,"Poor metal",114.8183,"indigo blue",114.8183,156.76,429.91,2072.0,3762.0,7.31,"soft metal",
+50,"Tin","Sn",5,14,"Poor metal",118.7107,"Latin stannum",118.7107,232.06,505.21,2602.0,4716.0,7.287,"1.5 soft metal",
+51,"Antimony","Sb",5,15,"Metalloid",121.7601,"Latin stibium",121.7601,630.9,904.1,1587.0,2889.0,6.685,"3","silvery lustrous grey"
+52,"Tellurium","Te",5,16,"Metalloid",127.603,"Greek tellus",127.603,449.65,722.8,988.0,1810.0,6.232,"2.25","silvery lustrous gray"
+53,"Iodine","I",5,17,"Halogen",126.904473,"Greek ioeides",126.904473,113.5,386.7,184.3,363.7,4.93,"halogen solid that sublimes at room temperatures into an irritating purple-pink gas","violet-dark gray, lustrous"
+54,"Xenon","Xe",5,18,"Noble gas",131.2936,"Greek xenos",131.2936,-111.7,161.0,-108.12,-162.62,0.005887,"noble gas",
+55,"Caesium","Cs",6,1,"Alkali metal",132.9054519,"Latin caesius",132.9054519,28.55,301.7,671.0,1240.0,1.873,"0.2","silvery gold"
+56,"Barium","Ba",6,2,"Alkaline earth metal",137.3277,"Greek barys",137.3277,729.0,1002.0,1897.0,3447.0,3.594,"1.25","metallic"
+57,"Lanthanum","La",6,,"Lanthanoid",138.905477,"Greek lanthanien",138.905477,920.0,1190.0,3464.0,6267.0,6.145,"2.5",
+58,"Cerium","Ce",6,,"Lanthanoid",140.1161,"Ceres",140.1161,798.0,1071.0,3443.0,6229.0,6.77,"2.5","resembles iron"
+59,"Praseodymium","Pr",6,,"Lanthanoid",140.907652,"Greek prasios",140.907652,931.0,1204.0,3520.0,6368.0,6.773,"soft","silvery white, yellowish tinge"
+60,"Neodymium","Nd",6,,"Lanthanoid",144.2423,"Greek neos didymos",144.2423,1016.0,1289.0,3074.0,5565.0,7.007,,
+61,"Promethium","Pm",6,,"Lanthanoid",145.0,"Prometheus",145.0,931.0,1204.0,3000.0,5432.0,7.26,,
+62,"Samarium","Sm",6,,"Lanthanoid",150.362,"samarskite",150.362,1072.0,1345.0,1794.0,3261.0,7.52,,
+63,"Europium","Eu",6,,"Lanthanoid",151.9641,"Europe",151.9641,822.0,1095.0,1529.0,2784.0,5.243,"lanthanide",
+64,"Gadolinium","Gd",6,,"Lanthanoid",157.253,"gadolinite",157.253,1312.0,1585.0,3273.0,5923.0,7.895,,
+65,"Terbium","Tb",6,,"Lanthanoid",158.925352,"Ytterby, Sweden",158.925352,1357.0,1630.0,3230.0,5846.0,8.229,,
+66,"Dysprosium","Dy",6,,"Lanthanoid",162.5001,"Greek dysprositos",162.5001,1407.0,1680.0,2567.0,4653.0,8.55,,
+67,"Holmium","Ho",6,,"Lanthanoid",164.930322,"Latin Holmia",164.930322,1470.0,1740.0,2720.0,4928.0,8.795,,
+68,"Erbium","Er",6,,"Lanthanoid",167.2593,"Ytterby, Sweden",167.2593,1522.0,1795.0,3230.0,5846.0,9.066,,
+69,"Thulium","Tm",6,,"Lanthanoid",168.934212,"Thule and the traditional -ium ending",168.934212,1545.0,1818.0,1950.0,3542.0,9.321,,
+70,"Ytterbium","Yb",6,,"Lanthanoid",173.0545,"Ytterby, Sweden",173.043,824.0,1097.0,1196.0,2185.0,6.965,,"silvery white, metallic"
+71,"Lutetium","Lu",6,3,"Lanthanoid",174.96681,"Latin Lutetia",174.9671,1663.0,1936.0,3402.0,6156.0,9.84,,
+72,"Hafnium","Hf",6,4,"Transition metal",178.492,"Latin Hafnia",178.492,2227.0,2500.0,4603.0,8317.0,13.31,,
+73,"Tantalum","Ta",6,5,"Transition metal",180.947882,"King Tantalus",180.947882,2996.0,3269.0,5458.0,9856.0,16.654,,
+74,"Tungsten","W",6,6,"Transition metal",183.841,"German wolfram",183.841,3422.0,3695.0,5555.0,10031.0,19.25,,
+75,"Rhenium","Re",6,7,"Transition metal",186.2071,"German Rheinprovinz",186.2071,3180.0,3450.0,5596.0,10105.0,21.02,,
+76,"Osmium","Os",6,8,"Transition metal",190.233,"Greek osme",190.233,3027.0,3300.0,5012.0,9054.0,22.61,,
+77,"Iridium","Ir",6,9,"Transition metal",192.2173,"Greek iris",192.2173,2443.0,2716.0,4428.0,8002.0,22.56,,"silvery-white"
+78,"Platinum","Pt",6,10,"Transition metal",195.0849,"Greek platina",195.0849,1772.0,2045.0,3825.0,6917.0,21.46,,
+79,"Gold","Au",6,11,"Transition metal",196.9665694,"Latin aurum",196.9665694,1064.58,1337.73,2856.0,5173.0,19.282,,
+80,"Mercury","Hg",6,12,"Transition metal",200.592,"Latin hydrargyrum",200.592,-38.72,234.0,357.0,674.0,13.5336,,
+81,"Thallium","Tl",6,13,"Poor metal",204.38332,"Greek thallos",204.38332,304.0,577.0,1473.0,2683.0,11.85,,
+82,"Lead","Pb",6,14,"Poor metal",207.21,"Latin plumbum",207.21,327.6,600.8,1749.0,3180.0,11.342,,
+83,"Bismuth","Bi",6,15,"Poor metal",208.980401,"from German wissmuth",208.980401,271.52,544.67,1564.0,2847.0,9.807,,
+84,"Polonium","Po",6,16,"Metalloid",210.0,"Poland",210.0,254.0,527.0,962.0,1764.0,9.32,,
+85,"Astatine","At",6,17,"Halogen",210.0,"Greek astatos",210.0,302.0,575.0,337.0,638.0,7.0,,
+86,"Radon","Rn",6,18,"Noble gas",222.0,"radium and emanation",220.0,-71.0,202.1,-61.7,-79.1,0.00973,"noble gas",
+87,"Francium","Fr",7,1,"Alkali metal",223.0,"France",223.0,27.0,300.0,677.0,1251.0,1.87,"radioactive alkali metal",
+88,"Radium","Ra",7,2,"Alkaline earth metal",226.0,"Latin radius",226.0,700.0,973.0,1737.0,3159.0,5.5,"radioactive alkaline earth metal","almost pure white, readily oxidizes on exposure to air, turning black"
+89,"Actinium","Ac",7,,"Actinoid",227.0,"from Greek aktinos",227.0,1050.0,1320.0,3198.0,5788.0,10.07,,"radioactive metallic element. glows in the dark with an eerie blue light."
+90,"Thorium","Th",7,,"Actinoid",232.038062,"Thor",232.038062,1755.0,2028.0,4788.0,8650.0,11.72,,
+91,"Protactinium","Pa",7,,"Actinoid",231.035882,"Greek protos and actinium",231.035882,1600.0,1870.0,4027.0,7280.0,15.37,,
+92,"Uranium","U",7,,"Actinoid",238.028913,"Uranus",238.028913,1132.0,1405.0,4131.0,7468.0,18.95,,
+93,"Neptunium","Np",7,,"Actinoid",237.0,"Neptune",237.0,640.0,913.0,4000.0,7232.0,20.45,,
+94,"Plutonium","Pu",7,,"Actinoid",244.0,"Pluto",244.0,640.0,913.0,3228.0,5842.0,19.84,,
+95,"Americium","Am",7,,"Actinoid",243.0,"the Americas",243.0,994.0,1267.0,2607.0,4725.0,13.69,,
+96,"Curium","Cm",7,,"Actinoid",247.0,"Pierre and Marie Curie and the traditional -um ending",247.0,1067.0,1340.0,3110.0,5630.0,13.51,,
+97,"Berkelium","Bk",7,,"Actinoid",247.0,"Berkeley, California",247.0,986.0,1259.0,710.0,1310.0,14.79,,
+98,"Californium","Cf",7,,"Actinoid",251.0,"State and University of California",251.0,1652.0,1925.0,900.0,1652.0,15.1,,
+99,"Einsteinium","Es",7,,"Actinoid",252.0,"Albert Einstein",252.0,860.0,1130.0,,,13.5,,
+100,"Fermium","Fm",7,,"Actinoid",257.0,"Enrico Fermi",257.0,,,,,,,
+101,"Mendelevium","Md",7,,"Actinoid",258.0,"Dmitri Mendeleyev",258.0,,,,,,,
+102,"Nobelium","No",7,,"Actinoid",259.0,"Alfred Nobel",259.0,,,,,,,
+103,"Lawrencium","Lr",7,3,"Actinoid",262.0,"Ernest O. Lawrence",262.0,,,,,9.84,,
+104,"Rutherfordium","Rf",7,4,"Transition metal",261.0,"Ernest Rutherford",261.0,,,,,18.1,,
+105,"Dubnium","Db",7,5,"Transition metal",262.0,"Dubna, Russia",262.0,,,,,39.0,,
+106,"Seaborgium","Sg",7,6,"Transition metal",266.0,"Glenn T. Seaborg",266.0,,,,,35.0,,
+107,"Bohrium","Bh",7,7,"Transition metal",264.0,"Niels Bohr",264.0,,,,,37.0,,
+108,"Hassium","Hs",7,8,"Transition metal",267.0,"Hesse, Germany",277.0,,,,,41.0,,
+109,"Meitnerium","Mt",7,9,"Transition metal",268.0,"Lise Meitner",268.0,,,,,35.0,,
+110,"Darmstadtium","Ds",7,10,"Transition metal",271.0,"Darmstadt, Germany",271.0,,,,,21.46,,
+111,"Roentgenium","Rg",7,11,"Transition metal",272.0,"Wilhelm Conrad Roentgen",272.0,,,,,19.282,,
+112,"Ununbium","Uub",7,12,"Transition metal",285.0,"Latin uni, uni, and bi",285.0,,,,,13.5336,,
+113,"Ununtrium","Uut",7,13,"Poor metal",284.0,"Latin uni, uni, and Greek tri",284.0,,,,,11.85,,
+114,"Ununquadium","Uuq",7,14,"Poor metal",289.0,"Latin uni, uni, and quadr",289.0,,,,,11.342,,
+115,"Ununpentium","Uup",7,15,"Poor metal",288.0,"Latin uni, uni, and Greek pent",288.0,,,,,9.807,,
+116,"Ununhexium","Uuh",7,16,"Poor metal",292.0,"Latin uni, uni, and Greek hex",292.0,,,,,9.32,,
+117,"Ununseptium","Uus",7,17,"Halogen",,,,,,,,,,
+118,"Ununoctium","Uuo",7,18,"Noble gas",294.0,"Latin uni, uni, and oct",294.0,,,,,,,

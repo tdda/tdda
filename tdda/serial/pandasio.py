@@ -735,6 +735,7 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                         df[k] = df[k].astype('datetime64[ns]')
                 except ValueError:  # probably time-zone aware date
                     pass
+
     if upgrade_possible_ints:
         for k in df:
             if not k in (specified_types or []):

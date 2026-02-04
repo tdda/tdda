@@ -1,0 +1,5 @@
+row,sq,recip,name,even,date
+1,1,1.0,one,false,2011-01-01
+2,4,0.5,two,true,2022-02-02
+3,9,0.33,three,false,2033-03-03
+4,16,0.25,four,true,2044-04-04

@@ -3,6 +3,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
@@ -13,7 +14,13 @@ from tdda.utils import (
 )
 from tdda.utils import debug, listify
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
-from tdda.abstractdf import col_names, calc_nunique, filter_fields
+from tdda.abstractdf import (
+    col_names,
+    calc_nunique,
+    df_rename_cols,
+    index_col,
+    filter_fields
+)
 
 
 import argparse
@@ -56,22 +63,34 @@ class TDDADiff:
         self.verbosity = verbosity
         self.find_md = self.dconfig.infer_md
         self.quick = quick
+        self.dflib = self.df_or_pl(pd, pl)
 
         if cli_args:
             self.process_args()
 
+    def df_or_pl(self, if_pd, if_pl):
+        """
+        Returns if_pd if the engine is pandas, otherwise if_pl
+        """
+        return if_pd if self.is_pandas() else if_pl
+
+    def is_pandas(self):
+        return self.engine == 'pandas'
 
     def ddiff(self):
         c = (
             PandasComparison()
-            if self.engine == 'pandas'
+            if self.is_pandas()
             else PolarsComparison()
         )
-        dfL = c.load_serialized_dataframe(self.left, find_md=self.find_md)
-        dfR = c.load_serialized_dataframe(self.right, find_md=self.find_md)
+        kw = {'infer_datetime_formats': True}
+        dfL = c.load_serialized_dataframe(self.left, find_md=self.find_md,
+                                          **kw)
+        dfR = c.load_serialized_dataframe(self.right, find_md=self.find_md,
+                                          **kw)
         dfL = filter_fields(dfL, self.fields, self.xfields)
         dfR = filter_fields(dfR, self.fields, self.xfields)
-        dfL, dfR, key = find_usable_key(dfL, dfR, self.key)
+        dfL, dfR, key = find_usable_key(self.is_pandas(), dfL, dfR, self.key)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
                                    check_data=self.fields,
                                    type_matching=self.type_checking,
@@ -275,7 +294,7 @@ class TDDADiff:
         return parser
 
 
-def find_usable_key(left, right, key=None, verbosity=1):
+def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
     """
     If key is supplied, this adds a row number to (copies of) the
     left and right DataFrames, at the start.
@@ -333,28 +352,25 @@ def find_usable_key(left, right, key=None, verbosity=1):
         all_names = set(col_names(left)) | set(col_names(right))
         if not key:
             key = find_free_name(all_names, ['#Key'])
-            L = pd.DataFrame({key: pd.Series(np.arange(left.shape[0]),
-                                             dtype='Int64')})
-            R = pd.DataFrame({key: pd.Series(np.arange(right.shape[0]),
-                                             dtype='Int64')})
-            for k in left:
-                L[k] = left[k]
-            for k in right:
-                R[k] = right[k]
-            left, right = L, R
-
-        left.columns = [name + '_L' for name in left]
-        right.columns = [name + '_R' for name in right]
-
+            DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
+            left = DataFrame(
+                    {key + '_L': index_col(is_pandas, left.shape[0])}
+                    | {k + '_L': left[k] for k in col_names(left)}
+            )
+            right = DataFrame(
+                    {key + '_R': index_col(is_pandas, right.shape[0])}
+                    | {k + '_R': right[k] for k in col_names(right)}
+            )
         key_list = key if type(key) == list else [key]
         keyL = [k +  '_L' for k in key_list]
         keyR = [k +  '_R' for k in key_list]
-        dfj = left.merge(right, left_on=keyL, right_on=keyR, how='outer')
+        join = left.merge if is_pandas else left.join
+        dfj = join(right, left_on=keyL, right_on=keyR, how='outer')
 
         L = dfj[left.columns]
         R = dfj[right.columns]
-        L.columns = [c[:-2] for c in L]
-        R.columns = [c[:-2] for c in R]
+        L = df_rename_cols(L, {c: c[:-2] for c in col_names(L)})
+        R = df_rename_cols(R, {c: c[:-2] for c in col_names(R)})
     else:
         L, R = left, right
 

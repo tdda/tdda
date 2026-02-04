@@ -1,5 +1,6 @@
 import inspect
 
+import numpy as np
 import pandas as pd
 import polars as pl
 
@@ -26,13 +27,19 @@ def is_polars_df(df):
     return isinstance(df, pl.DataFrame)
 
 
-
 def df_type(df):
     if isinstance(df, pd.DataFrame):
         return 'pandas'
     if isinstance(df, pl.DataFrame):
         return 'polars'
     raise TDDAError('Not a known kind of data frame.')
+
+
+def df_rename_cols(df, mapping):
+    if is_pandas_df(df):
+        return df.rename(mapping, axis=1)
+    else:
+        return df.rename(mapping)
 
 
 def df_definite(df, engine):
@@ -54,6 +61,12 @@ def specialize(df, fn, *args, **kwargs):
     f = eval(f'{df_type(df)}_{fn}')
     return f(*args, **kwargs)
 
+
+def index_col(is_pandas, n):
+    if is_pandas:
+        return pd.Series(np.arange(n), dtype='Int64')
+    else:
+        return pl.Series(np.arange(n), dtype=pl.Int64)
 
 def get_diffs_df_with_cols_and_index(df, *args, **kwargs):
     return specialize(df, inspect.stack()[0][3],  # this function's name

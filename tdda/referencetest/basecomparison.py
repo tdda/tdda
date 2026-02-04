@@ -165,7 +165,7 @@ class DiffState:
 
 
 
-class BaseComparison(object):
+class BaseComparison:
     """
     Common base class for different implementations of comparisons.
     """
@@ -322,7 +322,6 @@ class BaseComparison(object):
         state = DiffState(len(df), len(ref_df), common_cols)
 
         # 1. Convert category fields to string fields
-
         df = self._replace_cats(df)
         ref_df = self._replace_cats(ref_df)
 
@@ -914,7 +913,6 @@ class SameStructureDDiff:
         tot_vals = self.shape[0] * self.shape[1]
         prop_diffs = 100 * self.n_diff_values / tot_vals
         lines.extend([
-
             f'Total number of different values: {self.n_diff_values:,}'
             f' of {tot_vals:,} ({prop_diffs:.2f}%).',
 

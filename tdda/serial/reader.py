@@ -253,7 +253,7 @@ def set_delimiter_from_path(kw, path, sep_key):
     kw to the appropriate value.
     """
     kw = kw or {}
-    if not kw.get(sep_key):
+    if not kw.get('delimiter') and not kw.get(sep_key):
         ext = os.path.splitext(path)[1]
         if ext == '.csv':
             kw[sep_key] = ','

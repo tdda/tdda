@@ -1,0 +1,15 @@
+Difference summary: 
+DataFrames have same structure, but different values.
+Total number of different values: 1 of 28 (3.57%).
+Total number of rows with differences: 1
+Total number of columns with differences: 1:
+           1: date
+
+[1m      Value Differences (all rows with differences)      [0m
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃[1m    [0m┃[1m [0m[1m                   date[0m[1m [0m┃[1m [0m[1m                  date[0m[1m [0m┃
+┃[1m    [0m┃[1m [0m[1m             datetime64[0m[1m [0m┃[1m [0m[1m            datetime64[0m[1m [0m┃
+┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m                      <[0m[1m [0m┃[1m [0m[1m                     >[0m[1m [0m┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│  1 │     [31m2022-02-02 00:00:00[0m │    [34m2022-02-01 00:00:00[0m │
+└────┴─────────────────────────┴────────────────────────┘

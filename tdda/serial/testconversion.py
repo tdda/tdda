@@ -37,7 +37,7 @@ from tdda.serial import (
 
 from tdda.utils import testwarn
 
-TDDA_SERIAL_VERSION_RE = r'tdda\.serial\-[0-9]+.[0-9]+\.[0-9]+'
+TDDA_SERIAL_VERSION_RE = r'tdda\.serial\-[0-9]+.[0-9]+\.[0-9]+[rc0-9]*'
 
 
 class TestSerialConversions(ReferenceTestCase):

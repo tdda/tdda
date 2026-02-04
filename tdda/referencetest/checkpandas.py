@@ -23,7 +23,7 @@ from tdda.referencetest.basecomparison import (
     SameStructureDDiff,
     create_row_diffs_mask,
     valid_level,
-        ROW_NUM_HEADER
+    ROW_NUM_HEADER
 )
 from tdda.serial.pandasio import (
     pandas_to_csv,

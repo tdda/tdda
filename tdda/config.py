@@ -150,6 +150,7 @@ class ReferenceTestConfig(BaseConfig):
         self._config_name = 'config.referencetest'
         self.left_colour = 'red'
         self.right_colour = 'green'
+        self.failure_colour = 'red'
         self.mono = False
         self.bw = False
         self.left_prefix = '< '
@@ -188,6 +189,14 @@ class ReferenceTestConfig(BaseConfig):
         else:
             return str(value)
 
+    def format_failure(self, content):
+        if self.bw or self.mono:
+            return f'[bold]{content}[/bold]'
+        else:
+            colour = self.failure_colour
+            return f'[{colour}]{content}[/{colour}]'
+
+
     def set_colours(self, left, right):
         self.left_colour, self.right_colour = left.lower(), right.lower()
         # possibly validate
@@ -225,7 +234,6 @@ class TDDADiffConfig(BaseConfig):
 
         self.type_checking = 'medium'
         self.infer_md = True
-
 
 
 class SerialConfig(BaseConfig):

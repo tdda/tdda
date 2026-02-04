@@ -9,9 +9,11 @@ def get_help(command):
     path = os.path.join(MANDIR, f'{command}.txt')
     tddapath = os.path.join(MANDIR, f'tdda-{command}.txt')
     if os.path.exists(path):  # tdda, rexpy
-        man = open(path).read()
+        with open(path) as f:
+            man = f.read()
     elif os.path.exists(tddapath):  # tdda discover etc.
-        man = open(tddapath).read()
+        with open(tddapath) as f:
+            man = f.read()
     else:
         man = ''
     return f'{man.rstrip()}\n'

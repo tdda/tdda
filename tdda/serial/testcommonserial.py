@@ -25,7 +25,7 @@ TMPDIR = tempfile.mkdtemp()
 
 TDDASERIAL_PATTERNS = [
     r'^\s*"format": "http://tdda\.info/ns/tdda\.serial[.0-9/]*",?$',
-    r'^\s*"writer": "tdda\.serial[-.0-9]*",?$',
+    r'^\s*"writer": "tdda\.serial[-.0-9rc]*",?$',
 ]
 
 

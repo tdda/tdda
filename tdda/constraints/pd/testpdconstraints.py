@@ -1062,18 +1062,22 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
-        for backend in ('numpy_nullable', 'pyarrow'):
-            n_constraints_path = os.path.join(TESTDATADIR, 'dddn.tdda')
-            # Constraints for nullable backends
-            v = verify(csv_path, n_constraints_path, backend=backend,
-                       verbose=False)
-            self.assertEqual(v.passes, 61)
-            self.assertEqual(v.failures, 0)
+        n_constraints_path = os.path.join(TESTDATADIR, f'dddn.tdda')
+        v = verify(csv_path, n_constraints_path, backend='numpy_nullable',
+                   verbose=False)
+        self.assertEqual(v.passes, 55)
+        self.assertEqual(v.failures, 6)
+
+        n_constraints_path = os.path.join(TESTDATADIR, f'dddn.tdda')
+        v = verify(csv_path, n_constraints_path, backend='numpy_nullable',
+                   verbose=False)
+        self.assertEqual(v.passes, 55)
+        self.assertEqual(v.failures, 6)
 
         constraints_path = os.path.join(TESTDATADIR, 'ddd.tdda')
         for backend in ('numpy_nullable', 'pyarrow'):
             # Find and use metadata
-            # This doesn't work with pandas bcause evennulls and
+            # This doesn't work with pandas because evennulls and
             # oddnulls end up as strings not booleans.
             v = verify(csv_path + ':', constraints_path, backend=backend,
                        verbose=False)

@@ -1,0 +1,15 @@
+Difference summary: 
+DataFrames have same structure, but different values.
+Total number of different values: 1 of 28 (3.57%).
+Total number of rows with differences: 1
+Total number of columns with differences: 1:
+           1: recip
+
+[1mValue Differences (all rows with differences)[0m
+┏━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
+┃[1m    [0m┃[1m [0m[1m   recip[0m[1m [0m┃[1m [0m[1m  recip[0m[1m [0m┃
+┃[1m    [0m┃[1m [0m[1m Float64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃
+┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m       <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃
+┡━━━━╇━━━━━━━━━━╇━━━━━━━━━┩
+│  2 │  [31m0.33333[0m │    [32m0.33[0m │
+└────┴──────────┴─────────┘

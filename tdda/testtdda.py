@@ -11,6 +11,7 @@ from tdda.referencetest import ReferenceTestCase
 from tdda.constraints.testconstraints import *
 from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
+from tdda.referencetest.testtddadiff import *
 from tdda.referencetest.testgentest import *
 from tdda.serial.testserial import *
 from tdda.testutils import *
