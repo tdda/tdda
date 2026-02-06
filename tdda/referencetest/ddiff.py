@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 
@@ -5,11 +6,12 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
+from tdda.referencetest.basecomparison import HASH_DIFF_KEY
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
 from tdda.utils import (
-    nvl, warn, error, stdout_console as console, is_sequence,
+    nvl, warn, error, stdout_console, is_sequence,
     find_free_name
 )
 from tdda.utils import debug, listify
@@ -45,9 +47,11 @@ class TDDADiff:
                  vertical=False, fields=None, xfields=None,
                  type_checking=None, maxdiffs=None,
                  engine=None, backend=None, key=None, auto_key=False,
-                 cli_args=None, config=None, quick=False, verbosity=1):
+                 cli_args=None, config=None, console=None,
+                 quick=False, verbosity=1):
         self.args = cli_args
-        self.dconfig = get_config().tddadiff
+        self.config = config or get_config()
+        self.dconfig = self.config.tddadiff
         self.type_checking = self.dconfig.type_checking
         self.left = left
         self.right = right
@@ -64,6 +68,7 @@ class TDDADiff:
         self.find_md = self.dconfig.infer_md
         self.quick = quick
         self.dflib = self.df_or_pl(pd, pl)
+        self.console = console or stdout_console
 
         if cli_args:
             self.process_args()
@@ -78,11 +83,8 @@ class TDDADiff:
         return self.engine == 'pandas'
 
     def ddiff(self):
-        c = (
-            PandasComparison()
-            if self.is_pandas()
-            else PolarsComparison()
-        )
+        Comp = PandasComparison if self.is_pandas() else PolarsComparison
+        c = Comp(config=self.config)
         kw = {'infer_datetime_formats': True}
         dfL = c.load_serialized_dataframe(self.left, find_md=self.find_md,
                                           **kw)
@@ -99,14 +101,14 @@ class TDDADiff:
                                    quick=self.quick)
 
         if result.failures > 0:
-            print(result.diffs)
+            self.console.print(result.diffs)
             diff = result.diffs.dfd.diff  # there if same structure
                                           # or close enough
             if diff:
                 table = diff.details_table(dfL, dfR, self.maxdiffs)
                 if table:
-                    print()
-                    console.print(table)
+                    self.console.print()
+                    self.console.print(table)
         elif self.verbosity > 1:
             print('No differences.')
 
@@ -114,7 +116,6 @@ class TDDADiff:
     def process_args(self):
         parser = self.parser()
         flags, more = parser.parse_known_args(self.args)
-        self.config = get_config(force_no_global=flags.no_config)
         p = self.config.referencetest
         self.fields = None
 
@@ -351,7 +352,7 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
     if not key or nL != nR:
         all_names = set(col_names(left)) | set(col_names(right))
         if not key:
-            key = find_free_name(all_names, ['#Key'])
+            key = find_free_name(all_names, [HASH_DIFF_KEY])
             DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
             left = DataFrame(
                     {key + '_L': index_col(is_pandas, left.shape[0])}
@@ -423,8 +424,8 @@ def check_is_usable_key(left, right, key, raise_if_not=False):
 
 
 
-def ddiff_helper(args):
-    tddadiff = TDDADiff(cli_args=args)
+def ddiff_helper(args, config=None, console=None):
+    tddadiff = TDDADiff(cli_args=args, config=config, console=console)
     tddadiff.ddiff()
 
 

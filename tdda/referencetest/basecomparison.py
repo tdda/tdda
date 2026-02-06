@@ -38,6 +38,7 @@ from tdda.abstractdf import (
     get_diffs_df_with_cols,
     df_to_lists,
     get_sceq,
+    isnull_fn,
 )
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
@@ -56,6 +57,7 @@ ESC_MAP = str.maketrans({
     "'": r'\'',
 })
 TDDA_DIFF = 'tdda diff'
+HASH_DIFF_KEY = '#Key'
 
 class FailureDiffs:
     """
@@ -169,7 +171,8 @@ class BaseComparison:
     """
     Common base class for different implementations of comparisons.
     """
-    def __init__(self, print_fn=None, verbose=True, tmp_dir=None):
+    def __init__(self, print_fn=None, verbose=True, tmp_dir=None,
+                 config=None):
         """
         Constructor for an instance of the BaseComparison class.
 
@@ -181,6 +184,7 @@ class BaseComparison:
         self.print_fn = print_fn
         self.verbose = verbose
         self.tmp_dir = tmp_dir or tempfile.gettempdir()
+        self.config = config
 
     def check_dataframe(
         self,
@@ -352,7 +356,11 @@ class BaseComparison:
         if check_order != False and not missing_cols:
             check_order = self.resolve_option_flag(check_order, ref_df)
             order1 = [c for c in df_names if c in check_order]
-            order2 = [c for c in rf_names if c in check_order and c in df_names]
+            order2 = [
+                c for c in rf_names
+                if c in check_order
+                and c in df_names
+            ]
             state.out_of_order = order1 != order2
 
         if not state.same:
@@ -411,7 +419,6 @@ class BaseComparison:
                 rest = [f for f in df_names
                         if f in set(df_names) - set(cols)]
                 switches.append('--xfields \'%s\'' % escaped_list(rest))
-        config = get_config
         switches.append(f'--{type_matching}')
         if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
@@ -895,7 +902,7 @@ class SameStructureDDiff:
     with the same structure.
     """
     def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 key=None, colour=None):
+                 key=None, colour=None, config=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
@@ -903,7 +910,7 @@ class SameStructureDDiff:
         self.key = key
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
-        self.config = get_config()
+        self.config = config or get_config()
 
     def __str__(self):
         lines = [
@@ -991,10 +998,12 @@ class SameStructureDDiff:
         target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
         cols = col_names(self.diff_df)
+        col0isKey = cols and cols[0] == HASH_DIFF_KEY
         m = len(cols)
         C = self.config.referencetest
         vertical = nvl(C.vertical, False)
         prefix = vertical and (C.mono or C.bw)
+        isnull = isnull_fn(df)
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
             if self.key:
@@ -1022,22 +1031,28 @@ class SameStructureDDiff:
             for r in range(n):
                 l_vals = L_table[r]
                 r_vals = R_table[r]
-                lstr = [
-                    C.common(left) if eq(left, right)
-                                   else C.left_diff(left, prefix)
-                    for (left, right) in zip(l_vals, r_vals)
-                ]
-                rstr = [
-                    C.common(right) if eq(left, right)
-                                    else C.right_diff(right, prefix)
-                    for (left, right) in zip(l_vals, r_vals)
-                ]
-                plstr = [
-                    C.left_annotated(left, prefix) for left in l_vals
-                ]
-                prstr = [
-                    C.right_annotated(right, prefix) for right in r_vals
-                ]
+                if col0isKey and isnull(l_vals[0]):  # left row missing
+                    plstr = lstr = [''] * len(l_vals)
+                else:
+                    lstr = [
+                        C.common(left) if eq(left, right)
+                                       else C.left_diff(left, prefix)
+                        for (left, right) in zip(l_vals, r_vals)
+                    ]
+                    plstr = [
+                        C.left_annotated(left, prefix) for left in l_vals
+                    ]
+                if col0isKey and isnull(r_vals[0]):  # right row missing
+                    prstr = rstr = [''] * len(l_vals)
+                else:
+                    rstr = [
+                        C.common(right) if eq(left, right)
+                                        else C.right_diff(right, prefix)
+                        for (left, right) in zip(l_vals, r_vals)
+                    ]
+                    prstr = [
+                        C.right_annotated(right, prefix) for right in r_vals
+                    ]
                 if vertical:
                     if not self.key:
                         rows.append([f'{indexes[r]}{pL}'] + lstr)

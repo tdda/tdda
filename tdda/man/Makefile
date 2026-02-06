@@ -20,4 +20,6 @@ $(TARGETS): %.txt: %.md
 	cp $*.1 /usr/local/man/man1
 	python clean_markdown.py $*.md ../../doc/source/$*.md
 
-
+PHONY:
+svg:
+	(cd ../referencetest; GENSVG=1 python testtddadiff.py)

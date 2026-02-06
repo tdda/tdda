@@ -1,0 +1,7 @@
+row	sq	recip	name	even	date
+1	1	1.0	one	false	2011-01-01
+2	4	0.5	two	true	2000-02-02
+3	9	0.33333	three	true	2033-03-03
+4	16	0.25	four	true	2044-04-04
+5	25	0.2	five	false	2055-05-05
+

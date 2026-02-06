@@ -1,4 +1,10 @@
 import os
+import sys
+
+from rich.console import Console
+from rich.terminal_theme import MONOKAI, DIMMED_MONOKAI, SVG_EXPORT_THEME, DEFAULT_TERMINAL_THEME
+
+from tdda.config import Config
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.captureoutput import capture_output
@@ -6,12 +12,24 @@ from tdda.referencetest.captureoutput import capture_output
 from tdda.referencetest.ddiff import ddiff_helper
 from tdda.state import set_testing
 
+from tdda.utils import swap_ext, rprint
+
 REFTESTDIR = os.path.dirname(__file__)     # tdda.referencetest
 TDDADIR = os.path.dirname(REFTESTDIR)      # tdda
 EXDIR = os.path.join(REFTESTDIR,
                      'diffexamples')       # tdda/referencetest/diffexamples
 REFDIR = os.path.join(REFTESTDIR,
                       'testdata', 'diff')  # tdda/referencetest/testdata/diff
+BASEDIR = os.path.dirname(TDDADIR)         # parent of tdda (repo)
+DOCDIR = os.path.join(BASEDIR, 'doc')      # tdda/doc
+SVGDIR = os.path.join(DOCDIR,
+                      'svg', 'diff')       # tdda/doc/svg/diff
+
+
+GENSVG = 'GENSVG' in os.environ  # Set env var GENSVG to regenerate SVG output
+if GENSVG:
+    rprint('\n[green]*** REGENERATING DOC SVGs for TDDA DIFF ***[/green]\n',
+           file=sys.stderr)
 
 def inpath(filename):
     return os.path.join(EXDIR, filename)
@@ -21,27 +39,39 @@ def refpath(filename):
     return os.path.join(REFDIR, filename)
 
 
+def svgpath(filename):
+    return os.path.join(SVGDIR, swap_ext(filename, '.svg'))
+
+
 class TestTDDADiff(ReferenceTestCase):
 
     # HELPERS
 
-    def diff(self, args):
+    def diff(self, args, console=None):
         """Helper for tdda diff tests"""
         with capture_output() as c:
-            ddiff_helper(args)
+            ddiff_helper(args, config=Config(testing=True), console=console)
             result = str(c)
         return result
 
-    def difftest(self, left, right, flags=None, flagpart=None):
+    def difftest(self, left, right, flags=None, flagpart=None, width=80):
         L, R = inpath(left), inpath(right)
         if flagpart is None and flags is not None:
             flagpart = '_'.join(f.replace(' ', '_') for f in flags)
         elif flags is not None:
             assert isinstance(flags, list) or isinstance(flags, tuple)
         suffix = f'_{flagpart}' if flagpart else ''
-        expected = refpath(f'{left}_{right}{suffix}.txt')
+        filename = f'{left}_{right}{suffix}.txt'
+        expected = refpath(filename)
+        console = Console(highlight=False, soft_wrap=True,
+                          width=width, record=True)
         args = [L, R] + (flags or [])
-        actual = self.diff(args)
+        targs = [left, right] + (flags or [])
+        actual = self.diff(args, console=console)
+        title = ' '.join(['tdda diff'] + targs)
+        if GENSVG:
+            console.save_svg(svgpath(filename), title=title,
+                             theme=DIMMED_MONOKAI)
         self.assertStringCorrect(actual, expected)
         return actual
 
@@ -137,10 +167,27 @@ class TestTDDADiff(ReferenceTestCase):
 
     # DIFFERENT NUMBER OF ROWS
 
-    @tag
-    def test_a_csv_d_csv(self):
+    def test_a_csv_f5_tsv(self):
         """One extra row"""
-        actual = self.difftest('a.csv', 'f5.tsv')
+        actual = self.difftest('a.csv', 'f5.tsv', width=154)
+
+    def test_a_csv_f5_3f_tsv(self):
+        """One extra row and 2 diffs"""
+        actual = self.difftest('a.csv', 'f5-3d.tsv', width=164)
+
+    def test_f5_3f_tsv_a_csv(self):
+        """One extra row and 2 diffs, reversed"""
+        actual = self.difftest('f5-3d.tsv', 'a.csv', width=164)
+
+    @tag
+    def test_a_csv_f5_3f_tsv_vertical(self):
+        """One extra row"""
+        self.difftest('a.csv', 'f5-3d.tsv', ['--vertical'], width=82)
+
+        # test against same file
+        # self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical')
+
+
 
 if __name__ == '__main__':
     TDDA_CONFIG_TESTS = 'TDDA_CONFIG_TESTS' in os.environ

@@ -169,6 +169,10 @@ def get_sceq(df):
     return pd_sceq if df_type(df) == 'pandas' else pl_sceq
 
 
+def isnull_fn(df):
+    return pd.isnull if df_type(df) == 'pandas' else lambda x: x is None
+
+
 def pd_sceq(L, R):
     if pd.isnull(L):
         return pd.isnull(R)
