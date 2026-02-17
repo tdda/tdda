@@ -1,0 +1,56 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "i",
+                "fieldtype": "float"
+            },
+            {
+                "name": "b",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "name": "snull",
+                "fieldtype": "string"
+            },
+            {
+                "name": "sesc",
+                "fieldtype": "string"
+            },
+            {
+                "name": "sdt",
+                "fieldtype": "string"
+            },
+            {
+                "name": "sf",
+                "fieldtype": "string"
+            },
+            {
+                "name": "sq",
+                "fieldtype": "string"
+            },
+            {
+                "name": "ssep",
+                "fieldtype": "string"
+            },
+            {
+                "name": "d",
+                "fieldtype": "date",
+                "format": "iso8601-date"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "null_indicators": "",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

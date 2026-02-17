@@ -1,0 +1,73 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "datatype": "integer",
+                        "name": "index"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "evennulls"
+                    },
+                    {
+                        "datatype": "boolean",
+                        "name": "oddnulls"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "evens"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "odds"
+                    },
+                    {
+                        "datatype": "number",
+                        "name": "evenreals"
+                    },
+                    {
+                        "datatype": "decimal",
+                        "name": "oddreals"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "evenstr"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "oddstr"
+                    },
+                    {
+                        "datatype": "string",
+                        "name": "elevens"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "binnedindex"
+                    },
+                    {
+                        "datatype": "integer",
+                        "name": "binnedodds"
+                    },
+                    {
+                        "datatype": "date",
+                        "name": "basedate"
+                    },
+                    {
+                        "datatype": "datetime",
+                        "name": "evendates"
+                    }
+                ]
+            },
+            "dialect": {
+                "encoding": "utf-8",
+                "delimiter": ","
+            },
+            "url": "ddd.csv"
+        }
+    ]
+}

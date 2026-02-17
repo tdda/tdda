@@ -2,13 +2,11 @@ import copy
 import os
 import sys
 
-from collections import nametuple
-
 import numpy as np
 import pandas as pd
 import polars as pl
 
-from tdda.referencetest.samestructurediff import HASH_DIFF_KEY
+from tdda.referencetest.basecomparison import HASH_DIFF_KEY
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.state import get_config
@@ -19,15 +17,13 @@ from tdda.utils import (
 from tdda.utils import debug, listify
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
 from tdda.abstractdf import (
-    calc_nunique,
     col_names,
-    df_group_count,
-    df_join,
+    calc_nunique,
     df_rename_cols,
-    df_sort,
-    filter_fields,
     index_col,
-    is_pandas_df
+    filter_fields,
+    df_sort,
+    df_group_count,
 )
 
 
@@ -48,19 +44,11 @@ Notes
 '''
 
 
-JoinInfo = ('JoinInfo', [
-        'synthetic',  # True if key is synthetic (row number)
-        'key_list',   # key as a list (singleton if single key)
-        'exists',     # name of field with non-null col if present
-    ]
-)
-
-
 class TDDADiff:
     def __init__(self, left=None, right=None, precision=None,
                  vertical=False, fields=None, xfields=None,
                  type_checking=None, maxdiffs=None,
-                 engine=None, backend=None, key=None,
+                 engine=None, backend=None, key=None, auto_key=False,
                  cli_args=None, config=None, console=None,
                  quick=False, verbosity=1):
         self.args = cli_args
@@ -76,14 +64,13 @@ class TDDADiff:
         self.maxdiffs = maxdiffs
         self.engine = engine
         self.backend = backend
-        self.key = key        # key specifier
-        self.join_info = None  # set later
+        self.key = key
+        self.auto_key = auto_key
         self.verbosity = verbosity
         self.find_md = self.dconfig.infer_md
         self.quick = quick
         self.dflib = self.df_or_pl(pd, pl)
         self.console = console or stdout_console
-
 
         if cli_args:
             self.process_args()
@@ -107,15 +94,12 @@ class TDDADiff:
                                           **kw)
         dfL = filter_fields(dfL, self.fields, self.xfields)
         dfR = filter_fields(dfR, self.fields, self.xfields)
-        dfL, dfR, self.joininfo = find_usable_key(
-            self.is_pandas(), dfL, dfR, self.key
-        )
+        dfL, dfR, key = find_usable_key(self.is_pandas(), dfL, dfR, self.key)
         result = c.check_dataframe(dfL, dfR, create_temporaries=False,
                                    check_data=self.fields,
                                    type_matching=self.type_checking,
                                    precision=self.precision,
-                                   backend=self.backend,
-                                   key=self.join_info.key_list,
+                                   backend=self.backend, key=self.key,
                                    quick=self.quick)
 
         if result.failures > 0:
@@ -347,12 +331,10 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
                                  The key is the key found, to be used,
                                  if a key is created and found.
     """
-    ispd = is_pandas_df(left)
     nL, nR = left.shape[0], right.shape[0]
     if isinstance(key, str) or is_sequence(key):
         check_is_usable_key(left, right, key, raise_if_not=True)
-        # return left, right, key  # won't get here if not OK
-        mode = 'common'
+        mode = 'key'   # key provided
     elif key == True:
         mode = 'find'   # try to find a key
     elif key:
@@ -367,41 +349,52 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
         if key is None:
             mode = 'common' if nL == nR else 'rownum'
 
-    all_names = set(col_names(left)) | set(col_names(right))
-    exists = find_free_name(all_names, [HASH_DIFF_KEY + 'exists'])
-    if key:
-        join = left.merge if is_pandas else left.join
-        kw = {'suffixes': ('', '_R')} if is_pandas else {'suffix': '_R'}
-        key = [key] if isinstance(key, str) else key
-        left = index_and_exists(left, DataFrame, None, exists)
-        right = index_and_exists(right, DataFrame, None, exists)
-        dfj = df_join(left, right, key, key, **kw)
-        L = dfj[col_names(left)]
-        R = dfj[key_list + [f for f in col_names(dfj) if f.endswith('_R')]]
-        renames = set(col_names(R)) - set(key_list)
-        R = df_rename_cols(R, {c: c[:-2] for c in renames})
-        info = JoinInfo(False, key, exists)
+    if not key or nL != nR:
+        all_names = set(col_names(left)) | set(col_names(right))
+        orig_key = key
+        if not key:
+            key = find_free_name(all_names, [HASH_DIFF_KEY])
+            DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
+            left = DataFrame(
+                    {key + '_L': index_col(is_pandas, left.shape[0])}
+                    | {k: left[k] for k in col_names(left)}
+            )
+            right = DataFrame(
+                    {key + '_R': index_col(is_pandas, right.shape[0])}
+                    | {k + '_R': right[k] for k in col_names(right)}
+            )
+            keyL, keyR = [key +  '_L'], [key + '_R']
+#        print(keyL, keyR, file=sys.stderr)
+            kw = {'suffixes': ('', '_R')} if is_pandas else {'suffix': '_R'}
+            print(key, keyL, keyR, file=sys.stderr)
+            print(left, file=sys.stderr)
+            print(right, file=sys.stderr)
+            join = left.merge if is_pandas else left.join
+            dfj = join(right, left_on=keyL, right_on=keyR, how='outer', **kw)
+            R = dfj[right.columns]
+        else:
+            keyL = keyR = [key]
+            key_list = key if type(key) == list else [key]
+            keyL = [k +  '_L' for k in key_list] if not orig_key else key_list
+            keyR = [k +  '_R' for k in key_list] if not orig_key else key_list
+    #        print(keyL, keyR, file=sys.stderr)
+            kw = {'suffixes': ('', '_R')} if is_pandas else {'suffix': '_R'}
+    #        print(key, keyL, keyR, file=sys.stderr)
+    #        print(left, file=sys.stderr)
+    #        print(right, file=sys.stderr)
+            join = left.merge if is_pandas else left.join
+            dfj = join(right, left_on=keyL, right_on=keyR, how='outer', **kw)
+    #        print(dfj, file=sys.stderr)
+    #        pl.Config.set_tbl_width_chars(-1)
+    #        pl.Config.set_tbl_cols(-1)
+            R = dfj[keyR + [r + '_R' for r in right.columns[len(keyR):]]]
+            R = df_rename_cols(R, {c: c[:-2] for c in col_names(R)})
+        L = dfj[left.columns]
+#        R = dfj[keyR + [r + '_R' for r in right.columns[len(keyR):]]]
     else:
-        key = find_free_name(all_names, [HASH_DIFF_KEY])
-        DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
-        L = index_and_exists(left, DataFrame, key, exists)
-        R = index_and_exists(right, DataFrame, key, exists)
-        info = JoinInfo(True, key, exists)
-    return L, R, info
+        L, R = df_sort(left, key), df_sort(right, key)
 
-
-def index_and_exists(df, DataFrame, is_pandas, idx_name, exists_name):
-    """
-    Creates data frame from df.
-
-    If idx_name is non-null, creates an index called that.
-    Always creates exists column that is 1 for all rows.
-    """
-    return = DataFrame(
-        {idx_name: index_col(is_pandas, df.shape[0])} if key else {}
-        | {exists: 1}
-        | {k: df[k] for k in col_names(df)}
-    )
+    return L, R, key
 
 
 def find_common_key(left, right, verbosity=1):
@@ -427,15 +420,11 @@ def find_common_key(left, right, verbosity=1):
                     if R.shape[0] == nR:
                         return keys
 
-    warn('No usable key found. Using row number.', verbose=verbosity > 0)
+    warn('No usable key find. Use row number.', verbose=verbosity > 0)
     return None
 
 
 def check_is_usable_key(left, right, key, raise_if_not=False):
-    """
-    Check whether key constitutes a usable primary key
-    for left and right dataframes.
-    """
     keys = listify(key)
     str_key = ','.join(key)
     nL, nR = left.shape[0], right.shape[0]

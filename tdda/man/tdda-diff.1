@@ -14,16 +14,15 @@
             [\fB--prefixes\fR \fIPREFIXES\fP]
             [\fB--no-config\fR]
             [\fB--strict\fR] [\fB--medium\fR] [\fB--loose\fR] [\fB--permissive\fR]
-            \fILEFT\fP \fIRIGHT\fP [\fIOUTPATH\fP]
+            \fILEFT\fP \fIRIGHT\fP
 
 .SH POSITIONAL ARGUMENTS
-\fILEFT\fP
+\fILEFT\fP The 'left' (or actual) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
 
 .PP
-\fIRIGHT\fP
-
-.PP
-\fIOUTPATH\fP
+\fIRIGHT\fP The 'right' (or expected) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
 
 .SH DESCRIPTION
 The \fBtdda diff\fR command compares two tabular datasets in CSV or Parquet
@@ -35,8 +34,38 @@ numeric comparisons. It also provides a number of options for controlling
 the display of differences.
 
 .PP
-By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+The \fBtdda diff\fR functionality always first builds dataframes from the
+\fILEFT\fP and \fIRIGHT\fP sources. The datasets are then compared and differences
+reported.
+
+.PP
+If no key is provided, rows are compared based on position in the file,
+i.e. row \fIn\fP in the left file is compared to row \fIn\fP in the right file.
+If the files contain different numbers of rows, the shorter on is
+considered to have "blanks" at the end, (these being shown differently
+from nulls. The \fB--engine\fR and \fB--backend\fR options give control over
+the data frame engine and backend (in the case of Pandas).
+
+.PP
+If key is provided (which should uniquely identify rows), the right
+data frame is joined to the left data frame using an outer join,
+and the joined rows are compared.
+
+.PP
+By default, all fields are considered and comparisons are typed.
+Options, including \fB--strict\fR, \fB--medium\fR, \fB--loose\fR and \fB--precision\fR
+control various aspects of the comparison, and the \fB--fields\fR and
+\fB--xfields\fR options can be used to restrict the fields compared
+and reported.
+
+.PP
+If no (qualifying) differences are found, the output is empty.
+
+.PP
+If differences are found, summary information is reported
+followed by a difference table. The layout, colouring, and other
+aspects of styling of the output tables can be controlled with
+options.
 
 .SH OPTIONS
 \fB--fields\fR \fIFIELD1,FIELD2\fP,...
@@ -74,7 +103,7 @@ as typed values after reading. Ke
   Show black and white output. Also enables --LR by default
 
 .PP
-\fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP
+\fB--colours\fR, \fB-c\fR \fICOLOURS\fP
 .br
   Use colours specified e.g. -c red-blue
 
@@ -142,44 +171,33 @@ as typed values after reading. Ke
   Use loose (permissive) type comparisons
 
 .PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine. *
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine.
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                        (when dataframe engine is Pandas)
+.br
+                            \fBn\fR for numpy_nullable *
+.br
+                            \fBa\fR for pyarrow
+.br
+                            \fBo\fR for original.
+
+.PP
 \fB--help\fR, \fB-?\fR, \fB--?\fR
 .br
   Show help on \fBtdda diff\fR\&.
 
 .SH EXAMPLES
+Data suitable for all examples can be obtained with
+
+.PP
+\fBtdda examples diff\fR
 .IP "  1." 5
-tdda diff --mono a.csv b.csv
+tdda diff a.csv a.csv
 
 .PP
-Difference summary:
-.br
-DataFrames have same structure, but different values.
-.br
-Total number of different values: 2 of 24 (8.33%).
-.br
-Total number of rows with differences: 2
-.br
-Total number of columns with differences: 2:
-.br
-           1: sq
-.br
-           1: name
-
-.PP
-\fBValue Differences (all rows with differences)\fP
-.br
-┏━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━┓
-.br
-┃      ┃    \fBsq\fP ┃    \fBsq\fP ┃   \fBname\fP ┃   \fBname\fP ┃
-.br
-┃      ┃ \fBInt64\fP ┃ \fBInt64\fP ┃ \fBstring\fP ┃ \fBstring\fP ┃
-.br
-┃  \fBrow\fP ┃     < ┃     > ┃      < ┃      > ┃
-.br
-┡━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━┩
-.br
-│    2 │     9 │     9 │  \fBthree\fP │  \fBThree\fP │
-.br
-│    3 │    \fB16\fP │    \fB15\fP │   four │   four │
-.br
-└──────┴───────┴───────┴────────┴────────┘
+This is the simplest form of the command. It will read a.csv and
+convert it to a data frame, using the default back end (Pandas).

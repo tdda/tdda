@@ -1,0 +1,49 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "n",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            }
+        ],
+        "encoding": "latin-1",
+        "delimiter": "|",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "null_indicator": ".",
+        "header_row_count": 1,
+        "header_row": 0
+    },
+    "pandas.DataFrame.to_csv": {
+        "sep": "'|'",
+        "encoding": "'latin-1'",
+        "date_format": "'ISO8601'",
+        "na_rep": "'.'",
+        "index": "False"
+    },
+    "pandas.read_csv": {
+        "encoding": "latin-1",
+        "delimiter": "|",
+        "quotechar": "\"",
+        "escapechar": "\\",
+        "na_values": ".",
+        "keep_default_na": false,
+        "header": 0,
+        "date_format": "ISO8601",
+        "index_col": null,
+        "dtype": {
+            "n": "int64",
+            "f": "float64"
+        }
+    }
+}

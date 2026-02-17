@@ -1,0 +1,85 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "int",
+                "fieldtype": "int"
+            },
+            {
+                "name": "float",
+                "fieldtype": "float"
+            },
+            {
+                "name": "bool1",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "bool2",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "bool3",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "stri",
+                "fieldtype": "int"
+            },
+            {
+                "name": "strf",
+                "fieldtype": "float"
+            },
+            {
+                "name": "string",
+                "fieldtype": "string"
+            },
+            {
+                "name": "string_accents",
+                "fieldtype": "string"
+            },
+            {
+                "name": "string_torture",
+                "fieldtype": "string"
+            },
+            {
+                "name": "date",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "datetime",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "datetimezone",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "nil_bool",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "nil_str",
+                "fieldtype": "string"
+            },
+            {
+                "name": "row2",
+                "fieldtype": "int"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "stutter_quotes": false,
+        "date_format": "iso8601datetime",
+        "null_indicator": "",
+        "accept_percentages_as_floats": false,
+        "header_row_count": 1
+    }
+}

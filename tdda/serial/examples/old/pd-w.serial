@@ -1,0 +1,13 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "pandas.DataFrame.to_csv": {
+        "sep": ",",
+        "encoding": "UTF-8",
+        "escapechar": "\\",
+        "quotechar": "\"",
+        "date_format": "ISO8601",
+        "na_rep": "",
+        "header": 0
+    }
+}

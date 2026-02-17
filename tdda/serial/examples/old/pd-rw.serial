@@ -1,0 +1,26 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "pandas.read_csv": {
+        "sep": ",",
+        "encoding": "UTF-8",
+        "escapechar": "\\",
+        "quotechar": "\"",
+        "dtype": {
+            "n": "Int64",
+            "f": "float",
+            "s": "string"
+        },
+        "na_values": "",
+        "keep_default_na": false
+    },
+    "pandas.DataFrame.to_csv": {
+        "sep": ",",
+        "encoding": "UTF-8",
+        "escapechar": "\\",
+        "quotechar": "\"",
+        "date_format": "ISO8601",
+        "na_rep": "",
+        "header": 0
+    }
+}

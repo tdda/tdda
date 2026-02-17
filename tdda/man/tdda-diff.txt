@@ -14,15 +14,15 @@ SYNOPSIS
               [[1m‐‐prefixes [4m[22mPREFIXES[24m]
               [[1m‐‐no‐config[22m]
               [[1m‐‐strict[22m] [[1m‐‐medium[22m] [[1m‐‐loose[22m] [[1m‐‐permissive[22m]
-              [4mLEFT[24m [4mRIGHT[24m [[4mOUTPATH[24m]
+              [4mLEFT[24m [4mRIGHT[0m
 
 POSITIONAL ARGUMENTS
 
-  [4mLEFT[0m
+  [4mLEFT[24m The ’left’ (or actual) on‐disk data frame for comparison, usually
+  supplied as a parquet file or a flat file, with or without metadata.
 
-  [4mRIGHT[0m
-
-  [4mOUTPATH[0m
+  [4mRIGHT[24m The ’right’ (or expected) on‐disk data frame for comparison, usually
+  supplied as a parquet file or a flat file, with or without metadata.
 
 DESCRIPTION
 
@@ -34,8 +34,33 @@ DESCRIPTION
   numeric comparisons. It also provides a number of options for controlling
   the display of differences.
 
-  By default, comparisons are row‐based and consider all fields (columns),
-  as typed values after reading. Ke
+  The [1mtdda diff [22mfunctionality always first builds dataframes from the
+  [4mLEFT[24m and [4mRIGHT[24m sources. The datasets are then compared and differences
+  reported.
+
+  If no key is provided, rows are compared based on position in the file,
+  i.e. row [4mn[24m in the left file is compared to row [4mn[24m in the right file.
+  If the files contain different numbers of rows, the shorter on is
+  considered to have "blanks" at the end, (these being shown differently
+  from nulls. The [1m‐‐engine [22mand [1m‐‐backend [22moptions give control over
+  the data frame engine and backend (in the case of Pandas).
+
+  If key is provided (which should uniquely identify rows), the right
+  data frame is joined to the left data frame using an outer join,
+  and the joined rows are compared.
+
+  By default, all fields are considered and comparisons are typed.
+  Options, including [1m‐‐strict[22m, [1m‐‐medium[22m, [1m‐‐loose [22mand [1m‐‐precision[0m
+  control various aspects of the comparison, and the [1m‐‐fields [22mand
+  [1m‐‐xfields [22moptions can be used to restrict the fields compared
+  and reported.
+
+  If no (qualifying) differences are found, the output is empty.
+
+  If differences are found, summary information is reported
+  followed by a difference table. The layout, colouring, and other
+  aspects of styling of the output tables can be controlled with
+  options.
 
 OPTIONS
 
@@ -60,7 +85,7 @@ OPTIONS
   [1m‐‐bw[0m
     Show black and white output. Also enables ‐‐LR by default
 
-  [1m‐‐colours[22m, [1m‐c[22m, [1m‐‐colours [4m[22mCOLOURS[0m
+  [1m‐‐colours[22m, [1m‐c [4m[22mCOLOURS[0m
     Use colours specified e.g. ‐c red‐blue
 
   [1m‐‐dps [4m[22mN[0m
@@ -102,30 +127,71 @@ OPTIONS
   [1m‐‐permissive[0m
     Use loose (permissive) type comparisons
 
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine. *
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                          (when dataframe engine is Pandas)
+                              [1mn [22mfor numpy_nullable *
+                              [1ma [22mfor pyarrow
+                              [1mo [22mfor original.
+
   [1m‐‐help[22m, [1m‐?[22m, [1m‐‐?[0m
     Show help on [1mtdda diff[22m.
 
 EXAMPLES
 
-  tdda diff ‐‐mono a.csv b.csv
+  Data suitable for all examples can be obtained with
 
-  Difference summary:
-  DataFrames have same structure, but different values.
-  Total number of different values: 2 of 24 (8.33%).
-  Total number of rows with differences: 2
-  Total number of columns with differences: 2:
-             1: sq
-             1: name
+  [1mtdda examples diff[0m
+  tdda diff a.csv a.csv
 
-  [1mValue Differences (all rows with differences)[0m
-  ââââââââ³ââââââââ³ââââââââ³âââââââââ³âââââââââ
-  â      â    [1msq [22mâ    [1msq [22mâ   [1mname [22mâ   [1mname [22mâ
-  â      â [1mInt64 [22mâ [1mInt64 [22mâ [1mstring [22mâ [1mstring [22mâ
-  â  [1mrow [22mâ     < â     > â      < â      > â
-  â¡âââââââââââââââââââââââââââââââââââââââââ©
-  â    2 â     9 â     9 â  [1mthree [22mâ  [1mThree [22mâ
-  â    3 â    [1m16 [22mâ    [1m15 [22mâ   four â   four â
-  ââââââââ´ââââââââ´ââââââââ´âââââââââ´âââââââââ
+  This is the simplest form of the command. It will read a.csv and
+  convert it to a data frame, using the default back end (Pandas).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -23,6 +23,10 @@ def is_pandas_df(df):
     return isinstance(df, pd.DataFrame)
 
 
+def is_pandas_series(df):
+    return isinstance(df, pd.Series)
+
+
 def is_polars_df(df):
     return isinstance(df, pl.DataFrame)
 
@@ -162,18 +166,18 @@ def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
     else:
         error(f'Unknown DateFrame engine: {engine}.')
 
-def get_sceq(df):
+def get_scalar_eq(df):
     """
-    Return scale equal function for df
+    Return scalar equal function for df
     """
-    return pd_sceq if df_type(df) == 'pandas' else pl_sceq
+    return pd_scalar_eq if df_type(df) == 'pandas' else pl_scalar_eq
 
 
 def isnull_fn(df):
     return pd.isnull if df_type(df) == 'pandas' else lambda x: x is None
 
 
-def pd_sceq(L, R):
+def pd_scalar_eq(L, R):
     if pd.isnull(L):
         return pd.isnull(R)
     elif pd.isnull(R):
@@ -182,12 +186,24 @@ def pd_sceq(L, R):
         return L == R
 
 
-def pl_sceq(L, R):
+def pl_scalar_eq(L, R):
     return L == R
 
 
+def df_sort(df, keys):
+    return df.sort_values(keys) if df_type(df) == 'pandas' else df.sort(keys)
+
+
+def df_group_count(df, keys):
+    return (
+        df.groupby(keys).count().reset_index()
+        if df_type(df) == 'pandas'
+        else df.group_by(keys).len()
+    )
+
+
 def calc_nunique(col):
-    return col.nunique()
+    return col.nunique() if is_pandas_series(col) else col.n_unique()
 
 
 def get_engine_and_backend(engine=None, backend=None):
@@ -223,3 +239,18 @@ def find_non_fields(df, fields):
         if f not in set(self.fields).intersection(set(df))
     ]
 
+
+def df_add_named_col_with_values(df, name, values):
+    if is_pandas_df(df):
+        df[name] = values
+        return df
+    else:
+        return df.with_columns(pl.Series(name, values))
+
+
+def df_join(left, right, keyL, keyR, how='outer', **kw):
+    if is_pandas_df(left):
+        return left.merge(right, left_on=keyL, right_on=keyR, how=how, **kw)
+    else:
+        how = 'full' if how == 'outer' else how
+        return left.join(right, left_on=keyL, right_on=keyR, how=how, **kw)

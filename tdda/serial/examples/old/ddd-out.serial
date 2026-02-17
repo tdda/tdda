@@ -1,0 +1,73 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evennulls",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "oddnulls",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "evens",
+                "fieldtype": "int"
+            },
+            {
+                "name": "odds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evenreals",
+                "fieldtype": "number"
+            },
+            {
+                "name": "oddreals",
+                "fieldtype": "number"
+            },
+            {
+                "name": "evenstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "oddstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "elevens",
+                "fieldtype": "string"
+            },
+            {
+                "name": "binnedindex",
+                "fieldtype": "int"
+            },
+            {
+                "name": "binnedodds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "basedate",
+                "fieldtype": "date",
+                "format": "ISO8601"
+            },
+            {
+                "name": "evendates",
+                "fieldtype": "datetime",
+                "format": "ISO8601"
+            }
+        ],
+        "header_row_count": 1,
+        "metadata_source": "http://www.w3.org/ns/csvw",
+        "metadata_source_path": "/Users/njr/python/tdda/tdda/serial/examples/ddd-metadata.json",
+        "valid": true,
+        "metadata_source_dir": "/Users/njr/python/tdda/tdda/serial/examples",
+        "table_number": 0,
+        "n_tables": 1
+    }
+}

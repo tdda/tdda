@@ -1,0 +1,83 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "account_number",
+                "fieldtype": "int"
+            },
+            {
+                "name": "open_date",
+                "fieldtype": "datetime",
+                "format": "iso8601-datetime"
+            },
+            {
+                "name": "close_date",
+                "fieldtype": "datetime",
+                "format": "iso8601-datetime"
+            },
+            {
+                "name": "title",
+                "fieldtype": "string"
+            },
+            {
+                "name": "forename",
+                "fieldtype": "string"
+            },
+            {
+                "name": "middle_name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "surname",
+                "fieldtype": "string"
+            },
+            {
+                "name": "address1",
+                "fieldtype": "string"
+            },
+            {
+                "name": "city",
+                "fieldtype": "string"
+            },
+            {
+                "name": "postcode",
+                "fieldtype": "string"
+            },
+            {
+                "name": "home_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "mobile_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "email",
+                "fieldtype": "string"
+            },
+            {
+                "name": "account_type",
+                "fieldtype": "string"
+            },
+            {
+                "name": "overdraft_limit",
+                "fieldtype": "int"
+            },
+            {
+                "name": "cash_card_number",
+                "fieldtype": "string"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "stutter_quotes": false,
+        "date_format": "iso8601-datetime",
+        "accept_percentages_as_floats": false,
+        "header_row_count": 1,
+        "null_indicator": ""
+    }
+}

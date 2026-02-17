@@ -1,0 +1,8 @@
+{
+     "delimiter": ",",
+     "quoteChar": "\"",
+     "escapeChar": "\\",
+     "missingValues": "",
+    "header": true,
+     "header_rows": [0]
+}

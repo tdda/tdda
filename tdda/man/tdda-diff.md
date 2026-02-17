@@ -16,15 +16,17 @@
             [`--prefixes` *PREFIXES*]
             [`--no-config`]
             [`--strict`] [`--medium`] [`--loose`] [`--permissive`]
-            *LEFT* *RIGHT* [*OUTPATH*]
+            *LEFT* *RIGHT*
 
 ## POSITIONAL ARGUMENTS
 
-*LEFT*
+*LEFT* The 'left' (or actual) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
+See the section METADATA below for information about metadata matching rules.
 
-*RIGHT*
+*RIGHT* The 'right' (or expected) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
 
-*OUTPATH*
 
 ## DESCRIPTION
 
@@ -36,8 +38,34 @@ differences to consider, e.g. which fields, and strictness of type and
 numeric comparisons. It also provides a number of options for controlling
 the display of differences.
 
-By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+The `tdda diff` functionality always first builds dataframes from the
+*LEFT* and *RIGHT* sources. The datasets are then compared and differences
+reported.
+
+If no key is provided, rows are compared based on position in the file,
+i.e. row *n* in the left file is compared to row *n* in the right file.
+If the files contain different numbers of rows, the shorter on is
+considered to have "blanks" at the end, (these being shown differently
+from nulls. The `--polars` and `--backend` options give control over
+the data frame engine and backend (in the case of Pandas).
+
+If key is provided (which should uniquely identify rows), the right
+data frame is joined to the left data frame using an outer join,
+and the joined rows are compared.
+
+By default, all fields are considered and comparisons are typed.
+Options, including `--strict`, `--medium`, `--loose` and `--precision`
+control various aspects of the comparison, and the `--fields` and
+`--xfields` options can be used to restrict the fields compared
+and reported.
+
+If no (qualifying) differences are found, the output is empty.
+
+If differences are found, summary information is reported
+followed by a difference table. The layout, colouring, and other
+aspects of styling of the output tables can be controlled with
+options.
+
 
 ## OPTIONS
 
@@ -64,7 +92,7 @@ as typed values after reading. Ke
 `--bw`  
   Show black and white output. Also enables --LR by default
 
-`--colours`, `-c`, `--colours` *COLOURS*  
+`--colours`, `-c` *COLOURS*  
   Use colours specified e.g. -c red-blue
 
 
@@ -125,12 +153,71 @@ as typed values after reading. Ke
 
 ## EXAMPLES
 
-Data suitable for all examples can be obtained with
+Data suitable for all examples can be obtained with `tdda examples diff`,
+from a directory in which you are happy for files to be written.
 
 `tdda examples diff`
 
-1. tdda diff a.csv a.csv
+1. tdda diff a.parquet b.parquet
 
-This is the simplest form of the command. It will read a.csv and
-convert it to a data frame, using the default back end (Pandas).
+Compare dataframes read from a.parquet and b.parquet
+(with all default settings).
 
+There is no output if they are the same
+
+2. tdda diff a.csv b.csv
+
+As above, but now creating dataframes from CSV files using default
+settings (unless matching metadata is found, in which case it will
+be used).
+
+3. tdda diff a.tsv b.psv
+
+As above, except the `.tsv' and `.psv` extensions will cause the
+separator fo the flat files to be set as TAB and PIPE (|)
+respectively.
+
+4. tdda diff a.csv b.txt:md.serial
+
+As above except that metadata for b.txt will be sought in md.serial,
+which will be assumed to be a `tdda.serial` flat-file metadata
+specification file. Alternative formats for metadata are
+CSVW (typically md-metadata.json) or Frictionless (typically md.table.json
+or md.table.yaml).
+
+5. tdda diff a.csv b.csv --fields 'row,sq,recip'
+
+As above, but restrict attention to fields `row`, `sq`, and `recip`.
+(These need not exist.)
+
+5. tdda diff a.csv b.csv --xfields 'name,even,date'
+
+As above, but ignore any fields called `name`, `even`, or `date`.
+(These need not exist.)
+
+6. tdda diff a.csv b.csv --vertical
+
+As above, but shows rows from the left and right datasets on separate lines,
+rather than on a single line interleaved (the default, --horizontal).
+Useful for wide datasets.
+
+7. tdda diff a.csv b.csv --precision 2
+
+As above, but sets the precision for floating-point comparisons to 2
+decimal places, i.e. do report differences if the floating-point values
+both round to the same value to 2 decimal places.
+
+8. tdda diff a.parquet b.tsv --maxdiffs 1
+
+As above, but stop reporting limit the table to 1 row of differences.
+(The summary still includes all rows.)
+
+9. tdda diff a.psv b.parquet --polars
+
+As above, but use polars dataframes.
+
+10. tdda diff a.psv b.parquet --backend n
+
+As above, but use pandas with the `numpy_nullable` backend.
+
+11. tdda diff a.csv z.csv --key row

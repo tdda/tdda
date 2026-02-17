@@ -17,15 +17,16 @@ tdda diff [--fields FIELD1,FIELD2,...]
             [--prefixes PREFIXES]
             [--no-config]
             [--strict] [--medium] [--loose] [--permissive]
-            LEFT RIGHT [OUTPATH]
+            LEFT RIGHT
 ```
 #### POSITIONAL ARGUMENTS
 
-*LEFT*
+*LEFT* The 'left' (or actual) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
 
-*RIGHT*
+*RIGHT* The 'right' (or expected) on-disk data frame for comparison, usually
+supplied as a parquet file or a flat file, with or without metadata.
 
-*OUTPATH*
 
 #### DESCRIPTION
 
@@ -37,8 +38,34 @@ differences to consider, e.g. which fields, and strictness of type and
 numeric comparisons. It also provides a number of options for controlling
 the display of differences.
 
-By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+The `tdda diff` functionality always first builds dataframes from the
+*LEFT* and *RIGHT* sources. The datasets are then compared and differences
+reported.
+
+If no key is provided, rows are compared based on position in the file,
+i.e. row *n* in the left file is compared to row *n* in the right file.
+If the files contain different numbers of rows, the shorter on is
+considered to have "blanks" at the end, (these being shown differently
+from nulls. The `--engine` and `--backend` options give control over
+the data frame engine and backend (in the case of Pandas).
+
+If key is provided (which should uniquely identify rows), the right
+data frame is joined to the left data frame using an outer join,
+and the joined rows are compared.
+
+By default, all fields are considered and comparisons are typed.
+Options, including `--strict`, `--medium`, `--loose` and `--precision`
+control various aspects of the comparison, and the `--fields` and
+`--xfields` options can be used to restrict the fields compared
+and reported.
+
+If no (qualifying) differences are found, the output is empty.
+
+If differences are found, summary information is reported
+followed by a difference table. The layout, colouring, and other
+aspects of styling of the output tables can be controlled with
+options.
+
 
 #### OPTIONS
 
@@ -65,7 +92,7 @@ as typed values after reading. Ke
 `--bw`  
   Show black and white output. Also enables --LR by default
 
-`--colours`, `-c`, `--colours` *COLOURS*  
+`--colours`, `-c` *COLOURS*  
   Use colours specified e.g. -c red-blue
 
 
@@ -110,6 +137,15 @@ as typed values after reading. Ke
 `--permissive`  
   Use loose (permissive) type comparisons
 
+`--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
+`--polars`, `--pl`          Use Polars as DataFrame engine.  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+                        (when dataframe engine is Pandas)  
+                            `n` for numpy_nullable *  
+                            `a` for pyarrow  
+                            `o` for original.  
+
+
 
 `--help`, `-?`, `--?`  
   Show help on `tdda diff`.
@@ -117,23 +153,12 @@ as typed values after reading. Ke
 
 #### EXAMPLES
 
-1. tdda diff --mono a.csv b.csv
+Data suitable for all examples can be obtained with
 
+`tdda examples diff`
 
-Difference summary:  
-DataFrames have same structure, but different values.  
-Total number of different values: 2 of 24 (8.33%).  
-Total number of rows with differences: 2  
-Total number of columns with differences: 2:  
-           1: sq  
-           1: name  
-  
-**Value Differences (all rows with differences)**  
-┏━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━┓  
-┃      ┃    **sq** ┃    **sq** ┃   **name** ┃   **name** ┃  
-┃      ┃ **Int64** ┃ **Int64** ┃ **string** ┃ **string** ┃  
-┃  **row** ┃     < ┃     > ┃      < ┃      > ┃  
-┡━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━┩  
-│    2 │     9 │     9 │  **three** │  **Three** │  
-│    3 │    **16** │    **15** │   four │   four │  
-└──────┴───────┴───────┴────────┴────────┘  
+1. tdda diff a.csv a.csv
+
+This is the simplest form of the command. It will read a.csv and
+convert it to a data frame, using the default back end (Pandas).
+
