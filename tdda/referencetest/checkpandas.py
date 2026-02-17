@@ -20,11 +20,11 @@ from tdda.referencetest.basecomparison import (
     FailureDiffs,
     ColDiff,
     DiffCounts,
-    SameStructureDDiff,
     create_row_diffs_mask,
     valid_level,
     ROW_NUM_HEADER
 )
+from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.pandasio import (
     pandas_to_csv,
     csv_to_pandas,

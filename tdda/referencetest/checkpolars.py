@@ -6,12 +6,11 @@ from tdda.referencetest.basecomparison import (
     FailureDiffs,
     ColDiff,
     DiffCounts,
-    SameStructureDDiff,
     create_row_diffs_mask,
     valid_level,
     ROW_NUM_HEADER
 )
-
+from tdda.referencetest.samestructurediff import SameStructureDDiff,
 from tdda.serial.polarsio import (
     csv_to_polars,
     polars_read_df,
