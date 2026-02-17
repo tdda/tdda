@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from tdda.referencetest.basecomparison import HASH_DIFF_KEY
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
+from tdda.referencetest.samestructurediff import HASH_DIFF_KEY
 from tdda.state import get_config
 from tdda.utils import (
     nvl, warn, error, stdout_console, is_sequence,

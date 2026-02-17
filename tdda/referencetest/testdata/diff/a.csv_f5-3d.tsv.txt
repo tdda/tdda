@@ -3,7 +3,7 @@ DataFrames have same structure, but different values.
 Total number of different values: 9 of 35 (25.71%).
 Total number of rows with differences: 3
 Total number of columns with differences: 7:
-           1: #Key
+           1: #
            1: row
            1: sq
            1: recip
@@ -13,7 +13,7 @@ Total number of columns with differences: 7:
 
 [1m                                                           Value Differences (all rows with differences)                                                            [0m
 ┏━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
-┃[1m    [0m┃[1m [0m[1m  #Key[0m[1m [0m┃[1m [0m[1m  #Key[0m[1m [0m┃[1m [0m[1m   row[0m[1m [0m┃[1m [0m[1m   row[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m   recip[0m[1m [0m┃[1m [0m[1m  recip[0m[1m [0m┃[1m [0m[1m   name[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m               date[0m[1m [0m┃[1m [0m[1m               date[0m[1m [0m┃
+┃[1m    [0m┃[1m [0m[1m     #[0m[1m [0m┃[1m [0m[1m     #[0m[1m [0m┃[1m [0m[1m   row[0m[1m [0m┃[1m [0m[1m   row[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m   recip[0m[1m [0m┃[1m [0m[1m  recip[0m[1m [0m┃[1m [0m[1m   name[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m               date[0m[1m [0m┃[1m [0m[1m               date[0m[1m [0m┃
 ┃[1m    [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Float64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃[1m [0m[1m string[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃[1m [0m[1mboolean[0m[1m [0m┃[1m [0m[1mboolean[0m[1m [0m┃[1m [0m[1m         datetime64[0m[1m [0m┃[1m [0m[1m         datetime64[0m[1m [0m┃
 ┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m       <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃[1m [0m[1m      <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m      <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃[1m [0m[1m                  <[0m[1m [0m┃[1m [0m[1m                  >[0m[1m [0m┃
 ┡━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩

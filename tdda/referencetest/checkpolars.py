@@ -10,7 +10,7 @@ from tdda.referencetest.basecomparison import (
     valid_level,
     ROW_NUM_HEADER
 )
-from tdda.referencetest.samestructurediff import SameStructureDDiff,
+from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.polarsio import (
     csv_to_polars,
     polars_read_df,
