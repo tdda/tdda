@@ -20,15 +20,34 @@ def col_names(df):
 
 
 def is_pandas_df(df):
-    return isinstance(df, pd.DataFrame)
+    if isinstance(df, pd.DataFrame):
+        return True
+    elif isinstance(df, pl.DataFrame):
+        return False
+    raise ValueError(f'{df} is not a Python or Polars DataFrame')
 
 
 def is_pandas_series(df):
-    return isinstance(df, pd.Series)
+    if isinstance(df, pd.Series):
+        return True
+    elif isinstance(df, pl.Series):
+        return False
+    raise ValueError(f'{df} is not a Python or Polars DataFrame')
 
 
 def is_polars_df(df):
-    return isinstance(df, pl.DataFrame)
+    return not(is_pandas_df(df))
+
+
+def lib(o):
+    """
+    Returns pd or pl according to whether o is a pandas or polars object
+    """
+    if (isinstance(o, pd.DataFrame) or isinstance(o, pd.Series)):
+        return pd
+    elif (isinstance(o, pl.DataFrame) or isinstance(o, pl.Series)):
+        return pl
+    raise ValueError(f'{o} is not a Python or Polars DataFrame or Series')
 
 
 def df_type(df):
@@ -254,3 +273,12 @@ def df_join(left, right, keyL, keyR, how='outer', **kw):
     else:
         how = 'full' if how == 'outer' else how
         return left.join(right, left_on=keyL, right_on=keyR, how=how, **kw)
+
+
+def concat_series(series):
+    if is_pandas_series(series[0]):
+        return pd.concat(series).reset_index(drop=True)
+    else:
+        return pl.concat(series)
+
+

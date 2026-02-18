@@ -37,113 +37,6 @@ ESC_MAP = str.maketrans({
 })
 TDDA_DIFF = 'tdda diff'
 
-class FailureDiffs:
-    """
-    Container for Information about comparison failures.
-
-    Args:
-
-        failures: Number of failures.
-                  Can also be accessed (read) as .count.
-
-        diffs: Diffs object, with descriptions of failures
-               Can also be accessed (read) as .descriptions.
-
-    Failures diffs objects have a boolean value of True if there
-    are failures (differences) and False if not.
-    """
-    def __init__(self, failures, diffs):
-         self.failures = failures
-         self.diffs = diffs
-
-    @property
-    def count(self):
-        return self.failures
-
-    @property
-    def description(self):
-        return self.diffs
-
-    def __str__(self):
-        msg = '\n'.join(self.diffs)
-        return f'Number of Differences: {self.failures}\n{msg}'
-
-    def __bool__(self):
-        return self.failures > 0
-
-    def __iter__(self):
-        """Make iterable to allow it to be assigned to a pair (2-tuple)"""
-        return (x for x in (self.failures, self.diffs))
-
-    def __eq__(self, other):
-        return self.failures == other.failures and self.diffs == other.diffs
-
-    @property
-    def pair(self):
-        return (self.failures, self.diffs)
-
-    def details(self, df, ref_df):
-        dfd = getattr(self.diffs, 'dfd', None)
-        diff = getattr(dfd, 'diff', None)
-        return diff.details(df, ref_df) if diff else None
-
-
-class DiffState:
-    """
-    Container for DataFrame differences state
-    """
-    def __init__(self, actual_nrows, ref_nrows, common_cols,
-                 wrong_types=None, extra_cols=None, missing_cols=None,
-                 out_of_order=False, n_diff_values=0):
-        self.actual_nrows = actual_nrows
-        self.ref_nrows = ref_nrows
-        self.common_cols = common_cols
-        self.wrong_types = nvl(wrong_types, [])  # where type checking applied
-        self.extra_cols = nvl(extra_cols, [])    # where specified
-        self.missing_cols = nvl(missing_cols, [])  # where specified
-        self.out_of_order = out_of_order         # if specified
-        self.n_diff_values = n_diff_values       # Only when not 'quick'
-                                                 # if there are structure
-                                                 # differences
-
-    @property
-    def same_nrows(self):
-        return self.actual_nrows == self.ref_nrows
-
-    @property
-    def diff_nrows(self):
-        return self.actual_nrows != self.ref_nrows
-
-    @property
-    def different(self):
-        return bool(
-            self.diff_nrows
-            or self.n_diff_values
-            or self.wrong_types
-            or self.extra_cols
-            or self.missing_cols
-            or self.out_of_order
-        )
-
-    @property
-    def same(self):
-        return not self.different
-
-    @property
-    def different_ignoring_types(self):
-        return bool(
-            self.diff_nrows
-            or self.n_diff_values
-            or self.extra_cols
-            or self.missing_cols
-            or self.out_of_order
-        )
-
-    @property
-    def same_ignoring_types(self):
-        return not self.different_ignoring_types
-
-
 
 class BaseComparison:
     """
@@ -223,8 +116,10 @@ class BaseComparison:
                             a DataFrame as its single parameter and returns
                             a vector of booleans (to specify which rows should
                             be compared).
+
             *precision*
                             Number of decimal places to compare float values.
+
             *msgs*
                             Optional Diffs object.
 
@@ -280,7 +175,7 @@ class BaseComparison:
             - a function taking a dataframe as its single parameter, and
               returning a list of field names to use.
         """
-        diffs = msgs  # better name
+        diffs = msgs  # better name; it is a Diffs object
 
         self.actual_path = actual_path
         self.expected_path = expected_path
@@ -812,7 +707,113 @@ class BaseComparison:
             loader = self.default_csv_loader
         return loader(csvfile, **kwargs)
 
-    ####
+
+
+class FailureDiffs:
+    """
+    Container for Information about comparison failures.
+
+    Args:
+
+        failures: Number of failures.
+                  Can also be accessed (read) as .count.
+
+        diffs: Diffs object, with descriptions of failures
+               Can also be accessed (read) as .descriptions.
+
+    Failures diffs objects have a boolean value of True if there
+    are failures (differences) and False if not.
+    """
+    def __init__(self, failures, diffs):
+         self.failures = failures
+         self.diffs = diffs
+
+    @property
+    def count(self):
+        return self.failures
+
+    @property
+    def description(self):
+        return self.diffs
+
+    def __str__(self):
+        msg = '\n'.join(self.diffs)
+        return f'Number of Differences: {self.failures}\n{msg}'
+
+    def __bool__(self):
+        return self.failures > 0
+
+    def __iter__(self):
+        """Make iterable to allow it to be assigned to a pair (2-tuple)"""
+        return (x for x in (self.failures, self.diffs))
+
+    def __eq__(self, other):
+        return self.failures == other.failures and self.diffs == other.diffs
+
+    @property
+    def pair(self):
+        return (self.failures, self.diffs)
+
+    def details(self, df, ref_df):
+        dfd = getattr(self.diffs, 'dfd', None)
+        diff = getattr(dfd, 'diff', None)
+        return diff.details(df, ref_df) if diff else None
+
+
+class DiffState:
+    """
+    Container for DataFrame differences state
+    """
+    def __init__(self, actual_nrows, ref_nrows, common_cols,
+                 wrong_types=None, extra_cols=None, missing_cols=None,
+                 out_of_order=False, n_diff_values=0):
+        self.actual_nrows = actual_nrows
+        self.ref_nrows = ref_nrows
+        self.common_cols = common_cols
+        self.wrong_types = nvl(wrong_types, [])  # where type checking applied
+        self.extra_cols = nvl(extra_cols, [])    # where specified
+        self.missing_cols = nvl(missing_cols, [])  # where specified
+        self.out_of_order = out_of_order         # if specified
+        self.n_diff_values = n_diff_values       # Only when not 'quick'
+                                                 # if there are structure
+                                                 # differences
+
+    @property
+    def same_nrows(self):
+        return self.actual_nrows == self.ref_nrows
+
+    @property
+    def diff_nrows(self):
+        return self.actual_nrows != self.ref_nrows
+
+    @property
+    def different(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.wrong_types
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same(self):
+        return not self.different
+
+    @property
+    def different_ignoring_types(self):
+        return bool(
+            self.diff_nrows
+            or self.n_diff_values
+            or self.extra_cols
+            or self.missing_cols
+            or self.out_of_order
+        )
+
+    @property
+    def same_ignoring_types(self):
+        return not self.different_ignoring_types
 
 
 class Diffs:
@@ -828,8 +829,9 @@ class Diffs:
     It doesn't (currently) try to tie up the messages to individual
     comparison operations.
 
-    When the objects are dataframes, the .dfd field contains a DataFrameDiffs
-    object with structured information on the dataframe differences.
+    When the objects are dataframes, the .dfd attribute contains
+    a DataFrameDiffs object with structured information
+    on the dataframe differences.
     """
     def __init__(self, lines=None):
         self.lines = lines or []

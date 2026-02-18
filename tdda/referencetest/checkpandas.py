@@ -14,6 +14,10 @@ import sys
 
 from collections import OrderedDict, namedtuple
 
+from tdda.abstractdf import (
+    concat_series,
+    lib,
+)
 from tdda.referencetest.basecomparison import (
     BaseComparison,
     Diffs,
@@ -74,9 +78,12 @@ class PandasComparison(BaseComparison):
 
         Returns:
             number of different values
+
+        Modifies:
+            diffs, by adding in any differences found
         """
         assert list(df) == list(ref_df)
-        assert df.shape == ref_df.shape
+        assert df.shape[1] == ref_df.shape[1]
 
         if self.precision is not None:
             df = df.round(self.precision).reset_index(drop=True)
@@ -107,9 +114,7 @@ class PandasComparison(BaseComparison):
             n_diffs = D.n_diff_values
             if n_diffs > 0:
                 diffs.dfd.diff = D
-                n_diffs = diffs.dfd.diff.n_diff_values
-                if n_diffs:
-                    diffs.append(str(diffs.dfd.diff))
+                diffs.append(str(D))
             return n_diffs
 
     def same_structure_summary_diffs(self, df, ref_df, diffs):
@@ -157,6 +162,8 @@ class PandasComparison(BaseComparison):
             right       is the rish-hand series
 
         Returns a short summary of where values differ, for two columns.
+
+        TODO: Extend summary if diff lengths, one < 10?
         """
         cdiff = single_col_diffs(left, right)
         if cdiff.n == 0:
@@ -500,8 +507,8 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
     """
     Compute differences between each pair of columns in two data frames.
 
-    The two data frames must have the same columns, the same lengths,
-    and compatible types.
+    The two data frames must have the same columns and compatible types,
+    but not necessarily the same length.
 
     Args:
         df        "left" data frame  (typically "actual")
@@ -512,7 +519,8 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
     """
     assert set(df) == set(ref_df)
     d = {}
-    n_vals = 0   # total number of values with diffenrences
+    n_vals = 0  # total number of values with differences
+                # (including values from "extra" rows)
     for c in list(df):
         diffs = single_col_diffs(df[c], ref_df[c])
         if diffs.n > 0:
@@ -533,30 +541,44 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
                               config=config)
 
 
-def single_col_diffs(L, R):
+def single_col_diffs(left, right):
     """
     Compares two columns and returns col indicating where they are different
 
     Args:
         L     "left-hand" column
-        R     "left-hand" column
+        R     "right-hand" column
 
     Returns:
         (diffs,    boolean mask with 1's where there are differences
          n)        number of differences
+
+    If they are different lengths, all the values in the longer row
+    are considered different (even if null).
+
+    The col diff is the length of the SHORTER of left and right
+    (with all the extra places "obviously" being different.
     """
-    if 'string' in (str(L.dtype), str(R.dtype)):
+    if 'string' in (str(left.dtype), str(right.dtype)):
         # "eq not implemented for
         #  <class 'pandas.core.arrays.string_.StringArray'>"
-        L, R = L.astype('string'), R.astype('string')
+        left, right = left.astype('string'), right.astype('string')
+    nL, nR = left.shape[0], right.shape[0]
+    # nD = abs(nL - nR)
+    L, R = left, right
+    if nL > nR:
+        L = left[:nR]
+    elif nR > nL:
+        R = right[:nL]
     different = ~(L.eq(R) | (L.isnull() & R.isnull()))
+    dflib = lib(L)
+    # if nD:
+    #     different = concat_series(
+    #         [different, dflib.Series(np.ones(nD, dtype=np.bool_))]
+    #     )
     if different.dtype == pd.BooleanDtype():
         different = different.fillna(True)
-    d = different.sum()
-    try:
-        d = d.item()
-    except AttributeError:
-        pass
+    d = int(different.sum()) + abs(nL - nR)
     return ColDiff(different, d)
 
 

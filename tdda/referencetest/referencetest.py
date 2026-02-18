@@ -13,7 +13,7 @@ from tdda.referencetest.checkfiles import FilesComparison
 from tdda.state import get_config
 from tdda.utils import TDDAError, nvl, error
 from tdda.abstractdf import (
-    df_type, df_definite, is_pandas_df, is_polars_df
+    df_type, df_definite, is_pandas_df, is_polars_df, lib
 )
 
 
@@ -433,7 +433,7 @@ class ReferenceTest(object):
 
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
-        lib = self.get_df_lib(df=df, engine=engine)
+        lib = self.get_comparison_lib(df=df, engine=engine)
         if self._should_regenerate(kind):
             lib._write_reference_dataframe(df, expected_path)
         else:
@@ -523,7 +523,7 @@ class ReferenceTest(object):
         if kind == 'parquet':
             kind = 'csv'  # it's just a key; can be parquet
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
-        lib = self.get_df_lib(engine=engine)
+        lib = self.get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
             lib._write_reference_dataframe_from_file(actual_path,
                                                      expected_path)
@@ -648,7 +648,7 @@ class ReferenceTest(object):
             kind = 'csv'  # it's just a key; can be parquet
 
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
-        lib = get_df_lib(engine=engine)
+        lib = get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
             lib._write_reference_dataframes_from_files(actual_paths,
                                                                expected_paths)
@@ -1028,7 +1028,7 @@ class ReferenceTest(object):
         """
         Internal method for regenerating reference data for a Pandas dataset
         """
-        lib = self.get_df_lib(df)
+        lib = self.get_comparison_lib(df)
         lib._write_reference_dataframe(df, reference_path)
 
     def _write_reference_result(
@@ -1065,16 +1065,12 @@ class ReferenceTest(object):
         lib = self.polars if engine == 'polars' else self.pandas
         return df_definite(ldf, engine), df_definite(rdf, engine), lib
 
-    def get_df_lib(self, df=None, engine=None):
-        if is_pandas_df(df):
-            return self.pandas
-        elif is_polars_df(df):
-            return self.polars
-        elif df is None:
+    def get_comparison_lib(self, df=None, engine=None):
+        if df is None:
             engine = get_preferred_engine(engine)
             return self.polars if engine == 'polars' else self.pandas
         else:
-            error('Unrecognized DataFrame.')
+            return self.pandas if is_pandas_df(df) else self.polars
 
     @staticmethod
     def _default_print_fn(*args, **kwargs):

@@ -24,8 +24,8 @@ QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
 class SameStructureDDiff:
     """
-    Container for information about differences betwee data frames
-    with the same structure.
+    Container for information about differences between data frames
+    with the same column structure.
     """
     def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
                  key=None, colour=None, config=None):
