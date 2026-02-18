@@ -1,5 +1,6 @@
 import os
 
+from tdda.abstractdf import df_len_diff
 from tdda.referencetest.basecomparison import (
     BaseComparison,
     Diffs,
@@ -208,9 +209,9 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
     n_vals = 0   # total number of values with diffenrences
     for c in df.columns:
         diffs = single_col_diffs(df[c], ref_df[c])
-        if diffs.n > 0:
+        if diffs.total > 0:
             d[c] = diffs.mask
-            n_vals += diffs.n
+            n_vals += diffs.total
     n_cols = len(d)  # number of columns with differences
 
     if n_vals > 0:
@@ -225,25 +226,31 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
                               n_vals, n_cols, n_rows, key=key, config=config)
 
 
-def single_col_diffs(L, R):
+def single_col_diffs(left, right):
     """
     Compares two columns and returns col indicating where they are different
 
     Args:
-        L     "left-hand" column
-        R     "left-hand" column
+        left     "left-hand" column
+        right    "right-hand" column
 
     Returns:
         (diffs,    boolean mask with 1's where there are differences
          n)        number of differences
     """
+    nL, nR = left.shape[0], right.shape[0]
+    L, R = left, right
+    if nL > nR:
+        L = left[:nR]
+    elif nR > nL:
+        R = right[:nL]
     if polars_types_match(L.dtype, R.dtype, level='loose'):
         different = ~(L.eq(R) | (L.is_null() & R.is_null()))
     else:
         different = ~(L.is_null() & R.is_null())
     if different.dtype == pl.Boolean:
         different = different.fill_null(True)
-    return ColDiff(different, different.sum())
+    return ColDiff(different, df_len_diff(L, R))
 
 
 def create_row_diff_counts(masks):

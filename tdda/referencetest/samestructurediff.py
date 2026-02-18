@@ -21,6 +21,11 @@ HASH_DIFF_KEY = '#'
 
 QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
+DEBUG = False
+def debug(*args):
+    if DEBUG:
+        print(*args, file=sys.stderr)
+
 
 class SameStructureDDiff:
     """
@@ -130,6 +135,11 @@ class SameStructureDDiff:
         vertical = nvl(C.vertical, False)
         prefix = vertical and (C.mono or C.bw)
         isnull = isnull_fn(df)
+        rows_delta = len(df) - len(ref_df)
+        nL, nR = len(df), len(ref_df)
+        debug('L>', df)
+        debug('R>', ref_df)
+
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
             if self.key:
@@ -143,7 +153,6 @@ class SameStructureDDiff:
             R = get_diffs_df_with_cols(
                 ref_df, cols, self.row_diff_counts.rowdiffs, n
             )
-
             pL, pR = C.stripped_prefixes(pre=' ' if vertical else '')
             if not self.key:
                 indexes = [
@@ -153,8 +162,15 @@ class SameStructureDDiff:
                     C.common(v, plain=True) for v in row_indexes
                 ]
             rows, plain_rows = [], []
-            L_table, R_table = df_to_lists(L), df_to_lists(R)
-            for r in range(n):
+            N = min(max(nL, nR), n)  # extend short tables to this
+            debug('>>> N', N, 'nL', nL, 'nR', nR, 'tr', target_rows,
+                  'ndr', self.n_diff_rows)
+            debug('L>>', L)
+            debug('R>>', R)
+            L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
+            debug(111, L_table)
+            debug(222, R_table)
+            for r in range(N):
                 l_vals = L_table[r]
                 r_vals = R_table[r]
                 if col0isKey and isnull(l_vals[0]):  # left row missing

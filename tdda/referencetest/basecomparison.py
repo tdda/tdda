@@ -7,7 +7,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2022
+Copyright (c) Stochastic Solutions Limited 2016-2026
 """
 
 import os
@@ -24,7 +24,6 @@ from tdda.abstractdf import (
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
-ColDiff = namedtuple('ColDiff', 'mask n')
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 DEFAULT_DIFF_ROWS = 10
@@ -251,7 +250,7 @@ class BaseComparison:
         # If sortby is specified, both DataFrames need to be
         # sorted.
         #
-        # Could also do a join here.
+        # --> Could also do a join here.
         #
         if sortby:
             sortby = self.resolve_option_flag(sortby, ref_df)
@@ -708,6 +707,14 @@ class BaseComparison:
         return loader(csvfile, **kwargs)
 
 
+class ColDiff:
+    def __init__(self, mask, extra):
+        self.mask = mask          # Boolean mask, 1 where different
+                                  # within common area (length)
+        self.n = int(sum(mask))   # Number of differences in common area
+        self.extra = extra        # Number of extra rows (left - right)
+        self.total = self.n + abs(extra)  # Total rows with differences
+                                          # including extra/missing rows
 
 class FailureDiffs:
     """
@@ -1002,7 +1009,6 @@ def escaped_list(items):
     return ','.join(item.translate(ESC_MAP) for item in items)
 
 
-
 def create_row_diffs_mask(masks):
     """
     Combine all column diff masks efficiently for mask
@@ -1032,7 +1038,6 @@ def valid_level(level):
         raise ValueError(f'Type match level must be one of strict, medium, '
                          f'or loose(/permissive), not {level}')
     return level
-
 
 
 def is_row_key(keyname):

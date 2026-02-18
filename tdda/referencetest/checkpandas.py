@@ -5,7 +5,7 @@ Source repository: http://github.com/tdda/tdda
 
 License: MIT
 
-Copyright (c) Stochastic Solutions Limited 2016-2024
+Copyright (c) Stochastic Solutions Limited 2016-2026
 """
 
 import csv
@@ -16,6 +16,7 @@ from collections import OrderedDict, namedtuple
 
 from tdda.abstractdf import (
     concat_series,
+    df_len_diff,
     lib,
 )
 from tdda.referencetest.basecomparison import (
@@ -154,30 +155,32 @@ class PandasComparison(BaseComparison):
         else:
             return 0
 
-    def single_col_difference_summary(self, name, left, right):
+    def single_col_difference_summary(self, name, left, right, n=10):
         """
         Args:
             name        is the name of the columns
             left        is the left-hand series
-            right       is the rish-hand series
+            right       is the right-hand series
 
         Returns a short summary of where values differ, for two columns.
 
         TODO: Extend summary if diff lengths, one < 10?
         """
         cdiff = single_col_diffs(left, right)
-        if cdiff.n == 0:
+        if cdiff.total == 0:
             return ''
 
-        l_vals = left[cdiff.mask][:10]
-        r_vals = right[cdiff.mask][:10]
-        n = len(l_vals)
+        nL, nR = len(left), len(right)
+        mL, mR = min(nL, n), min(nR, n)
+        l_vals = left[:nL][cdiff.mask[:nL]]
+        r_vals = right[:nR][cdiff.mask[:nR]]
+        N = max(nL, nR)
         s = (
-            'First 10 differences:\n'
-            if n > 10
-            else ('Difference%s:\n' % ('s' if n > 1 else ''))
+            f'First {n} differences:\n'
+            if N > n
+            else ('Difference%s:\n' % ('s' if N > 1 else ''))
         )
-        return f'{s}{col_comparison(l_vals, r_vals)}\n'
+        return f'{s}{col_comparison(l_vals, r_vals, n)}\n'
 
 
     def sample(self, values, start, stop):
@@ -498,7 +501,7 @@ def diff_masks(df, ref_df, only_diffs=False):
     }
     if only_diffs:
         for k in list(diffs):
-            if diff[k].n == 0:
+            if diff[k].total == 0:
                 del[k]
     return diffs
 
@@ -523,14 +526,15 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
                 # (including values from "extra" rows)
     for c in list(df):
         diffs = single_col_diffs(df[c], ref_df[c])
-        if diffs.n > 0:
+        if diffs.total > 0:
             d[c] = diffs.mask
-            n_vals += diffs.n
+            n_vals += diffs.total
     n_cols = len(d)  # number of columns with differences
 
     if n_vals > 0:
+        delta = df_len_diff(df, ref_df)
         D = create_row_diff_counts(list(d.values()))
-        n_rows = (D > 0).sum().item()  # number of rows with differences
+        n_rows = int((D > 0).sum()) + abs(delta)  # #rows with differences
         row_diff_counts = DiffCounts(D, n_rows)
     else:
         n_rows = 0
@@ -564,7 +568,6 @@ def single_col_diffs(left, right):
         #  <class 'pandas.core.arrays.string_.StringArray'>"
         left, right = left.astype('string'), right.astype('string')
     nL, nR = left.shape[0], right.shape[0]
-    # nD = abs(nL - nR)
     L, R = left, right
     if nL > nR:
         L = left[:nR]
@@ -578,21 +581,23 @@ def single_col_diffs(left, right):
     #     )
     if different.dtype == pd.BooleanDtype():
         different = different.fillna(True)
-    d = int(different.sum()) + abs(nL - nR)
-    return ColDiff(different, d)
+    return ColDiff(different, df_len_diff(left, right))
 
 
-def col_comparison(left, right):
-    n = min(len(left), 10)
-    indexes = [str(left.index[i]) for i in range(n)]
-    lefts = [repr(left.iloc[i]) for i in range(n)]
-    rights = [repr(right.iloc[i]) for i in range(n)]
+def col_comparison(left, right, n):
+    nL, nR = len(left), len(right)
+    M = max(nL, nR)
+    N = min(M, n)
+    idx = left if nL >= nR else right
+    indexes = [str(idx.index[i]) for i in range(N)]
+    lefts = [repr(left.iloc[i]) for i in range(nL)] + [''] * (N - nL)
+    rights = [repr(right.iloc[i]) for i in range(nR)] + [''] * (N - nR)
     df = pd.DataFrame({
         ROW_NUM_HEADER: indexes,
         'actual': lefts,
         'expected': rights,
     })
-    return df.to_string(index=False) if n > 0 else ''
+    return df.to_string(index=False) if N > 0 else ''
 
 
 def diff_dataframes(*args, **kwargs):
@@ -619,5 +624,3 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
-
-
