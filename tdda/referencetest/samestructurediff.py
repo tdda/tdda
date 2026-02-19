@@ -33,11 +33,12 @@ class SameStructureDDiff:
     with the same column structure.
     """
     def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 key=None, colour=None, config=None):
+                 row_delta, key=None, colour=None, config=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
+        self.row_delta = row_delta
         self.key = key
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
@@ -57,8 +58,9 @@ class SameStructureDDiff:
             f'Total number of rows with differences: {self.n_diff_rows:,}',
             f'Total number of columns with differences: {self.n_diff_cols:,}:',
         ])
+        absdelta = abs(self.row_delta)
         for c in col_names(self.diff_df):
-            n = self.diff_df[c].sum()
+            n = self.diff_df[c].sum() + absdelta
             lines.append(f'  {n:10,}: {c}')
 
         return '\n'.join(lines)

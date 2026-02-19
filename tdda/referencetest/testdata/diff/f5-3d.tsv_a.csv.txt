@@ -6,12 +6,12 @@ DataFrames have same structure, but different values.
 Total number of different values: 8 of 30 (26.67%).
 Total number of rows with differences: 3
 Total number of columns with differences: 6:
-           0: row
-           0: sq
-           0: recip
-           0: name
-           1: even
-           1: date
+           1: row
+           1: sq
+           1: recip
+           1: name
+           2: even
+           2: date
 
 [1m                                                   Value Differences (all rows with differences)                                                    [0m
 ┏━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓

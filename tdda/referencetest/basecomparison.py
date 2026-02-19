@@ -716,6 +716,15 @@ class ColDiff:
         self.total = self.n + abs(extra)  # Total rows with differences
                                           # including extra/missing rows
 
+    def __str__(self):
+        return (
+            'ColDiff(\n'
+            f'    mask={self.mask},\n'
+            f'    n={self.n},\n'
+            f'    extra={self.extra}, \n'
+            f'    total={self.total}\n'
+            ')')
+
 class FailureDiffs:
     """
     Container for Information about comparison failures.

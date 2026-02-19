@@ -215,15 +215,17 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
     n_cols = len(d)  # number of columns with differences
 
     if n_vals > 0:
+        delta = df_len_diff(df, ref_df, absolute=True)
         D = create_row_diff_counts(list(d.values()))
-        n_rows = (D > 0).sum()  # number of rows with differences
+        n_rows = (D > 0).sum() + abs(delta) # number of rows with differences
         row_diff_counts = DiffCounts(D, n_rows)
     else:
         n_rows = 0
         row_diff_counts = None
     diff_df = pl.DataFrame(d)
     return SameStructureDDiff(df.shape, diff_df, row_diff_counts,
-                              n_vals, n_cols, n_rows, key=key, config=config)
+                              n_vals, n_cols, n_rows, delta,
+                              key=key, config=config)
 
 
 def single_col_diffs(left, right):

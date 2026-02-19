@@ -541,8 +541,8 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
         row_diff_counts = None
     return SameStructureDDiff(df.shape,
                               pd.DataFrame(d), row_diff_counts,
-                              n_vals, n_cols, n_rows, key=key,
-                              config=config)
+                              n_vals, n_cols, n_rows, delta,
+                              key=key, config=config)
 
 
 def single_col_diffs(left, right):
