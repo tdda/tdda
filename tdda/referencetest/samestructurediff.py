@@ -130,19 +130,24 @@ class SameStructureDDiff:
         n = min(target_rows, self.n_diff_rows)
         cols = col_names(self.diff_df)
         col0isKey = cols and cols[0] == HASH_DIFF_KEY
-        m = len(cols)
+        nc = len(cols)
         C = self.config.referencetest
         vertical = nvl(C.vertical, False)
         prefix = vertical and (C.mono or C.bw)
         isnull = isnull_fn(df)
         rows_delta = len(df) - len(ref_df)
         nL, nR = len(df), len(ref_df)
+        delta = nL - nR
+        if delta:
+            blanks = [''] * nc
         debug('L>', df)
         debug('R>', ref_df)
+        debug('Key>', self.key)
+        debug('Delta>', delta)
 
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
-            if self.key:
+            if self.key or delta < 0:
                 L = get_diffs_df_with_cols(
                     df, cols, self.row_diff_counts.rowdiffs, n
                 )
@@ -150,9 +155,14 @@ class SameStructureDDiff:
                 L, row_indexes = get_diffs_df_with_cols_and_index(
                     df, cols, self.row_diff_counts.rowdiffs, n
                 )
-            R = get_diffs_df_with_cols(
-                ref_df, cols, self.row_diff_counts.rowdiffs, n
-            )
+            if delta < 0 and not self.key:
+                R, row_indexes = get_diffs_df_with_cols_and_index(
+                        ref_df, cols, self.row_diff_counts.rowdiffs, n
+                    )
+            else:
+                R = get_diffs_df_with_cols(
+                        ref_df, cols, self.row_diff_counts.rowdiffs, n
+                    )
             pL, pR = C.stripped_prefixes(pre=' ' if vertical else '')
             if not self.key:
                 indexes = [
@@ -162,34 +172,38 @@ class SameStructureDDiff:
                     C.common(v, plain=True) for v in row_indexes
                 ]
             rows, plain_rows = [], []
-            N = min(max(nL, nR), n)  # extend short tables to this
-            debug('>>> N', N, 'nL', nL, 'nR', nR, 'tr', target_rows,
+            debug('>>>nL', nL, 'nR', nR, 'tr', target_rows,
                   'ndr', self.n_diff_rows)
             debug('L>>', L)
             debug('R>>', R)
+            N = min(self.n_diff_rows, target_rows)
             L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
             debug(111, L_table)
             debug(222, R_table)
-            for r in range(N):
-                l_vals = L_table[r]
-                r_vals = R_table[r]
-                if col0isKey and isnull(l_vals[0]):  # left row missing
+            nlt, nrt = len(L_table), len(R_table)
+            for r in range(n):
+                left_missing, right_missing = nlt <= r, nrt <= r
+                l_vals = blanks if left_missing else L_table[r]
+                r_vals = blanks if right_missing else R_table[r]
+                if left_missing:
                     plstr = lstr = [''] * len(l_vals)
                 else:
                     lstr = [
-                        C.common(left) if eq(left, right)
-                                       else C.left_diff(left, prefix)
+                        C.left_diff(left, prefix)
+                        if right_missing or not eq(left, right)
+                        else C.common(left)
                         for (left, right) in zip(l_vals, r_vals)
                     ]
                     plstr = [
                         C.left_annotated(left, prefix) for left in l_vals
                     ]
-                if col0isKey and isnull(r_vals[0]):  # right row missing
+                if right_missing:
                     prstr = rstr = [''] * len(l_vals)
                 else:
                     rstr = [
-                        C.common(right) if eq(left, right)
-                                        else C.right_diff(right, prefix)
+                        C.right_diff(right, prefix)
+                        if left_missing or not eq(left, right)
+                        else C.common(right)
                         for (left, right) in zip(l_vals, r_vals)
                     ]
                     prstr = [
@@ -197,6 +211,7 @@ class SameStructureDDiff:
                     ]
                 if vertical:
                     if not self.key:
+                        debug('indexes', indexes, 'r', r, 'pl', pl_indexes)
                         rows.append([f'{indexes[r]}{pL}'] + lstr)
                         rows.append([f'{indexes[r]}{pR}'] + rstr)
                         plain_rows.append([f'{pl_indexes[r]}{pL}'] + plstr)

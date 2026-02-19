@@ -1,6 +1,6 @@
 Difference summary: 
 DataFrames have same structure, but different values.
-Total number of different values: 2 of 6 (33.33%).
+Total number of different values: 2 of 3 (66.67%).
 Total number of rows with differences: 2
 Total number of columns with differences: 1:
            2: s

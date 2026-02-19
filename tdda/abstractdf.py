@@ -126,17 +126,27 @@ def get_diffs_df_with_cols(df, *args, **kwargs):
 
 def polars_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     nc = '_tdda_nc_'
-    N = min(len(rowdiffs), n, len(df))
+    delta = len(df) - len(rowdiffs)
+    if delta > len(rowdiffs):
+        rowdiffs = concat_series([
+            rowdiffs,
+            pl.Series(np.ones(delta, dtype=np.bool))
+        ])
     return (
         df.with_columns(rowdiffs.alias(nc))
           .filter(pl.col('_tdda_nc_') > 0)
           .select(cols)
-          .head(N)
+          .head(n)
     )
 
 def pandas_get_diffs_df_with_cols(df, cols, rowdiffs, n):
-    N = min(len(rowdiffs), n, len(df))
-    return df[cols][rowdiffs > 0][:N]
+    delta = len(df) - len(rowdiffs)
+    if delta > 0:
+        rowdiffs = concat_series([
+            rowdiffs,
+            pd.Series(np.ones(delta, dtype=np.bool))
+        ])
+    return df[cols][rowdiffs > 0].head(n)
 
 
 def df_to_lists(df, *args, **kwargs):
@@ -154,7 +164,7 @@ def pandas_df_to_lists(df, n=None):
 
 def extend_table(table, ncols, target=None):
     if target is not None and len(table) < target:
-        table.extend(([''] * ncols) * (target - len(table)))
+        table.extend([ ([''] * ncols) for i in range(target - len(table))])
     return table
 
 

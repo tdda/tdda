@@ -97,7 +97,7 @@ class TestTDDADiff(ReferenceTestCase):
         """Most basic diff of two CSV files with two diffs"""
         actual = self.difftest('a.csv', 'b.csv')
         self.assertIn(
-            'Total number of different values: 2 of 28 (7.14%).',
+            'Total number of different values: 2 of 24 (8.33%).',
             actual)
 
     def test_a_tsv_b_tsv(self):
@@ -127,7 +127,7 @@ class TestTDDADiff(ReferenceTestCase):
         """Single column string data with 2 diffs"""
         actual = self.difftest('s1.csv', 's2.csv')
         self.assertIn(
-            'Total number of different values: 2 of 6 (33.33%).',
+            'Total number of different values: 2 of 3 (66.67%).',
             actual)
 
     # CROSS-TYPE
@@ -162,7 +162,7 @@ class TestTDDADiff(ReferenceTestCase):
     def test_a_csv_d_csv(self):
         """One different date value: fails"""
         actual = self.difftest('a.csv', 'd.csv')
-        self.assertIn('Total number of different values: 1 of 28 (3.57%).',
+        self.assertIn('Total number of different values: 1 of 24 (4.17%).',
                       actual)
 
     # DIFFERENT NUMBER OF ROWS

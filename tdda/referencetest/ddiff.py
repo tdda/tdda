@@ -349,31 +349,30 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
         if key is None:
             mode = 'common' if nL == nR else 'rownum'
 
-    if not key or nL != nR:
-        all_names = set(col_names(left)) | set(col_names(right))
-        if not key:
-            key = find_free_name(all_names, [HASH_DIFF_KEY])
-            DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
-            left = DataFrame(
-                    {key + '_L': index_col(is_pandas, left.shape[0])}
-                    | {k + '_L': left[k] for k in col_names(left)}
-            )
-            right = DataFrame(
-                    {key + '_R': index_col(is_pandas, right.shape[0])}
-                    | {k + '_R': right[k] for k in col_names(right)}
-            )
-        key_list = key if type(key) == list else [key]
-        keyL = [k +  '_L' for k in key_list]
-        keyR = [k +  '_R' for k in key_list]
-        join = left.merge if is_pandas else left.join
-        dfj = join(right, left_on=keyL, right_on=keyR, how='outer')
+    L, R = left, right
+    # if not key or nL != nR:
+    #     all_names = set(col_names(left)) | set(col_names(right))
+    #     if not key:
+    #         key = find_free_name(all_names, [HASH_DIFF_KEY])
+    #         DataFrame = pd.DataFrame if is_pandas else pl.DataFrame
+    #         left = DataFrame(
+    #                 {key + '_L': index_col(is_pandas, left.shape[0])}
+    #                 | {k + '_L': left[k] for k in col_names(left)}
+    #         )
+    #         right = DataFrame(
+    #                 {key + '_R': index_col(is_pandas, right.shape[0])}
+    #                 | {k + '_R': right[k] for k in col_names(right)}
+    #         )
+    #     key_list = key if type(key) == list else [key]
+    #     keyL = [k +  '_L' for k in key_list]
+    #     keyR = [k +  '_R' for k in key_list]
+    #     join = left.merge if is_pandas else left.join
+    #     dfj = join(right, left_on=keyL, right_on=keyR, how='outer')
 
-        L = dfj[left.columns]
-        R = dfj[right.columns]
-        L = df_rename_cols(L, {c: c[:-2] for c in col_names(L)})
-        R = df_rename_cols(R, {c: c[:-2] for c in col_names(R)})
-    else:
-        L, R = left, right
+    #     L = dfj[left.columns]
+    #     R = dfj[right.columns]
+    #     L = df_rename_cols(L, {c: c[:-2] for c in col_names(L)})
+    #     R = df_rename_cols(R, {c: c[:-2] for c in col_names(R)})
 
     return L, R, key
 
