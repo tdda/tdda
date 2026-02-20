@@ -531,8 +531,8 @@ def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
             n_vals += diffs.total
     n_cols = len(d)  # number of columns with differences
 
+    delta = df_len_diff(df, ref_df)
     if n_vals > 0:
-        delta = df_len_diff(df, ref_df)
         D = create_row_diff_counts(list(d.values()))
         n_rows = int((D > 0).sum()) + abs(delta)  # #rows with differences
         row_diff_counts = DiffCounts(D, n_rows)

@@ -285,9 +285,11 @@ def df_add_named_col_with_values(df, name, values):
         return df.with_columns(pl.Series(name, values))
 
 
-def df_join(left, right, keyL, keyR, how='outer', **kw):
+def df_join(left, right, keyL, keyR=None, how='outer', **kw):
+    keyR = nvl(keyR, keyL)
     if is_pandas_df(left):
-        return left.merge(right, left_on=keyL, right_on=keyR, how=how, **kw)
+        return left.merge(right, left_on=keyL, right_on=keyR,
+                          how=how, **kw)
     else:
         how = 'full' if how == 'outer' else how
         return left.join(right, left_on=keyL, right_on=keyR, how=how, **kw)

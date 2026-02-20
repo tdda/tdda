@@ -1,17 +1,29 @@
 import os
 import sys
 
+import pandas as pd
+import polars as pl
+
 from rich.console import Console
-from rich.terminal_theme import MONOKAI, DIMMED_MONOKAI, SVG_EXPORT_THEME, DEFAULT_TERMINAL_THEME
+from rich.terminal_theme import (
+    MONOKAI, DIMMED_MONOKAI, SVG_EXPORT_THEME, DEFAULT_TERMINAL_THEME
+)
 
+from tdda.abstractdf import (
+    col_names,
+    df_add_named_col_with_values
+)
 from tdda.config import Config
-
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.captureoutput import capture_output
 
-from tdda.referencetest.ddiff import ddiff_helper
+from tdda.referencetest.ddiff import (
+    check_is_usable_key,
+    find_common_key,
+    find_usable_key,
+    ddiff_helper,
+)
 from tdda.state import set_testing
-
 from tdda.utils import swap_ext, rprint
 
 REFTESTDIR = os.path.dirname(__file__)     # tdda.referencetest
@@ -186,6 +198,104 @@ class TestTDDADiff(ReferenceTestCase):
 
         # test against same file
         # self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical')
+
+
+class TestKeyFunctions:
+    def testIsUsableKey(self):
+        dfL = df_add_named_col_with_values(
+            self.read_parquet(inpath('a.parquet')),
+            'small',
+            [i // 2 for i in range(4)]
+        )
+        dfR = df_add_named_col_with_values(
+            self.read_parquet(inpath('b.parquet')),
+            'small',
+            [1 - (i // 2) for i in range(4)]
+        )
+
+        # All except even, small are usable
+        for key in ('row', 'sq', 'recip', 'date'):
+            self.assertEqual(
+                (key, check_is_usable_key(dfL, dfR, key)),
+                (key, True)
+            )
+        # even, small not usable
+        self.assertEqual(check_is_usable_key(dfL, dfR, 'even'), False)
+        self.assertEqual(check_is_usable_key(dfL, dfR, 'small'), False)
+
+        # even, small usable as combination key
+        self.assertTrue(check_is_usable_key(dfL, dfR, ['even', 'small']))
+
+        # Exception if col doesn't exist.
+        # Different exceptions for Polars/Pandas
+        # Possibly not worth testing...
+
+    def testFindUsableKeySameLen(self):
+        dfL = self.read_parquet(inpath('a.parquet'))
+        dfR = self.read_parquet(inpath('b.parquet'))
+        fields = ['row', 'sq', 'recip', 'name', 'even', 'date']
+        # None
+        key = find_usable_key(self.is_pandas, dfL, dfR)
+        left, right, key = find_usable_key(self.is_pandas, dfL, dfR, key=None)
+        self.assertEqual(key, '#')
+
+        expected = ['#'] + fields
+        self.assertEqual(col_names(left), expected)
+        self.assertEqual(col_names(right), expected)
+
+        # True (unchanged)
+        left, right, key = find_usable_key(self.is_pandas, dfL, dfR, key=True)
+        self.assertEqual(key, 'row')  # first usable key
+        self.assertEqual(col_names(left), fields)
+        self.assertEqual(col_names(right), fields)
+
+        # True (remove row)
+        L = dfL[fields[1:]]
+        R = dfR[fields[1:]]
+        left, right, key = find_usable_key(self.is_pandas, L, R, key=True)
+        self.assertEqual(key, 'sq')  # first usable key
+        self.assertEqual(col_names(left), fields[1:])
+        self.assertEqual(col_names(right), fields[1:])
+
+        # True (nothing good)
+        L = dfL[['even']]
+        R = dfR[['even']]
+        left, right, key = find_usable_key(self.is_pandas, L, R, key=True,
+                                           verbosity=0)  # suppress warning
+        self.assertEqual(key, '#')  # first usable key
+        self.assertEqual(col_names(left), ['#', 'even'])
+        self.assertEqual(col_names(right), ['#', 'even'])
+
+        # row
+        left, right, key = find_usable_key(self.is_pandas, dfL, dfR, key='row')
+        self.assertEqual(key, 'row')  # first usable key
+        self.assertEqual(col_names(left), fields)
+        self.assertEqual(col_names(right), fields)
+
+    def testFindUsableKeyDifferentLengths(self):
+        dfL = self.read_parquet(inpath('a.parquet'))
+        dfR2 = self.read_parquet(inpath('f5.parquet'))
+        fields = ['row', 'sq', 'recip', 'name', 'even', 'date']
+        left, right, key = find_usable_key(self.is_pandas, dfL, dfR2, key='row')
+        self.assertEqual(key, 'row')  # first usable key
+        self.assertEqual(col_names(left), fields)
+        self.assertEqual(col_names(right), fields)
+
+
+
+class TestKeyFunctionsPandas(TestKeyFunctions, ReferenceTestCase):
+    is_pandas = True
+    def read_parquet(self, *args, **kw):
+        return pd.read_parquet(*args, **kw)
+
+
+
+
+class TestKeyFunctionsPolars(TestKeyFunctions, ReferenceTestCase):
+    is_pandas = False
+    def read_parquet(self, *args, **kw):
+        return pl.read_parquet(*args, **kw)
+
 
 
 
