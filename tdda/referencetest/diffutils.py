@@ -1,14 +1,49 @@
 from tdda.abstractdf import (
     col_names,
     calc_nunique,
-    df_group_count
+    df_add_named_col_with_values,
+    df_group_count,
+    df_join,
+    df_rename_cols,
+    df_sort,
+    index_col,
+    is_pandas_df,
 )
 from tdda.utils import (
     error,
+    find_free_name,
     is_sequence,
     listify,
     warn,
 )
+
+
+def join_for_diff(L, R, key):
+    keys = [key] if isinstance(key, str) else key
+    left_names, right_names = col_names(L), col_names(R)
+    names = set(left_names) | set(right_names)
+    is_pd = is_pandas_df(L)
+    if not is_pd == is_pandas_df(R):
+        raise ValueError('Data Frames from different libraries.')
+    if not len(left_names) == len(names):
+        raise ValueError(f'Fields different in left and right data frames.')
+    for k in keys:
+        if not k in left_names:
+            raise ValueError(f'No field {k} in left data frames')
+
+    idx_col = find_free_name(names, ['#idx#'])
+    nL, nR = len(L), len(R)
+    L = df_add_named_col_with_values(L, idx_col, index_col(is_pd, nL))
+    R = df_add_named_col_with_values(R, idx_col, index_col(is_pd, nR))
+    dfj = df_sort(df_join(L, R, keys), idx_col)  # sort on left
+    dfj = df_sort(df_join(L, R, keys), idx_col)  # sort on left
+    common_cols =  [idx_col] + [k for k in left_names if not k in keys]
+    L = dfj[keys + common_cols]
+    R = df_rename_cols(
+        dfj[keys + [f'{k}__r' for k in common_cols]],
+        {f'{k}__r': k for k in common_cols}
+    )
+    return L, R, idx_col
 
 
 def find_usable_key(is_pandas, left, right, key=None, verbosity=1):

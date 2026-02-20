@@ -17,10 +17,9 @@ import pandas as pd
 
 from collections import namedtuple
 
+from tdda.abstractdf import col_names
+from tdda.referencetest.diffutils import join_for_diff
 from tdda.utils import nvl, error
-from tdda.abstractdf import (
-    col_names,
-)
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
@@ -250,9 +249,10 @@ class BaseComparison:
         # Now move onto records.
         # If sortby is specified, both DataFrames need to be
         # sorted.
-        #
-        # --> Could also do a join here.
-        #
+
+        if key:
+            df, ref_df, idx = join_for_diff(df, ref_df, key)
+
         if sortby:
             sortby = self.resolve_option_flag(sortby, ref_df)
             if any([c in sortby for c in state.missing_cols]):

@@ -85,11 +85,11 @@ def specialize(df, fn, *args, **kwargs):
     return f(*args, **kwargs)
 
 
-def index_col(is_pandas, n):
+def index_col(is_pandas, n, start=0):
     if is_pandas:
-        return pd.Series(np.arange(n), dtype='Int64')
+        return pd.Series(np.arange(start, start + n), dtype='Int64')
     else:
-        return pl.Series(np.arange(n), dtype=pl.Int64)
+        return pl.Series(np.arange(start, start + n), dtype=pl.Int64)
 
 def get_diffs_df_with_cols_and_index(df, *args, **kwargs):
     return specialize(df, inspect.stack()[0][3],  # this function's name
@@ -285,14 +285,15 @@ def df_add_named_col_with_values(df, name, values):
         return df.with_columns(pl.Series(name, values))
 
 
-def df_join(left, right, keyL, keyR=None, how='outer', **kw):
+def df_join(left, right, keyL, keyR=None, how='outer', suffix='__r', **kw):
     keyR = nvl(keyR, keyL)
     if is_pandas_df(left):
         return left.merge(right, left_on=keyL, right_on=keyR,
-                          how=how, **kw)
+                          how=how, suffixes=('', suffix), **kw)
     else:
         how = 'full' if how == 'outer' else how
-        return left.join(right, left_on=keyL, right_on=keyR, how=how, **kw)
+        return left.join(right, left_on=keyL, right_on=keyR, how=how,
+                         suffix=suffix, **kw)
 
 
 def concat_series(series):
