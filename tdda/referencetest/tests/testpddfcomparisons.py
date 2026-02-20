@@ -17,7 +17,7 @@ from tdda.referencetest.basecomparison import (
     DataFrameDiffs,
     create_row_diffs_mask
 )
-from tdda.referencetest.ddiff import find_common_key, check_is_usable_key
+from tdda.referencetest.diffutils import find_common_key, check_is_usable_key
 from tdda.serial import csv_to_pandas
 from tdda.utils import nvl
 

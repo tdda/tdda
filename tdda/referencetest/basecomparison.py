@@ -191,8 +191,9 @@ class BaseComparison:
         check_extra_cols = self.resolve_option_flag(check_extra_cols, df)
 
         df_names = col_names(df)
-        rf_names = col_names(ref_df)
-        common_cols = list(set(df_names).intersection(set(rf_names)))
+        ref_names = col_names(ref_df)
+        common_cols = list(set(df_names).intersection(set(ref_names)))
+
 
         # Check whether they have the same number of records
         state = DiffState(len(df), len(ref_df), common_cols)
@@ -203,7 +204,7 @@ class BaseComparison:
 
         # 2. Make initial set of missing columns
 
-        missing_cols = set(rf_names) - set(df_names)
+        missing_cols = set(ref_names) - set(df_names)
 
         # 3. Check types of fields, where type checking is used.
         #    Also mark any fields not present in df that are
@@ -222,14 +223,14 @@ class BaseComparison:
 
         # 5. Find any cols in df not in ref_df
         if check_extra_cols:
-            state.extra_cols = sorted(set(df_names) - set(rf_names))
+            state.extra_cols = sorted(set(df_names) - set(ref_names))
 
         # 6. If checking order, do it now
         if check_order != False and not missing_cols:
             check_order = self.resolve_option_flag(check_order, ref_df)
             order1 = [c for c in df_names if c in check_order]
             order2 = [
-                c for c in rf_names
+                c for c in ref_names
                 if c in check_order
                 and c in df_names
             ]

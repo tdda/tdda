@@ -18,11 +18,14 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.captureoutput import capture_output
 
 from tdda.referencetest.ddiff import (
+    ddiff_helper,
+)
+from tdda.referencetest.diffutils import (
     check_is_usable_key,
     find_common_key,
     find_usable_key,
-    ddiff_helper,
 )
+
 from tdda.state import set_testing
 from tdda.utils import swap_ext, rprint
 
