@@ -21,7 +21,7 @@ HASH_DIFF_KEY = '#'
 
 QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
-DEBUG = False
+DEBUG = True
 def debug(*args):
     if DEBUG:
         print(*args, file=sys.stderr)
@@ -127,201 +127,286 @@ class SameStructureDDiff:
             return None
 
     def details_table(self, df, ref_df, target_rows=None):
+        C = self.config.referencetest
+        if nvl(C.vertical, False):
+            return self.vertical_details_table(df, ref_df,
+                                               target_rows=target_rows)
         eq = get_scalar_eq(df)
         target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
         cols = col_names(self.diff_df)
-        col0isKey = cols and cols[0] == HASH_DIFF_KEY
         nc = len(cols)
-        C = self.config.referencetest
-        vertical = nvl(C.vertical, False)
-        prefix = vertical and (C.mono or C.bw)
+        prefix = ''
         isnull = isnull_fn(df)
         rows_delta = len(df) - len(ref_df)
         nL, nR = len(df), len(ref_df)
         delta = nL - nR
         if delta:
             blanks = [''] * nc
-        debug('L>', df)
-        debug('R>', ref_df)
-        debug('Key>', self.key)
-        debug('Delta>', delta)
-
-        if self.n_diff_rows > 0:  # <= n:
-            # Extract small dataframes with diffs  n x m
-            if self.key or delta < 0:
-                L = get_diffs_df_with_cols(
-                    df, cols, self.row_diff_counts.rowdiffs, n
-                )
-            else:
-                L, row_indexes = get_diffs_df_with_cols_and_index(
-                    df, cols, self.row_diff_counts.rowdiffs, n
-                )
-            if delta < 0 and not self.key:
-                R, row_indexes = get_diffs_df_with_cols_and_index(
-                        ref_df, cols, self.row_diff_counts.rowdiffs, n
-                    )
-            else:
-                R = get_diffs_df_with_cols(
-                        ref_df, cols, self.row_diff_counts.rowdiffs, n
-                    )
-            pL, pR = C.stripped_prefixes(pre=' ' if vertical else '')
-            if not self.key:
-                indexes = [
-                    C.common(v, dim_if_not_bw=True) for v in row_indexes
-                ]
-                pl_indexes = [
-                    C.common(v, plain=True) for v in row_indexes
-                ]
-            rows, plain_rows = [], []
-            debug('>>>nL', nL, 'nR', nR, 'tr', target_rows,
-                  'ndr', self.n_diff_rows)
-            debug('L>>', L)
-            debug('R>>', R)
-            N = min(self.n_diff_rows, target_rows)
-            L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
-            debug(111, L_table)
-            debug(222, R_table)
-            nlt, nrt = len(L_table), len(R_table)
-            for r in range(n):
-                left_missing, right_missing = nlt <= r, nrt <= r
-                l_vals = blanks if left_missing else L_table[r]
-                r_vals = blanks if right_missing else R_table[r]
-                if left_missing:
-                    plstr = lstr = [''] * len(l_vals)
-                else:
-                    lstr = [
-                        C.left_diff(left, prefix)
-                        if right_missing or not eq(left, right)
-                        else C.common(left)
-                        for (left, right) in zip(l_vals, r_vals)
-                    ]
-                    plstr = [
-                        C.left_annotated(left, prefix) for left in l_vals
-                    ]
-                if right_missing:
-                    prstr = rstr = [''] * len(l_vals)
-                else:
-                    rstr = [
-                        C.right_diff(right, prefix)
-                        if left_missing or not eq(left, right)
-                        else C.common(right)
-                        for (left, right) in zip(l_vals, r_vals)
-                    ]
-                    prstr = [
-                        C.right_annotated(right, prefix) for right in r_vals
-                    ]
-                if vertical:
-                    if not self.key:
-                        debug('indexes', indexes, 'r', r, 'pl', pl_indexes)
-                        rows.append([f'{indexes[r]}{pL}'] + lstr)
-                        rows.append([f'{indexes[r]}{pR}'] + rstr)
-                        plain_rows.append([f'{pl_indexes[r]}{pL}'] + plstr)
-                        plain_rows.append([f'{pl_indexes[r]}{pR}'] + prstr)
-                else:
-                    if self.key:
-                        rows.append(
-                            list(chain(*([L, R]
-                                   for L, R in zip(lstr, rstr))))
-                        )
-                        plain_rows.append(
-                            list(chain(*([L, R]
-                                   for L, R in zip(plstr, prstr))))
-                        )
-                    else:
-                        rows.append(
-                            [pl_indexes[r]]
-                            + list(chain(*([L, R]
-                                   for L, R in zip(lstr, rstr))))
-                        )
-                        plain_rows.append(
-                            [pl_indexes[r]]
-                            + list(chain(*([L, R]
-                                   for L, R in zip(plstr, prstr))))
-                        )
-            type_headers = []
-            index_head = '' if self.key else ROW_NUM_HEADER
-            if vertical:
-                n_table_cols = len(plain_rows[0])
-                widths = [
-                    max(len(row[i]) for row in plain_rows)
-                    for i in range(n_table_cols)
-                ]
-                for i, col in enumerate(cols):
-                    tL, tR = type_header(L[col]), type_header(R[col])
-                    type_headers.append(f'{tL}\n{tR}')
-                    widths[1 + i] = max(widths[1 + i],
-                                        len(cols[i]),
-                                        len(tL),
-                                        len(tR))
-                widths[0] = max(widths[0], len(index_head))
-                col_space = sum(widths)
-                table_width = col_space + (n_table_cols) * 3
-                header_width = sum(len(name) for name in cols)
-            else:
-                n_table_cols = len(plain_rows[0])
-                widths = [
-                    max(len(row[i]) for row in plain_rows)
-                    for i in range(n_table_cols)
-                ]
-                for i, col in enumerate(cols):
-                    tL, tR = type_header(L[col]), type_header(R[col])
-                    type_headers.extend([tL, tR])
-                    widths[i * 2] = max(widths[i * 2],
-                                            len(cols[i]),
-                                            len(pL),
-                                            len(tL))
-                    widths[1 + i * 2] = max(widths[1 + i * 2],
-                                            len(cols[i]),
-                                            len(pR),
-                                            len(tR))
-                widths[0] = max(widths[0], len(index_head))
-                col_space = sum(widths)
-                table_width = col_space + (n_table_cols) * 3
-                header_width = sum(len(name) for name in cols)
-
-            s = '' if n == 1 else 's'
-            rows_desc = (
-                'all rows with differences'
-                 if self.n_diff_rows <= n
-                 else f'First {n:,} row{s} with differences'
-            )
-            title = f'Value Differences ({rows_desc})'
-            table = Table(
-                title=title,
-                title_style='bold',
-                width=table_width,
-            )
-            if self.key:
-                if vertical:
-                    index_head += f'\n{pL}\n{pR}'
-                else:
-                    index_head += '\n '
-            if not self.key:
-                table.add_column(index_head, justify='right', no_wrap=True)
-            for i, col in enumerate(cols):
-                if vertical:
-                    tH = type_headers[i]
-                    table.add_column('\n'.join((col, tH)),
-                                     justify='right',
-                                     min_width=widths[i + 1])
-                else:
-                    (tL, tR) = type_headers[2 * i:2 * i + 2]
-                    table.add_column('\n'.join((col, tL, pL)), justify='right',
-                                     min_width=widths[2 * i])
-                    table.add_column('\n'.join((col, tR, pR)), justify='right',
-                                     min_width=widths[2 * i + 1])
-            for row in rows:
-                table.add_row(*row)
-            return table
-        else:
+        if self.n_diff_rows == 0:
             return None
-            # find ones with most diffs (n=target-rows)
-            # see which cols are covered
-            # For the ones not covered
-            # Find the first one
-            # Get the indexes for all those
-            # Show them
+        key_vals = None
+        # Extract small dataframes with diffs  n x m
+        if self.key or delta < 0:
+            L = get_diffs_df_with_cols(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+        else:
+            L, row_indexes = get_diffs_df_with_cols_and_index(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+        if self.key:
+            D = ref_df if delta < 0 else df
+            key_vals = get_diffs_df_with_cols(
+                D, self.key, self.row_diff_counts.rowdiffs, n
+            )
+        if delta < 0 and not self.key:
+            R, row_indexes = get_diffs_df_with_cols_and_index(
+                ref_df, cols, self.row_diff_counts.rowdiffs, n
+            )
+        else:
+            R = get_diffs_df_with_cols(
+                    ref_df, cols, self.row_diff_counts.rowdiffs, n
+                )
+        pL, pR = C.stripped_prefixes(pre='')
+        N = min(self.n_diff_rows, target_rows)
+        K_table = (
+            df_to_lists(key_vals, N) if key_vals is not None else None
+        )
+        if self.key:
+            indexes = [[str(k) for k in k_vals] for k_vals in K_table]
+            pl_indexes = [[str(k) for k in k_vals] for k_vals in K_table]
+        else:
+            indexes = [
+                [C.common(v, dim_if_not_bw=True)] for v in row_indexes
+            ]
+            pl_indexes = [
+                [C.common(v, plain=True)] for v in row_indexes
+            ]
+        rows, plain_rows = [], []
+        L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
+        nK = len(key_vals) if key_vals is not None else 0
+        nlt, nrt = len(L_table), len(R_table)
+        for r in range(n):
+            left_missing, right_missing = nlt <= r, nrt <= r
+            k_vals = K_table[r] if self.key else []
+            l_vals = blanks if left_missing else L_table[r]
+            r_vals = blanks if right_missing else R_table[r]
+            if left_missing:
+                plstr = lstr = [''] * len(l_vals)
+            else:
+                lstr = [
+                    C.left_diff(left, prefix)
+                    if right_missing or not eq(left, right)
+                    else C.common(left)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                plstr = [
+                    C.left_annotated(left, prefix) for left in l_vals
+                ]
+            if right_missing:
+                prstr = rstr = [''] * len(l_vals)
+            else:
+                rstr = [
+                    C.right_diff(right, prefix)
+                    if left_missing or not eq(left, right)
+                    else C.common(right)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                prstr = [
+                    C.right_annotated(right, prefix) for right in r_vals
+                ]
+
+            rows.append(
+                pl_indexes[r]
+                + list(chain(*([L, R] for L, R in zip(lstr, rstr))))
+            )
+            plain_rows.append(
+                pl_indexes[r]
+                + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
+            )
+        type_headers = []
+        index_headers = self.key or [ROW_NUM_HEADER]
+        n_table_cols = len(plain_rows[0])
+        widths = [
+            max(len(row[i]) for row in plain_rows)
+            for i in range(n_table_cols)
+        ]
+        for i, col in enumerate(cols):
+            tL, tR = type_header(L[col]), type_header(R[col])
+            type_headers.extend([tL, tR])
+            widths[i * 2] = max(widths[i * 2],
+                                len(cols[i]),
+                                len(pL),
+                                len(tL))
+            widths[1 + i * 2] = max(widths[1 + i * 2],
+                                    len(cols[i]),
+                                    len(pR),
+                                    len(tR))
+        widths[0] = max(widths[0], len(index_headers[0]))
+        col_space = sum(widths)
+        table_width = col_space + (n_table_cols) * 3
+        header_width = sum(len(name) for name in cols)
+
+        s = '' if n == 1 else 's'
+        rows_desc = (
+            'all rows with differences'
+             if self.n_diff_rows <= n
+             else f'First {n:,} row{s} with differences'
+        )
+        title = f'Value Differences ({rows_desc})'
+        table = Table(
+            title=title,
+            title_style='bold',
+            width=table_width,
+        )
+        for k in index_headers:
+            table.add_column(f'{k}\n\n', justify='right', no_wrap=True)
+        for i, col in enumerate(cols):
+            (tL, tR) = type_headers[2 * i:2 * i + 2]
+            table.add_column('\n'.join((col, tL, pL)), justify='right',
+                             min_width=widths[2 * i])
+            table.add_column('\n'.join((col, tR, pR)), justify='right',
+                             min_width=widths[2 * i + 1])
+        for row in rows:
+            table.add_row(*row)
+        return table
+
+
+    def vertical_details_table(self, df, ref_df, target_rows=None):
+        C = self.config.referencetest
+        eq = get_scalar_eq(df)
+        target_rows = nvl(target_rows, self.n_diff_rows)
+        n = min(target_rows, self.n_diff_rows)
+        cols = col_names(self.diff_df)
+        nc = len(cols)
+        prefix = (C.mono or C.bw)
+        isnull = isnull_fn(df)
+        rows_delta = len(df) - len(ref_df)
+        nL, nR = len(df), len(ref_df)
+        delta = nL - nR
+        if delta:
+            blanks = [''] * nc
+        if self.n_diff_rows == 0:
+            return None
+
+        key_vals = None
+        # Extract small dataframes with diffs  n x m
+        if self.key or delta < 0:
+            L = get_diffs_df_with_cols(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+        else:
+            L, row_indexes = get_diffs_df_with_cols_and_index(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
+        if self.key:
+            D = ref_df if delta < 0 else df
+            key_vals = get_diffs_df_with_cols(
+                D, self.key, self.row_diff_counts.rowdiffs, n
+            )
+        if delta < 0 and not self.key:
+            R, row_indexes = get_diffs_df_with_cols_and_index(
+                    ref_df, cols, self.row_diff_counts.rowdiffs, n
+                )
+        else:
+            R = get_diffs_df_with_cols(
+                    ref_df, cols, self.row_diff_counts.rowdiffs, n
+                )
+        pL, pR = C.stripped_prefixes(pre=' ')
+        N = min(self.n_diff_rows, target_rows)
+        K_table = (
+            df_to_lists(key_vals, N) if key_vals is not None else None
+        )
+        if self.key:
+            indexes = [[str(k) for k in k_vals] for k_vals in K_table]
+            pl_indexes = [[str(k) for k in k_vals] for k_vals in K_table]
+        else:
+            indexes = [
+                [C.common(v, dim_if_not_bw=True)] for v in row_indexes
+            ]
+            pl_indexes = [
+                [C.common(v, plain=True)] for v in row_indexes
+            ]
+        rows, plain_rows = [], []
+        N = min(self.n_diff_rows, target_rows)
+        L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
+        K_table = df_to_lists(key_vals, N) if key_vals is not None else None
+        nlt, nrt = len(L_table), len(R_table)
+        for r in range(n):
+            left_missing, right_missing = nlt <= r, nrt <= r
+            k_vals = K_table[r] if self.key else []
+            l_vals = blanks if left_missing else L_table[r]
+            r_vals = blanks if right_missing else R_table[r]
+            if left_missing:
+                plstr = lstr = [''] * len(l_vals)
+            else:
+                lstr = [
+                    C.left_diff(left, prefix)
+                    if right_missing or not eq(left, right)
+                    else C.common(left)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                plstr = [
+                    C.left_annotated(left, prefix) for left in l_vals
+                ]
+            if right_missing:
+                prstr = rstr = [''] * len(l_vals)
+            else:
+                rstr = [
+                    C.right_diff(right, prefix)
+                    if left_missing or not eq(left, right)
+                    else C.common(right)
+                    for (left, right) in zip(l_vals, r_vals)
+                ]
+                prstr = [
+                    C.right_annotated(right, prefix) for right in r_vals
+                ]
+            rows.append([f'{indexes[r]}{pL}'] + lstr)
+            rows.append([f'{indexes[r]}{pR}'] + rstr)
+            plain_rows.append([f'{pl_indexes[r]}{pL}'] + plstr)
+            plain_rows.append([f'{pl_indexes[r]}{pR}'] + prstr)
+        type_headers = []
+        index_headers = self.key or [ROW_NUM_HEADER]
+
+        n_table_cols = len(plain_rows[0])
+        widths = [
+            max(len(row[i]) for row in plain_rows)
+            for i in range(n_table_cols)
+        ]
+        for i, col in enumerate(cols):
+            tL, tR = type_header(L[col]), type_header(R[col])
+            type_headers.append(f'{tL}\n{tR}')
+            widths[1 + i] = max(widths[1 + i],
+                                len(cols[i]),
+                                len(tL),
+                                len(tR))
+        widths[0] = max(widths[0], len(index_headers[0]))
+        col_space = sum(widths)
+        table_width = col_space + (n_table_cols) * 3
+        header_width = sum(len(name) for name in cols)
+        s = '' if n == 1 else 's'
+        rows_desc = (
+            'all rows with differences'
+             if self.n_diff_rows <= n
+             else f'First {n:,} row{s} with differences'
+        )
+        title = f'Value Differences ({rows_desc})'
+        table = Table(
+            title=title,
+            title_style='bold',
+            width=table_width,
+        )
+        for k in index_headers:
+            table.add_column(k, justify='right', no_wrap=True)
+        for i, col in enumerate(cols):
+            tH = type_headers[i]
+            table.add_column('\n'.join((col, tH)),
+                             justify='right',
+                             min_width=widths[i + 1])
+        for row in rows:
+            table.add_row(*row)
+        return table
 
 
 def type_header(col, suffix=''):

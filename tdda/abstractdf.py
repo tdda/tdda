@@ -130,7 +130,7 @@ def polars_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     if delta > len(rowdiffs):
         rowdiffs = concat_series([
             rowdiffs,
-            pl.Series(np.ones(delta, dtype=np.bool))
+            pl.Series(np.ones(delta, dtype=bool))
         ])
     return (
         df.with_columns(rowdiffs.alias(nc))
@@ -144,7 +144,7 @@ def pandas_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     if delta > 0:
         rowdiffs = concat_series([
             rowdiffs,
-            pd.Series(np.ones(delta, dtype=np.bool))
+            pd.Series(np.ones(delta, dtype=bool))
         ])
     return df[cols][rowdiffs > 0].head(n)
 

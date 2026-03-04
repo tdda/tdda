@@ -8,9 +8,9 @@ Total number of columns with differences: 2:
 
 [1mValue Differences (all rows with differences)[0m
 ┏━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━┓
-┃[1m    [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃
-┃[1m    [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃
-┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃
+┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m    sq[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃
+┃[1m [0m[1m  [0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1m Int64[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃
+┃[1m [0m[1m  [0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃
 ┡━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━┩
 │  2 │      9 │      9 │  [31mthree[0m │  [32mThree[0m │
 │  3 │     [31m16[0m │     [32m15[0m │   four │   four │
