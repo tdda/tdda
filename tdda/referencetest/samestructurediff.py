@@ -323,10 +323,10 @@ class SameStructureDDiff:
             pl_indexes = [[str(k) for k in k_vals] for k_vals in K_table]
         else:
             indexes = [
-                [C.common(v, dim_if_not_bw=True)] for v in row_indexes
+                C.common(v, dim_if_not_bw=True) for v in row_indexes
             ]
             pl_indexes = [
-                [C.common(v, plain=True)] for v in row_indexes
+                C.common(v, plain=True) for v in row_indexes
             ]
         rows, plain_rows = [], []
         N = min(self.n_diff_rows, target_rows)

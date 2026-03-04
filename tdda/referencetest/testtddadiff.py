@@ -198,9 +198,8 @@ class TestTDDADiff(ReferenceTestCase):
     def test_a_csv_f5_3f_tsv_vertical(self):
         """One extra row"""
         self.difftest('a.csv', 'f5-3d.tsv', ['--vertical'], width=82)
-
         # test against same file
-        # self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical')
+        self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical', width=82)
 
 
 class TestKeyFunctions:
@@ -240,9 +239,9 @@ class TestKeyFunctions:
         # None
         key = find_usable_key(self.is_pandas, dfL, dfR)
         left, right, key = find_usable_key(self.is_pandas, dfL, dfR, key=None)
-        self.assertEqual(key, '#')
+        self.assertIsNone(key)
 
-        expected = ['#'] + fields
+        expected = fields
         self.assertEqual(col_names(left), expected)
         self.assertEqual(col_names(right), expected)
 
@@ -265,9 +264,9 @@ class TestKeyFunctions:
         R = dfR[['even']]
         left, right, key = find_usable_key(self.is_pandas, L, R, key=True,
                                            verbosity=0)  # suppress warning
-        self.assertEqual(key, '#')  # first usable key
-        self.assertEqual(col_names(left), ['#', 'even'])
-        self.assertEqual(col_names(right), ['#', 'even'])
+        self.assertIsNone(key)  # first usable key
+        self.assertEqual(col_names(left), ['even'])
+        self.assertEqual(col_names(right), ['even'])
 
         # row
         left, right, key = find_usable_key(self.is_pandas, dfL, dfR, key='row')
