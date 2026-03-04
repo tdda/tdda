@@ -200,6 +200,7 @@ def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
                              md_file_type=md_file_type,
                              find_md=find_md, backend=backend,
                              infer_datetime_formats=infer_datetime_formats)
+        return df
     else:
         error(f'Unknown DateFrame engine: {engine}.')
 

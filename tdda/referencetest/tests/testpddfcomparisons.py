@@ -374,7 +374,6 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         })
         self.assertTrue(ddiff.diff_df.equals(expected))
 
-    @tag
     def test_ddiff_values_output(self):
         df = four_squares()
         rdf = four_squares_and_ten()
