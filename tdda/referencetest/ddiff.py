@@ -11,7 +11,9 @@ from tdda.referencetest.diffutils import (
 from tdda.state import get_config
 from tdda.utils import (
     stdout_console,
+    split_string_list,
     warn,
+    debug,
 )
 from tdda.commonflags import process_pandas_flags, add_pandas_flags
 from tdda.abstractdf import (
@@ -166,8 +168,7 @@ class TDDADiff:
             self.xfields = [f.strip() for f in  self.xfields.split(', ')]
 
         if self.key:
-            self.key = [f.strip() for f in  self.key.split(', ')]
-
+            self.key = split_string_list(self.key)
         if self.infer_md:
             self.find_md = True
         elif self.no_md:

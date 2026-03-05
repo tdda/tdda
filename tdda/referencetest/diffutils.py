@@ -86,7 +86,6 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
         check_is_usable_key(left, right, key, raise_if_not=True)
         mode = 'key'   # key provided
     elif key == True:
-
         mode = 'find'   # try to find a key
     elif key:
         error(f'Unexpected value for key value: {repr(key)}')

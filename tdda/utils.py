@@ -1133,3 +1133,9 @@ def camelName(name):
         else:
             out.append(c)
     return ''.join(out) if out else 'v'
+
+
+def split_string_list(s):
+    """Split string on commas, spaces, allowing dups"""
+    L = [w.strip() for w in s.replace(',', ' ').split(' ')]
+    return [w for w in L if w]
