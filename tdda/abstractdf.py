@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
+from tdda.pdutils import pandas_types_match
+from tdda.plutils import polars_types_match
 from tdda.state import get_config
-from tdda.utils import TDDAError, nvl, error
+from tdda.utils import TDDAError, nvl, error, debug
 
 from tdda.serial import csv_to_pandas, csv_to_polars
 
@@ -32,11 +34,24 @@ def is_pandas_series(df):
         return True
     elif isinstance(df, pl.Series):
         return False
-    raise ValueError(f'{df} is not a Python or Polars DataFrame')
+    raise ValueError(f'{df} is not a Python or Polars Series')
+
+
+def is_pandas_obj(o):
+    if isinstance(o, pd.DataFrame) or isinstance(o, pd.Series):
+        return True
+    elif isinstance(o, pl.DataFrame) or isinstance(o, pl.Series):
+        return False
+    raise ValueError(f'{df} is not a Python or Polars DataFrame or Series')
 
 
 def is_polars_df(df):
     return not(is_pandas_df(df))
+
+
+def col_types_match(L, R, level=None):
+    f = pandas_types_match if is_pandas_series(L) else polars_types_match
+    return f(L.dtype, R.dtype, level)
 
 
 def lib(o):
@@ -56,6 +71,18 @@ def df_type(df):
     if isinstance(df, pl.DataFrame):
         return 'polars'
     raise TDDAError('Not a known kind of data frame.')
+
+
+def bool_type(o):
+    return pd.BooleanDtype() if is_pandas_obj(o) else pl.Boolean
+
+
+def int_type(o):
+    return int if is_pandas_obj(o) else pl.Int64
+
+
+def cast_col_to_int(c):
+    return c.astype(int) if is_pandas_series(c) else c.cast(pl.Int64)
 
 
 def df_rename_cols(df, mapping):
@@ -139,13 +166,16 @@ def polars_get_diffs_df_with_cols(df, cols, rowdiffs, n):
           .head(n)
     )
 
+
 def pandas_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     delta = len(df) - len(rowdiffs)
     if delta > 0:
         rowdiffs = concat_series([
             rowdiffs,
             pd.Series(np.ones(delta, dtype=bool))
-        ])
+        ]).reset_index(drop=True)
+    elif delta < 0:
+        rowdiffs = rowdiffs[:len(df)]
     return df[cols][rowdiffs > 0].head(n)
 
 
@@ -215,6 +245,14 @@ def isnull_fn(df):
     return pd.isnull if df_type(df) == 'pandas' else lambda x: x is None
 
 
+def isnull_col(c):
+    return c.isnull() if is_pandas_series(c) else c.is_null()
+
+
+def fillnull_col(c, v):
+    return c.fillna(v) if is_pandas_series(c) else c.fill_null(True)
+
+
 def pd_scalar_eq(L, R):
     if pd.isnull(L):
         return pd.isnull(R)
@@ -229,7 +267,10 @@ def pl_scalar_eq(L, R):
 
 
 def df_sort(df, keys):
-    return df.sort_values(keys) if df_type(df) == 'pandas' else df.sort(keys)
+    if df_type(df) == 'pandas':
+        return df.sort_values(keys).reset_index(drop=True)
+    else:
+        return df.sort(keys)
 
 
 def df_group_count(df, keys):

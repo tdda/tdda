@@ -17,17 +17,20 @@ from collections import OrderedDict, namedtuple
 from tdda.abstractdf import (
     concat_series,
     df_len_diff,
+    isnull_col,
     lib,
 )
+from tdda.pdutils import pandas_types_match
 from tdda.referencetest.basecomparison import (
     BaseComparison,
     Diffs,
     FailureDiffs,
-    ColDiff,
-    DiffCounts,
     create_row_diffs_mask,
-    valid_level,
     ROW_NUM_HEADER
+)
+from tdda.referencetest.diffutils import (
+    same_structure_dataframe_diffs,
+    single_col_diffs
 )
 from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.pandasio import (
@@ -37,8 +40,7 @@ from tdda.serial.pandasio import (
     infer_dates
 )
 from tdda.referencetest.pddates import infer_date_format
-from tdda.utils import nvl, error
-from tdda.utils import debug
+from tdda.utils import nvl, error, debug
 
 from tdda.pd.utils import is_string_col, first_non_null
 
@@ -65,7 +67,7 @@ class PandasComparison(BaseComparison):
     def __new__(cls, *args, **kwargs):
         return super(PandasComparison, cls).__new__(cls)
 
-    def same_structure_ddiff(self, df, ref_df, diffs, key=None):
+    def same_structure_ddiff(self, df, ref_df, diffs, key=None, idx=None):
         """
         Test two dataframes with the same structure for differences.
 
@@ -76,6 +78,8 @@ class PandasComparison(BaseComparison):
             df         Actual/LHS data frame
             ref_df     Actual/RHS data frame
             diffs      Diffs object for reporting
+            key
+            idx
 
         Returns:
             number of different values
@@ -110,7 +114,7 @@ class PandasComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            D = same_structure_dataframe_diffs(df, ref_df, key=key,
+            D = same_structure_dataframe_diffs(df, ref_df, key=key, idx=idx,
                                                config=self.config)
             n_diffs = D.n_diff_values
             if n_diffs > 0:
@@ -137,7 +141,6 @@ class PandasComparison(BaseComparison):
         Returns:
             number of different values
         """
-
         failures = []
         for c in list(df):
             if not df[c].equals(ref_df[c]):
@@ -425,61 +428,6 @@ def sample_format2(values, precision=None):
     )
 
 
-def pandas_string_type(t):
-    if type(t):
-        s = str(t)
-        if s.startswith('<'):
-            s = (
-                s.split('.')[-1]
-                 .replace('Dtype', '')
-                 .replace('_', '')
-                 .replace("'>", '')
-            )
-    else:
-        s = t
-    return s
-
-
-def loosen_pandas_type(t):
-    t = pandas_string_type(t)
-    name = ''.join(c for c in t if not c.isdigit()).lower()
-    p = name.find('[')
-    name = name[:p] if p > -1 else name
-    return 'bool' if name == 'boolean' else name
-
-
-def pandas_types_match(t1, t2, level=None):
-    level = valid_level(level)
-    t1i = t1
-    t2i = t2
-    t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
-    if level == 'strict' or t1 == t2:
-        if t1.lower() == t2.lower() and t1.lower().startswith('float'):
-            return True   # Float64 and float64 are not meaningfully different
-        return t1 == t2
-
-    t1loose = loosen_pandas_type(t1)
-    t2loose = loosen_pandas_type(t2)
-    object_types = ('string', 'boolean', 'datetime', 'bool')
-    if (
-        t1loose == t2loose
-        or t1loose == 'object'
-        and t2loose in object_types
-        or t2loose == 'object'
-        and t1loose in object_types
-    ):
-        return True
-
-    numeric_types = {'bool', 'boolean', 'int', 'float'}
-    if (
-        level == 'loose'
-        and t1loose in numeric_types
-        and t2loose in numeric_types
-    ):
-        return True
-    return False
-
-
 def diff_masks(df, ref_df, only_diffs=False):
     """
     Compares two data frames dictionary of ColDiff pairs keyed on column name
@@ -506,84 +454,6 @@ def diff_masks(df, ref_df, only_diffs=False):
     return diffs
 
 
-def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
-    """
-    Compute differences between each pair of columns in two data frames.
-
-    The two data frames must have the same columns and compatible types,
-    but not necessarily the same length.
-
-    Args:
-        df        "left" data frame  (typically "actual")
-        ref_df    "right" data frame (typically expected/reference)
-
-    Returns:
-        SameStructureDDiff  for df, ref_df
-    """
-    assert set(df) == set(ref_df)
-    d = {}
-    n_vals = 0  # total number of values with differences
-                # (including values from "extra" rows)
-    for c in list(df):
-        diffs = single_col_diffs(df[c], ref_df[c])
-        if diffs.total > 0:
-            d[c] = diffs.mask
-            n_vals += diffs.total
-    n_cols = len(d)  # number of columns with differences
-
-    delta = df_len_diff(df, ref_df)
-    if n_vals > 0:
-        D = create_row_diff_counts(list(d.values()))
-        n_rows = int((D > 0).sum()) + abs(delta)  # #rows with differences
-        row_diff_counts = DiffCounts(D, n_rows)
-    else:
-        n_rows = 0
-        row_diff_counts = None
-    return SameStructureDDiff(df.shape,
-                              pd.DataFrame(d), row_diff_counts,
-                              n_vals, n_cols, n_rows, delta,
-                              key=key, config=config)
-
-
-def single_col_diffs(left, right):
-    """
-    Compares two columns and returns col indicating where they are different
-
-    Args:
-        L     "left-hand" column
-        R     "right-hand" column
-
-    Returns:
-        (diffs,    boolean mask with 1's where there are differences
-         n)        number of differences
-
-    If they are different lengths, all the values in the longer row
-    are considered different (even if null).
-
-    The col diff is the length of the SHORTER of left and right
-    (with all the extra places "obviously" being different.
-    """
-    if 'string' in (str(left.dtype), str(right.dtype)):
-        # "eq not implemented for
-        #  <class 'pandas.core.arrays.string_.StringArray'>"
-        left, right = left.astype('string'), right.astype('string')
-    nL, nR = left.shape[0], right.shape[0]
-    L, R = left, right
-    if nL > nR:
-        L = left[:nR]
-    elif nR > nL:
-        R = right[:nL]
-    different = ~(L.eq(R) | (L.isnull() & R.isnull()))
-    dflib = lib(L)
-    # if nD:
-    #     different = concat_series(
-    #         [different, dflib.Series(np.ones(nD, dtype=np.bool_))]
-    #     )
-    if different.dtype == pd.BooleanDtype():
-        different = different.fillna(True)
-    return ColDiff(different, df_len_diff(left, right))
-
-
 def col_comparison(left, right, n):
     nL, nR = len(left), len(right)
     M = max(nL, nR)
@@ -603,24 +473,3 @@ def col_comparison(left, right, n):
 def diff_dataframes(*args, **kwargs):
     c = PandasComparison()
     return c.check_dataframe(*args, **kwargs)
-
-
-def create_row_diff_counts(masks):
-    """
-    Combine all column diff masks efficiently for col with
-    counts of number of differences for each row.
-
-    Args:
-        masks: list of bool columns indicating column difference
-
-    Return:
-        row_difference_col
-    """
-    counts = [m.astype(int) for m in masks]
-    while len(counts) > 1:
-        last = [counts[-1].astype(int)] if len(counts) % 2 == 1 else []
-        counts = [
-            (counts[2 * i] + counts[2 * i + 1])
-            for i in range(len(counts) // 2)
-        ] + last
-    return counts[0]

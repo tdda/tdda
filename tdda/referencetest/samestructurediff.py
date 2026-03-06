@@ -6,7 +6,7 @@ from itertools import chain
 from rich.table import Table
 
 from tdda.state import get_config
-from tdda.utils import Dummy, nvl
+from tdda.utils import Dummy, nvl, debug
 from tdda.abstractdf import (
     col_names,
     get_diffs_df_with_cols_and_index,
@@ -21,11 +21,6 @@ HASH_DIFF_KEY = '#'
 
 QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 
-DEBUG = True
-def debug(*args):
-    if DEBUG:
-        print(*args, file=sys.stderr)
-
 
 class SameStructureDDiff:
     """
@@ -33,13 +28,14 @@ class SameStructureDDiff:
     with the same column structure.
     """
     def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 row_delta, key=None, colour=None, config=None):
+                 row_delta, key=None, idx=None, colour=None, config=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
         self.n_diff_rows = n_rows
         self.row_delta = row_delta
         self.key = key
+        self.idx = idx
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
         self.config = config or get_config()
@@ -141,7 +137,7 @@ class SameStructureDDiff:
         rows_delta = len(df) - len(ref_df)
         nL, nR = len(df), len(ref_df)
         delta = nL - nR
-        if delta:
+        if delta or self.idx is not None:
             blanks = [''] * nc
         if self.n_diff_rows == 0:
             return None
@@ -168,6 +164,14 @@ class SameStructureDDiff:
             R = get_diffs_df_with_cols(
                     ref_df, cols, self.row_diff_counts.rowdiffs, n
                 )
+        LI = RI = None
+        if self.idx:
+            LI = df_to_lists(get_diffs_df_with_cols(
+                df, [self.idx], self.row_diff_counts.rowdiffs, n
+            ), n)
+            RI = df_to_lists(get_diffs_df_with_cols(
+                ref_df, [self.idx], self.row_diff_counts.rowdiffs, n
+            ), n)
         pL, pR = C.stripped_prefixes(pre='')
         N = min(self.n_diff_rows, target_rows)
         K_table = (
@@ -187,8 +191,13 @@ class SameStructureDDiff:
         L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
         nK = len(key_vals) if key_vals is not None else 0
         nlt, nrt = len(L_table), len(R_table)
+        isnull = isnull_fn(df)
         for r in range(n):
-            left_missing, right_missing = nlt <= r, nrt <= r
+            if self.idx is not None:
+                left_missing = isnull(LI[r][0])
+                right_missing = isnull(RI[r][0])
+            else:
+                left_missing, right_missing = nlt <= r, nrt <= r
             k_vals = K_table[r] if self.key else []
             l_vals = blanks if left_missing else L_table[r]
             r_vals = blanks if right_missing else R_table[r]

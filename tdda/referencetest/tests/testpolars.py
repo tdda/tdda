@@ -11,10 +11,10 @@ except:
     pl = None
 
 
+from tdda.plutils import loosen_polars_type
 from tdda.referencetest.checkpolars import (
     PolarsComparison,
     polars_types_match,
-    loosen_polars_type,
     round_df,
 )
 from tdda.referencetest.basecomparison import diffcmd

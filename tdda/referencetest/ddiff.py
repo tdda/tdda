@@ -10,6 +10,7 @@ from tdda.referencetest.diffutils import (
 )
 from tdda.state import get_config
 from tdda.utils import (
+    nvl,
     stdout_console,
     split_string_list,
     warn,
@@ -99,7 +100,9 @@ class TDDADiff:
             diff = result.diffs.dfd.diff  # there if same structure
                                           # or close enough
             if diff:
-                table = diff.details_table(dfL, dfR, self.maxdiffs)
+                table = diff.details_table(nvl(result.df, dfL),
+                                           nvl(result.ref_df, dfR),
+                                           self.maxdiffs)
                 if table:
                     self.console.print()
                     self.console.print(table)

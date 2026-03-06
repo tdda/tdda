@@ -1139,3 +1139,14 @@ def split_string_list(s):
     """Split string on commas, spaces, allowing dups"""
     L = [w.strip() for w in s.replace(',', ' ').split(' ')]
     return [w for w in L if w]
+
+
+def valid_level(level):
+    if level == 'permissive':
+        return 'loose'
+    elif level is None:
+        return 'strict'
+    if not (level is None or level in ('strict', 'medium', 'loose')):
+        raise ValueError(f'Type match level must be one of strict, medium, '
+                         f'or loose(/permissive), not {level}')
+    return level

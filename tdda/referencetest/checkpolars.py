@@ -5,12 +5,14 @@ from tdda.referencetest.basecomparison import (
     BaseComparison,
     Diffs,
     FailureDiffs,
-    ColDiff,
-    DiffCounts,
     create_row_diffs_mask,
-    valid_level,
     ROW_NUM_HEADER
 )
+from tdda.referencetest.diffutils import (
+    same_structure_dataframe_diffs,
+    single_col_diffs
+)
+from tdda.plutils import polars_types_match
 from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.polarsio import (
     csv_to_polars,
@@ -36,7 +38,7 @@ class PolarsComparison(BaseComparison):
     def __new__(cls, *args, **kwargs):
         return super(PolarsComparison, cls).__new__(cls)
 
-    def same_structure_ddiff(self, df, ref_df, diffs, key=None):
+    def same_structure_ddiff(self, df, ref_df, diffs, key=None, idx=None):
         """
         Test two dataframes with the same structure for differences.
 
@@ -47,6 +49,8 @@ class PolarsComparison(BaseComparison):
             df         Actual/LHS data frame
             ref_df     Actual/RHS data frame
             diffs      Diffs object for reporting
+            key
+            idx
 
         Returns:
             number of different values
@@ -69,7 +73,7 @@ class PolarsComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            D = same_structure_dataframe_diffs(df, ref_df, key=key,
+            D = same_structure_dataframe_diffs(df, ref_df, key=key, idx=idx,
                                                config=self.config)
             n_diffs = D.n_diff_values
             if n_diffs > 0:
@@ -154,32 +158,6 @@ class PolarsComparison(BaseComparison):
     ####
 
 
-def loosen_polars_type(t, level):
-    t = str(t)
-    level = valid_level(level)
-    if level == 'strict':
-        return 'String' if t == 'Utf8' else t
-
-    if t.startswith('Float') or t.startswith('Decimal'):
-        t = 'Float'
-    elif t.startswith('Int') or t.startswith('UInt'):
-        t = 'Int'
-    elif t.startswith('Date'):
-        t = 'Date'
-    elif t in ('Categorical', 'Enum', 'Utf8'):
-        t = 'String'
-
-    if level == 'loose':
-        if t in {'Float', 'Int', 'Boolean'}:
-            return 'Numeric'
-
-    return t
-
-
-def polars_types_match(t1, t2, level=None):
-    return loosen_polars_type(t1, level) == loosen_polars_type(t2, level)
-
-
 def round_df(df, n):
     floats = {c.name for c in df if str(c.dtype).startswith('Float')}
     if not floats:
@@ -188,91 +166,5 @@ def round_df(df, n):
          c: (df[c].round(n, mode='half_to_even') if c in floats else df[c])
          for c in df.columns
     })
-
-
-def same_structure_dataframe_diffs(df, ref_df, key=None, config=None):
-    """
-    Compute differences between each pair of columns in two data frames.
-
-    The two data frames must have the same columns, the same lengths,
-    and compatible types.
-
-    Args:
-        df        "left" data frame  (typically "actual")
-        ref_df    "right" data frame (typically expected/reference)
-
-    Returns:
-        SameStructureDDiff  for df, ref_df
-    """
-    assert set(df.columns) == set(ref_df.columns)
-    d = {}
-    n_vals = 0   # total number of values with diffenrences
-    for c in df.columns:
-        diffs = single_col_diffs(df[c], ref_df[c])
-        if diffs.total > 0:
-            d[c] = diffs.mask
-            n_vals += diffs.total
-    n_cols = len(d)  # number of columns with differences
-
-    if n_vals > 0:
-        delta = df_len_diff(df, ref_df, absolute=True)
-        D = create_row_diff_counts(list(d.values()))
-        n_rows = (D > 0).sum() + abs(delta) # number of rows with differences
-        row_diff_counts = DiffCounts(D, n_rows)
-    else:
-        n_rows = 0
-        row_diff_counts = None
-    diff_df = pl.DataFrame(d)
-    return SameStructureDDiff(df.shape, diff_df, row_diff_counts,
-                              n_vals, n_cols, n_rows, delta,
-                              key=key, config=config)
-
-
-def single_col_diffs(left, right):
-    """
-    Compares two columns and returns col indicating where they are different
-
-    Args:
-        left     "left-hand" column
-        right    "right-hand" column
-
-    Returns:
-        (diffs,    boolean mask with 1's where there are differences
-         n)        number of differences
-    """
-    nL, nR = left.shape[0], right.shape[0]
-    L, R = left, right
-    if nL > nR:
-        L = left[:nR]
-    elif nR > nL:
-        R = right[:nL]
-    if polars_types_match(L.dtype, R.dtype, level='loose'):
-        different = ~(L.eq(R) | (L.is_null() & R.is_null()))
-    else:
-        different = ~(L.is_null() & R.is_null())
-    if different.dtype == pl.Boolean:
-        different = different.fill_null(True)
-    return ColDiff(different, df_len_diff(L, R))
-
-
-def create_row_diff_counts(masks):
-    """
-    Combine all column diff masks efficiently for col with
-    counts of number of differences for each row.
-
-    Args:
-        masks: list of bool columns indicating column difference
-
-    Return:
-        row_difference_col
-    """
-    counts = [m.cast(pl.Int64) for m in masks]
-    while len(counts) > 1:
-        last = [counts[-1].cast(pl.Int64)] if len(counts) % 2 == 1 else []
-        counts = [
-            (counts[2 * i] + counts[2 * i + 1])
-            for i in range(len(counts) // 2)
-        ] + last
-    return counts[0]
 
 

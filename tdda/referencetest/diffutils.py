@@ -1,24 +1,66 @@
+from collections import namedtuple
 from tdda.abstractdf import (
+    bool_type,
+    cast_col_to_int,
     col_names,
     calc_nunique,
+    col_types_match,
     df_add_named_col_with_values,
     df_group_count,
     df_join,
+    df_len_diff,
     df_rename_cols,
     df_sort,
+    fillnull_col,
     index_col,
     is_pandas_df,
+    is_pandas_series,
+    is_pandas_obj,
+    isnull_col,
+    lib,
 )
+from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.utils import (
     error,
     find_free_name,
     is_sequence,
     listify,
     warn,
+    debug,
 )
 
 
+DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
+
+class ColDiff:
+    def __init__(self, mask, extra):
+        self.mask = mask          # Boolean mask, 1 where different
+                                  # within common area (length)
+        self.n = int(sum(mask))   # Number of differences in common area
+        self.extra = extra        # Number of extra rows (left - right)
+        self.total = self.n + abs(extra)  # Total rows with differences
+                                          # including extra/missing rows
+
+    def __str__(self):
+        return (
+            'ColDiff(\n'
+            f'    mask={self.mask},\n'
+            f'    n={self.n},\n'
+            f'    extra={self.extra}, \n'
+            f'    total={self.total}\n'
+            ')')
+
+
 def join_for_diff(L, R, key):
+    """
+    Joins L and R using specified key columns.
+
+    Returns aligned versions of L and R with a column indicating
+    which row they came from in the original L and R (index from 0)
+    with nulls for keys that are only in the other dataframe.
+
+    The name of indicator colums (usually #idx# is also returned.
+    """
     keys = [key] if isinstance(key, str) else key
     left_names, right_names = col_names(L), col_names(R)
     names = set(left_names) | set(right_names)
@@ -35,7 +77,6 @@ def join_for_diff(L, R, key):
     nL, nR = len(L), len(R)
     L = df_add_named_col_with_values(L, idx_col, index_col(is_pd, nL))
     R = df_add_named_col_with_values(R, idx_col, index_col(is_pd, nR))
-    dfj = df_sort(df_join(L, R, keys), idx_col)  # sort on left
     dfj = df_sort(df_join(L, R, keys), idx_col)  # sort on left
     common_cols =  [idx_col] + [k for k in left_names if not k in keys]
     L = dfj[keys + common_cols]
@@ -145,3 +186,115 @@ def check_is_usable_key(left, right, key, raise_if_not=False):
     elif raise_if_not:
         error(f'{str_key} is not a primary key for in left DataFrame.')
     return False
+
+
+def same_structure_dataframe_diffs(
+    df, ref_df, key=None, idx=None, config=None
+):
+    """
+    Compute differences between each pair of columns in two data frames.
+
+    The two data frames must have the same columns and compatible types,
+    but not necessarily the same length.
+
+    Args:
+        df        "left" data frame  (typically "actual")
+        ref_df    "right" data frame (typically expected/reference)
+
+    Returns:
+        SameStructureDDiff  for df, ref_df
+    """
+    assert set(col_names(df)) == set(col_names(ref_df))
+    d = {}
+    missings = None
+    if idx:
+        missings = isnull_col(df[idx]) | isnull_col(ref_df[idx])
+    n_vals = 0  # total number of values with differences
+                # (including values from "extra" rows)
+    for c in col_names(df):
+        if c != idx:
+            diffs = single_col_diffs(df[c], ref_df[c], missings)
+            if diffs.total > 0:
+                d[c] = diffs.mask
+                n_vals += diffs.total
+    n_cols = len(d)  # number of columns with differences
+
+    delta = df_len_diff(df, ref_df)
+    if n_vals > 0:
+        D = create_row_diff_counts(list(d.values()))
+        n_rows = int((D > 0).sum()) + abs(delta)  # rows with differences
+        row_diff_counts = DiffCounts(D, n_rows)
+    else:
+        n_rows = 0
+        row_diff_counts = None
+    dfl = lib(df)
+    diff_df = dfl.DataFrame(d)
+    return SameStructureDDiff(df.shape, diff_df, row_diff_counts,
+                              n_vals, n_cols, n_rows, delta,
+                              key=key, idx=idx, config=config)
+
+
+def single_col_diffs(left, right, missings=None):
+    """
+    Compares two columns and returns col indicating where they are different
+
+    Args:
+        L     "left-hand" column
+        R     "right-hand" colum
+        missings: optional col with mask that is true for unmatched rows
+                  (always return True for diff)
+
+
+
+    Returns:
+        (diffs,    boolean mask with 1's where there are differences
+         n)        number of differences
+
+    If they are different lengths, all the values in the longer row
+    are considered different (even if null).
+
+    The col diff is the length of the SHORTER of left and right
+    (with all the extra places "obviously" being different.
+
+    """
+    ispd = is_pandas_series(left)
+    if ispd and 'string' in (str(left.dtype), str(right.dtype)):
+        # "eq not implemented for
+        #  <class 'pandas.core.arrays.string_.StringArray'>"
+        left, right = left.astype('string'), right.astype('string')
+    nL, nR = left.shape[0], right.shape[0]
+    L, R = left, right
+    if nL > nR:
+        L = left[:nR]
+    elif nR > nL:
+        R = right[:nL]
+    if col_types_match(L, R, level='loose'):
+        different = ~(L.eq(R) | (isnull_col(L) & isnull_col(R)))
+    else:
+        different = ~(isnull_col(L) & isnull_col(R))
+    if different.dtype == bool_type(left):
+        different = fillnull_col(different, True)
+    if missings is not None:
+        difference = different | missings
+    return ColDiff(different, df_len_diff(left, right))
+
+
+def create_row_diff_counts(masks):
+    """
+    Combine all column diff masks efficiently for col with
+    counts of number of differences for each row.
+
+    Args:
+        masks: list of bool columns indicating column difference
+
+    Return:
+        row_difference_col
+    """
+    counts = [cast_col_to_int(m) for m in masks]
+    while len(counts) > 1:
+        last = [cast_col_to_int(counts[-1])] if len(counts) % 2 == 1 else []
+        counts = [
+            (counts[2 * i] + counts[2 * i + 1])
+            for i in range(len(counts) // 2)
+        ] + last
+    return counts[0]

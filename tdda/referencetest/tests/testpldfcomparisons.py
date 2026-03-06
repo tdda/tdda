@@ -8,15 +8,19 @@ from rich.console import Console
 from tdda.abstractdf import col_names
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
-from tdda.referencetest.checkpolars import (
-    PolarsComparison,
-    single_col_diffs,
-    create_row_diff_counts,
-    same_structure_dataframe_diffs
-)
 from tdda.referencetest.basecomparison import (
     DataFrameDiffs,
     create_row_diffs_mask,
+)
+from tdda.referencetest.checkpolars import (
+    PolarsComparison,
+    same_structure_dataframe_diffs
+)
+from tdda.referencetest.diffutils import (
+    check_is_usable_key,
+    create_row_diff_counts,
+    find_common_key,
+    single_col_diffs,
 )
 
 

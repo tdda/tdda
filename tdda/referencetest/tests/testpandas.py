@@ -11,8 +11,8 @@ import pandas as pd
 from tdda.referencetest.checkpandas import (
     PandasComparison,
     pandas_types_match,
-    loosen_pandas_type,
 )
+from tdda.pdutils import loosen_pandas_type
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest import tag, ReferenceTestCase
 from tdda.referencetest.tests.dftesthelpers import PYTHON_DATA

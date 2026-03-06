@@ -19,11 +19,9 @@ from collections import namedtuple
 
 from tdda.abstractdf import col_names
 from tdda.referencetest.diffutils import join_for_diff
-from tdda.utils import nvl, error
+from tdda.utils import nvl, error, debug
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
-
-DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 DEFAULT_DIFF_ROWS = 10
 ROW_NUM_HEADER = '#'
@@ -165,6 +163,8 @@ class BaseComparison:
               .failures     the number of failures
               .diffs        a Diffs object with information about
                             the failures
+              .df           Rewritten df if key and any diffs
+              .ref_df       Rewritten ref_df if key and any diff
         All of the 'Option' parameters can be of any of the following:
 
             - ``None`` (to apply that kind of comparison to all fields)
@@ -250,6 +250,7 @@ class BaseComparison:
         # If sortby is specified, both DataFrames need to be
         # sorted.
 
+        idx = None
         if key:
             df, ref_df, idx = join_for_diff(df, ref_df, key)
 
@@ -278,10 +279,13 @@ class BaseComparison:
             check_data = self.resolve_option_flag(check_data, ref_df)
             if check_data:
                 cols = [c for c in check_data if c in state.common_cols]
+                if idx:
+                    cols.append(idx)
                 state.n_diff_values = self.same_structure_ddiff(df[cols],
                                                                 ref_df[cols],
                                                                 diffs,
-                                                                key=key)
+                                                                key=key,
+                                                                idx=idx)
         switches = []
         nc = len(cols)
         nL = len(list(df))
@@ -295,8 +299,12 @@ class BaseComparison:
         switches.append(f'--{type_matching}')
         if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
-        return FailureDiffs(failures=0 if state.same else 1, diffs=diffs)
-
+        if state.same:
+            return FailureDiffs(failures=0, diffs=diffs)
+        elif idx:
+            return FailureDiffs(failures=1, diffs=diffs, df=df, ref_df=ref_df)
+        else:
+            return FailureDiffs(failures=1, diffs=diffs)
 
     def info(self, msgs, s):
         """
@@ -708,24 +716,6 @@ class BaseComparison:
         return loader(csvfile, **kwargs)
 
 
-class ColDiff:
-    def __init__(self, mask, extra):
-        self.mask = mask          # Boolean mask, 1 where different
-                                  # within common area (length)
-        self.n = int(sum(mask))   # Number of differences in common area
-        self.extra = extra        # Number of extra rows (left - right)
-        self.total = self.n + abs(extra)  # Total rows with differences
-                                          # including extra/missing rows
-
-    def __str__(self):
-        return (
-            'ColDiff(\n'
-            f'    mask={self.mask},\n'
-            f'    n={self.n},\n'
-            f'    extra={self.extra}, \n'
-            f'    total={self.total}\n'
-            ')')
-
 class FailureDiffs:
     """
     Container for Information about comparison failures.
@@ -738,12 +728,20 @@ class FailureDiffs:
         diffs: Diffs object, with descriptions of failures
                Can also be accessed (read) as .descriptions.
 
+        df: (optional) Left Data Frame, usually supplied if
+            a key was used and df was therefore modified
+
+        ref_df: (optional) Right Data Frame, usually supplied if
+            a key was used and df was therefore modified
+
     Failures diffs objects have a boolean value of True if there
     are failures (differences) and False if not.
     """
-    def __init__(self, failures, diffs):
+    def __init__(self, failures, diffs, df=None, ref_df=None):
          self.failures = failures
          self.diffs = diffs
+         self.df = df
+         self.ref_df = ref_df
 
     @property
     def count(self):
@@ -1037,17 +1035,6 @@ def create_row_diffs_mask(masks):
             for i in range(len(masks) // 2)
         ] + last
     return masks[0]
-
-
-def valid_level(level):
-    if level == 'permissive':
-        return 'loose'
-    elif level is None:
-        return 'strict'
-    if not (level is None or level in ('strict', 'medium', 'loose')):
-        raise ValueError(f'Type match level must be one of strict, medium, '
-                         f'or loose(/permissive), not {level}')
-    return level
 
 
 def is_row_key(keyname):

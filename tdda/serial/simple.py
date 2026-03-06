@@ -5,9 +5,9 @@ from collections import namedtuple
 
 import pandas as pd
 
+from tdda.pdutils import loosen_pandas_type
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.basecomparison import FailureDiffs
-from tdda.referencetest.checkpandas import loosen_pandas_type
 
 from tdda.serial.metadata import TDDASERIAL
 
