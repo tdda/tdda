@@ -1,23 +1,26 @@
+"""
+checkpolars.py: comparison mechanism for polars dataframes (and CSV files)
+
+Source repository: http://github.com/tdda/tdda
+
+License: MIT
+
+Copyright (c) Stochastic Solutions Limited 2016-2026
+"""
+
 import os
 
-from tdda.abstractdf import df_len_diff
 from tdda.referencetest.basecomparison import (
     BaseComparison,
-    Diffs,
-    FailureDiffs,
-    create_row_diffs_mask,
     ROW_NUM_HEADER
 )
 from tdda.referencetest.diffutils import (
     same_structure_dataframe_diffs,
-    single_col_diffs
 )
 from tdda.plutils import polars_types_match
-from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.polarsio import (
     csv_to_polars,
     polars_read_df,
-    polars_write_df
 )
 from tdda.utils import debug
 import polars as pl
@@ -130,7 +133,7 @@ class PolarsComparison(BaseComparison):
         dataframe in a file (parquet or CSV)
         """
         if isinstance(path, pl.DataFrame):
-            return pathf
+            return path
         ext = os.path.splitext(path)[1].lower()
         if ext == '.parquet':
             try:

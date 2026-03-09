@@ -12,35 +12,23 @@ import csv
 import os
 import sys
 
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
-from tdda.abstractdf import (
-    concat_series,
-    df_len_diff,
-    isnull_col,
-    lib,
-)
 from tdda.pdutils import pandas_types_match
 from tdda.referencetest.basecomparison import (
     BaseComparison,
-    Diffs,
-    FailureDiffs,
-    create_row_diffs_mask,
     ROW_NUM_HEADER
 )
 from tdda.referencetest.diffutils import (
     same_structure_dataframe_diffs,
     single_col_diffs
 )
-from tdda.referencetest.samestructurediff import SameStructureDDiff
 from tdda.serial.pandasio import (
-    pandas_to_csv,
     csv_to_pandas,
     pandas_read_df,
     infer_dates
 )
-from tdda.referencetest.pddates import infer_date_format
-from tdda.utils import nvl, error, debug
+from tdda.utils import debug
 
 from tdda.pd.utils import is_string_col, first_non_null
 
@@ -278,7 +266,6 @@ class PandasComparison(BaseComparison):
         Used when regenerating DataFrame reference results.
         """
         for (actual_path, ref_path) in zip(actual_paths, ref_paths):
-            df = self.load_serialized_dataframe(actual_path)
             self._write_reference_dataframe_from_file(
                 actual_path, ref_path, writer=writer, **kwargs
             )
@@ -449,7 +436,7 @@ def diff_masks(df, ref_df, only_diffs=False):
     }
     if only_diffs:
         for k in list(diffs):
-            if diff[k].total == 0:
+            if diffs[k].total == 0:
                 del[k]
     return diffs
 
