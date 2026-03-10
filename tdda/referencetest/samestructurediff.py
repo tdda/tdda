@@ -5,7 +5,6 @@ from itertools import chain
 
 from rich.table import Table
 
-from tdda.state import get_config
 from tdda.utils import Dummy, nvl, debug
 from tdda.abstractdf import (
     col_names,
@@ -28,7 +27,7 @@ class SameStructureDDiff:
     with the same column structure.
     """
     def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 row_delta, key=None, idx=None, colour=None, config=None):
+                 row_delta, config, key=None, idx=None, colour=None):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
@@ -38,7 +37,7 @@ class SameStructureDDiff:
         self.idx = idx
         self.diff_df = diff_df             # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
-        self.config = config or get_config()
+        self.config = config
 
     def __str__(self):
         lines = [

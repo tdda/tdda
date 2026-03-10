@@ -6,6 +6,7 @@ from rich import print as rprint
 from rich.console import Console
 
 from tdda.abstractdf import col_names
+from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.basecomparison import (
@@ -311,7 +312,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
 
         # First test: dfa vs ref_df
 
-        ddiff = same_structure_dataframe_diffs(dfa, ref_df)
+        config = Config(testing=True)
+        ddiff = same_structure_dataframe_diffs(dfa, ref_df, config=Config())
         self.assertEqual(ddiff.n_diff_values, 8)  # 8 diff values in total
         self.assertEqual(ddiff.n_diff_cols, 8)    # 8 diff cols in total
         self.assertEqual(ddiff.n_diff_rows, 8)    # 8 diff cols in total
@@ -334,8 +336,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         self.assertTrue(ddiff.diff_df.equals(expected))
 
         # First test: dfb vs ref_df
-
-        ddiff = same_structure_dataframe_diffs(dfb, ref_df)
+        config = Config(testing=True)
+        ddiff = same_structure_dataframe_diffs(dfb, ref_df, config=config)
         self.assertEqual(ddiff.n_diff_values, 36)  # UR different
         self.assertEqual(ddiff.n_diff_cols, 8)     # 8 diff cols in total
         self.assertEqual(ddiff.n_diff_rows, 8)     # 8 diff cols in total
@@ -370,7 +372,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             'd': [True, True, False],         # one diff
         })
 
-        ddiff = same_structure_dataframe_diffs(df, ref_df)
+        config = Config(testing=True)
+        ddiff = same_structure_dataframe_diffs(df, ref_df, config=config)
         self.assertEqual(ddiff.n_diff_values, 4)
         self.assertEqual(ddiff.n_diff_cols, 3)
         self.assertEqual(ddiff.n_diff_rows, 3)
@@ -387,7 +390,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
     def test_ddiff_values_output(self):
         df = four_squares()
         rdf = four_squares_and_ten()
-        diff = same_structure_dataframe_diffs(df, rdf)
+        config = Config(testing=True)
+        diff = same_structure_dataframe_diffs(df, rdf, config=config)
         table = diff.details_table(df, rdf)
         result = rich_capture(table)
         self.assertStringCorrect(str(diff), fp('ddiff-1-details.txt'),

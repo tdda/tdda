@@ -843,8 +843,8 @@ class Verification(object):
                  output_fields=None, index=False,
                  in_place=False, colour=False,
                  verify_allowed_fields=None, verify_required_fields=None,
-                 **kwargs):
-        config = get_config()
+                 config=None, **kwargs):
+        self.config = config = get_config(config)
         self.constraints = constraints
         self.n_source_records = n_source_records
         self.fields = TDDAObject()
@@ -863,7 +863,7 @@ class Verification(object):
         self.in_place = in_place
         self.detect_key = kwargs.get('key', [])
         self.detect_report_formats = kwargs.get('report_formats', [])
-        cconfig = get_config().constraints
+        cconfig = config.constraints
         self.detect_passes = cconfig.get('detect_passes')
         self.int_bools = cconfig.get('int_bools')
 
@@ -1201,7 +1201,6 @@ class Verification(object):
         d['_field_stats'] = field_stats
         d['_constraint_stats'] = constraint_stats
         self.create_summary_stats(field_stats)
-        config = get_config()
         self.fill_in_missing_db_rex_failures()
         self.to_table(d, d_raw)
         d = json_sanitize(d)
@@ -1215,11 +1214,11 @@ class Verification(object):
             elif fmt == 'toml':
                 dict_to_toml(d, outpath)
             elif fmt in ('txt', 'text'):
-                write_text_detect_report(d, outpath, config)
+                write_text_detect_report(d, outpath, self.config)
             elif fmt in ('md', 'markdown'):
-                write_markdown_detect_report(d, outpath, config)
+                write_markdown_detect_report(d, outpath, self.config)
             elif fmt == 'html':
-                write_html_detect_report(d, outpath, config, self._table)
+                write_html_detect_report(d, outpath, self.config, self._table)
             else:
                 print(f'Ignoring unknown output format "{fmt}".',
                       file=sys.stderr)
@@ -1285,8 +1284,7 @@ def constraint_class(kind):
 
 
 def verify(constraints, fieldnames, verifiers, VerificationClass=None,
-           detected_records_writer=None,
-           **kwargs):
+           detected_records_writer=None, config=None, **kwargs):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
@@ -1325,14 +1323,14 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     Returns a Verification object.
     """
     VerificationClass = VerificationClass or Verification
-    results = VerificationClass(constraints, **kwargs)
+    config = get_config(config)
+    results = VerificationClass(constraints, config=config, **kwargs)
     outpath = kwargs.get('outpath')
     report_path = kwargs.get('reportpath')
     detect = (outpath is not None
               or kwargs.get('detect') is not None
               or kwargs.get('in_place') is not None)
 
-    config = get_config()
     constrained_fields = constraints.fields
     glob_matches = globlike_match(constraints.allowed_fields, fieldnames)
     results.extra_fields = [

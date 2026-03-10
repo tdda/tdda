@@ -89,7 +89,7 @@ def discover_flags(parser, args, params):
     if flags.no_md:
         params['no_md'] = flags.no_md
 
-    params['engine'], params['backend'] = process_pandas_flags(flags)
+    params['engine'], params['backend'] = process_pandas_flags(None, flags)
 
     return flags
 
@@ -203,7 +203,7 @@ def verify_flags(parser, args, params):
     if (vr and nvr):
         error('Inconsistent settings for verify-required-fields')
 
-    params['engine'], params['backend'] = process_pandas_flags(flags)
+    params['engine'], params['backend'] = process_pandas_flags(None, flags)
 
     return flags
 
@@ -261,7 +261,7 @@ def detect_flags(parser, args, params):
     else:
         params['report_formats'] = []
 
-    params['engine'], params['backend'] = process_pandas_flags(flags)
+    params['engine'], params['backend'] = process_pandas_flags(None, flags)
 
     return flags
 

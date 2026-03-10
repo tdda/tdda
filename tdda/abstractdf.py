@@ -213,13 +213,13 @@ def all_fields_except(exclusions):
 
 def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
                      find_md=False, backend=None, engine=None,
-                     infer_datetime_formats=False):
+                     infer_datetime_formats=False, config=None):
     """
     Load a csv file to a DataFrame of a type (Pandas or Polars)
     determined by engine or config.
     """
-    config = get_config()
-    engine = nvl(engine, config.engine)
+    config = get_config(config)
+    engine = config.get('engine', engine)
     if engine == 'polars':
         return csv_to_polars(path=path, md_path=md_path,
                              md_file_type=md_file_type,
@@ -285,8 +285,8 @@ def calc_nunique(col):
     return col.nunique() if is_pandas_series(col) else col.n_unique()
 
 
-def get_engine_and_backend(engine=None, backend=None):
-    config = get_config()
+def get_engine_and_backend(engine=None, backend=None, config=None):
+    config = get_config(config)
     return config.get('engine', engine), config.get('pandas_backend', backend)
 
 

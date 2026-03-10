@@ -38,14 +38,14 @@ Notes
 
 
 class TDDADiff:
-    def __init__(self, left=None, right=None, precision=None,
+    def __init__(self, config, left=None, right=None, precision=None,
                  vertical=False, fields=None, xfields=None,
                  type_checking=None, maxdiffs=None,
                  engine=None, backend=None, key=None, auto_key=False,
-                 cli_args=None, config=None, console=None,
+                 cli_args=None, console=None,
                  quick=False, verbosity=1):
         self.args = cli_args
-        self.config = config or get_config()
+        self.config = config
         self.dconfig = self.config.tddadiff
         self.type_checking = self.dconfig.type_checking
         self.left = left
@@ -190,7 +190,7 @@ class TDDADiff:
         elif self.permissive or self.loose:
             self.type_checking = 'loose'
 
-        self.engine, self.backend = process_pandas_flags(self)
+        self.engine, self.backend = process_pandas_flags(self.config, self)
 
 
     def error(self, msg):
@@ -292,7 +292,8 @@ class TDDADiff:
 
 
 def ddiff_helper(args, config=None, console=None):
-    tddadiff = TDDADiff(cli_args=args, config=config, console=console)
+    config = get_config(config)
+    tddadiff = TDDADiff(config, cli_args=args, console=console)
     tddadiff.ddiff()
 
 

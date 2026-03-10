@@ -10,17 +10,17 @@ ENGINES = {
     'pl': 'polars',
 }
 
-def process_pandas_flags(o):
-    c = get_config()
+def process_pandas_flags(config, o):
+    config = get_config(config)
     engine = 'polars' if o.polars else 'pandas' if o.pandas else None
-    engine = ENGINES.get(engine, c.engine)
+    engine = ENGINES.get(engine, config.engine)
     if engine is None:
         error(f'Engine "{o.engine}" unknown. '
               'Should be pandas (pd) or polars (pl).')
     else:
-        c.engine = engine
+        config.engine = engine
 
-    c.backend = backend = nvl(o.backend, c.pandas_backend)
+    config.backend = backend = nvl(o.backend, config.pandas_backend)
 
     return engine, backend
 

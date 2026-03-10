@@ -109,9 +109,9 @@ def find_associated_metadata_file(path):
     return None
 
 
-def get_backend(backend):
+def get_backend(backend, config):
     if backend is None:
-        c = get_config()
+        c = get_config(config)
         backend = c.get('pandas_backend')
     if backend not in BACKEND_MAP:
         error(f'Pandas backend {backend} unknown.\n'

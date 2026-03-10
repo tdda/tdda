@@ -765,9 +765,9 @@ class Dummy(object):
         return self.__dict__
 
 
-def cprint(*args, colour=None, recolour=None, **kw):
+def cprint(*args, colour=None, recolour=None, config=None, **kw):
     if colour is None:
-        config = get_config()
+        config = get_config(config)
         colour = config.get('colour')
     if colour:
         if recolour:

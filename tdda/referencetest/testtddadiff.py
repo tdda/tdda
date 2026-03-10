@@ -26,7 +26,7 @@ from tdda.referencetest.diffutils import (
     find_usable_key,
 )
 
-from tdda.state import set_testing
+from tdda.state import set_testing, reset_config
 from tdda.utils import swap_ext, rprint
 
 REFTESTDIR = os.path.dirname(__file__)     # tdda.referencetest
@@ -194,12 +194,29 @@ class TestTDDADiff(ReferenceTestCase):
         """One extra row and 2 diffs, reversed"""
         actual = self.difftest('f5-3d.tsv', 'a.csv', width=164)
 
-    @tag
     def test_a_csv_f5_3f_tsv_vertical(self):
         """One extra row"""
         self.difftest('a.csv', 'f5-3d.tsv', ['--vertical'], width=82)
         # test against same file
         self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical', width=82)
+
+    def test_a_tsv_f5_tsv_join(self):
+        """One extra row, with join key"""
+        self.difftest('a.csv', 'f5.tsv', ['--key', 'row'], width=120)
+
+    def test_a_tsv_f5_tsv_join_polars(self):
+        """One extra row, with join key"""
+        self.difftest('a.csv', 'f5.tsv', ['--key', 'row', '--polars'],
+                      width=120)
+
+    def test_f5_3d_tsv_a_tsv_join(self):
+        """One extra row, with join key"""
+        self.difftest('f5-3d.tsv', 'a.tsv', ['--key', 'row'], width=130)
+
+    def test_f5_3d_tsv_f5_tsv_join_polars(self):
+        """One extra row, with join key"""
+        self.difftest('f5-3d.tsv', 'a.tsv', ['--key', 'row', '--polars'],
+                      width=130)
 
 
 class TestKeyFunctions:
@@ -289,8 +306,6 @@ class TestKeyFunctionsPandas(TestKeyFunctions, ReferenceTestCase):
     is_pandas = True
     def read_parquet(self, *args, **kw):
         return pd.read_parquet(*args, **kw)
-
-
 
 
 class TestKeyFunctionsPolars(TestKeyFunctions, ReferenceTestCase):

@@ -117,7 +117,7 @@ def load_metadata(path, md_file_type=None, table_number=None,
 
 def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
                   table_number=None, use_table_name=None,
-                  preferred=TDDASERIAL.key,
+                  preferred=TDDASERIAL.key, config=None,
                   verbosity=VERBOSITY):
     """
     Internal helper function for csv read and write functions.
@@ -170,7 +170,7 @@ def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
                     path, md_path, = actual_path, path
 
         else:
-            s_config = get_config().serial
+            s_config = get_config(config).serial
             md_path = s_config._md_inpath(path)
 
 

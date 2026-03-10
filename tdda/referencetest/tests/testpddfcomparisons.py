@@ -5,6 +5,7 @@ import pandas as pd
 from rich import print as rprint
 from rich.console import Console
 
+from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.checkpandas import (
@@ -304,7 +305,8 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
         # First test: dfa vs ref_df
 
-        ddiff = same_structure_dataframe_diffs(dfa, ref_df)
+        config = Config(testing=True)
+        ddiff = same_structure_dataframe_diffs(dfa, ref_df, config=config)
         self.assertEqual(ddiff.n_diff_values, 8)  # 8 diff values in total
         self.assertEqual(ddiff.n_diff_cols, 8)    # 8 diff cols in total
         self.assertEqual(ddiff.n_diff_rows, 8)    # 8 diff cols in total
@@ -363,7 +365,8 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             'd': [True, True, False],         # one diff
         })
 
-        ddiff = same_structure_dataframe_diffs(df, ref_df)
+        config = Config(testing=True)
+        ddiff = same_structure_dataframe_diffs(df, ref_df, config=config)
         self.assertEqual(ddiff.n_diff_values, 4)
         self.assertEqual(ddiff.n_diff_cols, 3)
         self.assertEqual(ddiff.n_diff_rows, 3)
@@ -380,7 +383,8 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
     def test_ddiff_values_output(self):
         df = four_squares()
         rdf = four_squares_and_ten()
-        diff = same_structure_dataframe_diffs(df, rdf)
+        config = Config(testing=True)
+        diff = same_structure_dataframe_diffs(df, rdf, config=config)
         table = diff.details_table(df, rdf)
         result = rich_capture(table)
         self.assertStringCorrect(str(diff), fp('ddiff-1-details.txt'))

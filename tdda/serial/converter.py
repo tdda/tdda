@@ -106,7 +106,7 @@ class SerialConverter:
         self.generate = generate
         self.cli_args = cli_args
         self.map_other_bools_to_string = map_other_bools_to_string
-        self.sconfig = get_config().serial
+        self.sconfig = get_config(config).serial
         self.for_csv = for_csv
         self.verbosity = nvl(verbosity, 1)
         if self.cli_args is not None:

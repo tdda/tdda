@@ -19,7 +19,9 @@ from collections import namedtuple
 
 from tdda.abstractdf import col_names
 from tdda.referencetest.diffutils import join_for_diff
+from tdda.state import get_config
 from tdda.utils import nvl, error, debug
+
 
 FieldDiff = namedtuple('FieldDiff', 'actual expected')
 
@@ -51,7 +53,7 @@ class BaseComparison:
         self.print_fn = print_fn
         self.verbose = verbose
         self.tmp_dir = tmp_dir or tempfile.gettempdir()
-        self.config = config
+        self.config = get_config(config)
 
     def check_dataframe(
         self,

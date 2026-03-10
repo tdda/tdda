@@ -167,9 +167,10 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
     """
     """
     def __init__(self, dbtype, dbc, tablename,
-                 epsilon=None, type_checking='strict', **kwargs):
+                 epsilon=None, type_checking='strict',
+                 config=None, **kwargs):
         DatabaseConstraintVerifier.__init__(self, dbtype, dbc, tablename)
-        config = get_config()
+        config = get_config(config)
         cconfig = config.constraints
         self.dbtype = dbtype
         self.source_table = self.resolve_table(tablename, quote=True)

@@ -7,12 +7,14 @@ load = True
 testing = False
 
 
-def get_config(force_no_global=False):
+def get_config(c, /, force_no_global=False):
+    if c is not None:
+        return c
     global config, load, testing
     if force_no_global:
-        config = Config(load=False, testing=testing)
-    elif config is None:
-        config = Config(load=load, testing=testing)
+        return Config(load=False, testing=testing)
+    if config is None:
+        return Config(load=load, testing=testing)
     return config
 
 
@@ -35,3 +37,7 @@ def get_testing():
     global testing
     return testing
 
+
+def reset_config():
+    global config
+    config = None

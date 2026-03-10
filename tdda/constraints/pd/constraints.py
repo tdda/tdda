@@ -735,7 +735,7 @@ def pandas_tdda_type(x):
 
 def verify_df(df, constraints_path, epsilon=None, type_checking=None,
               repair=True, report='all', engine=None, backend=None,
-              **kwargs):
+              config=None, **kwargs):
     """
     Verify that (i.e. check whether) the Pandas DataFrame provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -861,7 +861,7 @@ def verify_df(df, constraints_path, epsilon=None, type_checking=None,
     for a slightly fuller example.
 
     """
-    backend = get_backend(backend)
+    backend = get_backend(backend, config)
     pdv = PandasConstraintVerifier(df, epsilon=epsilon,
                                    type_checking=type_checking)
     if isinstance(constraints_path, dict):
@@ -1246,7 +1246,7 @@ def file_format(path):
         return 'parquet' if ext[1:].lower() == 'parquet' else 'csv'
 
 
-def load_df(path, md_path=None, find_md=False, backend=None):
+def load_df(path, md_path=None, find_md=False, backend=None, config=None):
     """
     Loads a pandas DataFrame from a path or stream.
 
@@ -1260,7 +1260,7 @@ def load_df(path, md_path=None, find_md=False, backend=None):
                         setting will cause the software to look for
                         metadata using known patterns.
     """
-    backend = get_backend(backend)
+    backend = get_backend(backend, config)
     if isinstance(path, StringIO):  # stream
         return default_csv_loader(path)
     exists = os.path.exists(os.path.expanduser(path))
