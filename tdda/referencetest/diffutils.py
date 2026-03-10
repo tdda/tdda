@@ -29,8 +29,8 @@ from tdda.utils import (
     debug,
 )
 
-
 DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
+
 
 class ColDiff:
     def __init__(self, mask, extra):
@@ -298,3 +298,5 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
+
+

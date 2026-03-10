@@ -194,6 +194,7 @@ class TestTDDADiff(ReferenceTestCase):
         """One extra row and 2 diffs, reversed"""
         actual = self.difftest('f5-3d.tsv', 'a.csv', width=164)
 
+    @tag
     def test_a_csv_f5_3f_tsv_vertical(self):
         """One extra row"""
         self.difftest('a.csv', 'f5-3d.tsv', ['--vertical'], width=82)
