@@ -6,11 +6,11 @@ Total number of columns with differences: 1:
            2: s
 
 [1mValue Differences (all rows with differences)[0m
-┏━━━━┳━━━━━━━━━┳━━━━━━━━━┓
-┃[1m [0m[1m #[0m[1m [0m┃[1m [0m[1m      s[0m[1m [0m┃[1m [0m[1m      s[0m[1m [0m┃
-┃[1m [0m[1m  [0m[1m [0m┃[1m [0m[1m string[0m[1m [0m┃[1m [0m[1m string[0m[1m [0m┃
-┃[1m [0m[1m  [0m[1m [0m┃[1m [0m[1m      <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃
-┡━━━━╇━━━━━━━━━╇━━━━━━━━━┩
-│  0 │   [31malpha[0m │   [32mAlpha[0m │
-│  2 │   [31mgamma[0m │   [32mGamma[0m │
-└────┴─────────┴─────────┘
+┏━━━┳━━━━━━━━┳━━━━━━━━┓
+┃[1m [0m[1m#[0m[1m [0m┃[1m [0m[1m     s[0m[1m [0m┃[1m [0m[1m     s[0m[1m [0m┃
+┃[1m [0m[1m [0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃[1m [0m[1mstring[0m[1m [0m┃
+┃[1m [0m[1m [0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃
+┡━━━╇━━━━━━━━╇━━━━━━━━┩
+│ 0 │  [31malpha[0m │  [32mAlpha[0m │
+│ 2 │  [31mgamma[0m │  [32mGamma[0m │
+└───┴────────┴────────┘

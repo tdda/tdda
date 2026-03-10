@@ -335,7 +335,9 @@ def df_join(left, right, keyL, keyR=None, how='outer', suffix='__r', **kw):
     else:
         how = 'full' if how == 'outer' else how
         return left.join(right, left_on=keyL, right_on=keyR, how=how,
-                         suffix=suffix, **kw)
+                         suffix=suffix,
+                         coalesce=True,  # return key even if only in right
+                         **kw)
 
 
 def concat_series(series):

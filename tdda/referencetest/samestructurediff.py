@@ -241,18 +241,20 @@ class SameStructureDDiff:
             max(len(row[i]) for row in plain_rows)
             for i in range(n_table_cols)
         ]
+        nih = len(index_headers)
+        for i in range(len(index_headers)):
+            widths[i] = max(widths[i], len(index_headers[i]))
         for i, col in enumerate(cols):
             tL, tR = type_header(L[col]), type_header(R[col])
             type_headers.extend([tL, tR])
-            widths[i * 2] = max(widths[i * 2],
-                                len(cols[i]),
-                                len(pL),
-                                len(tL))
-            widths[1 + i * 2] = max(widths[1 + i * 2],
-                                    len(cols[i]),
-                                    len(pR),
-                                    len(tR))
-        widths[0] = max(widths[0], len(index_headers[0]))
+            widths[nih + i * 2] = max(widths[nih + i * 2],
+                                      len(cols[i]),
+                                      len(pL),
+                                      len(tL))
+            widths[nih + 1 + i * 2] = max(widths[nih + 1 + i * 2],
+                                          len(cols[i]),
+                                          len(pR),
+                                          len(tR))
         col_space = sum(widths)
         table_width = col_space + (n_table_cols) * 3
         header_width = sum(len(name) for name in cols)
@@ -274,9 +276,9 @@ class SameStructureDDiff:
         for i, col in enumerate(cols):
             (tL, tR) = type_headers[2 * i:2 * i + 2]
             table.add_column('\n'.join((col, tL, pL)), justify='right',
-                             min_width=widths[2 * i])
+                             min_width=widths[nih + 2 * i])
             table.add_column('\n'.join((col, tR, pR)), justify='right',
-                             min_width=widths[2 * i + 1])
+                             min_width=widths[nih + 2 * i + 1])
         for row in rows:
             table.add_row(*row)
         return table
