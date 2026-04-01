@@ -664,7 +664,6 @@ class TestSerialConversions(ReferenceTestCase):
                                 longNames=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    @tag
     def testConversionToFrictionlessObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
@@ -693,7 +692,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd.package.json'),
                                ignore_lines=self.IGL)
 
-    #@tag
     def testConversionToFrictionless_t1nds_file_cli(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         outpath = tmppath('tiny1nd.resource.json')
@@ -702,7 +700,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd.resource.json'),
                                ignore_patterns=['(UTF-8|utf-8)'])
 
-    #@tag
     def testSerialToFrictionlessFrictionlessJSONExtra(self):
         outpath = tmppath('tiny1nd-ref.package.json')
         refpath =  tdpath('tiny1nd-ref.package.json')
@@ -712,7 +709,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    @tag
     def testSerialToFrictionlessFrictionlessYAMLExtra(self):
         outpath = tmppath('tiny1nd-ref.resource.yaml')
         refpath =  tdpath('tiny1nd-ref.resource.yaml')
@@ -897,7 +893,6 @@ class TestSerialUtilityFunction(ReferenceTestCase):
             f'b.txt'
         )
 
-    #@tag
     def testConversionSpecifcationCLI(self):
         # tests that the validator figures out what to do correctly
         # from command line args.
