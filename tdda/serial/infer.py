@@ -32,14 +32,15 @@ ADTISH = re.compile(
     '[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
 )
 
-
-
+PRIVATE = chr(0)
 
 class MetadataInferrer:
-    def __init__(self, inpath, lines_to_use=1000, verbosity=None):
+    def __init__(self, inpath, lines_to_use=1000, verbosity=None,
+                 single_field=None):
         self.inpath = os.path.expanduser(inpath)
         self.lines_to_use = lines_to_use
         self.verbosity = nvl(verbosity, 10)
+        self.single_field = single_field
         self.read()
         self.process()
 
@@ -104,6 +105,8 @@ class MetadataInferrer:
         self.infer_fields()
 
     def find_separator(self):
+        if self.single_field:
+            return PRIVATE
         lines = self.all_lines
         n_commas = count(',', lines)
         n_pipes = count('|', lines)
@@ -220,10 +223,11 @@ class MetadataInferrer:
     def dequote_and_split(self, line):
         raw_row = line.split(self.sep)
         q = self.quote_char
+        n = len(raw_row)
         if len(raw_row) > self.n_fieldnames:
             pass
             # more values than fields in header
-            error('Too many values')
+            error(f'Too many values for header ({n} vs {self.n_fieldnames})')
         elif q is not None and any(v.startswith(q) and not v.endswith(q)
                                    for v in raw_row):
             raw_row = careful_split(line, self.sep, self.quote_char,
@@ -273,8 +277,8 @@ class MetadataInferrer:
         return out, is_quoted
 
 
-def infer_format_from_flat_file(path, lines_to_use=1000, verbosity=None):
-    inferrer = MetadataInferrer(path, lines_to_use, verbosity=verbosity)
+def infer_format_from_flat_file(path, lines_to_use=1000, **kw):
+    inferrer = MetadataInferrer(path, lines_to_use, **kw)
     return inferrer.metadata
 
 

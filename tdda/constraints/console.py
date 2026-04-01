@@ -141,14 +141,20 @@ def main_with_argv(argv, verbose=True):
                 return ext.detect()
         no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
-        item = argv[2] if len(argv) > 2 else '.'
-        if item in ('referencetest', 'constraints', 'rexpy', 'gentest'):
-            dest = argv[3] if len(argv) > 3 else '.'
-            copy_examples(item, destination=dest, verbose=verbose)
-        else:
-            dest = argv[2] if len(argv) > 2 else '.'
-            for item in ('referencetest', 'constraints', 'rexpy', 'gentest'):
-                copy_examples(item, destination=dest, verbose=verbose)
+        items = ['referencetest', 'constraints', 'rexpy', 'gentest']
+        args = argv[2:]
+        if args:
+            if 'all' in args:
+                items.append('book')
+            else:
+                bads = set(args) - set(items) - set(['book'])
+                if bads:
+                    L = ', '.join(a for a in args if a in bads)
+                    print(f'Unknown: {L}.', file=sys.stderr)
+                    sys.exit(1)
+                items = args
+        for item in items:
+            copy_examples(item, destination='.', verbose=verbose)
     elif name == 'gentest':
         gentest_wrapper(argv[2:])
     elif name in ('version', '-v', '--version'):

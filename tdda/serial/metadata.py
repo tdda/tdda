@@ -78,6 +78,11 @@ SERIAL_METADATA_FLAVOURS = [
     'polars.read_csv',
 ]
 
+CSVW_ONLY_KEYS = (
+    'n_tables',
+    'table_number',
+)
+
 
 
 METADATA_FLAVOUR_MAP = {
@@ -369,6 +374,7 @@ class SerialMetadata:
                                   if not k.startswith('_')
                                   and k != 'libs'
                                   and nonnull(v)
+                                  and not k in CSVW_ONLY_KEYS
         }
         nulls = m.get('null_indicator')
         quoting = m.get('quoting')

@@ -1,42 +1,47 @@
 {
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
-    "tdda.serial": {
-        "fields": [
-            {
-                "name": "Index",
-                "fieldtype": "int"
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:creator": "tdda.serial-3.0.00rc1",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "name": "Index",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "Odd",
+                        "datatype": "boolean"
+                    },
+                    {
+                        "name": "Even",
+                        "datatype": "boolean"
+                    },
+                    {
+                        "name": "Real",
+                        "datatype": "number"
+                    },
+                    {
+                        "name": "Name",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "LastInFeb",
+                        "datatype": "date"
+                    },
+                    {
+                        "name": "LastIn2024",
+                        "datatype": "datetime"
+                    }
+                ]
             },
-            {
-                "name": "Odd",
-                "fieldtype": "bool"
-            },
-            {
-                "name": "Even",
-                "fieldtype": "bool"
-            },
-            {
-                "name": "Real",
-                "fieldtype": "number"
-            },
-            {
-                "name": "Name",
-                "fieldtype": "string"
-            },
-            {
-                "name": "LastInFeb",
-                "fieldtype": "date",
-                "format": "iso8601"
-            },
-            {
-                "name": "LastIn2024",
-                "fieldtype": "datetime",
-                "format": "iso8601"
-            }
-        ],
+            "url": "simple.csv"
+        }
+    ],
+    "dialect": {
         "encoding": "utf-8",
-        "header_row_count": 1,
-        "table_number": 0,
-        "n_tables": 1
-    }
+        "headerRowCount": 1
+    },
+    "null": ""
 }

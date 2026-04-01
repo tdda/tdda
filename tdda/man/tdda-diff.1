@@ -142,44 +142,33 @@ as typed values after reading. Ke
   Use loose (permissive) type comparisons
 
 .PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine. *
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine.
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                        (when dataframe engine is Pandas)
+.br
+                            \fBn\fR for numpy_nullable *
+.br
+                            \fBa\fR for pyarrow
+.br
+                            \fBo\fR for original.
+
+.PP
 \fB--help\fR, \fB-?\fR, \fB--?\fR
 .br
   Show help on \fBtdda diff\fR\&.
 
 .SH EXAMPLES
+Data suitable for all examples can be obtained with
+
+.PP
+\fBtdda examples diff\fR
 .IP "  1." 5
-tdda diff --mono a.csv b.csv
+tdda diff a.csv a.csv
 
 .PP
-Difference summary:
-.br
-DataFrames have same structure, but different values.
-.br
-Total number of different values: 2 of 24 (8.33%).
-.br
-Total number of rows with differences: 2
-.br
-Total number of columns with differences: 2:
-.br
-           1: sq
-.br
-           1: name
-
-.PP
-\fBValue Differences (all rows with differences)\fP
-.br
-┏━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━┓
-.br
-┃      ┃    \fBsq\fP ┃    \fBsq\fP ┃   \fBname\fP ┃   \fBname\fP ┃
-.br
-┃      ┃ \fBInt64\fP ┃ \fBInt64\fP ┃ \fBstring\fP ┃ \fBstring\fP ┃
-.br
-┃  \fBrow\fP ┃     < ┃     > ┃      < ┃      > ┃
-.br
-┡━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━┩
-.br
-│    2 │     9 │     9 │  \fBthree\fP │  \fBThree\fP │
-.br
-│    3 │    \fB16\fP │    \fB15\fP │   four │   four │
-.br
-└──────┴───────┴───────┴────────┴────────┘
+This is the simplest form of the command. It will read a.csv and
+convert it to a data frame, using the default back end (Pandas).

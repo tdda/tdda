@@ -5,9 +5,8 @@ NAME
 SYNOPSIS
 
   [1mtdda examples[0m
-  [1mtdda examples [4m[22mMODULE[0m
-  [1mtdda examples [4m[22mMODULE[24m [4mDIRECTORY[0m
-  [1mtdda examples [4m[22mDIRECTORY[0m
+  [1mtdda examples [22m[[4mMODULE...[24m]
+  [1mtdda examples all[0m
 
 POSITIONAL ARGUMENTS
 
@@ -16,11 +15,13 @@ POSITIONAL ARGUMENTS
     ‐ constraints
     ‐ rexpy
     ‐ gentest
-  If not specified, all four will be used created.
+    ‐ book
+  If not specified, all the first four will be used created, without
+  requiring internet access.
 
-  [4mDIRECTORY[24m If specified, the example directories will be
-              subdirectories of the specified directory
-              (which should exist).
+  If [1mall [22mis specified, or [1mbook [22mis included,
+  the [1mtdda‐book‐examples [22mwill be downloaded from GitHub, which
+  does require internet access.
 
 DESCRIPTION
 
@@ -29,24 +30,23 @@ DESCRIPTION
 
   If no module is specified, examples for all three are written out.
 
-  If no output directory is specified, the examples are
-  written to a subdirectory of the current directory.
+  Examples are always created in subdirectories of the current directory [1m.[0m
 
 EXAMPLES
 
   a. [1mtdda examples[0m
-     Creates all four example directories in [1m.[0m
+     Creates the referencetest, constraints, rexpy, and gentest
+     examples in [1m.[0m
 
   b. [1mtdda examples gentest[0m
-     Creates examples‐gentest in [1m.[0m
+     Creates [1mexamples_gentest [22min [1m.[0m
 
-  c. [1mtdda examples /tmp/tdda[0m
-     Creates all four as subdirectories of [1m/tmp/tdda[0m
+  c. [1mtdda examples gentest book[0m
+     Creates gentest and book examples in [1m.[0m
 
-  d. [1mtdda examples rexpy t[0m
-     Creates examples‐rexpy in subdirectory of [1m./t[0m
-
-
+  d. [1mtdda examples all[0m
+     Creates all the examples, four from local files and the book
+     examples from GitHub in [1m.[0m
 
 
 

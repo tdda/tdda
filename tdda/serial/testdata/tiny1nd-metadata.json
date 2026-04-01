@@ -1,39 +1,41 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-2.2.15",
+    "dc:creator": "tdda.serial-3.0.00rc1",
     "tables": [
         {
-            "columns": [
-                {
-                    "name": "b",
-                    "datatype": "boolean"
-                },
-                {
-                    "name": "i",
-                    "datatype": "integer"
-                },
-                {
-                    "name": "f",
-                    "datatype": "float"
-                },
-                {
-                    "name": "s",
-                    "datatype": "string"
-                },
-                {
-                    "name": "t",
-                    "datatype": "date"
-                }
-            ]
+            "tableSchema": {
+                "columns": [
+                    {
+                        "name": "b",
+                        "datatype": "boolean"
+                    },
+                    {
+                        "name": "i",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "f",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "s",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "t",
+                        "datatype": "date"
+                    }
+                ]
+            },
+            "url": "tiny1nd.csv"
         }
     ],
     "dialect": {
         "encoding": "UTF-8",
         "delimiter": ",",
         "headerRowCount": 1,
-        "null": "",
         "quoteChar": "\""
     },
-    "url": "tiny1nd.csv"
+    "null": ""
 }

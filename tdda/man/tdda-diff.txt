@@ -102,30 +102,30 @@ OPTIONS
   [1m‐‐permissive[0m
     Use loose (permissive) type comparisons
 
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine. *
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                          (when dataframe engine is Pandas)
+                              [1mn [22mfor numpy_nullable *
+                              [1ma [22mfor pyarrow
+                              [1mo [22mfor original.
+
   [1m‐‐help[22m, [1m‐?[22m, [1m‐‐?[0m
     Show help on [1mtdda diff[22m.
 
 EXAMPLES
 
-  tdda diff ‐‐mono a.csv b.csv
+  Data suitable for all examples can be obtained with
 
-  Difference summary:
-  DataFrames have same structure, but different values.
-  Total number of different values: 2 of 24 (8.33%).
-  Total number of rows with differences: 2
-  Total number of columns with differences: 2:
-             1: sq
-             1: name
+  [1mtdda examples diff[0m
+  tdda diff a.csv a.csv
 
-  [1mValue Differences (all rows with differences)[0m
-  ââââââââ³ââââââââ³ââââââââ³âââââââââ³âââââââââ
-  â      â    [1msq [22mâ    [1msq [22mâ   [1mname [22mâ   [1mname [22mâ
-  â      â [1mInt64 [22mâ [1mInt64 [22mâ [1mstring [22mâ [1mstring [22mâ
-  â  [1mrow [22mâ     < â     > â      < â      > â
-  â¡âââââââââââââââââââââââââââââââââââââââââ©
-  â    2 â     9 â     9 â  [1mthree [22mâ  [1mThree [22mâ
-  â    3 â    [1m16 [22mâ    [1m15 [22mâ   four â   four â
-  ââââââââ´ââââââââ´ââââââââ´âââââââââ´âââââââââ
+  This is the simplest form of the command. It will read a.csv and
+  convert it to a data frame, using the default back end (Pandas).
+
+
+
+
 
 
 

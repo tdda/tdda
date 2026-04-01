@@ -3,23 +3,104 @@
 .SH NAME
 \fBtdda serial\fR  \- Converts, interrogates and creates serial metadata files.
 
-.SH DESCRIPTION
-Use tdda serial [--to FORMAT] in.serial  out.serial
-to convert metadata in.serial to out.serial in the output
-format specified (or tdda.serial if none is specified).
-Input and output metdata can also be CSVW files (.json)
-Supported formats:
+.SH SYNOPSIS
+\fBtdda serial\fR [FLAGS] \fBinmetadata\fR \fBoutmetadata\fR
+\fBtdda serial\fR \fB--to FMT\fR [FLAGS] \fBinmetadata\fR \fBoutmetadata\fR
 
 .PP
-SHORT FORM  LONG FORM
+Converts metadata from one metadata format, in \fBinpath\fR,
+to another, in \fBoutpath\fR\&.
+
+.PP
+\fBtdda serial\fR [FLAGS] \fBindata\fR \fBoutmetadata\fR
+
+.PP
+Creates metadata for in \fBindata\fR in \fBoutmetadata\fR
+
+.PP
+\fBtdda serial\fR [FLAGS] \fBinmetadata\fR \fBscript.py\fR
+
+.PP
+Creates Python code for reading a file in the format in \fBinmetadata\fR as
+Python. Often, a reading library would be specified, e.g.
+
+.PP
+\fBtdda serial\fR \fBa.serial\fR \fBa.py\fR --to pd.r
+
+.PP
+which specifies that they Python script should use \fBpandas.read_csv\fR\&.
+
+.PP
+Supported formats \fBFMT\fR:
+
+.PP
+SHORT FORM  LONG FORM/Description
   \fB\&.\fR         \fBtdda.serial\fR
   \fBpd.r\fR      \fBpandas.read_csv\fR
   \fBpd.w\fR      \fBpandas.DataFrame.to_csv\fR
   \fBpl.\fR       \fBpolars.read_csv\fR
   \fBpl.w\fR      \fBpolars.DataFrame.write_csv\fR
   \fBcsv.r\fR     \fBpython.csv.reader\fR
-  \fBs\fR\&.wpython.csv.writier\fB
-\fRcsvwCSVW`
+  \fBcsv.w\fR     \fBpython.csv.writer\fR
+  \fBcsvw\fR      \fBCSVW\fR
+  \fBfl\fR        \fBfrictionless\fR
+  \fBfless\fR     \fBfrictionless
+\fRfl.rfrictionless.resource\fB
+\fRfl.pfrictionless.package`
 
 .PP
 Multiple formats can be separated by commas.
+
+.PP
+Format is usually inferred from filename if following common conventions
+for tdda.serial, CSVW, and frictionless.
+
+.SH OPTIONS
+\fB--to FMT\fR             Specify output metadata format (see list of formats above)
+
+.PP
+\fB-B BE, --backend BE\fR  Specify backend for Pandas flavours:
+                         \fBn\fR: \fBnumpy_nullable\fR
+                         \fBa\fR: \fBpyarrow\fR
+                         \fBo\fR: for original Pandas backend.
+
+.PP
+\fB--for FILE\fR            Filename for data to use when generating CSVW
+                        or Frictionless data.
+                        (Can also be used for \fBtdda.serial\fR and \fB\&.py\fR output)
+
+.PP
+\fB-g, --gen, --generate\fR  Generate (infer) metadata for flat file
+
+.PP
+\fB-v, --verbose\fR          Verose output
+\fB-V, --Verbose\fR          More verose output
+
+.SH EXAMPLES
+\fBtdda serial a.csv a.serial\fR
+   Generate tdda.serial metadata describing format of \fBa.csv\fR in \fBa.serial\fR\&.
+
+.PP
+\fBtdda serial --to . a.csv a.serial\fR
+    Same as previous, expicitly specifying the default, \fBtdda.serial\fR,
+    output format with \fB\&.\fR\&.
+
+.PP
+\fBtdda serial a.csv a-metadata.json\fR
+    Generate CSVW metadata describing format of \fBa.csv\fR in \fBa-metadata.json\fR
+
+.PP
+\fBtdda serial --to csvw a.csv a.json\fR
+    Same as previous, explicitly specifying format with non-standard output name
+
+.PP
+\fBtdda serial a.serial a-metadata.json\fR
+    Generate Converts \fBtdda.metadata\fR metadata to CSVW
+
+.PP
+\fBtdda serial a-metadata.json a.serial\fR
+    Generate Converts \fBtdda.metadata\fR metadata to CSVW
+
+.SH BUGS
+The \fBtdda serial\fR functionality is fairly new, and there are probably
+still many bugs an undesirable features in the implementation.

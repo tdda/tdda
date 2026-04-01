@@ -6,11 +6,9 @@
 .SH SYNOPSIS
 \fBtdda examples\fR
 .br
-\fBtdda examples\fR \fIMODULE\fP
+\fBtdda examples\fR [\fIMODULE...\fP]
 .br
-\fBtdda examples\fR \fIMODULE\fP \fIDIRECTORY\fP
-.br
-\fBtdda examples\fR \fIDIRECTORY\fP
+\fBtdda examples\fR \fBall\fR
 
 .SH POSITIONAL ARGUMENTS
 \fIMODULE\fP can be any of:
@@ -18,12 +16,15 @@
   - constraints
   - rexpy
   - gentest
-If not specified, all four will be used created.
+  - book
+.br
+If not specified, all the first four will be used created, without
+requiring internet access.
 
 .PP
-\fIDIRECTORY\fP If specified, the example directories will be
-            subdirectories of the specified directory
-            (which should exist).
+If \fBall\fR is specified, or \fBbook\fR is included,
+the \fBtdda-book-examples\fR will be downloaded from GitHub, which
+does require internet access.
 
 .SH DESCRIPTION
 Write out example code and data for all examples, by default,
@@ -33,25 +34,25 @@ or for a particular module if specified.
 If no module is specified, examples for all three are written out.
 
 .PP
-If no output directory is specified, the examples are
-written to a subdirectory of the current directory.
+Examples are always created in subdirectories of the current directory \fB\&.\fR
 
 .SH EXAMPLES
 a. \fBtdda examples\fR
-.br
-   Creates all four example directories in \fB\&.\fR
+   Creates the referencetest, constraints, rexpy, and gentest
+   examples in \fB\&.\fR
 
 .PP
 b. \fBtdda examples gentest\fR
 .br
-   Creates examples-gentest in \fB\&.\fR
+   Creates \fBexamples_gentest\fR in \fB\&.\fR
 
 .PP
-c. \fBtdda examples /tmp/tdda\fR
+c. \fBtdda examples gentest book\fR
 .br
-   Creates all four as subdirectories of \fB/tmp/tdda\fR
+   Creates gentest and book examples in \fB\&.\fR
 
 .PP
-d. \fBtdda examples rexpy t\fR
+d. \fBtdda examples all\fR
 .br
-   Creates examples-rexpy in subdirectory of \fB\&./t\fR
+   Creates all the examples, four from local files and the book
+   examples from GitHub in \fB\&.\fR

@@ -12,6 +12,7 @@ from tdda.serial.metadata import (
     writer,
 )
 from tdda.serial.utils import CSVW_MD_RE
+
 from tdda.utils import nvl, listify, warn, error
 
 
@@ -99,6 +100,7 @@ class CSVW:
     CONTEXT = 'http://www.w3.org/ns/csvw'
 
 
+
 class CSVWMetadata(SerialMetadata):
     """
     Subclass of SerialMetadata specifically for CSVW Metadata provided
@@ -122,9 +124,9 @@ class CSVWMetadata(SerialMetadata):
 
     """
     def __init__(self, spec=None, extensions=False, table_number=None,
-                 for_table_name=None, verbosity=2):
+                 for_table_name=None, url=None, verbosity=2):
         super().__init__(verbosity=verbosity)
-        self._url = None
+        self._url = url
         self._csvw_base_url = None
         self._csvw_language = None
         self._extensions = extensions
@@ -168,6 +170,7 @@ class CSVWMetadata(SerialMetadata):
             self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
             self._csvw = spec
+            print('0000', spec)
 
     def field_to_csvw_json(self, field):
         d = {}
@@ -194,20 +197,20 @@ class CSVWMetadata(SerialMetadata):
 
     def to_csvw_json(self, csvfile=None, lang=None, indent=4,
                      resource_type=None):
-        csvfile = nvl(csvfile, 'data.csv')
+        csvfile = nvl(csvfile, nvl(self._url, 'data.csv'))
         dialect = {}
 
-        table_info = {}
+        tableSchema = {}
         for key, attr in (
             ('dc:description', 'description'),
             ('dc:title', 'title'),
         ):
-            self.set_if_attr_non_null(table_info, key, attr)
+            self.set_if_attr_non_null(tableSchema, key, attr)
         columns = [
             self.field_to_csvw_json(field) for field in self.fields
         ]
         if columns:
-            table_info['columns'] = columns
+            tableSchema['columns'] = columns
 
         self._null = self.single_null_indicator()
         self._trim = (    # can be 'true', 'false', 'start' or 'end' in csvw
@@ -220,7 +223,7 @@ class CSVWMetadata(SerialMetadata):
             ('delimiter', None),
             ('header', None),
             ('headerRowCount', 'header_row_count'),
-            ('null', '_null'),
+            # ('null', '_null'),
             ('doubleQuote', 'stutter_quotes'),
             ('quoteChar', 'quote_char'),
             ('commentPrefix', 'comment_char'),
@@ -231,6 +234,7 @@ class CSVWMetadata(SerialMetadata):
             ('trim', '_trim'),
             # 'date_format'
             # 'true_value'
+
             # 'false_value'
         ):
             self.set_if_attr_non_null(dialect, key, attr)
@@ -244,12 +248,17 @@ class CSVWMetadata(SerialMetadata):
             'dc:conformsTo': 'data-package',
             'dc:creator': getattr(self, 'creator', writer()),
             'tables': [
-                table_info
+                {
+                    'tableSchema': tableSchema,
+                    'url': csvfile,
+                },
             ],
             'dialect': dialect,
-            'url': csvfile,
         }
+        self.set_if_attr_non_null(d, 'null', '_null')
         return json.dumps(d, indent=indent)
+
+    to_json = to_csvw_json  # Surely?
 
     def write_csvw(self, path, csvfile=None, lang=None, indent=4):
         if not csvfile:
@@ -653,7 +662,7 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
     return outfmt
 
 
-def serial_to_csvw(md):
+def serial_to_csvw(md, name='data.csv'):
     """
     Converts a SerialMetadata object to a CSVWMetadata Object.
 
@@ -663,6 +672,8 @@ def serial_to_csvw(md):
     Returns:
             A (braoadly equivalent) CSVWMetadata obkect
     """
-    csvw = CSVWMetadata()
+    csvw = CSVWMetadata(url=name)
     csvw.__dict__.update(md.__dict__)
     return csvw
+
+

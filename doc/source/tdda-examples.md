@@ -8,9 +8,8 @@
 #### SYNOPSIS
 ```x
 tdda examples  
-tdda examples MODULE  
-tdda examples MODULE DIRECTORY  
-tdda examples DIRECTORY  
+tdda examples [MODULE...]  
+tdda examples all  
 ```
 #### POSITIONAL ARGUMENTS
 
@@ -19,11 +18,13 @@ tdda examples DIRECTORY
   - constraints
   - rexpy
   - gentest
-If not specified, all four will be used created.
+  - book  
+If not specified, all the first four will be used created, without
+requiring internet access.
 
-*DIRECTORY* If specified, the example directories will be
-            subdirectories of the specified directory
-            (which should exist).
+If `all` is specified, or `book` is included,
+the `tdda-book-examples` will be downloaded from GitHub, which
+does require internet access.
 
 
 #### DESCRIPTION
@@ -33,22 +34,22 @@ or for a particular module if specified.
 
 If no module is specified, examples for all three are written out.
 
-If no output directory is specified, the examples are
-written to a subdirectory of the current directory.
+Examples are always created in subdirectories of the current directory `.`
 
 #### EXAMPLES
 
-a. `tdda examples`  
-   Creates all four example directories in `.`
+a. `tdda examples`
+   Creates the referencetest, constraints, rexpy, and gentest
+   examples in `.`
 
 b. `tdda examples gentest`  
-   Creates examples-gentest in `.`
+   Creates `examples_gentest` in `.`
 
-c. `tdda examples /tmp/tdda`  
-   Creates all four as subdirectories of `/tmp/tdda`
+c. `tdda examples gentest book`  
+   Creates gentest and book examples in `.`
 
-d. `tdda examples rexpy t`  
-   Creates examples-rexpy in subdirectory of `./t`
-
+d. `tdda examples all`  
+   Creates all the examples, four from local files and the book
+   examples from GitHub in `.`
 
 

@@ -1,6 +1,8 @@
 import copy
 import json
 
+from collections import namedtuple
+
 import pandas as pd
 import polars as pl
 
@@ -39,6 +41,8 @@ from tdda.utils import testwarn
 
 TDDA_SERIAL_VERSION_RE = r'tdda\.serial\-[0-9]+.[0-9]+\.[0-9]+[rc0-9]*'
 
+Spec = namedtuple('Spec', 'generate formats broad_out inpath outpath')
+
 
 class TestSerialConversions(ReferenceTestCase):
     tiny1nd_serial = tdpath('tiny1nd.serial')
@@ -63,7 +67,7 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertStringCorrect(str(md), tdpath('tiny1nd-weird-out.serial'),
                                  ignore_lines=self.IGL)
 
-    def testSerialToPandas(self):
+    def testSerialToPandas2(self):
         name = 'tiny1nd-weird-pd.serial'
         outpath = tmppath(name)
         refpath =  tdpath(name)
@@ -77,6 +81,7 @@ class TestSerialConversions(ReferenceTestCase):
 
 
     def testSerialToPandasWeird(self):
+        # serial to serial specifying pd.r
         name = 'tiny1nd-weird-pd.serial'
         outpath = tmppath(name)
         refpath = tdpath(name)
@@ -104,7 +109,6 @@ class TestSerialConversions(ReferenceTestCase):
                                 longNames=True)
 
         self.assertDataFramesEqual(df, ref_df, type_matching='loose')
-
 
     def testSerialToPandasWeird_PyArrow(self):
         name = 'tiny1nd-weird-pd-pyarrow.serial'
@@ -285,7 +289,7 @@ class TestSerialConversions(ReferenceTestCase):
         outpath = tmppath('tiny1nd-weird-no-rename-from-csvw.serial')
         refpath =  tdpath('tiny1nd-weird-no-rename-from-csvw.serial')
 
-        c = SerialConverter(csvwpath, outpath)
+        c = SerialConverter(csvwpath, outpath, verbosity=3)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath,
@@ -438,9 +442,9 @@ class TestSerialConversions(ReferenceTestCase):
     def testConversionToCSVWObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
-        csvw = serial_to_csvw(md)
-        # Just check this hasn't broken anything serious
-        self.assertStringCorrect(csvw.to_json(), tiny1nd_serial,
+        csvw = serial_to_csvw(md, 'tiny1nd.csv')
+        csvw_ref = tdpath('tiny1nd-metadata.json')
+        self.assertStringCorrect(csvw.to_json(), csvw_ref,
                                  ignore_lines=self.IGL)
 
     def testConversionToCSVW_t1nds(self):
@@ -462,7 +466,7 @@ class TestSerialConversions(ReferenceTestCase):
 
     def testConversionToCSVW_t1nds_file_cli(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
-        outpath = tmppath('tiny1nd.csvmetadata.json')
+        outpath = tmppath('tiny1nd-metadata.json')
         c = SerialConverter(cli_args=[tiny1nd_serial, outpath])
         c.convert()
         self.assertFileCorrect(outpath, tdpath('tiny1nd-metadata.json'),
@@ -660,11 +664,13 @@ class TestSerialConversions(ReferenceTestCase):
                                 longNames=True)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
+    @tag
     def testConversionToFrictionlessObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         md = load_metadata(self.tiny1nd_serial)
         frictionless = serial_to_frictionless(md)
         # Just check this hasn't broken anything serious
+        # This isn't testing Frictionless!!!
         self.assertStringCorrect(frictionless.to_json(), tiny1nd_serial,
                                  ignore_lines=self.IGL)
 
@@ -687,6 +693,7 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd.package.json'),
                                ignore_lines=self.IGL)
 
+    #@tag
     def testConversionToFrictionless_t1nds_file_cli(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         outpath = tmppath('tiny1nd.resource.json')
@@ -695,6 +702,17 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath('tiny1nd.resource.json'),
                                ignore_patterns=['(UTF-8|utf-8)'])
 
+    #@tag
+    def testSerialToFrictionlessFrictionlessJSONExtra(self):
+        outpath = tmppath('tiny1nd-ref.package.json')
+        refpath =  tdpath('tiny1nd-ref.package.json')
+        c = SerialConverter(self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv')
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, refpath)
+        self.assertEqual(buf, [])
+
+    @tag
     def testSerialToFrictionlessFrictionlessYAMLExtra(self):
         outpath = tmppath('tiny1nd-ref.resource.yaml')
         refpath =  tdpath('tiny1nd-ref.resource.yaml')
@@ -704,14 +722,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
-    def testSerialToFrictionlessFrictionlessJSONExtra(self):
-        outpath = tmppath('tiny1nd-ref.package.json')
-        refpath =  tdpath('tiny1nd-ref.package.json')
-        c = SerialConverter(self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv')
-        Warn, buf = testwarn()
-        c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, refpath)
-        self.assertEqual(buf, [])
 
 
 class TestSerialUtilityFunction(ReferenceTestCase):
@@ -886,6 +896,21 @@ class TestSerialUtilityFunction(ReferenceTestCase):
             m.choose_csv_from_frictionless_name('b.resource.json'),
             f'b.txt'
         )
+
+    #@tag
+    def testConversionSpecifcationCLI(self):
+        # tests that the validator figures out what to do correctly
+        # from command line args.
+
+        expected = {
+            ('a.csv', 'a.serial'): Spec(generate=True, formats=['tdda.serial'], broad_out='tdda.serial',
+                                        inpath='a.csv', outpath='a.serial')
+        }
+
+        for (args, expected) in expected.items():
+            c = SerialConverter(cli_args=list(args))
+            actual = Spec(c.generate, c.out_formats, c.broad_out, c.inpath, c.outpath)
+            self.assertEqual((args, actual), (args, expected))
 
 
 if __name__ == '__main__':

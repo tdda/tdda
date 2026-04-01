@@ -1124,6 +1124,7 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
 
     with tail being the path with cwd removed from the front.
     """
+    prefix = '' if in_cls else 'self.'
     if cwd.endswith(os.path.sep):
         cwd = cwd[:-len(os.path.sep)]
     if path.startswith(cwd + os.path.sep):
@@ -1138,9 +1139,8 @@ def as_join_repr(path, cwd, name=None, as_pwd=None, inc_tmpdir=False,
                 L = len(ref) + len(os.path.sep)
                 if tail.startswith(ref + os.path.sep):
                     tail = tail[L:]
-                    return 'os.path.join(self.refdir, %s)' % repr(tail)
+                    return 'os.path.join(%srefdir, %s)' % (prefix, repr(tail))
                 else:
-                    prefix = '' if in_cls else 'self.'
                     return 'os.path.join(%scwd, %s)' % (prefix, repr(tail))
     if inc_tmpdir:
         tmpdir = TMPDIR + os.path.sep

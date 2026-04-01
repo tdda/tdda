@@ -16,7 +16,7 @@ from tdda.serial.metadata import (
     SerialMetadata,
     TDDASerialError,
 )
-from tdda.serial.csvw import CSVWMetadata
+from tdda.serial.csvw import CSVWMetadata, CSVW
 from tdda.serial.frictionless import (
     FrictionlessMetadata,
     FRICTIONLESS_TELL_KEYS
@@ -96,7 +96,10 @@ def load_metadata(path, md_file_type=None, table_number=None,
         else:
             kind, _ = find_metadata_type_from_path(path)
             if not kind:
-                error(f'Unrecognized metadata content in {path}')
+                if has_csvw_context(path):
+                    kind = 'csvw'
+                else:
+                    error(f'Unrecognized metadata content in {path}')
             if kind == 'csvw':
                 md = CSVWMetadata(path, table_number=table_number,
                                   for_table_name=for_table_name,
@@ -262,4 +265,18 @@ def set_delimiter_from_path(kw, path, sep_key):
         elif ext == '.psv':
             kw[sep_key] = '|'
     return kw
+
+
+def has_csvw_context(json_path):
+    """
+    Check for CSVW sig in JSON file
+    """
+    with open(json_path) as f:
+        d = json.load(f)
+    if isinstance(d, dict):
+        context = d.get('@context')
+        if context and isinstance(context, list):
+            if context[0] == CSVW.CONTEXT:
+                return True
+    return None
 

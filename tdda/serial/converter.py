@@ -82,7 +82,7 @@ FLAGS:
   --for FILE    Filename for data to use when generating CSVW or Frictionless
                 data. (Can also be used for tdda.serial and .py output)
 
-  --backend BE, -b BE  Backend target dtypes when writing pandas flavours
+  --backend BE, -B BE  Backend target dtypes when writing pandas flavours
                        n for numpy_nullable, a for pyarrow, o for original
 
   --generate, --gen, -g
@@ -98,45 +98,53 @@ class SerialConverter:
                  out_format=None, backend=None,
                  map_other_bools_to_string=False,
                  generate=False, cli_args=None,
+                 single_field=None,
                  for_csv=None, config=None, verbosity=None):
         self.inpath = inpath
         self.outpath = outpath
-        self.out_formats = self.handle_formats(out_format)
-        self.backend = backend
-        self.generate = generate
         self.cli_args = cli_args
-        self.map_other_bools_to_string = map_other_bools_to_string
+        self._out_format = out_format
+        self.verbosity = nvl(verbosity, 1)
         self.sconfig = get_config(config).serial
         self.for_csv = for_csv
-        self.verbosity = nvl(verbosity, 1)
+        self.backend = backend
+        self.generate = generate
+        self.single_field = single_field
+        self.map_other_bools_to_string = map_other_bools_to_string
         if self.cli_args is not None:
             self.process_args()
         self.validate()
 
-    def handle_formats(self, out_formats):
-        fmt = out_formats or []
-        if isinstance(fmt, str):
-            fmt  = [fmt]
-        return get_metadata_flavours(out_formats)  # standardize
-
     def process_args(self):
         parser = self.parser()
-        flags, more = parser.parse_known_args(self.cli_args)
+        #flags, more = parser.parse_known_args(self.cli_args)
+        flags = parser.parse_args(self.cli_args)
         if flags.verbose or flags.Verbose:
             flags.verbosity = 3 if flags.Verbose else 2
         if flags.quiet:
             flags.verbosity = 0
+        flags._out_format = getattr(flags, 'to', None)
+        flags.for_csv = getattr(flags, 'for', None)
+        flags.single_field = getattr(flags, 'single', None)
         self.__dict__.update(vars(flags))
 
     def validate(self):
         if not self.outpath:
             suf = USAGE if self.cli_args else None
             error(f'No destination specified.{suf}')
-        kind, parts = find_metadata_type_from_path(self.outpath)
+
+        fmt = self._out_format or []
+        if fmt:
+            self.out_formats = get_metadata_flavours(fmt)  # standardize
+        else:
+            self.out_formats = []
+        if self.out_formats:
+            kind = self.out_formats[0]
+        else:
+            kind, parts = find_metadata_type_from_path(self.outpath)
+            self.out_formats = [kind]
         _, ext = os.path.splitext(self.outpath)
         ext = ext
-        if hasattr(self, 'to'):
-            self.out_formats = get_metadata_flavours(self.to)
 
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
@@ -150,12 +158,14 @@ class SerialConverter:
 
         if ext == '.py':
             self.broad_out = 'python'
+        elif ext == '.serial':
+            self.broad_out = 'tdda.serial'
         elif kind:
             self.broad_out = kind
         elif ext in ('.csvw'):
             self.broad_out = 'csvw'
         else:
-            warn('Cannot infer output format. Use --to FMT to specify.')
+            error('Cannot infer output format. Use --to FMT to specify.')
 
         self.for_csv = getattr(self, 'for', None)
 
@@ -207,11 +217,14 @@ class SerialConverter:
         parser.add_argument('--Verbose', '-V', action='store_true',
             help='Be more verbose')
 
+        parser.add_argument('--single', '-1', action='store_true',
+            help='Declare that there is only a single field in the file.')
+
         return parser
 
     def convert(self, debug=False, warner=None):
         Warn = nvl(warner, warn)
-        if debug:
+        if debug or self.verbosity > 2:
             print(f'IN: {self.inpath}')
             print(f'OUT: {self.outpath}')
             print(f'FORMAT: {self.out_formats}')
@@ -226,12 +239,14 @@ class SerialConverter:
             else SerialMetadata()
         )
         kw = {}
+        if self.generate:
+            md_out = self.infer_from_flat_file()
         for fmt in self.out_formats:
-            if self.generate:
-                md_out = self.infer_from_flat_file()
-            elif fmt == 'tdda.serial':
+            if fmt == 'tdda.serial':
                 pass
             elif fmt == 'csvw':
+                pass
+            elif fmt == 'frictionless':
                 pass
             else:
                 convert = CONVERTER[fmt]
@@ -243,12 +258,12 @@ class SerialConverter:
                                            warner=Warn, **kw)
 
         if self.broad_out == 'tdda.serial':
-            md_out.write(self.outpath)
+            md_out.write(self.outpath, verbose=self.verbosity > 1)
         elif self.broad_out == 'csvw':
-            csvw = serial_to_csvw(md_out)
-            csvw.write_csvw(self.outpath, self.for_csv)
+            c = serial_to_csvw(md_in)
+            c.write_csvw(self.outpath, self.for_csv)
         elif self.broad_out == 'frictionless':
-            fless = serial_to_frictionless(md_out)
+            fless = serial_to_frictionless(md_in)
             fless.write_frictionless(self.outpath, self.for_csv)
         elif self.broad_out == 'python':
             with open(self.outpath, 'w') as f:
@@ -258,10 +273,11 @@ class SerialConverter:
                 f.write(python_writer(md_out, backend=self.backend,
                                       warner=Warn, **kw))
         else:
-            Warn('Surprising to get here.')
+            Warn(f'Invalid broad output type: {self.broad_out}.')
 
     def infer_from_flat_file(self):
         return infer_format_from_flat_file(self.inpath,
+                                           single_field=self.single_field,
                                            verbosity=self.verbosity)
 
 

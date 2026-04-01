@@ -110,6 +110,15 @@ as typed values after reading. Ke
 `--permissive`  
   Use loose (permissive) type comparisons
 
+`--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
+`--polars`, `--pl`          Use Polars as DataFrame engine.  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+                        (when dataframe engine is Pandas)  
+                            `n` for numpy_nullable *  
+                            `a` for pyarrow  
+                            `o` for original.  
+
+
 
 `--help`, `-?`, `--?`  
   Show help on `tdda diff`.
@@ -117,23 +126,12 @@ as typed values after reading. Ke
 
 #### EXAMPLES
 
-1. tdda diff --mono a.csv b.csv
+Data suitable for all examples can be obtained with
 
+`tdda examples diff`
 
-Difference summary:  
-DataFrames have same structure, but different values.  
-Total number of different values: 2 of 24 (8.33%).  
-Total number of rows with differences: 2  
-Total number of columns with differences: 2:  
-           1: sq  
-           1: name  
-  
-**Value Differences (all rows with differences)**  
-┏━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━┓  
-┃      ┃    **sq** ┃    **sq** ┃   **name** ┃   **name** ┃  
-┃      ┃ **Int64** ┃ **Int64** ┃ **string** ┃ **string** ┃  
-┃  **row** ┃     < ┃     > ┃      < ┃      > ┃  
-┡━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━┩  
-│    2 │     9 │     9 │  **three** │  **Three** │  
-│    3 │    **16** │    **15** │   four │   four │  
-└──────┴───────┴───────┴────────┴────────┘  
+1. tdda diff a.csv a.csv
+
+This is the simplest form of the command. It will read a.csv and
+convert it to a data frame, using the default back end (Pandas).
+

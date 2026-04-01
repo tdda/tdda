@@ -2,27 +2,93 @@ NAME
 
   [1mtdda serial  [22m− Converts, interrogates and creates serial metadata files.
 
-DESCRIPTION
+SYNOPSIS
 
-  Use tdda serial [‐‐to FORMAT] in.serial  out.serial
-  to convert metadata in.serial to out.serial in the output
-  format specified (or tdda.serial if none is specified).
-  Input and output metdata can also be CSVW files (.json)
-  Supported formats:
+  [1mtdda serial [22m[FLAGS] [1minmetadata outmetadata[0m
+  [1mtdda serial ‐‐to FMT [22m[FLAGS] [1minmetadata outmetadata[0m
 
-  SHORT FORM  LONG FORM
+  Converts metadata from one metadata format, in [1minpath[22m,
+  to another, in [1moutpath[22m.
+
+  [1mtdda serial [22m[FLAGS] [1mindata outmetadata[0m
+
+  Creates metadata for in [1mindata [22min [1moutmetadata[0m
+
+  [1mtdda serial [22m[FLAGS] [1minmetadata script.py[0m
+
+  Creates Python code for reading a file in the format in [1minmetadata [22mas
+  Python. Often, a reading library would be specified, e.g.
+
+  [1mtdda serial a.serial a.py [22m‐‐to pd.r
+
+  which specifies that they Python script should use [1mpandas.read_csv[22m.
+
+  Supported formats [1mFMT[22m:
+
+  SHORT FORM  LONG FORM/Description
     [1m.         tdda.serial[0m
     [1mpd.r      pandas.read_csv[0m
     [1mpd.w      pandas.DataFrame.to_csv[0m
     [1mpl.       polars.read_csv[0m
     [1mpl.w      polars.DataFrame.write_csv[0m
     [1mcsv.r     python.csv.reader[0m
-    [1ms[22m.wpython.csv.writier
-  csvwCSVW‘
+    [1mcsv.w     python.csv.writer[0m
+    [1mcsvw      CSVW[0m
+    [1mfl        frictionless[0m
+    [1mfless     frictionless[0m
+  fl.rfrictionless.resource
+  fl.pfrictionless.package‘
 
   Multiple formats can be separated by commas.
 
+  Format is usually inferred from filename if following common conventions
+  for tdda.serial, CSVW, and frictionless.
 
+OPTIONS
+
+  [1m‐‐to FMT             [22mSpecify output metadata format (see list of formats
+above)
+
+  [1m‐B BE, ‐‐backend BE  [22mSpecify backend for Pandas flavours:
+                           [1mn[22m: [1mnumpy_nullable[0m
+                           [1ma[22m: [1mpyarrow[0m
+                           [1mo[22m: for original Pandas backend.
+
+  [1m‐‐for FILE            [22mFilename for data to use when generating CSVW
+                          or Frictionless data.
+                          (Can also be used for [1mtdda.serial [22mand [1m.py [22moutput)
+
+  [1m‐g, ‐‐gen, ‐‐generate  [22mGenerate (infer) metadata for flat file
+
+  [1m‐v, ‐‐verbose          [22mVerose output
+  [1m‐V, ‐‐Verbose          [22mMore verose output
+
+EXAMPLES
+
+  [1mtdda serial a.csv a.serial[0m
+     Generate tdda.serial metadata describing format of [1ma.csv [22min [1ma.serial[22m.
+
+  [1mtdda serial ‐‐to . a.csv a.serial[0m
+      Same as previous, expicitly specifying the default, [1mtdda.serial[22m,
+      output format with [1m.[22m.
+
+  [1mtdda serial a.csv a‐metadata.json[0m
+      Generate CSVW metadata describing format of [1ma.csv [22min [1ma‐metadata.json[0m
+
+  [1mtdda serial ‐‐to csvw a.csv a.json[0m
+      Same as previous, explicitly specifying format with non‐standard output
+name
+
+  [1mtdda serial a.serial a‐metadata.json[0m
+      Generate Converts [1mtdda.metadata [22mmetadata to CSVW
+
+  [1mtdda serial a‐metadata.json a.serial[0m
+      Generate Converts [1mtdda.metadata [22mmetadata to CSVW
+
+BUGS
+
+  The [1mtdda serial [22mfunctionality is fairly new, and there are probably
+  still many bugs an undesirable features in the implementation.
 
 
 

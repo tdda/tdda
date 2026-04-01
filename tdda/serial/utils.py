@@ -20,6 +20,7 @@ BACKEND_MAP = {
 
 
 CSVW_MD_RE = r'^(.*?)[-.]((csv[-.]?)?metadata)(\.json)$'
+
 TDDA_SERIAL_RE = r'^(.*)(\.serial)$'
 FRICTIONLESS_MD_RE = r'^(.*)[-.].*(package|resource|schema).*(\.json|\.yaml)'
 METADATA_STYLE_MAP = {

@@ -996,7 +996,7 @@ def find_free_name(names, candidates=None):
         if c not in names:
             return c
     n = 1
-    c = 'f{candidates[0]}_{n}'
+    c = f'{candidates[0]}_{n}'
     while c in names:
         n += 1
     return c
