@@ -47,8 +47,6 @@
 #   tdda detect some_other_directory /tmp/directoryconstraints.tdda bad.csv
 #
 
-from __future__ import print_function
-
 import csv
 import os
 import re

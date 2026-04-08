@@ -8,9 +8,6 @@ Generation command:
   tdda gentest 'tdda verify -7 INPUTS/testdata/accounts1k.csv INPUTS/testdata/accounts1k.tdda' 'test_verify.py' '.' STDOUT STDERR
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
 
 import os
 import sys

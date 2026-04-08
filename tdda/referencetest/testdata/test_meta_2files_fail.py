@@ -8,9 +8,6 @@ Generation command:
   tdda gentest 'tdda gentest -r "python 2files.py" 2files . stdout stderr' 'test_meta_2files_fail.py' 'ref/2files' STDOUT STDERR NONZEROEXIT
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
 
 import os
 import sys

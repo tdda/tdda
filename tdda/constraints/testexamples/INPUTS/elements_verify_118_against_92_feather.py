@@ -1,6 +1,5 @@
 # elements_verify_118_against_92_feather.py
 
-from __future__ import print_function
 import pandas as pd
 
 from tdda.constraints.pd.constraints import verify_df

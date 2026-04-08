@@ -1,6 +1,5 @@
 # elements_discover_92.py
 
-from __future__ import print_function
 import pandas as pd
 
 from tdda.constraints.pd.constraints import discover_df

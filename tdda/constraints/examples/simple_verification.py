@@ -8,9 +8,6 @@ a constraints (.tdda) file, and an unsuccessful verification (i.e.
 one in which some constraints are not satisfied.)
 """
 
-from __future__ import division
-from __future__ import print_function
-
 import os
 import sys
 import numpy as np

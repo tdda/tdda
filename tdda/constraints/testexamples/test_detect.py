@@ -8,9 +8,6 @@ Generation command:
   tdda gentest 'tdda detect -7 INPUTS/testdata/accounts25k.csv INPUTS/testdata/accounts1kedited.tdda $TMPDIR/bads.csv' 'test_detect.py' '.' STDOUT STDERR
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
 
 import os
 import sys
