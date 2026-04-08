@@ -4,11 +4,9 @@
 \fBtdda\fR examples \- Creates example data for TDDA
 
 .SH SYNOPSIS
-\fBtdda examples\fR
-.br
-\fBtdda examples\fR [\fIMODULE...\fP]
-.br
-\fBtdda examples\fR \fBall\fR
+\fBtdda examples\fR [OUTDIR]
+\fBtdda examples\fR [\fIMODULE...\fP] [OUTDIR]
+\fBtdda examples\fR \fBall\fR [OUTDIR]
 
 .SH POSITIONAL ARGUMENTS
 \fIMODULE\fP can be any of:
@@ -20,6 +18,10 @@
 .br
 If not specified, all the first four will be used created, without
 requiring internet access.
+
+.PP
+\fIOUTDIR\fP is an optional directory in which to write the example
+directories; by default this will be the current working directory (.).
 
 .PP
 If \fBall\fR is specified, or \fBbook\fR is included,

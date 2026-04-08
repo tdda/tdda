@@ -7,9 +7,9 @@
 
 #### SYNOPSIS
 ```x
-tdda examples  
-tdda examples [MODULE...]  
-tdda examples all  
+tdda examples [OUTDIR]
+tdda examples [MODULE...] [OUTDIR]
+tdda examples all [OUTDIR]
 ```
 #### POSITIONAL ARGUMENTS
 
@@ -21,6 +21,9 @@ tdda examples all
   - book  
 If not specified, all the first four will be used created, without
 requiring internet access.
+
+*OUTDIR* is an optional directory in which to write the example
+directories; by default this will be the current working directory (.).
 
 If `all` is specified, or `book` is included,
 the `tdda-book-examples` will be downloaded from GitHub, which
