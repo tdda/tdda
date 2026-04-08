@@ -289,7 +289,7 @@ class TestSerialConversions(ReferenceTestCase):
         outpath = tmppath('tiny1nd-weird-no-rename-from-csvw.serial')
         refpath =  tdpath('tiny1nd-weird-no-rename-from-csvw.serial')
 
-        c = SerialConverter(csvwpath, outpath, verbosity=3)
+        c = SerialConverter(csvwpath, outpath, verbosity=1)
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath,

@@ -9,9 +9,6 @@ License: MIT
 
 Copyright (c) Stochastic Solutions Limited 2016-2018
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import numpy as np
 import pandas as pd
@@ -30,4 +27,3 @@ def generate_dataframe(nrows=10, precision=3):
     df['r_square'] = df.r * df.r
     df['s'] = 'result ' + df.r_square.round(precision).astype(str)
     return df
-

@@ -144,17 +144,24 @@ def main_with_argv(argv, verbose=True):
         items = ['referencetest', 'constraints', 'rexpy', 'gentest']
         args = argv[2:]
         if args:
+            outdir = '.'
             if 'all' in args:
                 items.append('book')
             else:
                 bads = set(args) - set(items) - set(['book'])
-                if bads:
+                if len(bads) == 1 and args[-1] == list(bads).pop():
+                    # Last is destination directory
+                    outdir = os.path.expanduser(list(bads).pop())
+                    if len(args) > 1:
+                        items = args[:-1]
+                elif bads:
                     L = ', '.join(a for a in args if a in bads)
-                    print(f'Unknown: {L}.', file=sys.stderr)
+                    print(f'Unknown examples kind: {L}.', file=sys.stderr)
                     sys.exit(1)
-                items = args
+                else:
+                    items = args
         for item in items:
-            copy_examples(item, destination='.', verbose=verbose)
+            copy_examples(item, destination=outdir, verbose=verbose)
     elif name == 'gentest':
         gentest_wrapper(argv[2:])
     elif name in ('version', '-v', '--version'):
