@@ -686,9 +686,10 @@ class TestGenerator:
         else:
             set_tmpdir = ''
         with open(self.script, 'w') as f:
+            cls_name = sanitize_string(os.path.basename(self.raw_script[4:-3]))
             f.write(HEADER % {
                 'SCRIPT': os.path.basename(self.script),
-                'CLASSNAME': os.path.basename(self.raw_script[4:-3]).upper(),
+                'CLASSNAME': cls_name.upper(),
                 'GEN_COMMAND': self.cli_command(),
                 'COMMAND': repr(self.command),
                 'CWD': repr(self.cwd),
@@ -1220,11 +1221,16 @@ def quote_raw(s):
         return repr(s)
 
 
-def sanitize_string(string):
+def sanitize_string(string, force_letter=False):
     """
-    Replaces all non-alphas in string with '_'
+    Replaces all non-alphanumerics in string with '_'.
+    If force_letter is True, an 'x' is prepended to the string
+    if it does not start with a letter.
     """
-    return ''.join(c if c.isalnum() else '_' for c in string)
+    s = ''.join(c if c.isalnum() else '_' for c in string)
+    if force_letter and not s[0].isalpha():
+        s = 'x' + s
+    return s
 
 
 def force_start(path, checked_prefix, default_prefix):

@@ -29,6 +29,8 @@ from tdda.referencetest.diffutils import (
 from tdda.state import set_testing, reset_config
 from tdda.utils import swap_ext, rprint
 
+from tdda.referencetest.test_diff_book_sd1 import *
+
 REFTESTDIR = os.path.dirname(__file__)     # tdda.referencetest
 TDDADIR = os.path.dirname(REFTESTDIR)      # tdda
 EXDIR = os.path.join(REFTESTDIR,

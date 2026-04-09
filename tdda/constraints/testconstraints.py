@@ -6,6 +6,9 @@ from tdda.constraints.testbase import *
 from tdda.referencetest import ReferenceTestCase
 
 from tdda.constraints.pd.testpdconstraints import *
+from tdda.constraints.test_discover_bookex12 import *
+from tdda.constraints.test_verify_bookex13 import *
+from tdda.constraints.test_detect_bookex17 import *
 
 #try:
 if 1:
