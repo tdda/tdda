@@ -7,7 +7,9 @@
 \fBtdda discover\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR] [\fB--colour\fR]
               [\fB--no-colour\fR] [\fB-x\fR] [\fB-X\fR] [\fB-g\fR] [\fB-G\fR]
               [\fB-r\fR \fIREPORT\fP ...] [\fB-o\fR \fIREPORT_PATH\fP]
-              [\fB--no-md\fR] [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+              [\fB--no-md\fR] [\fB--allowed\fR] [\fB--no-allowed\fR]
+              [\fB--required\fR] [\fB--no-required\fR] [\fB--no-ar\fR]
+              [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
               \fIINPUT\fP [\fICONSTRAINTS\fP]
 
 .SH POSITIONAL ARGUMENTS
@@ -68,6 +70,16 @@ The following options are available.
 
 .PP
 \fB--no-md\fR                 Do not create metadata in constraints file
+\fB--allowed\fR               Create allowed-fields constraint (default)
+.br
+\fB--no-allowed\fR            Do not create allowed-fields constraint
+.br
+\fB--required\fR              Create required-fields constraint (default)
+.br
+\fB--no-required\fR           Do not create required-fields constraint
+\fB--no-allowed-required\fR   Same as \fB--no-allowed --no-required\fR
+.br
+\fB--no-ar\fR                 Same as \fB--no-allowed --no-required\fR
 .br
 \fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine. *
 .br

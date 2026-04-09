@@ -1,13 +1,17 @@
 creation_metadata:
-  creator: TDDA 2.2.15
+  creator: TDDA 3.0.00rc1
   dataset: small7x5.parquet
-  host: escher.local
-  local_time: '2025-07-15T09:07:28'
+  host: gardot.local
+  local_time: '2026-04-09T08:16:15'
   n_records: 5
   n_selected: 5
   source: /Users/njr/python/tdda/tdda/constraints/testdata/small7x5.parquet
   user: njr
-  utc_time: '2025-07-15T08:07:28+00:00'
+  utc_time: '2026-04-09T07:16:15+00:00'
+dataset:
+  allowed_fields: []
+  required_fields:
+  - '*'
 fields:
   boolField:
     max: true

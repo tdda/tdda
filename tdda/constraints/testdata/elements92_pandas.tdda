@@ -1,15 +1,15 @@
 {
     "creation_metadata": {
-        "local_time": "2018-06-06 11:11:56",
-        "utc_time": "2018-06-06 10:10:56",
-        "creator": "TDDA 1.0.07",
-        "source": "/var/folders/zv/3xvhmvpj0216687_pk__2f5h0000gn/T/constraints_examples/testdata/elements92.csv",
-        "host": "bartok.local",
+        "local_time": "2026-04-09T08:15:36",
+        "utc_time": "2026-04-09T07:15:36+00:00",
+        "creator": "TDDA 3.0.00rc1",
+        "source": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/constraints_examples/testdata/elements92.csv",
+        "host": "gardot.local",
         "user": "njr",
         "dataset": "elements92.csv",
         "n_records": 92,
         "n_selected": 92,
-        "tddafile": "/var/folders/zv/3xvhmvpj0216687_pk__2f5h0000gn/T/elements92.tdda"
+        "tddafile": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/elements92.tdda"
     },
     "fields": {
         "Z": {
@@ -127,5 +127,11 @@
             "min_length": 4,
             "max_length": 80
         }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
     }
 }

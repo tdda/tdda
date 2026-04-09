@@ -1,8 +1,8 @@
 {
     "creation_metadata": {
-        "local_time": "2025-03-03T17:43:22",
-        "utc_time": "2025-03-03T17:43:22+00:00",
-        "creator": "TDDA 2.2.15",
+        "local_time": "2026-04-09T08:12:29",
+        "utc_time": "2026-04-09T07:12:29+00:00",
+        "creator": "TDDA 3.0.00rc1",
         "rdbms": "sqlite::None:/Users/njr/python/tdda/tdda/constraints/testdata/example.sqlite3",
         "source": "elements",
         "host": "gardot.local",
@@ -177,5 +177,11 @@
                 "^soft, silvery, develops a slightly yellowish or pinkish cast when exposed to air$"
             ]
         }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
     }
 }

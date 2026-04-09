@@ -513,7 +513,9 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
     constraints on a single database table.
     """
     def __init__(self, dbtype, dbc, tablename, inc_rex=False,
-                 group_rexes=True, no_md=False, seed=None):
+                 group_rexes=True, no_md=False,
+                 allowed_fields=True, required_fields=True,
+                 seed=None):
         DatabaseHandler.__init__(self, dbtype, dbc)
         tablename = self.resolve_table(tablename)
 
@@ -521,6 +523,8 @@ class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
                                           group_rexes=group_rexes,
                                           no_md=no_md,
+                                          allowed_fields=allowed_fields,
+                                          required_fields=required_fields,
                                           seed=seed)
         self.tablename = tablename
 

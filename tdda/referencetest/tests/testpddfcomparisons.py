@@ -155,7 +155,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-order.txt'),
             ignore_patterns=[
-                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ]
         )
 

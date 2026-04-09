@@ -7,7 +7,9 @@ SYNOPSIS
   [1mtdda discover [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m] [[1m‐‐colour[22m]
                 [[1m‐‐no‐colour[22m] [[1m‐x[22m] [[1m‐X[22m] [[1m‐g[22m] [[1m‐G[22m]
                 [[1m‐r [4m[22mREPORT[24m ...] [[1m‐o [4m[22mREPORT_PATH[24m]
-                [[1m‐‐no‐md[22m] [[1m‐‐pandas[22m] [[1m‐‐polars[22m] [[1m‐‐backend [4m[22mBACKEND[24m]
+                [[1m‐‐no‐md[22m] [[1m‐‐allowed[22m] [[1m‐‐no‐allowed[22m]
+                [[1m‐‐required[22m] [[1m‐‐no‐required[22m] [[1m‐‐no‐ar[22m]
+                [[1m‐‐pandas[22m] [[1m‐‐polars[22m] [[1m‐‐backend [4m[22mBACKEND[24m]
                 [4mINPUT[24m [[4mCONSTRAINTS[24m]
 
 POSITIONAL ARGUMENTS
@@ -55,6 +57,12 @@ OPTIONS
   [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[24m   Path for reports
 
   [1m‐‐no‐md                 [22mDo not create metadata in constraints file
+  [1m‐‐allowed               [22mCreate allowed‐fields constraint (default)
+  [1m‐‐no‐allowed            [22mDo not create allowed‐fields constraint
+  [1m‐‐required              [22mCreate required‐fields constraint (default)
+  [1m‐‐no‐required           [22mDo not create required‐fields constraint
+  [1m‐‐no‐allowed‐required   [22mSame as [1m‐‐no‐allowed ‐‐no‐required[0m
+  [1m‐‐no‐ar                 [22mSame as [1m‐‐no‐allowed ‐‐no‐required[0m
   [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine. *
   [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
   [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
@@ -132,14 +140,6 @@ SEE ALSO
   tdda verify
   tdda detect
   tdda serial
-
-
-
-
-
-
-
-
 
 
 

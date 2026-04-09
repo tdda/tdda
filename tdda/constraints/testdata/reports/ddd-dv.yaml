@@ -1,13 +1,17 @@
 creation_metadata:
-  creator: TDDA 2.2.15
+  creator: TDDA 3.0.00rc1
   dataset: ddd.csv
-  host: escher.local
-  local_time: '2025-03-12T08:44:10'
+  host: gardot.local
+  local_time: '2026-04-09T08:23:12'
   n_records: 10
   n_selected: 10
   source: /Users/njr/python/tdda/tdda/constraints/testdata/ddd.csv
   user: njr
-  utc_time: '2025-03-12T08:44:10+00:00'
+  utc_time: '2026-04-09T07:23:12+00:00'
+dataset:
+  allowed_fields: []
+  required_fields:
+  - '*'
 fields:
   basedate:
     max: '1970-01-10 00:00:00'

@@ -1,8 +1,8 @@
 {
     "creation_metadata": {
-        "local_time": "2025-03-12T09:12:40",
-        "utc_time": "2025-03-12T09:12:40+00:00",
-        "creator": "TDDA 2.2.15",
+        "local_time": "2026-04-09T08:16:59",
+        "utc_time": "2026-04-09T07:16:59+00:00",
+        "creator": "TDDA 3.0.00rc1",
         "source": "/Users/njr/python/tdda/tdda/constraints/testdata/ddd.csv",
         "host": "gardot.local",
         "user": "njr",
@@ -101,5 +101,11 @@
             "min": "1970-01-01 00:00:00.123450",
             "max": "1970-01-09 00:00:08"
         }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
     }
 }

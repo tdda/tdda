@@ -1,10 +1,10 @@
 {
     "creation_metadata": {
-        "local_time": "2025-07-15T09:07:43",
-        "utc_time": "2025-07-15T08:07:43+00:00",
-        "creator": "TDDA 2.2.15",
+        "local_time": "2026-04-09T08:16:32",
+        "utc_time": "2026-04-09T07:16:32+00:00",
+        "creator": "TDDA 3.0.00rc1",
         "source": "/Users/njr/python/tdda/tdda/constraints/testdata/small7x5.parquet",
-        "host": "escher.local",
+        "host": "gardot.local",
         "user": "njr",
         "dataset": "small7x5.parquet",
         "n_records": 5,
@@ -71,5 +71,11 @@
                 "^([0-9]{4})\\-([0-9]{2})\\-([0-9]{2})([A-Z])([0-9]{2}):([0-9]{2}):([0-9]{2})$"
             ]
         }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
     }
 }

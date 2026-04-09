@@ -647,11 +647,14 @@ class PandasConstraintDiscoverer(PandasConstraintCalculator,
     A :py:class:`PandasConstraintDiscoverer` object is used to discover
     constraints on a Pandas DataFrame.
     """
-    def __init__(self, df, inc_rex=False, group_rexes=True, no_md=False):
+    def __init__(self, df, inc_rex=False, group_rexes=True, no_md=False,
+                 allowed_fields=True, required_fields=True):
         PandasConstraintCalculator.__init__(self, df)
         BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
                                           group_rexes=group_rexes,
-                                          no_md=no_md)
+                                          no_md=no_md,
+                                          allowed_fields=allowed_fields,
+                                          required_fields=required_fields)
 
 
 def pandas_types_compatible(x, y, colname=None):
@@ -1063,7 +1066,9 @@ def detect_df(df, constraints_path, epsilon=None, type_checking=None,
 
 def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
                 group_rexes=True, report_path=None, report_formats=None,
-                engine=None, backend=None, no_md=False, verbose=None):
+                engine=None, backend=None, no_md=False,
+                allowed_fields=True, required_fields=True,
+                verbose=None):
     """
     Automatically discover potentially useful constraints that characterize
     the Pandas DataFrame provided.
@@ -1096,6 +1101,18 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
         *report_formats*:
             List of report formats to write from:
                html, markdown (or md), text (or txt), yaml, json, toml
+
+        *engine*:
+            Engine to use (pandas or polars); currently ignored
+        *backend*:
+            Pandas backend to use
+        *no_md*:
+            If true, metadata is omitted from TDDA file
+        *allowed_fields*:
+            If false, no allowed_fields entry is generated
+        *required_fields*:
+            If false, no require_fields entry is generated
+
 
     Possible return values:
 
@@ -1207,7 +1224,9 @@ def discover_df(df, constraints_path=None, inc_rex=False, df_path=None,
     """
     disco = PandasConstraintDiscoverer(df, inc_rex=inc_rex,
                                        group_rexes=group_rexes,
-                                       no_md=no_md)
+                                       no_md=no_md,
+                                       allowed_fields=allowed_fields,
+                                       required_fields=required_fields)
     constraints = disco.discover()
     if constraints:
         constraints.set_dates_user_host_creator()

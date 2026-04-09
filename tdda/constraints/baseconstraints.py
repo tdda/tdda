@@ -563,11 +563,14 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
     and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
     """
     def __init__(self, inc_rex=False, seed=None, group_rexes=True,
-                 no_md=False,  **kwargs):
+                 no_md=False,  allowed_fields=True, required_fields=True,
+                 **kwargs):
         self.inc_rex = inc_rex
         self.seed = seed
         self.group_rexes = group_rexes
         self.no_md = no_md
+        self.allowed_fields = allowed_fields
+        self.required_fields = required_fields
 
     def discover(self):
         field_constraints = []
@@ -576,7 +579,9 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
             if constraints:
                 field_constraints.append(constraints)
         if field_constraints:
-            return DatasetConstraints(field_constraints, no_md=self.no_md)
+            return DatasetConstraints(field_constraints, no_md=self.no_md,
+                                      allowed_fields=self.allowed_fields,
+                                      required_fields=self.required_fields)
         else:
             return None
 

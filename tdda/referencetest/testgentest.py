@@ -15,7 +15,7 @@ from tdda.utils import REFTESTDIR
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.gentest import *
 
-from artists.giacometti.captureoutput import CaptureOutput
+# from tdda.captureoutput import CaptureOutput
 
 D1 = '/home/auser/python/tdda/tdda/referencetest/gentest'
 HOST = 'ahost.local'

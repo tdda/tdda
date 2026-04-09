@@ -381,6 +381,7 @@ class XML:
         else:
             return str(v)
 
+
 def xml_entitize(s, entitize=1, altnbsp=None):
     s = re.sub('&', '&amp;', s)
     s = re.sub('<', '&lt;', s)

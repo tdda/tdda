@@ -69,6 +69,20 @@ def discover_parser(usage=''):
                         help='Path for reports')
     parser.add_argument('--no-md', action='store_true',
                         help='Do not create metadata')
+    parser.add_argument('--no-allowed-required' '--no-ar', action='store_true',
+                        help='Do not create allowed and required field constraints')
+    parser.add_argument('--allowed', action='store_true',
+                        help='Create allowed fields dataset constraint')
+    parser.add_argument('--no-allowed', action='store_true',
+                        help='Do not create allowed fields dataset constraint')
+    parser.add_argument('--required', action='store_true',
+                        help='Create required fields dataset constraint')
+    parser.add_argument('--no-required', action='store_true',
+                        help='Do not create required fields dataset constraint')
+    parser.add_argument('--ar', action='store_true',
+                        help='Create allowed and required fields dataset constraints')
+    parser.add_argument('--no-ar', action='store_true',
+                        help='Do not create allowed or required fields dataset constraints')
     add_pandas_flags(parser)
     return parser
 
@@ -90,6 +104,9 @@ def discover_flags(parser, args, params):
         params['no_md'] = flags.no_md
 
     params['engine'], params['backend'] = process_pandas_flags(None, flags)
+
+    params['allowed_fields'] = not(flags.no_allowed or flags.no_ar)
+    params['required_fields'] = not(flags.no_required or flags.no_ar)
 
     return flags
 

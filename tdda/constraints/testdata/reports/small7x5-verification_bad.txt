@@ -14,10 +14,18 @@ dateField: 0 failures  4 passes  type ✓  min ✓  max ✓  max_nulls ✓
 
 stringDateField: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
 
+DATASET:
+
+Extra (disallowed) fields: None
+Missing (required) fields: None
+
 SUMMARY:
 
 Constrained Fields: 7
 Failing Fields: 2 (28.57%)
 
-Constraints: 37
-Failing Constraints: 4 (10.81%)
+Constraints: 39
+Failing Constraints: 4 (10.26%)
+
+Extra (disallowed) fields: 0
+Missing (required) fields: 0

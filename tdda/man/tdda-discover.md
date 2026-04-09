@@ -9,7 +9,9 @@
 `tdda discover` [`-h`] [`-?`] [`-7`] [`--no-config`] [`--colour`]
               [`--no-colour`] [`-x`] [`-X`] [`-g`] [`-G`]
               [`-r` *REPORT* ...] [`-o` *REPORT_PATH*]
-              [`--no-md`] [`--pandas`] [`--polars`] [`--backend` *BACKEND*]
+              [`--no-md`] [`--allowed`] [`--no-allowed`]
+              [`--required`] [`--no-required`] [`--no-ar`]
+              [`--pandas`] [`--polars`] [`--backend` *BACKEND*]
               *INPUT* [*CONSTRAINTS*]
 
 ## POSITIONAL ARGUMENTS
@@ -56,7 +58,13 @@ The following options are available.
 `-r`, `--report` [*REPORT* ...]       Report formats to write.  
 `-o`, `--report-path` *REPORT_PATH*   Path for reports  
 
-`--no-md`                 Do not create metadata in constraints file  
+`--no-md`                 Do not create metadata in constraints file
+`--allowed`               Create allowed-fields constraint (default)  
+`--no-allowed`            Do not create allowed-fields constraint  
+`--required`              Create required-fields constraint (default)  
+`--no-required`           Do not create required-fields constraint
+`--no-allowed-required`   Same as `--no-allowed --no-required`  
+`--no-ar`                 Same as `--no-allowed --no-required`  
 `--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  

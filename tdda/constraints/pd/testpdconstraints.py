@@ -857,7 +857,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                                 NoDuplicatesConstraint()])
 
         dfc1 = [ic1]
-        dsc1 = DatasetConstraints(dfc1)
+        dsc1 = DatasetConstraints(dfc1, allowed_fields=False,
+                                  required_fields=False)
         pdcv1 = pdc.PandasConstraintVerifier(df1)
         results1 = base.verify(dsc1, list(df1), pdcv1.verifiers(),
                                n_source_records=10)
@@ -887,7 +888,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
 
         df2 = pd.DataFrame({'i': [1, 2, 2, 6, np.nan]})
         dfc2 = [ic2]
-        dsc2 = DatasetConstraints(dfc2)
+        dsc2 = DatasetConstraints(dfc2, allowed_fields=False,
+                                  required_fields=False)
         pdcv2 = pdc.PandasConstraintVerifier(df2)
         results2 = base.verify(dsc2, list(df2), pdcv2.verifiers(),
                                n_source_records=10)
@@ -947,7 +949,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         ic3 = FieldConstraints('i', [TypeConstraint('int')])
         df3 = df1
         dfc3 = [ic3]
-        dsc3 = DatasetConstraints(dfc3)
+        dsc3 = DatasetConstraints(dfc3, allowed_fields=False,
+                                  required_fields=False)
         pdcv3 = pdc.PandasConstraintVerifier(df3)
         results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(),
                                n_source_records=10)
@@ -1102,7 +1105,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
                    report='fields', backend='original', verbose=False)
         self.assertFileCorrect(actual_constraints, ref_constraints_tdda,
                                ignore_patterns=TDDA_MD_IGNORES)
-        self.assertEqual(v.passes, 61)
+        self.assertEqual(v.passes, 63)
         self.assertEqual(v.failures, 0)
         for fmt in report_formats:
             ref_path = os.path.join(TESTREPORTSDIR, f'ddd-dv.{fmt}')
@@ -1256,20 +1259,20 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify(csv_path, constraints_path=reftddafile1k,
                    backend='original', verbose=False)
-        self.assertEqual(v.passes, 73)
+        self.assertEqual(v.passes, 75)
         self.assertEqual(v.failures, 0)
 
         for backend in ('numpy_nullable', 'pyarrow'):
             v = verify(csv_path, constraints_path=reftddafile1k,
                        backend=backend, verbose=False)
-            self.assertEqual(v.passes, 73)
+            self.assertEqual(v.passes, 75)
             self.assertEqual(v.failures, 0)
 
     def testVerify1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         v = verify(pq_path, constraints_path=reftddafile1k, verbose=False)
-        self.assertEqual(v.passes, 73)
+        self.assertEqual(v.passes, 75)
         self.assertEqual(v.failures, 0)
 
     def testVerify25kAgainst1k(self):
@@ -1278,7 +1281,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         v = verify(csv_path, constraints_path=reftddafile1k,
                    backend='original', verbose=False)
 
-        passingConstraints = 53
+        passingConstraints = 55
         failingConstraints = 20
         expected = (passingConstraints, failingConstraints)
 
@@ -1286,17 +1289,17 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         self.assertEqual(v.failures, failingConstraints)
 
         # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
-        self.assertEqual(expected, (53, 20), "NUMBERS DIFFER FROM README!")
+        self.assertEqual(expected, (55, 20), "NUMBERS DIFFER FROM README!")
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         v = verify(csv_path, constraints_path=reftddafile1k,
                    backend='numpy_nullable', verbose=False)
-        self.assertEqual(v.passes, 53)
+        self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 20)
 
         v = verify(csv_path, constraints_path=reftddafile1k,
                    backend='pyarrow', verbose=False)
-        self.assertEqual(v.passes, 53)
+        self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 20)
 
 
@@ -1313,7 +1316,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # data as read by the CSV and Parquet readers is validated
         # correctly by TDDA.
 
-        passingConstraints = 52
+        passingConstraints = 54
         failingConstraints = 21
         expected = (passingConstraints, failingConstraints)
 
@@ -1327,7 +1330,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
         v = detect(csv_path, constraints_path=reftddafile1k,
                    outpath=outfile, backend='original', verbose=False)
-        passingConstraints = 53
+        passingConstraints = 55
         failingConstraints = 20
         passingRecords = 23373
         failingRecords = 1627
@@ -1338,14 +1341,14 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         self.assertEqual(v.detection.n_passing_records,  passingRecords)
         self.assertEqual(v.detection.n_failing_records, failingRecords)
 
-        # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
-        self.assertEqual(expected, (53, 20, 23373, 1627),
+        # !!! IF THIS FAILS, THE EXAMPLES README MAY NEED TO BE UPDATED
+        # (tdda/constraints/examples/README)
+        self.assertEqual(expected, (55, 20, 23373, 1627),
                          "NUMBERS DIFFER FROM README!")
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         self.assertTextFileCorrect(outfile, refpath)
 
-    @tag
     def testDetect25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
@@ -1353,7 +1356,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.parquet')
         v = detect(pq_path, constraints_path=reftddafile1k,
                                 outpath=outfile, verbose=False)
-        passingConstraints = 52
+        passingConstraints = 54
         failingConstraints = 21
         passingRecords = 23373
         failingRecords = 1627
@@ -1471,7 +1474,9 @@ class TestPandasMultipleConstraintDetector(
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
         sconstraints = FieldConstraints('s', [NoDuplicatesConstraint()])
-        constraints = DatasetConstraints([iconstraints, sconstraints])
+        constraints = DatasetConstraints([iconstraints, sconstraints],
+                                         allowed_fields=False,
+                                         required_fields=False)
 
         df1 = pd.DataFrame({'i': [1, 2, 3, 4, np.nan],
                             's': ['one', 'two', 'three', 'four', np.nan]})

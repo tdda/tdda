@@ -1,12 +1,12 @@
 {
     "creation_metadata": {
-        "local_time": "2025-08-21T15:31:41",
-        "utc_time": "2025-08-21T14:31:41+00:00",
-        "creator": "TDDA 2.2.15",
-        "source": "/Users/njr/python/tdda/tdda/constraints/testdata/accounts25k.csv",
+        "local_time": "2026-04-09T08:14:52",
+        "utc_time": "2026-04-09T07:14:52+00:00",
+        "creator": "TDDA 3.0.00rc1",
+        "source": "/Users/njr/python/tdda/tdda/constraints/testdata/accounts25k.csv:",
         "host": "gardot.local",
         "user": "njr",
-        "dataset": "accounts25k.csv",
+        "dataset": "accounts25k.csv:",
         "n_records": 25000,
         "n_selected": 25000,
         "tddafile": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/accounts25kgen.tdda"
@@ -124,5 +124,11 @@
             "max_length": 19,
             "max_nulls": 0
         }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
     }
 }

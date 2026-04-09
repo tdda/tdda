@@ -172,7 +172,7 @@ class DatasetConstraints(object):
     Currently only supports per-field constraints.
     """
     def __init__(self, per_field_constraints=None, loadpath=None,
-                 no_md=False):
+                 no_md=False, allowed_fields=True, required_fields=True):
         self.as_at = None
         self.local_time = None
         self.utc_time = None
@@ -192,6 +192,8 @@ class DatasetConstraints(object):
             self.load(loadpath)
         else:
             self.fields = Fields(per_field_constraints)
+            self.allowed_fields = [] if allowed_fields else None
+            self.required_fields = ['*'] if required_fields else None
 
     @property
     def table(self):
@@ -332,6 +334,13 @@ class DatasetConstraints(object):
             self.postdicthook(d)
         except:
             pass
+        if self.allowed_fields is not None or self.required_fields is not None:
+            D = {}
+            if self.allowed_fields is not None:
+                D['allowed_fields'] = self.allowed_fields
+            if self.required_fields is not None:
+                D['required_fields'] = self.required_fields
+            d['dataset'] = D
 
         return d
 
