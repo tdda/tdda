@@ -1709,5 +1709,25 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
         self.assertEqual(kw['date_format'], {'d': 'ISO8601'})
 
 
+class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
+    """
+    Integration tests: load CSVs via .serial metadata with named
+    euro/US date formats. Both parse to the same datetime values,
+    verified against a shared reference parquet.
+    """
+
+    def test_eu_date_serial(self):
+        df = csv_to_pandas(
+            tdpath('eurod.csv'), tdpath('eurod.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
+
+    def test_us_date_serial(self):
+        df = csv_to_pandas(
+            tdpath('usd.csv'), tdpath('usd.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

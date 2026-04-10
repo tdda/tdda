@@ -1,0 +1,49 @@
+FIELDS:
+
+account_number: 0 failures  6 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✓  no_duplicates ✓
+
+open_date: 0 failures  4 passes  type ✓  min ✓  max ✓  max_nulls ✓
+
+close_date: 0 failures  3 passes  type ✓  min ✓  max ✓
+
+title: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  allowed_values ✓  rex ✓
+
+forename: 0 failures  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  rex ✓
+
+middle_name: 0 failures  4 passes  type ✓  min_length ✓  max_length ✓  rex ✓
+
+surname: 0 failures  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  rex ✓
+
+address1: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+city: 0 failures  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  rex ✓
+
+postcode: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+home_tel: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+mobile_tel: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+email: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+account_type: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  allowed_values ✓  rex ✓
+
+overdraft_limit: 0 failures  5 passes  type ✓  min ✓  max ✓  sign ✓  max_nulls ✓
+
+cash_card_number: 0 failures  6 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✓  rex ✓
+
+DATASET:
+
+Extra (disallowed) fields: None
+Missing (required) fields: None
+
+SUMMARY:
+
+Constrained Fields: 16
+Failing Fields: 0 (0.00%)
+
+Constraints: 87
+Failing Constraints: 0 (0.00%)
+
+Extra (disallowed) fields: 0
+Missing (required) fields: 0

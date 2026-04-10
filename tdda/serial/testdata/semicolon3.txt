@@ -1,0 +1,7 @@
+b;i;f;d;s
+false;1;1.2;2025-01-01,"cat"
+true;2;2.2;2025-02-02,"dog"
+NULL;3;NULL;2035-03-03,NULL
+false;NULL;3.3;NULL;"owl"
+
+

@@ -18,7 +18,7 @@ class TestRegenerate(ReferenceTestCase):
         ReferenceTest.set_defaults(verbose=False)
 
     def tearDown(self):
-        ReferenceTest.set_regeneration(regenerate=False)
+        ReferenceTest.regenerate.clear()
 
     def test_regenerate_all(self):
         ReferenceTest.set_regeneration()

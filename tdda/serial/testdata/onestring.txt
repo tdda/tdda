@@ -1,0 +1,7 @@
+field
+Well, I do say
+This is fine
+Nothing; bad here
+|||
+TAB	SEP	LINE
+boring

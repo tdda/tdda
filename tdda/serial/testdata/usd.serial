@@ -1,0 +1,24 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "date",
+                "fieldtype": "date",
+                "format": "us-date"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "date_format": "us-date",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

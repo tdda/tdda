@@ -1,0 +1,21 @@
+Difference summary: 
+DataFrames have same structure, but different values.
+Total number of different values: 4 of 21 (19.05%).
+Total number of rows with differences: 2
+Total number of columns with differences: 4:
+           1: Name
+           1: Symbol
+           1: AtomicWeight
+           1: ApproxDiscovery
+
+            Value Differences (all rows with differences)             
+┏━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   # ┃         Name ┃ Symbol ┃ AtomicWeight ┃       ApproxDiscovery ┃
+┃     ┃       String ┃ String ┃      Float64 ┃              Datetime ┃
+┃     ┃       String ┃ String ┃      Float64 ┃              Datetime ┃
+┡━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1 < │       Cerium │     Ce │   < 140.1161 │   1803-01-01 00:00:00 │
+│ 1 > │       Cerium │     Ce │     > 140.12 │   1803-01-01 00:00:00 │
+│ 2 < │ < Ununoctium │  < Uuo │        294.0 │                < None │
+│ 2 > │  > Oganesson │   > Og │        294.0 │ > 2002-06-01 00:00:00 │
+└─────┴──────────────┴────────┴──────────────┴───────────────────────┘

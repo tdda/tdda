@@ -1,0 +1,32 @@
+FIELDS:
+
+open_date: 1 failure  2 passes  type ✓  min ✗  max_nulls ✓
+
+close_date: 1 failure  1 pass  type ✓  min ✗
+
+home_tel: 1 failure  2 passes  type ✓  max_nulls ✗  rex ✓
+
+mobile_tel: 1 failure  2 passes  type ✓  max_nulls ✗  rex ✓
+
+email: 1 failure  5 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✗  rex ✓
+
+account_type: 2 failures  1 pass  type ✓  max_nulls ✗  allowed_values ✗
+
+cash_card_number: 2 failures  4 passes  type ✓  min_length ✓  max_length ✓  max_nulls ✓  no_duplicates ✗  rex ✗
+
+SUMMARY:
+
+Records: 25,000
+Failing Records: 15 (0.06%)
+
+Constrained Fields: 16
+Failing Fields: 7 (43.75%)
+
+Constrained Values: 400,000
+Failing Values: 24 (0.01%)
+
+Constraints: 61
+Failing Constraints: 9 (14.75%)
+
+Extra (disallowed) fields: 0
+Missing (required) fields: 0

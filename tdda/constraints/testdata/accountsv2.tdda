@@ -1,0 +1,141 @@
+{
+  "creation_metadata": {
+    "local_time": "2024-07-16T10:39:43",
+    "utc_time": "2024-07-16T09:39:43",
+    "creator": "TDDA 2.2.05 + NJR 2024-08-13",
+    "source": "accounts1k.csv",
+    "host": "escher.local",
+    "user": "njr",
+    "dataset": "accounts1k.csv",
+    "n_records": 1000,
+    "n_selected": 1000,
+    "tddafile": "accountsv2.tdda"
+  },
+  "fields": {
+    "account_number": {
+      "type": "int",
+      "min": 10000000,
+      "max": 19999999,
+      "sign": "positive",
+      "max_nulls": 0,
+      "no_duplicates": true
+    },
+    "open_date": {
+      "type": "date",
+      "min": "2001-10-02",
+      "max_nulls": 0
+    },
+    "close_date": {
+      "type": "date",
+      "min": "2001-10-02"
+    },
+    "title": {
+      "type": "string",
+      "max_nulls": 0,
+      "allowed_values": [
+        "Dr",
+        "M",
+        "Miss",
+        "Mr",
+        "Mrs",
+        "Ms",
+        "Prof"
+      ]
+    },
+    "forename": {
+      "type": "string",
+      "max_nulls": 0,
+      "rex": [
+        "^[A-Z][a-z]+$"
+      ]
+    },
+    "middle_name": {
+      "type": "string",
+      "rex": [
+        "^[A-Z][a-z]+$"
+      ]
+    },
+    "surname": {
+      "type": "string",
+      "max_nulls": 0,
+      "rex": [
+        "^[A-Za-z]+$"
+      ]
+    },
+    "address1": {
+      "type": "string",
+      "min_length": 2,
+      "max_length": 100,
+      "max_nulls": 0
+    },
+    "city": {
+      "type": "string",
+      "min_length": 2,
+      "max_length": 100,
+      "max_nulls": 0
+    },
+    "postcode": {
+      "type": "string",
+      "max_nulls": 0,
+      "rex": [
+        "^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$"
+      ]
+    },
+    "home_tel": {
+      "type": "string",
+      "max_nulls": 0,
+      "rex": [
+        "^[0-9]{4} [0-9]{3} [0-9]{4}$"
+      ]
+    },
+    "mobile_tel": {
+      "type": "string",
+      "max_nulls": 0,
+      "rex": [
+        "^[0-9]{4} [0-9]{3} [0-9]{4}$"
+      ]
+    },
+    "email": {
+      "type": "string",
+      "min_length": 5,
+      "max_length": 100,
+      "max_nulls": 0,
+      "no_duplicates": true,
+      "rex": [
+        "^(.+)@(.+)\\.(.+)$"
+      ]
+    },
+    "account_type": {
+      "type": "string",
+      "max_nulls": 0,
+      "allowed_values": [
+        "basic",
+        "current",
+        "current+",
+        "offset",
+        "premium"
+      ]
+    },
+    "overdraft_limit": {
+      "type": "int",
+      "min": 0,
+      "max": 100000,
+      "sign": "non-negative",
+      "max_nulls": 0
+    },
+    "cash_card_number": {
+      "type": "string",
+      "min_length": 19,
+      "max_length": 19,
+      "max_nulls": 0,
+      "no_duplicates": true,
+      "rex": [
+        "^1202 [0-9]{4} [0-9]{4} [0-9]{4}$"
+      ]
+    }
+  },
+  "dataset": {
+    "required_fields": ["*"],
+    "allowed_fields": []
+  }
+}
