@@ -425,7 +425,7 @@ def fp(path):
 
 
 def rich_capture(content):
-    console = Console()
+    console = Console(force_terminal=True)
     with console.capture() as capture:
         console.print(content)
     return capture.get()

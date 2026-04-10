@@ -81,7 +81,7 @@ class TestTDDADiff(ReferenceTestCase):
         filename = f'{left}_{right}{suffix}.txt'
         expected = refpath(filename)
         console = Console(highlight=False, soft_wrap=True,
-                          width=width, record=True)
+                          width=width, record=True, force_terminal=True)
         args = [L, R] + (flags or [])
         targs = [left, right] + (flags or [])
         actual = self.diff(args, console=console)
