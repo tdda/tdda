@@ -7,9 +7,13 @@ from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial.metadata import (
     RE_ISO8601, URI, SerialMetadata, FieldMetadata,
-    DateFormat, is_iso8601_format
+    DateFormat, NAMED_FORMAT_TO_STRFTIME, UNSPECIFIED_NAMED_FORMATS,
+    ISO8601_NAMED_FORMATS, is_iso8601_format
 )
 from tdda.serial.csvw import csvw_date_format_to_serial
+from tdda.serial.pandasio import (
+    to_pandas_date_format, pandas_date_format_to_serial
+)
 from tdda.serial.reader import (
     find_metadata_kind,
 )
@@ -470,6 +474,76 @@ def remove_common_key_vals(left, right):
             del left[k]
             del right[k]
 
+
+
+class TestToPandasDateFormat(ReferenceTestCase):
+
+    def testNoneReturnsNone(self):
+        self.assertIsNone(to_pandas_date_format(None))
+        self.assertIsNone(to_pandas_date_format(None, for_write=True))
+
+    def testISO8601NamedFormatsRead(self):
+        # All ISO8601 named formats → 'ISO8601' on read
+        for fmt in ISO8601_NAMED_FORMATS:
+            self.assertEqual(to_pandas_date_format(fmt), 'ISO8601',
+                             f'format {fmt!r} should give ISO8601 on read')
+
+    def testISO8601NamedFormatsWrite(self):
+        # All ISO8601 named formats → canonical strftime on write
+        for fmt in ISO8601_NAMED_FORMATS:
+            result = to_pandas_date_format(fmt, for_write=True)
+            self.assertEqual(result, NAMED_FORMAT_TO_STRFTIME[fmt],
+                             f'format {fmt!r} should give strftime on write')
+
+    def testEuroUSNamedFormats(self):
+        # Euro and US named formats → canonical strftime for both read and write
+        cases = {
+            DateFormat.EURO_DATE:       '%d/%m/%Y',
+            DateFormat.EURO_DATETIME:   '%d/%m/%Y %H:%M:%S',
+            DateFormat.EURO_DATE_2Y:    '%d/%m/%y',
+            DateFormat.EURO_DATETIME_2Y:'%d/%m/%y %H:%M:%S',
+            DateFormat.US_DATE:         '%m/%d/%Y',
+            DateFormat.US_DATETIME:     '%m/%d/%Y %H:%M:%S',
+            DateFormat.US_DATE_2Y:      '%m/%d/%y',
+            DateFormat.US_DATETIME_2Y:  '%m/%d/%y %H:%M:%S',
+        }
+        for fmt, expected in cases.items():
+            self.assertEqual(to_pandas_date_format(fmt), expected,
+                             f'format {fmt!r} read')
+            self.assertEqual(to_pandas_date_format(fmt, for_write=True),
+                             expected, f'format {fmt!r} write')
+
+    def testSpecificStrftimePassthrough(self):
+        # Specific strftime strings pass through unchanged
+        for fmt in ('%d/%m/%Y', '%Y%m%d', '%m-%d-%Y', '%d.%m.%Y %H:%M:%S'):
+            self.assertEqual(to_pandas_date_format(fmt), fmt)
+            self.assertEqual(to_pandas_date_format(fmt, for_write=True), fmt)
+
+    def testUnspecifiedRaisesNotImplemented(self):
+        self.assertRaises(NotImplementedError,
+                          to_pandas_date_format, DateFormat.EURO_UNSPECIFIED)
+        self.assertRaises(NotImplementedError,
+                          to_pandas_date_format, DateFormat.US_UNSPECIFIED)
+
+    def testPandasDateFormatToSerial(self):
+        self.assertEqual(pandas_date_format_to_serial('ISO8601'),
+                         DateFormat.ISO8601_UNSPECIFIED)
+        self.assertEqual(pandas_date_format_to_serial('%d/%m/%Y'), '%d/%m/%Y')
+        self.assertEqual(pandas_date_format_to_serial('%Y-%m-%dT%H:%M:%S'),
+                         '%Y-%m-%dT%H:%M:%S')
+
+
+class TestLegacyDatetimeFormat(ReferenceTestCase):
+
+    def testDatetimeFormatAlias(self):
+        # datetime_format is accepted as legacy alias for date_format
+        m = SerialMetadata(datetime_format='iso8601')
+        self.assertEqual(m.date_format, 'iso8601')
+
+    def testDateFormatWinsOverDatetimeFormat(self):
+        # date_format takes precedence over datetime_format
+        m = SerialMetadata(date_format='eu-date', datetime_format='iso8601')
+        self.assertEqual(m.date_format, 'eu-date')
 
 
 if __name__ == '__main__':
