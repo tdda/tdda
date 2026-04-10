@@ -542,7 +542,7 @@ class CSVWMetadata(SerialMetadata):
             if not fmt:
                 fmt = field.get_val(f, 'format')
             if fmt:
-                if fieldtype.startswith('date'):
+                if fieldtype and fieldtype.startswith('date'):
                     self._csvw_date_format = fmt
                     fmt = csvw_date_format_to_serial(
                         fmt,

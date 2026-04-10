@@ -175,9 +175,11 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
         and dtype is not None
     } or None
     dfmt = md.date_format
-    if any(v.format for v in date_fields) or dfmt:
-        kw['date_format'] = {name: to_pandas_date_format(f.format or dfmt)
-                             for name, f in date_fields.items()}
+    if any(v.format for v in date_fields.values()) or dfmt:
+        kw['date_format'] = {
+            name: to_pandas_date_format(f.format or dfmt)
+            for name, f in date_fields.items()
+        }
     if date_fields:
         kw['parse_dates'] = list(date_fields)
 
@@ -532,8 +534,13 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
                    null_indicator=kw.get('na_rep',
                        delistify(Defaults.NULL_INDICATOR)),
                    header_row_count=header_row_count,
-                   datetime_format=kw.get('date_format',
-                                          DateFormat.ISO8601_UNSPECIFIED),
+                   date_format=kw.get('date_format',
+                       DateFormat.ISO8601_UNSPECIFIED
+                       if any(f.fieldtype in (FieldType.DATE, FieldType.DATETIME,
+                                              FieldType.DATETIME_WITH_TIMEZONE,
+                                              FieldType.TIME, FieldType.ISO8601)
+                              for f in fields)
+                       else None),
              )
     else:
         md = SerialMetadata()

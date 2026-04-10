@@ -198,26 +198,54 @@ QUOTING_NAMES = None
 
 class FieldMetadata:
     """
-    Container for data about a field (column) in a serial data source
-    such as CSV file
+    Container for metadata about a single field (column) in a flat file.
 
     Args:
-        name:   Name of the field/column. This need not be the same as the
-                name in the file. MANDATORY.
+        name:           Internal name for the field/column used in the
+                        resulting dataframe. Need not match the name in
+                        the file (see csvname). MANDATORY.
 
-        fieldtype:  the type of the field. Must be one of the values
-                    in FIELDTYPES. MANDATORY.
+        fieldtype:      Type of the field. Must be one of the values in
+                        FieldType (bool, int, float, number, string, date,
+                        datetime, datetime_tz, time, iso8601). OPTIONAL.
 
-        csvname: Name of the column in the file. OPTIONAL.
+        csvname:        Name of the column in the file, if different from
+                        name. OPTIONAL.
 
-        format:  Format of the field in the file.
-                 Used mainly with date and datetime columns.
-                 OPTIONAL
+        format:         Format of the field. Interpretation depends on
+                        fieldtype:
+                          - date/datetime: a named format (e.g.
+                            'iso8601-date', 'eu-datetime') or a Python
+                            strftime string (e.g. '%d/%m/%Y').
+                          - bool: a boolean format spec (e.g. 'yes|no').
+                        Unambiguous because fieldtype is known. OPTIONAL.
 
-        null_indicator: values to be interpreted as NULL (missing/NA) values.
-                     OPTIONAL.
+        null_indicator: String or list of strings to be interpreted as
+                        NULL/NA values in this field. Overrides the
+                        dataset-level null_indicator. OPTIONAL.
 
+        true_values:    String or list of strings to interpret as True
+                        for bool fields. OPTIONAL.
 
+        false_values:   String or list of strings to interpret as False
+                        for bool fields. OPTIONAL.
+
+        description:    Human-readable description of the field. OPTIONAL.
+
+        thou_sep:       Thousands separator character (e.g. ',').
+                        TBC. OPTIONAL.
+
+        dp:             TBC. OPTIONAL.
+
+        dps:            Number of decimal places for float fields.
+                        TBC. OPTIONAL.
+
+        examples:       Example values for the field. TBC. OPTIONAL.
+
+        rdf_type:       RDF type URI for the field. TBC. OPTIONAL.
+
+        altnames:       Alternative names for the field (e.g. from CSVW
+                        titles). TBC. OPTIONAL.
     """
     def __init__(self, name, fieldtype=None, csvname=None,
                  format=None, null_indicator=None,
@@ -229,9 +257,6 @@ class FieldMetadata:
         self.csvname = csvname or name
         self.fieldtype = fieldtype
         self.altnames = None
-        if format:
-            if fieldtype and fieldtype.startswith('date'):
-                self._date_format = format  # TODO start using this
         self.format = format
         self.null_indicator = null_indicator
         self.true_values = listify(true_values)
@@ -296,6 +321,97 @@ class FieldMetadata:
 
 
 class SerialMetadata:
+    """
+    Container for metadata describing the format and structure of a flat
+    file (CSV or similar). Corresponds to the 'tdda.serial' section of a
+    .serial file.
+
+    All parameters are optional. Where not specified, library defaults
+    (e.g. pandas.read_csv defaults) apply.
+
+    Args:
+        fields:         List of FieldMetadata objects, or a dict mapping
+                        CSV column names to field attribute dicts. Use a
+                        list when specifying all fields (complete schema);
+                        use a dict when specifying only a subset (partial
+                        schema), allowing extra fields in the file.
+                        OPTIONAL.
+
+        path:           Path to the associated flat file. OPTIONAL.
+
+        encoding:       Character encoding of the file (e.g. 'UTF-8',
+                        'latin-1'). OPTIONAL.
+
+        delimiter:      Field separator character (e.g. ',', '|', '\t').
+                        OPTIONAL.
+
+        quote_char:     Quote character used to wrap fields containing
+                        delimiters or newlines (e.g. '"'). OPTIONAL.
+
+        escape_char:    Escape character used within quoted strings
+                        (e.g. '\\'). OPTIONAL.
+
+        stutter_quotes: If True, quotes within quoted strings are doubled
+                        rather than escaped (doublequote=True in pandas).
+                        OPTIONAL.
+
+        date_format:    Default date/datetime format for all date and
+                        datetime fields in the dataset. Can be a named
+                        format (e.g. 'iso8601-date', 'eu-datetime') or a
+                        Python strftime string. Overridden by per-field
+                        format if set. OPTIONAL.
+
+        null_indicator: String or list of strings to interpret as
+                        NULL/NA values throughout the file. OPTIONAL.
+
+        header_row_count: Number of header rows at the top of the file.
+                        0 means no header. Defaults to 1. OPTIONAL.
+
+        header_row:     TBC. OPTIONAL.
+
+        quoting:        CSV quoting style (e.g. 'QUOTE_MINIMAL',
+                        'QUOTE_ALL'). Accepts Python csv module quoting
+                        constants by name or value. OPTIONAL.
+
+        decimal_point:  Character used as decimal separator (e.g. '.'
+                        or ','). OPTIONAL.
+
+        dps:            Default number of decimal places for float fields.
+                        TBC. OPTIONAL.
+
+        accept_percentages_as_floats: If True, values like '12.5%' are
+                        read as 0.125. OPTIONAL.
+
+        map_missing_trailing_cols_to_null: If True, short rows (fewer
+                        fields than expected) are padded with nulls rather
+                        than causing an error. Useful for Excel-generated
+                        CSVs. OPTIONAL.
+
+        true_values:    Default string(s) to interpret as True for bool
+                        fields across the dataset. OPTIONAL.
+
+        false_values:   Default string(s) to interpret as False for bool
+                        fields across the dataset. OPTIONAL.
+
+        thou_sep:       Thousands separator character. TBC. OPTIONAL.
+
+        dp:             TBC. OPTIONAL.
+
+        verbosity:      Controls warning/error output. 0=silent, 1=errors
+                        only, 2=errors and warnings (default), 3=verbose.
+
+        libs:           Dict of library-specific parameter blocks (e.g.
+                        'pandas.read_csv', 'polars.read_csv'). When
+                        present for a given library, these parameters are
+                        used directly instead of being derived from the
+                        tdda.serial section. OPTIONAL.
+
+        source:         TBC. OPTIONAL.
+
+        extra_kwargs:   Controls handling of unrecognised keyword
+                        arguments. 'warn' (default) issues a warning,
+                        'error' raises an error, 'allow' silently accepts.
+    """
     def __init__(self,
         fields=None,
         path=None,
@@ -324,6 +440,8 @@ class SerialMetadata:
         extra_kwargs='warn',
         **kw
     ):
+        if datetime_format is not None and date_format is None:
+            date_format = datetime_format
         if kw:
             if extra_kwargs in ('error', 'warn'):
                 from pprint import pformat
