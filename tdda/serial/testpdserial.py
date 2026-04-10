@@ -1716,6 +1716,12 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
     verified against a shared reference parquet.
     """
 
+    def test_iso_date_serial(self):
+        df = csv_to_pandas(
+            tdpath('isod.csv'), tdpath('isod.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
+
     def test_eu_date_serial(self):
         df = csv_to_pandas(
             tdpath('eurod.csv'), tdpath('eurod.serial')
@@ -1728,6 +1734,59 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
         )
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
+    def test_eu_date2y_serial(self):
+        df = csv_to_pandas(
+            tdpath('eurod2y.csv'), tdpath('eurod2y.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
+
+    def test_us_date2y_serial(self):
+        df = csv_to_pandas(
+            tdpath('usd2y.csv'), tdpath('usd2y.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
+
+    def test_iso_datetime_serial(self):
+        df = csv_to_pandas(
+            tdpath('isodatetime.csv'), tdpath('isodatetime.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
+
+    def test_eu_datetime_serial(self):
+        df = csv_to_pandas(
+            tdpath('eurodt.csv'), tdpath('eurodt.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
+
+    def test_us_datetimeserial(self):
+        df = csv_to_pandas(
+            tdpath('usdt.csv'), tdpath('usdt.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
+
+    def test_eu_date2y_serial(self):
+        df = csv_to_pandas(
+            tdpath('eurodt2y.csv'), tdpath('eurodt2y.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
+
+    def test_us_date2y_serial(self):
+        df = csv_to_pandas(
+            tdpath('usdt2y.csv'), tdpath('usdt2y.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
+
+    def test_us_allformats_serial(self):
+        df = csv_to_pandas(
+            tdpath('allformats.csv'), tdpath('allformats.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('alldateformats.parquet'))
+
+    def atest_us_allformats2unspec_serial(self):
+        df = csv_to_pandas(
+            tdpath('allformats2unspec.csv'), tdpath('allformats2unspec.serial')
+        )
+        self.assertDataFrameCorrect(df, tdpath('alldateformats2unspec.parquet'))
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

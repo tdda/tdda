@@ -8,8 +8,7 @@
             },
             {
                 "name": "date",
-                "fieldtype": "date",
-                "format": "eu-date"
+                "fieldtype": "date"
             }
         ],
         "encoding": "UTF-8",

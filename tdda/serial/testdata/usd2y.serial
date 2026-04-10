@@ -15,7 +15,7 @@
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "us-date",
+        "date_format": "us-date-2y",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0

@@ -1,0 +1,70 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "eu_date",
+                "fieldtype": "date",
+                "format": "eu-date"
+            },
+            {
+                "name": "eu_date_2y",
+                "fieldtype": "date",
+                "format": "eu-date-2y"
+            },
+            {
+                "name": "iso_date",
+                "fieldtype": "date",
+                "format": "iso8601-date"
+            },
+            {
+                "name": "us_date",
+                "fieldtype": "date",
+                "format": "us-date"
+            },
+            {
+                "name": "us_date_2y",
+                "fieldtype": "date",
+                "format": "us-date-2y"
+            },
+            {
+                "name": "eu_datetime",
+                "fieldtype": "datetime",
+                "format": "eu-datetime"
+            },
+            {
+                "name": "eu_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "eu-datetime-2y"
+            },
+            {
+                "name": "iso_datetime",
+                "fieldtype": "datetime",
+                "format": "iso8601-datetime"
+            },
+            {
+                "name": "us_datetime",
+                "fieldtype": "datetime",
+                "format": "us-datetime"
+            },
+            {
+                "name": "us_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "us-datetime-2y"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "date_format": "eurod",
+        "datetime_format": "usdt",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

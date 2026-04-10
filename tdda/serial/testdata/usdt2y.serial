@@ -8,14 +8,14 @@
             },
             {
                 "name": "date",
-                "fieldtype": "date"
+                "fieldtype": "datetime"
             }
         ],
         "encoding": "UTF-8",
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "us-date",
+        "date_format": "us-datetime-2y",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0
