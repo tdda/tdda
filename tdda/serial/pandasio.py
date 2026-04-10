@@ -17,7 +17,11 @@ from tdda.serial.metadata import (
     FieldType,
     SerialMetadata,
     VERBOSITY,
-    TDDASerialError
+    TDDASerialError,
+    NAMED_FORMAT_TO_STRFTIME,
+    ISO8601_NAMED_FORMATS,
+    UNSPECIFIED_NAMED_FORMATS,
+    ALL_NAMED_FORMATS,
 )
 from tdda.serial.reader import (
     get_metadata_for_reader,
@@ -249,7 +253,8 @@ def serial_to_pandas_write_csv_args(md, backend=None, config=None):
         return md.libs[PANDAS.write_key]
 
     kw = to_common_pandas_rw_args(md)
-    kw['date_format'] = to_pandas_date_format(md.single_date_format())
+    kw['date_format'] = to_pandas_date_format(md.single_date_format(),
+                                               for_write=True)
 
     date_fields = [f for f in md.fields if f.fieldtype.startswith('date')]
     if date_fields:
@@ -607,17 +612,39 @@ def yn2bool(v):
     )
 
 
-def to_pandas_date_format(v):
+def to_pandas_date_format(v, for_write=False):
+    """
+    Convert a tdda.serial date format string to the appropriate value
+    for pandas date_format parameter.
+
+    For named generic formats:
+      - ISO8601 variants: return 'ISO8601' on read (pandas handles any
+        ISO variant); return canonical strftime on write.
+      - Euro/US variants: return canonical strftime for both read and write.
+      - Unspecified (eu, us): not yet implemented; raises an error.
+
+    For specific strftime strings: pass through unchanged.
+    """
     if v is None:
         return None
-    if v.startswith('iso8601'):
-        return 'ISO8601'
-    return v  # for now
+    if v in UNSPECIFIED_NAMED_FORMATS and v != DateFormat.ISO8601_UNSPECIFIED:
+        raise NotImplementedError(
+            f'Date format "{v}" is not yet implemented. '
+            f'Use a specific format such as "{v}-date" or "{v}-datetime".'
+        )
+    if v in ISO8601_NAMED_FORMATS:
+        if for_write:
+            return NAMED_FORMAT_TO_STRFTIME.get(v, '%Y-%m-%dT%H:%M:%S')
+        else:
+            return 'ISO8601'
+    if v in NAMED_FORMAT_TO_STRFTIME:
+        return NAMED_FORMAT_TO_STRFTIME[v]
+    return v  # specific strftime string: pass through
 
 
 def pandas_date_format_to_serial(fmt):
     if fmt == 'ISO8601':
-        return DateFormat.ISO8601_UNSPECIFIED, FieldType.ISO8601
+        return DateFormat.ISO8601_UNSPECIFIED
     else:
         return fmt
 

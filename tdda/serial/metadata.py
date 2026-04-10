@@ -37,14 +37,77 @@ class FieldType:
 
 
 class DateFormat:
-    ISO8601_DATE = 'iso8601-date'
-    ISO8601_DATETIME = 'iso8601-datetime'
-    ISO8601_DATETIME_TZ = 'iso8601-datetime-tz'
-    ISO8601_UNSPECIFIED = 'iso8601'
+    # ISO8601 generic (read any ISO variant, write canonical)
+    ISO8601_DATE         = 'iso8601-date'        # write: %Y-%m-%d
+    ISO8601_DATETIME     = 'iso8601-datetime'    # write: %Y-%m-%dT%H:%M:%S
+    ISO8601_DATETIME_TZ  = 'iso8601-datetime-tz' # write: %Y-%m-%dT%H:%M:%S%z
+    ISO8601_UNSPECIFIED  = 'iso8601'             # write: %Y-%m-%dT%H:%M:%S
 
-    EURO_DATE = 'eu-date'
-    EURO_DATETIME = 'eu-datetime'
+    # European generic (read canonical slash, write canonical slash)
+    EURO_DATE            = 'eu-date'             # write: %d/%m/%Y
+    EURO_DATETIME        = 'eu-datetime'         # write: %d/%m/%Y %H:%M:%S
+    EURO_DATE_2Y         = 'eu-date-2y'          # write: %d/%m/%y
+    EURO_DATETIME_2Y     = 'eu-datetime-2y'      # write: %d/%m/%y %H:%M:%S
+    EURO_UNSPECIFIED     = 'eu'                  # not yet implemented
 
+    # US generic (read canonical slash, write canonical slash)
+    US_DATE              = 'us-date'             # write: %m/%d/%Y
+    US_DATETIME          = 'us-datetime'         # write: %m/%d/%Y %H:%M:%S
+    US_DATE_2Y           = 'us-date-2y'          # write: %m/%d/%y
+    US_DATETIME_2Y       = 'us-datetime-2y'      # write: %m/%d/%y %H:%M:%S
+    US_UNSPECIFIED       = 'us'                  # not yet implemented
+
+
+# Canonical write strftime for each named generic format
+NAMED_FORMAT_TO_STRFTIME = {
+    DateFormat.ISO8601_DATE:        '%Y-%m-%d',
+    DateFormat.ISO8601_DATETIME:    '%Y-%m-%dT%H:%M:%S',
+    DateFormat.ISO8601_DATETIME_TZ: '%Y-%m-%dT%H:%M:%S%z',
+    DateFormat.ISO8601_UNSPECIFIED: '%Y-%m-%dT%H:%M:%S',
+    DateFormat.EURO_DATE:           '%d/%m/%Y',
+    DateFormat.EURO_DATETIME:       '%d/%m/%Y %H:%M:%S',
+    DateFormat.EURO_DATE_2Y:        '%d/%m/%y',
+    DateFormat.EURO_DATETIME_2Y:    '%d/%m/%y %H:%M:%S',
+    DateFormat.US_DATE:             '%m/%d/%Y',
+    DateFormat.US_DATETIME:         '%m/%d/%Y %H:%M:%S',
+    DateFormat.US_DATE_2Y:          '%m/%d/%y',
+    DateFormat.US_DATETIME_2Y:      '%m/%d/%y %H:%M:%S',
+}
+
+# Specific strftime strings → generic named format (many to one)
+STRFTIME_TO_NAMED_FORMAT = {
+    # ISO8601 variants
+    '%Y-%m-%d':              DateFormat.ISO8601_DATE,
+    '%Y/%m/%d':              DateFormat.ISO8601_DATE,
+    '%Y-%m-%d %H:%M:%S':     DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%dT%H:%M:%S':     DateFormat.ISO8601_DATETIME,
+    '%Y/%m/%d %H:%M:%S':     DateFormat.ISO8601_DATETIME,
+    '%Y/%m/%dT%H:%M:%S':     DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%d %H:%M:%S.%f':  DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%dT%H:%M:%S.%f':  DateFormat.ISO8601_DATETIME,
+    # Euro variants
+    '%d/%m/%Y':              DateFormat.EURO_DATE,
+    '%d-%m-%Y':              DateFormat.EURO_DATE,
+    '%d.%m.%Y':              DateFormat.EURO_DATE,
+    '%d/%m/%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
+    '%d-%m-%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
+    '%d.%m.%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
+    '%d/%m/%y':              DateFormat.EURO_DATE_2Y,
+    '%d-%m-%y':              DateFormat.EURO_DATE_2Y,
+    '%d.%m.%y':              DateFormat.EURO_DATE_2Y,
+    '%d/%m/%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
+    '%d-%m-%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
+    '%d.%m.%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
+    # US variants
+    '%m/%d/%Y':              DateFormat.US_DATE,
+    '%m-%d-%Y':              DateFormat.US_DATE,
+    '%m/%d/%Y %H:%M:%S':     DateFormat.US_DATETIME,
+    '%m-%d-%Y %H:%M:%S':     DateFormat.US_DATETIME,
+    '%m/%d/%y':              DateFormat.US_DATE_2Y,
+    '%m-%d-%y':              DateFormat.US_DATE_2Y,
+    '%m/%d/%y %H:%M:%S':     DateFormat.US_DATETIME_2Y,
+    '%m-%d-%y %H:%M:%S':     DateFormat.US_DATETIME_2Y,
+}
 
 ISO8601_NAMED_FORMATS = {
     DateFormat.ISO8601_DATE,
@@ -52,6 +115,14 @@ ISO8601_NAMED_FORMATS = {
     DateFormat.ISO8601_DATETIME_TZ,
     DateFormat.ISO8601_UNSPECIFIED,
 }
+
+UNSPECIFIED_NAMED_FORMATS = {
+    DateFormat.ISO8601_UNSPECIFIED,
+    DateFormat.EURO_UNSPECIFIED,
+    DateFormat.US_UNSPECIFIED,
+}
+
+ALL_NAMED_FORMATS = set(NAMED_FORMAT_TO_STRFTIME) | UNSPECIFIED_NAMED_FORMATS
 
 
 class Defaults:
