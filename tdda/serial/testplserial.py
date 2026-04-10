@@ -14,9 +14,9 @@ from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.polarsio import (
     csv_to_polars,
     serial_to_polars_read_csv_args,
-#    polars_df_to_csv,
-#    polars_df_to_metadata,
-#    polars_dtype_to_fieldtype,
+    #    polars_df_to_csv,
+    #    polars_df_to_metadata,
+    #    polars_dtype_to_fieldtype,
 )
 from tdda.serial.reader import (
     load_metadata,
@@ -35,18 +35,14 @@ from rich import print as rprint
 #     diff_dataframes
 # )
 
-from tdda.serial.examples.plgen import (
-    generate_reference_base_polars_dataframe
-)
+from tdda.serial.examples.plgen import generate_reference_base_polars_dataframe
 
 
 from tdda.serial.testserial import (
     TESTDATADIR,
-
     THREE_FLAVOURS,
     TDDASERIAL_PATTERNS,
-#    PANDAS2,
-
+    #    PANDAS2,
     tdpath,
     epath,
     tmppath,
@@ -57,17 +53,17 @@ from tdda.serial.datautils import (
 )
 
 
-
 def dfEqual(self, df, exp):
     self.assertEqual(len(df), len(exp))
     self.assertEqual(list(df), list(exp))
     for col in df:
         self.assertEqual(
             ('values', col, np.sum(df[col] == exp[col]).item()),
-            ('values', col, len(df)))
+            ('values', col, len(df)),
+        )
         self.assertEqual(
             ('types', col, str(df[col].dtype)),
-            ('types', col, str(exp[col].dtype))
+            ('types', col, str(exp[col].dtype)),
         )
 
 
@@ -75,43 +71,46 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
     def test_base_serial(self):
         md = load_metadata(epath('base-csv.serial'))
         warn, buf = testwarn()
-        kw = serial_to_polars_read_csv_args(md, warner=warn,
-                                                serializable=True)
-        self.assertStringCorrect(json.dumps(kw, indent=4),
-                                 tdpath('base-csv-pl-from-serial.json'))
-        self.assertEqual(buf, [
-            'Polars does not understand escape characters.\n'
-            'Ignoring escape value: \\\n',
-            'Field bool2 booleans yes, no will not be understood by Polars.\n'
-            'If they are present, you may need to set them to pl.String.\n'
-            '(Use map_other_bools_to_string=True.)\n'
-        ])
+        kw = serial_to_polars_read_csv_args(md, warner=warn, serializable=True)
+        self.assertStringCorrect(
+            json.dumps(kw, indent=4), tdpath('base-csv-pl-from-serial.json')
+        )
+        self.assertEqual(
+            buf,
+            [
+                'Polars does not understand escape characters.\n'
+                'Ignoring escape value: \\\n',
+                'Field bool2 booleans yes, no will not be understood by Polars.\n'
+                'If they are present, you may need to set them to pl.String.\n'
+                '(Use map_other_bools_to_string=True.)\n',
+            ],
+        )
 
     def test_base_polars_serial(self):
         md = load_metadata(epath('base-csv-polars.serial'))
         warn, buf = testwarn()
-        kw = serial_to_polars_read_csv_args(md, warner=warn,
-                                                serializable=True)
-        self.assertStringCorrect(json.dumps(kw, indent=4),
-                                 tdpath('base-csv-pl-from-serial2.json'))
+        kw = serial_to_polars_read_csv_args(md, warner=warn, serializable=True)
+        self.assertStringCorrect(
+            json.dumps(kw, indent=4), tdpath('base-csv-pl-from-serial2.json')
+        )
         self.assertEqual(buf, [])
 
     def test_simple(self):
         md = load_metadata(tdpath('simple-metadata.json'))
         warn, buf = testwarn()
-        kw = serial_to_polars_read_csv_args(md, warner=warn,
-                                                serializable=True)
-        self.assertStringCorrect(json.dumps(kw, indent=4),
-                                 tdpath('simple-csv-pl-from-csvw.json'))
+        kw = serial_to_polars_read_csv_args(md, warner=warn, serializable=True)
+        self.assertStringCorrect(
+            json.dumps(kw, indent=4), tdpath('simple-csv-pl-from-csvw.json')
+        )
         self.assertEqual(buf, [])
 
     def test_isodate_tsv(self):
         md = load_metadata(tdpath('isodt-tsv-metadata.json'))
-        warn,  buf = testwarn()
-        kw = serial_to_polars_read_csv_args(md, warner=warn,
-                                                serializable=True)
-        self.assertStringCorrect(json.dumps(kw, indent=4),
-                                 tdpath('isodate-tsv-pl-from-csvw.json'))
+        warn, buf = testwarn()
+        kw = serial_to_polars_read_csv_args(md, warner=warn, serializable=True)
+        self.assertStringCorrect(
+            json.dumps(kw, indent=4), tdpath('isodate-tsv-pl-from-csvw.json')
+        )
         self.assertEqual(buf, [])
 
 
@@ -225,45 +224,46 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 class TestPolarsLoad(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
-
         # This is the dataframe that is read by pl.read_csv
         # with no kwargs
-        cls.default_read_csv_df = pl.DataFrame({
-            'i1': [1, 2, 3],
-            'i2': [1.0, None, 3.0],
-            'i3': [-1.0, -2.0, None],
-            'f1': [1.5, None, 3.5],
-            'f2': [-1.5, -2.5, None],
-            'b1': [True, None, True],
-            'b2': [False, False, None],
-            's1': ['hello', None, 'goodbye'],
-            's2': ['àçéèïöô', 'aceeioo', None],
-            'dti': ['1999-12-31T23:59:59', None, '2003-03-03T03:03:03'],
-            'dte': ['31/12/1999 23:59:59', '02/02/2002 02:02:02', None],
-            'dtu': ['12/31/1999 11:59:59p', None, '04/03/2005 03:02:01a'],
-            'di': ['1999-12-31', '2002-01-02', None],
-            'de': ['31/12/1999', None, '03/03/2003'],
-            'du': ['12/31/1999', '01/02/2002', None],
-            # 'dtzi': ['1999-12-31T23:59:59+01:00', None,
-            #          '2003-03-03T03:02:01+01:00'],
-            # 'dtze': [
-            #     '31/12/1999 23:59:59+0100',
-            #     '02/01/2002 03:02:01+0100',
-            #     None
-            # ],
-            # 'dtzu': [
-            #     '12/31/1999 11:59:59p-0500',
-            #     None,
-            #     '03/03/2003 05:04:03p-0800'
-            # ],
-        })
+        cls.default_read_csv_df = pl.DataFrame(
+            {
+                'i1': [1, 2, 3],
+                'i2': [1.0, None, 3.0],
+                'i3': [-1.0, -2.0, None],
+                'f1': [1.5, None, 3.5],
+                'f2': [-1.5, -2.5, None],
+                'b1': [True, None, True],
+                'b2': [False, False, None],
+                's1': ['hello', None, 'goodbye'],
+                's2': ['àçéèïöô', 'aceeioo', None],
+                'dti': ['1999-12-31T23:59:59', None, '2003-03-03T03:03:03'],
+                'dte': ['31/12/1999 23:59:59', '02/02/2002 02:02:02', None],
+                'dtu': ['12/31/1999 11:59:59p', None, '04/03/2005 03:02:01a'],
+                'di': ['1999-12-31', '2002-01-02', None],
+                'de': ['31/12/1999', None, '03/03/2003'],
+                'du': ['12/31/1999', '01/02/2002', None],
+                # 'dtzi': ['1999-12-31T23:59:59+01:00', None,
+                #          '2003-03-03T03:02:01+01:00'],
+                # 'dtze': [
+                #     '31/12/1999 23:59:59+0100',
+                #     '02/01/2002 03:02:01+0100',
+                #     None
+                # ],
+                # 'dtzu': [
+                #     '12/31/1999 11:59:59p-0500',
+                #     None,
+                #     '03/03/2003 05:04:03p-0800'
+                # ],
+            }
+        )
 
         fromiso = datetime.datetime.fromisoformat
         dt_m1 = datetime.datetime(1999, 12, 31, 23, 59, 59)
         d_m1 = datetime.date(1999, 12, 31)
-        d_212= datetime.date(2002, 1, 2)
-        d_543= datetime.date(2005, 4, 3)
-        d_333= datetime.date(2003, 3, 3)
+        d_212 = datetime.date(2002, 1, 2)
+        d_543 = datetime.date(2005, 4, 3)
+        d_333 = datetime.date(2003, 3, 3)
         dt_333333 = datetime.datetime(2003, 3, 3, 3, 3, 3)
         dt_222222 = datetime.datetime(2002, 2, 2, 2, 2, 2)
         dt_543_321 = datetime.datetime(2005, 4, 3, 3, 2, 1)
@@ -273,54 +273,63 @@ class TestPolarsLoad(ReferenceTestCase):
         dtz_m1_m5 = fromiso('1999-12-31T23:59:59-05:00')
         dtz_333_543_m8 = fromiso('2003-03-03T05:04:03-08:00')
 
-        cls.correct_df = pl.DataFrame((
-            pl.Series('i1', [1, 2, 3], dtype=pl.Int64),
-            pl.Series('i2', [1, None, 3], dtype=pl.Int64),
-            pl.Series('i3', [-1, -2, None], dtype=pl.Int64),
-            pl.Series('f1', [1.5, None, 3.5], dtype=pl.Float64),
-            pl.Series('f2', [-1.5, -2.5, None], dtype=pl.Float64),
-            pl.Series('b1', [True, None, True], dtype=pl.Boolean),
-            pl.Series('b2', [False, False, None], dtype=pl.Boolean),
-            pl.Series('s1', ['hello', None, 'goodbye'], dtype=pl.String),
-            pl.Series('s2', ['àçéèïöô', 'aceeioo', None], dtype=pl.String),
-            pl.Series('dti', [dt_m1, None, dt_333333], dtype=pl.Datetime),
-            pl.Series('dte', [dt_m1, dt_222222, None], dtype=pl.Datetime),
-            pl.Series('dtu', [dt_m1, None, dt_543_321], dtype=pl.Datetime),
-            pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),
-            pl.Series('de', [d_m1, None, d_333], dtype=pl.Datetime),
-            pl.Series('du', [d_m1, d_212, None], dtype=pl.Datetime),
-            # 'dtzi': pd.Series([dtz_m1_1, pd.NaT, dtz_333_321_1],
-            #                    dtype='datetime64[ns]'),
-            # 'dtze': pd.Series([dtz_m1_1, dtz_212_321_1, pd.NaT],
-            #                    dtype='datetime64[ns]'),
-            # 'dtzu': pd.Series([dtz_m1_m5, pd.NaT, dtz_333_543_m8],
-            #                   dtype='datetime64[ns]'),
-        ))
+        cls.correct_df = pl.DataFrame(
+            (
+                pl.Series('i1', [1, 2, 3], dtype=pl.Int64),
+                pl.Series('i2', [1, None, 3], dtype=pl.Int64),
+                pl.Series('i3', [-1, -2, None], dtype=pl.Int64),
+                pl.Series('f1', [1.5, None, 3.5], dtype=pl.Float64),
+                pl.Series('f2', [-1.5, -2.5, None], dtype=pl.Float64),
+                pl.Series('b1', [True, None, True], dtype=pl.Boolean),
+                pl.Series('b2', [False, False, None], dtype=pl.Boolean),
+                pl.Series('s1', ['hello', None, 'goodbye'], dtype=pl.String),
+                pl.Series('s2', ['àçéèïöô', 'aceeioo', None], dtype=pl.String),
+                pl.Series('dti', [dt_m1, None, dt_333333], dtype=pl.Datetime),
+                pl.Series('dte', [dt_m1, dt_222222, None], dtype=pl.Datetime),
+                pl.Series('dtu', [dt_m1, None, dt_543_321], dtype=pl.Datetime),
+                pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),
+                pl.Series('de', [d_m1, None, d_333], dtype=pl.Datetime),
+                pl.Series('du', [d_m1, d_212, None], dtype=pl.Datetime),
+                # 'dtzi': pd.Series([dtz_m1_1, pd.NaT, dtz_333_321_1],
+                #                    dtype='datetime64[ns]'),
+                # 'dtze': pd.Series([dtz_m1_1, dtz_212_321_1, pd.NaT],
+                #                    dtype='datetime64[ns]'),
+                # 'dtzu': pd.Series([dtz_m1_m5, pd.NaT, dtz_333_543_m8],
+                #                   dtype='datetime64[ns]'),
+            )
+        )
 
-        cls.dfisodates = pl.DataFrame((
-            pl.Series('i1', [1, 2, 3], dtype=pl.Int64),
-            pl.Series('i2', [1, None, 3], dtype=pl.Int64),
-            pl.Series('i3', [-1, -2, None], dtype=pl.Int64),
-            pl.Series('f1', [1.5, None, 3.5], dtype=pl.Float64),
-            pl.Series('f2', [-1.5, -2.5, None], dtype=pl.Float64),
-            pl.Series('b1', [True, None, True], dtype=pl.Boolean),
-            pl.Series('b2', [False, False, None], dtype=pl.Boolean),
-            pl.Series('s1', ['hello', None, 'goodbye'], dtype=pl.String),
-            pl.Series('s2', ['àçéèïöô', 'aceeioo', None], dtype=pl.String),
-            pl.Series('dti', [dt_m1, None, dt_333333], dtype=pl.Datetime),
-            pl.Series('dte', ['31/12/1999 23:59:59', '02/02/2002 02:02:02',
-                              None], dtype=pl.String),
-            pl.Series('dtu', ['12/31/1999 11:59:59p', None,
-                              '04/03/2005 03:02:01a'], dtype=pl.String),
-
-
-            pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),
-            pl.Series('de', ['31/12/1999', None, '03/03/2003'],
-                      dtype=pl.String),
-            pl.Series('du', ['12/31/1999', '01/02/2002', None],
-                      dtype=pl.String),
-
-        ))
+        cls.dfisodates = pl.DataFrame(
+            (
+                pl.Series('i1', [1, 2, 3], dtype=pl.Int64),
+                pl.Series('i2', [1, None, 3], dtype=pl.Int64),
+                pl.Series('i3', [-1, -2, None], dtype=pl.Int64),
+                pl.Series('f1', [1.5, None, 3.5], dtype=pl.Float64),
+                pl.Series('f2', [-1.5, -2.5, None], dtype=pl.Float64),
+                pl.Series('b1', [True, None, True], dtype=pl.Boolean),
+                pl.Series('b2', [False, False, None], dtype=pl.Boolean),
+                pl.Series('s1', ['hello', None, 'goodbye'], dtype=pl.String),
+                pl.Series('s2', ['àçéèïöô', 'aceeioo', None], dtype=pl.String),
+                pl.Series('dti', [dt_m1, None, dt_333333], dtype=pl.Datetime),
+                pl.Series(
+                    'dte',
+                    ['31/12/1999 23:59:59', '02/02/2002 02:02:02', None],
+                    dtype=pl.String,
+                ),
+                pl.Series(
+                    'dtu',
+                    ['12/31/1999 11:59:59p', None, '04/03/2005 03:02:01a'],
+                    dtype=pl.String,
+                ),
+                pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),
+                pl.Series(
+                    'de', ['31/12/1999', None, '03/03/2003'], dtype=pl.String
+                ),
+                pl.Series(
+                    'du', ['12/31/1999', '01/02/2002', None], dtype=pl.String
+                ),
+            )
+        )
 
         cls.ref_base_df = generate_reference_base_polars_dataframe()
 
@@ -363,7 +372,9 @@ class TestPolarsLoad(ReferenceTestCase):
         self.assertEqual(df['sig'][0], '¤¦¨¼½¾')
 
         warn, buf = testwarn()
-        df = csv_to_polars(md_path=md_path, encoding='iso-8859-15', warner=warn)
+        df = csv_to_polars(
+            md_path=md_path, encoding='iso-8859-15', warner=warn
+        )
         self.assertEqual(buf, [])
         # Check read *incorrectly* when latin9 specified
         self.assertNotEqual(df['sig'][0], '¤¦¨¼½¾')
@@ -453,6 +464,7 @@ class TestPolarsLoad(ReferenceTestCase):
         self.assertTrue(df.equals(rf))
         # self.assertDataFramesEqual(df, rf)
 
+
 #     def test_load_base_serial_explicit(self):
 #         # Bypass tdda serial and read metadata directly from file
 #         md_path = epath('base-csv-polars.serial')
@@ -525,7 +537,6 @@ class TestPolarsLoad(ReferenceTestCase):
 
 #                         create_temporaries=False)
 #         self.assertFalse(diffs)  # Actually reads it correctly!
-
 
 
 # class TestCSVWTests(ReferenceTestCase):
@@ -961,7 +972,6 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertDataFrameCorrect(df, resultspath)
 
 
-
 #     def _test_csv_json(self, stem, upgrade_possible_ints=False,
 #                        to_ints=None):
 #         csvpath, resultspath = self.csv_json_paths(stem)
@@ -969,7 +979,6 @@ class TestPolarsLoad(ReferenceTestCase):
 #         fields = fields_from(csvpath)
 #         ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
 #         #self.assertDataFramesEqual(df, ref_df)
-
 
 
 # class TestPolarsFlatFileRoundTrips(ReferenceTestCase):
@@ -1022,7 +1031,6 @@ class TestPolarsLoad(ReferenceTestCase):
 #         # Right metadata written
 #         self.assertFileCorrect(md_path, tdpath('tiny1cd3.serial'),
 #                                ignore_patterns=TDDASERIAL_PATTERNS)
-
 
 
 #         polars_df_to_csv(df, csv_path, md_path, flavours=['tdda.serial'])
@@ -1319,7 +1327,6 @@ class TestPolarsLoad(ReferenceTestCase):
 #     })
 
 
-
 # def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
 #     with open(path) as f:
 #         d = json.load(f)
@@ -1476,8 +1483,6 @@ class TestPolarsLoad(ReferenceTestCase):
 #     return d[name[:1].lower()]
 
 
-
-
 # def remove_common_key_vals(left, right):
 #     for k in list(left.keys()):
 #         if left[k] == right[k]:
@@ -1490,8 +1495,6 @@ def print_df(df):
         cfg.set_tbl_cols(-1)
         cfg.set_tbl_rows(-1)
         print(df)
-
-
 
 
 if __name__ == '__main__':

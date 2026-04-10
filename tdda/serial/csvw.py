@@ -16,7 +16,6 @@ from tdda.serial.utils import CSVW_MD_RE
 from tdda.utils import nvl, listify, warn, error
 
 
-
 # From https://w3c.github.io/csvw/primer/#datatypes
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
 
@@ -27,55 +26,42 @@ CSVW_TYPE_TO_FIELDTYPE = {
     'number': FieldType.NUMBER,
     'datetime': FieldType.DATETIME,
     'date': FieldType.DATE,
-
     'double': FieldType.NUMBER,
     'decimal': FieldType.NUMBER,
     'float': FieldType.NUMBER,
-
     'long': FieldType.INT,
     'int': FieldType.INT,
     'short': FieldType.INT,
     'byte': FieldType.INT,
-
     'unsignedLong': FieldType.INT,
     'unsignedInt': FieldType.INT,
     'unsignedShort': FieldType.INT,
     'unsignedByte': FieldType.INT,
-
     'nonNegativeInteger': FieldType.INT,
     'nonPositiveInteger': FieldType.INT,
     'negativeInteger': FieldType.INT,
     'positiveInteger': FieldType.INT,
-
     'normalizedString': FieldType.STRING,
     'anyURI': FieldType.STRING,
     'token': FieldType.STRING,
     'language': FieldType.STRING,
     'Name': FieldType.STRING,
     'NMTOKEN': FieldType.STRING,
-
     'xml': FieldType.STRING,
     'html': FieldType.STRING,
     'json': FieldType.STRING,
-
     'dateTime': 'datetime',
-
     # Read as strings for now
-
     'base64Binary': FieldType.STRING,
     'binary': FieldType.STRING,
     'hexBinary': FieldType.STRING,
-
     'anyAtomicType': FieldType.STRING,
     'dateTimeStamp': FieldType.STRING,  # with timezone
-
     'duration': FieldType.STRING,
     'dayTimeDuration': FieldType.STRING,
     'yearMonthDuration': FieldType.STRING,
     'time': FieldType.STRING,
-
     'QName': FieldType.STRING,
-
     'gDay': FieldType.STRING,
     'gMonth': FieldType.STRING,
     'gMonthDay': FieldType.STRING,
@@ -100,7 +86,6 @@ class CSVW:
     CONTEXT = 'http://www.w3.org/ns/csvw'
 
 
-
 class CSVWMetadata(SerialMetadata):
     """
     Subclass of SerialMetadata specifically for CSVW Metadata provided
@@ -123,8 +108,16 @@ class CSVWMetadata(SerialMetadata):
                         while reading the CSVW information
 
     """
-    def __init__(self, spec=None, extensions=False, table_number=None,
-                 for_table_name=None, url=None, verbosity=2):
+
+    def __init__(
+        self,
+        spec=None,
+        extensions=False,
+        table_number=None,
+        for_table_name=None,
+        url=None,
+        verbosity=2,
+    ):
         super().__init__(verbosity=verbosity)
         self._url = url
         self._csvw_base_url = None
@@ -175,8 +168,9 @@ class CSVWMetadata(SerialMetadata):
     def field_to_csvw_json(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
-        self.set_if_non_null(d, 'datatype',
-                             FIELDTYPE_TO_CSVW.get(field.fieldtype))
+        self.set_if_non_null(
+            d, 'datatype', FIELDTYPE_TO_CSVW.get(field.fieldtype)
+        )
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
         if fmt is None and field.fieldtype.startswith('date'):
@@ -195,8 +189,9 @@ class CSVWMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'dc:description', 'description')
         return d
 
-    def to_csvw_json(self, csvfile=None, lang=None, indent=4,
-                     resource_type=None):
+    def to_csvw_json(
+        self, csvfile=None, lang=None, indent=4, resource_type=None
+    ):
         csvfile = nvl(csvfile, nvl(self._url, 'data.csv'))
         dialect = {}
 
@@ -206,16 +201,16 @@ class CSVWMetadata(SerialMetadata):
             ('dc:title', 'title'),
         ):
             self.set_if_attr_non_null(tableSchema, key, attr)
-        columns = [
-            self.field_to_csvw_json(field) for field in self.fields
-        ]
+        columns = [self.field_to_csvw_json(field) for field in self.fields]
         if columns:
             tableSchema['columns'] = columns
 
         self._null = self.single_null_indicator()
-        self._trim = (    # can be 'true', 'false', 'start' or 'end' in csvw
-            'true' if self.trim == True else
-            'false' if self.trim == False
+        self._trim = (  # can be 'true', 'false', 'start' or 'end' in csvw
+            'true'
+            if self.trim == True
+            else 'false'
+            if self.trim == False
             else self.trim
         )
         for key, attr in (
@@ -234,15 +229,11 @@ class CSVWMetadata(SerialMetadata):
             ('trim', '_trim'),
             # 'date_format'
             # 'true_value'
-
             # 'false_value'
         ):
             self.set_if_attr_non_null(dialect, key, attr)
 
-        context = (
-            [CSVW.CONTEXT, {'@language': lang}] if lang
-            else CSVW.CONTEXT
-        )
+        context = [CSVW.CONTEXT, {'@language': lang}] if lang else CSVW.CONTEXT
         d = {
             '@context': context,
             'dc:conformsTo': 'data-package',
@@ -307,9 +298,11 @@ class CSVWMetadata(SerialMetadata):
             tables = self._csvw.get('tables')
             if tables:
                 N = self.n_tables = len(tables)
-                if (N > 1
-                        and self.table_number is None
-                        and not self.for_table_name):
+                if (
+                    N > 1
+                    and self.table_number is None
+                    and not self.for_table_name
+                ):
                     self.warn(f'Only processing first table of {N}.')
                 name = self.for_table_name
                 if name:
@@ -342,8 +335,9 @@ class CSVWMetadata(SerialMetadata):
             )
 
         if type(self._schema) is str:
-            path = os.path.join(nvl(self._metadata_source_dir, ''),
-                                 self._schema)
+            path = os.path.join(
+                nvl(self._metadata_source_dir, ''), self._schema
+            )
             with open(path) as f:
                 self._schema = json.load(f)
 
@@ -351,9 +345,11 @@ class CSVWMetadata(SerialMetadata):
             try:
                 self._columns = self._schema['columns']
             except:
-                raise KeyError('Could not find columns information in CSVW'
-                               ' file at '
-                               "['tables'][0]['tableSchema']['columns'].")
+                raise KeyError(
+                    'Could not find columns information in CSVW'
+                    ' file at '
+                    "['tables'][0]['tableSchema']['columns']."
+                )
         else:
             self._columns = []
 
@@ -381,19 +377,22 @@ class CSVWMetadata(SerialMetadata):
                 if len(value) == 2:
                     properties = value[1]
             else:
-                self.warn('@context can only have 1 or 2 values when a list. '
-                          f'{len(value)} found')
+                self.warn(
+                    '@context can only have 1 or 2 values when a list. '
+                    f'{len(value)} found'
+                )
         else:
             context = value
 
         if context == CSVW.CONTEXT:
             self._metadata_source = context
         else:
-            self.warn('Unexpected value "{context}" for purported CSVW source.')
+            self.warn(
+                'Unexpected value "{context}" for purported CSVW source.'
+            )
         if properties:
             self._csvw_base_url = properties.get('@base')
             self._csvw_language = properties.get('@language')
-
 
     def get_url(self):
         self._url = self._csvw.get('url') or (
@@ -401,9 +400,11 @@ class CSVWMetadata(SerialMetadata):
         )
         if not self._url:
             self.warn('Mandatory property "url" not found in CSVW file.')
-        if (getattr(self, '_metadata_source_dir', None)
-               and self._url
-               and not '://' in self._url):
+        if (
+            getattr(self, '_metadata_source_dir', None)
+            and self._url
+            and not '://' in self._url
+        ):
             self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
@@ -484,8 +485,7 @@ class CSVWMetadata(SerialMetadata):
         header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')
         self.header_row_count = (
-            0 if header == False
-            else nvl(header_row_count, 1)
+            0 if header == False else nvl(header_row_count, 1)
         )
 
         # Allowed to be a boolean or string value. If string:
@@ -493,13 +493,15 @@ class CSVWMetadata(SerialMetadata):
         # This standarizes to booeans if "true" or "false"
         self.trim = self.get_val(dialect, 'trim')
         if self.trim is not None:
-            if self.trim not in (True, False, "true", "false", "start", "end"):
-                self.warn(f'Illegal value "{self.trim}" for delect attribute '
-                          '"trim". Ignoring')
+            if self.trim not in (True, False, 'true', 'false', 'start', 'end'):
+                self.warn(
+                    f'Illegal value "{self.trim}" for delect attribute '
+                    '"trim". Ignoring'
+                )
                 self.trim = None
-        if self.trim == "true":
+        if self.trim == 'true':
             self.trim = True
-        elif self.trim == "false":
+        elif self.trim == 'false':
             self.trim = False
 
     def get_non_dialect_attrs(self):
@@ -508,7 +510,6 @@ class CSVWMetadata(SerialMetadata):
             self.null_indicator = nulls
 
     def get_fields_metadata(self):
-
         fields = self.fields  # empty dict
         for i, f in enumerate(self._columns, 1):
             name = f.get('name')
@@ -525,15 +526,15 @@ class CSVWMetadata(SerialMetadata):
 
             field = FieldMetadata(name)
             fields.append(field)
-            datatype = field.get_val(f, 'datatype')  #, missing=MISSING.ERROR)
+            datatype = field.get_val(f, 'datatype')  # , missing=MISSING.ERROR)
 
             fmt = None
             if datatype:
                 if isinstance(datatype, dict):
                     fmt = datatype.get('format')
                     fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(
-                                    datatype.get('base')
-                                )
+                        datatype.get('base')
+                    )
                 else:
                     fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(datatype)
                 field.fieldtype = fieldtype
@@ -545,13 +546,11 @@ class CSVWMetadata(SerialMetadata):
                 if fieldtype and fieldtype.startswith('date'):
                     self._csvw_date_format = fmt
                     fmt = csvw_date_format_to_serial(
-                        fmt,
-                        extensions=self._extensions
+                        fmt, extensions=self._extensions
                     )
                 field.format = fmt
             elif fieldtype and fieldtype.startswith('date'):
                 field.format = DateFormat.ISO8601_UNSPECIFIED
-
 
             titles = field.get_val(f, 'titles')
             if titles:
@@ -562,28 +561,22 @@ class CSVWMetadata(SerialMetadata):
                 elif type(titles) is str:
                     field.altnames = [titles]
                 else:
-                    self.warn(f'Did not understand value "{titles}"'
-                              f'of type "{type(titles)}" '
-                              f'for titles of column {name}; ignoring.')
+                    self.warn(
+                        f'Did not understand value "{titles}"'
+                        f'of type "{type(titles)}" '
+                        f'for titles of column {name}; ignoring.'
+                    )
             description = field.get_val(f, 'dc:description')
             if description:
                 field.description = description
 
     def choose_csv_from_csvw_name(self, csvw_name):
         sep = self.delimiter or ','
-        ext = {
-            ',': 'csv',
-            '\t': 'tsv',
-            '|': 'psv',
-            ';': 'ssv'
-        }.get(sep, 'txt')
+        ext = {',': 'csv', '\t': 'tsv', '|': 'psv', ';': 'ssv'}.get(sep, 'txt')
         base_name = os.path.basename(csvw_name)
         m = re.match(CSVW_MD_RE, base_name)
         stem = m.group(1) if m else os.path.splitext(base_name)[0]
         return f'{stem}.{ext}'
-
-
-
 
 
 def booleans_to_csvw(true_values, false_values):
@@ -601,10 +594,12 @@ class CSVWMultiMetadata:
         self.tables = [table]
         n_tables = table.n_tables
         if n_tables > 1:
-            self.tables.extend([
-                CSVWMetadata(spec, extensions, table_number=i)
-                for i in range(1, n_tables + 1)
-            ])
+            self.tables.extend(
+                [
+                    CSVWMetadata(spec, extensions, table_number=i)
+                    for i in range(1, n_tables + 1)
+                ]
+            )
 
 
 def csvw_date_format_to_serial(fmt, extensions=False):
@@ -616,17 +611,17 @@ def csvw_date_format_to_serial(fmt, extensions=False):
         return fmt
     outfmt = (
         fmt.replace('dd', 'd')
-           .replace('d', '%d')
-           .replace('MM', 'M')
-           .replace('M', '%m')
-           .replace('yyyy', '%Y')
-           .replace('yy', '%y')
-           .replace('HH', '%H')
-           .replace('mm', '%M')
-           .replace('SSS', 'S')
-           .replace('SS', 'S')
-           .replace('S', '%f')
-           .replace('ss', '%S')
+        .replace('d', '%d')
+        .replace('MM', 'M')
+        .replace('M', '%m')
+        .replace('yyyy', '%Y')
+        .replace('yy', '%y')
+        .replace('HH', '%H')
+        .replace('mm', '%M')
+        .replace('SSS', 'S')
+        .replace('SS', 'S')
+        .replace('S', '%f')
+        .replace('ss', '%S')
     )
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
@@ -641,20 +636,22 @@ def csvw_date_format_to_serial(fmt, extensions=False):
 def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
     if fmt == DateFormat.ISO8601_UNSPECIFIED:
         return (
-            'yyyy-mm-dd' if fieldtype == 'date' else
-            'yyyy-mm-ddTHH:MM:SS+ZZ:zz' if fieldtype == 'datetime_tz' else
-            'yyyy-mm-ddTHH:MM:SS'
+            'yyyy-mm-dd'
+            if fieldtype == 'date'
+            else 'yyyy-mm-ddTHH:MM:SS+ZZ:zz'
+            if fieldtype == 'datetime_tz'
+            else 'yyyy-mm-ddTHH:MM:SS'
         )
 
     outfmt = (
         fmt.replace('%S', 'ss')
-           .replace('%f', 'SS')
-           .replace('%M', 'mm')
-           .replace('%H', 'HH')
-           .replace('%y', 'yy')
-           .replace('%Y', 'yyyy')
-           .replace('%m', 'MM')
-           .replace('%d', 'dd')
+        .replace('%f', 'SS')
+        .replace('%M', 'mm')
+        .replace('%H', 'HH')
+        .replace('%y', 'yy')
+        .replace('%Y', 'yyyy')
+        .replace('%m', 'MM')
+        .replace('%d', 'dd')
     )
     if extensions:
         outfmt = outfmt.replace('%:z', '+ZZ:zz')
@@ -674,5 +671,3 @@ def serial_to_csvw(md, name='data.csv'):
     csvw = CSVWMetadata(url=name)
     csvw.__dict__.update(md.__dict__)
     return csvw
-
-

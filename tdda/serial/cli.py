@@ -5,7 +5,7 @@ import sys
 from tdda.serial.pandasio import gen_pandas_kwargs
 
 
-USAGE = '''
+USAGE = """
 python cli.py [[foo-metadata.json] [output.py]]
 
 python cli.py
@@ -19,7 +19,7 @@ python cli.py foo-metadata.json foo.py
        writes foo.py, defining a dictionary with kwargs
        for pandas read_csv correspending to foo-metadata.json
 
-'''
+"""
 
 
 def fmt(d):

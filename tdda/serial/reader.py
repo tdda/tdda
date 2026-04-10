@@ -19,20 +19,25 @@ from tdda.serial.metadata import (
 from tdda.serial.csvw import CSVWMetadata, CSVW
 from tdda.serial.frictionless import (
     FrictionlessMetadata,
-    FRICTIONLESS_TELL_KEYS
+    FRICTIONLESS_TELL_KEYS,
 )
 
 from tdda.serial.utils import (
     find_associated_metadata_file,
-    find_metadata_type_from_path
+    find_metadata_type_from_path,
 )
 from tdda.state import get_config
 from tdda.utils import error, is_sequence, tdda_path_info
 
 
-def load_metadata(path, md_file_type=None, table_number=None,
-                  for_table_name=None,
-                  preferred_serial_flavour=None, verbosity=VERBOSITY):
+def load_metadata(
+    path,
+    md_file_type=None,
+    table_number=None,
+    for_table_name=None,
+    preferred_serial_flavour=None,
+    verbosity=VERBOSITY,
+):
     """
     Attempt to load metadata from path given.
 
@@ -84,13 +89,19 @@ def load_metadata(path, md_file_type=None, table_number=None,
         if kind == TDDASERIAL.key:
             md = SerialMetadata(**md)
         elif kind == 'csvw':
-            md = CSVWMetadata(path, table_number=table_number,
-                              for_table_name=for_table_name,
-                              verbosity=verbosity)
+            md = CSVWMetadata(
+                path,
+                table_number=table_number,
+                for_table_name=for_table_name,
+                verbosity=verbosity,
+            )
         elif kind == 'frictionless':
-            md = FrictionlessMetadata(path, table_number=table_number,
-                                      for_table_name=for_table_name,
-                                      verbosity=verbosity)
+            md = FrictionlessMetadata(
+                path,
+                table_number=table_number,
+                for_table_name=for_table_name,
+                verbosity=verbosity,
+            )
         elif kind:
             md = SerialMetadata(libs={kind: md})
         else:
@@ -101,27 +112,43 @@ def load_metadata(path, md_file_type=None, table_number=None,
                 else:
                     error(f'Unrecognized metadata content in {path}')
             if kind == 'csvw':
-                md = CSVWMetadata(path, table_number=table_number,
-                                  for_table_name=for_table_name,
-                                  verbosity=verbosity)
+                md = CSVWMetadata(
+                    path,
+                    table_number=table_number,
+                    for_table_name=for_table_name,
+                    verbosity=verbosity,
+                )
 
     elif ext == '.yaml':
-        md = FrictionlessMetadata(path, table_number=table_number,
-                                  for_table_name=for_table_name,
-                                  verbosity=verbosity)
+        md = FrictionlessMetadata(
+            path,
+            table_number=table_number,
+            for_table_name=for_table_name,
+            verbosity=verbosity,
+        )
         kind = 'frictionless'
     else:
-        error(f'Unexpected file extension {ext} for metadata '
-              f'file.\nExpected .serial, .json, or .yaml.')
+        error(
+            f'Unexpected file extension {ext} for metadata '
+            f'file.\nExpected .serial, .json, or .yaml.'
+        )
     if md_file_type and kind != md_file_type:
         error(f'Expected {md_file_type} file; found {kind} file.')
     return md
 
 
-def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
-                  table_number=None, use_table_name=None,
-                  preferred=TDDASERIAL.key, config=None,
-                  verbosity=VERBOSITY):
+def _get_metadata(
+    rw,
+    path,
+    md_path=None,
+    md_file_type=None,
+    find_md=False,
+    table_number=None,
+    use_table_name=None,
+    preferred=TDDASERIAL.key,
+    config=None,
+    verbosity=VERBOSITY,
+):
     """
     Internal helper function for csv read and write functions.
     Users should normally use get_metadata_for_reader or
@@ -146,10 +173,13 @@ def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
         if md_path is None:
             error('Must provide path or md_path')
         else:
-            md = load_metadata(md_path, md_file_type=md_file_type,
-                               table_number=table_number,
-                               for_table_name=for_table_name,
-                               preferred_serial_flavour=preferred)
+            md = load_metadata(
+                md_path,
+                md_file_type=md_file_type,
+                table_number=table_number,
+                for_table_name=for_table_name,
+                preferred_serial_flavour=preferred,
+            )
             path = md._fullpath
             if path is None:
                 error('No data specified.')
@@ -163,47 +193,78 @@ def _get_metadata(rw, path, md_path=None, md_file_type=None, find_md=False,
             elif path is not None:
                 kind, _ = find_metadata_type_from_path(path)
                 if kind:
-                    md = load_metadata(path, md_file_type=md_file_type,
-                                       table_number=table_number,
-                                       for_table_name=for_table_name,
-                                       preferred_serial_flavour=preferred)
+                    md = load_metadata(
+                        path,
+                        md_file_type=md_file_type,
+                        table_number=table_number,
+                        for_table_name=for_table_name,
+                        preferred_serial_flavour=preferred,
+                    )
                     actual_path = getattr(md, '_fullpath', md.path)
                     if actual_path is None:
                         error('No data specified.')
-                    path, md_path, = actual_path, path
+                    (
+                        path,
+                        md_path,
+                    ) = actual_path, path
 
         else:
             s_config = get_config(config).serial
             md_path = s_config._md_inpath(path)
 
-
     if md is None and md_path is not None:
-        md = load_metadata(md_path, md_file_type=md_file_type,
-                           table_number=table_number,
-                           for_table_name=for_table_name, verbosity=verbosity)
+        md = load_metadata(
+            md_path,
+            md_file_type=md_file_type,
+            table_number=table_number,
+            for_table_name=for_table_name,
+            verbosity=verbosity,
+        )
     return md, path, md_path
 
 
-def get_metadata_for_reader(path, md_path=None, md_file_type=None,
-                            find_md=False,
-                            table_number=None, use_table_name=None,
-                            preferred=TDDASERIAL.key,
-                            verbosity=VERBOSITY):
-    return _get_metadata(rw='r', path=path, md_path=md_path,
-                         md_file_type=md_file_type, find_md=find_md,
-                         table_number=table_number,
-                         use_table_name=use_table_name,
-                         preferred=preferred, verbosity=verbosity)
+def get_metadata_for_reader(
+    path,
+    md_path=None,
+    md_file_type=None,
+    find_md=False,
+    table_number=None,
+    use_table_name=None,
+    preferred=TDDASERIAL.key,
+    verbosity=VERBOSITY,
+):
+    return _get_metadata(
+        rw='r',
+        path=path,
+        md_path=md_path,
+        md_file_type=md_file_type,
+        find_md=find_md,
+        table_number=table_number,
+        use_table_name=use_table_name,
+        preferred=preferred,
+        verbosity=verbosity,
+    )
 
 
-def get_metadata_for_writer(path, md_path=None, md_file_type=None,
-                            find_md=False,
-                            table_number=None, use_table_name=None,
-                            preferred=TDDASERIAL.key,
-                            verbosity=VERBOSITY):
-    return _get_metadata(rw='w', path=path, md_path=md_path,
-                         md_file_type=md_file_type, find_md=find_md,
-                         preferred=preferred, verbosity=verbosity)
+def get_metadata_for_writer(
+    path,
+    md_path=None,
+    md_file_type=None,
+    find_md=False,
+    table_number=None,
+    use_table_name=None,
+    preferred=TDDASERIAL.key,
+    verbosity=VERBOSITY,
+):
+    return _get_metadata(
+        rw='w',
+        path=path,
+        md_path=md_path,
+        md_file_type=md_file_type,
+        find_md=find_md,
+        preferred=preferred,
+        verbosity=verbosity,
+    )
 
 
 def find_metadata_kind(mds, preferred=None):
@@ -279,4 +340,3 @@ def has_csvw_context(json_path):
             if context[0] == CSVW.CONTEXT:
                 return True
     return None
-

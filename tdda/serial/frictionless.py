@@ -3,6 +3,7 @@ import os
 import re
 
 from yaml import load as yamlload, dump as yamldump
+
 try:
     from yaml import CLoader as YAMLLoader, CDumper as YAMLDumper
 except ImportError:
@@ -24,24 +25,19 @@ FRICTIONLESS_TELL_KEYS = ('package', 'resource', 'schema')
 FRICTIONLESS_TYPE_TO_FIELDTYPE = {
     'boolean': FieldType.BOOL,
     'integer': FieldType.INT,
-
     'string': FieldType.STRING,
     'number': FieldType.NUMBER,
-
     'datetime': FieldType.DATETIME,
     'date': FieldType.DATE,
-
     'time': FieldType.TIME,
-
-    'object': FieldType.STRING,     # JSON
+    'object': FieldType.STRING,  # JSON
     'year': FieldType.INT,
     'yearmonth': FieldType.STRING,  # YYYY-MM
-
     'duration': FieldType.STRING,
     'geopoint': FieldType.STRING,
     'geojson': FieldType.STRING,
     'any': FieldType.STRING,
-    'array': FieldType.STRING,      # JSON array
+    'array': FieldType.STRING,  # JSON array
 }
 
 
@@ -80,8 +76,15 @@ class FrictionlessMetadata(SerialMetadata):
                         while reading the Frictionless information
 
     """
-    def __init__(self, spec=None, extensions=False, table_number=None,
-                 for_table_name=None, verbosity=2):
+
+    def __init__(
+        self,
+        spec=None,
+        extensions=False,
+        table_number=None,
+        for_table_name=None,
+        verbosity=2,
+    ):
         super().__init__(verbosity=verbosity)
         self._url = None
         self._frictionless_base_url = None
@@ -126,27 +129,32 @@ class FrictionlessMetadata(SerialMetadata):
         self._table_name = r.get('name')  # really resource name. But...
         self.path = r.get('path')
         self._scheme = r.get('scheme')  # file
-        self._format = r.get('format') # csv
+        self._format = r.get('format')  # csv
         if self._format and self._format != 'csv':
-            warn(f'The format is "{self._format}"; expected "csv". '
-                 'Continuing.')
-        self._mediatype = r.get('mediaType')   # text/csv
+            warn(
+                f'The format is "{self._format}"; expected "csv". Continuing.'
+            )
+        self._mediatype = r.get('mediaType')  # text/csv
         if self._mediatype and self._mediatype != 'text/csv':
-            warn(f'The format is "{self._format}"; expected "text/csv". '
-                 'Continuing.')
+            warn(
+                f'The format is "{self._format}"; expected "text/csv". '
+                'Continuing.'
+            )
         self.encoding = r.get('encoding')
 
     def field_to_frictionless_dict(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
-        self.set_if_non_null(d, 'type',
-                             FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype))
+        self.set_if_non_null(
+            d, 'type', FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype)
+        )
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
         if fmt is None and field.fieldtype.startswith('date'):
             fmt = self.date_format
-            d['format'] = serial_date_format_to_frictionless(fmt,
-                                                             field.fieldtype)
+            d['format'] = serial_date_format_to_frictionless(
+                fmt, field.fieldtype
+            )
         elif field.true_values and field.false_values:
             d['trueValues'] = listify(field.true_values)
             d['falseValues'] = listify(field.false_values)
@@ -157,8 +165,9 @@ class FrictionlessMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'description', 'description')
         return d
 
-    def to_frictionless_dict(self, csvfile=None, lang=None,
-                             resource_type=None):
+    def to_frictionless_dict(
+        self, csvfile=None, lang=None, resource_type=None
+    ):
         csv = {}
         self.set_if_attr_non_null(csv, 'delimiter')
         self.set_if_attr_non_null(csv, 'quoteChar', 'quote_char')
@@ -202,12 +211,9 @@ class FrictionlessMetadata(SerialMetadata):
         if self.trim in (True, 'start'):
             schema['skipInitialSpace'], True
 
-
         d['schema'] = schema
         if resource_type == 'package':
-            d = {
-                'resources': [d]
-            }
+            d = {'resources': [d]}
         return d
 
     def write_frictionless(self, path, csvfile=None, indent=None, lang=None):
@@ -215,7 +221,6 @@ class FrictionlessMetadata(SerialMetadata):
             csvfile = self.choose_csv_from_frictionless_name(path)
         d = self.to_frictionless_dict(csvfile=csvfile, lang=lang)
         write_json_or_yaml(d, path, indent=indent)
-
 
     def set_if_attr_non_null(self, d, key, attribute=None):
         """
@@ -261,9 +266,11 @@ class FrictionlessMetadata(SerialMetadata):
             self._resources = resources = self._frictionless.get('resources')
             if self._resources:
                 N = self.n_resources = len(resources)
-                if (N > 1
-                        and self.table_number is None
-                        and not self.for_table_name):
+                if (
+                    N > 1
+                    and self.table_number is None
+                    and not self.for_table_name
+                ):
                     self.warn(f'Only processing first resource of {N}.')
                 name = self.for_table_name
                 if name:
@@ -294,8 +301,9 @@ class FrictionlessMetadata(SerialMetadata):
             error('Could not find schema.')
 
         if type(self._schema) is str:  # TODO
-            path = os.path.join(nvl(self._metadata_source_dir, ''),
-                                self._schema)
+            path = os.path.join(
+                nvl(self._metadata_source_dir, ''), self._schema
+            )
             self._schema = load_json_or_yaml(path)
 
         self._fields = self._schema.get('fields')
@@ -308,11 +316,12 @@ class FrictionlessMetadata(SerialMetadata):
             self.warn(
                 'Mandatory property "url" not found in Frictionless file.'
             )
-        if (getattr(self, '_metadata_source_dir', None)
-               and self._url
-               and not '://' in self._url):
-            self._fullpath = os.path.join(self._metadata_source_dir,
-                                          self._url)
+        if (
+            getattr(self, '_metadata_source_dir', None)
+            and self._url
+            and not '://' in self._url
+        ):
+            self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
         """
@@ -334,24 +343,22 @@ class FrictionlessMetadata(SerialMetadata):
         self.comment_char = dialect.get('commentChar')
         self.skip_blank_rows = dialect.get('skipBlankRows')
         self._comment_rows = dialect.get('commentRows')  # list of rows
-        self._descriptor = csv.get('descriptor')               # str|dict
-        self.delimiter = csv.get('delimiter')                  # str
-        self.line_terminator = csv.get('lineTerminator')       # ? str
-        self.quote_char = csv.get('quoteChar')                 # str
-        self.stutter_quotes = csv.get('doubleQuote')           # bool
-        self.escape_char = csv.get('escapeChar')               # str
-        self.null_sequence = csv.get('nullSequence')           # str
+        self._descriptor = csv.get('descriptor')  # str|dict
+        self.delimiter = csv.get('delimiter')  # str
+        self.line_terminator = csv.get('lineTerminator')  # ? str
+        self.quote_char = csv.get('quoteChar')  # str
+        self.stutter_quotes = csv.get('doubleQuote')  # bool
+        self.escape_char = csv.get('escapeChar')  # str
+        self.null_sequence = csv.get('nullSequence')  # str
         self.skip_initial_space = csv.get('skipInitialSpace')  # bool
-        self.comment_char = csv.get('commentChar')             # str
+        self.comment_char = csv.get('commentChar')  # str
 
         if self.null_sequence:  # don't understand what this is
             warn(f'*****\nNULL SEQUENCE FOUND: "{self.null_sequnce}"!!!\n****')
 
         self.header_row_count = (
-            0 if self.header == False
-            else nvl(self.header_row_count, 1)
+            0 if self.header == False else nvl(self.header_row_count, 1)
         )
-
 
     def get_schema_and_fields_metadata(self):
         fields = self._schema.get('fields') or []
@@ -388,9 +395,11 @@ class FrictionlessMetadata(SerialMetadata):
                 elif type(titles) is str:
                     altnames = [titles]
                 else:
-                    self.warn(f'Did not understand value "{titles}"'
-                              f'of type "{type(titles)}" '
-                              f'for titles of column {name}; ignoring.')
+                    self.warn(
+                        f'Did not understand value "{titles}"'
+                        f'of type "{type(titles)}" '
+                        f'for titles of column {name}; ignoring.'
+                    )
             description = f.get('dc:description')
             rdf_type = f.get('rdfType')
 
@@ -417,19 +426,11 @@ class FrictionlessMetadata(SerialMetadata):
 
     def choose_csv_from_frictionless_name(self, frictionless_name):
         sep = self.delimiter or ','
-        ext = {
-            ',': 'csv',
-            '\t': 'tsv',
-            '|': 'psv',
-            ';': 'ssv'
-        }.get(sep, 'txt')
+        ext = {',': 'csv', '\t': 'tsv', '|': 'psv', ';': 'ssv'}.get(sep, 'txt')
         base_name = os.path.basename(frictionless_name)
         m = re.match(FRICTIONLESS_MD_RE, base_name)
         stem = m.group(1) if m else os.path.splitext(base_name)[0]
         return f'{stem}.{ext}'
-
-
-
 
 
 def booleans_to_frictionless(true_values, false_values):
@@ -448,10 +449,12 @@ class FrictionlessMultiMetadata:
         self.tables = [table]
         n_tables = table.n_tables
         if n_tables > 1:
-            self.tables.extend([
-                FrictionlessMetadata(spec, extensions, table_number=i)
-                for i in range(1, n_tables + 1)
-            ])
+            self.tables.extend(
+                [
+                    FrictionlessMetadata(spec, extensions, table_number=i)
+                    for i in range(1, n_tables + 1)
+                ]
+            )
 
 
 def frictionless_date_format_to_serial(fmt, extensions=False):
@@ -463,17 +466,17 @@ def frictionless_date_format_to_serial(fmt, extensions=False):
         return fmt
     outfmt = (
         fmt.replace('dd', 'd')
-           .replace('d', '%d')
-           .replace('MM', 'M')
-           .replace('M', '%m')
-           .replace('yyyy', '%Y')
-           .replace('yy', '%y')
-           .replace('HH', '%H')
-           .replace('mm', '%M')
-           .replace('SSS', 'S')
-           .replace('SS', 'S')
-           .replace('S', '%f')
-           .replace('ss', '%S')
+        .replace('d', '%d')
+        .replace('MM', 'M')
+        .replace('M', '%m')
+        .replace('yyyy', '%Y')
+        .replace('yy', '%y')
+        .replace('HH', '%H')
+        .replace('mm', '%M')
+        .replace('SSS', 'S')
+        .replace('SS', 'S')
+        .replace('S', '%f')
+        .replace('ss', '%S')
     )
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
@@ -523,10 +526,15 @@ def load_json_or_yaml(path):
 def write_json_or_yaml(d, path, indent=None, verbose=False):
     with open(path, 'w') as f:
         if isyaml(path):
-            f.write(yamldump(d, default_flow_style=False,
-                    indent=nvl(indent, 2), sort_keys=False))
+            f.write(
+                yamldump(
+                    d,
+                    default_flow_style=False,
+                    indent=nvl(indent, 2),
+                    sort_keys=False,
+                )
+            )
         else:
             f.write(json.dumps(d, indent=nvl(indent, 4)))
     if verbose:
         print(f'Written {path}.')
-

@@ -26,11 +26,15 @@ from tdda.serial.metadata import (
 from tdda.serial.reader import (
     get_metadata_for_reader,
     get_metadata_for_writer,
-    set_delimiter_from_path
+    set_delimiter_from_path,
 )
 from tdda.serial.utils import (
-    find_associated_metadata_file, get_backend, OG_BACKEND, choose_md_path,
-    PYTHON_TEMPLATES, fill_template
+    find_associated_metadata_file,
+    get_backend,
+    OG_BACKEND,
+    choose_md_path,
+    PYTHON_TEMPLATES,
+    fill_template,
 )
 from tdda.utils import nvl, error, warn, listify, delistify, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
@@ -46,7 +50,7 @@ FIELDTYPE_TO_PANDAS_OLD_DTYPE = {
     'number': 'float',
     'float': 'float',
     'datetime': 'datetime',  # not passed to Pandas
-    'date': 'date',          # not passed to Pandas
+    'date': 'date',  # not passed to Pandas
 }
 
 
@@ -57,7 +61,7 @@ FIELDTYPE_TO_PANDAS_NULLABLE_DTYPE = {
     'number': 'Float64',
     'float': 'Float64',
     'datetime': 'datetime',  # not passed to Pandas
-    'date': 'date',          # not passed to Pandas
+    'date': 'date',  # not passed to Pandas
 }
 
 
@@ -79,7 +83,6 @@ FIELDTYPE_MAP_MAP = {
 }
 
 
-
 PANDAS_DTYPE_TO_FIELDTYPE = {
     'boolean': 'bool',
     'bool': 'bool',
@@ -92,11 +95,11 @@ PANDAS_DTYPE_TO_FIELDTYPE = {
     'float': 'float',
     'datetime': 'datetime',
     'date': 'date',
-#    'category' : ???,
-#    'period' : ???,
-#    'Spares' : ???,
-#    'interval' : ???,
-#    'Interval' : ???,
+    #    'category' : ???,
+    #    'period' : ???,
+    #    'Spares' : ???,
+    #    'interval' : ???,
+    #    'Interval' : ???,
 }
 
 
@@ -161,8 +164,9 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
         return md.libs[PANDAS.read_key]
     kw = to_common_pandas_rw_args(md)
     date_fields = {
-        f.name: f for f in md.fields
-                if f.fieldtype and f.fieldtype.startswith('date')
+        f.name: f
+        for f in md.fields
+        if f.fieldtype and f.fieldtype.startswith('date')
     }
     dtypes = {
         f.name: serial_type_to_pandas_dtype(f.fieldtype, backend)
@@ -171,8 +175,7 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     kw['dtype'] = {
         name: dtype
         for name, dtype in dtypes.items()
-        if name not in date_fields
-        and dtype is not None
+        if name not in date_fields and dtype is not None
     } or None
     dfmt = md.date_format
     if any(v.format for v in date_fields.values()) or dfmt:
@@ -208,8 +211,10 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
                 trues.add(parts[0])
                 falses.add(parts[1])
             else:
-                print(f'*** Warning: Boolean specification {b} not understood;'
-                       ' ignoring')
+                print(
+                    f'*** Warning: Boolean specification {b} not understood;'
+                    ' ignoring'
+                )
             if trues.intersection(falses):
                 print(f'*** Conflicting values for booleans.')
             else:
@@ -222,9 +227,9 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     fields = []
     for fmd in md.fields:
         if fmd.true_values and fmd.fieldtype.lower().startswith('bool'):
-             trues.update(fmd.true_values)
+            trues.update(fmd.true_values)
         if fmd.false_values and fmd.fieldtype.lower().startswith('bool'):
-             falses.update(fmd.false_values)
+            falses.update(fmd.false_values)
     if any(f.name != f.csvname for f in md.fields):
         kw['names'] = [f.name for f in md.fields]
         kw['header'] = 0
@@ -237,10 +242,11 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
         (trues or falses)
         and backend == 'pyarrow'
         and any(v == 'bool[pyarrow]' for v in dtypes.values())
-   ):
+    ):
         Warn(
-           'PyArrow backend does not understand alternate booleans.\n'
-           'If they are really present, you may have to read as strings.')
+            'PyArrow backend does not understand alternate booleans.\n'
+            'If they are really present, you may have to read as strings.'
+        )
     if dtypes:
         kw['dtype'] = dtypes
     if date_formats:
@@ -255,8 +261,9 @@ def serial_to_pandas_write_csv_args(md, backend=None, config=None):
         return md.libs[PANDAS.write_key]
 
     kw = to_common_pandas_rw_args(md)
-    kw['date_format'] = to_pandas_date_format(md.single_date_format(),
-                                               for_write=True)
+    kw['date_format'] = to_pandas_date_format(
+        md.single_date_format(), for_write=True
+    )
 
     date_fields = [f for f in md.fields if f.fieldtype.startswith('date')]
     if date_fields:
@@ -334,8 +341,11 @@ def pandas_read_csv_to_serial(params, backend=None, warner=None, config=None):
         if has_names or type_ or fmt:
             fields.append(
                 FieldMetadata(
-                    name, fieldtype=type_, format=fmt,
-                    true_values=true_values, false_values=false_values
+                    name,
+                    fieldtype=type_,
+                    format=fmt,
+                    true_values=true_values,
+                    false_values=false_values,
                 )
             )
 
@@ -343,10 +353,7 @@ def pandas_read_csv_to_serial(params, backend=None, warner=None, config=None):
         # Names were not provided as list.
         # Need to turn fields into dictionary so as not to assume
         # it is complete
-        fields = {
-            field.name: field
-            for field in fields
-        }
+        fields = {field.name: field for field in fields}
     if fields:
         kw['fields'] = fields
     return kw
@@ -433,17 +440,17 @@ def pandas_write_to_read_params(df, warner=None, **kw):
     }
     idx = kw.get('index')
     if idx is None or idx == True:
-        d['index_col'] = 0       # Use column 0 and index
+        d['index_col'] = 0  # Use column 0 and index
     else:
-        d['index_col'] = None   # Do not use any column as index
-                                 #
-                                 # Why yes, in Python 0 == False == 0
-                                 # So Pandas must be checking the type
-                                 # or using is for the comparison
-                                 # or something.
-                                 #
-                                 # Yes, this is a little bit crazy,
-                                 # and a big bit confusing.
+        d['index_col'] = None  # Do not use any column as index
+        #
+        # Why yes, in Python 0 == False == 0
+        # So Pandas must be checking the type
+        # or using is for the comparison
+        # or something.
+        #
+        # Yes, this is a little bit crazy,
+        # and a big bit confusing.
 
     typemap = {}
     dts = []
@@ -503,10 +510,7 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
     Returns:
         SerialMetadata object
     """
-    fields = [
-        pandas_col_to_field_metadata(df[c])
-        for c in df
-    ]
+    fields = [pandas_col_to_field_metadata(df[c]) for c in df]
     idx = kw.get('index')
     if idx != False:  # will write index
         dtype = df.index.dtype
@@ -525,32 +529,39 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
         flavours = [TDDASERIAL.key]  # , PANDAS.write_key, PANDAS.read_key]
     if TDDASERIAL.key in flavours:
         md = SerialMetadata(
-                   fields,
-                   # path=path,
-                   encoding=kw.get('encoding', Defaults.ENCODING),
-                   delimiter=kw.get('sep', Defaults.DELIMITER),
-                   quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
-                   escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
-                   null_indicator=kw.get('na_rep',
-                       delistify(Defaults.NULL_INDICATOR)),
-                   header_row_count=header_row_count,
-                   date_format=kw.get('date_format',
-                       DateFormat.ISO8601_UNSPECIFIED
-                       if any(f.fieldtype in (FieldType.DATE, FieldType.DATETIME,
-                                              FieldType.DATETIME_WITH_TIMEZONE,
-                                              FieldType.TIME, FieldType.ISO8601)
-                              for f in fields)
-                       else None),
-             )
+            fields,
+            # path=path,
+            encoding=kw.get('encoding', Defaults.ENCODING),
+            delimiter=kw.get('sep', Defaults.DELIMITER),
+            quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
+            escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
+            null_indicator=kw.get(
+                'na_rep', delistify(Defaults.NULL_INDICATOR)
+            ),
+            header_row_count=header_row_count,
+            date_format=kw.get(
+                'date_format',
+                DateFormat.ISO8601_UNSPECIFIED
+                if any(
+                    f.fieldtype
+                    in (
+                        FieldType.DATE,
+                        FieldType.DATETIME,
+                        FieldType.DATETIME_WITH_TIMEZONE,
+                        FieldType.TIME,
+                        FieldType.ISO8601,
+                    )
+                    for f in fields
+                )
+                else None,
+            ),
+        )
     else:
         md = SerialMetadata()
 
     if PANDAS.write_key in flavours:
         # literally the parameters passed in
-        lib_params = {
-            k: repr(v)
-            for k, v in kw.items()
-        }
+        lib_params = {k: repr(v) for k, v in kw.items()}
         md.libs[PANDAS.write_key] = lib_params
 
     if PANDAS.read_key in flavours:
@@ -563,8 +574,9 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
     return md
 
 
-def pandas_col_to_field_metadata(field, fieldtype=None,
-                                 fmt=None, backend=None):
+def pandas_col_to_field_metadata(
+    field, fieldtype=None, fmt=None, backend=None
+):
     """
     Produces a FieldMetadata object for the pandas series provided
     in field.
@@ -612,9 +624,12 @@ def yn2bool(v):
     Otherwise return None
     """
     return (
-        None if pd.isnull(v)
-        else True if v.lower().startswith('y')
-        else False if v.lower().startswith('n')
+        None
+        if pd.isnull(v)
+        else True
+        if v.lower().startswith('y')
+        else False
+        if v.lower().startswith('n')
         else None
     )
 
@@ -656,14 +671,24 @@ def pandas_date_format_to_serial(fmt):
         return fmt
 
 
-
-def csv_to_pandas(path=None, md_path=None, md_file_type=None,
-                  find_md=False, backend=None,
-                  upgrade_types=True, upgrade_possible_ints=False,
-                  return_md=False, table_number=None, use_table_name=False,
-                  preferred=None, verbosity=VERBOSITY,
-                  infer_datetime_formats=False, warner=None,
-                  config=None, **kw):
+def csv_to_pandas(
+    path=None,
+    md_path=None,
+    md_file_type=None,
+    find_md=False,
+    backend=None,
+    upgrade_types=True,
+    upgrade_possible_ints=False,
+    return_md=False,
+    table_number=None,
+    use_table_name=False,
+    preferred=None,
+    verbosity=VERBOSITY,
+    infer_datetime_formats=False,
+    warner=None,
+    config=None,
+    **kw,
+):
     """
     Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
     and extra metadata.
@@ -728,16 +753,20 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
                 metadata file.
     """
     md, path, md_path = get_metadata_for_reader(
-         path=path, md_path=md_path, md_file_type=md_file_type,
-         find_md=find_md, table_number=table_number,
-         use_table_name=use_table_name,
-         preferred=preferred or 'pandas.read_csv',
-         verbosity=verbosity
+        path=path,
+        md_path=md_path,
+        md_file_type=md_file_type,
+        find_md=find_md,
+        table_number=table_number,
+        use_table_name=use_table_name,
+        preferred=preferred or 'pandas.read_csv',
+        verbosity=verbosity,
     )
     backend = get_backend(backend, config)
     if md:
-        md_kw = serial_to_pandas_read_csv_args(md, backend=backend,
-                                               warner=warner)
+        md_kw = serial_to_pandas_read_csv_args(
+            md, backend=backend, warner=warner
+        )
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -780,14 +809,15 @@ def csv_to_pandas(path=None, md_path=None, md_file_type=None,
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
-def serial_to_pandas_read_csv_python(md, backend=None, warner=None,
-                                     config=None):
+def serial_to_pandas_read_csv_python(
+    md, backend=None, warner=None, config=None
+):
     backend = get_backend(backend, config)
     kw = serial_to_pandas_read_csv_args(md, backend=backend, warner=warner)
-        # if 'dtype_backend' not in kw:
-        #     backend = get_backend(backend)
-        #     if backend != OG_BACKEND:
-        #        kw = {'dtype_backend': backend}
+    # if 'dtype_backend' not in kw:
+    #     backend = get_backend(backend)
+    #     if backend != OG_BACKEND:
+    #        kw = {'dtype_backend': backend}
     if not md and 'backend' not in kw:
         backend = get_backend(backend)
         if backend and backend != OG_BACKEND:
@@ -795,17 +825,20 @@ def serial_to_pandas_read_csv_python(md, backend=None, warner=None,
     return fill_template(PYTHON_TEMPLATES.PANDAS_READ, kw)
 
 
-def pandas_to_csv(df, path=None,
-                  md_inpath=None,
-                  md_outpath=None,
-                  auto_md_inpath=False,
-                  auto_md_outpath=False,
-                  flavour=None,
-                  preferred_in_flavour=None,
-                  in_table_number=None,
-                  find_safe_null=False,
-                  warner=None,
-                  **kw_overrides):
+def pandas_to_csv(
+    df,
+    path=None,
+    md_inpath=None,
+    md_outpath=None,
+    auto_md_inpath=False,
+    auto_md_outpath=False,
+    flavour=None,
+    preferred_in_flavour=None,
+    in_table_number=None,
+    find_safe_null=False,
+    warner=None,
+    **kw_overrides,
+):
     """
     Write pandas dataframe provided to flat file to the path or buffer
     provided with options to use a tdda serial file to specify the format
@@ -867,9 +900,10 @@ def pandas_to_csv(df, path=None,
     """
     Warn = nvl(warner, warn)
     md_in, path, md_inpath = get_metadata_for_writer(
-         path=path, md_path=md_inpath,
-         find_md=auto_md_inpath,
-         preferred=preferred_in_flavour or 'pandas.write_csv'
+        path=path,
+        md_path=md_inpath,
+        find_md=auto_md_inpath,
+        preferred=preferred_in_flavour or 'pandas.write_csv',
     )
 
     if md_in:
@@ -884,9 +918,10 @@ def pandas_to_csv(df, path=None,
         null = find_safe_null_rep(df, preferred=overrides.get('na_rep'))
         kw['na_rep'] = null
         if specified_null is not None and spec != null:
-            Warn(f'Specified null rep "{spec}" was not safe. '
-                 f'Using "{null}".\n(Safe null rep was requested.)')
-
+            Warn(
+                f'Specified null rep "{spec}" was not safe. '
+                f'Using "{null}".\n(Safe null rep was requested.)'
+            )
 
     kw.update(kw_overrides)  # overrides passed in
 
@@ -896,9 +931,9 @@ def pandas_to_csv(df, path=None,
     if auto_md_outpath and not md_outpath:
         md_outpath = choose_md_path(path, flavour)
     if md_outpath:
-        md_out = pandas_df_to_metadata(df, outpath=md_outpath,
-                                       flavour=flavour,
-                                       **kw)
+        md_out = pandas_df_to_metadata(
+            df, outpath=md_outpath, flavour=flavour, **kw
+        )
 
     return WriteInfo(path, md_outpath, md_inpath, kw)
 
@@ -916,7 +951,7 @@ def poss_upgrade_to_int(df, name):
                 df[name] = int_col
         else:
             int_col = field.astype('int')
-            n_same = sum(int_col== field)
+            n_same = sum(int_col == field)
             if n_same == field.shape[0]:
                 # no floats have fractional parts
                 df[name] = int_col

@@ -11,5 +11,3 @@ class TDDASERIAL:
     writer = f'tdda.serial-{version}'
     URI = URI.TDDASERIAL
     format = f'{URI}/{version}'
-
-

@@ -12,7 +12,6 @@ BACKEND_MAP = {
     'original': 'original',
     'numpy_nullable': 'numpy_nullable',
     'pyarrow': 'pyarrow',
-
     'o': 'original',
     'n': 'numpy_nullable',
     'a': 'pyarrow',
@@ -30,18 +29,22 @@ METADATA_STYLE_MAP = {
 }
 
 METADATA_STYLES = (
-    (('-metadata',
-      '-csvmetadata',
-      '-csv-metadata',
-      '.csvmetadata',
-      '.csv-metadata',),
-     ('.json',)),
-    (('.schema', '.resource', '.package'), ('.json', '.yaml'))
+    (
+        (
+            '-metadata',
+            '-csvmetadata',
+            '-csv-metadata',
+            '.csvmetadata',
+            '.csv-metadata',
+        ),
+        ('.json',),
+    ),
+    (('.schema', '.resource', '.package'), ('.json', '.yaml')),
 )
 
 
 class PYTHON_TEMPLATES:
-    PANDAS_READ = '''
+    PANDAS_READ = """
 import pandas as pd
 
 def read_data(inpath):
@@ -50,9 +53,9 @@ def read_data(inpath):
         %s
     )
 
-'''
+"""
 
-    POLARS_READ = '''
+    POLARS_READ = """
 import polars as pl
 
 def read_data(inpath):
@@ -61,7 +64,7 @@ def read_data(inpath):
         %s
     )
 
-'''
+"""
 
 
 def find_metadata_type_from_path(path):
@@ -101,7 +104,7 @@ def find_associated_metadata_file(path):
         if os.path.exists(md_path):
             return md_path
 
-    for (suffixes, exts) in METADATA_STYLES:
+    for suffixes, exts in METADATA_STYLES:
         for suffix in suffixes:
             for ext in exts:
                 md_path = pathstem + suffix + ext
@@ -115,8 +118,10 @@ def get_backend(backend, config):
         c = get_config(config)
         backend = c.get('pandas_backend')
     if backend not in BACKEND_MAP:
-        error(f'Pandas backend {backend} unknown.\n'
-              f'Should be one of: {" ".join(BACKENDS)}.')
+        error(
+            f'Pandas backend {backend} unknown.\n'
+            f'Should be one of: {" ".join(BACKENDS)}.'
+        )
     return BACKEND_MAP[backend]
 
 
@@ -134,16 +139,18 @@ def fill_template(template, kw, flavour=None, dtypes=None):
             prefix = ''
             if flavour == 'polars' and dtypes:
                 vals = list(dtypes.values())
-                if any (v in vals for v in x.values()):
+                if any(v in vals for v in x.values()):
                     prefix = 'pl.'
-            pairs = joint.join(f'{repr(k)}: {prefix}{repr(v)}'
-                               for k, v in x.items())
+            pairs = joint.join(
+                f'{repr(k)}: {prefix}{repr(v)}' for k, v in x.items()
+            )
             return '{\n%s%s\n%s}' % (s12, pairs, s8)
         elif isinstance(x, list) and len(x) > 1:
             L = joint.join(f'{repr(v)}' for v in x)
             return '[\n%s%s\n%s]' % (s12, L, s8)
         else:
             return repr(x)
+
     args = ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
     return (template % args).lstrip()
 
@@ -174,4 +181,3 @@ def dict_max_items(d):
         return d
     m = max(d.values())
     return {k: v for k, v in d.items() if v == m}
-

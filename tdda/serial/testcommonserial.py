@@ -6,13 +6,19 @@ import tempfile
 from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.serial.metadata import (
-    RE_ISO8601, URI, SerialMetadata, FieldMetadata,
-    DateFormat, NAMED_FORMAT_TO_STRFTIME, UNSPECIFIED_NAMED_FORMATS,
-    ISO8601_NAMED_FORMATS, is_iso8601_format
+    RE_ISO8601,
+    URI,
+    SerialMetadata,
+    FieldMetadata,
+    DateFormat,
+    NAMED_FORMAT_TO_STRFTIME,
+    ISO8601_NAMED_FORMATS,
+    is_iso8601_format,
 )
 from tdda.serial.csvw import csvw_date_format_to_serial
 from tdda.serial.pandasio import (
-    to_pandas_date_format, pandas_date_format_to_serial
+    to_pandas_date_format,
+    pandas_date_format_to_serial,
 )
 from tdda.serial.reader import (
     find_metadata_kind,
@@ -85,15 +91,15 @@ class TestDateSanityRE(ReferenceTestCase):
 
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'),
-                                         '%Y-%m-%d %H:%M')
+        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'), '%Y-%m-%d %H:%M')
 
-        self.assertEqual(map_date_format('dd-MM-yyyy HH:mm:ss.S'),
-                                         '%d-%m-%Y %H:%M:%S.%f')
-        self.assertEqual(map_date_format('MM-dd-yyyy HH:mm:ss'),
-                                         '%m-%d-%Y %H:%M:%S')
-        self.assertEqual(map_date_format('dd-MM-yy HH:mm'),
-                                         '%d-%m-%y %H:%M')
+        self.assertEqual(
+            map_date_format('dd-MM-yyyy HH:mm:ss.S'), '%d-%m-%Y %H:%M:%S.%f'
+        )
+        self.assertEqual(
+            map_date_format('MM-dd-yyyy HH:mm:ss'), '%m-%d-%Y %H:%M:%S'
+        )
+        self.assertEqual(map_date_format('dd-MM-yy HH:mm'), '%d-%m-%y %H:%M')
 
     def testSingleDateFormat(self):
         # Nothing. Use ISO 8601
@@ -143,20 +149,15 @@ class TestDateSanityRE(ReferenceTestCase):
         m = SerialMetadata(fields=[dt1, dt4, dt5, dt6, dt7])
         warn, buf = testwarn()
         self.assertEqual(m.single_date_format(warner=warn), isodt)
-        self.assertEqual(
-            buf, ['Multiple data formats; using ISO 8601.']
-        )
+        self.assertEqual(buf, ['Multiple data formats; using ISO 8601.'])
 
         # Ties result in iso8601
         m = SerialMetadata(fields=[dt1, dt4])
         warn, buf = testwarn()
         self.assertEqual(m.single_date_format(warner=warn), isodt)
-        self.assertEqual(
-            buf, ['Multiple data formats; using ISO 8601.']
-        )
+        self.assertEqual(buf, ['Multiple data formats; using ISO 8601.'])
 
     def testIsIso8601Format(self):
-
         # Boolean values, including names
         self.assertEqual(is_iso8601_format('iso8601'), True)
         self.assertEqual(is_iso8601_format('iso8601-date'), True)
@@ -187,49 +188,48 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(is_iso8601_format('%Y.%m.%d %h:%m:%s,%f'), False)
         self.assertEqual(is_iso8601_format('%Y.%m.%dT%h:%m:%s-%f'), False)
 
-
         # Boolean values, excluding names
         self.assertEqual(is_iso8601_format('iso8601', inc_names=False), False)
-        self.assertEqual(is_iso8601_format('iso8601-date',
-                                           inc_names=False), False)
-        self.assertEqual(is_iso8601_format('iso8601-datetime',
-                                           inc_names=False), False)
-        self.assertEqual(is_iso8601_format('iso8601-datetime-tz',
-                                           inc_names=False), False)
+        self.assertEqual(
+            is_iso8601_format('iso8601-date', inc_names=False), False
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-datetime', inc_names=False), False
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-datetime-tz', inc_names=False), False
+        )
 
         self.assertEqual(is_iso8601_format('%Y-%m-%d', inc_names=False), True)
 
         # Specific values
         self.assertEqual(
-            is_iso8601_format('iso8601', return_specific=True),
-            'iso8601'
+            is_iso8601_format('iso8601', return_specific=True), 'iso8601'
         )
         self.assertEqual(
             is_iso8601_format('iso8601-date', return_specific=True),
-            'iso8601-date'
+            'iso8601-date',
         )
         self.assertEqual(
             is_iso8601_format('iso8601-datetime', return_specific=True),
-            'iso8601-datetime'
+            'iso8601-datetime',
         )
         self.assertEqual(
             is_iso8601_format('iso8601-datetime-tz', return_specific=True),
-            'iso8601-datetime-tz'
+            'iso8601-datetime-tz',
         )
 
         self.assertEqual(
-            is_iso8601_format('%Y-%m-%d', return_specific=True),
-            'iso8601-date'
+            is_iso8601_format('%Y-%m-%d', return_specific=True), 'iso8601-date'
         )
 
         self.assertEqual(
-            is_iso8601_format('%Y-%m-%d', return_specific=True),
-            'iso8601-date'
+            is_iso8601_format('%Y-%m-%d', return_specific=True), 'iso8601-date'
         )
 
         self.assertEqual(
             is_iso8601_format('%Y/%m/%dT%H:%M:%S', return_specific=True),
-            'iso8601-datetime'
+            'iso8601-datetime',
         )
 
         # Timezones not actually handled yet.
@@ -249,8 +249,9 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
 
         warner, buf = testwarn()
-        self.assertEqual(m.single_null_indicator(default='NULL',
-                                                 warner=warner), '.')
+        self.assertEqual(
+            m.single_null_indicator(default='NULL', warner=warner), '.'
+        )
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
 
         f1 = FieldMetadata('f1', fieldtype='int', null_indicator='.')
@@ -310,65 +311,91 @@ class TestFindMetadata(ReferenceTestCase):
 
     def testDetectMetadataKindFromPath(self):
         # CSVW
-        self.assertEqual(find_metadata_type_from_path('foo-metadata.json'),
-                         ('csvw', ('foo', 'metadata', None, '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo-csvmetadata.json'),
-                         ('csvw', ('foo', 'csvmetadata', 'csv', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo-csv-metadata.json'),
-                         ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')))
-
-        self.assertEqual(find_metadata_type_from_path('foo.metadata.json'),
-                         ('csvw', ('foo', 'metadata', None, '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo.csvmetadata.json'),
-                         ('csvw', ('foo', 'csvmetadata', 'csv', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo.csv.metadata.json'),
-                         ('csvw', ('foo', 'csv.metadata', 'csv.', '.json')))
-
-        self.assertEqual(find_metadata_type_from_path('foo.csv-metadata.json'),
-                         ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')))
-
-
-        self.assertEqual(find_metadata_type_from_path(
-            'foo.bar-baz.csv-metadata.json'),
-            ('csvw', ('foo.bar-baz', 'csv-metadata', 'csv-', '.json')))
-        self.assertEqual(find_metadata_type_from_path(
-            'foo-bar.baz.csv-metadata.json'),
-            ('csvw', ('foo-bar.baz', 'csv-metadata', 'csv-', '.json')))
-
-        self.assertEqual(find_metadata_type_from_path('foo.resource.json'),
-                         ('frictionless', ('foo', 'resource', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo.package.json'),
-                         ('frictionless', ('foo', 'package', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo.schema.json'),
-                         ('frictionless', ('foo', 'schema', '.json')))
-
-        self.assertEqual(find_metadata_type_from_path('foo-resource.json'),
-                         ('frictionless', ('foo', 'resource', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo-package.json'),
-                         ('frictionless', ('foo', 'package', '.json')))
-        self.assertEqual(find_metadata_type_from_path('foo-schema.json'),
-                         ('frictionless', ('foo', 'schema', '.json')))
-
-        self.assertEqual(find_metadata_type_from_path(
-            'foo.bar-baz.resource.json'),
-            ('frictionless', ('foo.bar-baz', 'resource', '.json')))
-        self.assertEqual(find_metadata_type_from_path(
-            'foo-bar.baz.resource.json'),
-            ('frictionless', ('foo-bar.baz', 'resource', '.json')))
-
         self.assertEqual(
-            find_metadata_type_from_path('foo.json'),
-            (None, None)
+            find_metadata_type_from_path('foo-metadata.json'),
+            ('csvw', ('foo', 'metadata', None, '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-csvmetadata.json'),
+            ('csvw', ('foo', 'csvmetadata', 'csv', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-csv-metadata.json'),
+            ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')),
         )
 
+        self.assertEqual(
+            find_metadata_type_from_path('foo.metadata.json'),
+            ('csvw', ('foo', 'metadata', None, '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo.csvmetadata.json'),
+            ('csvw', ('foo', 'csvmetadata', 'csv', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo.csv.metadata.json'),
+            ('csvw', ('foo', 'csv.metadata', 'csv.', '.json')),
+        )
 
+        self.assertEqual(
+            find_metadata_type_from_path('foo.csv-metadata.json'),
+            ('csvw', ('foo', 'csv-metadata', 'csv-', '.json')),
+        )
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo.bar-baz.csv-metadata.json'),
+            ('csvw', ('foo.bar-baz', 'csv-metadata', 'csv-', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-bar.baz.csv-metadata.json'),
+            ('csvw', ('foo-bar.baz', 'csv-metadata', 'csv-', '.json')),
+        )
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo.resource.json'),
+            ('frictionless', ('foo', 'resource', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo.package.json'),
+            ('frictionless', ('foo', 'package', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo.schema.json'),
+            ('frictionless', ('foo', 'schema', '.json')),
+        )
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo-resource.json'),
+            ('frictionless', ('foo', 'resource', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-package.json'),
+            ('frictionless', ('foo', 'package', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-schema.json'),
+            ('frictionless', ('foo', 'schema', '.json')),
+        )
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo.bar-baz.resource.json'),
+            ('frictionless', ('foo.bar-baz', 'resource', '.json')),
+        )
+        self.assertEqual(
+            find_metadata_type_from_path('foo-bar.baz.resource.json'),
+            ('frictionless', ('foo-bar.baz', 'resource', '.json')),
+        )
+
+        self.assertEqual(
+            find_metadata_type_from_path('foo.json'), (None, None)
+        )
 
     def test_find_metadata_priority(self):
         d = {
-            'tdda.serial' : {'sep': ','},
-            'pandas.read_csv' : {'sep': '|'},
-            'csvw' : {'sep': '\t'},
-            'e': 3
+            'tdda.serial': {'sep': ','},
+            'pandas.read_csv': {'sep': '|'},
+            'csvw': {'sep': '\t'},
+            'e': 3,
         }
         kind, md = find_metadata_kind(d)
         self.assertEqual(kind, 'tdda.serial')
@@ -390,9 +417,9 @@ class TestFindMetadata(ReferenceTestCase):
 
     def test_find_metadata_two_levels(self):
         c = {
-            'pandas.read_csv' : {'quote': '*'},
-            'tdda.serial' : {'quote': "'"},
-            'csvw' : {'quote': '|'},
+            'pandas.read_csv': {'quote': '*'},
+            'tdda.serial': {'quote': "'"},
+            'csvw': {'quote': '|'},
         }
         d = {
             'a': 'foo',
@@ -423,34 +450,20 @@ class TestFindMetadata(ReferenceTestCase):
             'b': {
                 'c': 1,
                 'd': 'foo',
-                'A': {
-                    'r': {
-                        'tdda.serial': {
-                            'quote_char': "'"
-                        }
-                    }
-                }
+                'A': {'r': {'tdda.serial': {'quote_char': "'"}}},
             },
             'e': {
                 'f': {
                     'g': 'bar',
-                    'h': {
-                        'i': {
-                             'csvw': {
-                                 'blah': 'blah'
-                             }
-                        }
-                    },
+                    'h': {'i': {'csvw': {'blah': 'blah'}}},
                     'j': 2,
-                    'pandas.read_csv': {
-                        'sep': ','
-                    }
+                    'pandas.read_csv': {'sep': ','},
                 }
-            }
+            },
         }
         kind, md = find_metadata_kind(d)
         self.assertEqual(kind, 'pandas.read_csv')  # least deep
-        self.assertEqual(md, {'sep': ","})
+        self.assertEqual(md, {'sep': ','})
 
 
 def ntype(name):
@@ -466,8 +479,6 @@ def ntype(name):
     return d[name[:1].lower()]
 
 
-
-
 def remove_common_key_vals(left, right):
     for k in list(left.keys()):
         if left[k] == right[k]:
@@ -475,9 +486,7 @@ def remove_common_key_vals(left, right):
             del right[k]
 
 
-
 class TestToPandasDateFormat(ReferenceTestCase):
-
     def testNoneReturnsNone(self):
         self.assertIsNone(to_pandas_date_format(None))
         self.assertIsNone(to_pandas_date_format(None, for_write=True))
@@ -485,33 +494,43 @@ class TestToPandasDateFormat(ReferenceTestCase):
     def testISO8601NamedFormatsRead(self):
         # All ISO8601 named formats → 'ISO8601' on read
         for fmt in ISO8601_NAMED_FORMATS:
-            self.assertEqual(to_pandas_date_format(fmt), 'ISO8601',
-                             f'format {fmt!r} should give ISO8601 on read')
+            self.assertEqual(
+                to_pandas_date_format(fmt),
+                'ISO8601',
+                f'format {fmt!r} should give ISO8601 on read',
+            )
 
     def testISO8601NamedFormatsWrite(self):
         # All ISO8601 named formats → canonical strftime on write
         for fmt in ISO8601_NAMED_FORMATS:
             result = to_pandas_date_format(fmt, for_write=True)
-            self.assertEqual(result, NAMED_FORMAT_TO_STRFTIME[fmt],
-                             f'format {fmt!r} should give strftime on write')
+            self.assertEqual(
+                result,
+                NAMED_FORMAT_TO_STRFTIME[fmt],
+                f'format {fmt!r} should give strftime on write',
+            )
 
     def testEuroUSNamedFormats(self):
         # Euro and US named formats → canonical strftime for both read and write
         cases = {
-            DateFormat.EURO_DATE:       '%d/%m/%Y',
-            DateFormat.EURO_DATETIME:   '%d/%m/%Y %H:%M:%S',
-            DateFormat.EURO_DATE_2Y:    '%d/%m/%y',
-            DateFormat.EURO_DATETIME_2Y:'%d/%m/%y %H:%M:%S',
-            DateFormat.US_DATE:         '%m/%d/%Y',
-            DateFormat.US_DATETIME:     '%m/%d/%Y %H:%M:%S',
-            DateFormat.US_DATE_2Y:      '%m/%d/%y',
-            DateFormat.US_DATETIME_2Y:  '%m/%d/%y %H:%M:%S',
+            DateFormat.EURO_DATE: '%d/%m/%Y',
+            DateFormat.EURO_DATETIME: '%d/%m/%Y %H:%M:%S',
+            DateFormat.EURO_DATE_2Y: '%d/%m/%y',
+            DateFormat.EURO_DATETIME_2Y: '%d/%m/%y %H:%M:%S',
+            DateFormat.US_DATE: '%m/%d/%Y',
+            DateFormat.US_DATETIME: '%m/%d/%Y %H:%M:%S',
+            DateFormat.US_DATE_2Y: '%m/%d/%y',
+            DateFormat.US_DATETIME_2Y: '%m/%d/%y %H:%M:%S',
         }
         for fmt, expected in cases.items():
-            self.assertEqual(to_pandas_date_format(fmt), expected,
-                             f'format {fmt!r} read')
-            self.assertEqual(to_pandas_date_format(fmt, for_write=True),
-                             expected, f'format {fmt!r} write')
+            self.assertEqual(
+                to_pandas_date_format(fmt), expected, f'format {fmt!r} read'
+            )
+            self.assertEqual(
+                to_pandas_date_format(fmt, for_write=True),
+                expected,
+                f'format {fmt!r} write',
+            )
 
     def testSpecificStrftimePassthrough(self):
         # Specific strftime strings pass through unchanged
@@ -520,21 +539,30 @@ class TestToPandasDateFormat(ReferenceTestCase):
             self.assertEqual(to_pandas_date_format(fmt, for_write=True), fmt)
 
     def testUnspecifiedRaisesNotImplemented(self):
-        self.assertRaises(NotImplementedError,
-                          to_pandas_date_format, DateFormat.EURO_UNSPECIFIED)
-        self.assertRaises(NotImplementedError,
-                          to_pandas_date_format, DateFormat.US_UNSPECIFIED)
+        self.assertRaises(
+            NotImplementedError,
+            to_pandas_date_format,
+            DateFormat.EURO_UNSPECIFIED,
+        )
+        self.assertRaises(
+            NotImplementedError,
+            to_pandas_date_format,
+            DateFormat.US_UNSPECIFIED,
+        )
 
     def testPandasDateFormatToSerial(self):
-        self.assertEqual(pandas_date_format_to_serial('ISO8601'),
-                         DateFormat.ISO8601_UNSPECIFIED)
+        self.assertEqual(
+            pandas_date_format_to_serial('ISO8601'),
+            DateFormat.ISO8601_UNSPECIFIED,
+        )
         self.assertEqual(pandas_date_format_to_serial('%d/%m/%Y'), '%d/%m/%Y')
-        self.assertEqual(pandas_date_format_to_serial('%Y-%m-%dT%H:%M:%S'),
-                         '%Y-%m-%dT%H:%M:%S')
+        self.assertEqual(
+            pandas_date_format_to_serial('%Y-%m-%dT%H:%M:%S'),
+            '%Y-%m-%dT%H:%M:%S',
+        )
 
 
 class TestLegacyDatetimeFormat(ReferenceTestCase):
-
     def testDatetimeFormatAlias(self):
         # datetime_format is accepted as legacy alias for date_format
         m = SerialMetadata(datetime_format='iso8601')

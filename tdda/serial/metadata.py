@@ -10,6 +10,7 @@ from tdda.version import version as VERSION
 from tdda.serial.constants import URI, TDDASERIAL
 from tdda.utils import listify, nvl, warn, swap_ext, error
 
+
 class TDDASerialError(Exception):
     pass
 
@@ -38,75 +39,75 @@ class FieldType:
 
 class DateFormat:
     # ISO8601 generic (read any ISO variant, write canonical)
-    ISO8601_DATE         = 'iso8601-date'        # write: %Y-%m-%d
-    ISO8601_DATETIME     = 'iso8601-datetime'    # write: %Y-%m-%dT%H:%M:%S
-    ISO8601_DATETIME_TZ  = 'iso8601-datetime-tz' # write: %Y-%m-%dT%H:%M:%S%z
-    ISO8601_UNSPECIFIED  = 'iso8601'             # write: %Y-%m-%dT%H:%M:%S
+    ISO8601_DATE = 'iso8601-date'  # write: %Y-%m-%d
+    ISO8601_DATETIME = 'iso8601-datetime'  # write: %Y-%m-%dT%H:%M:%S
+    ISO8601_DATETIME_TZ = 'iso8601-datetime-tz'  # write: %Y-%m-%dT%H:%M:%S%z
+    ISO8601_UNSPECIFIED = 'iso8601'  # write: %Y-%m-%dT%H:%M:%S
 
     # European generic (read canonical slash, write canonical slash)
-    EURO_DATE            = 'eu-date'             # write: %d/%m/%Y
-    EURO_DATETIME        = 'eu-datetime'         # write: %d/%m/%Y %H:%M:%S
-    EURO_DATE_2Y         = 'eu-date-2y'          # write: %d/%m/%y
-    EURO_DATETIME_2Y     = 'eu-datetime-2y'      # write: %d/%m/%y %H:%M:%S
-    EURO_UNSPECIFIED     = 'eu'                  # not yet implemented
+    EURO_DATE = 'eu-date'  # write: %d/%m/%Y
+    EURO_DATETIME = 'eu-datetime'  # write: %d/%m/%Y %H:%M:%S
+    EURO_DATE_2Y = 'eu-date-2y'  # write: %d/%m/%y
+    EURO_DATETIME_2Y = 'eu-datetime-2y'  # write: %d/%m/%y %H:%M:%S
+    EURO_UNSPECIFIED = 'eu'  # not yet implemented
 
     # US generic (read canonical slash, write canonical slash)
-    US_DATE              = 'us-date'             # write: %m/%d/%Y
-    US_DATETIME          = 'us-datetime'         # write: %m/%d/%Y %H:%M:%S
-    US_DATE_2Y           = 'us-date-2y'          # write: %m/%d/%y
-    US_DATETIME_2Y       = 'us-datetime-2y'      # write: %m/%d/%y %H:%M:%S
-    US_UNSPECIFIED       = 'us'                  # not yet implemented
+    US_DATE = 'us-date'  # write: %m/%d/%Y
+    US_DATETIME = 'us-datetime'  # write: %m/%d/%Y %H:%M:%S
+    US_DATE_2Y = 'us-date-2y'  # write: %m/%d/%y
+    US_DATETIME_2Y = 'us-datetime-2y'  # write: %m/%d/%y %H:%M:%S
+    US_UNSPECIFIED = 'us'  # not yet implemented
 
 
 # Canonical write strftime for each named generic format
 NAMED_FORMAT_TO_STRFTIME = {
-    DateFormat.ISO8601_DATE:        '%Y-%m-%d',
-    DateFormat.ISO8601_DATETIME:    '%Y-%m-%dT%H:%M:%S',
+    DateFormat.ISO8601_DATE: '%Y-%m-%d',
+    DateFormat.ISO8601_DATETIME: '%Y-%m-%dT%H:%M:%S',
     DateFormat.ISO8601_DATETIME_TZ: '%Y-%m-%dT%H:%M:%S%z',
     DateFormat.ISO8601_UNSPECIFIED: '%Y-%m-%dT%H:%M:%S',
-    DateFormat.EURO_DATE:           '%d/%m/%Y',
-    DateFormat.EURO_DATETIME:       '%d/%m/%Y %H:%M:%S',
-    DateFormat.EURO_DATE_2Y:        '%d/%m/%y',
-    DateFormat.EURO_DATETIME_2Y:    '%d/%m/%y %H:%M:%S',
-    DateFormat.US_DATE:             '%m/%d/%Y',
-    DateFormat.US_DATETIME:         '%m/%d/%Y %H:%M:%S',
-    DateFormat.US_DATE_2Y:          '%m/%d/%y',
-    DateFormat.US_DATETIME_2Y:      '%m/%d/%y %H:%M:%S',
+    DateFormat.EURO_DATE: '%d/%m/%Y',
+    DateFormat.EURO_DATETIME: '%d/%m/%Y %H:%M:%S',
+    DateFormat.EURO_DATE_2Y: '%d/%m/%y',
+    DateFormat.EURO_DATETIME_2Y: '%d/%m/%y %H:%M:%S',
+    DateFormat.US_DATE: '%m/%d/%Y',
+    DateFormat.US_DATETIME: '%m/%d/%Y %H:%M:%S',
+    DateFormat.US_DATE_2Y: '%m/%d/%y',
+    DateFormat.US_DATETIME_2Y: '%m/%d/%y %H:%M:%S',
 }
 
 # Specific strftime strings → generic named format (many to one)
 STRFTIME_TO_NAMED_FORMAT = {
     # ISO8601 variants
-    '%Y-%m-%d':              DateFormat.ISO8601_DATE,
-    '%Y/%m/%d':              DateFormat.ISO8601_DATE,
-    '%Y-%m-%d %H:%M:%S':     DateFormat.ISO8601_DATETIME,
-    '%Y-%m-%dT%H:%M:%S':     DateFormat.ISO8601_DATETIME,
-    '%Y/%m/%d %H:%M:%S':     DateFormat.ISO8601_DATETIME,
-    '%Y/%m/%dT%H:%M:%S':     DateFormat.ISO8601_DATETIME,
-    '%Y-%m-%d %H:%M:%S.%f':  DateFormat.ISO8601_DATETIME,
-    '%Y-%m-%dT%H:%M:%S.%f':  DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%d': DateFormat.ISO8601_DATE,
+    '%Y/%m/%d': DateFormat.ISO8601_DATE,
+    '%Y-%m-%d %H:%M:%S': DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%dT%H:%M:%S': DateFormat.ISO8601_DATETIME,
+    '%Y/%m/%d %H:%M:%S': DateFormat.ISO8601_DATETIME,
+    '%Y/%m/%dT%H:%M:%S': DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%d %H:%M:%S.%f': DateFormat.ISO8601_DATETIME,
+    '%Y-%m-%dT%H:%M:%S.%f': DateFormat.ISO8601_DATETIME,
     # Euro variants
-    '%d/%m/%Y':              DateFormat.EURO_DATE,
-    '%d-%m-%Y':              DateFormat.EURO_DATE,
-    '%d.%m.%Y':              DateFormat.EURO_DATE,
-    '%d/%m/%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
-    '%d-%m-%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
-    '%d.%m.%Y %H:%M:%S':     DateFormat.EURO_DATETIME,
-    '%d/%m/%y':              DateFormat.EURO_DATE_2Y,
-    '%d-%m-%y':              DateFormat.EURO_DATE_2Y,
-    '%d.%m.%y':              DateFormat.EURO_DATE_2Y,
-    '%d/%m/%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
-    '%d-%m-%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
-    '%d.%m.%y %H:%M:%S':     DateFormat.EURO_DATETIME_2Y,
+    '%d/%m/%Y': DateFormat.EURO_DATE,
+    '%d-%m-%Y': DateFormat.EURO_DATE,
+    '%d.%m.%Y': DateFormat.EURO_DATE,
+    '%d/%m/%Y %H:%M:%S': DateFormat.EURO_DATETIME,
+    '%d-%m-%Y %H:%M:%S': DateFormat.EURO_DATETIME,
+    '%d.%m.%Y %H:%M:%S': DateFormat.EURO_DATETIME,
+    '%d/%m/%y': DateFormat.EURO_DATE_2Y,
+    '%d-%m-%y': DateFormat.EURO_DATE_2Y,
+    '%d.%m.%y': DateFormat.EURO_DATE_2Y,
+    '%d/%m/%y %H:%M:%S': DateFormat.EURO_DATETIME_2Y,
+    '%d-%m-%y %H:%M:%S': DateFormat.EURO_DATETIME_2Y,
+    '%d.%m.%y %H:%M:%S': DateFormat.EURO_DATETIME_2Y,
     # US variants
-    '%m/%d/%Y':              DateFormat.US_DATE,
-    '%m-%d-%Y':              DateFormat.US_DATE,
-    '%m/%d/%Y %H:%M:%S':     DateFormat.US_DATETIME,
-    '%m-%d-%Y %H:%M:%S':     DateFormat.US_DATETIME,
-    '%m/%d/%y':              DateFormat.US_DATE_2Y,
-    '%m-%d-%y':              DateFormat.US_DATE_2Y,
-    '%m/%d/%y %H:%M:%S':     DateFormat.US_DATETIME_2Y,
-    '%m-%d-%y %H:%M:%S':     DateFormat.US_DATETIME_2Y,
+    '%m/%d/%Y': DateFormat.US_DATE,
+    '%m-%d-%Y': DateFormat.US_DATE,
+    '%m/%d/%Y %H:%M:%S': DateFormat.US_DATETIME,
+    '%m-%d-%Y %H:%M:%S': DateFormat.US_DATETIME,
+    '%m/%d/%y': DateFormat.US_DATE_2Y,
+    '%m-%d-%y': DateFormat.US_DATE_2Y,
+    '%m/%d/%y %H:%M:%S': DateFormat.US_DATETIME_2Y,
+    '%m-%d-%y %H:%M:%S': DateFormat.US_DATETIME_2Y,
 }
 
 ISO8601_NAMED_FORMATS = {
@@ -155,7 +156,6 @@ CSVW_ONLY_KEYS = (
 )
 
 
-
 METADATA_FLAVOUR_MAP = {
     'tdda.serial': 'tdda.serial',
     'pandas.read_csv': 'pandas.read_csv',
@@ -168,7 +168,6 @@ METADATA_FLAVOUR_MAP = {
     'frictionless': 'frictionless',
     'python.csv.reader': 'python.csv.reader',
     'python.csv.writer': 'python.csv.writer',
-
     '.': 'tdda.serial',
     'pd.r': 'pandas.read_csv',
     'pd.w': 'pandas.DataFrame.to_csv',
@@ -176,19 +175,17 @@ METADATA_FLAVOUR_MAP = {
     'pl.w': 'polars.DataFrame.to_csv',
     'csv.r': 'python.csv.reader',
     'csv.w': 'python.csv.writer',
-
     'fless': 'frictionless',
-    'fless.r':  'frictionless.resource',
-    'fless.p':  'frictionless.package',
-
+    'fless.r': 'frictionless.resource',
+    'fless.p': 'frictionless.package',
     'fl': 'frictionless',
-    'fl.r':  'frictionless.resource',
-    'fl.p':  'frictionless.package',
+    'fl.r': 'frictionless.resource',
+    'fl.p': 'frictionless.package',
 }
 
 
-VERBOSITY = 2     # show errors and warnings. 1 for errors only. 0 for none
-                  # 3 for extra information
+VERBOSITY = 2  # show errors and warnings. 1 for errors only. 0 for none
+# 3 for extra information
 
 FIELDTYPES = tuple(FieldType.__dict__.values())
 
@@ -247,12 +244,26 @@ class FieldMetadata:
         altnames:       Alternative names for the field (e.g. from CSVW
                         titles). TBC. OPTIONAL.
     """
-    def __init__(self, name, fieldtype=None, csvname=None,
-                 format=None, null_indicator=None,
-                 true_values=None, false_values=None,
-                 allow_extra_keys=False, description=None,
-                 thou_sep=None, dp=None, dps=None, examples=None,
-                 rdf_type=None, altnames=None, **kw):
+
+    def __init__(
+        self,
+        name,
+        fieldtype=None,
+        csvname=None,
+        format=None,
+        null_indicator=None,
+        true_values=None,
+        false_values=None,
+        allow_extra_keys=False,
+        description=None,
+        thou_sep=None,
+        dp=None,
+        dps=None,
+        examples=None,
+        rdf_type=None,
+        altnames=None,
+        **kw,
+    ):
         self.name = name
         self.csvname = csvname or name
         self.fieldtype = fieldtype
@@ -288,9 +299,7 @@ class FieldMetadata:
             elif missing == MISSING.WARNING:
                 self._warnings.append(msg)
             elif missing != MISSING.ALLOWED:
-                raise TDDASerialError(
-                    f'Unknown value "{missing}" for missing'
-                )
+                raise TDDASerialError(f'Unknown value "{missing}" for missing')
         return d.get(k, None)
 
     def validate(self):
@@ -300,8 +309,11 @@ class FieldMetadata:
             )
 
     def unobjectify(self):
-        d = {k: unobjectify(v) for k, v in self.__dict__.items()
-                if nonnull(v) and not k.startswith('_')}
+        d = {
+            k: unobjectify(v)
+            for k, v in self.__dict__.items()
+            if nonnull(v) and not k.startswith('_')
+        }
         if d['csvname'] == d['name']:
             del d['csvname']
         return d
@@ -314,9 +326,11 @@ class FieldMetadata:
         return md
 
     def __repr__(self):
-        parts = ', '.join(f'{k}={repr(v)}'
-                               for k, v in self.__dict__.items()
-                               if v is not None and v != [])
+        parts = ', '.join(
+            f'{k}={repr(v)}'
+            for k, v in self.__dict__.items()
+            if v is not None and v != []
+        )
         return f'FieldMetadata({parts})'
 
 
@@ -412,7 +426,9 @@ class SerialMetadata:
                         arguments. 'warn' (default) issues a warning,
                         'error' raises an error, 'allow' silently accepts.
     """
-    def __init__(self,
+
+    def __init__(
+        self,
         fields=None,
         path=None,
         encoding=None,
@@ -428,8 +444,8 @@ class SerialMetadata:
         quoting=None,
         decimal_point=None,
         dps=None,
-        accept_percentages_as_floats = None,
-        map_missing_trailing_cols_to_null = None,
+        accept_percentages_as_floats=None,
+        map_missing_trailing_cols_to_null=None,
         true_values=None,
         false_values=None,
         thou_sep=None,
@@ -438,13 +454,14 @@ class SerialMetadata:
         libs=None,
         source=None,
         extra_kwargs='warn',
-        **kw
+        **kw,
     ):
         if datetime_format is not None and date_format is None:
             date_format = datetime_format
         if kw:
             if extra_kwargs in ('error', 'warn'):
                 from pprint import pformat
+
                 s = pformat(kw)
                 report = error if extra_kwargs == 'error' else warn
                 report(f'Unexpected arguments for Serial Metadata:\n{s}')
@@ -503,16 +520,17 @@ class SerialMetadata:
         if self.header_row is None and header_row_count:
             self.header_row = 0
 
-#        self.metametadata = {
-#            'creationhash': ''
-#        }
+        #        self.metametadata = {
+        #            'creationhash': ''
+        #        }
 
         if isinstance(self.fields, list):
-            self.fields = [(FieldMetadata(**f) if isinstance(f, dict) else f)
-                           for f in self.fields]
+            self.fields = [
+                (FieldMetadata(**f) if isinstance(f, dict) else f)
+                for f in self.fields
+            ]
 
         self._source = source
-
 
     def error(self, msg):
         self._errors.append(msg)
@@ -559,11 +577,12 @@ class SerialMetadata:
             'writer': writer(),
         }
         m = {
-            k: unobjectify(v) for k, v in self.__dict__.items()
-                                  if not k.startswith('_')
-                                  and k != 'libs'
-                                  and nonnull(v)
-                                  and not k in CSVW_ONLY_KEYS
+            k: unobjectify(v)
+            for k, v in self.__dict__.items()
+            if not k.startswith('_')
+            and k != 'libs'
+            and nonnull(v)
+            and not k in CSVW_ONLY_KEYS
         }
         nulls = m.get('null_indicator')
         quoting = m.get('quoting')
@@ -574,11 +593,8 @@ class SerialMetadata:
         if m:
             d[TDDASERIAL.key] = m
 
-        for (lib, params) in self.libs.items():
-            d[lib] = {
-                k: unobjectify(v)
-                for (k, v) in params.items()
-            }
+        for lib, params in self.libs.items():
+            d[lib] = {k: unobjectify(v) for (k, v) in params.items()}
         return d
 
     def to_json(self, indent=4):
@@ -748,13 +764,10 @@ def get_quoting_codes():
     global QUOTING_CODES, QUOTING_NAMES
 
     QUOTING_CODES = {
-        k: v for k, v in csv.__dict__.items()
-        if k.startswith('QUOTE_')
+        k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')
     }
     QUOTING_CODES['STRING_ONLY'] = -1
-    QUOTING_NAMES = {
-        v: k for k, v in QUOTING_CODES.items()
-    }
+    QUOTING_NAMES = {v: k for k, v in QUOTING_CODES.items()}
 
 
 def quoting_as_code(name):
@@ -784,8 +797,5 @@ def get_metadata_flavour(flavour):
 
 def get_metadata_flavours(flavours):
     return [
-       get_metadata_flavour(f)
-       for f in (flavours or '.').strip().split(',')
+        get_metadata_flavour(f) for f in (flavours or '.').strip().split(',')
     ]
-
-

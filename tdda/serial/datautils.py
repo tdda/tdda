@@ -10,8 +10,14 @@ Names = namedtuple('Names', 'b i f s t')
 
 LONG_NAMES = ['IAmBoolean', 'IAmInt', 'f', 'IAmString', 'IAmDate']
 
-def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
-                       sBools=False, longNames=False):
+
+def tiny_python_values(
+    nulls=False,
+    sNullNull=False,
+    euroStrDates=False,
+    sBools=False,
+    longNames=False,
+):
     """
     Generate tiny 5x2 or 5x3 set of values for a DataFrame
     with Python booleans, integers, floats, strings and dates.
@@ -42,38 +48,59 @@ def tiny_python_values(nulls=False, sNullNull=False, euroStrDates=False,
         names.i: [0, 1],
         names.f: [0.5, 1.5],
         names.s: [nil, 'a'],
-        names.t: [d1, d2]
+        names.t: [d1, d2],
     }
     if nulls:
-        values = {
-            k: v[:1] + [None] + v[1:]
-            for k, v in values.items()
-        }
+        values = {k: v[:1] + [None] + v[1:] for k, v in values.items()}
     return values
 
 
-def tiny_pandas_df(nulls=False, nullable_types=False,  sNullNull=False,
-                   euroStrDates=False, sBools=False, longNames=False):
+def tiny_pandas_df(
+    nulls=False,
+    nullable_types=False,
+    sNullNull=False,
+    euroStrDates=False,
+    sBools=False,
+    longNames=False,
+):
     if nullable_types:
-        df = pd.DataFrame({
-            k: pd.Series(v, dtype=pd_nullable_type(k))
-            for k, v in tiny_python_values(nulls=nulls).items()
-        })
+        df = pd.DataFrame(
+            {
+                k: pd.Series(v, dtype=pd_nullable_type(k))
+                for k, v in tiny_python_values(nulls=nulls).items()
+            }
+        )
         if longNames:
             df.columns = LONG_NAMES
         return df
     else:
-        return pd.DataFrame(tiny_python_values(nulls=nulls, sNullNull=sNullNull,
-                        euroStrDates=euroStrDates, sBools=sBools,
-                        longNames=longNames))
+        return pd.DataFrame(
+            tiny_python_values(
+                nulls=nulls,
+                sNullNull=sNullNull,
+                euroStrDates=euroStrDates,
+                sBools=sBools,
+                longNames=longNames,
+            )
+        )
 
 
-def tiny_polars_df(nulls=False, sNullNull=False, euroStrDates=False,
-                   sBools=False, longNames=False):
-    return pl.DataFrame(tiny_python_values(nulls=nulls, sNullNull=sNullNull,
-                        euroStrDates=euroStrDates, sBools=sBools,
-                        longNames=longNames))
-
+def tiny_polars_df(
+    nulls=False,
+    sNullNull=False,
+    euroStrDates=False,
+    sBools=False,
+    longNames=False,
+):
+    return pl.DataFrame(
+        tiny_python_values(
+            nulls=nulls,
+            sNullNull=sNullNull,
+            euroStrDates=euroStrDates,
+            sBools=sBools,
+            longNames=longNames,
+        )
+    )
 
 
 def pd_nullable_type(name):
@@ -87,4 +114,3 @@ def pd_nullable_type(name):
         't': 'datetime64[ns]',
     }
     return d[name[:1].lower()]
-

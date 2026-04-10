@@ -34,7 +34,7 @@ PYTHON_WRITER = {
     'polars.read_csv': serial_to_polars_read_csv_python,
 }
 
-USAGE = '''
+USAGE = """
 tdda serial [FLAGS] INPATH OUTPUT
 
   INPATH     A source metadata file or a flat file for metadata generation
@@ -89,17 +89,24 @@ FLAGS:
 
   --verbose, -v  Verbose
   --Verbose, -V  More verbose
-'''
-
+"""
 
 
 class SerialConverter:
-    def __init__(self, inpath=None, outpath=None,
-                 out_format=None, backend=None,
-                 map_other_bools_to_string=False,
-                 generate=False, cli_args=None,
-                 single_field=None,
-                 for_csv=None, config=None, verbosity=None):
+    def __init__(
+        self,
+        inpath=None,
+        outpath=None,
+        out_format=None,
+        backend=None,
+        map_other_bools_to_string=False,
+        generate=False,
+        cli_args=None,
+        single_field=None,
+        for_csv=None,
+        config=None,
+        verbosity=None,
+    ):
         self.inpath = inpath
         self.outpath = outpath
         self.cli_args = cli_args
@@ -117,7 +124,7 @@ class SerialConverter:
 
     def process_args(self):
         parser = self.parser()
-        #flags, more = parser.parse_known_args(self.cli_args)
+        # flags, more = parser.parse_known_args(self.cli_args)
         flags = parser.parse_args(self.cli_args)
         if flags.verbose or flags.Verbose:
             flags.verbosity = 3 if flags.Verbose else 2
@@ -148,11 +155,10 @@ class SerialConverter:
 
         if 'csvw' in self.out_formats and len(self.out_formats) > 1:
             error('You cannot combine csvw with other output formats.')
-        if (
-            len(self.out_formats) > 1
-            and ('frictionless' in self.out_formats
-                 or 'frictionless.resource' in self.out_formats
-                 or 'frictionless.package' in self.out_formats)
+        if len(self.out_formats) > 1 and (
+            'frictionless' in self.out_formats
+            or 'frictionless.resource' in self.out_formats
+            or 'frictionless.package' in self.out_formats
         ):
             error('You cannot combine frictionless with other output formats.')
 
@@ -179,46 +185,74 @@ class SerialConverter:
 
     def parser(self):
         formatter = argparse.RawDescriptionHelpFormatter
-        parser = argparse.ArgumentParser(prog='tdda serial',
-                                         # epilog=TDDA_DIFF_HELP,
-                                         formatter_class=formatter)
+        parser = argparse.ArgumentParser(
+            prog='tdda serial',
+            # epilog=TDDA_DIFF_HELP,
+            formatter_class=formatter,
+        )
 
-        parser.add_argument('inpath',
+        parser.add_argument(
+            'inpath',
             help='input file (.serial, csvw (json), '
-                 'frictionless (yaml/json) or flat file (.csv, .psv etc.)')
-        parser.add_argument('outpath', nargs='?',
-                            help='output metadata file or python script)')
+            'frictionless (yaml/json) or flat file (.csv, .psv etc.)',
+        )
+        parser.add_argument(
+            'outpath', nargs='?', help='output metadata file or python script)'
+        )
 
-        parser.add_argument('-?', '--?', action='help',
-                            help='same as -h or --help')
+        parser.add_argument(
+            '-?', '--?', action='help', help='same as -h or --help'
+        )
 
-        parser.add_argument('--to', type=str,
-            help='output format or formats (comma separated for multiple).')
+        parser.add_argument(
+            '--to',
+            type=str,
+            help='output format or formats (comma separated for multiple).',
+        )
 
-        parser.add_argument('--for', type=str,
-            help='csv file to use as url in written metadata')
+        parser.add_argument(
+            '--for',
+            type=str,
+            help='csv file to use as url in written metadata',
+        )
 
-        parser.add_argument('--backend', '-B', type=str,
+        parser.add_argument(
+            '--backend',
+            '-B',
+            type=str,
             help='For Pandas, preferred backend.'
-                 ' n (or numpy_nullable),'
-                 ' a (or pyarrow),'
-                 ' o (or original).')
+            ' n (or numpy_nullable),'
+            ' a (or pyarrow),'
+            ' o (or original).',
+        )
 
-        parser.add_argument('--generate', '--gen', '-g', action='store_true',
+        parser.add_argument(
+            '--generate',
+            '--gen',
+            '-g',
+            action='store_true',
             help='Generate a bare-bones tdda.serial file for a '
-                 'CSV file provided')
+            'CSV file provided',
+        )
 
-        parser.add_argument('--quiet', '-q', action='store_true',
-            help='Be quiet')
+        parser.add_argument(
+            '--quiet', '-q', action='store_true', help='Be quiet'
+        )
 
-        parser.add_argument('--verbose', '-v', action='store_true',
-            help='Be verbose')
+        parser.add_argument(
+            '--verbose', '-v', action='store_true', help='Be verbose'
+        )
 
-        parser.add_argument('--Verbose', '-V', action='store_true',
-            help='Be more verbose')
+        parser.add_argument(
+            '--Verbose', '-V', action='store_true', help='Be more verbose'
+        )
 
-        parser.add_argument('--single', '-1', action='store_true',
-            help='Declare that there is only a single field in the file.')
+        parser.add_argument(
+            '--single',
+            '-1',
+            action='store_true',
+            help='Declare that there is only a single field in the file.',
+        )
 
         return parser
 
@@ -254,8 +288,9 @@ class SerialConverter:
                     md_out.libs = {}
                 if self.map_other_bools_to_string:
                     kw['map_other_bools_to_string'] = True
-                md_out.libs[fmt] = convert(md_in, backend=self.backend,
-                                           warner=Warn, **kw)
+                md_out.libs[fmt] = convert(
+                    md_in, backend=self.backend, warner=Warn, **kw
+                )
 
         if self.broad_out == 'tdda.serial':
             md_out.write(self.outpath, verbose=self.verbosity > 1)
@@ -270,15 +305,20 @@ class SerialConverter:
                 python_writer = PYTHON_WRITER.get(fmt)
                 if python_writer is None:
                     error('No target library/format (e.g. pd.r) specified')
-                f.write(python_writer(md_out, backend=self.backend,
-                                      warner=Warn, **kw))
+                f.write(
+                    python_writer(
+                        md_out, backend=self.backend, warner=Warn, **kw
+                    )
+                )
         else:
             Warn(f'Invalid broad output type: {self.broad_out}.')
 
     def infer_from_flat_file(self):
-        return infer_format_from_flat_file(self.inpath,
-                                           single_field=self.single_field,
-                                           verbosity=self.verbosity)
+        return infer_format_from_flat_file(
+            self.inpath,
+            single_field=self.single_field,
+            verbosity=self.verbosity,
+        )
 
 
 def serial_cli(args):

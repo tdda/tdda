@@ -13,10 +13,33 @@ from tdda.serial.utils import non_chars, dict_max_items
 
 
 KNOWN_NULLS = [
-    '', 'NULL', 'NA', '<NA>', 'N/A', 'None',
-    'nan', 'null', 'null ', 'Null', 'na', 'Na', '-', '-', 'x', 'X'
-    'NaN', 'n/a', '#NA', '#N/A', '-NaN', '-nan',
-    '#N/A N/A',  '-1.#IND', '-1.#QNAN', '1.#IND', '1.#QNAN', ' ',
+    '',
+    'NULL',
+    'NA',
+    '<NA>',
+    'N/A',
+    'None',
+    'nan',
+    'null',
+    'null ',
+    'Null',
+    'na',
+    'Na',
+    '-',
+    '-',
+    'x',
+    'XNaN',
+    'n/a',
+    '#NA',
+    '#N/A',
+    '-NaN',
+    '-nan',
+    '#N/A N/A',
+    '-1.#IND',
+    '-1.#QNAN',
+    '1.#IND',
+    '1.#QNAN',
+    ' ',
 ]
 
 DATEISH = re.compile('^[0-9]{2,4}[-./][0-9]{2}[-./][0-9]{2,4}$')
@@ -25,7 +48,7 @@ ADATEISH = re.compile(
 )
 
 DTISH = re.compile(
-  '^[0-9]{2,4}[-./][0-9]{2,4}[-./][0-9]{2,4}.[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
+    '^[0-9]{2,4}[-./][0-9]{2,4}[-./][0-9]{2,4}.[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
 )
 ADTISH = re.compile(
     '^([0-9]{2,4}|[a-z]{3}).([0-9]{2,4}|[a-z]{3}).[0-9]{2,4}'
@@ -34,9 +57,11 @@ ADTISH = re.compile(
 
 PRIVATE = chr(0)
 
+
 class MetadataInferrer:
-    def __init__(self, inpath, lines_to_use=1000, verbosity=None,
-                 single_field=None):
+    def __init__(
+        self, inpath, lines_to_use=1000, verbosity=None, single_field=None
+    ):
         self.inpath = os.path.expanduser(inpath)
         self.lines_to_use = lines_to_use
         self.verbosity = nvl(verbosity, 10)
@@ -45,9 +70,13 @@ class MetadataInferrer:
         self.process()
 
         self.metadata = SerialMetadata(
-            fields=self.fields, encoding=self.encoding, delimiter=self.sep,
-            stutter_quotes=self.stutter, escape_char=self.escape,
-            quote_char=self.quote_char, null_indicator=self.null
+            fields=self.fields,
+            encoding=self.encoding,
+            delimiter=self.sep,
+            stutter_quotes=self.stutter,
+            escape_char=self.escape,
+            quote_char=self.quote_char,
+            null_indicator=self.null,
         )
 
     def print(self, msg, min_verbosity=1):
@@ -115,14 +144,19 @@ class MetadataInferrer:
 
         M = max((n_commas, n_pipes, n_tabs, n_semis))
         if M == 0:
-            error('Separator does not appear to be comma, pipe, tab'
-                  ' or semicolon. Abandoning.')
+            error(
+                'Separator does not appear to be comma, pipe, tab'
+                ' or semicolon. Abandoning.'
+            )
 
         sep = (
-            ',' if n_commas == M else
-            '|' if n_pipes == M else
-            '\t' if n_tabs == M else
-            ';'
+            ','
+            if n_commas == M
+            else '|'
+            if n_pipes == M
+            else '\t'
+            if n_tabs == M
+            else ';'
         )
         self.print(f'Inferred separator: {sep} ({M} occurrences).', 2)
         return sep
@@ -139,18 +173,16 @@ class MetadataInferrer:
     def find_fieldnames(self):
         fieldnames = self.header.split(self.sep)
         quote = self.quote_char
-        if quote and any(f.startswith(quote) and not f.endswith(quote)
-                         for f in fieldnames):
+        if quote and any(
+            f.startswith(quote) and not f.endswith(quote) for f in fieldnames
+        ):
             return careful_split(self.header, sep, quote, '\\')
         else:
             return fieldnames
 
     def infer_fields(self):
         sep = self.sep
-        combined = [
-            self.dequote_and_split(row)
-            for row in self.data
-        ]
+        combined = [self.dequote_and_split(row) for row in self.data]
         is_quoted = [r[2] for r in combined]
         data = [r[1] for r in combined]
         raw = [r[0] for r in combined]
@@ -163,8 +195,11 @@ class MetadataInferrer:
         else:
             self.print('All rows complete', 2)
 
-        self.print(f'Fieldnames {nFields}. '
-                   f'Min fields in row: {m}. Max fields in row: {M}\n', 2)
+        self.print(
+            f'Fieldnames {nFields}. '
+            f'Min fields in row: {m}. Max fields in row: {M}\n',
+            2,
+        )
         if M > nFields:
             self.print('More cols in some rows than fields (headers)', 2)
         if nFields > M:
@@ -183,8 +218,10 @@ class MetadataInferrer:
         n_cols = max(len(row) for row in data)
         n_fields = len(self.fieldnames)
         if n_fields < n_cols:
-            error(f'Found more data columns ({n_cols}) than fieldnames '
-                  f'({n_fields}). Giving up.')
+            error(
+                f'Found more data columns ({n_cols}) than fieldnames '
+                f'({n_fields}). Giving up.'
+            )
 
         type_info = {
             col: analyse_values(col, [row[i] for row in data if len(row) > i])
@@ -214,8 +251,9 @@ class MetadataInferrer:
             self.null = None
 
         self.fields = [
-            FieldMetadata(name=name,
-                          fieldtype=type_info[name].most_likely_type)
+            FieldMetadata(
+                name=name, fieldtype=type_info[name].most_likely_type
+            )
             for name in self.fieldnames
         ]
         self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
@@ -228,12 +266,14 @@ class MetadataInferrer:
             pass
             # more values than fields in header
             error(f'Too many values for header ({n} vs {self.n_fieldnames})')
-        elif q is not None and any(v.startswith(q) and not v.endswith(q)
-                                   for v in raw_row):
-            raw_row = careful_split(line, self.sep, self.quote_char,
-                                self.escape_char)
+        elif q is not None and any(
+            v.startswith(q) and not v.endswith(q) for v in raw_row
+        ):
+            raw_row = careful_split(
+                line, self.sep, self.quote_char, self.escape_char
+            )
             if raw_row is None:
-                error('Can\'t split line')
+                error("Can't split line")
         if q:
             deq_row, is_quoted = self.dequote(raw_row)
         else:
@@ -249,7 +289,6 @@ class MetadataInferrer:
         debug('QUOTE CHAR:', self.quote_char)
         debug(self.fields)
 
-
     def describe_null(self):
         if self.null in KNOWN_NULLS:
             self.print(f'Null: "{self.null}"', 2)
@@ -257,20 +296,15 @@ class MetadataInferrer:
             if self.verbosity > 0:
                 warn(f'Unusual null: "{self.null}".')
 
-
     def dequote(self, row):
         # Strip pairs of opening and closing quote for each element in row.
         # Also restores replaced characters based on map
         # Return list of dequoted values and list of booleans
         # saying whether each was quoted
         q = self.quote_char or '"'
-        is_quoted = [
-            s.startswith(q) and s.endswith(q)
-            for s in row
-        ]
+        is_quoted = [s.startswith(q) and s.endswith(q) for s in row]
         out = [
-            s[1:-1] if s.startswith(q) and s.endswith(q) else s
-            for s in row
+            s[1:-1] if s.startswith(q) and s.endswith(q) else s for s in row
         ]
         for k, v in self.restorations.items():
             out = [s.replace(k, v) for s in out]
@@ -307,12 +341,12 @@ def careful_split(line, sep, quote, escape):
     return out
 
 
-
 class TypeStats:
     """
     Container for information about possible validity of a set of
     string values (from a field) for the type specified.
     """
+
     def __init__(self, type_):
         self.type_ = type_  # Not really used by this class (for info)
         self.n_valid = 0
@@ -320,7 +354,6 @@ class TypeStats:
         self.invalids = Counter()
         self.n_distinct_invalids = 0
         self.poss_null = None
-
 
     def summarize(self):
         self.n_distinct_invalids = len(self.invalids)
@@ -331,11 +364,8 @@ class TypeStats:
                 self.poss_null = list(modes)[0]
 
         # Potentially valid as this type if null is poss_null
-        self.all_poss_valid = (
-            self.n_invalid == 0 or (
-                self.n_distinct_invalids == 1
-                and self.poss_null is not None
-            )
+        self.all_poss_valid = self.n_invalid == 0 or (
+            self.n_distinct_invalids == 1 and self.poss_null is not None
         )
 
     def __str__(self):
@@ -344,14 +374,14 @@ class TypeStats:
         compatible with this type for some possible null indicator.
         """
         null = (
-            f': {self.n_valid} valid + {self.n_invalid} null if null is '
-            f'"{self.poss_null}"'
-        ) if self.poss_null else ''
-        return (
-            f'poss {self.type_}{null}'
-            if self.all_poss_valid
+            (
+                f': {self.n_valid} valid + {self.n_invalid} null if null is '
+                f'"{self.poss_null}"'
+            )
+            if self.poss_null
             else ''
         )
+        return f'poss {self.type_}{null}' if self.all_poss_valid else ''
 
 
 class FieldTypeStats:
@@ -374,8 +404,7 @@ class FieldTypeStats:
             self.poss_null = None
         else:
             most_likelies = {
-                k: v for k, v in self.stats.items()
-                if v.n_valid == m
+                k: v for k, v in self.stats.items() if v.n_valid == m
             }
             if len(most_likelies) == 1:
                 t = self.most_likely_type = list(most_likelies)[0]
@@ -427,7 +456,7 @@ def analyse_values(fieldname, values):
             d.invalids[v] += 1
 
         if re.match(DTISH, v) or re.match(ADTISH, v):
-           dt.n_valid += 1
+            dt.n_valid += 1
         else:
             dt.invalids[v] += 1
 

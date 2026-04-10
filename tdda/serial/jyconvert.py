@@ -3,10 +3,11 @@ import os
 import sys
 
 from tdda.serial.frictionless import (
-    isyaml, load_json_or_yaml, write_json_or_yaml
+    isyaml,
+    load_json_or_yaml,
+    write_json_or_yaml,
 )
 from tdda.utils import error, swap_ext
-
 
 
 def main(*paths):

@@ -32,14 +32,13 @@ def metadata_path(path, md_path=None):
 
 FUNCTIONS = {
     'pandas.read_csv': (
-        ReadWriteDiff(read=lambda path, **kwargs:
-                                  pd.read_csv(path, **kwargs),
-                      write=lambda df, path, **kwargs:
-                                   df.to_csv(path, **kwargs),
-                      Comparison=PandasComparison)
+        ReadWriteDiff(
+            read=lambda path, **kwargs: pd.read_csv(path, **kwargs),
+            write=lambda df, path, **kwargs: df.to_csv(path, **kwargs),
+            Comparison=PandasComparison,
+        )
     ),
 }
-
 
 
 def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
@@ -65,11 +64,12 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
 
     # Now transform to read params
 
-    del kw['index']    # don't want in the read args
+    del kw['index']  # don't want in the read args
 
     # parse these dates
-    dates = [col for col in df
-             if 'date' in loosen_pandas_type(df[col].dtype.name)]
+    dates = [
+        col for col in df if 'date' in loosen_pandas_type(df[col].dtype.name)
+    ]
 
     # Don't specify these types (typically strings, bools, and dates)
     objects = [col for col in df if df[col].dtype.name == 'object']
@@ -85,7 +85,8 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
     # Specify types for non-object columns
 
     kw['dtype'] = {
-        col: df[col].dtype.name for col in df
+        col: df[col].dtype.name
+        for col in df
         if col not in objects and col not in dates
     }
 
@@ -105,12 +106,11 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         'writer': TDDASERIAL.writer,
         lib: kw,
     }
-    with open (md_path, 'w') as f:
+    with open(md_path, 'w') as f:
         json.dump(d, f, indent=4)
 
     if verify:
-
-        with open (md_path) as f:
+        with open(md_path) as f:
             kw2 = json.load(f)
         assert kw == kw2
         df2 = fns.read(path, **kw2)
@@ -120,8 +120,14 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
 
 
 def pandas_write_csv(df, path, md_path=None, verify=False, **kwargs):
-    return write_csv('pandas.read_csv', df, path=path,
-                     md_path=md_path, verify=verify, **kwargs)
+    return write_csv(
+        'pandas.read_csv',
+        df,
+        path=path,
+        md_path=md_path,
+        verify=verify,
+        **kwargs,
+    )
 
 
 def read_csv(lib, path, md_path=None, **kwargs):
@@ -138,6 +144,3 @@ def read_csv(lib, path, md_path=None, **kwargs):
 
 def pandas_read_csv(path, md_path=None, **kwargs):
     return read_csv('pandas.read_csv', path=path, md_path=md_path, **kwargs)
-
-
-
