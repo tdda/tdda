@@ -177,10 +177,13 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
         for name, dtype in dtypes.items()
         if name not in date_fields and dtype is not None
     } or None
-    dfmt = md.date_format
+    dfmt = nvl(md.date_format, md.datetime_format)
+    dtfmt = nvl(md.datetime_format, md.date_format)
     if any(v.format for v in date_fields.values()) or dfmt:
         kw['date_format'] = {
-            name: to_pandas_date_format(f.format or dfmt)
+            name: to_pandas_date_format(
+                f.format or (dfmt if f.fieldtype == 'date' else dtfmt)
+            )
             for name, f in date_fields.items()
         }
     if date_fields:

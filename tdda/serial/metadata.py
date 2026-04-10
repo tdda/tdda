@@ -456,8 +456,8 @@ class SerialMetadata:
         extra_kwargs='warn',
         **kw,
     ):
-        if datetime_format is not None and date_format is None:
-            date_format = datetime_format
+#        if datetime_format is not None and date_format is None:
+#            date_format = datetime_format
         if kw:
             if extra_kwargs in ('error', 'warn'):
                 from pprint import pformat
@@ -481,7 +481,8 @@ class SerialMetadata:
         self.quote_char = quote_char
         self.escape_char = escape_char
         self.stutter_quotes = stutter_quotes
-        self.date_format = date_format
+        self.date_format = nvl(date_format, datetime_format)
+        self.datetime_format = datetime_format
         self.null_indicator = null_indicator
 
         self.accept_percentages_as_floats = accept_percentages_as_floats

@@ -57,11 +57,11 @@
                 "format": "us-datetime-2y"
             },
             {
-                "name": "unspecifieddateformat",
+                "name": "udate",
                 "fieldtype": "date"
             },
             {
-                "name": "unspecifieddatetimeformat",
+                "name": "udatetime",
                 "fieldtype": "datetime"
             }
         ],

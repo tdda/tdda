@@ -1782,7 +1782,8 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
         )
         self.assertDataFrameCorrect(df, tdpath('alldateformats.parquet'))
 
-    def atest_us_allformats2unspec_serial(self):
+    @tag
+    def test_us_allformats2unspec_serial(self):
         df = csv_to_pandas(
             tdpath('allformats2unspec.csv'), tdpath('allformats2unspec.serial')
         )
