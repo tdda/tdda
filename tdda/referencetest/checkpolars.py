@@ -171,3 +171,6 @@ def round_df(df, n):
     })
 
 
+def diff_dataframes(*args, **kwargs):
+    c = PolarsComparison()
+    return c.check_dataframe(*args, **kwargs)

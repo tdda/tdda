@@ -592,7 +592,6 @@ def booleans_to_csvw(true_values, false_values):
         warn(f'Several true values: using {trues[0]}')
     if len(falses) > 1:
         warn(f'Several false values: using {falses[0]}')
-    print(f'>>>{repr(true_values)} --- {repr(false_values)}')
     return f'{trues[0]}|{falses[0]}'
 
 
