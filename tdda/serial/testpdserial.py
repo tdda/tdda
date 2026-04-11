@@ -1839,5 +1839,48 @@ class TestSerialNamedDateFormatsWrite(ReferenceTestCase):
         )
 
 
+class TestSerialSmallWrite(ReferenceTestCase):
+    """
+    Integration tests: write a multi-type DataFrame (read from small.csv)
+    via pandas_to_csv with tab delimiter, single-quote char, and NULL
+    null marker — both via kw_overrides and via an input .serial file.
+    Verify that the written CSV and companion .serial file are correct.
+    """
+
+    def test_write_small_via_kwargs(self):
+        df = csv_to_pandas(
+            tdpath('small.csv'), md_path=tdpath('small-metadata.json')
+        )
+        csv_path = tmppath('small-write-kw.csv')
+        md_path = tmppath('small-write-kw.serial')
+        pandas_to_csv(
+            df, csv_path, md_outpath=md_path,
+            sep='\t', quotechar="'", na_rep='NULL'
+        )
+        self.assertFileCorrect(csv_path, tdpath('small-write-kw.csv'))
+        self.assertFileCorrect(
+            md_path,
+            tdpath('small-write-kw.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+    def test_write_small_via_serial(self):
+        df = csv_to_pandas(
+            tdpath('small.csv'), md_path=tdpath('small-metadata.json')
+        )
+        csv_path = tmppath('small-write-serial.csv')
+        md_path = tmppath('small-write-serial.serial')
+        pandas_to_csv(
+            df, csv_path,
+            md_inpath=tdpath('small-write-tsv.serial'), md_outpath=md_path
+        )
+        self.assertFileCorrect(csv_path, tdpath('small-write-serial.csv'))
+        self.assertFileCorrect(
+            md_path,
+            tdpath('small-write-serial.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)
