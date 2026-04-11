@@ -115,6 +115,7 @@ and graph results)
 import datetime
 import json
 import os
+import re
 import sys
 import unittest
 
@@ -155,7 +156,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check, r = _set_flags_from_argv(argv)
+        argv, tagged, check, r, untag = _set_flags_from_argv(argv)
         report = nvl(r, report)
         if 'TDDAREPORT' in os.environ:
             report = True
@@ -163,7 +164,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
             saved = set_testing(True)
         try:
             _run_tests(module=module, argv=argv, tagged=tagged,
-                       check=check, report=report, **kw)
+                       check=check, report=report, untag=untag, **kw)
         finally:
             if testtdda:
                 if saved is not None:
@@ -172,10 +173,13 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
 
 
 def _run_tests(module=None, argv=None, tagged=False, check=False,
-               report=None, **kw):
+               report=None, untag=False, **kw):
     """
     Run tests
     """
+    if untag:
+        _untag_tests(module=module, argv=argv)
+        return
     if argv is None:
         argv = sys.argv
     loader = (TaggedTestLoader(check) if tagged or check
@@ -241,6 +245,7 @@ def _set_flags_from_argv(argv=None):
     check = False
     regenerate = False
     report = None
+    untag = False
 
     for i, arg in enumerate(rest):
         if arg.startswith('-') and not arg.startswith('--'):
@@ -254,6 +259,9 @@ def _set_flags_from_argv(argv=None):
                 elif flag == '0':
                     check = True
                     arg = arg.replace('0', '')
+                elif flag == '9':
+                    untag = True
+                    arg = arg.replace('9', '')
                 elif flag == 'r':
                     report = True
                     arg = arg.replace('r', '')
@@ -307,9 +315,54 @@ def _set_flags_from_argv(argv=None):
                 else:
                     tagged = True
 
+    if '--untag' in rest:
+        idx = rest.index('--untag')
+        rest = rest[:idx] + rest[idx+1:]
+        untag = True
+
     if regenerate:
         ReferenceTestCase.set_regeneration()
-    return (argv[:1] + rest, tagged, check, report)
+    return (argv[:1] + rest, tagged, check, report, untag)
+
+
+def _untag_tests(module=None, argv=None):
+    """
+    Remove @tag decorators from all tagged test source files.
+    Finds the source files by loading tagged tests (as -0 does),
+    then rewrites each file with @tag lines stripped.
+    """
+    if argv is None:
+        argv = sys.argv
+    collected = []
+    loader = TaggedTestLoader(check=True, printer=collected.append)
+    if module is None:
+        unittest.main(argv=argv[:1], testLoader=loader, exit=False)
+    else:
+        loader.loadTestsFromModule(module)
+
+    source_files = set()
+    for classname in collected:
+        module_name = classname.rsplit('.', 1)[0]
+        mod = sys.modules.get(module_name)
+        if mod and getattr(mod, '__file__', None):
+            source_files.add(os.path.abspath(mod.__file__))
+
+    for filepath in sorted(source_files):
+        _remove_tag_lines(filepath)
+
+
+def _remove_tag_lines(filepath):
+    """Remove all @tag decorator lines from a source file."""
+    with open(filepath) as f:
+        lines = f.readlines()
+    new_lines = [line for line in lines if line.strip() != '@tag']
+    n_removed = len(lines) - len(new_lines)
+    if n_removed:
+        with open(filepath, 'w') as f:
+            f.write(''.join(new_lines))
+        print('Removed %d @tag decorator(s) from %s' % (n_removed, filepath))
+    else:
+        print('No @tag decorators found in %s' % filepath)
 
 
 class TaggedTestLoader(unittest.TestLoader):

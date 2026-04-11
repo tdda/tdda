@@ -114,7 +114,6 @@ class TestTDDAUtils(ReferenceTestCase):
         self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
 
 
-@tag
 class TestXMLGeneration(ReferenceTestCase):
     def testSimpleXMLGen(self):
         x = XML()
