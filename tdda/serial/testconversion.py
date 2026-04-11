@@ -266,56 +266,6 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
         self.assertEqual(len(buf), 3)  # Escape; Booleans; date format
 
-    def testInferMetadataWeird(self):
-        md = infer_format_from_flat_file(
-            tdpath('tiny1nd-weird.ssv'), verbosity=0
-        )
-        self.assertStringCorrect(
-            md.to_json(),
-            tdpath('tiny1nd-weird-inferred.serial'),
-            ignore_lines=self.IGL,
-        )
-
-    def testInferMetadataTiny1cdq(self):
-        md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'), verbosity=0)
-        # self.assertStringCorrect(md.to_json(),
-        #                          tdpath('tiny1nd-weird-inferred.serial'),
-        #                          ignore_lines=self.IGL)
-
-    def test_careful_split(self):
-        # Trivial cases
-        c = lambda s: careful_split(s, ',', '"', '\\')
-        self.assertEqual(c(''), [''])
-        self.assertEqual(c('1'), ['1'])
-        self.assertEqual(
-            c(
-                '1,2',
-            ),
-            ['1', '2'],
-        )
-        self.assertEqual(c('"a"'), ['"a"'])
-        self.assertEqual(c('"a","b"'), ['"a"', '"b"'])
-
-        self.assertEqual(c('"a,b"'), ['"a,b"'])
-        self.assertEqual(c('"a,b","1,2,3"'), ['"a,b"', '"1,2,3"'])
-
-        self.assertEqual(c('"a""b","1,2,3"'), ['"a""b"', '"1,2,3"'])
-        self.assertEqual(c('"a"b","1,2,3"'), ['"a"b"', '"1,2,3"'])
-
-        # escape handling done before
-        self.assertEqual(c(r'"a\,b","1,2,3"'), [r'"a\,b"', '"1,2,3"'])
-
-    def testInferMetadataWeirdCLI(self):
-        inpath = tdpath('tiny1nd-weird.ssv')
-        outpath = tmppath('tiny1nd-weird-inferred2.serial')
-        c = SerialConverter(cli_args=[inpath, outpath, '-g', '-q'])
-        c.convert()
-        self.assertFileCorrect(
-            outpath,
-            tdpath('tiny1nd-weird-inferred.serial'),
-            ignore_lines=self.IGL,
-        )
-
     def testCSVWToSerial(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath = tmppath('tiny1nd-weird-no-rename-from-csvw.serial')
@@ -482,22 +432,6 @@ class TestSerialConversions(ReferenceTestCase):
             longNames=True,
         )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
-
-    def testInferMetadataSimple(self):
-        md = infer_format_from_flat_file(tdpath('simple.csv'), verbosity=1)
-        self.assertStringCorrect(
-            md.to_json(),
-            tdpath('simple-inferred.serial'),
-            ignore_lines=self.IGL,
-        )
-
-    def testInferMetadataMinimal(self):
-        md = infer_format_from_flat_file(tdpath('minimal.csv'), verbosity=1)
-        self.assertStringCorrect(
-            md.to_json(),
-            tdpath('minimal-inferred.serial'),
-            ignore_lines=self.IGL,
-        )
 
     def testConversionToCSVWObject(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
@@ -815,6 +749,81 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(buf, [])
 
 
+class TestInference(ReferenceTestCase):
+    tiny1nd_serial = tdpath('tiny1nd.serial')
+    weird_serial = tdpath('tiny1nd-weird.serial')
+    IGL = ['tdda.serial-', 'writer']
+
+    def testInferMetadataTiny1cdq(self):
+        md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'), verbosity=0)
+        # self.assertStringCorrect(md.to_json(),
+        #                          tdpath('tiny1nd-weird-inferred.serial'),
+        #                          ignore_lines=self.IGL)
+
+    def test_careful_split(self):
+        # Trivial cases
+        c = lambda s: careful_split(s, ',', '"', '\\')
+        self.assertEqual(c(''), [''])
+        self.assertEqual(c('1'), ['1'])
+        self.assertEqual(
+            c(
+                '1,2',
+            ),
+            ['1', '2'],
+        )
+        self.assertEqual(c('"a"'), ['"a"'])
+        self.assertEqual(c('"a","b"'), ['"a"', '"b"'])
+
+        self.assertEqual(c('"a,b"'), ['"a,b"'])
+        self.assertEqual(c('"a,b","1,2,3"'), ['"a,b"', '"1,2,3"'])
+
+        self.assertEqual(c('"a""b","1,2,3"'), ['"a""b"', '"1,2,3"'])
+        self.assertEqual(c('"a"b","1,2,3"'), ['"a"b"', '"1,2,3"'])
+
+        # escape handling done before
+        self.assertEqual(c(r'"a\,b","1,2,3"'), [r'"a\,b"', '"1,2,3"'])
+
+    def testInferMetadataWeirdCLI(self):
+        inpath = tdpath('tiny1nd-weird.ssv')
+        outpath = tmppath('tiny1nd-weird-inferred2.serial')
+        c = SerialConverter(cli_args=[inpath, outpath, '-g', '-q'])
+        c.convert()
+        self.assertFileCorrect(
+            outpath,
+            tdpath('tiny1nd-weird-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
+
+    def testInferMetadataWeird(self):
+        md = infer_format_from_flat_file(
+            tdpath('tiny1nd-weird.ssv'), verbosity=0
+        )
+        self.assertStringCorrect(
+            md.to_json(),
+            tdpath('tiny1nd-weird-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
+
+    def testInferMetadataSimple(self):
+        md = infer_format_from_flat_file(tdpath('simple.csv'), verbosity=1)
+        self.assertStringCorrect(
+            md.to_json(),
+            tdpath('simple-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
+
+    def testInferMetadataMinimal(self):
+        md = infer_format_from_flat_file(tdpath('minimal.csv'), verbosity=1)
+        self.assertStringCorrect(
+            md.to_json(),
+            tdpath('minimal-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
+
+
+
+
+
 class TestSerialUtilityFunction(ReferenceTestCase):
     def testTypeInference(self):
         self.assertEqual(
@@ -994,7 +1003,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
             m.choose_csv_from_frictionless_name('b.resource.json'), f'b.txt'
         )
 
-    def testConversionSpecifcationCLI(self):
+    def testConversionSpecificationCLI(self):
         # tests that the validator figures out what to do correctly
         # from command line args.
 
