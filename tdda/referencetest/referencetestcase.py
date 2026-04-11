@@ -113,14 +113,15 @@ and graph results)
 """
 
 import datetime
+import glob
 import json
 import os
 import re
 import sys
 import unittest
 
-from tdda.state import get_testing, set_testing
-from tdda.referencetest.referencetest import ReferenceTest, tag
+from tdda.state import get_testing, set_testing, get_config
+from tdda.referencetest.referencetest import ReferenceTest, tag, DEFAULT_FAIL_DIR
 from tdda.utils import TDDAError, nvl
 
 
@@ -156,7 +157,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check, r, untag = _set_flags_from_argv(argv)
+        argv, tagged, check, r, untag, tag_failures = _set_flags_from_argv(argv)
         report = nvl(r, report)
         if 'TDDAREPORT' in os.environ:
             report = True
@@ -164,7 +165,8 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
             saved = set_testing(True)
         try:
             _run_tests(module=module, argv=argv, tagged=tagged,
-                       check=check, report=report, untag=untag, **kw)
+                       check=check, report=report, untag=untag,
+                       tag_failures=tag_failures, **kw)
         finally:
             if testtdda:
                 if saved is not None:
@@ -173,7 +175,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
 
 
 def _run_tests(module=None, argv=None, tagged=False, check=False,
-               report=None, untag=False, **kw):
+               report=None, untag=False, tag_failures=False, **kw):
     """
     Run tests
     """
@@ -204,6 +206,10 @@ def _run_tests(module=None, argv=None, tagged=False, check=False,
         if report:
             with open(outpath, 'w') as f:
                 json.dump(d, f)
+        if not tag_failures:
+            tag_failures = get_config(None).referencetest.tag_failures
+        if tag_failures:
+            _write_failing_tests(result)
         sys.exit(0 if ok else 1)
     else:
         unittest.main(module=module, argv=argv, testLoader=loader, **kw)
@@ -246,6 +252,7 @@ def _set_flags_from_argv(argv=None):
     regenerate = False
     report = None
     untag = False
+    tag_failures = False
 
     for i, arg in enumerate(rest):
         if arg.startswith('-') and not arg.startswith('--'):
@@ -262,6 +269,9 @@ def _set_flags_from_argv(argv=None):
                 elif flag == '9':
                     untag = True
                     arg = arg.replace('9', '')
+                elif flag == 'F':
+                    tag_failures = True
+                    arg = arg.replace('F', '')
                 elif flag == 'r':
                     report = True
                     arg = arg.replace('r', '')
@@ -320,9 +330,19 @@ def _set_flags_from_argv(argv=None):
         rest = rest[:idx] + rest[idx+1:]
         untag = True
 
+    if '--tag-failures' in rest:
+        idx = rest.index('--tag-failures')
+        rest = rest[:idx] + rest[idx+1:]
+        tag_failures = True
+
+    if '--no-tag-failures' in rest:
+        idx = rest.index('--no-tag-failures')
+        rest = rest[:idx] + rest[idx+1:]
+        tag_failures = False
+
     if regenerate:
         ReferenceTestCase.set_regeneration()
-    return (argv[:1] + rest, tagged, check, report, untag)
+    return (argv[:1] + rest, tagged, check, report, untag, tag_failures)
 
 
 def _untag_tests(module=None, argv=None):
@@ -363,6 +383,149 @@ def _remove_tag_lines(filepath):
         print('Removed %d @tag decorator(s) from %s' % (n_removed, filepath))
     else:
         print('No @tag decorators found in %s' % filepath)
+
+
+def _write_failing_tests(result):
+    """
+    Write the IDs of failing/erroring tests to a file in TDDA_FAIL_DIR,
+    one per line in the format:
+        /abs/path/to/test_file.py::ClassName::test_method_name
+        /abs/path/to/test_file.py::test_function_name
+    """
+    cases = [t for (t, _) in result.failures + result.errors]
+    if not cases:
+        return
+    lines = []
+    for test in cases:
+        test_id = test.id()       # e.g. "pkg.module.ClassName.test_method"
+        parts = test_id.rsplit('.', 2)
+        if len(parts) == 3:
+            module_name, class_name, method_name = parts
+        elif len(parts) == 2:
+            module_name, method_name = parts
+            class_name = None
+        else:
+            continue
+        mod = sys.modules.get(module_name)
+        if mod and getattr(mod, '__file__', None):
+            filepath = os.path.abspath(mod.__file__)
+            if class_name:
+                lines.append('%s::%s::%s' % (filepath, class_name, method_name))
+            else:
+                lines.append('%s::%s' % (filepath, method_name))
+    if lines:
+        stamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+        filename = '%s-failing-tests.txt' % stamp
+        outpath = os.path.join(DEFAULT_FAIL_DIR, filename)
+        with open(outpath, 'w') as f:
+            f.write('\n'.join(lines) + '\n')
+        print('Failing tests written to %s' % outpath)
+
+
+def tag_failing_tests(args=None):
+    """
+    Read a failing-tests file (written by a previous run with -F /
+    --tagfailures) and add @tag decorators to each failing test method
+    in its source file.
+
+    args: list of command-line arguments; if non-empty, args[0] is the
+          path to the failing-tests file.  If empty/None, finds the most
+          recent *-failing-tests.txt file in $TDDA_FAIL_DIR.
+    """
+    if args:
+        filepath = args[0]
+    else:
+        pattern = os.path.join(DEFAULT_FAIL_DIR,
+                               '????-??-??T??????-failing-tests.txt')
+        candidates = sorted(glob.glob(pattern))
+        if not candidates:
+            print('No failing tests file found in %s' % DEFAULT_FAIL_DIR)
+            return
+        filepath = candidates[-1]
+    if not os.path.exists(filepath):
+        print('No failing tests file found at %s' % filepath)
+        return
+    with open(filepath) as f:
+        lines = [l.strip() for l in f if l.strip()]
+    by_file = {}
+    for line in lines:
+        parts = line.split('::')
+        src = parts[0]
+        identifiers = parts[1:]   # [ClassName, method] or [function_name]
+        by_file.setdefault(src, []).append(identifiers)
+    for src, items in sorted(by_file.items()):
+        _add_tag_lines(src, items)
+
+
+def _add_tag_lines(filepath, items):
+    """
+    Add @tag decorators to the specified test methods/functions in filepath.
+
+    items is a list of:
+        [class_name, method_name]  — for a method inside a class
+        [function_name]            — for a module-level test function
+    """
+    with open(filepath) as f:
+        lines = f.readlines()
+
+    # Ensure `tag` is imported; fix the import line if needed
+    tag_imported = any(re.search(r'\bimport\b.*\btag\b', l) for l in lines)
+    if not tag_imported:
+        for i, line in enumerate(lines):
+            m = re.match(r'(from\s+tdda\.referencetest\s+import\s+)(.*)', line)
+            if m:
+                lines[i] = m.group(1) + m.group(2).rstrip() + ', tag\n'
+                tag_imported = True
+                break
+        if not tag_imported:
+            # No tdda.referencetest import found — insert one after last import
+            last_import = 0
+            for i, line in enumerate(lines):
+                if re.match(r'\s*(import |from \S+ import )', line):
+                    last_import = i
+            lines.insert(last_import + 1,
+                         'from tdda.referencetest import tag\n')
+
+    # Build lookup: method/function name -> expected class name (or None)
+    targets = {}
+    for item in items:
+        if len(item) == 2:
+            targets[item[1]] = item[0]   # method_name -> class_name
+        elif len(item) == 1:
+            targets[item[0]] = None      # function_name -> no class
+
+    insertions = []   # list of (line_index, indent_str)
+    current_class = None
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        indent = line[:len(line) - len(stripped)]
+
+        if stripped.startswith('class '):
+            m = re.match(r'class\s+(\w+)', stripped)
+            if m:
+                current_class = m.group(1)
+
+        if stripped.startswith('def '):
+            m = re.match(r'def\s+(\w+)', stripped)
+            if m:
+                name = m.group(1)
+                if name in targets:
+                    expected_class = targets[name]
+                    if expected_class is None or expected_class == current_class:
+                        prev = lines[i - 1].strip() if i > 0 else ''
+                        if prev != '@tag':
+                            insertions.append((i, indent))
+
+    for idx, indent in reversed(insertions):
+        lines.insert(idx, indent + '@tag\n')
+
+    n = len(insertions)
+    if n or not tag_imported:
+        with open(filepath, 'w') as f:
+            f.write(''.join(lines))
+        print('Added %d @tag decorator(s) to %s' % (n, filepath))
+    else:
+        print('No new @tag decorators needed in %s' % filepath)
 
 
 class TaggedTestLoader(unittest.TestLoader):

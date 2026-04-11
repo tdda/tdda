@@ -172,6 +172,9 @@ def main_with_argv(argv, verbose=True):
     elif name == 'diff':
         from tdda.referencetest.ddiff import ddiff_helper
         ddiff_helper(argv[2:])
+    elif name == 'tag':
+        from tdda.referencetest.referencetestcase import tag_failing_tests
+        tag_failing_tests(argv[2:])
     elif name == 'serial':
         from tdda.serial.converter import serial_cli
         serial_cli(argv[2:])
