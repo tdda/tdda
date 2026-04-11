@@ -1,12 +1,14 @@
 from collections import namedtuple
 import re
 
+
 class DateRE:
     DATEISH = re.compile(r'^[0-9]{1,4}[-./][0-9]{1,2}[-/][0-9]{1,2}.*$')
     ISO_DATEISH = re.compile(r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}$')
-    ISO_DATETIMEISH = re.compile(r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$$')
-    SEP_ISO = re.compile(
-        r'^[0-9]{4}([-/])[0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$')
+    ISO_DATETIMEISH = re.compile(
+        r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$$'
+    )
+    SEP_ISO = re.compile(r'^[0-9]{4}([-/])[0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$')
     DATEISH4Y = re.compile(
         r'^([0-9]{1,2})[-./]([0-9]{1,2})[-/]([0-9]{4})'
         r'(.[0-9]{2}[:.][0-9]{2}[:.][0-9]{2}(\.[0-9]+)?)?$'
@@ -26,8 +28,8 @@ class DateRE:
 
 
 Separators = namedtuple(
-    'Separators',
-    'date_sep date_time_sep time_sep has_time has_frac time_part')
+    'Separators', 'date_sep date_time_sep time_sep has_time has_frac time_part'
+)
 
 
 ISODT = 'ISO8601'
@@ -36,7 +38,7 @@ ISODT = 'ISO8601'
 def infer_date_format(col, n=100):
     nonnulls = col.dropna()
     if nonnulls.size == 0:
-        return None             # All null
+        return None  # All null
 
     strings = nonnulls[:n].to_list()  # first n non-null strings
     if not strings:
@@ -45,7 +47,7 @@ def infer_date_format(col, n=100):
         return None
 
     if not all(re.match(DateRE.DATEISH, s) for s in strings):
-        return None    # Don't look like dates at all
+        return None  # Don't look like dates at all
 
     if all(re.match(DateRE.ISO_DATEISH, s) for s in strings):
         # all isodates
@@ -56,7 +58,6 @@ def infer_date_format(col, n=100):
         return fmt
     elif all(re.match(DateRE.ISO_DATETIMEISH, s) for s in strings):
         return ISODT
-
 
     matches = [re.match(DateRE.DATEISH4Y, s) for s in strings]
     if all(matches):

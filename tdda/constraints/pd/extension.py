@@ -26,8 +26,14 @@ class TDDAPandasExtension(ExtensionBase):
             if a == '-':
                 return True
             info = tdda_path_info(a)
-            if (info.ext in ('.csv', '.psv', '.tsv', '.parquet',
-                             '.json', '.yaml')):
+            if info.ext in (
+                '.csv',
+                '.psv',
+                '.tsv',
+                '.parquet',
+                '.json',
+                '.yaml',
+            ):
                 return True
         return False
 
@@ -46,4 +52,3 @@ class TDDAPandasExtension(ExtensionBase):
 
     def detect(self):
         return PandasDetector(self.argv, verbose=self.verbose).detect()
-

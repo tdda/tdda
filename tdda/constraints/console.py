@@ -42,16 +42,22 @@ CONSTRAINTS_COMMANDS = ('discover', 'verify', 'detect')
 def help(extensions, cmd=None, stream=sys.stdout):
     if cmd:
         if cmd in CONSTRAINTS_COMMANDS + (
-           'gentest', 'diff', 'serial', 'version',
-           'examples', 'help'
+            'gentest',
+            'diff',
+            'serial',
+            'version',
+            'examples',
+            'help',
         ):
             print_help(cmd, stream)
         else:
-            print('\nNo help available for %s. Try one of the following:\n'
-                  '    tdda help discover\n'
-                  '    tdda help verify\n'
-                  '    tdda help detect\n'
-                  '    tdda help examples\n' % cmd)
+            print(
+                '\nNo help available for %s. Try one of the following:\n'
+                '    tdda help discover\n'
+                '    tdda help verify\n'
+                '    tdda help detect\n'
+                '    tdda help examples\n' % cmd
+            )
         # if cmd in CONSTRAINTS_COMMANDS:
         #     print('\n%s is available for the following:'
         #           % cmd.title(), file=stream)
@@ -67,11 +73,12 @@ def help(extensions, cmd=None, stream=sys.stdout):
         #     ext.help(stream=stream)
         #     print(file=stream)
     if os.name == 'nt':
-        print('\nNOTE\n\n'
-              'If this tick (%s) and cross (%s) are not being displayed '
-              'correctly, you probably\nneed to use a different font, '
-              'or use --ascii.\n'
-              % (Marks.tick, Marks.cross))
+        print(
+            '\nNOTE\n\n'
+            'If this tick (%s) and cross (%s) are not being displayed '
+            'correctly, you probably\nneed to use a different font, '
+            'or use --ascii.\n' % (Marks.tick, Marks.cross)
+        )
 
 
 def load_extension(ext):
@@ -87,8 +94,11 @@ def load_extension(ext):
         mod = importlib.import_module(modulename)
         return getattr(mod, classname, None)
     except ImportError as e:
-        print('Warning: no tdda constraint module %s (%s)'
-              % (modulename, str(e)), file=sys.stderr)
+        print(
+            'Warning: no tdda constraint module %s (%s)'
+            % (modulename, str(e)),
+            file=sys.stderr,
+        )
         return None
 
 
@@ -110,8 +120,9 @@ def no_constraints(name, msg, argv, extensions):
     When no constraint discovery or verification could be done, show
     some help about it.
     """
-    inputs = [a for a in argv
-                if not a.startswith('-') and not a.endswith('.tdda')]
+    inputs = [
+        a for a in argv if not a.startswith('-') and not a.endswith('.tdda')
+    ]
     if inputs:
         print('%s for %s' % (msg, ' '.join(inputs)), file=sys.stderr)
     help(extensions, name, stream=sys.stderr)
@@ -168,15 +179,19 @@ def main_with_argv(argv, verbose=True):
         print(__version__)
     elif name == 'test':
         from tdda import testtdda
+
         testtdda.run_all_tests(module=testtdda, argv=['python'])
     elif name == 'diff':
         from tdda.referencetest.ddiff import ddiff_helper
+
         ddiff_helper(argv[2:])
     elif name == 'tag':
         from tdda.referencetest.referencetestcase import tag_failing_tests
+
         tag_failing_tests(argv[2:])
     elif name == 'serial':
         from tdda.serial.converter import serial_cli
+
         serial_cli(argv[2:])
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None

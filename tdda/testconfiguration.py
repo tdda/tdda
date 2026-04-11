@@ -30,12 +30,14 @@ class TestSystemConfig(unittest.TestCase):
     def test_04_numpy_pandas_versions(self):
         try:
             import numpy
+
             print('\nnumpy version:', numpy.__version__)
         except ImportError:
             print('numpy not found.')
 
         try:
             import pandas
+
             print('\npandas version:', pandas.__version__)
         except ImportError:
             print('pandas not found.')
@@ -43,4 +45,3 @@ class TestSystemConfig(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

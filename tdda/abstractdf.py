@@ -46,7 +46,7 @@ def is_pandas_obj(o):
 
 
 def is_polars_df(df):
-    return not(is_pandas_df(df))
+    return not (is_pandas_df(df))
 
 
 def col_types_match(L, R, level=None):
@@ -58,9 +58,9 @@ def lib(o):
     """
     Returns pd or pl according to whether o is a pandas or polars object
     """
-    if (isinstance(o, pd.DataFrame) or isinstance(o, pd.Series)):
+    if isinstance(o, pd.DataFrame) or isinstance(o, pd.Series):
         return pd
-    elif (isinstance(o, pl.DataFrame) or isinstance(o, pl.Series)):
+    elif isinstance(o, pl.DataFrame) or isinstance(o, pl.Series):
         return pl
     raise ValueError(f'{o} is not a Python or Polars DataFrame or Series')
 
@@ -118,9 +118,15 @@ def index_col(is_pandas, n, start=0):
     else:
         return pl.Series(np.arange(start, start + n), dtype=pl.Int64)
 
+
 def get_diffs_df_with_cols_and_index(df, *args, **kwargs):
-    return specialize(df, inspect.stack()[0][3],  # this function's name
-                      df, *args, **kwargs)
+    return specialize(
+        df,
+        inspect.stack()[0][3],  # this function's name
+        df,
+        *args,
+        **kwargs,
+    )
 
 
 def polars_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n, key=None):
@@ -128,10 +134,10 @@ def polars_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n, key=None):
     nc = '_tdda_nc_'
     out_df = (
         df.with_row_index(idx)
-          .with_columns(rowdiffs.alias(nc))
-          .filter(pl.col('_tdda_nc_') > 0)
-          .select(cols + [idx])
-          .head(n)
+        .with_columns(rowdiffs.alias(nc))
+        .filter(pl.col('_tdda_nc_') > 0)
+        .select(cols + [idx])
+        .head(n)
     )
     return out_df.select(cols), out_df[idx].to_list()
 
@@ -147,41 +153,50 @@ def pandas_get_diffs_df_with_cols_and_index(df, cols, rowdiffs, n, key=None):
 
 
 def get_diffs_df_with_cols(df, *args, **kwargs):
-    return specialize(df, inspect.stack()[0][3],  # this function's name
-                      df, *args, **kwargs)
+    return specialize(
+        df,
+        inspect.stack()[0][3],  # this function's name
+        df,
+        *args,
+        **kwargs,
+    )
 
 
 def polars_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     nc = '_tdda_nc_'
     delta = len(df) - len(rowdiffs)
     if delta > len(rowdiffs):
-        rowdiffs = concat_series([
-            rowdiffs,
-            pl.Series(np.ones(delta, dtype=bool))
-        ])
+        rowdiffs = concat_series(
+            [rowdiffs, pl.Series(np.ones(delta, dtype=bool))]
+        )
     return (
         df.with_columns(rowdiffs.alias(nc))
-          .filter(pl.col('_tdda_nc_') > 0)
-          .select(cols)
-          .head(n)
+        .filter(pl.col('_tdda_nc_') > 0)
+        .select(cols)
+        .head(n)
     )
 
 
 def pandas_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     delta = len(df) - len(rowdiffs)
     if delta > 0:
-        rowdiffs = concat_series([
-            rowdiffs,
-            pd.Series(np.ones(delta, dtype=bool))
-        ]).reset_index(drop=True)
+        rowdiffs = concat_series(
+            [rowdiffs, pd.Series(np.ones(delta, dtype=bool))]
+        ).reset_index(drop=True)
     elif delta < 0:
-        rowdiffs = rowdiffs[:len(df)]
+        rowdiffs = rowdiffs[: len(df)]
     return df[cols][rowdiffs > 0].head(n)
 
 
 def df_to_lists(df, *args, **kwargs):
-    return specialize(df, inspect.stack()[0][3],  # this function's name
-                      df, *args, **kwargs)
+    return specialize(
+        df,
+        inspect.stack()[0][3],  # this function's name
+        df,
+        *args,
+        **kwargs,
+    )
+
 
 def polars_df_to_lists(df, n=None):
     return extend_table(df.rows(), df.shape[1], n)
@@ -194,7 +209,7 @@ def pandas_df_to_lists(df, n=None):
 
 def extend_table(table, ncols, target=None):
     if target is not None and len(table) < target:
-        table.extend([ ([''] * ncols) for i in range(target - len(table))])
+        table.extend([([''] * ncols) for i in range(target - len(table))])
     return table
 
 
@@ -211,9 +226,16 @@ def all_fields_except(exclusions):
     return lambda df: sorted(set(col_names(df)) - set(exclusions))
 
 
-def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
-                     find_md=False, backend=None, engine=None,
-                     infer_datetime_formats=False, config=None):
+def csv_to_dataframe(
+    path=None,
+    md_path=None,
+    md_file_type=None,
+    find_md=False,
+    backend=None,
+    engine=None,
+    infer_datetime_formats=False,
+    config=None,
+):
     """
     Load a csv file to a DataFrame of a type (Pandas or Polars)
     determined by engine or config.
@@ -221,18 +243,26 @@ def csv_to_dataframe(path=None, md_path=None, md_file_type=None,
     config = get_config(config)
     engine = config.get('engine', engine)
     if engine == 'polars':
-        return csv_to_polars(path=path, md_path=md_path,
-                             md_file_type=md_file_type,
-                             find_md=find_md,
-                             infer_datetime_format=infer_datetime_format)
+        return csv_to_polars(
+            path=path,
+            md_path=md_path,
+            md_file_type=md_file_type,
+            find_md=find_md,
+            infer_datetime_format=infer_datetime_format,
+        )
     elif engine == 'pandas':
-        return csv_to_pandas(path=path, md_path=md_path,
-                             md_file_type=md_file_type,
-                             find_md=find_md, backend=backend,
-                             infer_datetime_formats=infer_datetime_formats)
+        return csv_to_pandas(
+            path=path,
+            md_path=md_path,
+            md_file_type=md_file_type,
+            find_md=find_md,
+            backend=backend,
+            infer_datetime_formats=infer_datetime_formats,
+        )
         return df
     else:
         error(f'Unknown DateFrame engine: {engine}.')
+
 
 def get_scalar_eq(df):
     """
@@ -314,8 +344,7 @@ def find_non_fields(df, fields):
     Return any fields in the list/collection fields that are not in df
     """
     return [
-        f for f in list(df)
-        if f not in set(self.fields).intersection(set(df))
+        f for f in list(df) if f not in set(self.fields).intersection(set(df))
     ]
 
 
@@ -330,14 +359,25 @@ def df_add_named_col_with_values(df, name, values):
 def df_join(left, right, keyL, keyR=None, how='outer', suffix='__r', **kw):
     keyR = nvl(keyR, keyL)
     if is_pandas_df(left):
-        return left.merge(right, left_on=keyL, right_on=keyR,
-                          how=how, suffixes=('', suffix), **kw)
+        return left.merge(
+            right,
+            left_on=keyL,
+            right_on=keyR,
+            how=how,
+            suffixes=('', suffix),
+            **kw,
+        )
     else:
         how = 'full' if how == 'outer' else how
-        return left.join(right, left_on=keyL, right_on=keyR, how=how,
-                         suffix=suffix,
-                         coalesce=True,  # return key even if only in right
-                         **kw)
+        return left.join(
+            right,
+            left_on=keyL,
+            right_on=keyR,
+            how=how,
+            suffix=suffix,
+            coalesce=True,  # return key even if only in right
+            **kw,
+        )
 
 
 def concat_series(series):

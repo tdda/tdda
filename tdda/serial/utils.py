@@ -146,6 +146,7 @@ def choose_md_path(path, flavour=None):
 
 def format_template_args(kw, flavour=None, dtypes=None):
     """Format a kwargs dict as a string for use in a code template."""
+
     def f(x):
         s12 = ' ' * 12
         s8 = ' ' * 8

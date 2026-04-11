@@ -3,6 +3,7 @@
 """
 Classes for representing individual constraints.
 """
+
 import datetime
 import getpass
 import json
@@ -19,12 +20,28 @@ from collections import OrderedDict, namedtuple
 from tdda.state import get_config
 from tdda.tables import Table
 from tdda.utils import (
-    swap_ext, dict_to_json, dict_to_yaml, dict_to_toml,
-    json_sanitize, strip_lines,
-    nvl, richgood, richbad, richgoodbad, XML, write_or_return,
-    tdda_css, constraint_val, indicator_field_name,
-    rednz, redblack, coloured_tick_cross, print_stderr,
-    TDDAError, globlike_match, plural
+    swap_ext,
+    dict_to_json,
+    dict_to_yaml,
+    dict_to_toml,
+    json_sanitize,
+    strip_lines,
+    nvl,
+    richgood,
+    richbad,
+    richgoodbad,
+    XML,
+    write_or_return,
+    tdda_css,
+    constraint_val,
+    indicator_field_name,
+    rednz,
+    redblack,
+    coloured_tick_cross,
+    print_stderr,
+    TDDAError,
+    globlike_match,
+    plural,
 )
 from tdda.version import version
 
@@ -36,62 +53,87 @@ outdict = dict
 
 PRECISIONS = ('open', 'closed', 'fuzzy')
 
-CONSTRAINT_SUFFIX_MAP = OrderedDict((
-    ('type', 'type'),
-    ('min', 'min'),
-    ('min_length', 'min_length'),
-    ('max', 'max'),
-    ('max_length', 'max_length'),
-    ('sign', 'sign'),
-    ('max_nulls', 'nonnull'),
-    ('no_duplicates', 'nodups'),
-    ('allowed_values', 'values'),
-    ('rex', 'rex'),
-    ('transform', None),  # this mapped value isn't used
-))
+CONSTRAINT_SUFFIX_MAP = OrderedDict(
+    (
+        ('type', 'type'),
+        ('min', 'min'),
+        ('min_length', 'min_length'),
+        ('max', 'max'),
+        ('max_length', 'max_length'),
+        ('sign', 'sign'),
+        ('max_nulls', 'nonnull'),
+        ('no_duplicates', 'nodups'),
+        ('allowed_values', 'values'),
+        ('rex', 'rex'),
+        ('transform', None),  # this mapped value isn't used
+    )
+)
 
-CONSTRAINT_COLS = dict((
-    ('type', 'Type Allowed'),
-    ('min', 'Min Allowed'),
-    ('max', 'Max Allowed'),
-    ('sign', 'Sign Allowed'),
-    ('max_nulls', 'Nulls Allowed'),
-    ('no_duplicates', 'Duplicates Allowed'),
-    ('allowed_values', 'Values Allowed'),
-    ('rex', 'Regular Expressions'),
-))
+CONSTRAINT_COLS = dict(
+    (
+        ('type', 'Type Allowed'),
+        ('min', 'Min Allowed'),
+        ('max', 'Max Allowed'),
+        ('sign', 'Sign Allowed'),
+        ('max_nulls', 'Nulls Allowed'),
+        ('no_duplicates', 'Duplicates Allowed'),
+        ('allowed_values', 'Values Allowed'),
+        ('rex', 'Regular Expressions'),
+    )
+)
 
 
 STANDARD_FIELD_CONSTRAINTS = tuple(CONSTRAINT_SUFFIX_MAP.keys())
 STANDARD_CONSTRAINT_SUFFIXES = tuple(CONSTRAINT_SUFFIX_MAP.values())
 STANDARD_FIELD_GROUP_CONSTRAINTS = ('lt', 'lte', 'eq', 'gt', 'gte')
-SIGNS = ('positive', 'non-negative', 'zero', 'non-positive', 'negative',
-         'null')
+SIGNS = (
+    'positive',
+    'non-negative',
+    'zero',
+    'non-positive',
+    'negative',
+    'null',
+)
 TYPES = ('bool', 'int', 'real', 'date', 'string')
 DATE_VALUED_CONSTRAINTS = ('min', 'max')
 UTF8 = 'UTF-8'
 
 
 RD = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$')
-RDT = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
-                 r'(\d{1,2}):(\d{2}):(\d{2})$')
-RDTM = re.compile(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
-                  r'(\d{1,2}):(\d{2}):(\d{2})'
-                  r'\.(\d+)$')
+RDT = re.compile(
+    r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
+    r'(\d{1,2}):(\d{2}):(\d{2})$'
+)
+RDTM = re.compile(
+    r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T]'
+    r'(\d{1,2}):(\d{2}):(\d{2})'
+    r'\.(\d+)$'
+)
 
 UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
 
-EPSILON_DEFAULT = 0.0   # no tolerance for min/max constraints for
-                        # real (i.e. floating point) fields.
+EPSILON_DEFAULT = 0.0  # no tolerance for min/max constraints for
+# real (i.e. floating point) fields.
 
-METADATA_KEYS = ('as_at', 'local_time', 'utc_time', 'creator',
-                 'rdbms', 'source', 'host','user', 'dataset',
-                 'n_records', 'n_selected', 'tddafile')
+METADATA_KEYS = (
+    'as_at',
+    'local_time',
+    'utc_time',
+    'creator',
+    'rdbms',
+    'source',
+    'host',
+    'user',
+    'dataset',
+    'n_records',
+    'n_selected',
+    'tddafile',
+)
 
 
 class Marks:
-    tick = '✓'     # This is a tick mark; whether or not it displays in editors
-    cross = '✗'    # This is a cross; again, it may not display
+    tick = '✓'  # This is a tick mark; whether or not it displays in editors
+    cross = '✗'  # This is a cross; again, it may not display
     nothing = '-'  # This is an en-dash; again, it may not display in editors
 
 
@@ -110,6 +152,7 @@ class PassFailCount:
     Container for pass & fail counts for anything,
     with a few convenience properties
     """
+
     def __init__(self, name, passes, failures):
         self.name = name
         self.passes = passes
@@ -142,16 +185,17 @@ class ConstraintResult:
     info is usually used to store an information value for the constraint,
     e.g. the actual max for a max constraint.
     """
+
     def __init__(self, ok, info=None):
         self.ok = ok
         self.info = info
-
 
 
 class TDDAObject(OrderedDict):
     """
     Ordered Dictionary
     """
+
     def __init__(self, *args, **kwargs):
         OrderedDict.__init__(self, *args, **kwargs)
 
@@ -171,8 +215,15 @@ class DatasetConstraints(object):
     Container for constraints pertaining to a dataset.
     Currently only supports per-field constraints.
     """
-    def __init__(self, per_field_constraints=None, loadpath=None,
-                 no_md=False, allowed_fields=True, required_fields=True):
+
+    def __init__(
+        self,
+        per_field_constraints=None,
+        loadpath=None,
+        no_md=False,
+        allowed_fields=True,
+        required_fields=True,
+    ):
         self.as_at = None
         self.local_time = None
         self.utc_time = None
@@ -209,8 +260,9 @@ class DatasetConstraints(object):
 
     def set_source(self, source, dataset=None):
         self.source = source
-        self.dataset = (dataset
-                        or (os.path.basename(source) if source else None))
+        self.dataset = dataset or (
+            os.path.basename(source) if source else None
+        )
 
     def set_stats(self, n_records, n_selected=None):
         self.n_records = n_records
@@ -270,7 +322,7 @@ class DatasetConstraints(object):
                 elif not kind.startswith('#'):
                     print_error(
                         'Constraint kind %s for field %s unknown: ignored.'
-                         % (kind, fieldname)
+                        % (kind, fieldname)
                     )
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))
@@ -279,7 +331,7 @@ class DatasetConstraints(object):
         self.required_fields = dataset.get('required_fields', None)
 
         metadata = in_constraints.get('creation_metadata', {})
-        for (k, v) in metadata.items():
+        for k, v in metadata.items():
             if k in METADATA_KEYS and v is not None:
                 self.__dict__[k] = v
                 if k == 'tddafile':
@@ -297,8 +349,8 @@ class DatasetConstraints(object):
         self.local_time = now.isoformat(timespec='seconds')
         self.utc_time = utcnow.isoformat(timespec='seconds')
         self.host = socket.gethostname()
-        try:    # Issue 18: getuser() can fail under Docker with password
-                # files with no non-root users
+        try:  # Issue 18: getuser() can fail under Docker with password
+            # files with no non-root users
             self.user = getpass.getuser()
         except:
             self.user = ''
@@ -307,7 +359,8 @@ class DatasetConstraints(object):
     def get_metadata(self, tddafile=None):
         d = outdict(
             (k, getattr(self, k, None))
-            for k in METADATA_KEYS if getattr(self, k, None) is not None
+            for k in METADATA_KEYS
+            if getattr(self, k, None) is not None
         )
         if tddafile:
             d['tddafile'] = tddafile
@@ -320,9 +373,9 @@ class DatasetConstraints(object):
         """
         Converts the constraints in this object to a dictionary.
         """
-        constraints = outdict((
-            (f, v.to_dict_value()) for f, v in self.fields.items()
-        ))
+        constraints = outdict(
+            ((f, v.to_dict_value()) for f, v in self.fields.items())
+        )
         metadata = self.get_metadata(tddafile=tddafile)
         if self.no_md:
             metadata = None
@@ -384,28 +437,41 @@ class DatasetConstraints(object):
             elif fmt == 'html':
                 self.to_html_report(outpath)
             else:
-                print(f'Ignoring unknown output format "{fmt}".',
-                      file=sys.stderr)
+                print(
+                    f'Ignoring unknown output format "{fmt}".', file=sys.stderr
+                )
 
     def to_json_report(self, outpath=None):
-        return write_or_return(self.to_json(), fwrite, json.dumps,
-                               path=outpath)
+        return write_or_return(
+            self.to_json(), fwrite, json.dumps, path=outpath
+        )
 
     def to_yaml_report(self, outpath=None):
-        return write_or_return(self.to_dict(), yaml.dump, yaml.dump,
-                               path=outpath)
+        return write_or_return(
+            self.to_dict(), yaml.dump, yaml.dump, path=outpath
+        )
 
     def to_toml_report(self, outpath=None):
-        return write_or_return(self.to_dict(), tomli_w.dump,
-                               tomli_w.dumps, path=outpath, binary=True)
+        return write_or_return(
+            self.to_dict(),
+            tomli_w.dump,
+            tomli_w.dumps,
+            path=outpath,
+            binary=True,
+        )
 
     def to_text_report(self, outpath=None):
-        return write_or_return(self.table.toString(), fwrite, passthrough,
-                               path=outpath)
+        return write_or_return(
+            self.table.toString(), fwrite, passthrough, path=outpath
+        )
 
     def to_markdown_report(self, outpath=None, flavour='github'):
-        return write_or_return(self.table.toMarkdown(flavour=flavour),
-                               fwrite, passthrough, path=outpath)
+        return write_or_return(
+            self.table.toMarkdown(flavour=flavour),
+            fwrite,
+            passthrough,
+            path=outpath,
+        )
 
     def to_html_report(self, outpath=None):
         xml = XML(
@@ -443,16 +509,17 @@ class DatasetConstraints(object):
                     htmlrow.append(None)
             rows.append(row)
             htmlrows.append(htmlrow)
-        self._table = Table(headers, rows,
-                            attr={'class': 'solid tdda'},
-                            groupHeader='Individual Field Constraints',
-                            commonHeadColour=True,
-                            htmlrows=htmlrows if any_rex else None)
+        self._table = Table(
+            headers,
+            rows,
+            attr={'class': 'solid tdda'},
+            groupHeader='Individual Field Constraints',
+            commonHeadColour=True,
+            htmlrows=htmlrows if any_rex else None,
+        )
 
     def __str__(self):
         return 'FIELDS:\n\n%s' % str(self.fields)
-
-
 
 
 class Fields(TDDAObject):
@@ -462,8 +529,9 @@ class Fields(TDDAObject):
             self[c.name] = c
 
     def to_dict_value(self, raw=False):
-        return OrderedDict((name, c.to_dict_value(raw=raw))
-                             for (name, c) in self.items())
+        return OrderedDict(
+            (name, c.to_dict_value(raw=raw)) for (name, c) in self.items()
+        )
 
     def __str__(self):
         return str('\n\n'.join(str(v) for v in self.values()))
@@ -473,6 +541,7 @@ class FieldConstraints(object):
     """
     Container for constraints on a field.
     """
+
     def __init__(self, name=None, constraints=None):
         """
         The name of the field can be supplied, or left as null (None).
@@ -499,8 +568,9 @@ class FieldConstraints(object):
         order, rather than being a jumbled mess.
         """
         d = outdict()
-        keys = to_preferred_order(self.constraints.keys(),
-                                  STANDARD_FIELD_CONSTRAINTS)
+        keys = to_preferred_order(
+            self.constraints.keys(), STANDARD_FIELD_CONSTRAINTS
+        )
         for k in keys:
             d[k] = self.constraints[k].to_dict_value(raw=raw)
         return d
@@ -512,20 +582,24 @@ class FieldConstraints(object):
         return self.constraints[k]
 
     def __str__(self):
-        keys = [k for k in STANDARD_FIELD_CONSTRAINTS
-                if k in self.constraints]
+        keys = [k for k in STANDARD_FIELD_CONSTRAINTS if k in self.constraints]
         keys += list(sorted(set(self.constraints.keys()) - set(keys)))
-        return str('Field %s:\n  %s' % (self.name,
-                                        '\n  '.join('%13s: %s'
-                                                    % (k, self.constraints[k])
-                                                       for k in keys)))
-
+        return str(
+            'Field %s:\n  %s'
+            % (
+                self.name,
+                '\n  '.join(
+                    '%13s: %s' % (k, self.constraints[k]) for k in keys
+                ),
+            )
+        )
 
 
 class MultiFieldConstraints(FieldConstraints):
     """
     Container for constraints on a pairs (or higher numbers) of fields
     """
+
     def __init__(self, names=None, constraints=None):
         """
         The names of the fields can be supplied, or left as null (None).
@@ -559,8 +633,10 @@ class MultiFieldConstraints(FieldConstraints):
         for k in STANDARD_FIELD_GROUP_CONSTRAINTS:
             if k in self.constraints:
                 d[k] = self.constraints[k].to_dict_value()
-        remainder = sorted(set(self.constraints.keys())
-                           - set(STANDARD_FIELD_GROUP_CONSTRAINTS))
+        remainder = sorted(
+            set(self.constraints.keys())
+            - set(STANDARD_FIELD_GROUP_CONSTRAINTS)
+        )
         for k in remainder:
             d[k] = self.constraints[k].to_dict_value()
         return d
@@ -575,19 +651,29 @@ class MultiFieldConstraints(FieldConstraints):
         return ','.join(self.names)
 
     def __str__(self):
-        keys = [k for k in STANDARD_FIELD_GROUP_CONSTRAINTS
-                if k in self.constraints]
+        keys = [
+            k
+            for k in STANDARD_FIELD_GROUP_CONSTRAINTS
+            if k in self.constraints
+        ]
         keys += list(sorted(set(self.constraints.keys()) - set(keys)))
-        return str('Field %s:\n  %s' % (self.name_key(),
-                                        '\n  '.join('%13s: %s'
-                                                    % (k, self.constraints[k])
-                                                       for k in keys)))
+        return str(
+            'Field %s:\n  %s'
+            % (
+                self.name_key(),
+                '\n  '.join(
+                    '%13s: %s' % (k, self.constraints[k]) for k in keys
+                ),
+            )
+        )
+
 
 class Constraint(object):
     """
     Base container for a single constraint.
     All specific constraint types (should) subclass this.
     """
+
     def __init__(self, kind, value, **kwargs):
         """
         All constraints have a kind (a string) and a value, which should
@@ -602,20 +688,23 @@ class Constraint(object):
         """
         self.kind = kind
         self.value = value
-        for (k, v) in kwargs.items():
+        for k, v in kwargs.items():
             self.__dict__[k] = v
 
         assert constraint_class(kind) == self.__class__.__name__
 
     def __repr__(self):
-        """
-        """
-        kws = ', '.join('%s=%s' % (k, repr(v))
-                        for (k, v) in sorted(self.__dict__.items())
-                        if k not in ('kind', 'value'))
-        return '%s(value=%s%s)' % (constraint_class(self.kind),
-                                   repr(self.value),
-                                   (', ' + kws) if kws else '')
+        """ """
+        kws = ', '.join(
+            '%s=%s' % (k, repr(v))
+            for (k, v) in sorted(self.__dict__.items())
+            if k not in ('kind', 'value')
+        )
+        return '%s(value=%s%s)' % (
+            constraint_class(self.kind),
+            repr(self.value),
+            (', ' + kws) if kws else '',
+        )
 
     def check_validity(self, name, value, *valids):
         """
@@ -627,26 +716,32 @@ class Constraint(object):
             allowed.extend(vs)
             if value in vs:
                 return
-        errmsg = ('must be one of: %s'
-                  % (', '.join([json.dumps(v) for v in allowed])))
-        raise InvalidConstraintSpecification('Invalid %s constraint value %s '
-                                             '(%s)' % (name, value, errmsg))
+        errmsg = 'must be one of: %s' % (
+            ', '.join([json.dumps(v) for v in allowed])
+        )
+        raise InvalidConstraintSpecification(
+            'Invalid %s constraint value %s (%s)' % (name, value, errmsg)
+        )
 
     def to_dict_value(self, raw=False):
-        return (self.value
-                   if raw or type(self.value) not in (datetime.datetime,
-                                                      datetime.date)
-                else str(self.value))
+        return (
+            self.value
+            if raw
+            or type(self.value) not in (datetime.datetime, datetime.date)
+            else str(self.value)
+        )
 
 
 #
 # SINGLE FIELD CONSTRAINTS
 #
 
+
 class MinConstraint(Constraint):
     """
     Constraint specifying the minimum allowed value in a field.
     """
+
     def __init__(self, value, precision=None, comment=None):
         self.check_validity('min precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'min', value, precision=precision)
@@ -655,14 +750,16 @@ class MinConstraint(Constraint):
         if self.precision is None:
             return Constraint.to_dict_value(self, raw=raw)
         else:
-            return OrderedDict((('value', self.value),
-                                ('precision', self.precision)))
+            return OrderedDict(
+                (('value', self.value), ('precision', self.precision))
+            )
 
 
 class MaxConstraint(Constraint):
     """
     Constraint specifying the maximum allowed value in a field.
     """
+
     def __init__(self, value, precision=None, comment=None):
         self.check_validity('max precision', precision, [None], PRECISIONS)
         Constraint.__init__(self, 'max', value, precision=precision)
@@ -671,8 +768,9 @@ class MaxConstraint(Constraint):
         if self.precision is None:
             return Constraint.to_dict_value(self, raw=raw)
         else:
-            return OrderedDict((('value', self.value),
-                                ('precision', self.precision)))
+            return OrderedDict(
+                (('value', self.value), ('precision', self.precision))
+            )
 
 
 class SignConstraint(Constraint):
@@ -684,6 +782,7 @@ class SignConstraint(Constraint):
     Possible values are ``positive``, ``non-negative``, ``zero``,
     ``non-positive``, ``negative`` and ``null``.
     """
+
     def __init__(self, value, comment=None):
         self.check_validity('sign', value, [None], SIGNS)
         Constraint.__init__(self, 'sign', value)
@@ -704,6 +803,7 @@ class TypeConstraint(Constraint):
     sometimes used because of Pandas silent and automatic promotion
     of integer fields to floats if nulls are present.)
     """
+
     def __init__(self, value, comment=None):
         if type(value) in (list, tuple):
             for t in value:
@@ -720,6 +820,7 @@ class MaxNullsConstraint(Constraint):
     (The constraint generator only generates 0 and 1, but the verifier
     will verify and number.)
     """
+
     def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_nulls', value)
 
@@ -732,6 +833,7 @@ class NoDuplicatesConstraint(Constraint):
     Currently only generated for string fields, though could be used
     more broadly.
     """
+
     def __init__(self, value=True, comment=None):
         self.check_validity('no_duplicates', value, [None, True, False])
         Constraint.__init__(self, 'no_duplicates', value)
@@ -748,6 +850,7 @@ class AllowedValuesConstraint(Constraint):
     time of writing, but check above in case this comment rusts)
     different values in the field.
     """
+
     def __init__(self, value, comment=None):
         Constraint.__init__(self, 'allowed_values', value)
 
@@ -759,6 +862,7 @@ class MinLengthConstraint(Constraint):
     Generated instead of a ``MinConstraint`` by this generation code,
     but can be used in conjunction with a ``MinConstraint``.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'min_length', value)
 
@@ -770,6 +874,7 @@ class MaxLengthConstraint(Constraint):
     Generated instead of a ``MaxConstraint`` by this generation code,
     but can be used in conjunction with a ``MinConstraint``.
     """
+
     def __init__(self, value, comment=None):
         Constraint.__init__(self, 'max_length', value)
 
@@ -779,6 +884,7 @@ class RexConstraint(Constraint):
     Constraint restricting a string field to match (at least) one of
     the regular expressions in a list given.
     """
+
     def __init__(self, value, comment=None):
         Constraint.__init__(self, 'rex', [native_definite(v) for v in value])
 
@@ -793,6 +899,7 @@ class LtConstraint(Constraint):
     Constraint specifying that the first field of a pair should be
     (strictly) less than the second, where both are non-null.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'lt', value)
 
@@ -802,14 +909,17 @@ class LteConstraint(Constraint):
     Constraint specifying that the first field of a pair should be
     no greater than the second, where both are non-null.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'lte', value)
+
 
 class EqConstraint(Constraint):
     """
     Constraint specifying that two fields should have identical values
     where they are both non-null.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'eq', value)
 
@@ -819,6 +929,7 @@ class GtConstraint(Constraint):
     Constraint specifying that the first field of a pair should be
     (strictly) greater than the second, where both are non-null.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'gt', value)
 
@@ -828,6 +939,7 @@ class GteConstraint(Constraint):
     Constraint specifying that the first field of a pair should be
     greater than or equal to the second, where both are non-null.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'gte', value)
 
@@ -837,6 +949,7 @@ class TransformConstraint(Constraint):
     Not really a constraint, but a tranform to be applied to a field,
     allowing constraints to be applied to that transformed field.
     """
+
     def __init__(self, value):
         Constraint.__init__(self, 'transform', value)
 
@@ -846,19 +959,32 @@ class Verification(object):
     Container for the result of a constraint verification for a dataset
     in the context of a given set of constraints.
     """
-    def __init__(self, constraints, n_source_records, report='all',
-                 ascii=False, detect=False, outpath=None,
-                 write_all_records=False, per_constraint=False,
-                 output_fields=None, index=False,
-                 in_place=False, colour=False,
-                 verify_allowed_fields=None, verify_required_fields=None,
-                 config=None, **kwargs):
+
+    def __init__(
+        self,
+        constraints,
+        n_source_records,
+        report='all',
+        ascii=False,
+        detect=False,
+        outpath=None,
+        write_all_records=False,
+        per_constraint=False,
+        output_fields=None,
+        index=False,
+        in_place=False,
+        colour=False,
+        verify_allowed_fields=None,
+        verify_required_fields=None,
+        config=None,
+        **kwargs,
+    ):
         self.config = config = get_config(config)
         self.constraints = constraints
         self.n_source_records = n_source_records
         self.fields = TDDAObject()
         self.failures = 0  # constraints
-        self.passes = 0    # constraints
+        self.passes = 0  # constraints
         self.detection = None
         self.report = report
         self.ascii = ascii
@@ -878,11 +1004,11 @@ class Verification(object):
 
         self.verify_allowed_fields = nvl(
             cconfig.get('verify_allowed_fields', verify_allowed_fields),
-            self.constraints.allowed_fields is not None
+            self.constraints.allowed_fields is not None,
         )
         self.verify_required_fields = nvl(
             cconfig.get('verify_required_fields', verify_required_fields),
-            self.constraints.allowed_fields is not None
+            self.constraints.allowed_fields is not None,
         )
 
         if self.int_bools:
@@ -892,51 +1018,58 @@ class Verification(object):
         self.report_path = kwargs.get('report_path', outpath)
 
         if report not in ('all', 'fields', 'records'):
-            raise TDDAError('Value for report must be one of "all", "fields"'
-                            ' or "records", not "%s".' % report)
-        if (not outpath and not detect and not in_place
+            raise TDDAError(
+                'Value for report must be one of "all", "fields"'
+                ' or "records", not "%s".' % report
+            )
+        if (
+            not outpath
+            and not detect
+            and not in_place
             and not getattr(self, 'is_db', None)
         ):
-            if any((write_all_records, per_constraint,
-                    output_fields, index)):
-                raise TDDAError('You have specified detection parameters '
-                                'without specifying\na detection output path.')
+            if any((write_all_records, per_constraint, output_fields, index)):
+                raise TDDAError(
+                    'You have specified detection parameters '
+                    'without specifying\na detection output path.'
+                )
 
     def indicator_field_name(self, field, constraint):
-        return indicator_field_name(field, constraint,
-                                    CONSTRAINT_SUFFIX_MAP,
-                                    detect_passes=self.detect_passes)
+        return indicator_field_name(
+            field,
+            constraint,
+            CONSTRAINT_SUFFIX_MAP,
+            detect_passes=self.detect_passes,
+        )
 
     def create_summary_stats(self, field_stats=None):
-        n_fields_with_failures = len(list(
+        n_fields_with_failures = len(
+            list(
                 (field, ver)
-                 for (field, ver) in self.fields.items()
-                 if ver.failures > 0
-        ))
+                for (field, ver) in self.fields.items()
+                if ver.failures > 0
+            )
+        )
 
         self.summary_stats = stats = {
             'fields': PassFailCount(
                 'fields',
                 len(self.fields) - n_fields_with_failures,
-                n_fields_with_failures
+                n_fields_with_failures,
             ),
             'constraints': PassFailCount(
-                'constraints',
-                self.passes,
-                self.failures
-            )
+                'constraints', self.passes, self.failures
+            ),
         }
         if field_stats:
             r = nvl(self.detection, self)  # TODO: pd vs. db
             stats['records'] = PassFailCount(
-                'records',
-                r.n_passing_records,
-                r.n_failing_records
+                'records', r.n_passing_records, r.n_failing_records
             )
             stats['values'] = PassFailCount(
                 'values',
                 field_stats['_values'].passes,
-                field_stats['_values'].failures
+                field_stats['_values'].failures,
             )
 
         if self.verify_allowed_fields or (
@@ -967,18 +1100,21 @@ class Verification(object):
         else:
             self.extra_fields = None  # No longer relevant
 
-
     def dataset_constraints_results(self):
         out = []
         if self.verify_allowed_fields:
             if self.extra_fields or self.report not in ('fields', 'records'):
-                out.append('Extra (disallowed) fields: %s'
-                           % (', '.join(self.extra_fields) or 'None'))
+                out.append(
+                    'Extra (disallowed) fields: %s'
+                    % (', '.join(self.extra_fields) or 'None')
+                )
 
         if self.verify_required_fields:
             if self.missing_fields or self.report not in ('fields', 'records'):
-                out.append('Missing (required) fields: %s'
-                           % (', '.join(self.missing_fields) or 'None'))
+                out.append(
+                    'Missing (required) fields: %s'
+                    % (', '.join(self.missing_fields) or 'None')
+                )
         s = '\n'.join(out)
         return ('DATASET:\n\n%s\n\n' % s) if s else ''
 
@@ -993,9 +1129,11 @@ class Verification(object):
         ascii = nvl(ascii, self.ascii)
         colour = nvl(colour, self.colour)
         n_fields = len(self.fields)
-        failing_field_items = list((field, ver)
-                                   for (field, ver) in self.fields.items()
-                                   if ver.failures > 0)
+        failing_field_items = list(
+            (field, ver)
+            for (field, ver) in self.fields.items()
+            if ver.failures > 0
+        )
 
         n_fields_with_failures = len(failing_field_items)
         if self.report in ('fields', 'records'):
@@ -1003,15 +1141,23 @@ class Verification(object):
             field_items = failing_field_items
         else:
             field_items = self.fields.items()
-        fields = '\n\n'.join('%s: %s  %s  %s'
-                           % (field,
-                              richbad(plural(ver.failures, 'failure'),
-                                      colour, ver.failures > 0),
-                              richgood(plural(ver.passes, 'pass', 'es'),
-                                       colour, ver.failures == 0),
-                              '  '.join('%s %s' % (c, tcn(s, ascii, colour))
-                                       for (c, s) in ver.items()))
-                           for field, ver in field_items)
+        fields = '\n\n'.join(
+            '%s: %s  %s  %s'
+            % (
+                field,
+                richbad(
+                    plural(ver.failures, 'failure'), colour, ver.failures > 0
+                ),
+                richgood(
+                    plural(ver.passes, 'pass', 'es'), colour, ver.failures == 0
+                ),
+                '  '.join(
+                    '%s %s' % (c, tcn(s, ascii, colour))
+                    for (c, s) in ver.items()
+                ),
+            )
+            for field, ver in field_items
+        )
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else '\n'
 
         dataset_part = self.dataset_constraints_results()
@@ -1021,45 +1167,73 @@ class Verification(object):
         if self.report == 'records' and 'records' in ss:
             sr = ss['records']
             out.extend(
-              [f'Records: {sr.total:,}',
-               'Failing Records: %s'
-                % richgoodbad(f'{sr.failures:,} ({sr.bad_pc})',
-                             colour, sr.failures == 0), ''])
+                [
+                    f'Records: {sr.total:,}',
+                    'Failing Records: %s'
+                    % richgoodbad(
+                        f'{sr.failures:,} ({sr.bad_pc})',
+                        colour,
+                        sr.failures == 0,
+                    ),
+                    '',
+                ]
+            )
 
         sf = ss['fields']
         out.extend(
-            [f'Constrained Fields: {sf.total:,}',
-             'Failing Fields: %s'
-             % richgoodbad(f'{sf.failures:,} ({sf.bad_pc})',
-                           colour, sf.failures == 0), ''])
+            [
+                f'Constrained Fields: {sf.total:,}',
+                'Failing Fields: %s'
+                % richgoodbad(
+                    f'{sf.failures:,} ({sf.bad_pc})', colour, sf.failures == 0
+                ),
+                '',
+            ]
+        )
 
         if 'values' in ss:
             sv = ss['values']
             out.extend(
-                [f'Constrained Values: {sv.total:,}',
-                 'Failing Values: %s'
-                 % richgoodbad(f'{sv.failures:,} ({sv.bad_pc})',
-                               colour, sv.failures == 0), ''])
+                [
+                    f'Constrained Values: {sv.total:,}',
+                    'Failing Values: %s'
+                    % richgoodbad(
+                        f'{sv.failures:,} ({sv.bad_pc})',
+                        colour,
+                        sv.failures == 0,
+                    ),
+                    '',
+                ]
+            )
 
         sc = ss['constraints']
         out.extend(
-            [f'Constraints: {sc.total:,}',
-             'Failing Constraints: %s'
-             % richgoodbad(f'{sc.failures:,} ({sc.bad_pc})',
-                           colour, sc.failures == 0)])
+            [
+                f'Constraints: {sc.total:,}',
+                'Failing Constraints: %s'
+                % richgoodbad(
+                    f'{sc.failures:,} ({sc.bad_pc})', colour, sc.failures == 0
+                ),
+            ]
+        )
 
         lines = []
         if self.verify_allowed_fields:
-            n_extras = ss["extras"]
-            lines.append(f'Extra (disallowed) fields: %s'
-                         % richgoodbad(f'{n_extras}', colour, n_extras == 0))
+            n_extras = ss['extras']
+            lines.append(
+                f'Extra (disallowed) fields: %s'
+                % richgoodbad(f'{n_extras}', colour, n_extras == 0)
+            )
         if self.verify_required_fields:
-            n_missing = ss["missing"]
-            lines.append(f'Missing (required) fields: %s'
-                         % richgoodbad(f'{n_missing}', colour, n_missing == 0))
+            n_missing = ss['missing']
+            lines.append(
+                f'Missing (required) fields: %s'
+                % richgoodbad(f'{n_missing}', colour, n_missing == 0)
+            )
         if lines:
             out.extend([''] + lines)
         return '\n'.join(out)
+
     __str__ = to_string
 
     def to_table(self, fails, constraints):
@@ -1071,10 +1245,11 @@ class Verification(object):
             fails: dictionary keyed on fieldname for fields with any failures.
             constraints: original constraints
         """
-        headers = (
-            ['Values', 'Constraints']
-            + ['Allowed', 'Actual', Marks.tick] * 8
-        )
+        headers = ['Values', 'Constraints'] + [
+            'Allowed',
+            'Actual',
+            Marks.tick,
+        ] * 8
         structured_header = [
             [1, 2, 'Name'],
             [2, 1, 'Failures'],
@@ -1085,7 +1260,7 @@ class Verification(object):
             [3, 1, 'Max Nulls'],
             [3, 1, 'Duplicates'],
             [3, 1, 'Values'],
-            [3, 1, 'Rex']
+            [3, 1, 'Rex'],
         ]
         rows = []
         htmlrows = []
@@ -1099,18 +1274,18 @@ class Verification(object):
                 n_failing_values = fail_details.failures
                 failing_constraints = fails['fields'].get(field)
                 n_failing_constraints = (
-                    len(failing_constraints)
-                    if failing_constraints
-                    else 0
+                    len(failing_constraints) if failing_constraints else 0
                 )
                 row = [
                     field,
                     f'{n_failing_values:,}',
-                    f'{n_failing_constraints}'
+                    f'{n_failing_constraints}',
                 ]
-                htmlrow = [field,
-                           rednz(n_failing_values),
-                           rednz(n_failing_constraints)]
+                htmlrow = [
+                    field,
+                    rednz(n_failing_values),
+                    rednz(n_failing_constraints),
+                ]
             else:
                 row = [field, '0', '0']
                 htmlrow = ['field', '0', '0']
@@ -1132,30 +1307,43 @@ class Verification(object):
                         if field_info and kind in field_info
                         else None
                     )
-                    row.extend([constraint_val(c, kind),
-                                str(nvl(actual, '')),
-                                tick_or_cross])
+                    row.extend(
+                        [
+                            constraint_val(c, kind),
+                            str(nvl(actual, '')),
+                            tick_or_cross,
+                        ]
+                    )
                     if kind == 'rex':
-                        htmlrow.extend([colour_regexes(c),
-                                        None,
-                                        coloured_tick_cross(not cfail)])
+                        htmlrow.extend(
+                            [
+                                colour_regexes(c),
+                                None,
+                                coloured_tick_cross(not cfail),
+                            ]
+                        )
                         any_rex = True
                     else:
-                        htmlrow.extend([
-                            None,
-                            redblack(str(nvl(actual, '')), red=cfail),
-                            coloured_tick_cross(not cfail)])
+                        htmlrow.extend(
+                            [
+                                None,
+                                redblack(str(nvl(actual, '')), red=cfail),
+                                coloured_tick_cross(not cfail),
+                            ]
+                        )
                 else:
                     row.extend(['', '', ''])
                     htmlrow.extend([None, None, None])
             rows.append(row)
             htmlrows.append(htmlrow)
-        self._table = Table(headers, rows,
-                            attr={'class': 'solid tdda'},
-                            structuredHeader=structured_header,
-                            commonHeadColour=True,
-                            htmlrows=htmlrows)
-
+        self._table = Table(
+            headers,
+            rows,
+            attr={'class': 'solid tdda'},
+            structuredHeader=structured_header,
+            commonHeadColour=True,
+            htmlrows=htmlrows,
+        )
 
     def write_detection_reports(self, minimal=True):
         """
@@ -1163,8 +1351,8 @@ class Verification(object):
         of the output file, or -r / --report flags, or by
         configuration, this writes the report or reports.
         """
-#        if not (self.report_path and self.detect_report_formats):
-#            return
+        #        if not (self.report_path and self.detect_report_formats):
+        #            return
 
         # TODO: If detection reports are no, and output_fields
         # are specified and do not include fields with failures
@@ -1175,7 +1363,7 @@ class Verification(object):
         key_fields = self.detect_key
         field_stats = {}
         constraint_stats = {}
-        if hasattr(self,'build_field_stats'):
+        if hasattr(self, 'build_field_stats'):
             self.build_field_stats(list(d['fields']))
         for field in list(d['fields']):
             constraints = d['fields'][field]
@@ -1183,9 +1371,7 @@ class Verification(object):
             constraint_stats[field] = cstats = {}
             for constraint in list(constraints):
                 value = constraints[constraint]
-                c = constraints[constraint] = {
-                    'constraint_value': value
-                }
+                c = constraints[constraint] = {'constraint_value': value}
                 stats = self.get_constraint_stats(field, constraint)
                 cstats[constraint] = stats
                 if stats.n_failures == 0:
@@ -1195,8 +1381,9 @@ class Verification(object):
                         c['n_failures'] = 0
                 else:
                     c.update(stats.to_dict())
-                    failures = self.get_failure_values(field, constraint,
-                                                       key_fields)
+                    failures = self.get_failure_values(
+                        field, constraint, key_fields
+                    )
                     c['failures'] = (
                         json_sanitize(list(failures)) if failures else []
                     )
@@ -1205,7 +1392,7 @@ class Verification(object):
         field_stats['_values'] = PassFailCount(
             '_values',
             sum(f.passes for f in field_stats.values()),
-            sum(f.failures for f in field_stats.values())
+            sum(f.failures for f in field_stats.values()),
         )
         d['_field_stats'] = field_stats
         d['_constraint_stats'] = constraint_stats
@@ -1229,21 +1416,20 @@ class Verification(object):
             elif fmt == 'html':
                 write_html_detect_report(d, outpath, self.config, self._table)
             else:
-                print(f'Ignoring unknown output format "{fmt}".',
-                      file=sys.stderr)
+                print(
+                    f'Ignoring unknown output format "{fmt}".', file=sys.stderr
+                )
 
     def fill_in_missing_db_rex_failures(self):
         for fieldname, info in self.field_info.items():
             if 'rex' in info:
                 if info['rex'] == []:  # DB does not return bad rex value
-                                       # And nor does pandas!
+                    # And nor does pandas!
                     failures = self.get_failure_values(
                         fieldname, 'rex', [], max_vals=1
                     )
                     info['rex'] = (
-                        json.dumps(list(failures)[0][0])
-                        if failures
-                        else ''
+                        json.dumps(list(failures)[0][0]) if failures else ''
                     )
 
 
@@ -1251,6 +1437,7 @@ class Detection(object):
     """
     Object to represent the result of running detect.
     """
+
     def __init__(self, obj, n_passing_records, n_failing_records):
         """
         *obj*:
@@ -1292,8 +1479,15 @@ def constraint_class(kind):
     return '%sConstraint' % ''.join(part.title() for part in kind.split('_'))
 
 
-def verify(constraints, fieldnames, verifiers, VerificationClass=None,
-           detected_records_writer=None, config=None, **kwargs):
+def verify(
+    constraints,
+    fieldnames,
+    verifiers,
+    VerificationClass=None,
+    detected_records_writer=None,
+    config=None,
+    **kwargs,
+):
     """
     Perform a verification of a set of constraints.
     This is primarily an internal function, intended to be used by
@@ -1336,29 +1530,34 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
     results = VerificationClass(constraints, config=config, **kwargs)
     outpath = kwargs.get('outpath')
     report_path = kwargs.get('reportpath')
-    detect = (outpath is not None
-              or kwargs.get('detect') is not None
-              or kwargs.get('in_place') is not None)
+    detect = (
+        outpath is not None
+        or kwargs.get('detect') is not None
+        or kwargs.get('in_place') is not None
+    )
 
     constrained_fields = constraints.fields
     glob_matches = globlike_match(constraints.allowed_fields, fieldnames)
     results.extra_fields = [
-        f for f in fieldnames
-        if f in set(fieldnames)
-                 - set(constrained_fields)
-                 - set(constraints.allowed_fields or [])
-                 - set(glob_matches)
+        f
+        for f in fieldnames
+        if f
+        in set(fieldnames)
+        - set(constrained_fields)
+        - set(constraints.allowed_fields or [])
+        - set(glob_matches)
     ]
     if constraints.required_fields:
-        results.required_fields = globlike_match(constraints.required_fields,
-                                                 constrained_fields)
+        results.required_fields = globlike_match(
+            constraints.required_fields, constrained_fields
+        )
         results.missing_fields = [
-            f for f in results.required_fields
-            if f not in set(fieldnames)
+            f for f in results.required_fields if f not in set(fieldnames)
         ]
     else:
         results.missing_fields = [
-            f for f in constrained_fields
+            f
+            for f in constrained_fields
             if f in (set(constrained_fields) - set(fieldnames))
         ]
     allfields = [f for f in constrained_fields if f in set(fieldnames)]
@@ -1381,7 +1580,9 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             verify = verifiers.get(c.kind)
             if verify:
                 satisfied = verify(name, c, detect)
-                if (satisfied == True) or (satisfied != False and satisfied.ok):
+                if (satisfied == True) or (
+                    satisfied != False and satisfied.ok
+                ):
                     passes += 1
                 else:
                     failures += 1
@@ -1396,7 +1597,7 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
 
         field_results.failures = failures  # constraints for this field
         field_results.passes = passes
-        results.failures += failures       # all constraints
+        results.failures += failures  # all constraints
         results.passes += passes
         results.fields[name] = field_results
 
@@ -1406,11 +1607,12 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
         if detected_records_writer and results.failures > 0:
             if results.per_constraint:
                 failing_fields = [
-                    field for field, result in results.fields.items()
-                          if any(v != True for v in result.values())
+                    field
+                    for field, result in results.fields.items()
+                    if any(v != True for v in result.values())
                 ]
-                missing_failing_fields = (
-                    set(results.output_fields) - set(failing_fields)
+                missing_failing_fields = set(results.output_fields) - set(
+                    failing_fields
                 )
                 results.output_fields.extend(missing_failing_fields)
             results.detection = detected_records_writer(**kwargs)
@@ -1424,23 +1626,34 @@ def verify(constraints, fieldnames, verifiers, VerificationClass=None,
             results.summary_stats = {
                 'fields': PassFailCount('fields', n_fields, 0),
                 'constraints': PassFailCount('constraints', n_constraints, 0),
-                'records':  PassFailCount('records', n_records, 0),
-                'values': PassFailCount('values', n_records * n_fields, 0)
+                'records': PassFailCount('records', n_records, 0),
+                'values': PassFailCount('values', n_records * n_fields, 0),
             }
     else:
         results.create_summary_stats()
     return results
 
 
-def detect(constraints, fieldnames, verifiers, VerificationClass=None,
-           detected_records_writer=None, **kwargs):
+def detect(
+    constraints,
+    fieldnames,
+    verifiers,
+    VerificationClass=None,
+    detected_records_writer=None,
+    **kwargs,
+):
     """
     Variation of verify which does detection too.
     """
-    return verify(constraints, fieldnames, verifiers,
-                  VerificationClass=VerificationClass,
-                  detect=True, detected_records_writer=detected_records_writer,
-                  **kwargs)
+    return verify(
+        constraints,
+        fieldnames,
+        verifiers,
+        VerificationClass=VerificationClass,
+        detect=True,
+        detected_records_writer=detected_records_writer,
+        **kwargs,
+    )
 
 
 def tcn(sat, ascii=False, colour=False):
@@ -1458,7 +1671,6 @@ def tcn(sat, ascii=False, colour=False):
         return mark
 
 
-
 #
 # Mapping from constraint kind (e.g. 'min_length') to constraint class
 # e.g. MinLengthConstraint.
@@ -1471,11 +1683,12 @@ FIELD_CONSTRAINTS_MAP = {
 }
 
 
-
-
 def native_definite(o):
-    return (UnicodeDefinite(o) if sys.version_info[0] >= 3
-                               else UTF8DefiniteObject(o))
+    return (
+        UnicodeDefinite(o)
+        if sys.version_info[0] >= 3
+        else UTF8DefiniteObject(o)
+    )
 
 
 def UTF8Definite(s):
@@ -1506,11 +1719,15 @@ def UTF8DefiniteObject(s):
     elif type(s) == tuple:
         return tuple([UTF8DefiniteObject(v) for v in s])
     elif isinstance(s, OrderedDict):
-        return OrderedDict(((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
-                           for (k, v) in s.items())
+        return OrderedDict(
+            ((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
+            for (k, v) in s.items()
+        )
     elif isinstance(s, dict):
-        return {UTF8DefiniteObject(k): UTF8DefiniteObject(v)
-                for (k, v) in s.items()}
+        return {
+            UTF8DefiniteObject(k): UTF8DefiniteObject(v)
+            for (k, v) in s.items()
+        }
     return s
 
 
@@ -1528,11 +1745,17 @@ def NativeDefiniteObject(s):
     elif type(s) is tuple:
         return tuple([NativeDefiniteObject(v) for v in s])
     elif isinstance(s, OrderedDict):
-        return OrderedDict(((NativeDefiniteObject(k), NativeDefiniteObject(v))
-                           for (k, v) in s.items()))
+        return OrderedDict(
+            (
+                (NativeDefiniteObject(k), NativeDefiniteObject(v))
+                for (k, v) in s.items()
+            )
+        )
     elif isinstance(s, dict):
-        return {NativeDefiniteObject(k): NativeDefiniteObject(v)
-                for (k, v) in s.items()}
+        return {
+            NativeDefiniteObject(k): NativeDefiniteObject(v)
+            for (k, v) in s.items()
+        }
     return s
 
 
@@ -1541,18 +1764,19 @@ def get_date(d):
         m = re.match(rex, d)
         if m:
             try:
-                return datetime.datetime(*(int(m.group(i))
-                                           for i in range(1, L + 1)))
+                return datetime.datetime(
+                    *(int(m.group(i)) for i in range(1, L + 1))
+                )
             except ValueError:
-                print ('Failed to read "%s" as date' % d, file=sys.stderr)
+                print('Failed to read "%s" as date' % d, file=sys.stderr)
                 return d
     return d
 
 
 def to_preferred_order(keys, preferred_order):
-    return ([k for k in preferred_order if k in list(keys)]
-               + list(sorted(set(keys) - set(preferred_order))))
-
+    return [k for k in preferred_order if k in list(keys)] + list(
+        sorted(set(keys) - set(preferred_order))
+    )
 
 
 def fuzzy_greater_than(a, b, epsilon):
@@ -1618,16 +1842,34 @@ def sort_constraint_dict(d):
     all of the individual constraints in the same order in which they
     are generated.
     """
-    constraintkey = ['type', 'min', 'max', 'min_length', 'max_length',
-                     'sign', 'max_nulls', 'no_duplicates', 'allowed_values',
-                     'rex']
-    fields = OrderedDict((
-        (f, OrderedDict(((k, kv)
-                         for k, kv in sorted(v.items(),
-                                             key=lambda x:
-                                                  constraintkey.index(x[0])))))
-        for f, v in sorted(d['fields'].items())
-    ))
+    constraintkey = [
+        'type',
+        'min',
+        'max',
+        'min_length',
+        'max_length',
+        'sign',
+        'max_nulls',
+        'no_duplicates',
+        'allowed_values',
+        'rex',
+    ]
+    fields = OrderedDict(
+        (
+            (
+                f,
+                OrderedDict(
+                    (
+                        (k, kv)
+                        for k, kv in sorted(
+                            v.items(), key=lambda x: constraintkey.index(x[0])
+                        )
+                    )
+                ),
+            )
+            for f, v in sorted(d['fields'].items())
+        )
+    )
     return OrderedDict((('fields', fields),))
 
 
@@ -1646,8 +1888,9 @@ def write_text_detect_report(d, outpath, config):
                 label = f'{indent}Constraint: {constraint}: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = config.format_constraint_value(value, len(label), 4,
-                                                      rex=is_rex)
+                fval = config.format_constraint_value(
+                    value, len(label), 4, rex=is_rex
+                )
                 if fval.startswith('\n'):
                     label = label[:-1]
                 nl = '\n' if ic > 0 else ''
@@ -1674,8 +1917,9 @@ def write_markdown_detect_report(d, outpath, config):
                 label = f'**Constraint:** `{constraint}`: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = config.format_constraint_value(value, len(label), 4,
-                                                      rex=is_rex)
+                fval = config.format_constraint_value(
+                    value, len(label), 4, rex=is_rex
+                )
                 if fval.startswith('\n'):
                     label = label[:-1]
                 nl = '\n' if ic > 0 else ''
@@ -1723,8 +1967,9 @@ def write_html_detect_report(d, outpath, config, table=None):
 
             is_rex = constraint == 'rex'
             label = f'Constraint: {constraint}: '
-            fval = config.format_constraint_value(value, len(label), 4,
-                                                  rex=is_rex)
+            fval = config.format_constraint_value(
+                value, len(label), 4, rex=is_rex
+            )
 
             nf = results['n_failures']
             n = nf + results['n_passes']
@@ -1742,7 +1987,6 @@ def write_html_detect_report(d, outpath, config, table=None):
             xml.CloseElement('ul')
             xml.CloseElement('ul')
     xml.CloseElement('div')
-
 
     xml.CloseXML()
 

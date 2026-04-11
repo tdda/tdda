@@ -15,6 +15,7 @@ import pytest
 
 from tdda.referencetest import referencepytest
 
+
 def pytest_addoption(parser):
     """
     Extend pytest to include the --write, --write-all regeneration
@@ -48,4 +49,3 @@ def set_default_data_location(location, kind=None):
     so that it's easy to use from a conftest.py thst imports this file.
     """
     referencepytest.set_default_data_location(location, kind=kind)
-

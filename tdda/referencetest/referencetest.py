@@ -13,7 +13,11 @@ from tdda.referencetest.checkfiles import FilesComparison
 from tdda.state import get_config
 from tdda.utils import TDDAError, nvl, error
 from tdda.abstractdf import (
-    df_type, df_definite, is_pandas_df, is_polars_df, lib
+    df_type,
+    df_definite,
+    is_pandas_df,
+    is_polars_df,
+    lib,
 )
 
 
@@ -358,7 +362,7 @@ class ReferenceTest(object):
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
             engine=engine,
-            backend=backend
+            backend=backend,
         )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
@@ -438,8 +442,10 @@ class ReferenceTest(object):
             lib._write_reference_dataframe(df, expected_path)
         else:
             ref_df = lib.load_serialized_dataframe(
-                expected_path, actual_df=df, loader=csv_read_fn,
-                backend=backend
+                expected_path,
+                actual_df=df,
+                loader=csv_read_fn,
+                backend=backend,
             )
             self.assertDataFramesEqual(
                 df,
@@ -525,8 +531,9 @@ class ReferenceTest(object):
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         lib = self.get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
-            lib._write_reference_dataframe_from_file(actual_path,
-                                                     expected_path)
+            lib._write_reference_dataframe_from_file(
+                actual_path, expected_path
+            )
         else:
             r = lib.check_serialized_dataframe(
                 actual_path,
@@ -543,6 +550,7 @@ class ReferenceTest(object):
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
+
     assertOnDiskDataFrameCorrect = assertStoredDataFrameCorrect
 
     def assertCSVFileCorrect(
@@ -650,8 +658,9 @@ class ReferenceTest(object):
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         lib = get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
-            lib._write_reference_dataframes_from_files(actual_paths,
-                                                               expected_paths)
+            lib._write_reference_dataframes_from_files(
+                actual_paths, expected_paths
+            )
         else:
             r = lib.check_serialized_dataframes(
                 actual_paths,
@@ -1092,7 +1101,6 @@ def get_preferred_engine(engine):
     if not engine in ('polars', 'pandas'):
         error(f'Unknown dataframe engine: {engine}')
     return engine
-
 
 
 # Magic so that an instance of this class can masquerade as a module,

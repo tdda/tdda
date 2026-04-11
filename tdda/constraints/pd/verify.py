@@ -7,7 +7,7 @@ Verify constraints using CSV files, or Pandas or R DataFrames saved as
 parquet files, against a constraints from .tdda JSON constraints file.
 """
 
-USAGE = '''
+USAGE = """
 
 Parameters:
 
@@ -23,7 +23,7 @@ Parameters:
 If no constraints file is provided, a file with the same path as the
 input file, with a .tdda extension will be tried.
 
-'''
+"""
 
 import os
 import sys
@@ -44,8 +44,14 @@ from tdda.state import get_config
 from tdda.utils import handle_tilde, nvl, cprint, tdda_path_info
 
 
-def verify_df_from_file(df_path, constraints_path, verbose=True,
-                        md_path=None, backend=None, **kwargs):
+def verify_df_from_file(
+    df_path,
+    constraints_path,
+    verbose=True,
+    md_path=None,
+    backend=None,
+    **kwargs,
+):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -83,8 +89,9 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
         constraints_path = stem + '.tdda'
 
     df = load_df(df_path, md_path=md_path, backend=backend)
-    v = verify_df(df, constraints_path, md_path=md_path, backend=backend,
-                  **kwargs)
+    v = verify_df(
+        df, constraints_path, md_path=md_path, backend=backend, **kwargs
+    )
     if verbose:
         cprint(v)
     return v
@@ -93,8 +100,9 @@ def verify_df_from_file(df_path, constraints_path, verbose=True,
 def pd_verify_parser():
     parser = verify_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or parquet file')
-    parser.add_argument('constraints', nargs='?',
-                        help='constraints file to verify against')
+    parser.add_argument(
+        'constraints', nargs='?', help='constraints file to verify against'
+    )
     return parser
 
 
@@ -132,4 +140,3 @@ def main(argv, verbose=True):
 
 if __name__ == '__main__':
     main(sys.argv)
-

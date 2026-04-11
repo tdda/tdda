@@ -14,75 +14,118 @@ from tdda.utils import error
 from tdda.commonflags import add_pandas_flags, process_pandas_flags
 
 
-def help_defaults(help=True, seven=True, colour=True, config=True,
-                  epsilon=False):
+def help_defaults(
+    help=True, seven=True, colour=True, config=True, epsilon=False
+):
     out = []
     if epsilon:
-        out.append('''
+        out.append("""
   * --epsilon E
       Use this value of epsilon for fuzziness in comparing numeric values.
-''')
+""")
     if seven:
-        out.append('''
+        out.append("""
   * -7, --ascii
       Report in ASCII form, without using special characters.
-''')
+""")
     if colour:
-        out.append('''
+        out.append("""
   * --colour
       Coloured output
   * --no-colour
       Monochrome output
-''')
+""")
     if config:
-        out.append('''
+        out.append("""
   * -N, --no-config
       Do not configure using ~/tdda.toml: use all defaults
-''')
+""")
     return ''.join(o.rstrip() for o in out) + '\n'
 
     if help:
-        out.append('''
+        out.append("""
   * -?, --help
       Show help
-''')
+""")
     return ''.join(o.rstrip() for o in out) + '\n'
 
 
 def discover_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog='tdda discover',
-                                     epilog=usage + get_help('discover'),
-                                     formatter_class=formatter)
+    parser = argparse.ArgumentParser(
+        prog='tdda discover',
+        epilog=usage + get_help('discover'),
+        formatter_class=formatter,
+    )
     add_defaults(parser)
-    parser.add_argument('-x', '--rex', action='store_true',
-                        help='include regular expression generation')
-    parser.add_argument('-X', '--no-rex', action='store_true',
-                        help='exclude regular expression generation')
-    parser.add_argument('-g', '--group-rex', action='store_true',
-                        help='group regular expression generation')
-    parser.add_argument('-G', '--no-group-rex', action='store_true',
-                        help='do not group regular expression generation')
-    parser.add_argument('-r', '--report', nargs='*',
-                        help='Report formats to write.')
-    parser.add_argument('-o', '--report-path', action='store',
-                        help='Path for reports')
-    parser.add_argument('--no-md', action='store_true',
-                        help='Do not create metadata')
-    parser.add_argument('--no-allowed-required' '--no-ar', action='store_true',
-                        help='Do not create allowed and required field constraints')
-    parser.add_argument('--allowed', action='store_true',
-                        help='Create allowed fields dataset constraint')
-    parser.add_argument('--no-allowed', action='store_true',
-                        help='Do not create allowed fields dataset constraint')
-    parser.add_argument('--required', action='store_true',
-                        help='Create required fields dataset constraint')
-    parser.add_argument('--no-required', action='store_true',
-                        help='Do not create required fields dataset constraint')
-    parser.add_argument('--ar', action='store_true',
-                        help='Create allowed and required fields dataset constraints')
-    parser.add_argument('--no-ar', action='store_true',
-                        help='Do not create allowed or required fields dataset constraints')
+    parser.add_argument(
+        '-x',
+        '--rex',
+        action='store_true',
+        help='include regular expression generation',
+    )
+    parser.add_argument(
+        '-X',
+        '--no-rex',
+        action='store_true',
+        help='exclude regular expression generation',
+    )
+    parser.add_argument(
+        '-g',
+        '--group-rex',
+        action='store_true',
+        help='group regular expression generation',
+    )
+    parser.add_argument(
+        '-G',
+        '--no-group-rex',
+        action='store_true',
+        help='do not group regular expression generation',
+    )
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
+    parser.add_argument(
+        '-o', '--report-path', action='store', help='Path for reports'
+    )
+    parser.add_argument(
+        '--no-md', action='store_true', help='Do not create metadata'
+    )
+    parser.add_argument(
+        '--no-allowed-required--no-ar',
+        action='store_true',
+        help='Do not create allowed and required field constraints',
+    )
+    parser.add_argument(
+        '--allowed',
+        action='store_true',
+        help='Create allowed fields dataset constraint',
+    )
+    parser.add_argument(
+        '--no-allowed',
+        action='store_true',
+        help='Do not create allowed fields dataset constraint',
+    )
+    parser.add_argument(
+        '--required',
+        action='store_true',
+        help='Create required fields dataset constraint',
+    )
+    parser.add_argument(
+        '--no-required',
+        action='store_true',
+        help='Do not create required fields dataset constraint',
+    )
+    parser.add_argument(
+        '--ar',
+        action='store_true',
+        help='Create allowed and required fields dataset constraints',
+    )
+    parser.add_argument(
+        '--no-ar',
+        action='store_true',
+        help='Do not create allowed or required fields dataset constraints',
+    )
     add_pandas_flags(parser)
     return parser
 
@@ -105,81 +148,145 @@ def discover_flags(parser, args, params):
 
     params['engine'], params['backend'] = process_pandas_flags(None, flags)
 
-    params['allowed_fields'] = not(flags.no_allowed or flags.no_ar)
-    params['required_fields'] = not(flags.no_required or flags.no_ar)
+    params['allowed_fields'] = not (flags.no_allowed or flags.no_ar)
+    params['required_fields'] = not (flags.no_required or flags.no_ar)
 
     return flags
 
 
 def verify_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog='tdda verify',
-                                     epilog=usage + get_help('verify'),
-                                     formatter_class=formatter)
+    parser = argparse.ArgumentParser(
+        prog='tdda verify',
+        epilog=usage + get_help('verify'),
+        formatter_class=formatter,
+    )
     add_defaults(parser, epsilon=True)
-    parser.add_argument('-a', '--all', action='store_true',
-                        help='report all fields, even if there are '
-                             'no failures')
-    parser.add_argument('-f', '--fields', action='store_true',
-                        help='report only fields with failures')
-    parser.add_argument('-r', '--report', nargs='*',
-                        help='Report formats to write.')
-    parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
-                        help='"sloppy" means consider all numeric types '
-                             'equivalent')
+    parser.add_argument(
+        '-a',
+        '--all',
+        action='store_true',
+        help='report all fields, even if there are no failures',
+    )
+    parser.add_argument(
+        '-f',
+        '--fields',
+        action='store_true',
+        help='report only fields with failures',
+    )
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
+    parser.add_argument(
+        '-t',
+        '--type_checking',
+        choices=['strict', 'sloppy'],
+        help='"sloppy" means consider all numeric types equivalent',
+    )
     add_verify_fields_flags(parser)
     return parser
 
 
 def detect_parser(usage=''):
     formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog='tdda detect',
-                                     epilog=usage + get_help('detect'),
-                                     formatter_class=formatter)
+    parser = argparse.ArgumentParser(
+        prog='tdda detect',
+        epilog=usage + get_help('detect'),
+        formatter_class=formatter,
+    )
     add_defaults(parser, epsilon=True)
-    parser.add_argument('-o', '--report-path', action='store',
-                        help='Path for reports')
-    parser.add_argument('-a', '--all', action='store_true',
-                        help='report all fields, even if there are '
-                             'no failures')
-    parser.add_argument('-f', '--fields', action='store_true',
-                        help='report only fields with failures')
-    parser.add_argument('-t', '--type_checking', choices=['strict', 'sloppy'],
-                        help='"sloppy" means consider all numeric types '
-                             'equivalent')
-    parser.add_argument('--write-all-records', action='store_true',
-                        help='Include passing records')
-    parser.add_argument('--per-constraint', action='store_true',
-                        help='Write one flag column per failing constraint '
-                             'in addition to n_failures. Set by default.')
-    parser.add_argument('--no-per-constraint', action='store_true',
-                        help='Do not write out any per-constraint flag columns')
-    parser.add_argument('--no-original-fields', action='store_true',
-                        help='Do not write out original fields columns')
-    parser.add_argument('--original-fields', action='store_true',
-                        help='Write out original fields columns (default)')
-    parser.add_argument('--no-output-fields', action='store_true',
-                        help='Do not write out any original fields in the '
-                             'output. By default, all original columns will '
-                             'be included.')
-    parser.add_argument('--output-fields', nargs='*',
-                        help='Specify original columns to write out.')
-    parser.add_argument('-r', '--report', nargs='*',
-                        help='Report formats to write.')
-    parser.add_argument('--interleave', action='store_true',
-                        help='Interleave ok columns with original fields.')
-    parser.add_argument('--no-interleave', action='store_true',
-                        help='Do not interleave ok columns with original fields.')
-    parser.add_argument('--index', action='store_true',
-                        help='Include a row-number index in the output file '
-                             'when detecting. Rows are usually numbered from '
-                             '1, unless the input file already has an index.')
-    parser.add_argument('--int', dest='int_bools', action='store_true',
-                        help='Write out boolean fields as integers, with '
-                             '1 for true and 0 for false.')
+    parser.add_argument(
+        '-o', '--report-path', action='store', help='Path for reports'
+    )
+    parser.add_argument(
+        '-a',
+        '--all',
+        action='store_true',
+        help='report all fields, even if there are no failures',
+    )
+    parser.add_argument(
+        '-f',
+        '--fields',
+        action='store_true',
+        help='report only fields with failures',
+    )
+    parser.add_argument(
+        '-t',
+        '--type_checking',
+        choices=['strict', 'sloppy'],
+        help='"sloppy" means consider all numeric types equivalent',
+    )
+    parser.add_argument(
+        '--write-all-records',
+        action='store_true',
+        help='Include passing records',
+    )
+    parser.add_argument(
+        '--per-constraint',
+        action='store_true',
+        help='Write one flag column per failing constraint '
+        'in addition to n_failures. Set by default.',
+    )
+    parser.add_argument(
+        '--no-per-constraint',
+        action='store_true',
+        help='Do not write out any per-constraint flag columns',
+    )
+    parser.add_argument(
+        '--no-original-fields',
+        action='store_true',
+        help='Do not write out original fields columns',
+    )
+    parser.add_argument(
+        '--original-fields',
+        action='store_true',
+        help='Write out original fields columns (default)',
+    )
+    parser.add_argument(
+        '--no-output-fields',
+        action='store_true',
+        help='Do not write out any original fields in the '
+        'output. By default, all original columns will '
+        'be included.',
+    )
+    parser.add_argument(
+        '--output-fields',
+        nargs='*',
+        help='Specify original columns to write out.',
+    )
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
+    parser.add_argument(
+        '--interleave',
+        action='store_true',
+        help='Interleave ok columns with original fields.',
+    )
+    parser.add_argument(
+        '--no-interleave',
+        action='store_true',
+        help='Do not interleave ok columns with original fields.',
+    )
+    parser.add_argument(
+        '--index',
+        action='store_true',
+        help='Include a row-number index in the output file '
+        'when detecting. Rows are usually numbered from '
+        '1, unless the input file already has an index.',
+    )
+    parser.add_argument(
+        '--int',
+        dest='int_bools',
+        action='store_true',
+        help='Write out boolean fields as integers, with '
+        '1 for true and 0 for false.',
+    )
 
-    parser.add_argument('--key', nargs='*',
-                        help='Key or key fields to use when reporting failures')
+    parser.add_argument(
+        '--key',
+        nargs='*',
+        help='Key or key fields to use when reporting failures',
+    )
     add_verify_fields_flags(parser)
     return parser
 
@@ -187,13 +294,18 @@ def detect_parser(usage=''):
 def verify_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
-        print('Unexpected arguments %s\n' % ' '.join(more),
-              parser.epilog, file=sys.stderr)
+        print(
+            'Unexpected arguments %s\n' % ' '.join(more),
+            parser.epilog,
+            file=sys.stderr,
+        )
         sys.exit(1)
-    params.update({
-        'report': 'all',
-        'ascii': False,
-    })
+    params.update(
+        {
+            'report': 'all',
+            'ascii': False,
+        }
+    )
     add_flags(flags, params, epsilon=True)
     va = nva = vr = nvr = False
     if flags.all:
@@ -215,9 +327,9 @@ def verify_flags(parser, args, params):
         params['verify_required_fields'] = False
         nvr = True
 
-    if (va and nva):
+    if va and nva:
         error('Inconsistent settings for verify-allowed-fields')
-    if (vr and nvr):
+    if vr and nvr:
         error('Inconsistent settings for verify-required-fields')
 
     params['engine'], params['backend'] = process_pandas_flags(None, flags)
@@ -230,18 +342,26 @@ def detect_flags(parser, args, params):
     if len(more) > 0:
         print(parser.epilog, file=sys.stderr)
         sys.exit(1)
-    params.update({
-        'report': 'records',
-        'ascii': False,
-    })
+    params.update(
+        {
+            'report': 'records',
+            'ascii': False,
+        }
+    )
     add_flags(flags, params, epsilon=True)
     if flags.per_constraint and flags.no_per_constraint:
-        print('You must not specify both --per-constraint and '
-              '--no-per-constraint.', file=sys.stderr)
+        print(
+            'You must not specify both --per-constraint and '
+            '--no-per-constraint.',
+            file=sys.stderr,
+        )
         sys.exit(1)
     if flags.output_fields and flags.no_output_fields:
-        print('You must not specify both --output-fields and '
-              '--no-output-fields.', file=sys.stderr)
+        print(
+            'You must not specify both --output-fields and '
+            '--no-output-fields.',
+            file=sys.stderr,
+        )
         sys.exit(1)
     if flags.type_checking is not None:
         params['type_checking'] = flags.type_checking
@@ -283,25 +403,41 @@ def detect_flags(parser, args, params):
     return flags
 
 
-def add_defaults(parser, help=True, seven=True, colour=True, config=True,
-                 epsilon=False):
+def add_defaults(
+    parser, help=True, seven=True, colour=True, config=True, epsilon=False
+):
     if help:
-        parser.add_argument('-?', '--?', action='help',
-                            help='same as -h or --help')
+        parser.add_argument(
+            '-?', '--?', action='help', help='same as -h or --help'
+        )
     if seven:
-        parser.add_argument('-7', '--ascii', action='store_true',
-                            help='report without using special characters')
+        parser.add_argument(
+            '-7',
+            '--ascii',
+            action='store_true',
+            help='report without using special characters',
+        )
     if config:
-        parser.add_argument('--no-config', action='store_true',
-                            help='Skip loading ~/.tdda.toml')
+        parser.add_argument(
+            '--no-config',
+            action='store_true',
+            help='Skip loading ~/.tdda.toml',
+        )
     if colour:
-        parser.add_argument('--colour', action='store_true',
-                            help='Use colour in terminal output')
-        parser.add_argument('--no-colour', action='store_true',
-                            help='Do not not use colour in terminal output')
+        parser.add_argument(
+            '--colour',
+            action='store_true',
+            help='Use colour in terminal output',
+        )
+        parser.add_argument(
+            '--no-colour',
+            action='store_true',
+            help='Do not not use colour in terminal output',
+        )
     if epsilon:
-        parser.add_argument('-epsilon', '--epsilon', type=float,
-                            help='epsilon fuzziness')
+        parser.add_argument(
+            '-epsilon', '--epsilon', type=float, help='epsilon fuzziness'
+        )
 
 
 def add_flags(flags, params, epsilon=False):
@@ -325,24 +461,41 @@ def add_flags(flags, params, epsilon=False):
 
 
 def add_verify_fields_flags(parser):
-
-    parser.add_argument('--verify-required-fields', '--vrf',
-                        action='store_true',
-                        help='Force verify of required fields')
-    parser.add_argument('--verify-allowed-fields', '--vaf',
-                        action='store_true',
-                        help='Force verify of allowed fields')
-    parser.add_argument('--no-verify-required-fields', '--no-vrf',
-                        action='store_true',
-                        help='Force no verication of required fields')
-    parser.add_argument('--no-verify-allowed-fields', '--no-vaf',
-                        action='store_true',
-                        help='Force no verification of allowed fields')
-    parser.add_argument('--varf', '--vraf', action='store_true',
-       help='Force verification of allowed and required fields'
+    parser.add_argument(
+        '--verify-required-fields',
+        '--vrf',
+        action='store_true',
+        help='Force verify of required fields',
     )
-    parser.add_argument('--no-varf', '--no-vraf', action='store_true',
-       help='Force no verification of allowed and required fields'
+    parser.add_argument(
+        '--verify-allowed-fields',
+        '--vaf',
+        action='store_true',
+        help='Force verify of allowed fields',
+    )
+    parser.add_argument(
+        '--no-verify-required-fields',
+        '--no-vrf',
+        action='store_true',
+        help='Force no verication of required fields',
+    )
+    parser.add_argument(
+        '--no-verify-allowed-fields',
+        '--no-vaf',
+        action='store_true',
+        help='Force no verification of allowed fields',
+    )
+    parser.add_argument(
+        '--varf',
+        '--vraf',
+        action='store_true',
+        help='Force verification of allowed and required fields',
+    )
+    parser.add_argument(
+        '--no-varf',
+        '--no-vraf',
+        action='store_true',
+        help='Force no verification of allowed and required fields',
     )
 
     add_pandas_flags(parser)

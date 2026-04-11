@@ -6,13 +6,13 @@ import polars as pl
 
 from rich.console import Console
 from rich.terminal_theme import (
-    MONOKAI, DIMMED_MONOKAI, SVG_EXPORT_THEME, DEFAULT_TERMINAL_THEME
+    MONOKAI,
+    DIMMED_MONOKAI,
+    SVG_EXPORT_THEME,
+    DEFAULT_TERMINAL_THEME,
 )
 
-from tdda.abstractdf import (
-    col_names,
-    df_add_named_col_with_values
-)
+from tdda.abstractdf import col_names, df_add_named_col_with_values
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.captureoutput import capture_output
@@ -31,22 +31,26 @@ from tdda.utils import swap_ext, rprint
 
 from tdda.referencetest.test_diff_book_sd1 import *
 
-REFTESTDIR = os.path.dirname(__file__)     # tdda.referencetest
-TDDADIR = os.path.dirname(REFTESTDIR)      # tdda
-EXDIR = os.path.join(REFTESTDIR,
-                     'diffexamples')       # tdda/referencetest/diffexamples
-REFDIR = os.path.join(REFTESTDIR,
-                      'testdata', 'diff')  # tdda/referencetest/testdata/diff
-BASEDIR = os.path.dirname(TDDADIR)         # parent of tdda (repo)
-DOCDIR = os.path.join(BASEDIR, 'doc')      # tdda/doc
-SVGDIR = os.path.join(DOCDIR,
-                      'svg', 'diff')       # tdda/doc/svg/diff
+REFTESTDIR = os.path.dirname(__file__)  # tdda.referencetest
+TDDADIR = os.path.dirname(REFTESTDIR)  # tdda
+EXDIR = os.path.join(
+    REFTESTDIR, 'diffexamples'
+)  # tdda/referencetest/diffexamples
+REFDIR = os.path.join(
+    REFTESTDIR, 'testdata', 'diff'
+)  # tdda/referencetest/testdata/diff
+BASEDIR = os.path.dirname(TDDADIR)  # parent of tdda (repo)
+DOCDIR = os.path.join(BASEDIR, 'doc')  # tdda/doc
+SVGDIR = os.path.join(DOCDIR, 'svg', 'diff')  # tdda/doc/svg/diff
 
 
 GENSVG = 'GENSVG' in os.environ  # Set env var GENSVG to regenerate SVG output
 if GENSVG:
-    rprint('\n[green]*** REGENERATING DOC SVGs for TDDA DIFF ***[/green]\n',
-           file=sys.stderr)
+    rprint(
+        '\n[green]*** REGENERATING DOC SVGs for TDDA DIFF ***[/green]\n',
+        file=sys.stderr,
+    )
+
 
 def inpath(filename):
     return os.path.join(EXDIR, filename)
@@ -61,7 +65,6 @@ def svgpath(filename):
 
 
 class TestTDDADiff(ReferenceTestCase):
-
     # HELPERS
 
     def diff(self, args, console=None):
@@ -80,15 +83,21 @@ class TestTDDADiff(ReferenceTestCase):
         suffix = f'_{flagpart}' if flagpart else ''
         filename = f'{left}_{right}{suffix}.txt'
         expected = refpath(filename)
-        console = Console(highlight=False, soft_wrap=True,
-                          width=width, record=True, force_terminal=True)
+        console = Console(
+            highlight=False,
+            soft_wrap=True,
+            width=width,
+            record=True,
+            force_terminal=True,
+        )
         args = [L, R] + (flags or [])
         targs = [left, right] + (flags or [])
         actual = self.diff(args, console=console)
         title = ' '.join(['tdda diff'] + targs)
         if GENSVG:
-            console.save_svg(svgpath(filename), title=title,
-                             theme=DIMMED_MONOKAI)
+            console.save_svg(
+                svgpath(filename), title=title, theme=DIMMED_MONOKAI
+            )
         self.assertStringCorrect(actual, expected)
         return actual
 
@@ -114,8 +123,8 @@ class TestTDDADiff(ReferenceTestCase):
         """Most basic diff of two CSV files with two diffs"""
         actual = self.difftest('a.csv', 'b.csv')
         self.assertIn(
-            'Total number of different values: 2 of 24 (8.33%).',
-            actual)
+            'Total number of different values: 2 of 24 (8.33%).', actual
+        )
 
     def test_a_tsv_b_tsv(self):
         """Diff aginst self: should be empty"""
@@ -144,19 +153,19 @@ class TestTDDADiff(ReferenceTestCase):
         """Single column string data with 2 diffs"""
         actual = self.difftest('s1.csv', 's2.csv')
         self.assertIn(
-            'Total number of different values: 2 of 3 (66.67%).',
-            actual)
+            'Total number of different values: 2 of 3 (66.67%).', actual
+        )
 
     # CROSS-TYPE
 
-    def test_a_csv_b_parquet (self):
+    def test_a_csv_b_parquet(self):
         """CSV against parquet"""
         actual = self.difftest('a.csv', 'b.parquet')
 
         # Should also be same result as for csv
         self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
-    def test_a_parquet_b_csv (self):
+    def test_a_parquet_b_csv(self):
         """Parquet against csv"""
         actual = self.difftest('a.parquet', 'b.csv')
 
@@ -179,8 +188,9 @@ class TestTDDADiff(ReferenceTestCase):
     def test_a_csv_d_csv(self):
         """One different date value: fails"""
         actual = self.difftest('a.csv', 'd.csv')
-        self.assertIn('Total number of different values: 1 of 24 (4.17%).',
-                      actual)
+        self.assertIn(
+            'Total number of different values: 1 of 24 (4.17%).', actual
+        )
 
     # DIFFERENT NUMBER OF ROWS
 
@@ -208,8 +218,9 @@ class TestTDDADiff(ReferenceTestCase):
 
     def test_a_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
-        self.difftest('a.csv', 'f5.tsv', ['--key', 'row', '--polars'],
-                      width=120)
+        self.difftest(
+            'a.csv', 'f5.tsv', ['--key', 'row', '--polars'], width=120
+        )
 
     def test_f5_3d_tsv_a_tsv_join(self):
         """One extra row, with join key"""
@@ -217,8 +228,9 @@ class TestTDDADiff(ReferenceTestCase):
 
     def test_f5_3d_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
-        self.difftest('f5-3d.tsv', 'a.tsv', ['--key', 'row', '--polars'],
-                      width=130)
+        self.difftest(
+            'f5-3d.tsv', 'a.tsv', ['--key', 'row', '--polars'], width=130
+        )
 
 
 class TestKeyFunctions:
@@ -226,19 +238,18 @@ class TestKeyFunctions:
         dfL = df_add_named_col_with_values(
             self.read_parquet(inpath('a.parquet')),
             'small',
-            [i // 2 for i in range(4)]
+            [i // 2 for i in range(4)],
         )
         dfR = df_add_named_col_with_values(
             self.read_parquet(inpath('b.parquet')),
             'small',
-            [1 - (i // 2) for i in range(4)]
+            [1 - (i // 2) for i in range(4)],
         )
 
         # All except even, small are usable
         for key in ('row', 'sq', 'recip', 'date'):
             self.assertEqual(
-                (key, check_is_usable_key(dfL, dfR, key)),
-                (key, True)
+                (key, check_is_usable_key(dfL, dfR, key)), (key, True)
             )
         # even, small not usable
         self.assertEqual(check_is_usable_key(dfL, dfR, 'even'), False)
@@ -281,8 +292,9 @@ class TestKeyFunctions:
         # True (nothing good)
         L = dfL[['even']]
         R = dfR[['even']]
-        left, right, key = find_usable_key(self.is_pandas, L, R, key=True,
-                                           verbosity=0)  # suppress warning
+        left, right, key = find_usable_key(
+            self.is_pandas, L, R, key=True, verbosity=0
+        )  # suppress warning
         self.assertIsNone(key)  # first usable key
         self.assertEqual(col_names(left), ['even'])
         self.assertEqual(col_names(right), ['even'])
@@ -297,25 +309,26 @@ class TestKeyFunctions:
         dfL = self.read_parquet(inpath('a.parquet'))
         dfR2 = self.read_parquet(inpath('f5.parquet'))
         fields = ['row', 'sq', 'recip', 'name', 'even', 'date']
-        left, right, key = find_usable_key(self.is_pandas, dfL, dfR2, key='row')
+        left, right, key = find_usable_key(
+            self.is_pandas, dfL, dfR2, key='row'
+        )
         self.assertEqual(key, 'row')  # first usable key
         self.assertEqual(col_names(left), fields)
         self.assertEqual(col_names(right), fields)
 
 
-
 class TestKeyFunctionsPandas(TestKeyFunctions, ReferenceTestCase):
     is_pandas = True
+
     def read_parquet(self, *args, **kw):
         return pd.read_parquet(*args, **kw)
 
 
 class TestKeyFunctionsPolars(TestKeyFunctions, ReferenceTestCase):
     is_pandas = False
+
     def read_parquet(self, *args, **kw):
         return pl.read_parquet(*args, **kw)
-
-
 
 
 if __name__ == '__main__':

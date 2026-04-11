@@ -10,10 +10,7 @@ Copyright (c) Stochastic Solutions Limited 2016-2026
 
 import os
 
-from tdda.referencetest.basecomparison import (
-    BaseComparison,
-    ROW_NUM_HEADER
-)
+from tdda.referencetest.basecomparison import BaseComparison, ROW_NUM_HEADER
 from tdda.referencetest.diffutils import (
     same_structure_dataframe_diffs,
 )
@@ -66,7 +63,7 @@ class PolarsComparison(BaseComparison):
             ref_df = round_df(ref_df, self.precision)
 
         if self.fuzzy_nulls:
-            for c in (df.columns):
+            for c in df.columns:
                 ltype = str(df[c].dtype)
                 rtype = str(ref_df[c].dtype)
                 if ltype == rtype == 'String':
@@ -76,8 +73,9 @@ class PolarsComparison(BaseComparison):
         if df.equals(ref_df):  # the check
             return 0
         else:
-            D = same_structure_dataframe_diffs(df, ref_df, key=key, idx=idx,
-                                               config=self.config)
+            D = same_structure_dataframe_diffs(
+                df, ref_df, key=key, idx=idx, config=self.config
+            )
             n_diffs = D.n_diff_values
             if n_diffs > 0:
                 diffs.dfd.diff = D
@@ -125,8 +123,13 @@ class PolarsComparison(BaseComparison):
     default_csv_loader = csv_to_dataframe
 
     def load_serialized_dataframe(
-        self, path, actual_df=None, loader=None, reset_index=True,
-        backend=None, **kwargs
+        self,
+        path,
+        actual_df=None,
+        loader=None,
+        reset_index=True,
+        backend=None,
+        **kwargs,
     ):
         """
         Function for constructing a pandas dataframe from a serialized
@@ -148,8 +151,6 @@ class PolarsComparison(BaseComparison):
         else:
             return self.load_csv(path, loader, **kwargs)
 
-
-
     @staticmethod
     def _replace_cats(df):
         return df  # for now
@@ -165,10 +166,12 @@ def round_df(df, n):
     floats = {c.name for c in df if str(c.dtype).startswith('Float')}
     if not floats:
         return df
-    return pl.DataFrame({
-         c: (df[c].round(n, mode='half_to_even') if c in floats else df[c])
-         for c in df.columns
-    })
+    return pl.DataFrame(
+        {
+            c: (df[c].round(n, mode='half_to_even') if c in floats else df[c])
+            for c in df.columns
+        }
+    )
 
 
 def diff_dataframes(*args, **kwargs):

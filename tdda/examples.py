@@ -20,6 +20,7 @@ BOOK_EXAMPLES_URL = (
     'http://github.com/tdda/tdda-book-examples/archive/refs/heads/main.zip'
 )
 
+
 def examples_srcdir(name):
     path = os.path.join(os.path.dirname(__file__), name)
     return os.path.join(path, 'examples')
@@ -31,8 +32,10 @@ def copy_examples(name, destination='.', verbose=True):
     """
     srcdir = examples_srcdir(name)
     if not os.path.isdir(destination):
-        print('copyexamples: output directory %s does not exist' % destination,
-              file=sys.stderr)
+        print(
+            'copyexamples: output directory %s does not exist' % destination,
+            file=sys.stderr,
+        )
         sys.exit(1)
     outdir = os.path.join(destination, '%s_examples' % name)
     shutil.rmtree(outdir, ignore_errors=True)
@@ -80,11 +83,12 @@ def copy(srcdir, destination):
             copy_accounts_data_unzipped(destination)
         else:
             for run in (0, 1):
-                binary = 'b' if run  or fullname.endswith('.feather') else ''
+                binary = 'b' if run or fullname.endswith('.feather') else ''
                 try:
                     with open(fullname, 'r%s' % binary) as fin:
-                        with open(os.path.join(destination, name),
-                                               'w%s' % binary) as fout:
+                        with open(
+                            os.path.join(destination, name), 'w%s' % binary
+                        ) as fout:
                             fout.write(fin.read())
                     break
                 except UnicodeDecodeError:

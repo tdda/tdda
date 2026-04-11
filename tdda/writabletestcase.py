@@ -43,8 +43,16 @@ __version__ = '0.0.4'
 
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
-def check_strings(actual, expected, actual_path, expected_path,
-                  ignore_patterns, lstrip=False, rstrip=False):
+
+def check_strings(
+    actual,
+    expected,
+    actual_path,
+    expected_path,
+    ignore_patterns,
+    lstrip=False,
+    rstrip=False,
+):
     """
     Compare two lists of strings (actual and expected), one-by-one.
 
@@ -71,8 +79,11 @@ def check_strings(actual, expected, actual_path, expected_path,
     failures = 0
     normalize = normalize_function(lstrip, rstrip)
     if len(actual) == len(expected):
-        diffs = [i for i in range(len(actual))
-                 if normalize(actual[i]) != normalize(expected[i])]
+        diffs = [
+            i
+            for i in range(len(actual))
+            if normalize(actual[i]) != normalize(expected[i])
+        ]
 
         if diffs:
             ignore_patterns = ignore_patterns or []
@@ -150,7 +161,7 @@ def set_write_from_argv(argv=None):
     if '-w' in argv:
         WritableTestCase.set_defaults(write=True)
         idx = argv.index('-w')
-        return argv[:idx] + argv[idx+1:]
+        return argv[:idx] + argv[idx + 1 :]
     else:
         return argv
 
@@ -212,9 +223,15 @@ class WritableTestCase(unittest.TestCase):
         if faildir is not None:
             cls.faildir = faildir
 
-    def check_file(self, actual_path, expected_path,
-                   ignore_patterns=None, lstrip=False, rstrip=False,
-                   do_assert=True):
+    def check_file(
+        self,
+        actual_path,
+        expected_path,
+        ignore_patterns=None,
+        lstrip=False,
+        rstrip=False,
+        do_assert=True,
+    ):
         """
         Check a pair of files, line by line, with optional
         ignore patterns (substrings) and optionally left-
@@ -244,16 +261,29 @@ class WritableTestCase(unittest.TestCase):
             raise
         if rstrip and actual and len(actual[-1]) == 0:
             actual = actual[:-1]
-        failures = check_strings(actual, expected, actual_path, expected_path,
-                                 ignore_patterns, lstrip=lstrip, rstrip=rstrip)
+        failures = check_strings(
+            actual,
+            expected,
+            actual_path,
+            expected_path,
+            ignore_patterns,
+            lstrip=lstrip,
+            rstrip=rstrip,
+        )
         if do_assert:
             self.assertEqual(failures, 0)
         return failures
 
-    def check_string_against_file(self, actualString, expected_path,
-                                  ignore_patterns=None, lstrip=False,
-                                  rstrip=False, faildir=None,
-                                  do_assert=True):
+    def check_string_against_file(
+        self,
+        actualString,
+        expected_path,
+        ignore_patterns=None,
+        lstrip=False,
+        rstrip=False,
+        faildir=None,
+        do_assert=True,
+    ):
         """
         Check a string against expected content in a file,
         line by line, with optional ignore patterns (substrings)
@@ -283,13 +313,19 @@ class WritableTestCase(unittest.TestCase):
             with open(actual_path, 'w') as f:
                 f.write(actualString)
         except IOError:
-            print('Failed to write actual string to %s.' % actual_path,
-                  file=sys.stderr)
-        failures = check_strings(actualString.splitlines(),
-                                 expectedString.splitlines(),
-                                 actual_path, expected_path,
-                                 ignore_patterns=ignore_patterns,
-                                 lstrip=lstrip, rstrip=rstrip)
+            print(
+                'Failed to write actual string to %s.' % actual_path,
+                file=sys.stderr,
+            )
+        failures = check_strings(
+            actualString.splitlines(),
+            expectedString.splitlines(),
+            actual_path,
+            expected_path,
+            ignore_patterns=ignore_patterns,
+            lstrip=lstrip,
+            rstrip=rstrip,
+        )
         if do_assert:
             self.assertEqual(failures, 0)
         return failures

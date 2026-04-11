@@ -32,6 +32,7 @@ For usage details:
     >>> help(rexpy)
 
 """
+
 from tdda.version import version as __version__
 from . import referencetest
 from . import constraints

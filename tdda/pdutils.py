@@ -1,14 +1,15 @@
 from tdda.utils import valid_level
 
+
 def pandas_string_type(t):
     if type(t):
         s = str(t)
         if s.startswith('<'):
             s = (
                 s.split('.')[-1]
-                 .replace('Dtype', '')
-                 .replace('_', '')
-                 .replace("'>", '')
+                .replace('Dtype', '')
+                .replace('_', '')
+                .replace("'>", '')
             )
     else:
         s = t
@@ -30,7 +31,7 @@ def pandas_types_match(t1, t2, level=None):
     t1, t2 = pandas_string_type(t1), pandas_string_type(t2)
     if level == 'strict' or t1 == t2:
         if t1.lower() == t2.lower() and t1.lower().startswith('float'):
-            return True   # Float64 and float64 are not meaningfully different
+            return True  # Float64 and float64 are not meaningfully different
         return t1 == t2
 
     t1loose = loosen_pandas_type(t1)

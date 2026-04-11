@@ -3,9 +3,7 @@ import sys
 import pandas as pd
 import polars as pl
 
-from tdda.constraints.pd.constraints import (discover_df,
-                                             verify_df,
-                                             detect_df)
+from tdda.constraints.pd.constraints import discover_df, verify_df, detect_df
 from tdda.constraints.pd.discover import discover_df_from_file
 from tdda.constraints.pd.verify import verify_df_from_file
 from tdda.constraints.pd.detect import detect_df_from_file
@@ -46,9 +44,16 @@ def source_kind(src):
         return None
 
 
-def discover(indata, constraints_path=None,
-             report_path=None, report_formats=None,
-             engine=None, backend=None, verbose=True, **kwargs):
+def discover(
+    indata,
+    constraints_path=None,
+    report_path=None,
+    report_formats=None,
+    engine=None,
+    backend=None,
+    verbose=True,
+    **kwargs,
+):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -90,22 +95,40 @@ def discover(indata, constraints_path=None,
 
     engine, backend = get_engine_and_backend(engine, backend)
     if kind == 'pandas':
-        return discover_df(indata, constraints_path, report_path=report_path,
-                           report_formats=report_formats, backend=backend,
-                           verbose=verbose, **kwargs)
+        return discover_df(
+            indata,
+            constraints_path,
+            report_path=report_path,
+            report_formats=report_formats,
+            backend=backend,
+            verbose=verbose,
+            **kwargs,
+        )
     elif kind in ('parquet', 'flat') and engine == 'pandas':
-        return discover_df_from_file(indata, constraints_path,
-                                     report_path=report_path,
-                                     report_formats=report_formats,
-                                     backend=backend,
-                                     verbose=verbose, **kwargs)
+        return discover_df_from_file(
+            indata,
+            constraints_path,
+            report_path=report_path,
+            report_formats=report_formats,
+            backend=backend,
+            verbose=verbose,
+            **kwargs,
+        )
     else:
         print('Unsupported discovery mode', file=sys.stderr)
         sys.exit(1)
 
 
-def verify(indata, constraints_path, outdata=None, verbose=True,
-           engine=None, backend=None, md_path=None, **kwargs):
+def verify(
+    indata,
+    constraints_path,
+    outdata=None,
+    verbose=True,
+    engine=None,
+    backend=None,
+    md_path=None,
+    **kwargs,
+):
     """
     Verify that (i.e. check whether) the data provided
     satisfies the constraints in the JSON ``.tdda`` file provided.
@@ -139,19 +162,31 @@ def verify(indata, constraints_path, outdata=None, verbose=True,
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)
     if kind == 'pandas':
-        return verify_df(indata, constraints_path, engine=engine,
-                         backend=backend,
-                         verbose=verbose, **kwargs)
+        return verify_df(
+            indata,
+            constraints_path,
+            engine=engine,
+            backend=backend,
+            verbose=verbose,
+            **kwargs,
+        )
     elif kind in ('parquet', 'flat') and engine == 'pandas':
-        return verify_df_from_file(indata, constraints_path, verbose=verbose,
-                                   backend=backend, md_path=md_path, **kwargs)
+        return verify_df_from_file(
+            indata,
+            constraints_path,
+            verbose=verbose,
+            backend=backend,
+            md_path=md_path,
+            **kwargs,
+        )
     else:
         print('Unsupported verification mode (%s)' % kind, file=sys.stderr)
         sys.exit(1)
 
 
-def detect(indata, constraints_path, outpath=None,
-           engine=None, backend=None, **kwargs):
+def detect(
+    indata, constraints_path, outpath=None, engine=None, backend=None, **kwargs
+):
     """
     Check the records from the Pandas DataFrame provided, to detect
     records that fail any of the constraints in the JSON ``.tdda`` file
@@ -187,13 +222,23 @@ def detect(indata, constraints_path, outpath=None,
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)
     if kind == 'pandas':
-        return detect_df(indata, constraints_path, outpath=outpath,
-                         engine=engine, backend=backend, **kwargs)
+        return detect_df(
+            indata,
+            constraints_path,
+            outpath=outpath,
+            engine=engine,
+            backend=backend,
+            **kwargs,
+        )
     elif kind in ('parquet', 'flat') and engine == 'pandas':
-        return detect_df_from_file(indata, constraints_path,
-                                   outpath=outpath,
-                                   engine=engine, backend=backend,
-                                   **kwargs)
+        return detect_df_from_file(
+            indata,
+            constraints_path,
+            outpath=outpath,
+            engine=engine,
+            backend=backend,
+            **kwargs,
+        )
     else:
         print(f'Unsupported detect mode ({kind})', file=sys.stderr)
         sys.exit(1)

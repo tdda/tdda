@@ -34,12 +34,12 @@ DiffCounts = namedtuple('DiffCounts', 'rowdiffs n')
 
 class ColDiff:
     def __init__(self, mask, extra):
-        self.mask = mask          # Boolean mask, 1 where different
-                                  # within common area (length)
-        self.n = int(sum(mask))   # Number of differences in common area
-        self.extra = extra        # Number of extra rows (left - right)
+        self.mask = mask  # Boolean mask, 1 where different
+        # within common area (length)
+        self.n = int(sum(mask))  # Number of differences in common area
+        self.extra = extra  # Number of extra rows (left - right)
         self.total = self.n + abs(extra)  # Total rows with differences
-                                          # including extra/missing rows
+        # including extra/missing rows
 
     def __str__(self):
         return (
@@ -48,7 +48,8 @@ class ColDiff:
             f'    n={self.n},\n'
             f'    extra={self.extra}, \n'
             f'    total={self.total}\n'
-            ')')
+            ')'
+        )
 
 
 def join_for_diff(L, R, key):
@@ -78,11 +79,11 @@ def join_for_diff(L, R, key):
     L = df_add_named_col_with_values(L, idx_col, index_col(is_pd, nL))
     R = df_add_named_col_with_values(R, idx_col, index_col(is_pd, nR))
     dfj = df_sort(df_join(L, R, keys), idx_col)  # sort on left
-    common_cols =  [idx_col] + [k for k in left_names if not k in keys]
+    common_cols = [idx_col] + [k for k in left_names if not k in keys]
     L = dfj[keys + common_cols]
     R = df_rename_cols(
         dfj[keys + [f'{k}__r' for k in common_cols]],
-        {f'{k}__r': k for k in common_cols}
+        {f'{k}__r': k for k in common_cols},
     )
     return L, R, idx_col
 
@@ -125,9 +126,9 @@ def find_usable_key(is_pandas, left, right, key=None, verbosity=1):
     nL, nR = left.shape[0], right.shape[0]
     if isinstance(key, str) or is_sequence(key):
         check_is_usable_key(left, right, key, raise_if_not=True)
-        mode = 'key'   # key provided
+        mode = 'key'  # key provided
     elif key == True:
-        mode = 'find'   # try to find a key
+        mode = 'find'  # try to find a key
     elif key:
         error(f'Unexpected value for key value: {repr(key)}')
     elif nL == nR:
@@ -156,9 +157,9 @@ def find_common_key(left, right, verbosity=1):
                 return key
         distincts[key] = ndL
     if len(distincts) >= 2:
-        cands = sorted(shared_cols, key = lambda k: -distincts[k])
+        cands = sorted(shared_cols, key=lambda k: -distincts[k])
         for i, key1 in enumerate(cands[:-1]):
-            for key2 in cands[i + 1:]:
+            for key2 in cands[i + 1 :]:
                 keys = [key1, key2]
                 L = left[keys].groupby(keys).count().reset_index()
                 if L.shape[0] == nL:
@@ -180,7 +181,7 @@ def check_is_usable_key(left, right, key, raise_if_not=False):
         if R.shape[0] == nR:
             return True
         elif raise_if_not:
-             error(f'{str_key} is not a primary key for in right DataFrame.')
+            error(f'{str_key} is not a primary key for in right DataFrame.')
         else:
             return False
     elif raise_if_not:
@@ -210,7 +211,7 @@ def same_structure_dataframe_diffs(
     if idx:
         missings = isnull_col(df[idx]) | isnull_col(ref_df[idx])
     n_vals = 0  # total number of values with differences
-                # (including values from "extra" rows)
+    # (including values from "extra" rows)
     for c in col_names(df):
         if c != idx:
             diffs = single_col_diffs(df[c], ref_df[c], missings)
@@ -229,9 +230,18 @@ def same_structure_dataframe_diffs(
         row_diff_counts = None
     dfl = lib(df)
     diff_df = dfl.DataFrame(d)
-    return SameStructureDDiff(df.shape, diff_df, row_diff_counts,
-                              n_vals, n_cols, n_rows, delta,
-                              key=key, idx=idx, config=config)
+    return SameStructureDDiff(
+        df.shape,
+        diff_df,
+        row_diff_counts,
+        n_vals,
+        n_cols,
+        n_rows,
+        delta,
+        key=key,
+        idx=idx,
+        config=config,
+    )
 
 
 def single_col_diffs(left, right, missings=None):
@@ -298,5 +308,3 @@ def create_row_diff_counts(masks):
             for i in range(len(counts) // 2)
         ] + last
     return counts[0]
-
-

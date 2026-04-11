@@ -19,4 +19,3 @@ from tdda import examples
 
 if __name__ == '__main__':
     examples.copy_main('constraints')
-

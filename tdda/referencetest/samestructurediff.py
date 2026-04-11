@@ -20,13 +20,27 @@ QualifiedTypeRE = re.compile('^([A-Za-z0-9]+)+.*$')
 ROW_NUM_HEADER = '#'
 HASH_DIFF_KEY = '#'
 
+
 class SameStructureDDiff:
     """
     Container for information about differences between data frames
     with the same column structure.
     """
-    def __init__(self, shape, diff_df, row_counts, n_vals, n_cols, n_rows,
-                 row_delta, config, key=None, idx=None, colour=None):
+
+    def __init__(
+        self,
+        shape,
+        diff_df,
+        row_counts,
+        n_vals,
+        n_cols,
+        n_rows,
+        row_delta,
+        config,
+        key=None,
+        idx=None,
+        colour=None,
+    ):
         self.shape = shape
         self.n_diff_values = n_vals
         self.n_diff_cols = n_cols
@@ -34,7 +48,7 @@ class SameStructureDDiff:
         self.row_delta = row_delta
         self.key = key
         self.idx = idx
-        self.diff_df = diff_df             # keyed on common column name
+        self.diff_df = diff_df  # keyed on common column name
         self.row_diff_counts = row_counts  # count of diffs on each row
         self.config = config
 
@@ -45,13 +59,14 @@ class SameStructureDDiff:
         ]
         tot_vals = self.shape[0] * self.shape[1]
         prop_diffs = 100 * self.n_diff_values / tot_vals
-        lines.extend([
-            f'Total number of different values: {self.n_diff_values:,}'
-            f' of {tot_vals:,} ({prop_diffs:.2f}%).',
-
-            f'Total number of rows with differences: {self.n_diff_rows:,}',
-            f'Total number of columns with differences: {self.n_diff_cols:,}:',
-        ])
+        lines.extend(
+            [
+                f'Total number of different values: {self.n_diff_values:,}'
+                f' of {tot_vals:,} ({prop_diffs:.2f}%).',
+                f'Total number of rows with differences: {self.n_diff_rows:,}',
+                f'Total number of columns with differences: {self.n_diff_cols:,}:',
+            ]
+        )
         absdelta = abs(self.row_delta)
         for c in col_names(self.diff_df):
             n = self.diff_df[c].sum() + absdelta
@@ -96,33 +111,40 @@ class SameStructureDDiff:
                     if self.key:
                         plain_rows.append(
                             [indexes[r]]
-                            + list(chain(*([L, R]
-                                   for L, R in zip(l_vals, r_vals))))
+                            + list(
+                                chain(
+                                    *([L, R] for L, R in zip(l_vals, r_vals))
+                                )
+                            )
                         )
                     else:
                         plain_rows.append(
                             [indexes[r]]
-                            + list(chain(*([L, R]
-                                 for L, R in zip(l_vals, r_vals))))
-                    )
+                            + list(
+                                chain(
+                                    *([L, R] for L, R in zip(l_vals, r_vals))
+                                )
+                            )
+                        )
 
             index_header = [] if self.key else [ROW_NUM_HEADER]
 
             s = '' if n == 1 else 's'
             rows_desc = (
                 'all rows with differences'
-                 if self.n_diff_rows <= n
-                 else f'First {n:,} row{s} with differences'
+                if self.n_diff_rows <= n
+                else f'First {n:,} row{s} with differences'
             )
             title = f'Value Differences ({rows_desc})'
-            return Dummy(title=title, cols=index_header + cols,
-                         rows=plain_rows)
+            return Dummy(
+                title=title, cols=index_header + cols, rows=plain_rows
+            )
         else:
             return None
 
     def details_table(self, df, ref_df, target_rows=None):
         C = self.config.referencetest
-        vertical =  nvl(C.vertical, False)
+        vertical = nvl(C.vertical, False)
         eq = get_scalar_eq(df)
         target_rows = nvl(target_rows, self.n_diff_rows)
         n = min(target_rows, self.n_diff_rows)
@@ -163,27 +185,27 @@ class SameStructureDDiff:
             )
         LI = RI = None
         if self.idx:
-            LI = df_to_lists(get_diffs_df_with_cols(
-                df, [self.idx], self.row_diff_counts.rowdiffs, n
-            ), n)
-            RI = df_to_lists(get_diffs_df_with_cols(
-                ref_df, [self.idx], self.row_diff_counts.rowdiffs, n
-            ), n)
+            LI = df_to_lists(
+                get_diffs_df_with_cols(
+                    df, [self.idx], self.row_diff_counts.rowdiffs, n
+                ),
+                n,
+            )
+            RI = df_to_lists(
+                get_diffs_df_with_cols(
+                    ref_df, [self.idx], self.row_diff_counts.rowdiffs, n
+                ),
+                n,
+            )
         pL, pR = C.stripped_prefixes(pre=' ' if vertical else '')
         N = min(self.n_diff_rows, target_rows)
-        K_table = (
-            df_to_lists(key_vals, N) if key_vals is not None else None
-        )
+        K_table = df_to_lists(key_vals, N) if key_vals is not None else None
         if self.key:
             indexes = [[str(k) for k in k_vals] for k_vals in K_table]
             pl_indexes = [[str(k) for k in k_vals] for k_vals in K_table]
         else:
-            indexes = [
-                [C.common(v, dim_if_not_bw=True)] for v in row_indexes
-            ]
-            pl_indexes = [
-                [C.common(v, plain=True)] for v in row_indexes
-            ]
+            indexes = [[C.common(v, dim_if_not_bw=True)] for v in row_indexes]
+            pl_indexes = [[C.common(v, plain=True)] for v in row_indexes]
         rows, plain_rows = [], []
         # N = min(self.n_diff_rows, target_rows)
         L_table, R_table = df_to_lists(L, N), df_to_lists(R, N)
@@ -208,9 +230,7 @@ class SameStructureDDiff:
                     else C.common(left)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
-                plstr = [
-                    C.left_annotated(left, prefix) for left in l_vals
-                ]
+                plstr = [C.left_annotated(left, prefix) for left in l_vals]
             if right_missing:
                 prstr = rstr = [''] * len(l_vals)
             else:
@@ -220,9 +240,7 @@ class SameStructureDDiff:
                     else C.common(right)
                     for (left, right) in zip(l_vals, r_vals)
                 ]
-                prstr = [
-                    C.right_annotated(right, prefix) for right in r_vals
-                ]
+                prstr = [C.right_annotated(right, prefix) for right in r_vals]
 
             if vertical:
                 rows.append([f'{indexes[r][0]}{pL}'] + lstr)
@@ -244,8 +262,7 @@ class SameStructureDDiff:
 
         n_table_cols = len(plain_rows[0])
         widths = [
-            max(len(row[i]) for row in plain_rows)
-            for i in range(n_table_cols)
+            max(len(row[i]) for row in plain_rows) for i in range(n_table_cols)
         ]
 
         nih = len(index_headers)
@@ -255,20 +272,17 @@ class SameStructureDDiff:
             tL, tR = type_header(L[col]), type_header(R[col])
             if vertical:
                 type_headers.append(f'{tL}\n{tR}')
-                widths[nih + i] = max(widths[nih + i],
-                                      len(cols[i]),
-                                      len(tL),
-                                      len(tR))
+                widths[nih + i] = max(
+                    widths[nih + i], len(cols[i]), len(tL), len(tR)
+                )
             else:
                 type_headers.extend([tL, tR])
-                widths[nih + i * 2] = max(widths[nih + i * 2],
-                                          len(cols[i]),
-                                          len(pL),
-                                          len(tL))
-                widths[nih + 1 + i * 2] = max(widths[nih + 1 + i * 2],
-                                              len(cols[i]),
-                                              len(pR),
-                                              len(tR))
+                widths[nih + i * 2] = max(
+                    widths[nih + i * 2], len(cols[i]), len(pL), len(tL)
+                )
+                widths[nih + 1 + i * 2] = max(
+                    widths[nih + 1 + i * 2], len(cols[i]), len(pR), len(tR)
+                )
 
         col_space = sum(widths)
         table_width = col_space + (n_table_cols) * 3
@@ -277,8 +291,8 @@ class SameStructureDDiff:
         s = '' if n == 1 else 's'
         rows_desc = (
             'all rows with differences'
-             if self.n_diff_rows <= n
-             else f'First {n:,} row{s} with differences'
+            if self.n_diff_rows <= n
+            else f'First {n:,} row{s} with differences'
         )
         title = f'Value Differences ({rows_desc})'
         table = Table(
@@ -291,19 +305,26 @@ class SameStructureDDiff:
         for i, col in enumerate(cols):
             if vertical:
                 tH = type_headers[i]
-                table.add_column('\n'.join((col, tH)),
-                                 justify='right',
-                                 min_width=widths[i + 1])
+                table.add_column(
+                    '\n'.join((col, tH)),
+                    justify='right',
+                    min_width=widths[i + 1],
+                )
             else:
-                (tL, tR) = type_headers[2 * i:2 * i + 2]
-                table.add_column('\n'.join((col, tL, pL)), justify='right',
-                                 min_width=widths[nih + 2 * i])
-                table.add_column('\n'.join((col, tR, pR)), justify='right',
-                                 min_width=widths[nih + 2 * i + 1])
+                (tL, tR) = type_headers[2 * i : 2 * i + 2]
+                table.add_column(
+                    '\n'.join((col, tL, pL)),
+                    justify='right',
+                    min_width=widths[nih + 2 * i],
+                )
+                table.add_column(
+                    '\n'.join((col, tR, pR)),
+                    justify='right',
+                    min_width=widths[nih + 2 * i + 1],
+                )
         for row in rows:
             table.add_row(*row)
         return table
-
 
 
 def is_synthetic(name):

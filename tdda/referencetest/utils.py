@@ -8,17 +8,31 @@ import polars as pl
 
 from tdda.utils import TDDAError, error
 
-MIN_CHARDET_CONFIDENCE=0.5
+MIN_CHARDET_CONFIDENCE = 0.5
+
 
 class FileType:
     BINARY_IMAGES = ('png', 'jpeg', 'jpg', 'gif', 'ps', 'eps', 'eps')
     TEXT_IMAGES = ('svg', 'ps', 'eps', 'pdf')  # pdf isn't, strictly, but...
     TEXT_FLAT_FILES = ('csv', 'tsv', 'psv')
-    OTHER_TEXTS = ('txt',  'tex',
-                   'md', 'markdown', 'rst', 'tex'
-                   'html', 'htm', 'css', 'js',
-                   'json', 'xml', 'yaml',
-                   'sh', 'py', 'R', 'sql')
+    OTHER_TEXTS = (
+        'txt',
+        'tex',
+        'md',
+        'markdown',
+        'rst',
+        'texhtml',
+        'htm',
+        'css',
+        'js',
+        'json',
+        'xml',
+        'yaml',
+        'sh',
+        'py',
+        'R',
+        'sql',
+    )
     TEXT_FILES = TEXT_IMAGES + TEXT_FLAT_FILES + OTHER_TEXTS
     IMAGE_FILES = BINARY_IMAGES + TEXT_IMAGES
 
@@ -28,8 +42,8 @@ class FileType:
         name = os.path.basename(path)
 
         self.binary = self.ext in self.BINARY_IMAGES
-        self.text   = self.ext in self.TEXT_FILES or name == 'Makefile'
-        self.image  = self.ext in self.IMAGE_FILES
+        self.text = self.ext in self.TEXT_FILES or name == 'Makefile'
+        self.image = self.ext in self.IMAGE_FILES
         self.encoding = 'iso-8859-1' if self.ext == 'pdf' else None
         if not self.image and not self.binary:
             if self.ext == 'pdf':
@@ -43,7 +57,7 @@ class FileType:
                             break
                 detector.close()
                 confidence = detector.result.get('confidence', 0.0)
-                if confidence  > MIN_CHARDET_CONFIDENCE:
+                if confidence > MIN_CHARDET_CONFIDENCE:
                     self.encoding = detector.result.get('encoding')
                     self.text = True
                 else:
@@ -106,8 +120,11 @@ def protected_readlines(path, filetype):
                 filetype.binary = True
                 filetype.text = False
                 filetype.encoding = None
-                print('Could not read %s as text file; treating as binary'
-                      % path, file=sys.stderr)
+                print(
+                    'Could not read %s as text file; treating as binary'
+                    % path,
+                    file=sys.stderr,
+                )
 
 
 def normabspath(p):

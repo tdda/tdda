@@ -119,6 +119,7 @@ class ExtensionBase:
     :py:meth:`applicable`, :py:meth:`help`, :py:meth:`discover` and
     :py:meth:`verify` methods.
     """
+
     def __init__(self, argv, verbose=False):
         """
         A subclass of :py:class:`ExtensionBase` should call its superclass
@@ -211,6 +212,7 @@ class BaseConstraintCalculator:
     base :py:mod:`BaseConstraintDiscoverer` and :py:mod:`BaseConstraintVerifier`
     classes.
     """
+
     def is_null(self, value):
         """
         Determine whether a value is null
@@ -255,7 +257,6 @@ class BaseConstraintCalculator:
 
     def filter_out_nulls(self, values):
         return {v for v in values if not v is None}
-
 
     def calc_tdda_type(self, colname):
         """
@@ -361,6 +362,7 @@ class BaseConstraintDetector:
     to implement constraint detection via the a subclass of the base
     :py:mod:`BaseConstraintVerifier` class.
     """
+
     def detect_min_constraint(self, colname, value, precision, epsilon):
         """
         Detect failures for a min constraint.
@@ -421,16 +423,18 @@ class BaseConstraintDetector:
         """
         pass
 
-    def write_detected_records(self,
-                               outpath=None,
-                               write_all_records=False,
-                               per_constraint=False,
-                               output_fields=None,
-                               index=False,
-                               in_place=False,
-                               rownumber_is_index=True,
-                               boolean_ints=False,
-                               **kwargs):
+    def write_detected_records(
+        self,
+        outpath=None,
+        write_all_records=False,
+        per_constraint=False,
+        output_fields=None,
+        index=False,
+        in_place=False,
+        rownumber_is_index=True,
+        boolean_ints=False,
+        **kwargs,
+    ):
         """
         Write out a detection dataset.
 
@@ -438,4 +442,3 @@ class BaseConstraintDetector:
         (or ``None``).
         """
         pass
-

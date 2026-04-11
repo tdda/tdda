@@ -37,7 +37,7 @@ class Test%(CLASSNAME)s(ReferenceTestCase):
 '''
 
 
-TAIL = '''
+TAIL = """
 if __name__ == '__main__':
     ReferenceTestCase.main()
-'''
+"""

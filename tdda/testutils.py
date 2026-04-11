@@ -6,12 +6,28 @@ import unicodedata
 
 from tdda.referencetest.referencetestcase import ReferenceTestCase, tag
 from tdda.utils import (
-    to_pc, n_glyphs, handle_tilde, XML, squote, DQuote,
-    tddadir, Dummy, swap_ext, dict_to_json, dict_to_toml, dict_to_yaml,
-    json_sanitize, swap_ext_q,
-    CONSTRAINTSDIR, PDCONSTRAINTSDIR,
-    normal_form_tk, is_sequence, listify, globlike_match,
-    tex_name, tex_encode
+    to_pc,
+    n_glyphs,
+    handle_tilde,
+    XML,
+    squote,
+    DQuote,
+    tddadir,
+    Dummy,
+    swap_ext,
+    dict_to_json,
+    dict_to_toml,
+    dict_to_yaml,
+    json_sanitize,
+    swap_ext_q,
+    CONSTRAINTSDIR,
+    PDCONSTRAINTSDIR,
+    normal_form_tk,
+    is_sequence,
+    listify,
+    globlike_match,
+    tex_name,
+    tex_encode,
 )
 from unicodedata import normalize
 
@@ -20,7 +36,6 @@ TESTDIR = os.path.join(os.path.dirname(__file__), 'testdata')
 
 
 class TestTDDAUtils(ReferenceTestCase):
-
     def test_to_pc(self):
         cases = {
             (1, 1): '100.00%',
@@ -29,24 +44,20 @@ class TestTDDAUtils(ReferenceTestCase):
             (1, 100): '1.00%',
             (3, 9): '33.33%',
             (1, 37): '2.70%',
-
             (9_999, 10_000): '99.99%',
             (1, 10_000): '0.01%',
             (19_999, 20_001): '99.99%',
             (19_999, 20_000): '99.995%',
             (1, 19_999): '0.01%',
             (1, 20_000): '0.01%',
-
             (99_999, 100_000): '99.999%',
             (1, 100_000): '0.001%',
             (199_999, 200_001): '99.999%',
             (199_999, 200_000): '99.999%',
             (1, 199_999): '0.001%',
             (1, 200_000): '0.001%',
-
             (999_999, 1_000_000): '99.9999%',
             (1, 1_000_000): '0.0001%',
-
             (999_999_999, 1_000_000_000): '99.9999999%',
             (1_999_999_999, 2_000_000_000): '99.9999999%',
             (3_999_999_999, 4_000_000_000): '99.99999997%',
@@ -55,8 +66,9 @@ class TestTDDAUtils(ReferenceTestCase):
             (1, 2_000_000_001): '0.00000005%',
         }
         for (a, b), expected in cases.items():
-            self.assertEqual((f'{a} / {b}', to_pc(a / b)),
-                             (f'{a} / {b}', expected))
+            self.assertEqual(
+                (f'{a} / {b}', to_pc(a / b)), (f'{a} / {b}', expected)
+            )
 
     def test_n_glyphs(self):
         for s in ('é', 'q̣̇'):
@@ -66,50 +78,73 @@ class TestTDDAUtils(ReferenceTestCase):
             self.assertEqual(n_glyphs(d), 1)  # less natch
 
         smiley = chr(0x1F600)
-        okA = '\U0001F44C'
-        okB = '\U0001F44C\U0001F3FB'
-        okC = '\U0001F44C\U0001F3FC'
-        okD = '\U0001F44C\N{EMOJI MODIFIER FITZPATRICK TYPE-4}'
-        okE = '\U0001F44C\U0001F3FE'
-        okF = '\U0001F44C\U0001F3FF'
+        okA = '\U0001f44c'
+        okB = '\U0001f44c\U0001f3fb'
+        okC = '\U0001f44c\U0001f3fc'
+        okD = '\U0001f44c\N{EMOJI MODIFIER FITZPATRICK TYPE-4}'
+        okE = '\U0001f44c\U0001f3fe'
+        okF = '\U0001f44c\U0001f3ff'
 
-        mmh = ('👨' + chr(0x1F3FB) + chr(0x200D) + '🤝' + chr(0x200D)
-               + '👨' + chr(0x1F3FF))
-        mmh2 = '\U0001F468\U0001F3FB\u200D\U0001F91D\u200D\U0001F468\U0001F3FF'
-
-
-        thumbsup = '\U0001F44D\uFE0F'
-        bwthumbsup = '\U0001F44D\uFE0E'
-        glyphs = (smiley,
-                  okA, okB, okC, okD, okE, okF,
-                  mmh, mmh2,
-                  thumbsup, bwthumbsup,
+        mmh = (
+            '👨'
+            + chr(0x1F3FB)
+            + chr(0x200D)
+            + '🤝'
+            + chr(0x200D)
+            + '👨'
+            + chr(0x1F3FF)
         )
-        actual = '\n'.join((f'''('{c}', {len(c)}, {n_glyphs(c)})''')
-                           for c in glyphs) + '\n'
+        mmh2 = '\U0001f468\U0001f3fb\u200d\U0001f91d\u200d\U0001f468\U0001f3ff'
+
+        thumbsup = '\U0001f44d\ufe0f'
+        bwthumbsup = '\U0001f44d\ufe0e'
+        glyphs = (
+            smiley,
+            okA,
+            okB,
+            okC,
+            okD,
+            okE,
+            okF,
+            mmh,
+            mmh2,
+            thumbsup,
+            bwthumbsup,
+        )
+        actual = (
+            '\n'.join(
+                (f"""('{c}', {len(c)}, {n_glyphs(c)})""") for c in glyphs
+            )
+            + '\n'
+        )
         self.assertStringCorrect(actual, os.path.join(TESTDIR, 'emoji.txt'))
 
     def test_handle_tilde_non_strings(self):
         self.assertIsNone(handle_tilde(None))
         self.assertEqual(handle_tilde(0), 0)
 
-
     def test_handle_tilde_strings(self):
         homedir = os.path.expanduser('~')
         user = os.path.split(homedir)[-1]
 
-        self.assertEqual(handle_tilde('~/foo.csv'),
-                         os.path.join(homedir, 'foo.csv'))
-        self.assertEqual(handle_tilde('~%s/foo.csv' % user),
-                         os.path.join(homedir, 'foo.csv'))
+        self.assertEqual(
+            handle_tilde('~/foo.csv'), os.path.join(homedir, 'foo.csv')
+        )
+        self.assertEqual(
+            handle_tilde('~%s/foo.csv' % user),
+            os.path.join(homedir, 'foo.csv'),
+        )
 
-        self.assertEqual(handle_tilde('~/bar/foo.csv'),
-                         os.path.join(homedir, 'bar', 'foo.csv'))
-        self.assertEqual(handle_tilde('~%s/bar/foo.csv' % user),
-                         os.path.join(homedir, 'bar', 'foo.csv'))
+        self.assertEqual(
+            handle_tilde('~/bar/foo.csv'),
+            os.path.join(homedir, 'bar', 'foo.csv'),
+        )
+        self.assertEqual(
+            handle_tilde('~%s/bar/foo.csv' % user),
+            os.path.join(homedir, 'bar', 'foo.csv'),
+        )
 
     def test_handle_tilde_non_tilde_trings(self):
-
         self.assertEqual(handle_tilde('foo.csv'), 'foo.csv')
         self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
 
@@ -118,76 +153,109 @@ class TestXMLGeneration(ReferenceTestCase):
     def testSimpleXMLGen(self):
         x = XML()
         x.OpenElement('foo')
-        x.WriteElement('bar', 'Contents of bar oné, twø, thrέé',
-                       attributes=(('a1', 1), ('a2', 2)))
+        x.WriteElement(
+            'bar',
+            'Contents of bar oné, twø, thrέé',
+            attributes=(('a1', 1), ('a2', 2)),
+        )
         x.CloseElement()
         stripped = x.xml().strip()
-        self.assertEqual(stripped, '''
+        self.assertEqual(
+            stripped,
+            """
 <?xml version="1.0" encoding="UTF-8"?>
 <foo>
     <bar a1="1" a2="2">Contents of bar oné, twø, thrέé</bar>
 </foo>
-'''.strip())
+""".strip(),
+        )
         self.assertEqual(type(stripped), str)
 
     def testSimpleLatin1XMLGen(self):
         x = XML(inputEncoding='latin1')
         x.OpenElement('foo')
-        x.WriteElement('bar', u'Contents of bar oné, twø, threé'.encode('latin1'),
-                       attributes=(('a1', 1), ('a2', 2)))
+        x.WriteElement(
+            'bar',
+            'Contents of bar oné, twø, threé'.encode('latin1'),
+            attributes=(('a1', 1), ('a2', 2)),
+        )
         x.CloseElement()
         stripped = x.xml().strip()
-        self.assertEqual(stripped, '''
+        self.assertEqual(
+            stripped,
+            """
 <?xml version="1.0" encoding="UTF-8"?>
 <foo>
     <bar a1="1" a2="2">Contents of bar oné, twø, threé</bar>
 </foo>
-'''.strip())
+""".strip(),
+        )
         self.assertEqual(type(stripped), str)
 
     def testSimpleLatin9XMLGen(self):
         x = XML(inputEncoding='latin9')
         x.OpenElement('foo')
-        x.WriteElement('bar', u'Contents of bar oné, twø, threé at €3.'.encode('latin9'),
-                       attributes=(('a1', 1), ('a2', 2)))
+        x.WriteElement(
+            'bar',
+            'Contents of bar oné, twø, threé at €3.'.encode('latin9'),
+            attributes=(('a1', 1), ('a2', 2)),
+        )
         x.CloseElement()
         stripped = x.xml().strip()
-        self.assertEqual(stripped, '''
+        self.assertEqual(
+            stripped,
+            """
 <?xml version="1.0" encoding="UTF-8"?>
 <foo>
     <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
 </foo>
-'''.strip())
+""".strip(),
+        )
         self.assertEqual(type(stripped), str)
 
     def testHarderLatin9XMLGen(self):
         x = XML(inputEncoding='latin9')
         x.OpenElement('foo')
-        x.WriteElement('bar', u'Contents of bar oné, twø, threé at €3.',
-                       attributes=(('a1', 1), ('a2', 2)))
-        x.WriteElement('bas', u'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode('latin9'))
+        x.WriteElement(
+            'bar',
+            'Contents of bar oné, twø, threé at €3.',
+            attributes=(('a1', 1), ('a2', 2)),
+        )
+        x.WriteElement(
+            'bas',
+            'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode(
+                'latin9'
+            ),
+        )
         x.CloseElement()
         stripped = x.xml().strip()
-        self.assertEqual(stripped, '''
+        self.assertEqual(
+            stripped,
+            """
 <?xml version="1.0" encoding="UTF-8"?>
 <foo>
     <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
     <bas>N/A/N/A of 78042 on N/A at N/Abarceló hotels &amp; resorts</bas>
 </foo>
-'''.strip())
+""".strip(),
+        )
         self.assertEqual(type(stripped), str)
 
     def testHTML5ExternalCSS(self):
         x = XML(html=5, title='Test Page', css=['style.css', 'theme.css'])
         x.WriteElement('h1', 'Hello World')
         x.CloseXML()
-        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-ext.html'))
+        self.assertStringCorrect(
+            x.xml(), os.path.join(TESTDIR, 'html5-ext.html')
+        )
 
     def testHTML5InlineCSS(self):
         x = XML(html=5, title='Test Page', css='body { margin: 0; }')
         x.WriteElement('p', 'Content')
         x.CloseXML()
-        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-inline.html'))
+        self.assertStringCorrect(
+            x.xml(), os.path.join(TESTDIR, 'html5-inline.html')
+        )
 
     def testHTML5EmptyElements(self):
         x = XML(html=5, omitHeader=1)
@@ -203,7 +271,9 @@ class TestXMLGeneration(ReferenceTestCase):
         x.WriteElement('img', '', {'src': 'test.png'})
         x.CloseElement('div')
         x.CloseXML()
-        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-empty-elements.html'))
+        self.assertStringCorrect(
+            x.xml(), os.path.join(TESTDIR, 'html5-empty-elements.html')
+        )
 
     def testHTML5TableFormatting(self):
         x = XML(html=5, omitHeader=1)
@@ -218,20 +288,25 @@ class TestXMLGeneration(ReferenceTestCase):
         x.CloseElement('tr')
         x.CloseElement('table')
         x.CloseXML()
-        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-table-formatting.html'))
+        self.assertStringCorrect(
+            x.xml(), os.path.join(TESTDIR, 'html5-table-formatting.html')
+        )
 
     def testSQuote(self):
         self.assertEqual(squote(''), "''")
         self.assertEqual(squote("''"), r"""'\'\''""")
         self.assertEqual(squote("It's"), r"'It\'s'")
-        self.assertEqual(squote("It's\na\ndog's\nlife."),
-                                r"'It\'s\na\ndog\'s\nlife.'")
+        self.assertEqual(
+            squote("It's\na\ndog's\nlife."), r"'It\'s\na\ndog\'s\nlife.'"
+        )
 
     def testDQuote(self):
-        self.assertEqual(DQuote(""), '""')
+        self.assertEqual(DQuote(''), '""')
         self.assertEqual(DQuote('""'), r'''"\"\""''')
-        self.assertEqual(DQuote('"So,", she said.\n"So, So"'),
-                                r'"\"So,\", she said.\n\"So, So\""')
+        self.assertEqual(
+            DQuote('"So,", she said.\n"So, So"'),
+            r'"\"So,\", she said.\n\"So, So\""',
+        )
 
     def testBastardQuoting(self):
         u = r'\!\"\#\$\%\&\'\('
@@ -255,7 +330,6 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(d.to_dict(), {'a': 1, 'b': 2})
 
     def testSwapExt(self):
-
         self.assertEqual(swap_ext('foo.one', '.two'), 'foo.two')
         self.assertEqual(swap_ext('foo.one', 'two'), 'foo.two')
         self.assertEqual(swap_ext('foo', '.two'), 'foo.two')
@@ -283,8 +357,7 @@ class TestXMLGeneration(ReferenceTestCase):
     def testDictToJSON(self):
         refpath = os.path.join(TESTDIR, 'd1.json')
         self.assertStringCorrect(
-            dict_to_json({'a': 1, 'b': [1, 2], 'c': {'a': 1}}),
-            refpath
+            dict_to_json({'a': 1, 'b': [1, 2], 'c': {'a': 1}}), refpath
         )
         path = os.path.join(TMPDIR, 'd1.json')
         dict_to_json({'a': 1, 'b': [1, 2], 'c': {'a': 1}}, path)
@@ -293,8 +366,7 @@ class TestXMLGeneration(ReferenceTestCase):
     def testDictToTOML(self):
         refpath = os.path.join(TESTDIR, 'd1.toml')
         self.assertStringCorrect(
-            dict_to_toml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}),
-            refpath
+            dict_to_toml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}), refpath
         )
         path = os.path.join(TMPDIR, 'd1.toml')
         dict_to_toml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}, path)
@@ -303,8 +375,7 @@ class TestXMLGeneration(ReferenceTestCase):
     def testDictToYAML(self):
         refpath = os.path.join(TESTDIR, 'd1.yaml')
         self.assertStringCorrect(
-            dict_to_yaml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}),
-            refpath
+            dict_to_yaml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}), refpath
         )
         path = os.path.join(TMPDIR, 'd1.yaml')
         dict_to_yaml({'a': 1, 'b': [1, 2], 'c': {'a': 1}}, path)
@@ -320,11 +391,11 @@ class TestXMLGeneration(ReferenceTestCase):
             List=[1, 2, 3],
             Dict={'a': 1},
             Object=Dummy(foo='bar'),
-            Datetime=datetime.datetime(1970,1,1,23,59,59),
-            Midnight=datetime.datetime(1999,12,31,0,0,0),
-            Date=datetime.date(1999,12,31),
+            Datetime=datetime.datetime(1970, 1, 1, 23, 59, 59),
+            Midnight=datetime.datetime(1999, 12, 31, 0, 0, 0),
+            Date=datetime.date(1999, 12, 31),
             npnan=np.nan,
-            pynan=float('nan')
+            pynan=float('nan'),
         )
         refpath = os.path.join(TESTDIR, 'jsd.json')
         self.assertStringCorrect(dict_to_json(json_sanitize(jsd)), refpath)
@@ -361,7 +432,7 @@ class TestXMLGeneration(ReferenceTestCase):
         figure_space = unicodedata.lookup('FIGURE SPACE')
         punctuation_space = unicodedata.lookup('PUNCTUATION SPACE')
 
-        tab = '\u00B9'
+        tab = '\u00b9'
         superscript_one = unicodedata.lookup('SUPERSCRIPT ONE')
         subscript_one = unicodedata.lookup('SUBSCRIPT ONE')
         circled_digit_one = unicodedata.lookup('CIRCLED DIGIT one')
@@ -393,40 +464,32 @@ class TestXMLGeneration(ReferenceTestCase):
             en_dash: '-',
             em_dash: '-',
             minus_sign: '-',
-
             left_single_quotation_mark: "'",
             right_single_quotation_mark: "'",
             modifier_letter_apostrophe: "'",
             grave_accent: "'",
-
             fullwidth_quotation_mark: '"',
             left_double_quotation_mark: '"',
             right_double_quotation_MARK: '"',
-
             no_break_space: ' ',
             en_space: ' ',
             em_space: ' ',
             figure_space: ' ',
             punctuation_space: ' ',
             tab: ' ',
-
             superscript_one: '1',
             subscript_one: '1',
             circled_digit_one: '1',
-
             mathematical_double_struck_digit_one: '1',
             parenthesized_digit_one: '(1)',
             digit_one_full_stop: '1.',
-
             greek_capital_letter_alpha: 'A',
             latin_capital_letter_a_with_ring_above: 'A',
             angstrom_sign: 'A',
-
             horizontal_ellipsis: '...',
             midline_horizontal_ellipsis: '...',
             down_right_diagonal_ellipsis: '...',
             vertical_ellipsis: '...',
-
             unicodedata.lookup('LATIN SMALL LIGATURE FF'): 'ff',
             unicodedata.lookup('LATIN SMALL LIGATURE FI'): 'fi',
             unicodedata.lookup('LATIN SMALL LIGATURE FL'): 'fl',
@@ -436,42 +499,44 @@ class TestXMLGeneration(ReferenceTestCase):
             unicodedata.lookup('LATIN SMALL LIGATURE IJ'): 'ij',
         }
         for raw, expected in mapping.items():
-            self.assertEqual((raw, normal_form_tk(raw, strip=False)),
-                             (raw, expected))
+            self.assertEqual(
+                (raw, normal_form_tk(raw, strip=False)), (raw, expected)
+            )
             if expected != ' ':
-                self.assertEqual((raw, normal_form_tk(raw, strip=True)),
-                                 (raw, expected))
+                self.assertEqual(
+                    (raw, normal_form_tk(raw, strip=True)), (raw, expected)
+                )
 
-        self.assertEqual(normal_form_tk(
-                             '  The — em-dash  – and en-dash - and  '
-                             '“various” ‘quotes’ etc … ⋮ ⋯ ⋱  ',
-                             strip=True, standardize_space=True),
-                         '''The - em-dash - and en-dash - and "various"'''
-                         ''' 'quotes' etc ... ... ... ...''')
+        self.assertEqual(
+            normal_form_tk(
+                '  The — em-dash  – and en-dash - and  '
+                '“various” ‘quotes’ etc … ⋮ ⋯ ⋱  ',
+                strip=True,
+                standardize_space=True,
+            ),
+            '''The - em-dash - and en-dash - and "various"'''
+            """ 'quotes' etc ... ... ... ...""",
+        )
 
         accents = {
-            'àáâäǎæãåā':  'aaaaaaeaaa',
-            'ÀÁÂÄǍÆÃÅĀ':  'AAAAAAEAAA',
+            'àáâäǎæãåā': 'aaaaaaeaaa',
+            'ÀÁÂÄǍÆÃÅĀ': 'AAAAAAEAAA',
             'èéêëěẽēėęę': 'eeeeeeeeee',
             'ÈÉÊËĚẼĒĖĘĘ': 'EEEEEEEEEE',
-            'ìíîïǐĩīıį':  'iiiiiiiii',
-            'ÌÍÎÏǏĨĪİĮ':  'IIIIIIIII',
-            'òóôöǒœøõō':  'ooooooeooo',
-            'ÒÓÔÖǑŒØÕŌ':  'OOOOOOEOOO',
-            'ùúûüǔũūűů':  'uuuuuuuuu',
-            'ÙÚÛÜǓŨŪŰŮ':  'UUUUUUUUU',
-
-            'çćčċ ďð ğġ ħ ķ łļľ ñńņň ř ßşșśš țť ŵ ýŷÿ źžż':
-                'cccc dd gg h k lll nnnn r ssssss tt w yyy zzz',
-            'ÇĆČĊ Ď ĞĠ Ķ ĻĽ ÑŃŅŇ Ř ŚŠŞȘ ȚŤ Ŵ ÝŶŸ ŹŽŻ ':
-                'CCCC D GG K LL NNNN R SSSS TT W YYY ZZZ',
-            'ﬀ ﬁ ﬂ ﬃ ﬄ ﬆ œ ӕ Œ Ӕ ĳ':
-                'ff fi fl ffi ffl st oe ae OE AE ij',
+            'ìíîïǐĩīıį': 'iiiiiiiii',
+            'ÌÍÎÏǏĨĪİĮ': 'IIIIIIIII',
+            'òóôöǒœøõō': 'ooooooeooo',
+            'ÒÓÔÖǑŒØÕŌ': 'OOOOOOEOOO',
+            'ùúûüǔũūűů': 'uuuuuuuuu',
+            'ÙÚÛÜǓŨŪŰŮ': 'UUUUUUUUU',
+            'çćčċ ďð ğġ ħ ķ łļľ ñńņň ř ßşșśš țť ŵ ýŷÿ źžż': 'cccc dd gg h k lll nnnn r ssssss tt w yyy zzz',
+            'ÇĆČĊ Ď ĞĠ Ķ ĻĽ ÑŃŅŇ Ř ŚŠŞȘ ȚŤ Ŵ ÝŶŸ ŹŽŻ ': 'CCCC D GG K LL NNNN R SSSS TT W YYY ZZZ',
+            'ﬀ ﬁ ﬂ ﬃ ﬄ ﬆ œ ӕ Œ Ӕ ĳ': 'ff fi fl ffi ffl st oe ae OE AE ij',
         }
         for k, v in accents.items():
-            self.assertEqual((k, normal_form_tk(k, standardize_space=True,
-                                                strip=True)),
-                             (k, v)
+            self.assertEqual(
+                (k, normal_form_tk(k, standardize_space=True, strip=True)),
+                (k, v),
             )
 
     def testIsSequence(self):
@@ -505,11 +570,10 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(globlike_match(['*'], names), names)
         self.assertEqual(globlike_match('a2?', names), ['a20'])
         self.assertEqual(globlike_match('a*2*', names), ['a2', 'a12', 'a20'])
-        self.assertEqual(globlike_match(['a*2*', 'a10'], names),
-                                        ['a2', 'a10', 'a12', 'a20'])
-        self.assertEqual(globlike_match(['a1[23]'], names),
-                                        ['a12', 'a13'])
-
+        self.assertEqual(
+            globlike_match(['a*2*', 'a10'], names), ['a2', 'a10', 'a12', 'a20']
+        )
+        self.assertEqual(globlike_match(['a1[23]'], names), ['a12', 'a13'])
 
     def testTeXName(self):
         cases = {
@@ -526,22 +590,15 @@ class TestXMLGeneration(ReferenceTestCase):
             'x12345678910': 'xOneTwoThreeFourFiveSixSevenEightNineTen',
             'the_big_out10': 'theBigOutTen',
             'The-Kebab-Shak20': 'TheKebabShakTwenty',
-            'ab102030405060708090100':
-                'abTenTwentyThirtyFortyFiftySixtySeventyEightyNinetyOneHundred',
-            'from_low_-1000_to_high_20000':
-                'fromLowOnekToHighTwoxk',
-
+            'ab102030405060708090100': 'abTenTwentyThirtyFortyFiftySixtySeventyEightyNinetyOneHundred',
+            'from_low_-1000_to_high_20000': 'fromLowOnekToHighTwoxk',
             # These aren't great
             '': 'v',
             '_': 'v',
             '-': 'v',
         }
         for k, v in cases.items():
-            self.assertEqual(
-                (k, tex_name(k)),
-                (k, v)
-            )
-
+            self.assertEqual((k, tex_name(k)), (k, v))
 
 
 if __name__ == '__main__':

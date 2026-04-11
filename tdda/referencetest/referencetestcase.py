@@ -121,7 +121,11 @@ import sys
 import unittest
 
 from tdda.state import get_testing, set_testing, get_config
-from tdda.referencetest.referencetest import ReferenceTest, tag, DEFAULT_FAIL_DIR
+from tdda.referencetest.referencetest import (
+    ReferenceTest,
+    tag,
+    DEFAULT_FAIL_DIR,
+)
 from tdda.utils import TDDAError, nvl, plural
 
 
@@ -139,6 +143,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
     tests to use any of the standard ``unittest`` *assert* methods,
     and also use any of the ``referencetest`` *assert* extensions.
     """
+
     tag = tag
 
     def __init__(self, *args, **kwargs):
@@ -157,25 +162,41 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check, r, untag, log_failures = _set_flags_from_argv(argv)
+        argv, tagged, check, r, untag, log_failures = _set_flags_from_argv(
+            argv
+        )
         report = nvl(r, report)
         if 'TDDAREPORT' in os.environ:
             report = True
         if testtdda:
             saved = set_testing(True)
         try:
-            _run_tests(module=module, argv=argv, tagged=tagged,
-                       check=check, report=report, untag=untag,
-                       log_failures=log_failures, **kw)
+            _run_tests(
+                module=module,
+                argv=argv,
+                tagged=tagged,
+                check=check,
+                report=report,
+                untag=untag,
+                log_failures=log_failures,
+                **kw,
+            )
         finally:
             if testtdda:
                 if saved is not None:
                     set_testing(saved)
 
 
-
-def _run_tests(module=None, argv=None, tagged=False, check=False,
-               report=None, untag=False, log_failures=None, **kw):
+def _run_tests(
+    module=None,
+    argv=None,
+    tagged=False,
+    check=False,
+    report=None,
+    untag=False,
+    log_failures=None,
+    **kw,
+):
     """
     Run tests
     """
@@ -184,8 +205,11 @@ def _run_tests(module=None, argv=None, tagged=False, check=False,
         return
     if argv is None:
         argv = sys.argv
-    loader = (TaggedTestLoader(check) if tagged or check
-              else unittest.defaultTestLoader)
+    loader = (
+        TaggedTestLoader(check)
+        if tagged or check
+        else unittest.defaultTestLoader
+    )
     if module is None:
         t = unittest.main(argv=argv, testLoader=loader, exit=False, **kw)
         result = t.__dict__['result']
@@ -195,13 +219,14 @@ def _run_tests(module=None, argv=None, tagged=False, check=False,
             outpath = os.path.splitext(path)[0] + '-results.json'
             ok = result.failures == result.errors == []
             d = {
-                'date': datetime.datetime.now()
-                        .isoformat(sep='t', timespec='seconds'),
+                'date': datetime.datetime.now().isoformat(
+                    sep='t', timespec='seconds'
+                ),
                 'run': result.testsRun,
                 'failures': len(result.failures),
                 'errors': len(result.errors),
                 'skipped': len(result.skipped),
-                'result':  'PASS' if ok else 'FAIL'
+                'result': 'PASS' if ok else 'FAIL',
             }
         if report:
             with open(outpath, 'w') as f:
@@ -213,7 +238,6 @@ def _run_tests(module=None, argv=None, tagged=False, check=False,
         sys.exit(0 if ok else 1)
     else:
         unittest.main(module=module, argv=argv, testLoader=loader, **kw)
-
 
 
 def _set_flags_from_argv(argv=None):
@@ -284,34 +308,36 @@ def _set_flags_from_argv(argv=None):
         if quietflag in rest:
             idx = rest.index(quietflag)
             ReferenceTestCase.set_defaults(verbose=False)
-            rest = rest[:idx] + rest[idx+1:]
+            rest = rest[:idx] + rest[idx + 1 :]
 
     for writeflag in ('--W', '--write-all'):
         if writeflag in rest:
             idx = rest.index(writeflag)
             if idx:
                 regenerate = True
-                rest = rest[:idx] + rest[idx+1:]
+                rest = rest[:idx] + rest[idx + 1 :]
                 break
 
     for reportflag in ('-report', '--report'):
         if reportflag in rest:
             idx = rest.index(reportflag)
             report = True
-            rest = rest[:idx] + rest[idx+1:]
+            rest = rest[:idx] + rest[idx + 1 :]
 
     for writeflag in ('-w', '--w', '--write'):
         if writeflag in rest:
             idx = rest.index(writeflag)
             if idx:
                 if idx < len(rest) - 1:
-                    for r in rest[idx+1:]:
+                    for r in rest[idx + 1 :]:
                         for kind in r.split(','):
                             ReferenceTestCase.set_regeneration(kind)
                 else:
-                    raise TDDAError('--write option requires parameters; '
-                                    'use --write-all to regenerate all '
-                                    'reference results')
+                    raise TDDAError(
+                        '--write option requires parameters; '
+                        'use --write-all to regenerate all '
+                        'reference results'
+                    )
             rest = rest[:idx]
             break
 
@@ -319,7 +345,7 @@ def _set_flags_from_argv(argv=None):
         if option in rest:
             idx = rest.index(option)
             if idx:
-                rest = rest[:idx] + rest[idx+1:]
+                rest = rest[:idx] + rest[idx + 1 :]
                 if option in ('-0', '--istagged'):
                     check = True
                 else:
@@ -327,17 +353,17 @@ def _set_flags_from_argv(argv=None):
 
     if '--untag' in rest:
         idx = rest.index('--untag')
-        rest = rest[:idx] + rest[idx+1:]
+        rest = rest[:idx] + rest[idx + 1 :]
         untag = True
 
     if '--log-failures' in rest:
         idx = rest.index('--log-failures')
-        rest = rest[:idx] + rest[idx+1:]
+        rest = rest[:idx] + rest[idx + 1 :]
         log_failures = True
 
     if '--no-log-failures' in rest:
         idx = rest.index('--no-log-failures')
-        rest = rest[:idx] + rest[idx+1:]
+        rest = rest[:idx] + rest[idx + 1 :]
         log_failures = False  # explicitly suppressed
 
     if regenerate:
@@ -380,7 +406,10 @@ def _remove_tag_lines(filepath):
     if n_removed:
         with open(filepath, 'w') as f:
             f.write(''.join(new_lines))
-        print('Removed %s from %s' % (plural(n_removed, '@tag decorator'), filepath))
+        print(
+            'Removed %s from %s'
+            % (plural(n_removed, '@tag decorator'), filepath)
+        )
     else:
         print('No @tag decorators found in %s' % filepath)
 
@@ -397,7 +426,7 @@ def _record_failing_tests(result):
         return
     lines = []
     for test in cases:
-        test_id = test.id()       # e.g. "pkg.module.ClassName.test_method"
+        test_id = test.id()  # e.g. "pkg.module.ClassName.test_method"
         parts = test_id.rsplit('.', 2)
         if len(parts) == 3:
             module_name, class_name, method_name = parts
@@ -410,7 +439,9 @@ def _record_failing_tests(result):
         if mod and getattr(mod, '__file__', None):
             filepath = os.path.abspath(mod.__file__)
             if class_name:
-                lines.append('%s::%s::%s' % (filepath, class_name, method_name))
+                lines.append(
+                    '%s::%s::%s' % (filepath, class_name, method_name)
+                )
             else:
                 lines.append('%s::%s' % (filepath, method_name))
     if lines:
@@ -435,8 +466,9 @@ def tag_failing_tests(args=None):
     if args:
         filepath = args[0]
     else:
-        pattern = os.path.join(DEFAULT_FAIL_DIR,
-                               '????-??-??T??????-failing-tests.txt')
+        pattern = os.path.join(
+            DEFAULT_FAIL_DIR, '????-??-??T??????-failing-tests.txt'
+        )
         candidates = sorted(glob.glob(pattern))
         if not candidates:
             print('No failing tests file found in %s' % DEFAULT_FAIL_DIR)
@@ -451,7 +483,7 @@ def tag_failing_tests(args=None):
     for line in lines:
         parts = line.split('::')
         src = parts[0]
-        identifiers = parts[1:]   # [ClassName, method] or [function_name]
+        identifiers = parts[1:]  # [ClassName, method] or [function_name]
         by_file.setdefault(src, []).append(identifiers)
     for src, items in sorted(by_file.items()):
         _add_tag_lines(src, items)
@@ -483,22 +515,23 @@ def _add_tag_lines(filepath, items):
             for i, line in enumerate(lines):
                 if re.match(r'\s*(import |from \S+ import )', line):
                     last_import = i
-            lines.insert(last_import + 1,
-                         'from tdda.referencetest import tag\n')
+            lines.insert(
+                last_import + 1, 'from tdda.referencetest import tag\n'
+            )
 
     # Build lookup: method/function name -> expected class name (or None)
     targets = {}
     for item in items:
         if len(item) == 2:
-            targets[item[1]] = item[0]   # method_name -> class_name
+            targets[item[1]] = item[0]  # method_name -> class_name
         elif len(item) == 1:
-            targets[item[0]] = None      # function_name -> no class
+            targets[item[0]] = None  # function_name -> no class
 
-    insertions = []   # list of (line_index, indent_str)
+    insertions = []  # list of (line_index, indent_str)
     current_class = None
     for i, line in enumerate(lines):
         stripped = line.lstrip()
-        indent = line[:len(line) - len(stripped)]
+        indent = line[: len(line) - len(stripped)]
 
         if stripped.startswith('class '):
             m = re.match(r'class\s+(\w+)', stripped)
@@ -511,7 +544,10 @@ def _add_tag_lines(filepath, items):
                 name = m.group(1)
                 if name in targets:
                     expected_class = targets[name]
-                    if expected_class is None or expected_class == current_class:
+                    if (
+                        expected_class is None
+                        or expected_class == current_class
+                    ):
                         prev = lines[i - 1].strip() if i > 0 else ''
                         if prev != '@tag':
                             insertions.append((i, indent))
@@ -532,14 +568,16 @@ class TaggedTestLoader(unittest.TestLoader):
     """
     Subclass of ``TestLoader``, which strips out any non-tagged tests.
     """
+
     def __init__(self, check, printer=None):
         unittest.TestLoader.__init__(self)
         self.check = check
         self.print = printer or print
 
     def loadTestsFromTestCase(self, *args, **kwargs):
-        suite = unittest.TestLoader.loadTestsFromTestCase(self, *args,
-                                                          **kwargs)
+        suite = unittest.TestLoader.loadTestsFromTestCase(
+            self, *args, **kwargs
+        )
         return self._tagged_tests_only(suite)
 
     def loadTestsFromModule(self, *args, **kwargs):
@@ -561,8 +599,10 @@ class TaggedTestLoader(unittest.TestLoader):
             if isinstance(test, unittest.suite.TestSuite):
                 test = self._tagged_tests_only(test)
             if self.check and not isinstance(test, unittest.suite.TestSuite):
-                cases.add('%s.%s' % (test.__class__.__module__,
-                                     test.__class__.__name__))
+                cases.add(
+                    '%s.%s'
+                    % (test.__class__.__module__, test.__class__.__name__)
+                )
             else:
                 newsuite.addTest(test)
         if self.check:
@@ -575,8 +615,11 @@ class TaggedTestLoader(unittest.TestLoader):
         if hasattr(testCaseClass, '_tagged'):
             return names
         else:
-            return [name for name in names
-                         if hasattr(getattr(testCaseClass, name), '_tagged')]
+            return [
+                name
+                for name in names
+                if hasattr(getattr(testCaseClass, name), '_tagged')
+            ]
 
 
 def main():
@@ -584,4 +627,3 @@ def main():
     Wrapper around the :py:func:`unittest.main()` entry point.
     """
     ReferenceTestCase.main()
-

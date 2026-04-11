@@ -15,23 +15,22 @@ from tdda.referencetest.gentest import exec_command
 
 
 class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
-    command = 'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdda'
+    command = (
+        'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdda'
+    )
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'discover_bookex12')
 
-    generated_files = [
-        os.path.join(cwd, 'scratch/accountsex12.tdda')
-    ]
+    generated_files = [os.path.join(cwd, 'scratch/accountsex12.tdda')]
+
     @classmethod
     def setUpClass(cls):
         for path in cls.generated_files:
             if os.path.exists(path):
                 os.unlink(path)
-        (cls.output,
-         cls.error,
-         cls.exception,
-         cls.exit_code,
-         cls.duration) = exec_command(cls.command, cls.cwd)
+        (cls.output, cls.error, cls.exception, cls.exit_code, cls.duration) = (
+            exec_command(cls.command, cls.cwd)
+        )
 
     def test_no_exception(self):
         self.assertIsNone(self.exception)
@@ -40,12 +39,14 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
         self.assertEqual(self.exit_code, 0)
 
     def test_stdout(self):
-        self.assertStringCorrect(self.output,
-                                 os.path.join(self.refdir, 'STDOUT'))
+        self.assertStringCorrect(
+            self.output, os.path.join(self.refdir, 'STDOUT')
+        )
 
     def test_stderr(self):
-        self.assertStringCorrect(self.error,
-                                 os.path.join(self.refdir, 'STDERR'))
+        self.assertStringCorrect(
+            self.error, os.path.join(self.refdir, 'STDERR')
+        )
 
     def test_accountsex12_tdda(self):
         patterns = [
@@ -57,11 +58,14 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
             'gardot.local',
             'njr',
         ]
-        self.assertTextFileCorrect(os.path.join(self.cwd, 'scratch/accountsex12.tdda'),
-                                   os.path.join(self.refdir, 'accountsex12.tdda'),
-                                   ignore_patterns=patterns,
-                                   ignore_substrings=substrings,
-                                   encoding='MacRoman')
+        self.assertTextFileCorrect(
+            os.path.join(self.cwd, 'scratch/accountsex12.tdda'),
+            os.path.join(self.refdir, 'accountsex12.tdda'),
+            ignore_patterns=patterns,
+            ignore_substrings=substrings,
+            encoding='MacRoman',
+        )
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

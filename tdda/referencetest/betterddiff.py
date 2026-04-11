@@ -20,10 +20,7 @@ if __name__ == '__main__':
     join_diff(left, right, 'n')
     join_diff(left, right)
 
-
     left = csv_to_pandas('../constraints/testdata/elements92.csv')
     right = csv_to_pandas('../constraints/testdata/elements118.csv')
     join_diff(left, right, 'Z')
     join_diff(left, right)
-
-

@@ -15,26 +15,18 @@ import sys
 from collections import OrderedDict
 
 from tdda.pdutils import pandas_types_match
-from tdda.referencetest.basecomparison import (
-    BaseComparison,
-    ROW_NUM_HEADER
-)
+from tdda.referencetest.basecomparison import BaseComparison, ROW_NUM_HEADER
 from tdda.referencetest.diffutils import (
     same_structure_dataframe_diffs,
-    single_col_diffs
+    single_col_diffs,
 )
-from tdda.serial.pandasio import (
-    csv_to_pandas,
-    pandas_read_df,
-    infer_dates
-)
+from tdda.serial.pandasio import csv_to_pandas, pandas_read_df, infer_dates
 from tdda.utils import debug
 
 from tdda.pd.utils import is_string_col, first_non_null
 
 import pandas as pd
 import numpy as np
-
 
 
 # TDDA_DIFF = 'diff'
@@ -80,30 +72,31 @@ class PandasComparison(BaseComparison):
 
         if self.precision is not None:
             df = df.round(self.precision).reset_index(drop=True)
-            ref_df = ref_df.round(self.precision).reset_index(
-                drop=True
-            )
+            ref_df = ref_df.round(self.precision).reset_index(drop=True)
 
         if self.fuzzy_nulls:
             dtypes = ['object']
             if self.fuzzy_nulls == True:
                 dtypes.append('string')
 
-            for c in (df):
+            for c in df:
                 ltype = str(df[c].dtype)
                 rtype = str(ref_df[c].dtype)
                 if ltype in dtypes and rtype in dtypes:
                     if ltype == 'string' or type(first_non_null(df[c])) == str:
                         df[c] = df[c].fillna('')
-                    if (rtype == 'string'
-                            or type(first_non_null(ref_df[c])) == str):
+                    if (
+                        rtype == 'string'
+                        or type(first_non_null(ref_df[c])) == str
+                    ):
                         ref_df[c] = ref_df[c].fillna('')
 
         if df.equals(ref_df):  # the check
             return 0
         else:
-            D = same_structure_dataframe_diffs(df, ref_df, key=key, idx=idx,
-                                               config=self.config)
+            D = same_structure_dataframe_diffs(
+                df, ref_df, key=key, idx=idx, config=self.config
+            )
             n_diffs = D.n_diff_values
             if n_diffs > 0:
                 diffs.dfd.diff = D
@@ -173,7 +166,6 @@ class PandasComparison(BaseComparison):
         )
         return f'{s}{col_comparison(l_vals, r_vals, n)}\n'
 
-
     def sample(self, values, start, stop):
         return [
             None if pd.isnull(values[i]) else values[i]
@@ -210,8 +202,13 @@ class PandasComparison(BaseComparison):
         return stop
 
     def load_serialized_dataframe(
-        self, path, actual_df=None, loader=None, reset_index=True,
-        backend=None, **kwargs
+        self,
+        path,
+        actual_df=None,
+        loader=None,
+        reset_index=True,
+        backend=None,
+        **kwargs,
     ):
         """
         Function for constructing a pandas dataframe from a serialized
@@ -265,7 +262,7 @@ class PandasComparison(BaseComparison):
         Function for saving a Pandas DataFrame to a CSV file.
         Used when regenerating DataFrame reference results.
         """
-        for (actual_path, ref_path) in zip(actual_paths, ref_paths):
+        for actual_path, ref_path in zip(actual_paths, ref_paths):
             self._write_reference_dataframe_from_file(
                 actual_path, ref_path, writer=writer, **kwargs
             )
@@ -277,7 +274,6 @@ class PandasComparison(BaseComparison):
     def csv_to_dataframe(self, path, **kwargs):
         return csv_to_pandas(path, **kwargs)
 
-
     @staticmethod
     def _replace_cats(df):
         """
@@ -286,10 +282,9 @@ class PandasComparison(BaseComparison):
         """
         cats = [c for c in df if str(df[c].dtype) == 'category']
         if cats:
-            df = pd.DataFrame({
-                c: df[c].astype('string') if c in cats else df[c]
-                for c in df
-            })
+            df = pd.DataFrame(
+                {c: df[c].astype('string') if c in cats else df[c] for c in df}
+            )
         return df
 
     @staticmethod
@@ -304,8 +299,8 @@ class PandasComparison(BaseComparison):
     def _apply_condition(df, condition):
         return df[condition(df)].reindex()
 
-
     ####
+
 
 class PandasNotImplemented(object):
     """
@@ -430,14 +425,11 @@ def diff_masks(df, ref_df, only_diffs=False):
          n)        number of differences
     """
     assert list(df) == list(ref_df)
-    diffs = {
-        k: single_col_diffs(df[k], ref_df[k])
-        for k in df
-    }
+    diffs = {k: single_col_diffs(df[k], ref_df[k]) for k in df}
     if only_diffs:
         for k in list(diffs):
             if diffs[k].total == 0:
-                del[k]
+                del [k]
     return diffs
 
 
@@ -449,11 +441,13 @@ def col_comparison(left, right, n):
     indexes = [str(idx.index[i]) for i in range(N)]
     lefts = [repr(left.iloc[i]) for i in range(nL)] + [''] * (N - nL)
     rights = [repr(right.iloc[i]) for i in range(nR)] + [''] * (N - nR)
-    df = pd.DataFrame({
-        ROW_NUM_HEADER: indexes,
-        'actual': lefts,
-        'expected': rights,
-    })
+    df = pd.DataFrame(
+        {
+            ROW_NUM_HEADER: indexes,
+            'actual': lefts,
+            'expected': rights,
+        }
+    )
     return df.to_string(index=False) if N > 0 else ''
 
 

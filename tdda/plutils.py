@@ -1,5 +1,6 @@
 from tdda.utils import valid_level
 
+
 def loosen_polars_type(t, level):
     t = str(t)
     level = valid_level(level)
@@ -24,5 +25,3 @@ def loosen_polars_type(t, level):
 
 def polars_types_match(t1, t2, level=None):
     return loosen_polars_type(t1, level) == loosen_polars_type(t2, level)
-
-

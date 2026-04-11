@@ -7,9 +7,10 @@ import tomli
 import pandas as pd
 
 
-DATETIME_RE ='^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
+DATETIME_RE = '^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
 DEFAULT_IN_METADATA = './_write.serial'
+
 
 class BaseConfig:
     def override(self, d, complain):
@@ -18,9 +19,11 @@ class BaseConfig:
                 self.__dict__[k] = v
             elif complain:
                 part = self._part
-                print(f'Unknown configuration parameter {k} '
-                      f'ignored{(" " + part) if part else ""}.',
-                      file=sys.stderr)
+                print(
+                    f'Unknown configuration parameter {k} '
+                    f'ignored{(" " + part) if part else ""}.',
+                    file=sys.stderr,
+                )
 
     def get(self, key, preferred=None, raiseOnFailure=True):
         """
@@ -105,8 +108,9 @@ class Config(BaseConfig):
             return s[:10] if v.hour or v.minute or v.second else s
         return repr(v)
 
-    def format_constraint_value(self, value, start_col, indent, max_width=79,
-                                tabsize=2, rex=False):
+    def format_constraint_value(
+        self, value, start_col, indent, max_width=79, tabsize=2, rex=False
+    ):
         if not isinstance(value, list) and not isinstance(value, tuple):
             return self.format_value(value)
         if len(value) == 1:
@@ -197,7 +201,6 @@ class ReferenceTestConfig(BaseConfig):
             colour = self.failure_colour
             return f'[{colour}]{content}[/{colour}]'
 
-
     def set_colours(self, left, right):
         self.left_colour, self.right_colour = left.lower(), right.lower()
         # possibly validate
@@ -207,8 +210,10 @@ class ReferenceTestConfig(BaseConfig):
         # possibly validate
 
     def stripped_prefixes(self, pre='\n'):
-        return (pre + self.left_prefix.strip().replace(':', ''),
-                pre + self.right_prefix.strip().replace(':', ''))
+        return (
+            pre + self.left_prefix.strip().replace(':', ''),
+            pre + self.right_prefix.strip().replace(':', ''),
+        )
 
 
 class ConstraintsConfig(BaseConfig):
@@ -244,16 +249,18 @@ class SerialConfig(BaseConfig):
 
         self.md_inpath = [DEFAULT_IN_METADATA]  # list/single dir/None
 
-
     def _get_inpath_list(self, csvpath=None):
         path = self.md_inpath
-        paths = [m] if isinstance(path,  str) else (path or [])
+        paths = [m] if isinstance(path, str) else (path or [])
         paths = [os.path.expanduser(p) for p in paths]
         if csvpath:
             dir_ = os.path.dirname(os.path.abspath(csvpath))
-            paths = [p if os.path.isabs(p)
-                       else os.path.join(dir_, os.path.basename(p))
-                     for p in paths]
+            paths = [
+                p
+                if os.path.isabs(p)
+                else os.path.join(dir_, os.path.basename(p))
+                for p in paths
+            ]
         return paths
 
     def _md_inpath(self, csvpath=None):

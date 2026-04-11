@@ -8,7 +8,7 @@ constraints as a .tdda JSON file.
 
 """
 
-USAGE = '''
+USAGE = """
 
 Parameters:
 
@@ -22,7 +22,7 @@ Parameters:
   * constraints.tdda, if provided, specifies the name of a file to
     which the generated constraints will be written.
 
-'''
+"""
 
 import os
 import sys
@@ -30,15 +30,26 @@ import sys
 from tdda import __version__
 from tdda.constraints.flags import discover_parser, discover_flags
 from tdda.constraints.db.constraints import discover_db_table
-from tdda.constraints.db.drivers import (database_connection, parse_table_name,
-                                         database_arg_parser,
-                                         database_arg_flags)
+from tdda.constraints.db.drivers import (
+    database_connection,
+    parse_table_name,
+    database_arg_parser,
+    database_arg_flags,
+)
 
 
-def discover_constraints_from_database(table, constraints_path=None,
-                                       conn=None, dbtype=None, db=None,
-                                       host=None, port=None, user=None,
-                                       password=None, **kwargs):
+def discover_constraints_from_database(
+    table,
+    constraints_path=None,
+    conn=None,
+    dbtype=None,
+    db=None,
+    host=None,
+    port=None,
+    user=None,
+    password=None,
+    **kwargs,
+):
     """
     Discover constraints in the given database table.
 
@@ -46,10 +57,17 @@ def discover_constraints_from_database(table, constraints_path=None,
     """
     database = db
     (table, dbtype, conn_file) = parse_table_name(table, dbtype)
-    dbc = database_connection(table=table, conn=conn, dbtype=dbtype,
-                              db=database, conn_file=conn_file,
-                              host=host, port=port,
-                              user=user, password=password)
+    dbc = database_connection(
+        table=table,
+        conn=conn,
+        dbtype=dbtype,
+        db=database,
+        conn_file=conn_file,
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+    )
     constraints = discover_db_table(dbtype, dbc, table, **kwargs)
     if constraints is None:
         # should never happen
@@ -59,7 +77,7 @@ def discover_constraints_from_database(table, constraints_path=None,
 
     if constraints_path:
         with open(constraints_path, 'w') as f:
-            f.write(output);
+            f.write(output)
     else:
         print(output)
     return output
@@ -68,8 +86,9 @@ def discover_constraints_from_database(table, constraints_path=None,
 def get_params(args):
     parser = database_arg_parser(discover_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
-    parser.add_argument('constraints', nargs='?',
-                        help='name of constraints file to create')
+    parser.add_argument(
+        'constraints', nargs='?', help='name of constraints file to create'
+    )
     params = {}
     flags = database_arg_flags(discover_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None

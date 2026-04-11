@@ -4,6 +4,7 @@ from tdda.constraints.db.drivers import (
     get_db_handler,
 )
 
+
 def main(table, sql_path, conn=None, dbtype=None):
     h = get_db_handler(table, dbtype=dbtype, conn=conn)
     dbc = h.dbc
@@ -20,7 +21,11 @@ def main(table, sql_path, conn=None, dbtype=None):
 
 connection_file = os.path.expanduser('~/.tdda_db_conn_docker_postgres')
 pg_sql_path = 'init/postgres-create-elements.sql'
-main('e', pg_sql_path, conn=connection_file, )
+main(
+    'e',
+    pg_sql_path,
+    conn=connection_file,
+)
 
 mysql_sql_path = 'init/mysql-create-elements.sql'
 main('mysql:e', mysql_sql_path)

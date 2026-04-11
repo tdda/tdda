@@ -607,8 +607,11 @@ def pandas_col_to_field_metadata(
         fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field)
 
     if not fmt and date_fmt:
-        if fieldtype in (FieldType.DATE, FieldType.DATETIME,
-                         FieldType.DATETIME_WITH_TIMEZONE):
+        if fieldtype in (
+            FieldType.DATE,
+            FieldType.DATETIME,
+            FieldType.DATETIME_WITH_TIMEZONE,
+        ):
             fmt = date_fmt
     return FieldMetadata(field.name, fieldtype, format=fmt)
 

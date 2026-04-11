@@ -3,9 +3,17 @@ import os
 
 import polars as pl
 
-from tdda.serial.metadata import VERBOSITY, SerialMetadata, serial_format_to_strftime
+from tdda.serial.metadata import (
+    VERBOSITY,
+    SerialMetadata,
+    serial_format_to_strftime,
+)
 from tdda.serial.reader import get_metadata_for_reader, set_delimiter_from_path
-from tdda.serial.utils import PYTHON_TEMPLATES, fill_template, format_template_args
+from tdda.serial.utils import (
+    PYTHON_TEMPLATES,
+    fill_template,
+    format_template_args,
+)
 
 from tdda.utils import listify, warn, nvl
 
@@ -443,8 +451,10 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     if not postproc:
         return (PYTHON_TEMPLATES.POLARS_READ % args).lstrip()
     exprs = '\n'.join(
-        f"        pl.col({name!r}).str.{info['op']}(format={info['format']!r}),"
+        f'        pl.col({name!r}).str.{info["op"]}(format={info["format"]!r}),'
         for name, info in postproc.items()
     )
     postproc_block = f'    df = df.with_columns([\n{exprs}\n    ])'
-    return (PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)).lstrip()
+    return (
+        PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)
+    ).lstrip()

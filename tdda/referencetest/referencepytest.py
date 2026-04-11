@@ -252,18 +252,33 @@ def addoption(parser):
     flags which can be used to control regeneration of reference results.
     """
     try:
-        parser.addoption('--write', action='store', nargs='+', default=None,
-                         help='--write: rewrite named reference results kinds')
-        parser.addoption('--write-all', action='store_true',
-                         help='--write-all: rewrite all reference results')
-        parser.addoption('--wquiet', action='store_true',
-                         help='--wquiet: when rewriting results, '
-                              'do so quietly')
-        parser.addoption('--tagged', action='store_true',
-                         help='--tagged: only run tagged tests')
-        parser.addoption('--istagged', action='store_true',
-                         help='--istagged: report tagged tests, '
-                              'without running')
+        parser.addoption(
+            '--write',
+            action='store',
+            nargs='+',
+            default=None,
+            help='--write: rewrite named reference results kinds',
+        )
+        parser.addoption(
+            '--write-all',
+            action='store_true',
+            help='--write-all: rewrite all reference results',
+        )
+        parser.addoption(
+            '--wquiet',
+            action='store_true',
+            help='--wquiet: when rewriting results, do so quietly',
+        )
+        parser.addoption(
+            '--tagged',
+            action='store_true',
+            help='--tagged: only run tagged tests',
+        )
+        parser.addoption(
+            '--istagged',
+            action='store_true',
+            help='--istagged: report tagged tests, without running',
+        )
     except ValueError:
         # ignore attempts to add parser options multiple times
         pass
@@ -300,4 +315,3 @@ def tagged(config, items):
                     shownclasses.add(cls)
                 else:
                     print('%s.%s' % (f.obj.__module__, f.name))
-

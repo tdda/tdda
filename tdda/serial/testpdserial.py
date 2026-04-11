@@ -1714,20 +1714,23 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
         # All other fields have explicit per-field formats.
         md = load_metadata(tdpath('allformats2unspec.serial'))
         kw = serial_to_pandas_read_csv_args(md)
-        self.assertEqual(kw['date_format'], {
-            'eu_date':       '%d/%m/%Y',
-            'eu_date_2y':    '%d/%m/%y',
-            'iso_date':      'ISO8601',
-            'us_date':       '%m/%d/%Y',
-            'us_date_2y':    '%m/%d/%y',
-            'eu_datetime':   '%d/%m/%Y %H:%M:%S',
-            'eu_datetime_2y':'%d/%m/%y %H:%M:%S',
-            'iso_datetime':  'ISO8601',
-            'us_datetime':   '%m/%d/%Y %H:%M:%S',
-            'us_datetime_2y':'%m/%d/%y %H:%M:%S',
-            'udate':         '%d/%m/%Y',
-            'udatetime':     '%d/%m/%Y %H:%M:%S',
-        })
+        self.assertEqual(
+            kw['date_format'],
+            {
+                'eu_date': '%d/%m/%Y',
+                'eu_date_2y': '%d/%m/%y',
+                'iso_date': 'ISO8601',
+                'us_date': '%m/%d/%Y',
+                'us_date_2y': '%m/%d/%y',
+                'eu_datetime': '%d/%m/%Y %H:%M:%S',
+                'eu_datetime_2y': '%d/%m/%y %H:%M:%S',
+                'iso_datetime': 'ISO8601',
+                'us_datetime': '%m/%d/%Y %H:%M:%S',
+                'us_datetime_2y': '%m/%d/%y %H:%M:%S',
+                'udate': '%d/%m/%Y',
+                'udatetime': '%d/%m/%Y %H:%M:%S',
+            },
+        )
 
 
 class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
@@ -1738,33 +1741,23 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
     """
 
     def test_iso_date_serial(self):
-        df = csv_to_pandas(
-            tdpath('isod.csv'), tdpath('isod.serial')
-        )
+        df = csv_to_pandas(tdpath('isod.csv'), tdpath('isod.serial'))
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_eu_date_serial(self):
-        df = csv_to_pandas(
-            tdpath('eurod.csv'), tdpath('eurod.serial')
-        )
+        df = csv_to_pandas(tdpath('eurod.csv'), tdpath('eurod.serial'))
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_us_date_serial(self):
-        df = csv_to_pandas(
-            tdpath('usd.csv'), tdpath('usd.serial')
-        )
+        df = csv_to_pandas(tdpath('usd.csv'), tdpath('usd.serial'))
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_eu_date2y_serial(self):
-        df = csv_to_pandas(
-            tdpath('eurod2y.csv'), tdpath('eurod2y.serial')
-        )
+        df = csv_to_pandas(tdpath('eurod2y.csv'), tdpath('eurod2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_us_date2y_serial(self):
-        df = csv_to_pandas(
-            tdpath('usd2y.csv'), tdpath('usd2y.serial')
-        )
+        df = csv_to_pandas(tdpath('usd2y.csv'), tdpath('usd2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_iso_datetime_serial(self):
@@ -1774,34 +1767,29 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_eu_datetime_serial(self):
-        df = csv_to_pandas(
-            tdpath('eurodt.csv'), tdpath('eurodt.serial')
-        )
+        df = csv_to_pandas(tdpath('eurodt.csv'), tdpath('eurodt.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_us_datetimeserial(self):
-        df = csv_to_pandas(
-            tdpath('usdt.csv'), tdpath('usdt.serial')
-        )
+        df = csv_to_pandas(tdpath('usdt.csv'), tdpath('usdt.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_eu_date2y_serial(self):
-        df = csv_to_pandas(
-            tdpath('eurodt2y.csv'), tdpath('eurodt2y.serial')
-        )
+        df = csv_to_pandas(tdpath('eurodt2y.csv'), tdpath('eurodt2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_us_date2y_serial(self):
-        df = csv_to_pandas(
-            tdpath('usdt2y.csv'), tdpath('usdt2y.serial')
-        )
+        df = csv_to_pandas(tdpath('usdt2y.csv'), tdpath('usdt2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_us_allformats2unspec_serial(self):
         df = csv_to_pandas(
             tdpath('allformats2unspec.csv'), tdpath('allformats2unspec.serial')
         )
-        self.assertDataFrameCorrect(df, tdpath('alldateformats2unspec.parquet'))
+        self.assertDataFrameCorrect(
+            df, tdpath('alldateformats2unspec.parquet')
+        )
+
 
 class TestSerialNamedDateFormatsWrite(ReferenceTestCase):
     """
@@ -1848,14 +1836,16 @@ class TestSerialSmallWrite(ReferenceTestCase):
     """
 
     def test_write_small_via_kwargs(self):
-        df = csv_to_pandas(
-            tdpath('small.csv'), md_path=tdpath('small.serial')
-        )
+        df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-kw.csv')
         md_path = tmppath('small-write-kw.serial')
         pandas_to_csv(
-            df, csv_path, md_outpath=md_path,
-            sep='\t', quotechar="'", na_rep='NULL'
+            df,
+            csv_path,
+            md_outpath=md_path,
+            sep='\t',
+            quotechar="'",
+            na_rep='NULL',
         )
         self.assertFileCorrect(csv_path, tdpath('small-write-kw.csv'))
         self.assertFileCorrect(
@@ -1865,14 +1855,14 @@ class TestSerialSmallWrite(ReferenceTestCase):
         )
 
     def test_write_small_via_serial(self):
-        df = csv_to_pandas(
-            tdpath('small.csv'), md_path=tdpath('small.serial')
-        )
+        df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-serial.csv')
         md_path = tmppath('small-write-serial.serial')
         pandas_to_csv(
-            df, csv_path,
-            md_inpath=tdpath('small-write-tsv.serial'), md_outpath=md_path
+            df,
+            csv_path,
+            md_inpath=tdpath('small-write-tsv.serial'),
+            md_outpath=md_path,
         )
         self.assertFileCorrect(csv_path, tdpath('small-write-serial.csv'))
         self.assertFileCorrect(

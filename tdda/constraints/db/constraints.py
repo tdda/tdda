@@ -17,6 +17,7 @@ The top-level functions are:
         but not yet implemented for databases.
 
 """
+
 import sys
 
 from tdda.constraints.base import (
@@ -25,7 +26,7 @@ from tdda.constraints.base import (
     Verification,
     constraints_from_path_or_dict,
     CONSTRAINT_SUFFIX_MAP,
-    PassFailCount
+    PassFailCount,
 )
 from tdda.constraints.baseconstraints import (
     BaseConstraintCalculator,
@@ -37,8 +38,15 @@ from tdda.constraints.baseconstraints import (
 
 from tdda.constraints.db.drivers import DatabaseHandler
 from tdda.state import get_config
-from tdda.utils import (squote, remove_falsy_values, indicator_field_name,
-                        pass_fail_stats, OK, BAD, TDDAError)
+from tdda.utils import (
+    squote,
+    remove_falsy_values,
+    indicator_field_name,
+    pass_fail_stats,
+    OK,
+    BAD,
+    TDDAError,
+)
 from tdda import rexpy
 
 
@@ -112,8 +120,9 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
         return self.get_database_nunique(self.tablename, colname)
 
     def calc_unique_values(self, colname, include_nulls=True):
-        return self.get_database_unique_values(self.tablename, colname,
-                                               include_nulls=include_nulls)
+        return self.get_database_unique_values(
+            self.tablename, colname, include_nulls=include_nulls
+        )
 
     def calc_non_integer_values_count(self, colname):
         raise TDDAError('database should not require non_integer_values_count')
@@ -127,19 +136,28 @@ class DatabaseConstraintCalculator(BaseConstraintCalculator):
         return rexpy.extract(sorted(values), seed=seed, tag=self.group_rexes)
 
     def calc_rex_constraint(self, colname, constraint, detect=False):
-        return not self.get_database_rex_match(self.tablename, colname,
-                                               constraint.value)
+        return not self.get_database_rex_match(
+            self.tablename, colname, constraint.value
+        )
 
 
-class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
-                                 BaseConstraintVerifier,
-                                 DatabaseHandler):
+class DatabaseConstraintVerifier(
+    DatabaseConstraintCalculator, BaseConstraintVerifier, DatabaseHandler
+):
     """
     A :py:class:`DatabaseConstraintVerifier` object provides methods
     for verifying every type of constraint against a single database table.
     """
-    def __init__(self, dbtype, dbc, source_table,
-                 epsilon=None, type_checking='strict', testing=False):
+
+    def __init__(
+        self,
+        dbtype,
+        dbc,
+        source_table,
+        epsilon=None,
+        type_checking='strict',
+        testing=False,
+    ):
         """
         Inputs:
 
@@ -158,17 +176,26 @@ class DatabaseConstraintVerifier(DatabaseConstraintCalculator,
         source_table = self.resolve_table(source_table)
 
         DatabaseConstraintCalculator.__init__(self, source_table, testing)
-        BaseConstraintVerifier.__init__(self, epsilon=epsilon,
-                                        type_checking=type_checking)
+        BaseConstraintVerifier.__init__(
+            self, epsilon=epsilon, type_checking=type_checking
+        )
 
 
-class DatabaseConstraintDetector(DatabaseConstraintVerifier,
-                                 BaseConstraintDetector):
-    """
-    """
-    def __init__(self, dbtype, dbc, tablename,
-                 epsilon=None, type_checking='strict',
-                 config=None, **kwargs):
+class DatabaseConstraintDetector(
+    DatabaseConstraintVerifier, BaseConstraintDetector
+):
+    """ """
+
+    def __init__(
+        self,
+        dbtype,
+        dbc,
+        tablename,
+        epsilon=None,
+        type_checking='strict',
+        config=None,
+        **kwargs,
+    ):
         DatabaseConstraintVerifier.__init__(self, dbtype, dbc, tablename)
         config = get_config(config)
         cconfig = config.constraints
@@ -184,28 +211,39 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         self.n_failures_field = 'n_failures'
 
     def detect(self, constraints, dest_pair, execute=True, **kwargs):
-        ver = self.verify(constraints, VerificationClass=DatabaseVerification,
-                          n_source_records=self.n_source_records, **kwargs)
+        ver = self.verify(
+            constraints,
+            VerificationClass=DatabaseVerification,
+            n_source_records=self.n_source_records,
+            **kwargs,
+        )
         ver.dbh = self
         if ver.failures == 0:
             return ver  # possibly calulate failure passing & failing
-                        # records and values; though that's bit trivial
+            # records and values; though that's bit trivial
 
         # Build map from names of fields with failures
         # to the failing constraints (only)
-        failure_map = remove_falsy_values({
-            field: [c for (c, ok) in fc.items() if not ok]
-            for field, fc in ver.fields.items()
-        })
-        failure_field_constraints = remove_falsy_values({
-            field: FieldConstraints(field, [
+        failure_map = remove_falsy_values(
+            {
+                field: [c for (c, ok) in fc.items() if not ok]
+                for field, fc in ver.fields.items()
+            }
+        )
+        failure_field_constraints = remove_falsy_values(
+            {
+                field: FieldConstraints(
+                    field,
+                    [
                         constraint
                         for kind, constraint in fc.constraints.items()
                         if kind in failure_map[field]
-                    ])
-            for field, fc in constraints.fields.items()
-            if field in failure_map
-        })
+                    ],
+                )
+                for field, fc in constraints.fields.items()
+                if field in failure_map
+            }
+        )
         ver.n_failing_fields = len(failure_map)
         ver.n_passing_fields = len(ver.fields) - ver.n_failing_fields
         raw_dest_name, dest_dbtype = dest_pair
@@ -213,12 +251,16 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
         ver.detection_table = dest_name
 
         if dest_dbtype != self.dbtype:
-            raise TDDAError('Detect from RDBMS currently only supports'
-                            'writing to same RDBMS.')
+            raise TDDAError(
+                'Detect from RDBMS currently only supports'
+                'writing to same RDBMS.'
+            )
         self.drop_table_if_exists(raw_dest_name)
-        exprs = [] if self.interleave else [
-            self.quoted(field) for field in failure_map
-        ]
+        exprs = (
+            []
+            if self.interleave
+            else [self.quoted(field) for field in failure_map]
+        )
         ver.detection_fields = detection_fields = []
         for fc in failure_field_constraints.values():
             if self.interleave:
@@ -227,10 +269,12 @@ class DatabaseConstraintDetector(DatabaseConstraintVerifier,
             detection_fields.extend(self.detection_field_names(fc))
         n_failures_field_sql = self.failures_field(detection_fields)
         exprstr = ',\n'.join(exprs)
-        where = '' if self.write_all_records else (
-            f'WHERE {self.quoted(self.n_failures_field)} > 0'
+        where = (
+            ''
+            if self.write_all_records
+            else (f'WHERE {self.quoted(self.n_failures_field)} > 0')
         )
-        sql = f'''
+        sql = f"""
 CREATE TABLE {dest_name}
 AS
 WITH BASE AS (
@@ -244,7 +288,7 @@ FROM BASE
 )
 SELECT * FROM DETECTED
 {where}
-'''.strip()
+""".strip()
         ver.sql = sql
         if execute:
             self.execute_commit(sql)
@@ -266,27 +310,27 @@ SELECT * FROM DETECTED
         ]
 
     def detection_field_names(self, fc):
-        return [
-            self.out_field_name(fc.name, kind)
-            for kind in fc.constraints
-        ]
+        return [self.out_field_name(fc.name, kind) for kind in fc.constraints]
 
     def failures_field(self, out_fields):
         if self.detect_passes:
             joint = '\n          + '
             return (
                 str(len(out_fields))
-              + '\n       - ('
-              + (joint.join(f'{self.cast_bool_to_int(self.quoted(field))}'
-                     for field in out_fields))
-              + f'\n        ) AS {self.quoted(self.n_failures_field)}'
+                + '\n       - ('
+                + (
+                    joint.join(
+                        f'{self.cast_bool_to_int(self.quoted(field))}'
+                        for field in out_fields
+                    )
+                )
+                + f'\n        ) AS {self.quoted(self.n_failures_field)}'
             )
         else:
             joint = '\n       + '
             return (
-                (joint.join(f'{field}::INT' for field in out_fields))
-                + f'\nAS {self.quoted(self.n_failures_field)}'
-            )
+                joint.join(f'{field}::INT' for field in out_fields)
+            ) + f'\nAS {self.quoted(self.n_failures_field)}'
 
     def detect_ok_field(self, field, kind, constraint):
         outname = self.quoted(self.out_field_name(field, kind))
@@ -298,31 +342,24 @@ SELECT * FROM DETECTED
         if kind == 'type':
             return a('true')
         if kind in ('min', 'max'):
-            return (
-                a(f'({field} {mm_op} {val} {ornull}')
-            )
+            return a(f'({field} {mm_op} {val} {ornull}')
         if kind in ('min_length', 'max_length'):
-            return (
-                a(f'(LENGTH({field}) {mm_op} {val} {ornull}')
-            )
+            return a(f'(LENGTH({field}) {mm_op} {val} {ornull}')
         if kind == 'sign':
             op = SIGN_OP.get(val, None)
-            return (
-                a(f'({field} {op} 0 {ornull}')
-            )
+            return a(f'({field} {op} 0 {ornull}')
         if kind == 'max_nulls':
             if val > 0:
                 maxcond = f'((COUNT(*) OVER ()) <= {val}) OR '
             else:
                 maxcond = ''
-            return a(
-                f'({maxcond}{field} IS NOT NULL)'
-            )
+            return a(f'({maxcond}{field} IS NOT NULL)')
         if kind == 'no_duplicates':
             return a(f'(((COUNT(*) OVER (PARTITION BY {field})) = 1) {ornull}')
         if kind == 'allowed_values':
-            return a(f"({field} IN ({', '.join(squote(x) for x in val)}) "
-                     f"{ornull}")
+            return a(
+                f'({field} IN ({", ".join(squote(x) for x in val)}) {ornull}'
+            )
         if kind == 'rex':
             rex_sql = self.rex_match_sql(field, val)
             if rex_sql:
@@ -341,31 +378,24 @@ SELECT * FROM DETECTED
         if kind == 'type':
             return a('false')
         if kind in ('min', 'max'):
-            return (
-                a(f'(({field} {mm_op} {val}) {andnn}')
-            )
+            return a(f'(({field} {mm_op} {val}) {andnn}')
         if kind in ('min_length', 'max_length'):
-            return (
-                a(f'((LENGTH({field}) {mm_op} {val}) {andnn}')
-            )
+            return a(f'((LENGTH({field}) {mm_op} {val}) {andnn}')
         if kind == 'sign':
             op = BAD_SIGN_OP.get(val, None)
-            return (
-                a(f'(({field} {op} 0) {andnn}')
-            )
+            return a(f'(({field} {op} 0) {andnn}')
         if kind == 'max_nulls':
             if val > 0:
                 maxcond = f'((COUNT(*) OVER (PARTITION BY 1)) > {val}) AND '
             else:
                 maxcond = ''
-            return a(
-                f'({maxcond}{field} IS NULL)'
-            )
+            return a(f'({maxcond}{field} IS NULL)')
         if kind == 'no_duplicates':
             return a(f'(((COUNT(*) OVER (PARTITION BY {field})) > 1) {andnn}')
         if kind == 'allowed_values':
-            return a(f"({field} NOT IN ({', '.join(squote(x) for x in val)})"
-                     f"{andnn}"   )
+            return a(
+                f'({field} NOT IN ({", ".join(squote(x) for x in val)}){andnn}'
+            )
         if kind == 'rex':
             rex_sql = rex_match_sql(field, v)
             if rex_sql:
@@ -388,15 +418,17 @@ class DatabaseVerification(Verification):
     the :py:class:`tdda.constraints.base.Verification` object used for
     verification of constraints on a database table.
     """
+
     def __init__(self, *args, **kwargs):
         self.is_db = True
         Verification.__init__(self, *args, **kwargs)
 
-    def get_failure_values(self, field, constraint, key_fields,
-                           max_vals=None):
-        indicator_field = (
-            indicator_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP,
-                                 detect_passes=self.detect_passes)
+    def get_failure_values(self, field, constraint, key_fields, max_vals=None):
+        indicator_field = indicator_field_name(
+            field,
+            constraint,
+            CONSTRAINT_SUFFIX_MAP,
+            detect_passes=self.detect_passes,
         )
         exists = indicator_field in self.detection_fields
         bad_val = str(self.bad_val).upper()
@@ -407,13 +439,16 @@ class DatabaseVerification(Verification):
         )
         dbh = self.dbh
         if exists:
-            sql = (f'SELECT {keys}{self.dbh.quoted(field)}\n'
-                   f'FROM {self.detection_table}\n'
-                   f'WHERE {dbh.quoted(indicator_field)} = {bad_val}')
+            sql = (
+                f'SELECT {keys}{self.dbh.quoted(field)}\n'
+                f'FROM {self.detection_table}\n'
+                f'WHERE {dbh.quoted(indicator_field)} = {bad_val}'
+            )
             if max_vals:
                 if not type(max_vals) == int and max_vals > 0:
-                    raise TDDAError(f'Internal error: Bad value for max_vals: '
-                                    f'{max_vals}')
+                    raise TDDAError(
+                        f'Internal error: Bad value for max_vals: {max_vals}'
+                    )
                 sql += f'\nLIMIT {max_vals}'
             result = self.dbh.execute_all(sql)
             return [list(r) for r in result]
@@ -421,18 +456,22 @@ class DatabaseVerification(Verification):
             return None
 
     def get_constraint_stats(self, field, constraint):
-        indicator_field = (
-            indicator_field_name(field, constraint, CONSTRAINT_SUFFIX_MAP,
-                                 detect_passes=self.detect_passes)
+        indicator_field = indicator_field_name(
+            field,
+            constraint,
+            CONSTRAINT_SUFFIX_MAP,
+            detect_passes=self.detect_passes,
         )
         if not hasattr(self, 'constraint_stats'):
             # compute them all together and save as dict
-            sql = ('SELECT\n'
-                  + ',\n'.join(
-                            self.count_failing_records_for(indicator)
-                            for indicator in self.detection_fields
-                    )
-                  + f'\nFROM {self.detection_table}')
+            sql = (
+                'SELECT\n'
+                + ',\n'.join(
+                    self.count_failing_records_for(indicator)
+                    for indicator in self.detection_fields
+                )
+                + f'\nFROM {self.detection_table}'
+            )
             result = self.dbh.execute_all(sql)
             self.constraint_stats = dict(zip(self.detection_fields, result[0]))
         failures = self.constraint_stats.get(indicator_field, 0)
@@ -460,25 +499,27 @@ class DatabaseVerification(Verification):
     def build_field_stats(self, fields):
         self.field_stats = {}
         inds = {
-            field: list({
-                self.indicator_field_name(field, constraint)
-                for constraint in CONSTRAINT_SUFFIX_MAP
-            }.intersection(set(self.detection_fields)))
+            field: list(
+                {
+                    self.indicator_field_name(field, constraint)
+                    for constraint in CONSTRAINT_SUFFIX_MAP
+                }.intersection(set(self.detection_fields))
+            )
             for field in fields
         }
-        sql = ('SELECT\n'
-              + ',\n'.join(
-                        self.count_failing_field_values(field, inds[field])
-                        for field in fields
-                )
-              + f'\nFROM {self.detection_table}')
+        sql = (
+            'SELECT\n'
+            + ',\n'.join(
+                self.count_failing_field_values(field, inds[field])
+                for field in fields
+            )
+            + f'\nFROM {self.detection_table}'
+        )
         results = self.dbh.execute_all(sql)
         self.field_stats = {
             field: PassFailCount(
-                       field,
-                       self.n_source_records - results[0][i],
-                       results[0][i]
-                   )
+                field, self.n_source_records - results[0][i], results[0][i]
+            )
             for i, field in enumerate(fields)
         }
 
@@ -504,28 +545,39 @@ class DatabaseVerification(Verification):
         return self.field_stats[field]
 
 
-
-class DatabaseConstraintDiscoverer(DatabaseConstraintCalculator,
-                                   BaseConstraintDiscoverer,
-                                   DatabaseHandler):
+class DatabaseConstraintDiscoverer(
+    DatabaseConstraintCalculator, BaseConstraintDiscoverer, DatabaseHandler
+):
     """
     A :py:class:`DatabaseConstraintDiscoverer` object is used to discover
     constraints on a single database table.
     """
-    def __init__(self, dbtype, dbc, tablename, inc_rex=False,
-                 group_rexes=True, no_md=False,
-                 allowed_fields=True, required_fields=True,
-                 seed=None):
+
+    def __init__(
+        self,
+        dbtype,
+        dbc,
+        tablename,
+        inc_rex=False,
+        group_rexes=True,
+        no_md=False,
+        allowed_fields=True,
+        required_fields=True,
+        seed=None,
+    ):
         DatabaseHandler.__init__(self, dbtype, dbc)
         tablename = self.resolve_table(tablename)
 
         DatabaseConstraintCalculator.__init__(self, tablename)
-        BaseConstraintDiscoverer.__init__(self, inc_rex=inc_rex,
-                                          group_rexes=group_rexes,
-                                          no_md=no_md,
-                                          allowed_fields=allowed_fields,
-                                          required_fields=required_fields,
-                                          seed=seed)
+        BaseConstraintDiscoverer.__init__(
+            self,
+            inc_rex=inc_rex,
+            group_rexes=group_rexes,
+            no_md=no_md,
+            allowed_fields=allowed_fields,
+            required_fields=required_fields,
+            seed=seed,
+        )
         self.tablename = tablename
 
 
@@ -545,15 +597,26 @@ def types_compatible(x, y, colname):
     ty = int if type(y) is long else type(y)
     ok = tx == ty
     if not ok and colname:
-        print('Warning: Failing incompatible types constraint for field %s '
-              'of type %s.\n(Constraint value %s of type %s.)'
-              % (colname, type(x), y, type(y)), file=sys.stderr)
+        print(
+            'Warning: Failing incompatible types constraint for field %s '
+            'of type %s.\n(Constraint value %s of type %s.)'
+            % (colname, type(x), y, type(y)),
+            file=sys.stderr,
+        )
     return ok
 
 
-def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
-                    type_checking='strict', testing=False, report='all',
-                    **kwargs):
+def verify_db_table(
+    dbtype,
+    db,
+    tablename,
+    constraints_path,
+    epsilon=None,
+    type_checking='strict',
+    testing=False,
+    report='all',
+    **kwargs,
+):
     """
     Verify that (i.e. check whether) the database table provided
     satisfies the constraints in the JSON .tdda file provided.
@@ -652,40 +715,66 @@ def verify_db_table(dbtype, db, tablename, constraints_path, epsilon=None,
         print('Constraints failing: %d\\n' % v.failures)
         print(str(v))
     """
-    dbv = DatabaseConstraintVerifier(dbtype, db, tablename, epsilon=epsilon,
-                                     type_checking=type_checking,
-                                     testing=testing)
+    dbv = DatabaseConstraintVerifier(
+        dbtype,
+        db,
+        tablename,
+        epsilon=epsilon,
+        type_checking=type_checking,
+        testing=testing,
+    )
     if not dbv.table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return dbv.verify(constraints,
-                      VerificationClass=DatabaseVerification,
-                      report=report, n_source_records=dbv.n_source_records,
-                      **kwargs)
+    return dbv.verify(
+        constraints,
+        VerificationClass=DatabaseVerification,
+        report=report,
+        n_source_records=dbv.n_source_records,
+        **kwargs,
+    )
 
 
-def detect_db_table(dbtype, dbc, tablename, constraints_path, destination,
-                    epsilon=None, type_checking='strict', testing=False,
-                    **kwargs):
+def detect_db_table(
+    dbtype,
+    dbc,
+    tablename,
+    constraints_path,
+    destination,
+    epsilon=None,
+    type_checking='strict',
+    testing=False,
+    **kwargs,
+):
     """
     For detection of failures from verification of constraints, but
     not yet implemented for database tables.
     """
     detector = DatabaseConstraintDetector(
-        dbtype, dbc, tablename, epsilon=epsilon,
+        dbtype,
+        dbc,
+        tablename,
+        epsilon=epsilon,
         type_checking=type_checking,
-        **kwargs
+        **kwargs,
     )
     constraints = constraints_from_path_or_dict(constraints_path)
     return detector.detect(constraints, destination, **kwargs)
 
 
-
-def discover_db_table(dbtype, dbc, tablename, inc_rex=False, group_rexes=True,
-                      report_path=None, report_formats=None, seed=None,
-                      no_md=False,
-                      **kw):
+def discover_db_table(
+    dbtype,
+    dbc,
+    tablename,
+    inc_rex=False,
+    group_rexes=True,
+    report_path=None,
+    report_formats=None,
+    seed=None,
+    no_md=False,
+    **kw,
+):
     """
     Automatically discover potentially useful constraints that characterize
     the database table provided.
@@ -799,11 +888,15 @@ def discover_db_table(dbtype, dbc, tablename, inc_rex=False, group_rexes=True,
             f.write(constraints.to_json())
 
     """
-    disco = DatabaseConstraintDiscoverer(dbtype, dbc, tablename,
-                                         inc_rex=inc_rex,
-                                         group_rexes=group_rexes,
-                                         no_md=no_md,
-                                         seed=seed)
+    disco = DatabaseConstraintDiscoverer(
+        dbtype,
+        dbc,
+        tablename,
+        inc_rex=inc_rex,
+        group_rexes=group_rexes,
+        no_md=no_md,
+        seed=seed,
+    )
     if not disco.table_exists(tablename):
         print('No table %s' % tablename, file=sys.stderr)
         sys.exit(1)
@@ -812,10 +905,13 @@ def discover_db_table(dbtype, dbc, tablename, inc_rex=False, group_rexes=True,
         nrows = disco.get_nrows(tablename)
         constraints.set_stats(n_records=nrows, n_selected=nrows)
         constraints.set_dates_user_host_creator()
-        constraints.set_rdbms('%s:%s:%s:%s' % (dbtype or '', dbc.host or '',
-                                               dbc.user, dbc.database))
+        constraints.set_rdbms(
+            '%s:%s:%s:%s'
+            % (dbtype or '', dbc.host or '', dbc.user, dbc.database)
+        )
         constraints.set_source(tablename, tablename)
     return constraints
+
 
 def indent(s, indentation):
     joint = '\n' + ' ' * indentation

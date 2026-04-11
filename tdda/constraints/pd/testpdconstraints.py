@@ -17,7 +17,8 @@ import tempfile
 import unittest
 
 from collections import OrderedDict, namedtuple
-#from distutils.spawn import find_executable
+
+# from distutils.spawn import find_executable
 from shutil import which
 
 import pandas as pd
@@ -62,21 +63,20 @@ from tdda.referencetest.pddates import (
     infer_date_format,
     DateRE,
     Separators,
-    get_date_separators
+    get_date_separators,
 )
 from tdda.serial import csv_to_pandas
 from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 TDDA_MD_IGNORES = [
-    r'''^\s*"?local_time"?[ =:]+["'].*['"],?$''',
-    r'''^\s*"?utc_time"?[:= ]+['"].*['"],?$''',
-    r'''^\s*"?creator"?[:= ]+['"]?TDDA .*['"]?,?$''',
-    r'''^\s*"?source"?[:= ]+ ['"]?/.*/testdata/small7x5.parquet['"]?,?$''',
-    r'''^\s*"?host"?[:= ]+ ['"]?.*['"]?,?$''',
-    r'''^\s*"?user"?[:= ]+ ['"]?.*['"]?,?$''',
-    r'''^\s*"?tddafile"?[:= ]+ ['"]?.*['"]?,?$''',
+    r"""^\s*"?local_time"?[ =:]+["'].*['"],?$""",
+    r"""^\s*"?utc_time"?[:= ]+['"].*['"],?$""",
+    r"""^\s*"?creator"?[:= ]+['"]?TDDA .*['"]?,?$""",
+    r"""^\s*"?source"?[:= ]+ ['"]?/.*/testdata/small7x5.parquet['"]?,?$""",
+    r"""^\s*"?host"?[:= ]+ ['"]?.*['"]?,?$""",
+    r"""^\s*"?user"?[:= ]+ ['"]?.*['"]?,?$""",
+    r"""^\s*"?tddafile"?[:= ]+ ['"]?.*['"]?,?$""",
 ]
-
 
 
 isPython2 = sys.version_info[0] < 3
@@ -95,15 +95,18 @@ REALS = POS_REALS + (0.0,) + NEG_REALS
 NUMBERS = BOOLS + INTS + REALS
 STRINGS = ('', 'a', 'αβγδε')
 NULLS = (None,)
-DATES = (datetime.datetime(1970, 1, 1),
-         datetime.datetime(1, 1, 1),
-         datetime.datetime(9999, 12, 31, 23, 59, 59),
-         datetime.datetime.now(),
-         datetime.datetime.now(datetime.timezone.utc))
-OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + ((u'u',) if isPython2
-                                                              else (b'u',))
+DATES = (
+    datetime.datetime(1970, 1, 1),
+    datetime.datetime(1, 1, 1),
+    datetime.datetime(9999, 12, 31, 23, 59, 59),
+    datetime.datetime.now(),
+    datetime.datetime.now(datetime.timezone.utc),
+)
+OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + (
+    ('u',) if isPython2 else (b'u',)
+)
 
-E118_SUMMARY = '''
+E118_SUMMARY = """
 SUMMARY:
 
 Records: 118
@@ -117,16 +120,16 @@ Failing Values: 176 (9.32%)
 
 Constraints: 72
 Failing Constraints: 15 (20.83%)
-'''
+"""
 
 
 class ParquetFileChecker:
     def check_parquet_file_correct(self, actual_path, expected_path):
         actual_df = load_df(actual_path)
         expected_df = load_df(os.path.join(TESTDATADIR, expected_path))
-        self.assertDataFramesEquivalent(actual_df, expected_df,
-                                        actual_path, expected_path)
-
+        self.assertDataFramesEquivalent(
+            actual_df, expected_df, actual_path, expected_path
+        )
 
 
 class ConstraintVerificationTester:
@@ -136,7 +139,9 @@ class ConstraintVerificationTester:
     This exists so that when there are test failures,
     useful information about failing inputs and outputs can be shown.
     """
+
     outstandingAssertions = 0
+
     def __init__(self, tester, *args, **kwargs):
         self.tester = tester
         self.verifier = pdc.PandasConstraintVerifier(*args, **kwargs)
@@ -156,8 +161,8 @@ class ConstraintVerificationTester:
 
 
 class Asserter:
-    """
-    """
+    """ """
+
     def __init__(self, cvt, satisfied, method, args, kwargs):
         self.cvt = cvt
         self.satisfied = satisfied
@@ -176,13 +181,16 @@ class Asserter:
         self.cvt.tester.assertFalse(v, self.diagnostic(False))
 
     def diagnostic(self, expected):
-        return ('Verifier: %s Inputs: %s %s: Assertion: %s'
-                % (self.method, str(self.args),
-                   str(self.kwargs) if self.kwargs else '',
-                   'satisified' if expected is True
-                                else 'not satisfied' if expected is False
-                                else expected))
-
+        return 'Verifier: %s Inputs: %s %s: Assertion: %s' % (
+            self.method,
+            str(self.args),
+            str(self.kwargs) if self.kwargs else '',
+            'satisified'
+            if expected is True
+            else 'not satisfied'
+            if expected is False
+            else expected,
+        )
 
 
 class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
@@ -252,40 +260,34 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
         goods = (
             (1.0, 1.0),
             (1.00999, 1.0),
-
             (MILLION, MILLION),
             (MILLION + 9999, MILLION),
             (MILLION + 10000, MILLION),
             (REAL_MILLION, REAL_MILLION),
             (MILLION + 9999.0, REAL_MILLION),
             (MILLION + 10000.0, MILLION),
-
             (1e-100, 1e-100),
             (1.00999e-100, 1e-100),
-
             (-1.0, -1.0),
-            (-.990001, -1.0),
-
+            (-0.990001, -1.0),
             (-MILLION, -MILLION),
             (-MILLION + 9999, -MILLION),
             (-MILLION + 10000, -MILLION),
             (-REAL_MILLION, -REAL_MILLION),
             (-REAL_MILLION + 9999.0, -REAL_MILLION),
             (-REAL_MILLION + 10000.0, -MILLION),
-
             (-1e-100, -1e-100),
             (-0.999999e-100, -1e-100),
         )
         bad_goods = (
             (MILLION + 10000 + SMALL, MILLION),  # Should fail mathematically.
-                                                 # But rounding
+            # But rounding
         )
         bads = (
             (1.01000001, 1.0),
             (MILLION + 10001, MILLION),
             (MILLION + 10000.0000000001, MILLION),
             (1.010001e-100, 1.0e-100),
-
             (-0.989999, -1.0),
             (-MILLION + 100001, -MILLION),
             (-MILLION + 10000.0000000001, -MILLION),
@@ -295,9 +297,9 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
         cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(MILLION + 10000 + SMALL, MILLION + 10000)
         epsilon = 0.01
-        for (x, y) in goods + bad_goods:
+        for x, y in goods + bad_goods:
             self.assertTrue(fuzzy_less_than(x, y, epsilon))
-        for (x, y) in bads:
+        for x, y in bads:
             self.assertFalse(fuzzy_less_than(x, y, epsilon))
 
     def test_fuzzy_greater_than_zero(self):
@@ -317,56 +319,51 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
     def test_fuzzy_greater_than(self):
         goods = (
             (1.0, 1.0),
-            (.9900001, 1.0),
-
+            (0.9900001, 1.0),
             (MILLION, MILLION),
             (999900, MILLION),
             (999899, MILLION),
             (999899.999, REAL_MILLION),
-
             (1e-100, 1e-100),
             (0.99000001e-100, 1e-100),
-
             (-1.0, -1.0),
             (-1.009999, -1.0),
-
             (-MILLION, -MILLION),
             (-MILLION + 10000, -MILLION),
             (-REAL_MILLION, -REAL_MILLION),
             (-REAL_MILLION + 10000.0001, -REAL_MILLION),
             (-REAL_MILLION + 10000.0, -MILLION),
-
             (-1e-100, -1e-100),
             (-0.99001e-100, -1e-100),
         )
         bad_goods = (
             (999900 - SMALL, MILLION),  # Should fail mathematically.
-                                        # But MILLION + SMALL == MILLION
+            # But MILLION + SMALL == MILLION
         )
         bads = (
             (0.9899999, 1.0),
             (MILLION - 10001, MILLION),
             (MILLION - 10000.0000000001, MILLION),
-            (0.989999-100, 1.0e-100),
-
+            (0.989999 - 100, 1.0e-100),
             (-1.01001, -1.0),
             (-MILLION - 10001, -MILLION),
             (-MILLION - 10000.0000000001, -MILLION),
             (-1.0100001e-100, -1.0e-100),
-
         )
         cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(999900 - SMALL, 999900)
         epsilon = 0.01
-        for (x, y) in goods + bad_goods:
+        for x, y in goods + bad_goods:
             self.assertTrue(fuzzy_greater_than(x, y, epsilon))
-        for (x, y) in bads:
+        for x, y in bads:
             self.assertFalse(fuzzy_greater_than(x, y, epsilon))
 
     def test_caching(self):
-        df = pd.DataFrame({
-            'a': range(3),
-        })
+        df = pd.DataFrame(
+            {
+                'a': range(3),
+            }
+        )
         v = pdc.PandasConstraintVerifier(df)
 
         # First check the max gets computed and cached correctly
@@ -381,37 +378,46 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
         self.assertEqual(v.cache['a']['max'], -3)
 
     def test_verify_min_constraint(self):
-        df = pd.DataFrame({
-            'intzero': range(3),
-            'intzeron': [0, None, 1],
-            'intzeronn': [0, np.nan, 1],
-
-            'realzero': [float(i) for i in range(3)],
-            'realzeron': [0.0, None, 1.0],
-            'realzeronn': [0.0, np.nan, 1.0],
-
-            'int1': range(1, 4),
-            'real1': [float(i) for i in range(1, 4)],
-
-            'sempty': [''] * 3,
-            'semptyn': ['', '', None],
-
-            'sabc': ['a', 'b', 'c'],
-            'sacn': ['a', 'c', None],
-
-        })
+        df = pd.DataFrame(
+            {
+                'intzero': range(3),
+                'intzeron': [0, None, 1],
+                'intzeronn': [0, np.nan, 1],
+                'realzero': [float(i) for i in range(3)],
+                'realzeron': [0.0, None, 1.0],
+                'realzeronn': [0.0, np.nan, 1.0],
+                'int1': range(1, 4),
+                'real1': [float(i) for i in range(1, 4)],
+                'sempty': [''] * 3,
+                'semptyn': ['', '', None],
+                'sabc': ['a', 'b', 'c'],
+                'sacn': ['a', 'c', None],
+            }
+        )
         goods0 = [
             (col, v, p)
             for p in (None, 'closed', 'fuzzy')
             for v in (0, 0.0)
-            for col in ('intzero', 'intzeron', 'intzeronn',
-                        'realzero', 'realzeron', 'realzeronn')
+            for col in (
+                'intzero',
+                'intzeron',
+                'intzeronn',
+                'realzero',
+                'realzeron',
+                'realzeronn',
+            )
         ]
         bads0 = [
             (col, v, 'open')
             for v in (0, 0.0)
-            for col in ('intzero', 'intzeron', 'intzeronn',
-                        'realzero', 'realzeron', 'realzeronn')
+            for col in (
+                'intzero',
+                'intzeron',
+                'intzeronn',
+                'realzero',
+                'realzeron',
+                'realzeronn',
+            )
         ]
 
         goods1 = [
@@ -421,9 +427,7 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             for col in ('int1', 'real1')
         ]
         bads1 = [
-            (col, v, 'open')
-            for v in (1, 1.0)
-            for col in ('int1', 'real1')
+            (col, v, 'open') for v in (1, 1.0) for col in ('int1', 'real1')
         ]
 
         good_strings = [
@@ -449,39 +453,50 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
         goods = goods0 + goods1 + good_strings
         bads = bads0 + bads1 + bad_strings
         cvt = ConstraintVerificationTester(self, df)
-        for (col, value, precision) in goods:
+        for col, value, precision in goods:
             c = MinConstraint(value, precision=precision)
             cvt.verify_min_constraint(col, c).isTrue()
-        for (col, value, precision) in bads:
+        for col, value, precision in bads:
             c = MinConstraint(value, precision=precision)
             cvt.verify_min_constraint(col, c).isFalse()
 
     def test_verify_max_constraint(self):
-        df = pd.DataFrame({
-            'intzero': range(-2, 1),
-            'intzeron': [0, None, -1],
-            'intzeronn': [0, np.nan, -1],
-
-            'realzero': [-float(i) for i in range(3)],
-            'realzeron': [0.0, None, -1.0],
-            'realzeronn': [0.0, np.nan, -1.0],
-
-            'int1': range(-1, 2),
-            'real1': [float(i) for i in range(-1, 2)]
-
-        })
+        df = pd.DataFrame(
+            {
+                'intzero': range(-2, 1),
+                'intzeron': [0, None, -1],
+                'intzeronn': [0, np.nan, -1],
+                'realzero': [-float(i) for i in range(3)],
+                'realzeron': [0.0, None, -1.0],
+                'realzeronn': [0.0, np.nan, -1.0],
+                'int1': range(-1, 2),
+                'real1': [float(i) for i in range(-1, 2)],
+            }
+        )
         goods0 = [
             (col, v, p)
             for p in (None, 'closed', 'fuzzy')
             for v in (0, 0.0)
-            for col in ('intzero', 'intzeron', 'intzeronn',
-                        'realzero', 'realzeron', 'realzeronn')
+            for col in (
+                'intzero',
+                'intzeron',
+                'intzeronn',
+                'realzero',
+                'realzeron',
+                'realzeronn',
+            )
         ]
         bads0 = [
             (col, v, 'open')
             for v in (0, 0.0)
-            for col in ('intzero', 'intzeron', 'intzeronn',
-                        'realzero', 'realzeron', 'realzeronn')
+            for col in (
+                'intzero',
+                'intzeron',
+                'intzeronn',
+                'realzero',
+                'realzeron',
+                'realzeronn',
+            )
         ]
         goods1 = [
             (col, v, p)
@@ -490,47 +505,43 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             for col in ('int1', 'real1')
         ]
         bads1 = [
-            (col, v, 'open')
-            for v in (1, 1.0)
-            for col in ('int1', 'real1')
+            (col, v, 'open') for v in (1, 1.0) for col in ('int1', 'real1')
         ]
 
         goods = goods0 + goods1
         bads = bads0 + bads1
 
         cvt = ConstraintVerificationTester(self, df)
-        for (col, value, precision) in goods:
+        for col, value, precision in goods:
             c = MaxConstraint(value, precision=precision)
             cvt.verify_max_constraint(col, c).isTrue()
-        for (col, value, precision) in bads:
+        for col, value, precision in bads:
             c = MaxConstraint(value, precision=precision)
             cvt.verify_max_constraint(col, c).isFalse()
 
     def test_verify_min_max_length_constraints(self):
-        df = pd.DataFrame({
-            'zero': [''] * 4,
-            'zeroOne': ['', 'a', '1', None],
-            'one': ['α', 'b', 'c', None],       # Note unicode; min max len 1
-            'oneTwo': ['a', 'aa', 'bb', None],
-            'two': ['αα', 'αα', 'ββ', 'ββ'],    # Note unicode; min max len 2
-        })
+        df = pd.DataFrame(
+            {
+                'zero': [''] * 4,
+                'zeroOne': ['', 'a', '1', None],
+                'one': ['α', 'b', 'c', None],  # Note unicode; min max len 1
+                'oneTwo': ['a', 'aa', 'bb', None],
+                'two': ['αα', 'αα', 'ββ', 'ββ'],  # Note unicode; min max len 2
+            }
+        )
         goods = [
             ('zero', 0, 0),
             ('zero', 0, 10),
-
             ('zeroOne', 0, 1),
             ('zeroOne', 0, 5),
-
             ('one', 1, 1),
             ('one', 0, 1),
             ('one', 1, 4),
             ('one', 0, 10),
-
             ('oneTwo', 1, 2),
             ('oneTwo', 0, 2),
             ('oneTwo', 1, 4),
             ('oneTwo', 0, 10),
-
             ('two', 2, 2),
             ('two', 0, 2),
             ('two', 2, 8),
@@ -544,12 +555,12 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             ('two', 3, 1),
         ]
         cvt = ConstraintVerificationTester(self, df)
-        for (col, m, M) in goods:
+        for col, m, M in goods:
             c = MinLengthConstraint(m)
             cvt.verify_min_length_constraint(col, c).isTrue()
             c = MaxLengthConstraint(M)
             cvt.verify_max_length_constraint(col, c).isTrue()
-        for (col, m, M) in bads:
+        for col, m, M in bads:
             c = MinLengthConstraint(m)
             cvt.verify_min_length_constraint(col, c).isFalse()
             if M is not None:
@@ -557,35 +568,37 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                 cvt.verify_max_length_constraint(col, c).isFalse()
 
     def test_verify_tdda_type_constraint(self):
-        df = pd.DataFrame({
-            'b': [True, False],
-            'i': [1, 0],
-            'r': [1.0, 1.1],
-            's': ['1', 'a'],
-            'd': [datetime.datetime(2000,1,1), datetime.datetime(2000,1,2)],
-
-            'bn': [True, None],
-            'in': [1, None],
-            'rn': [1.1, None],
-            'sn': [None, 'a'],
-            'dn': [datetime.datetime(2000,1,1), None],
-        })
+        df = pd.DataFrame(
+            {
+                'b': [True, False],
+                'i': [1, 0],
+                'r': [1.0, 1.1],
+                's': ['1', 'a'],
+                'd': [
+                    datetime.datetime(2000, 1, 1),
+                    datetime.datetime(2000, 1, 2),
+                ],
+                'bn': [True, None],
+                'in': [1, None],
+                'rn': [1.1, None],
+                'sn': [None, 'a'],
+                'dn': [datetime.datetime(2000, 1, 1), None],
+            }
+        )
         goods = [
             ('b', 'bool', 'strict'),
             ('i', 'int', 'strict'),
             ('r', 'real', 'strict'),
             ('s', 'string', 'strict'),
             ('d', 'date', 'strict'),
-
             ('bn', 'bool', 'strict'),
             ('in', 'int', 'sloppy'),  # Fails strict because promoted to real
             ('rn', 'real', 'strict'),
             ('sn', 'string', 'strict'),
             ('dn', 'date', 'strict'),
-
-            ('bn', ['bool', 'string'], 'strict'),   # promotion to object
-            ('in', ['int', 'real'], 'strict'),      # promotion to real
-            ('rn', ['int', 'real'], 'strict'),      # just a looser constraint
+            ('bn', ['bool', 'string'], 'strict'),  # promotion to object
+            ('in', ['int', 'real'], 'strict'),  # promotion to real
+            ('rn', ['int', 'real'], 'strict'),  # just a looser constraint
         ]
         bads = [
             ('in', 'int', 'strict'),
@@ -594,14 +607,15 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             ('r', 'int', 'sloppy'),
             ('s', 'real', 'sloppy'),
             ('d', 'string', 'sloppy'),
-
             ('s', ['real', 'int'], 'sloppy'),  # not sloppy enough for this
         ]
-        strict_cvt = ConstraintVerificationTester(self, df,
-                                                  type_checking='strict')
-        sloppy_cvt = ConstraintVerificationTester(self, df,
-                                                  type_checking='sloppy')
-        for (col, value, strictness) in goods:
+        strict_cvt = ConstraintVerificationTester(
+            self, df, type_checking='strict'
+        )
+        sloppy_cvt = ConstraintVerificationTester(
+            self, df, type_checking='sloppy'
+        )
+        for col, value, strictness in goods:
             cvt = strict_cvt if strictness == 'strict' else sloppy_cvt
             c = TypeConstraint(value)
             if strictness == 'strict':
@@ -610,7 +624,7 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             # also satisfy the sloppy checker
             sloppy_cvt.verify_tdda_type_constraint(col, c).isTrue()
 
-        for (col, value, strictness) in bads:
+        for col, value, strictness in bads:
             c = TypeConstraint(value)
             if strictness == 'sloppy':
                 sloppy_cvt.verify_tdda_type_constraint(col, c).isFalse()
@@ -619,37 +633,35 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             strict_cvt.verify_tdda_type_constraint(col, c).isFalse()
 
     def test_verify_tdda_sign_constraint(self):
-        df = pd.DataFrame({
-            'ipos': [1, 2, 3],
-            'inonneg': [0, 1, 2],
-            'izero': [0, 0, 0],
-            'inonpos': [0, -1, -2],
-            'ineg': [-1, -2, -3],
-            'imixed': [1,0,-1],
-
-            'rpos': [1.0, 2.0, 3.0],
-            'rnonneg': [0.0, 1.0, 1.0],
-            'rzero': [0.0, 0.0, 0.0],
-            'rnonpos': [0.0, -1.0, -1.0],
-            'rneg': [-1.0, -2.0, -3.0],
-            'rmixed': [-1.0, 0.0, 1.0],
-
-            'iposn': [1, 2, np.nan],
-            'inonnegn': [0, 1, np.nan],
-            'izeron': [0, 0, np.nan],
-            'inonposn': [0, -1, np.nan],
-            'inegn': [-1, -2, np.nan],
-            'inmixedn': [-1, 1, np.nan],
-
-            'rposn': [1.0, 2.0, np.nan],
-            'rnonnegn': [0.0, 1.0, np.nan],
-            'rzeron': [0.0, 0.0, np.nan],
-            'rnonposn': [0.0, -1.0, np.nan],
-            'rnegn': [-1.0, -2.0, np.nan],
-            'rnmixedn': [-1.0, 1.0, np.nan],
-
-            'null': [np.nan, np.nan, np.nan],
-        })
+        df = pd.DataFrame(
+            {
+                'ipos': [1, 2, 3],
+                'inonneg': [0, 1, 2],
+                'izero': [0, 0, 0],
+                'inonpos': [0, -1, -2],
+                'ineg': [-1, -2, -3],
+                'imixed': [1, 0, -1],
+                'rpos': [1.0, 2.0, 3.0],
+                'rnonneg': [0.0, 1.0, 1.0],
+                'rzero': [0.0, 0.0, 0.0],
+                'rnonpos': [0.0, -1.0, -1.0],
+                'rneg': [-1.0, -2.0, -3.0],
+                'rmixed': [-1.0, 0.0, 1.0],
+                'iposn': [1, 2, np.nan],
+                'inonnegn': [0, 1, np.nan],
+                'izeron': [0, 0, np.nan],
+                'inonposn': [0, -1, np.nan],
+                'inegn': [-1, -2, np.nan],
+                'inmixedn': [-1, 1, np.nan],
+                'rposn': [1.0, 2.0, np.nan],
+                'rnonnegn': [0.0, 1.0, np.nan],
+                'rzeron': [0.0, 0.0, np.nan],
+                'rnonposn': [0.0, -1.0, np.nan],
+                'rnegn': [-1.0, -2.0, np.nan],
+                'rnmixedn': [-1.0, 1.0, np.nan],
+                'null': [np.nan, np.nan, np.nan],
+            }
+        )
         cvt = ConstraintVerificationTester(self, df)
         for col in df:
             pos = SignConstraint('positive')
@@ -712,86 +724,92 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                 raise Exception('Cannot get here: %s' % col)
 
     def test_verify_tdda_max_nulls_constraint(self):
-        df = pd.DataFrame({
-            'b': [True, False],
-            'i': [1, -1],
-            'r': [1.0, -1.0],
-            's': ['a', 'a'],
-            'd': [datetime.datetime.now()] * 2,
-
-            'bn': [True, None],
-            'in': [1, None],
-            'rn': [None, 1.0],
-            'sn': [None, 'a'],
-            'dn': [datetime.datetime.now(), None],
-
-            'n': [None, None],
-        })
+        df = pd.DataFrame(
+            {
+                'b': [True, False],
+                'i': [1, -1],
+                'r': [1.0, -1.0],
+                's': ['a', 'a'],
+                'd': [datetime.datetime.now()] * 2,
+                'bn': [True, None],
+                'in': [1, None],
+                'rn': [None, 1.0],
+                'sn': [None, 'a'],
+                'dn': [datetime.datetime.now(), None],
+                'n': [None, None],
+            }
+        )
         cvt = ConstraintVerificationTester(self, df)
         c = MaxNullsConstraint(0)
         for col in df:
             if col.endswith('n'):
-                 cvt.verify_max_nulls_constraint(col, c).isFalse()
+                cvt.verify_max_nulls_constraint(col, c).isFalse()
             else:
-                 cvt.verify_max_nulls_constraint(col, c).isTrue()
+                cvt.verify_max_nulls_constraint(col, c).isTrue()
 
     def test_verify_no_duplicates_constraint(self):
-        df = pd.DataFrame({
-            'bu': [True, False, None, None],  # Note two nulls
-            'iu': [1, -1, 0, 2],
-            'ru': [1.0, -1.0, 0.0, 3.0],
-            'su': ['a', 'b', 'c', ''],
-            'du': [datetime.datetime(2000,1,1), datetime.datetime(2000,1,2),
-                   datetime.datetime(2000,1,3), datetime.datetime(2000,1,4)],
-
-            'bd': [True, True, False, None],
-            'id': [1, 2, 2, 3],
-            'rd': [1.0, 2.0, 2.0, 3.0],
-            'sd': ['a', 'a', 'a', 'a'],
-            'dd': [datetime.datetime(2000,1,1)] * 4,
-
-            'IU': [1, -1, None, None],
-            'RU': [1.0, -1.0, None, None],
-            'SU': [None, None, 'c', ''],
-            'DU': [datetime.datetime(2000,1,1), None,
-                   None, datetime.datetime(2000,1,4)],
-
-            'BD': [True, True, False, None],
-            'ID': [1, 2, 2, None],
-            'RD': [None, 2.0, 2.0, None],
-            'SD': ['a', 'a', None, 'b'],
-            'DD': [datetime.datetime(2000,1,1)] * 2 + [None] * 2,
-
-            'nu': [None, None, None, None],
-        })
+        df = pd.DataFrame(
+            {
+                'bu': [True, False, None, None],  # Note two nulls
+                'iu': [1, -1, 0, 2],
+                'ru': [1.0, -1.0, 0.0, 3.0],
+                'su': ['a', 'b', 'c', ''],
+                'du': [
+                    datetime.datetime(2000, 1, 1),
+                    datetime.datetime(2000, 1, 2),
+                    datetime.datetime(2000, 1, 3),
+                    datetime.datetime(2000, 1, 4),
+                ],
+                'bd': [True, True, False, None],
+                'id': [1, 2, 2, 3],
+                'rd': [1.0, 2.0, 2.0, 3.0],
+                'sd': ['a', 'a', 'a', 'a'],
+                'dd': [datetime.datetime(2000, 1, 1)] * 4,
+                'IU': [1, -1, None, None],
+                'RU': [1.0, -1.0, None, None],
+                'SU': [None, None, 'c', ''],
+                'DU': [
+                    datetime.datetime(2000, 1, 1),
+                    None,
+                    None,
+                    datetime.datetime(2000, 1, 4),
+                ],
+                'BD': [True, True, False, None],
+                'ID': [1, 2, 2, None],
+                'RD': [None, 2.0, 2.0, None],
+                'SD': ['a', 'a', None, 'b'],
+                'DD': [datetime.datetime(2000, 1, 1)] * 2 + [None] * 2,
+                'nu': [None, None, None, None],
+            }
+        )
         cvt = ConstraintVerificationTester(self, df)
         c = NoDuplicatesConstraint(True)
         for col in df:
             if col.lower().endswith('u'):
-                 cvt.verify_no_duplicates_constraint(col, c).isTrue()
+                cvt.verify_no_duplicates_constraint(col, c).isTrue()
             else:
-                 cvt.verify_no_duplicates_constraint(col, c).isFalse()
+                cvt.verify_no_duplicates_constraint(col, c).isFalse()
 
     def test_verify_allowed_values_constraint(self):
         DIGITS = list('1234567890')
         PRIMES = list('2357')
         EMPTIES = ['', ' ', '  ', '   ']
         ANDOR = ['and', 'or']
-        df = pd.DataFrame({
-            'digits': list('8275'),
-            'primes1': PRIMES,
-            'primes2': list('3355'),
-            'empties': EMPTIES,
-            'eitheror': ['and', 'not', 'either', 'or'],
-
-            'digitsn': list('827') + [None],
-            'primes1n': PRIMES[:-1] + [np.nan],
-            'primes2n': [None, np.nan, '3', '5'],
-            'emptiesn': [' ', None, '  ', '   '],
-            'eitherorn': ['and', None, 'either', 'or'],
-
-            'null': [None] * 4,
-        })
+        df = pd.DataFrame(
+            {
+                'digits': list('8275'),
+                'primes1': PRIMES,
+                'primes2': list('3355'),
+                'empties': EMPTIES,
+                'eitheror': ['and', 'not', 'either', 'or'],
+                'digitsn': list('827') + [None],
+                'primes1n': PRIMES[:-1] + [np.nan],
+                'primes2n': [None, np.nan, '3', '5'],
+                'emptiesn': [' ', None, '  ', '   '],
+                'eitherorn': ['and', None, 'either', 'or'],
+                'null': [None] * 4,
+            }
+        )
         cvt = ConstraintVerificationTester(self, df)
         c_digits = AllowedValuesConstraint(DIGITS)
         c_primes = AllowedValuesConstraint(PRIMES)
@@ -833,154 +851,198 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
 
 class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
     def testFieldVerification(self):
-        df1 = pd.DataFrame({
+        df1 = pd.DataFrame(
+            {
                 'b': [True, False] * 2,
                 'i': range(1, 5),
                 'r': [float(x) for x in range(1, 5)],
                 's': ['S%s' % x for x in range(1, 5)],
-                'd': [datetime.datetime(2016,1,x) for x in range(1, 5)]
-             })
-        ic1 = FieldConstraints('i',
-                               [TypeConstraint('int'),
-                                MinConstraint(0),
-                                MaxConstraint(10),
-                                SignConstraint('positive'),
-                                MaxNullsConstraint(0),
-                                NoDuplicatesConstraint()])
+                'd': [datetime.datetime(2016, 1, x) for x in range(1, 5)],
+            }
+        )
+        ic1 = FieldConstraints(
+            'i',
+            [
+                TypeConstraint('int'),
+                MinConstraint(0),
+                MaxConstraint(10),
+                SignConstraint('positive'),
+                MaxNullsConstraint(0),
+                NoDuplicatesConstraint(),
+            ],
+        )
 
-        ic2 = FieldConstraints('i',
-                               [TypeConstraint('bool'),
-                                MinConstraint(2),
-                                MaxConstraint(3),
-                                SignConstraint('negative'),
-                                MaxNullsConstraint(0),
-                                NoDuplicatesConstraint()])
+        ic2 = FieldConstraints(
+            'i',
+            [
+                TypeConstraint('bool'),
+                MinConstraint(2),
+                MaxConstraint(3),
+                SignConstraint('negative'),
+                MaxNullsConstraint(0),
+                NoDuplicatesConstraint(),
+            ],
+        )
 
         dfc1 = [ic1]
-        dsc1 = DatasetConstraints(dfc1, allowed_fields=False,
-                                  required_fields=False)
+        dsc1 = DatasetConstraints(
+            dfc1, allowed_fields=False, required_fields=False
+        )
         pdcv1 = pdc.PandasConstraintVerifier(df1)
-        results1 = base.verify(dsc1, list(df1), pdcv1.verifiers(),
-                               n_source_records=10)
-        expected = ('FIELDS:\n\n'
-                    'i: 0 failures  6 passes  '
-                    'type ✓  min ✓  max ✓  sign ✓  '
-                    'max_nulls ✓  no_duplicates ✓\n\n'
-                    'SUMMARY:\n\n'
-                    'Constrained Fields: 1\n'
-                    'Failing Fields: 0 (0.00%)\n\n'
-                    'Constraints: 6\n'
-                    'Failing Constraints: 0 (0.00%)')
+        results1 = base.verify(
+            dsc1, list(df1), pdcv1.verifiers(), n_source_records=10
+        )
+        expected = (
+            'FIELDS:\n\n'
+            'i: 0 failures  6 passes  '
+            'type ✓  min ✓  max ✓  sign ✓  '
+            'max_nulls ✓  no_duplicates ✓\n\n'
+            'SUMMARY:\n\n'
+            'Constrained Fields: 1\n'
+            'Failing Fields: 0 (0.00%)\n\n'
+            'Constraints: 6\n'
+            'Failing Constraints: 0 (0.00%)'
+        )
         self.assertEqual(str(results1), expected)
-        expected = pd.DataFrame(OrderedDict((
-                        ('field', ['i']),
-                        ('failures', [0]),
-                        ('passes', [6]),
-                        ('type', [True]),
-                        ('min', [True]),
-                        ('max', [True]),
-                        ('sign', [True]),
-                        ('max_nulls', [True]),
-                        ('no_duplicates', [True]),
-                        )))
+        expected = pd.DataFrame(
+            OrderedDict(
+                (
+                    ('field', ['i']),
+                    ('failures', [0]),
+                    ('passes', [6]),
+                    ('type', [True]),
+                    ('min', [True]),
+                    ('max', [True]),
+                    ('sign', [True]),
+                    ('max_nulls', [True]),
+                    ('no_duplicates', [True]),
+                )
+            )
+        )
         vdf = pdc.PandasVerification.verification_to_dataframe(results1)
         self.assertTrue(vdf.equals(expected))
 
         df2 = pd.DataFrame({'i': [1, 2, 2, 6, np.nan]})
         dfc2 = [ic2]
-        dsc2 = DatasetConstraints(dfc2, allowed_fields=False,
-                                  required_fields=False)
+        dsc2 = DatasetConstraints(
+            dfc2, allowed_fields=False, required_fields=False
+        )
         pdcv2 = pdc.PandasConstraintVerifier(df2)
-        results2 = base.verify(dsc2, list(df2), pdcv2.verifiers(),
-                               n_source_records=10)
+        results2 = base.verify(
+            dsc2, list(df2), pdcv2.verifiers(), n_source_records=10
+        )
         # expect the boolean->real type constraint to pass with sloppy types
-        expected = ('FIELDS:\n\n'
-                    'i: 5 failures  1 pass  '
-                    'type ✓  min ✗  max ✗  sign ✗  '
-                    'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\n'
-                    'Constrained Fields: 1\n'
-                    'Failing Fields: 1 (100.00%)\n\n'
-                    'Constraints: 6\n'
-                    'Failing Constraints: 5 (83.33%)')
+        expected = (
+            'FIELDS:\n\n'
+            'i: 5 failures  1 pass  '
+            'type ✓  min ✗  max ✗  sign ✗  '
+            'max_nulls ✗  no_duplicates ✗\n\n'
+            'SUMMARY:\n\n'
+            'Constrained Fields: 1\n'
+            'Failing Fields: 1 (100.00%)\n\n'
+            'Constraints: 6\n'
+            'Failing Constraints: 5 (83.33%)'
+        )
         self.assertEqual(str(results2), expected)
-        expected = pd.DataFrame(OrderedDict((
-                        ('field', ['i']),
-                        ('failures', [5]),
-                        ('passes', [1]),
-                        ('type', [True]),
-                        ('min', [False]),
-                        ('max', [False]),
-                        ('sign', [False]),
-                        ('max_nulls', [False]),
-                        ('no_duplicates', [False]),
-                        )))
+        expected = pd.DataFrame(
+            OrderedDict(
+                (
+                    ('field', ['i']),
+                    ('failures', [5]),
+                    ('passes', [1]),
+                    ('type', [True]),
+                    ('min', [False]),
+                    ('max', [False]),
+                    ('sign', [False]),
+                    ('max_nulls', [False]),
+                    ('no_duplicates', [False]),
+                )
+            )
+        )
         vdf = pdc.PandasVerification.verification_to_dataframe(results2)
         self.assertTrue(vdf.equals(expected))
 
         pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
-        results2strict = base.verify(dsc2, list(df2), pdcv2strict.verifiers(),
-                                     n_source_records=10)
+        results2strict = base.verify(
+            dsc2, list(df2), pdcv2strict.verifiers(), n_source_records=10
+        )
         # expect the boolean->real type constraint to fail with strict types
-        expected = ('FIELDS:\n\n'
-                    'i: 6 failures  0 passes  '
-                    'type ✗  min ✗  max ✗  sign ✗  '
-                    'max_nulls ✗  no_duplicates ✗\n\n'
-                    'SUMMARY:\n\n'
-                    'Constrained Fields: 1\n'
-                    'Failing Fields: 1 (100.00%)\n\n'
-                    'Constraints: 6\n'
-                    'Failing Constraints: 6 (100.00%)')
+        expected = (
+            'FIELDS:\n\n'
+            'i: 6 failures  0 passes  '
+            'type ✗  min ✗  max ✗  sign ✗  '
+            'max_nulls ✗  no_duplicates ✗\n\n'
+            'SUMMARY:\n\n'
+            'Constrained Fields: 1\n'
+            'Failing Fields: 1 (100.00%)\n\n'
+            'Constraints: 6\n'
+            'Failing Constraints: 6 (100.00%)'
+        )
         self.assertEqual(str(results2strict), expected)
-        expected = pd.DataFrame(OrderedDict((
-                        ('field', ['i']),
-                        ('failures', [6]),
-                        ('passes', [0]),
-                        ('type', [False]),
-                        ('min', [False]),
-                        ('max', [False]),
-                        ('sign', [False]),
-                        ('max_nulls', [False]),
-                        ('no_duplicates', [False]),
-                        )))
+        expected = pd.DataFrame(
+            OrderedDict(
+                (
+                    ('field', ['i']),
+                    ('failures', [6]),
+                    ('passes', [0]),
+                    ('type', [False]),
+                    ('min', [False]),
+                    ('max', [False]),
+                    ('sign', [False]),
+                    ('max_nulls', [False]),
+                    ('no_duplicates', [False]),
+                )
+            )
+        )
         vdf = pdc.PandasVerification.verification_to_dataframe(results2strict)
         self.assertTrue(vdf.equals(expected))
 
         ic3 = FieldConstraints('i', [TypeConstraint('int')])
         df3 = df1
         dfc3 = [ic3]
-        dsc3 = DatasetConstraints(dfc3, allowed_fields=False,
-                                  required_fields=False)
+        dsc3 = DatasetConstraints(
+            dfc3, allowed_fields=False, required_fields=False
+        )
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(),
-                               n_source_records=10)
-        expected = ('FIELDS:\n\n'
-                    'i: 0 failures  1 pass  type ✓\n\n'
-                    'SUMMARY:\n\n'
-                    'Constrained Fields: 1\n'
-                    'Failing Fields: 0 (0.00%)\n\n'
-                    'Constraints: 1\n'
-                    'Failing Constraints: 0 (0.00%)')
+        results3 = base.verify(
+            dsc3, list(df3), pdcv3.verifiers(), n_source_records=10
+        )
+        expected = (
+            'FIELDS:\n\n'
+            'i: 0 failures  1 pass  type ✓\n\n'
+            'SUMMARY:\n\n'
+            'Constrained Fields: 1\n'
+            'Failing Fields: 0 (0.00%)\n\n'
+            'Constraints: 1\n'
+            'Failing Constraints: 0 (0.00%)'
+        )
         self.assertEqual(str(results3), expected)
-        expected = pd.DataFrame(OrderedDict((
-                        ('field', ['i']),
-                        ('failures', [0]),
-                        ('passes', [1]),
-                        ('type', [True]),
-                   )))
+        expected = pd.DataFrame(
+            OrderedDict(
+                (
+                    ('field', ['i']),
+                    ('failures', [0]),
+                    ('passes', [1]),
+                    ('type', [True]),
+                )
+            )
+        )
         vdf = pdc.PandasVerification.verification_to_dataframe(results3)
         self.assertTrue(vdf.equals(expected))
 
         pdcv3 = pdc.PandasConstraintVerifier(df3)
-        results3 = base.verify(dsc3, list(df3), pdcv3.verifiers(), ascii=True,
-                               n_source_records=10)
-        expected = ('FIELDS:\n\n'
-                    'i: 0 failures  1 pass  type OK\n\n'
-                    'SUMMARY:\n\n'
-                    'Constrained Fields: 1\n'
-                    'Failing Fields: 0 (0.00%)\n\n'
-                    'Constraints: 1\n'
-                    'Failing Constraints: 0 (0.00%)')
+        results3 = base.verify(
+            dsc3, list(df3), pdcv3.verifiers(), ascii=True, n_source_records=10
+        )
+        expected = (
+            'FIELDS:\n\n'
+            'i: 0 failures  1 pass  type OK\n\n'
+            'SUMMARY:\n\n'
+            'Constrained Fields: 1\n'
+            'Failing Fields: 0 (0.00%)\n\n'
+            'Constraints: 1\n'
+            'Failing Constraints: 0 (0.00%)'
+        )
         self.assertEqual(str(results3), expected)
 
     def testElements92(self):
@@ -1060,20 +1122,29 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
     def testDDD_csv(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         o_constraints_path = os.path.join(TESTDATADIR, 'dddo.tdda')
-        v = verify(csv_path, o_constraints_path, backend='original',
-                   verbose=False)
+        v = verify(
+            csv_path, o_constraints_path, backend='original', verbose=False
+        )
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 0)
 
         n_constraints_path = os.path.join(TESTDATADIR, f'dddn.tdda')
-        v = verify(csv_path, n_constraints_path, backend='numpy_nullable',
-                   verbose=False)
+        v = verify(
+            csv_path,
+            n_constraints_path,
+            backend='numpy_nullable',
+            verbose=False,
+        )
         self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 6)
 
         n_constraints_path = os.path.join(TESTDATADIR, f'dddn.tdda')
-        v = verify(csv_path, n_constraints_path, backend='numpy_nullable',
-                   verbose=False)
+        v = verify(
+            csv_path,
+            n_constraints_path,
+            backend='numpy_nullable',
+            verbose=False,
+        )
         self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 6)
 
@@ -1082,8 +1153,12 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             # Find and use metadata
             # This doesn't work with pandas because evennulls and
             # oddnulls end up as strings not booleans.
-            v = verify(csv_path + ':', constraints_path, backend=backend,
-                       verbose=False)
+            v = verify(
+                csv_path + ':',
+                constraints_path,
+                backend=backend,
+                verbose=False,
+            )
             self.assertEqual(v.passes, 61)
             self.assertEqual(v.failures, 0)
 
@@ -1096,26 +1171,41 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         report_formats = ['html', 'txt', 'md', 'json', 'yaml', 'toml']
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
 
-        c = discover(csv_path, constraints_path=actual_constraints,
-                     report_formats=report_formats,
-                     group_rexes=True, backend='original', verbose=False)
+        c = discover(
+            csv_path,
+            constraints_path=actual_constraints,
+            report_formats=report_formats,
+            group_rexes=True,
+            backend='original',
+            verbose=False,
+        )
         with open(actual_constraints2, 'w') as f:
             f.write(c.to_json())
-        v = verify(csv_path, actual_constraints2,
-                   report='fields', backend='original', verbose=False)
-        self.assertFileCorrect(actual_constraints, ref_constraints_tdda,
-                               ignore_patterns=TDDA_MD_IGNORES)
+        v = verify(
+            csv_path,
+            actual_constraints2,
+            report='fields',
+            backend='original',
+            verbose=False,
+        )
+        self.assertFileCorrect(
+            actual_constraints,
+            ref_constraints_tdda,
+            ignore_patterns=TDDA_MD_IGNORES,
+        )
         self.assertEqual(v.passes, 63)
         self.assertEqual(v.failures, 0)
         for fmt in report_formats:
             ref_path = os.path.join(TESTREPORTSDIR, f'ddd-dv.{fmt}')
             actual_path = swap_ext(actual_constraints, fmt)
-            self.assertFileCorrect(actual_path, ref_path,
-                                   ignore_patterns=TDDA_MD_IGNORES)
+            self.assertFileCorrect(
+                actual_path, ref_path, ignore_patterns=TDDA_MD_IGNORES
+            )
 
     def testDiscoverDataframeDates(self):
-        df = pd.DataFrame({'a': [datetime.date(1987, 1, 1),
-                                 datetime.date(2019, 1, 2)]})
+        df = pd.DataFrame(
+            {'a': [datetime.date(1987, 1, 1), datetime.date(2019, 1, 2)]}
+        )
         c = discover(df, verbose=False)
         ac = c.fields['a'].constraints
         self.assertEqual(ac['type'].value, 'date')
@@ -1124,8 +1214,14 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         self.assertEqual(ac['max_nulls'].value, 0)
 
     def testDiscoverDataframeDateTimes(self):
-        df = pd.DataFrame({'a': [datetime.datetime(1987, 1, 1),
-                                 datetime.datetime(2019, 1, 2)]})
+        df = pd.DataFrame(
+            {
+                'a': [
+                    datetime.datetime(1987, 1, 1),
+                    datetime.datetime(2019, 1, 2),
+                ]
+            }
+        )
         c = discover(df, verbose=False)
         ac = c.fields['a'].constraints
         self.assertEqual(ac['type'].value, 'date')
@@ -1181,13 +1277,19 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
                     'min': 1,
                     'max': 3,
                     'sign': 'positive',
-                }
+                },
             }
         }
         constraints = DatasetConstraints()
         constraints.initialize_from_dict(native_definite(cdict))
-        v = detect(df, cdict, per_constraint=True, output_fields=[],
-                      interleave=True, repair=False)
+        v = detect(
+            df,
+            cdict,
+            per_constraint=True,
+            output_fields=[],
+            interleave=True,
+            repair=False,
+        )
         d = v.detected()
         self.assertTrue(not d['a_type_ok'].any())
         self.assertTrue(not d['b_type_ok'].any())
@@ -1201,11 +1303,12 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             {},
             {'fields': 'a'},
             {'fields': 22},
-            {'fields': {
+            {
+                'fields': {
                     'a': 33,
                     'b': 'b',
                 }
-            }
+            },
         ]
         for cdict in cdicts:
             constraints = DatasetConstraints()
@@ -1223,48 +1326,68 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv:')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover(csv_path, constraints_path=tddafile1k,
-                     backend='original', verbose=False)
-        self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
-                                   ignore_lines=[
-                                       '"local_time":',
-                                       '"utc_time":',
-                                       '"creator":',
-                                       '"source":',
-                                       '"host":',
-                                       '"user":',
-                                       '"dataset":',
-                                       '"tddafile":',
-                                   ])
+        c = discover(
+            csv_path,
+            constraints_path=tddafile1k,
+            backend='original',
+            verbose=False,
+        )
+        self.assertTextFileCorrect(
+            tddafile1k,
+            reftddafile1k,
+            rstrip=True,
+            ignore_lines=[
+                '"local_time":',
+                '"utc_time":',
+                '"creator":',
+                '"source":',
+                '"host":',
+                '"user":',
+                '"dataset":',
+                '"tddafile":',
+            ],
+        )
 
     def testDiscover1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         c = discover(pq_path, constraints_path=tddafile1k, verbose=False)
-        self.assertTextFileCorrect(tddafile1k, reftddafile1k, rstrip=True,
-                                   ignore_lines=[
-                                       '"local_time":',
-                                       '"utc_time":',
-                                       '"creator":',
-                                       '"source":',
-                                       '"host":',
-                                       '"user":',
-                                       '"tddafile":',
-                                       '"dataset":'
-                                   ])
+        self.assertTextFileCorrect(
+            tddafile1k,
+            reftddafile1k,
+            rstrip=True,
+            ignore_lines=[
+                '"local_time":',
+                '"utc_time":',
+                '"creator":',
+                '"source":',
+                '"host":',
+                '"user":',
+                '"tddafile":',
+                '"dataset":',
+            ],
+        )
 
     def testVerify1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv:')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify(csv_path, constraints_path=reftddafile1k,
-                   backend='original', verbose=False)
+        v = verify(
+            csv_path,
+            constraints_path=reftddafile1k,
+            backend='original',
+            verbose=False,
+        )
         self.assertEqual(v.passes, 75)
         self.assertEqual(v.failures, 0)
 
         for backend in ('numpy_nullable', 'pyarrow'):
-            v = verify(csv_path, constraints_path=reftddafile1k,
-                       backend=backend, verbose=False)
+            v = verify(
+                csv_path,
+                constraints_path=reftddafile1k,
+                backend=backend,
+                verbose=False,
+            )
             self.assertEqual(v.passes, 75)
             self.assertEqual(v.failures, 0)
 
@@ -1278,8 +1401,12 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
     def testVerify25kAgainst1k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv:')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        v = verify(csv_path, constraints_path=reftddafile1k,
-                   backend='original', verbose=False)
+        v = verify(
+            csv_path,
+            constraints_path=reftddafile1k,
+            backend='original',
+            verbose=False,
+        )
 
         passingConstraints = 55
         failingConstraints = 20
@@ -1289,19 +1416,26 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         self.assertEqual(v.failures, failingConstraints)
 
         # !!! IF THIS FAILS, THE EXAMPLES README NEEDS TO BE UPDATED
-        self.assertEqual(expected, (55, 20), "NUMBERS DIFFER FROM README!")
+        self.assertEqual(expected, (55, 20), 'NUMBERS DIFFER FROM README!')
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        v = verify(csv_path, constraints_path=reftddafile1k,
-                   backend='numpy_nullable', verbose=False)
+        v = verify(
+            csv_path,
+            constraints_path=reftddafile1k,
+            backend='numpy_nullable',
+            verbose=False,
+        )
         self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 20)
 
-        v = verify(csv_path, constraints_path=reftddafile1k,
-                   backend='pyarrow', verbose=False)
+        v = verify(
+            csv_path,
+            constraints_path=reftddafile1k,
+            backend='pyarrow',
+            verbose=False,
+        )
         self.assertEqual(v.passes, 55)
         self.assertEqual(v.failures, 20)
-
 
     def testVerify25kAgainst1k_parquet(self):
         pq_path = os.path.join(TESTDATADIR, 'accounts25k.parquet')
@@ -1328,23 +1462,33 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.txt')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.txt')
-        v = detect(csv_path, constraints_path=reftddafile1k,
-                   outpath=outfile, backend='original', verbose=False)
+        v = detect(
+            csv_path,
+            constraints_path=reftddafile1k,
+            outpath=outfile,
+            backend='original',
+            verbose=False,
+        )
         passingConstraints = 55
         failingConstraints = 20
         passingRecords = 23373
         failingRecords = 1627
-        expected = (passingConstraints, failingConstraints,
-                    passingRecords, failingRecords)
+        expected = (
+            passingConstraints,
+            failingConstraints,
+            passingRecords,
+            failingRecords,
+        )
         self.assertEqual(v.passes, passingConstraints)
         self.assertEqual(v.failures, failingConstraints)
-        self.assertEqual(v.detection.n_passing_records,  passingRecords)
+        self.assertEqual(v.detection.n_passing_records, passingRecords)
         self.assertEqual(v.detection.n_failing_records, failingRecords)
 
         # !!! IF THIS FAILS, THE EXAMPLES README MAY NEED TO BE UPDATED
         # (tdda/constraints/examples/README)
-        self.assertEqual(expected, (55, 20, 23373, 1627),
-                         "NUMBERS DIFFER FROM README!")
+        self.assertEqual(
+            expected, (55, 20, 23373, 1627), 'NUMBERS DIFFER FROM README!'
+        )
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         self.assertTextFileCorrect(outfile, refpath)
@@ -1354,19 +1498,26 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
         refpath = os.path.join(TESTDATADIR, 'ref-detect25k-failures.parquet')
         outfile = os.path.join(self.tmp_dir, 'accounts25kfailures.parquet')
-        v = detect(pq_path, constraints_path=reftddafile1k,
-                                outpath=outfile, verbose=False)
+        v = detect(
+            pq_path,
+            constraints_path=reftddafile1k,
+            outpath=outfile,
+            verbose=False,
+        )
         passingConstraints = 54
         failingConstraints = 21
         passingRecords = 23373
         failingRecords = 1627
-        expected = (passingConstraints, failingConstraints,
-                    passingRecords, failingRecords)
+        expected = (
+            passingConstraints,
+            failingConstraints,
+            passingRecords,
+            failingRecords,
+        )
         self.assertEqual(v.passes, passingConstraints)
         self.assertEqual(v.failures, failingConstraints)
-        self.assertEqual(v.detection.n_passing_records,  passingRecords)
+        self.assertEqual(v.detection.n_passing_records, passingRecords)
         self.assertEqual(v.detection.n_failing_records, failingRecords)
-
 
         actual_df = pd.read_parquet(outfile)
         expected_df = pd.read_parquet(refpath)
@@ -1381,38 +1532,49 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         # self.assertDataFramesEqual(expected_df, from_csv_df,
         #                            outfile, refcsvpath)
 
-
     def testDiscover25k(self):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv:')
         tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
         reftddafile = os.path.join(TESTDATADIR, 'ref-accounts25k.tdda')
-        c = discover(csv_path, constraints_path=tddafile, backend='original',
-                     verbose=False)
-        self.assertTextFileCorrect(tddafile, reftddafile, rstrip=True,
-                                   ignore_lines=[
-                                       '"local_time":',
-                                       '"utc_time":',
-                                       '"creator":',
-                                       '"source":',
-                                       '"host":',
-                                       '"user":',
-                                       '"tddafile":',
-                                       '"dataset":',
-                                   ])
+        c = discover(
+            csv_path,
+            constraints_path=tddafile,
+            backend='original',
+            verbose=False,
+        )
+        self.assertTextFileCorrect(
+            tddafile,
+            reftddafile,
+            rstrip=True,
+            ignore_lines=[
+                '"local_time":',
+                '"utc_time":',
+                '"creator":',
+                '"source":',
+                '"host":',
+                '"user":',
+                '"tddafile":',
+                '"dataset":',
+            ],
+        )
 
 
 class TestPandasMultipleConstraintDetector(
-    ReferenceTestCase,
-    ParquetFileChecker
+    ReferenceTestCase, ParquetFileChecker
 ):
     def testDetectElements118rexToFile(self):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
         detectfile = os.path.join(self.tmp_dir, 'elements118rex_detect.csv')
-        v = detect(df, constraints_path, report='fields',
-                      outpath=detectfile, output_fields=['Z'],
-                      rowindex_is_index=False)
+        v = detect(
+            df,
+            constraints_path,
+            report='fields',
+            outpath=detectfile,
+            output_fields=['Z'],
+            rowindex_is_index=False,
+        )
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         self.assertTextFileCorrect(detectfile, 'elements118rex_detect.csv')
@@ -1421,22 +1583,31 @@ class TestPandasMultipleConstraintDetector(
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        detectfile = os.path.join(self.tmp_dir,
-                                  'elements118rex_detect_perc.csv')
-        v = detect(df, constraints_path, report='fields',
-                   outpath=detectfile, output_fields=['Z'],
-                   per_constraint=True, rowindex_is_index=False)
+        detectfile = os.path.join(
+            self.tmp_dir, 'elements118rex_detect_perc.csv'
+        )
+        v = detect(
+            df,
+            constraints_path,
+            report='fields',
+            outpath=detectfile,
+            output_fields=['Z'],
+            per_constraint=True,
+            rowindex_is_index=False,
+        )
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
-        self.assertTextFileCorrect(detectfile,
-                                   'elements118rex_detect_perc.csv')
+        self.assertTextFileCorrect(
+            detectfile, 'elements118rex_detect_perc.csv'
+        )
 
     def testDetectElements118rexToDataFrame(self):
         csv_path = os.path.join(TESTDATADIR, 'elements118.csv')
         df = pd.read_csv(csv_path)
         constraints_path = os.path.join(TESTDATADIR, 'elements92rex.tdda')
-        v = detect(df, constraints_path, output_fields=['Z'],
-                      rowindex_is_index=False)
+        v = detect(
+            df, constraints_path, output_fields=['Z'], rowindex_is_index=False
+        )
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         ddf = v.detected()
@@ -1460,10 +1631,16 @@ class TestPandasMultipleConstraintDetector(
         constraints_path = os.path.join(TESTDATADIR, 'elements92.tdda')
         detect_name = 'elements118_detect_from_%s.%s' % (input, output)
         detectfile = os.path.join(self.tmp_dir, detect_name)
-        v = detect(df, constraints_path, report='fields',
-                      outpath=detectfile, output_fields=['Z'],
-                      per_constraint=True, index=True,
-                      rownumber_is_index=False)
+        v = detect(
+            df,
+            constraints_path,
+            report='fields',
+            outpath=detectfile,
+            output_fields=['Z'],
+            per_constraint=True,
+            index=True,
+            rownumber_is_index=False,
+        )
         self.assertEqual(v.detection.n_passing_records, 91)
         self.assertEqual(v.detection.n_failing_records, 27)
         if output == 'parquet':
@@ -1474,30 +1651,45 @@ class TestPandasMultipleConstraintDetector(
     def testDetectDuplicates(self):
         iconstraints = FieldConstraints('i', [NoDuplicatesConstraint()])
         sconstraints = FieldConstraints('s', [NoDuplicatesConstraint()])
-        constraints = DatasetConstraints([iconstraints, sconstraints],
-                                         allowed_fields=False,
-                                         required_fields=False)
+        constraints = DatasetConstraints(
+            [iconstraints, sconstraints],
+            allowed_fields=False,
+            required_fields=False,
+        )
 
-        df1 = pd.DataFrame({'i': [1, 2, 3, 4, np.nan],
-                            's': ['one', 'two', 'three', 'four', np.nan]})
+        df1 = pd.DataFrame(
+            {
+                'i': [1, 2, 3, 4, np.nan],
+                's': ['one', 'two', 'three', 'four', np.nan],
+            }
+        )
         n1 = len(df1)
         verifier1 = pdc.PandasConstraintVerifier(df1)
-        v1 = verifier1.detect(constraints,
-                              VerificationClass=pdc.PandasDetection,
-                              n_source_records=n1)
+        v1 = verifier1.detect(
+            constraints,
+            VerificationClass=pdc.PandasDetection,
+            n_source_records=n1,
+        )
         self.assertEqual(v1.passes, 2)
         self.assertEqual(v1.failures, 0)
         ddf1 = v1.detected()
         self.assertIsNone(ddf1)
 
-        df2 = pd.DataFrame({'i': [1, 2, 3, 2, np.nan],
-                            's': ['one', 'two', 'three', 'two', np.nan]})
+        df2 = pd.DataFrame(
+            {
+                'i': [1, 2, 3, 2, np.nan],
+                's': ['one', 'two', 'three', 'two', np.nan],
+            }
+        )
         n2 = len(df2)
         verifier2 = pdc.PandasConstraintVerifier(df2)
-        v2 = verifier2.detect(constraints,
-                              VerificationClass=pdc.PandasDetection,
-                              per_constraint=True, output_fields=['i', 's'],
-                              n_source_records=n2)
+        v2 = verifier2.detect(
+            constraints,
+            VerificationClass=pdc.PandasDetection,
+            per_constraint=True,
+            output_fields=['i', 's'],
+            n_source_records=n2,
+        )
         self.assertEqual(v2.passes, 0)
         self.assertEqual(v2.failures, 2)
         ddf2 = v2.detected()
@@ -1529,30 +1721,35 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
             new_refjson = f.read()
         old_ref = native_definite(json.loads(old_refjson))
         new_ref = native_definite(json.loads(new_refjson))
-        constraints = discover(df, inc_rex=inc_rex, group_rexes=True,
-                               verbose=False)
+        constraints = discover(
+            df, inc_rex=inc_rex, group_rexes=True, verbose=False
+        )
         discovered = native_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         old_ref_fields = old_ref['fields']
         new_ref_fields = new_ref['fields']
-        self.assertEqual(set(discovered_fields.keys()),
-                         set(new_ref_fields.keys()))
+        self.assertEqual(
+            set(discovered_fields.keys()), set(new_ref_fields.keys())
+        )
         for field, ref_field in new_ref_fields.items():
             old_ref_field = old_ref_fields[field]
             new_ref_field = new_ref_fields[field]
             discovered_field = discovered_fields[field]
-            self.assertEqual((field, set(discovered_field.keys())),
-                             (field, set(new_ref_field.keys())))
+            self.assertEqual(
+                (field, set(discovered_field.keys())),
+                (field, set(new_ref_field.keys())),
+            )
             for c, new_expected in new_ref_field.items():
                 actual = discovered_field[c]
                 old_expected = old_ref_field[c]
                 if type(new_expected) == float:
                     self.assertAlmostEqual(actual, new_expected, 4)
                 elif type(new_expected) == list:
-                    self.assertIn(set(actual), [set(new_expected),
-                                                set(old_expected)])
+                    self.assertIn(
+                        set(actual), [set(new_expected), set(old_expected)]
+                    )
                 elif new_expected in ('int', 'real'):  # pandas too broken to
-                                                       # get this right for now
+                    # get this right for now
                     self.assertTrue(actual in ('int', 'real'))
                 else:
                     # regular expressions must match either 'old' or 'new'
@@ -1563,12 +1760,16 @@ class CommandLineHelper:
     @classmethod
     def setUpHelper(cls):
         cls.test_tmpdir = tempfile.gettempdir()
-        cls.test_dirs = ['referencetest_examples', 'constraints_examples',
-                         'rexpy_examples']
+        cls.test_dirs = [
+            'referencetest_examples',
+            'constraints_examples',
+            'rexpy_examples',
+        ]
         cls.constraintsdir = os.path.abspath(os.path.dirname(__file__))
         cls.tddaTopDir = os.path.dirname(os.path.dirname(cls.constraintsdir))
-        cls.testDataDir = os.path.join(cls.test_tmpdir,
-                                       'constraints_examples', 'testdata')
+        cls.testDataDir = os.path.join(
+            cls.test_tmpdir, 'constraints_examples', 'testdata'
+        )
 
         cls.e92csv = os.path.join(cls.testDataDir, 'elements92.csv')
         cls.e118csv = os.path.join(cls.testDataDir, 'elements118.csv')
@@ -1597,30 +1798,39 @@ class CommandLineHelper:
             pass
         argv = ['tdda', 'discover', self.e92csv, self.e92tdda, '-B', 'o']
         self.execute_command(argv)
-        self.assertTextFileCorrect(self.e92tdda, 'elements92_pandas.tdda',
-                                   rstrip=True,
-                                   ignore_substrings=[
-                                       '"local_time":', '"utc_time":',
-                                       '"source":', '"host":', '"user":',
-                                       '"tddafile":', '"creator":',
-                                   ])
+        self.assertTextFileCorrect(
+            self.e92tdda,
+            'elements92_pandas.tdda',
+            rstrip=True,
+            ignore_substrings=[
+                '"local_time":',
+                '"utc_time":',
+                '"source":',
+                '"host":',
+                '"user":',
+                '"tddafile":',
+                '"creator":',
+            ],
+        )
         os.remove(self.e92tdda)
 
     def testVerifyE92Cmd(self):
         argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct]
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 72\n'
-            'Failing Constraints: 0 (0.00%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 72\nFailing Constraints: 0 (0.00%)'
+            )
+        )
 
     def testVerifyE118Cmd(self):
         argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct]
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 72\n'
-            'Failing Constraints: 15 (20.83%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 72\nFailing Constraints: 15 (20.83%)'
+            )
+        )
         self.assertStringCorrect(str(result), 'elements118_verify_92_out.txt')
 
     def testVerifyOptionFlags(self):
@@ -1630,70 +1840,123 @@ class CommandLineHelper:
         self.assertTrue('✓' in result)
         self.assertFalse('OK' in result)
 
-        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
-                '--ascii']
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct, '--ascii']
         result = self.execute_command(argv)
         self.assertEqual(len(result.splitlines()), 41)
         self.assertTrue('OK' in result)
 
-        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
-                '--fields']
+        argv = [
+            'tdda',
+            'verify',
+            self.e92csv,
+            self.e92tdda_correct,
+            '--fields',
+        ]
         result = self.execute_command(argv)
         self.assertEqual(len(result.splitlines()), 8)
 
-        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct,
-                '--all']
+        argv = ['tdda', 'verify', self.e92csv, self.e92tdda_correct, '--all']
         result = self.execute_command(argv)
         self.assertEqual(len(result.splitlines()), 41)
 
-        argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
-                '--fields', '--type_checking', 'strict', '-B' 'o']
+        argv = [
+            'tdda',
+            'verify',
+            self.dddcsv,
+            self.dddtdda_correct,
+            '--fields',
+            '--type_checking',
+            'strict',
+            '-Bo',
+        ]
         result = self.execute_command(argv)
         # 5 type-failures (plus min_length on elevens, considered as an int)
-        self.assertTrue(result.strip().endswith(
-           'Constraints: 61\n'
-           'Failing Constraints: 6 (9.84%)'
-        ))
-        argv = ['tdda', 'verify', self.dddcsv, self.dddtdda_correct,
-                '--fields', '--type_checking', 'sloppy', '-B', 'original']
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 61\nFailing Constraints: 6 (9.84%)'
+            )
+        )
+        argv = [
+            'tdda',
+            'verify',
+            self.dddcsv,
+            self.dddtdda_correct,
+            '--fields',
+            '--type_checking',
+            'sloppy',
+            '-B',
+            'original',
+        ]
         result = self.execute_command(argv)
         # 1 failure, because elevens is treated as an int, so min_length fails
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 61\n'
-            'Failing Constraints: 1 (1.64%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 61\nFailing Constraints: 1 (1.64%)'
+            )
+        )
 
     def testVerifyEpsilon(self):
-        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
-                '--fields']
+        argv = [
+            'tdda',
+            'verify',
+            self.e118csv,
+            self.e92tdda_correct,
+            '--fields',
+        ]
         result = self.execute_command(argv)
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 72\n'
-            'Failing Constraints: 15 (20.83%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 72\nFailing Constraints: 15 (20.83%)'
+            )
+        )
 
-        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
-                '--fields', '--epsilon', '0.5']
+        argv = [
+            'tdda',
+            'verify',
+            self.e118csv,
+            self.e92tdda_correct,
+            '--fields',
+            '--epsilon',
+            '0.5',
+        ]
         result = self.execute_command(argv)
         # a few fewer failures, because of epsilon
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 72\n'
-            'Failing Constraints: 12 (16.67%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 72\nFailing Constraints: 12 (16.67%)'
+            )
+        )
 
-        argv = ['tdda', 'verify', self.e118csv, self.e92tdda_correct,
-                '--fields', '--epsilon', '10']
+        argv = [
+            'tdda',
+            'verify',
+            self.e118csv,
+            self.e92tdda_correct,
+            '--fields',
+            '--epsilon',
+            '10',
+        ]
         result = self.execute_command(argv)
         # even fewer failures, because of massive epsilon
-        self.assertTrue(result.strip().endswith(
-            'Constraints: 72\n'
-            'Failing Constraints: 11 (15.28%)'
-        ))
+        self.assertTrue(
+            result.strip().endswith(
+                'Constraints: 72\nFailing Constraints: 11 (15.28%)'
+            )
+        )
 
     def testDetectE118Cmd(self):
-        argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
-                self.e92bads1, '--per-constraint', '--output-fields',
-                '--index', '-B', 'o']
+        argv = [
+            'tdda',
+            'detect',
+            self.e118csv,
+            self.e92tdda_correct,
+            self.e92bads1,
+            '--per-constraint',
+            '--output-fields',
+            '--index',
+            '-B',
+            'o',
+        ]
         result = self.execute_command(argv)
         self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads1))
@@ -1701,20 +1964,36 @@ class CommandLineHelper:
         os.remove(self.e92bads1)
 
     def testDetectE118CmdInterleaved(self):
-        argv = ['tdda', 'detect', self.e118csv, self.e92tdda_correct,
-                self.e92bads3, '--per-constraint', '--output-fields',
-                '--interleave', '-B' 'o']
+        argv = [
+            'tdda',
+            'detect',
+            self.e118csv,
+            self.e92tdda_correct,
+            self.e92bads3,
+            '--per-constraint',
+            '--output-fields',
+            '--interleave',
+            '-Bo',
+        ]
         result = self.execute_command(argv)
         self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads3))
-        self.assertTextFileCorrect(self.e92bads3,
-                                   'detect-els-cmdline-interleaved.csv')
+        self.assertTextFileCorrect(
+            self.e92bads3, 'detect-els-cmdline-interleaved.csv'
+        )
         os.remove(self.e92bads3)
 
     def testDetectE118ParquetCmd(self):
-        argv = ['tdda', 'detect', self.e118parquet, self.e92tdda_correct,
-                self.e92bads2, '--per-constraint', '--output-fields',
-                '--index']
+        argv = [
+            'tdda',
+            'detect',
+            self.e118parquet,
+            self.e92tdda_correct,
+            self.e92bads2,
+            '--per-constraint',
+            '--output-fields',
+            '--index',
+        ]
         result = self.execute_command(argv)
         self.assertTrue(result.strip().endswith(self.E118summary))
         self.assertTrue(os.path.exists(self.e92bads2))
@@ -1757,52 +2036,72 @@ class TestPandasCommandLine(ReferenceTestCase, CommandLineHelper):
         try:
             result = check_shell_output(argv)
         except:
-            print('\n\nIf this test fails, it often means you do not have a '
-                  'working command-line\ninstallation of the tdda command.\n\n'
-                  'To test this, try typing\n\n  tdda version\n\n')
+            print(
+                '\n\nIf this test fails, it often means you do not have a '
+                'working command-line\ninstallation of the tdda command.\n\n'
+                'To test this, try typing\n\n  tdda version\n\n'
+            )
             raise
         return result
 
 
 class TestUtilityFunctions(ReferenceTestCase):
     def testVerificationFieldIdentifier(self):
-        for name in ('a_type_ok',
-                     'a_min_ok',
-                     'a_min_length_ok',
-                     'a_max_ok',
-                     'a_max_length_ok',
-                     'a_sign_ok',
-                     'a_nonnull_ok',
-                     'a_nodups_ok',
-                     'a_values_ok',
-                     'a_rex_ok',
-                     'a_min_ok',
-                     'a_values_ok_68'):
+        for name in (
+            'a_type_ok',
+            'a_min_ok',
+            'a_min_length_ok',
+            'a_max_ok',
+            'a_max_length_ok',
+            'a_sign_ok',
+            'a_nonnull_ok',
+            'a_nodups_ok',
+            'a_values_ok',
+            'a_rex_ok',
+            'a_min_ok',
+            'a_values_ok_68',
+        ):
             self.assertTrue(pdc.is_ver_field(name, 'a'))
 
-        for name in ('a_b',
-                     'a_b_ok',
-                     'a_b_min_ok',
-                     'a_b_min_ok_68',
-                     'a_min_ok68',
-                     'a_transform_ok'):
+        for name in (
+            'a_b',
+            'a_b_ok',
+            'a_b_min_ok',
+            'a_b_min_ok_68',
+            'a_min_ok68',
+            'a_transform_ok',
+        ):
             self.assertFalse(pdc.is_ver_field(name, 'a'))
 
 
 class TestUtilityFunctions2(ReferenceTestCase):
-
     def testDateInferrer(self):
-        df = pd.DataFrame({
-            'isod': ['2024-01-01', None, '2024-01-20', None],
-            'isodt': ['2024-01-01T12:34:56', None, '2024-01-20T21:22:23', None],
-            'eurod': ['01-01-2024', None, '20-01-2024', None],
-            'eurodt': ['01-01-2024:12:34:56', None, '20-01-2024:21:22:23',
-                       None],
-            'usd': ['01-01-2024', None, '01-20-2024', None],
-            'usdt': ['01-01-2024:12:34:56', None, '01-20-2024:21:22:23',
-                     None],
-            'nodate': ['foo', None, 'bar', None]
-        })
+        df = pd.DataFrame(
+            {
+                'isod': ['2024-01-01', None, '2024-01-20', None],
+                'isodt': [
+                    '2024-01-01T12:34:56',
+                    None,
+                    '2024-01-20T21:22:23',
+                    None,
+                ],
+                'eurod': ['01-01-2024', None, '20-01-2024', None],
+                'eurodt': [
+                    '01-01-2024:12:34:56',
+                    None,
+                    '20-01-2024:21:22:23',
+                    None,
+                ],
+                'usd': ['01-01-2024', None, '01-20-2024', None],
+                'usdt': [
+                    '01-01-2024:12:34:56',
+                    None,
+                    '01-20-2024:21:22:23',
+                    None,
+                ],
+                'nodate': ['foo', None, 'bar', None],
+            }
+        )
         expected_fmt = {
             'isod': '%Y-%m-%d',
             'isodt': 'ISO8601',
@@ -1810,23 +2109,29 @@ class TestUtilityFunctions2(ReferenceTestCase):
             'eurodt': '%d-%m-%Y:%H:%M:%S',
             'usd': '%m-%d-%Y',
             'usdt': '%m-%d-%Y:%H:%M:%S',
-            'nodate': None
+            'nodate': None,
         }
 
         dtdt = datetime.datetime
         date_col = [dtdt(2024, 1, 1), None, dtdt(2024, 1, 20), None]
-        dt_col = [dtdt(2024, 1, 1, 12, 34, 56), None,
-                  dtdt(2024, 1, 20, 21, 22, 23), None]
+        dt_col = [
+            dtdt(2024, 1, 1, 12, 34, 56),
+            None,
+            dtdt(2024, 1, 20, 21, 22, 23),
+            None,
+        ]
 
-        expected_df = pd.DataFrame({
-            'isod': date_col,
-            'isodt': dt_col,
-            'eurod': date_col,
-            'eurodt': dt_col,
-            'usd': date_col,
-            'usdt': dt_col,
-            'nodate': df['nodate'],
-        })
+        expected_df = pd.DataFrame(
+            {
+                'isod': date_col,
+                'isodt': dt_col,
+                'eurod': date_col,
+                'eurodt': dt_col,
+                'usd': date_col,
+                'usdt': dt_col,
+                'nodate': df['nodate'],
+            }
+        )
 
         for k in df:
             f = infer_date_format(df[k])
@@ -1849,44 +2154,30 @@ class TestUtilityFunctions2(ReferenceTestCase):
         dates = {
             '2024-01-20': R.ISO_DATEISH,
             '2024/01/20': R.ISO_DATEISH,
-
             '2024-01-20T12:34:56': R.ISO_DATETIMEISH,
             '2024-01-20 12:34:56.12345': R.ISO_DATETIMEISH,
             '2024/01/20T12:34:56': R.ISO_DATETIMEISH,
             '2024/01/20 12:34:56.12345': R.ISO_DATETIMEISH,
-
-
             '20-01-2024': R.DATEISH4Y,
             '20/01/2024': R.DATEISH4Y,
-
             '01-20-2024': R.DATEISH4Y,
             '01/20/2024': R.DATEISH4Y,
-
             '20-01-2024': R.DATEISH4Y,
             '20/01/2024': R.DATEISH4Y,
-
             '01-20-2024': R.DATEISH4Y,
             '01/20/2024': R.DATEISH4Y,
-
             '20-01-2024T12:34:56': R.DATEISH4Y,
             '20-01-2024T12:34:56.123456': R.DATEISH4Y,
-
-
             '20-01-24': R.DATEISH2Y,
             '20/01/24': R.DATEISH2Y,
-
             '01-20-24': R.DATEISH2Y,
             '01/20/24': R.DATEISH2Y,
-
             '20-01-24': R.DATEISH2Y,
             '20/01/24': R.DATEISH2Y,
-
             '01-20-24': R.DATEISH2Y,
             '01/20/24': R.DATEISH2Y,
-
             '20-01-24T12:34:56': R.DATEISH2Y,
             '20-01-24T12:34:56.123456': R.DATEISH2Y,
-
         }
 
         for k, r in dates.items():
@@ -1903,20 +2194,19 @@ class TestUtilityFunctions2(ReferenceTestCase):
         sep_dates = {
             '20-01-2024': (
                 R.SEPS4Y,
-                Separators('-', None, None, False, False, '')
+                Separators('-', None, None, False, False, ''),
             ),
             '20-01-2024T12:34:56': (
                 R.SEPS4Y,
-                Separators('-', 'T', ':', True, False, 'T%H:%M:%S')
+                Separators('-', 'T', ':', True, False, 'T%H:%M:%S'),
             ),
-
             '20-01-2024T12:34:56.123': (
                 R.SEPS4Y,
-                Separators('-', 'T', ':', True, True, 'T%H:%M:%S.%f')
+                Separators('-', 'T', ':', True, True, 'T%H:%M:%S.%f'),
             ),
             '20/01/2024 12.34.56.123': (
                 R.SEPS4Y,
-                Separators('/', ' ', '.', True, True, ' %H.%M.%S.%f')
+                Separators('/', ' ', '.', True, True, ' %H.%M.%S.%f'),
             ),
         }
         for k, (r, expected) in sep_dates.items():
@@ -1926,8 +2216,6 @@ class TestUtilityFunctions2(ReferenceTestCase):
                 print('--> expected', expected)
                 print()
             self.assertEqual(actual, expected)
-
-
 
 
 TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATADIR)

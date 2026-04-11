@@ -4,7 +4,7 @@
 Support for database constraint verification from the command-line tool
 """
 
-USAGE = '''
+USAGE = """
 
 Parameters:
 
@@ -17,7 +17,7 @@ Parameters:
 
   * constraints.tdda is a JSON .tdda file constaining constraints.
 
-'''
+"""
 
 import argparse
 import os
@@ -26,16 +26,27 @@ import sys
 from tdda import __version__
 from tdda.constraints.flags import verify_parser, verify_flags
 from tdda.constraints.db.constraints import verify_db_table
-from tdda.constraints.db.drivers import (database_connection, parse_table_name,
-                                         database_arg_parser,
-                                         database_arg_flags)
+from tdda.constraints.db.drivers import (
+    database_connection,
+    parse_table_name,
+    database_arg_parser,
+    database_arg_flags,
+)
 from tdda.utils import cprint
 
 
-def verify_database_table_cli(table, constraints_path,
-                              conn=None, dbtype=None, db=None,
-                              host=None, port=None, user=None,
-                              password=None, **kwargs):
+def verify_database_table_cli(
+    table,
+    constraints_path,
+    conn=None,
+    dbtype=None,
+    db=None,
+    host=None,
+    port=None,
+    user=None,
+    password=None,
+    **kwargs,
+):
     """
     Verify the given database table, against constraints in the .tdda
     file specified.
@@ -43,17 +54,26 @@ def verify_database_table_cli(table, constraints_path,
     Prints results to stdout.
     """
     (table, dbtype, conn_file) = parse_table_name(table, dbtype)
-    db = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                             host=host, port=port, conn_file=conn_file,
-                             user=user, password=password)
+    db = database_connection(
+        table=table,
+        conn=conn,
+        dbtype=dbtype,
+        db=db,
+        host=host,
+        port=port,
+        conn_file=conn_file,
+        user=user,
+        password=password,
+    )
     cprint(verify_db_table(dbtype, db, table, constraints_path, **kwargs))
 
 
 def get_verify_params(args):
     parser = database_arg_parser(verify_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
-    parser.add_argument('constraints', nargs='?',
-                        help='constraints file to verify against')
+    parser.add_argument(
+        'constraints', nargs='?', help='constraints file to verify against'
+    )
     params = {}
     flags = database_arg_flags(verify_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
@@ -81,4 +101,3 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
-

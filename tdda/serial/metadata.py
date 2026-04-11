@@ -477,8 +477,8 @@ class SerialMetadata:
         extra_kwargs='warn',
         **kw,
     ):
-#        if datetime_format is not None and date_format is None:
-#            date_format = datetime_format
+        #        if datetime_format is not None and date_format is None:
+        #            date_format = datetime_format
         if kw:
             if extra_kwargs in ('error', 'warn'):
                 from pprint import pformat

@@ -7,6 +7,7 @@ import sys
 THISDIR = os.path.dirname(__file__)
 EXAMPLESDIR = os.path.join(THISDIR, 'examples', 'reference')
 
+
 def make_parquet_counterparts():
     paths = [
         os.path.abspath(os.path.join(EXAMPLESDIR, f))

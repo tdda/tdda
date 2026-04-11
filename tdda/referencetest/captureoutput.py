@@ -19,6 +19,7 @@ class CaptureOutput:
         c.restore()
         printed = str(c)
     """
+
     def __init__(self, echo=False, stream='stdout'):
         self.stream = stream
         if stream == 'stdout':
@@ -51,7 +52,6 @@ class CaptureOutput:
         return ''.join(self.out)
 
 
-
 @contextmanager
 def capture_output(*args, **kw):
     # Code to acquire resource, e.g.:
@@ -61,5 +61,3 @@ def capture_output(*args, **kw):
     finally:
         # Code to release resource, e.g.:
         c.restore()
-
-

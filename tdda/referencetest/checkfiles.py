@@ -17,7 +17,10 @@ import tempfile
 from collections import namedtuple
 
 from tdda.referencetest.basecomparison import (
-    BaseComparison, Diffs, copycmd, FailureDiffs
+    BaseComparison,
+    Diffs,
+    copycmd,
+    FailureDiffs,
 )
 from tdda.referencetest.utils import get_encoding, FileType
 
@@ -29,6 +32,7 @@ BinaryInfo = namedtuple(
 
 def perms_ok(n_permutations, max_permutations):
     return max_permutations is None or n_permutations <= max_permutations
+
 
 class FilesComparison(BaseComparison):
     def check_strings(
@@ -263,8 +267,11 @@ class FilesComparison(BaseComparison):
             )
             msgs.add_reconstruction(reconstruction)
 
-        if permutable and ndiffs > 0 and perms_ok(ndiffs,
-                                                  max_permutation_cases):
+        if (
+            permutable
+            and ndiffs > 0
+            and perms_ok(ndiffs, max_permutation_cases)
+        ):
             ndiffs = self.check_for_permutation_failures(failure_cases)
 
         if ndiffs > 0:
@@ -987,7 +994,6 @@ class FilesComparison(BaseComparison):
             elif not create_temporaries:
                 self.info(msgs, 'No files available for comparison')
 
-
         if reconstruction and create_temporaries:
             # show diffs after ignores and removals have been collapsed
             differ = ''
@@ -1008,23 +1014,25 @@ class FilesComparison(BaseComparison):
             )
             actualsSame = (
                 '\n'.join(actual).strip()
-                    == reconstruction.actual_lines().strip()
+                == reconstruction.actual_lines().strip()
             )
             expectedsSame = (
                 '\n'.join(expected).strip()
-                    == reconstruction.expected_lines().strip()
+                == reconstruction.expected_lines().strip()
             )
-            bothSame = (actualsSame and expectedsSame)
+            bothSame = actualsSame and expectedsSame
             if bothSame:
                 # Don't print second diff line and take the 'raw'
                 # out ot raw_differ
                 raw_differ = self.compare_with(
-                    raw_actual_path, raw_expected_path,
-                    qualifier=None, binary=binary,
+                    raw_actual_path,
+                    raw_expected_path,
+                    qualifier=None,
+                    binary=binary,
                 )
             else:
                 rec_differ = self.compare_with(
-                        diffActual, diffExpected, qualifier='post-processed'
+                    diffActual, diffExpected, qualifier='post-processed'
                 )
 
         self.info(msgs, raw_differ)

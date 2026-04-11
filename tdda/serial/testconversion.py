@@ -756,9 +756,11 @@ class TestInference(ReferenceTestCase):
 
     def testInferMetadataTiny1cdq(self):
         md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'), verbosity=0)
-        self.assertStringCorrect(md.to_json(),
-                                 tdpath('tiny1ndq-inferred.serial'),
-                                 ignore_lines=self.IGL)
+        self.assertStringCorrect(
+            md.to_json(),
+            tdpath('tiny1ndq-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
 
     def test_careful_split(self):
         # Trivial cases
@@ -819,9 +821,6 @@ class TestInference(ReferenceTestCase):
             tdpath('minimal-inferred.serial'),
             ignore_lines=self.IGL,
         )
-
-
-
 
 
 class TestSerialUtilityFunction(ReferenceTestCase):

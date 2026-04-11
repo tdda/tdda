@@ -12,8 +12,9 @@ LINE_NUMBER_RE = re.compile(r'^@@\s+\-(\d+)(,\d+)?\s+\+(\d+)(,\d+)?\s+@@$')
 TOGETHER = True
 GROUP_RE = False
 
-Pair = namedtuple('Pair',
-                  'left_content right_content left_line_num right_line_num')
+Pair = namedtuple(
+    'Pair', 'left_content right_content left_line_num right_line_num'
+)
 
 
 def diffs(left_path, right_path, filetype):
@@ -21,8 +22,9 @@ def diffs(left_path, right_path, filetype):
     if left_lines is not None:
         right_lines = protected_readlines(right_path, filetype)
         if right_lines is not None:
-            return difflib.unified_diff(left_lines, right_lines,
-                                        left_path, right_path)
+            return difflib.unified_diff(
+                left_lines, right_lines, left_path, right_path
+            )
     return None
 
 
@@ -77,8 +79,9 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
             for p in pairs:
                 print(p.left_content, end='')
                 print(p.right_content, end='')
-                patterns = extract([p.left_content, p.right_content],
-                                   tag=group)
+                patterns = extract(
+                    [p.left_content, p.right_content], tag=group
+                )
                 if len(patterns) == 1:
                     rex = patterns.pop()
                     print('/%s' % rex)
@@ -87,16 +90,24 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
                     print('*** Could not find RE.')
                     fails.append((left, right))
                 print()
-            print('%d pattern%s for %d line pair%s'
-                  % (len(rexes), 's' if len(rexes) != 1 else '',
-                     len(pairs), 's' if len(pairs) != 1 else ''))
+            print(
+                '%d pattern%s for %d line pair%s'
+                % (
+                    len(rexes),
+                    's' if len(rexes) != 1 else '',
+                    len(pairs),
+                    's' if len(pairs) != 1 else '',
+                )
+            )
             for r, lines in sorted(rexes.items()):
                 print(' ', r)
                 print('     ', lines)
             if fails:
                 print()
-            print('%d pair%s of lines failed:'
-                  % (len(fails), 's' if len(fails) != 1 else ''))
+            print(
+                '%d pair%s of lines failed:'
+                % (len(fails), 's' if len(fails) != 1 else '')
+            )
             for left, right in fails:
                 print(left)
                 print(right)
@@ -108,10 +119,14 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
 def add_pairs(pairs, L, R, left_num, right_num, offset=0):
     if L or R:
         for i in range(max(len(L), len(R))):
-            pairs.append(Pair(L[i] if i < len(L) else '',
-                              R[i] if i < len(R) else '',
-                              (left_num + i + offset) if i < len(L) else 0,
-                              (right_num + i + offset) if i < len(R) else 0))
+            pairs.append(
+                Pair(
+                    L[i] if i < len(L) else '',
+                    R[i] if i < len(R) else '',
+                    (left_num + i + offset) if i < len(L) else 0,
+                    (right_num + i + offset) if i < len(R) else 0,
+                )
+            )
 
 
 if __name__ == '__main__':

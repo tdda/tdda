@@ -14,12 +14,12 @@ import yaml
 from fnmatch import fnmatch
 
 
-#jythonc needs explicit import of utf-8 and iso-8859-1/latin1 encoding packages
-import encodings.aliases     # type:ignore
+# jythonc needs explicit import of utf-8 and iso-8859-1/latin1 encoding packages
+import encodings.aliases  # type:ignore
 import encodings.utf_8
-import encodings.ascii       # type:ignore
-import encodings.latin_1     # type:ignore
-import encodings.iso8859_1   # type:ignore
+import encodings.ascii  # type:ignore
+import encodings.latin_1  # type:ignore
+import encodings.iso8859_1  # type:ignore
 
 
 from collections import namedtuple
@@ -28,10 +28,12 @@ import numpy as np
 import pandas as pd
 
 import rich
+
 rprint = rich.print
 rich.reconfigure(highlight=False, soft_wrap=True)
 
 from rich.console import Console
+
 stdout_console = Console(highlight=False, soft_wrap=True)
 stderr_console = Console(stderr=True, highlight=False, soft_wrap=True)
 
@@ -57,14 +59,15 @@ TDDA_NF_MAP = None  # build lazily
 
 ALT_NULL_REP = '∅'
 ALT_OTHER_REP = '★'
-U_ALT_NULL_REP = u'∅'
+U_ALT_NULL_REP = '∅'
 ENDASH = '–'  # chr(0x2013)
 MINUS_SIGN = '−'  # chr(0x2212)
 
 
+TDDAPathInfo = namedtuple(
+    'TDDAPathInfo', 'path stem ext md_path find_md combined'
+)
 
-TDDAPathInfo = namedtuple('TDDAPathInfo',
-                          'path stem ext md_path find_md combined')
 
 class TDDAError(Exception):
     pass
@@ -75,44 +78,56 @@ class XMLError(TDDAError):
 
 
 class XML:
-
-    def __init__(self, indentLevel=0, tabSize=4, omitHeader=0,
-                 output=None, html=0, xsl='', css=[],
-                 title='', padEmptyElements=0, content='',
-                 inputEncoding=DEFAULT_INPUT_ENCODING,
-                 headerAttr={}, useHardTabs=True,
-                 float_precision=None, debug=False,
-                 altnbsp=None, hardTabs=True):
+    def __init__(
+        self,
+        indentLevel=0,
+        tabSize=4,
+        omitHeader=0,
+        output=None,
+        html=0,
+        xsl='',
+        css=[],
+        title='',
+        padEmptyElements=0,
+        content='',
+        inputEncoding=DEFAULT_INPUT_ENCODING,
+        headerAttr={},
+        useHardTabs=True,
+        float_precision=None,
+        debug=False,
+        altnbsp=None,
+        hardTabs=True,
+    ):
         """Initialize XML.
 
-           An XML declaration is put in unless
-                omitHeader = 1 or indentLevel > 0.
-           If html is set to 5, an HTML5 head <!DOCTYPE html>
-           is used in place of the XML header.
+        An XML declaration is put in unless
+             omitHeader = 1 or indentLevel > 0.
+        If html is set to 5, an HTML5 head <!DOCTYPE html>
+        is used in place of the XML header.
 
-           If tabSize is given, nested elements are indented by this many
-                spaced (tabified).
+        If tabSize is given, nested elements are indented by this many
+             spaced (tabified).
 
-           If output is set to 'stdout' (in any case),
-           output is written to STDOUT on the fly and flushed.
-           If it is set to anything else, this is used as a filename
-           to write to, and again output is written on the fly and flushed.
+        If output is set to 'stdout' (in any case),
+        output is written to STDOUT on the fly and flushed.
+        If it is set to anything else, this is used as a filename
+        to write to, and again output is written on the fly and flushed.
 
-           If html = 1, an XHTML file is written with
-                - a title in the head if provided
-                - a list of CSS stylesheets in the head, if css is provided
-                - a head if a title or a css list is provided
+        If html = 1, an XHTML file is written with
+             - a title in the head if provided
+             - a list of CSS stylesheets in the head, if css is provided
+             - a head if a title or a css list is provided
 
-           If padEmptyElements = 1, these get a non-breaking space.
+        If padEmptyElements = 1, these get a non-breaking space.
 
-           If xsl is given, this is added to the XML as an xsl-stylesheet
-                processing instruction.
+        If xsl is given, this is added to the XML as an xsl-stylesheet
+             processing instruction.
 
-           If context is given, self.contentType is set to the
-                appropriate string.
+        If context is given, self.contentType is set to the
+             appropriate string.
 
-           If inputEncoding is given, this specifies the encoding input
-                data is in. Output encoding is always utf-8."""
+        If inputEncoding is given, this specifies the encoding input
+             data is in. Output encoding is always utf-8."""
 
         self.indentLevel = indentLevel
         self.tabSize = tabSize
@@ -123,8 +138,9 @@ class XML:
         self.out = None
         self.tab = '\t' if useHardTabs else '        '
         self.float_precision = float_precision
-        self.float_fmt = (('%%.%df' % float_precision) if float_precision
-                                                       else None)
+        self.float_fmt = (
+            ('%%.%df' % float_precision) if float_precision else None
+        )
         self.altnbsp = None
         self.debug = debug
         self.hardTabs = hardTabs
@@ -134,16 +150,21 @@ class XML:
                 self.out = sys.stdout
             elif output:
                 self.out = open(self.output, 'wb')
-        if indentLevel == 0 and not(omitHeader):
+        if indentLevel == 0 and not (omitHeader):
             extraAttr = ''
             if html == 5:
                 self.xmlbuf.append('<!DOCTYPE html>\n')
             else:
                 if headerAttr:
-                    extraAttr = ''.join([' %s="%s"' % (key, headerAttr[key])
-                                         for key in headerAttr.keys()])
-                self.xmlbuf.append('<?xml version="1.0" encoding="UTF-8"%s?>\n'
-                                   % extraAttr)
+                    extraAttr = ''.join(
+                        [
+                            ' %s="%s"' % (key, headerAttr[key])
+                            for key in headerAttr.keys()
+                        ]
+                    )
+                self.xmlbuf.append(
+                    '<?xml version="1.0" encoding="UTF-8"%s?>\n' % extraAttr
+                )
         self.inputEncoding = inputEncoding
 
         if self.html:
@@ -158,21 +179,23 @@ class XML:
                 if css:
                     if type(css) in (list, tuple):  # list of URLs
                         for c in css:
-                            self.WriteElement('link', '',
-                                               {'rel': 'stylesheet',
-                                                'href': c},
-                                               entitize=0)
+                            self.WriteElement(
+                                'link',
+                                '',
+                                {'rel': 'stylesheet', 'href': c},
+                                entitize=0,
+                            )
                     else:  # in-line CSS
-                        self.WriteElement('style', css, {'type': 'text/css'},
-                                          entitize=0)
+                        self.WriteElement(
+                            'style', css, {'type': 'text/css'}, entitize=0
+                        )
                 self.CloseElement('head')
             self.WriteElement('body', leave='open')
 
         if xsl:
-            self.WritePI('xml-stylesheet', {'href': xsl,
-                                             'type': 'text/xsl'})
+            self.WritePI('xml-stylesheet', {'href': xsl, 'type': 'text/xsl'})
 
-        if content.lower() in('xml', 'html', 'text'):
+        if content.lower() in ('xml', 'html', 'text'):
             self.contentType = 'Content-Type: text/%s\n' % content.lower()
         elif content == '':
             self.contentType = ''
@@ -195,49 +218,97 @@ class XML:
     def Entitize(self, s, entitize=1):
         return xml_entitize(s, entitize=entitize, altnbsp=self.altnbsp)
 
-    def WriteElement(self, name, content='', attributes={},
-                     leave='close', entitize=1, convertWS=0,
-                     link='', convertNL=0, tight=False, forceNL=False,
-                     openclose=False):
+    def WriteElement(
+        self,
+        name,
+        content='',
+        attributes={},
+        leave='close',
+        entitize=1,
+        convertWS=0,
+        link='',
+        convertNL=0,
+        tight=False,
+        forceNL=False,
+        openclose=False,
+    ):
         if type(content) == bytes:
             content = content.decode(self.inputEncoding)
         # In HTML mode, non-void elements should use open/close tags even when empty
         if self.html and not openclose:
             # HTML void elements that can self-close
-            void_elements = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
-                           'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
+            void_elements = {
+                'area',
+                'base',
+                'br',
+                'col',
+                'embed',
+                'hr',
+                'img',
+                'input',
+                'link',
+                'meta',
+                'param',
+                'source',
+                'track',
+                'wbr',
+            }
             if name.lower() not in void_elements:
                 openclose = True
         self.xmlbuf.append(
             xml_element(
-                name, content, attributes, leave=leave, entitize=entitize,
-                convertWS=0, link='', convertNL=convertNL,
+                name,
+                content,
+                attributes,
+                leave=leave,
+                entitize=entitize,
+                convertWS=0,
+                link='',
+                convertNL=convertNL,
                 indent='' if tight else self.IndentString(),
-                openclose=openclose
+                openclose=openclose,
             )
         )
         if leave != 'close':
             self.Push(name, tight)
         self.Flush()
 
-    def OpenElement(self, name, content='', attributes={},
-                         leave='close', entitize=1, convertWS=0,
-                         link='', tight=False, forceNL=False):
-        self.WriteElement(name, content, attributes, 'open',
-                          entitize, convertWS, link, tight=tight,
-                          forceNL=forceNL)
+    def OpenElement(
+        self,
+        name,
+        content='',
+        attributes={},
+        leave='close',
+        entitize=1,
+        convertWS=0,
+        link='',
+        tight=False,
+        forceNL=False,
+    ):
+        self.WriteElement(
+            name,
+            content,
+            attributes,
+            'open',
+            entitize,
+            convertWS,
+            link,
+            tight=tight,
+            forceNL=forceNL,
+        )
 
-    def WriteCDElement(self, name, content='', attributes={},
-                        leave='close', urlsafe=0):
+    def WriteCDElement(
+        self, name, content='', attributes={}, leave='close', urlsafe=0
+    ):
         indent = self.IndentString()
         self.xmlbuf.append(indent + '<' + self.toString(name))
         if attributes:
             self.WriteAttributes(attributes)
         self.xmlbuf.append('>')
         if urlsafe:
-            self.xmlbuf.append('<![CDATA['
-                               + str(encode_uri_component(content))
-                               + ']]>')
+            self.xmlbuf.append(
+                '<![CDATA[' + str(encode_uri_component(content)) + ']]>'
+            )
         else:
             content = UnicodeDefinite(content)
             self.xmlbuf.append('<![CDATA[' + content + ']]>')
@@ -255,8 +326,9 @@ class XML:
 
     def IndentString(self):
         if self.hardTabs:
-            return (self.tab * ((self.indentLevel * self.tabSize) // 8)
-                    + ' ' * ((self.indentLevel * self.tabSize) % 8))
+            return self.tab * (
+                (self.indentLevel * self.tabSize) // 8
+            ) + ' ' * ((self.indentLevel * self.tabSize) % 8)
         else:
             return ' ' * (self.indentLevel * self.tabSize)
 
@@ -266,8 +338,9 @@ class XML:
         self.indentLevel += 1
         self.stack.append(name)
 
-    def WriteContent(self, content, leave='open', force=False, tight=False,
-                     entitize=False):
+    def WriteContent(
+        self, content, leave='open', force=False, tight=False, entitize=False
+    ):
         if not force and self.indentLevel < 1:
             raise XMLError('No element open for writing')
         if content:
@@ -281,11 +354,10 @@ class XML:
 
     def AddBalancedXML(self, xml):
         """Add a balanced XML section to the output.
-           It is the caller's responsibility to ensure that the XML
-           delivered is balanced, well-formed, in situ etc: this function
-           just appends it to the output."""
-        self.xmlbuf.append(xml if type(xml) == str
-                               else xml.decode('UTF-8'))
+        It is the caller's responsibility to ensure that the XML
+        delivered is balanced, well-formed, in situ etc: this function
+        just appends it to the output."""
+        self.xmlbuf.append(xml if type(xml) == str else xml.decode('UTF-8'))
 
     def CloseElement(self, element=None, tight=False, forceNL=False):
         if self.indentLevel < 1:
@@ -295,8 +367,9 @@ class XML:
         if element:
             if str(element) != stored:
                 info = '\n'.join([''] + self.xmlbuf) if self.debug else ''
-                raise XMLError('Attempt to close %s with %s%s'
-                               % (stored, element, info))
+                raise XMLError(
+                    'Attempt to close %s with %s%s' % (stored, element, info)
+                )
         if tight:
             self.xmlbuf.append('</' + stored + '>\n')
         else:
@@ -320,9 +393,10 @@ class XML:
                 self.CloseElement('body')
                 self.CloseElement('html')
             if self.indentLevel != 0:
-                raise XMLError('Attempt to terminate open XML '
-                                    '(items remaining %s)'
-                                        % str(self.stack))
+                raise XMLError(
+                    'Attempt to terminate open XML '
+                    '(items remaining %s)' % str(self.stack)
+                )
         self.Flush()
         if self.out and self.out != sys.stdout:
             self.out.close()
@@ -348,9 +422,10 @@ class XML:
 
         else:
             c = comment.replace('--', '- - ')
-            self.xmlbuf.append('%s%s<!-- %s -->%s\n' % (padding,
-                                                     self.IndentString(),
-                                                     comment, padding))
+            self.xmlbuf.append(
+                '%s%s<!-- %s -->%s\n'
+                % (padding, self.IndentString(), comment, padding)
+            )
 
     def __str__(self):
         s = 'indent level = %d\n' % self.indentLevel
@@ -361,8 +436,7 @@ class XML:
 
     def xml(self, flushing=False):
         if self.indentLevel > 0 and not flushing:
-            raise XMLError('Elements still open: %s.'
-                           % ', '.join(self.stack))
+            raise XMLError('Elements still open: %s.' % ', '.join(self.stack))
         return ''.join(self.xmlbuf)
 
     def toString(self, v):
@@ -372,8 +446,7 @@ class XML:
             return str(v, self.inputEncoding, 'ignore')
         elif type(v) is float and self.float_fmt is not None:
             s = str(self.float_fmt % v)
-            while (s.endswith('0') and not len(s) == 1
-                   and not s.endswith('.0')):
+            while s.endswith('0') and not len(s) == 1 and not s.endswith('.0'):
                 s = s[:-1]
             if s.endswith('.0') and len(s) > 2:
                 s = s[:-2]
@@ -389,7 +462,7 @@ def xml_entitize(s, entitize=1, altnbsp=None):
     if entitize > 1:
         s = re.sub('&lt;=', '&#x2264;', s)
         s = re.sub('&gt;=', '&#x2265;', s)
-    s = re.sub(u"'", '&apos;', s)
+    s = re.sub("'", '&apos;', s)
     s = re.sub('"', '&quot;', s)
     if altnbsp:
         s = re.sub(self.nbsp, '&nbsp;', s)
@@ -408,21 +481,30 @@ def xml_attributes(attributes):
     keys are assumed to be valid, entitized strings.
     """
     items = attributes.items() if isinstance(attributes, dict) else attributes
-    return ' '.join(f'{a}="{xml_entitize(str(val))}"'
-                    for a, val in items)
+    return ' '.join(f'{a}="{xml_entitize(str(val))}"' for a, val in items)
 
-def xml_element(name, content='', attributes={},
-                leave='close', entitize=1, convertWS=0,
-                link='', convertNL=0, indent='', forceNL=False,
-                openclose=False, pad=0):
+
+def xml_element(
+    name,
+    content='',
+    attributes={},
+    leave='close',
+    entitize=1,
+    convertWS=0,
+    link='',
+    convertNL=0,
+    indent='',
+    forceNL=False,
+    openclose=False,
+    pad=0,
+):
     # convertNL: binary field:
     #   0  to ignore newlines
     #   *1 to convert backslash n (r'\n') to <br/>
     #   1* to convert inline newline '\n' to <br/>
     out = []
     if content is None:
-        print('WARNING: null content for element %s' % name,
-              file=sys.stderr)
+        print('WARNING: null content for element %s' % name, file=sys.stderr)
         content = ''
     else:
         content = str(content)
@@ -441,8 +523,9 @@ def xml_element(name, content='', attributes={},
         out.append('>')
     if link:
         out.append('<a href="xml_entitize{%s}">' % link)
-    if (re.match('^[ \t]+$', content)
-                 or (pad and content == '' and leave == 'close')):
+    if re.match('^[ \t]+$', content) or (
+        pad and content == '' and leave == 'close'
+    ):
         xmlc = '&#160;'
     elif entitize:
         xmlc = xml_entitize(content, entitize=entitize)
@@ -462,7 +545,6 @@ def xml_element(name, content='', attributes={},
     return ''.join(out)
 
 
-
 class PassFailStats:
     def __init__(self, passes, failures, items='records'):
         self.items = items
@@ -478,13 +560,15 @@ class PassFailStats:
             'n_failures': self.n_failures,
         }
         if total_values:
-            d[f'n_{self.items}'] = self.n_passes + self.n_failures,
+            d[f'n_{self.items}'] = (self.n_passes + self.n_failures,)
 
         if pc:
-            d.update({
-                'pass_rate': to_pc(self.pass_rate),
-                'failure_rate': to_pc(self.failure_rate)
-            })
+            d.update(
+                {
+                    'pass_rate': to_pc(self.pass_rate),
+                    'failure_rate': to_pc(self.failure_rate),
+                }
+            )
         return d
 
 
@@ -606,8 +690,7 @@ def indicator_suffix(detect_passes=True):
     return OK if detect_passes else BAD
 
 
-def indicator_field_name(field, constraint, name_map=None,
-                         detect_passes=True):
+def indicator_field_name(field, constraint, name_map=None, detect_passes=True):
     suffix = indicator_suffix(detect_passes)
     if name_map:
         return f'{field}_{name_map[constraint]}_{suffix}'
@@ -661,7 +744,6 @@ def constraints_testdata_path(path):
     return os.path.join(TDDADIR, 'constraints', 'testdata', path)
 
 
-
 def richbad(s, colour=True, cond=True):
     if colour and cond:
         return '[red]%s[/red]' % s
@@ -682,7 +764,6 @@ def richgoodbad(s, colour=True, cond=True):
         return f'[{c}]{s}[/{c}]'
     else:
         return str(s)
-
 
 
 def write_or_return(content, dump, stringify, path=None, binary=False):
@@ -747,8 +828,10 @@ def is_sequence(L):
     Tests whether L is a list, tuple or something similar
     (in particular, that it can be indexed).
     """
-    return ((hasattr(L, "__getitem__") or hasattr(L, "__iter__"))
-            and not hasattr(L, "strip"))
+    return (
+        hasattr(L, '__getitem__') or hasattr(L, '__iter__')
+    ) and not hasattr(L, 'strip')
+
 
 def is_parquet(path):
     return os.splitext.path(path)[1] == '.parquet'
@@ -758,6 +841,7 @@ class Dummy(object):
     """
     A dummy object. For whatever.
     """
+
     def __init__(self, **kwargs):
         for k in kwargs:
             self.__dict__[k] = kwargs[k]
@@ -789,25 +873,20 @@ def tdda_nf_map():
         '\u2013': '-',  # EN DASH
         '\u2014': '-',  # EM DASH
         '\u2212': '-',  # MINUS SIGN
-
         '\u2018': "'",  # LEFT SINGLE QUOTATION MARK
         '\u2019': "'",  # RIGHT SINGLE QUOTATION MARK
-        '\u02BC': "'",  # MODIFIER LETTER APOSTROPHE
+        '\u02bc': "'",  # MODIFIER LETTER APOSTROPHE
         '\u0060': "'",  # GRAVE ACCENT
-
         # '\uFF02',  # FULLWIDTH QUOTATION MARK  # Handled by NFKC/D
-        '\u201C': '"',  # LEFT DOUBLE QUOTATION MARK
-        '\u201D': '"',  # RIGHT DOUBLE QUOTATION MARK
-
+        '\u201c': '"',  # LEFT DOUBLE QUOTATION MARK
+        '\u201d': '"',  # RIGHT DOUBLE QUOTATION MARK
         # Handled by NFKC/D
         # '\u00A0',  # NO-BREAK SPACE
         # '\u2002',  # EN SPACE
         # '\u2003',  # EM SPACE
         # '\u2007',  # FIGURE SPACE
         # '\u2008',  # PUNCTUATION SPACE
-
         '\u0009': ' ',  # TAB  # unicodedata.name does not recognize!
-
         # Handled by NFKC/D:
         # '\u00B9',  # SUPERSCRIPT ONE
         # '\u2081',  # SUBSCRIPT ONE
@@ -815,19 +894,15 @@ def tdda_nf_map():
         # '\U0001D7D9',  # MATHEMATICAL DOUBLE-STRUCK DIGIT ONE
         '\u2474': '(1)',  # PARENTHESIZED DIGIT ONE
         '\u2488': '1.',  # DIGIT ONE FULL STOP
-
         '\u0391': 'A',  # GREEK CAPITAL LETTER ALPHA
-        '\u00C5': 'A',  # LATIN CAPITAL LETTER A WITH RING ABOVE
+        '\u00c5': 'A',  # LATIN CAPITAL LETTER A WITH RING ABOVE
         # '\u212B',  # ANGSTROM SIGN  # Handled by NFKC/D
-
         # Handled by NFKC/D:
         #'\u2026',  # HORIZONTAL ELLIPSIS
         #'\uFE19',  # PRESENTATION FORM FOR VERTICAL HORIZONTAL ELLIPSIS
-        '\u22EE': '...',   # VERTICAL ELLIPSIS
-
-        '\u22EF': '...',  # MIDLINE HORIZONTAL ELLIPSIS
-        '\u22F1': '...',  # DOWN RIGHT DIAGONAL ELLIPSIS
-
+        '\u22ee': '...',  # VERTICAL ELLIPSIS
+        '\u22ef': '...',  # MIDLINE HORIZONTAL ELLIPSIS
+        '\u22f1': '...',  # DOWN RIGHT DIAGONAL ELLIPSIS
         '\u04d5': 'ae',  # 'æ'
         '\u00e6': 'ae',  # 'æ'
         '\u04d4': 'AE',  # 'Ӕ'
@@ -851,8 +926,9 @@ def tdda_nf_map():
     return str.maketrans(strmap)
 
 
-def normal_form_tk(s, remove_accents=True, strip=False,
-                   standardize_space=False, nfkd=False):
+def normal_form_tk(
+    s, remove_accents=True, strip=False, standardize_space=False, nfkd=False
+):
     """
     Maps a string to TDDA normal form (NFTK), which is normal
     Unicode Normal Form TKC (or TKD, if specified)
@@ -935,16 +1011,18 @@ def debug(*args, buf=None, verbose=True, **kw):
         stderr_console.print(*args, style='blue', **kw)
 
 
-
 def listify(v, sort=False):
     """
     If v is not a list, convert it to a list.
     In particularly, turn a scalar, v, into [v]
     """
     L = (
-        v if isinstance(v, list)
-        else list(v) if isinstance(v, tuple)
-        else [] if v is None
+        v
+        if isinstance(v, list)
+        else list(v)
+        if isinstance(v, tuple)
+        else []
+        if v is None
         else [v]
     )
     return sorted(L) if sort else L
@@ -959,7 +1037,7 @@ def delistify(L):
 
 def tdda_path_info(inpath):
     inpath = handle_tilde(inpath)
-    if ':' in inpath  and not os.path.exists(inpath):
+    if ':' in inpath and not os.path.exists(inpath):
         if inpath.endswith(':'):
             path = inpath[:-1]
             stem, ext = os.path.splitext(path)
@@ -968,10 +1046,11 @@ def tdda_path_info(inpath):
         if len(parts) == 2:
             path, md_path = parts
             stem, ext = os.path.splitext(path)
-            return TDDAPathInfo(path, stem, ext, handle_tilde(md_path),
-                                False, inpath)
+            return TDDAPathInfo(
+                path, stem, ext, handle_tilde(md_path), False, inpath
+            )
         # else
-            # ignore for now
+        # ignore for now
 
     stem, ext = os.path.splitext(inpath)
     return TDDAPathInfo(inpath, stem, ext, None, False, inpath)
@@ -1022,8 +1101,9 @@ def dict_to_tex_macros(d, outpath=None, verbose=False):
 
 def tex_encode(s, number=False, para=False):
     if not type(s) is str:
-        print('tex_encode: input type (%s); expected type (%s)'
-              % (type(s), str))
+        print(
+            'tex_encode: input type (%s); expected type (%s)' % (type(s), str)
+        )
         print(s)
         raise Exception('Wrong type sent to tex_encode')
     if s is None:
@@ -1061,11 +1141,11 @@ def tex_encode(s, number=False, para=False):
     elif s.startswith('-'):
         plain = (
             s.replace(',', '')
-             .replace(' ', '')
-             .replace('%', '')
-             .replace('--', '-')
-             .replace(r'\$', '')
-             .replace(r'\pounds{}', '')
+            .replace(' ', '')
+            .replace('%', '')
+            .replace('--', '-')
+            .replace(r'\$', '')
+            .replace(r'\pounds{}', '')
         )
         try:
             x = float(plain)
@@ -1085,7 +1165,7 @@ DIGITS = {
     '7': 'Seven',
     '8': 'Eight',
     '9': 'Nine',
-    '0': 'Zero'
+    '0': 'Zero',
 }
 
 TENS = {
@@ -1100,6 +1180,7 @@ TENS = {
     '90': 'Ninety',
 }
 
+
 def tex_name(name):
     out = camelName(name)
     return remap(powers_of_ten(out), DIGITS)
@@ -1110,14 +1191,14 @@ def remap(s, d):
 
 
 def powers_of_ten(s):
-    r =  (
+    r = (
         s.replace('000000', 'mn')
-         .replace('00000', 'xxk')
-         .replace('0000', 'xk')
-         .replace('000', 'k')
-         .replace('00', 'Hundred')
+        .replace('00000', 'xxk')
+        .replace('0000', 'xk')
+        .replace('000', 'k')
+        .replace('00', 'Hundred')
     )
-    for (tens, name) in TENS.items():
+    for tens, name in TENS.items():
         r = r.replace(tens, name)
     return r
 
@@ -1162,6 +1243,8 @@ def valid_level(level):
     elif level is None:
         return 'strict'
     if not (level is None or level in ('strict', 'medium', 'loose')):
-        raise ValueError(f'Type match level must be one of strict, medium, '
-                         f'or loose(/permissive), not {level}')
+        raise ValueError(
+            f'Type match level must be one of strict, medium, '
+            f'or loose(/permissive), not {level}'
+        )
     return level

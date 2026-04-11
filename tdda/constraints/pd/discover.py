@@ -7,7 +7,7 @@ Discover TDDA constraints for CSV files, and for Pandas or R DataFrames saved
 as parquetfiles, and save the generated constraints as a .tdda JSON file.
 """
 
-USAGE = '''
+USAGE = """
 Parameters:
 
   * input is one of:
@@ -20,7 +20,7 @@ Parameters:
     which the generated constraints will be written.  Can be - (or missing)
     to write to standard output.
 
-'''
+"""
 
 import os
 import sys
@@ -32,15 +32,25 @@ except ImportError:
 
 from tdda import __version__
 from tdda.constraints.flags import discover_parser, discover_flags
-from tdda.constraints.pd.constraints import (discover_df, load_df,
-                                             write_constraints)
+from tdda.constraints.pd.constraints import (
+    discover_df,
+    load_df,
+    write_constraints,
+)
 
 from tdda.utils import handle_tilde, nvl, tdda_path_info
 
 
-def discover_df_from_file(df_path, constraints_path, report_path=None,
-                          report_formats=None, engine=None, backend=None,
-                          verbose=True, **kwargs):
+def discover_df_from_file(
+    df_path,
+    constraints_path,
+    report_path=None,
+    report_formats=None,
+    engine=None,
+    backend=None,
+    verbose=True,
+    **kwargs,
+):
     """
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
@@ -79,17 +89,22 @@ def discover_df_from_file(df_path, constraints_path, report_path=None,
         df_path = StringIO(sys.stdin.read())
         md_df_path = None
     df = load_df(df_path, backend=backend)
-    return discover_df(df, constraints_path, df_path=md_df_path,
-                       report_path=report_path,
-                       report_formats=report_formats, **kwargs)
+    return discover_df(
+        df,
+        constraints_path,
+        df_path=md_df_path,
+        report_path=report_path,
+        report_formats=report_formats,
+        **kwargs,
+    )
 
 
 def pd_discover_parser():
     parser = discover_parser(USAGE)
-    parser.add_argument('input', nargs=1,
-                        help='CSV or parquet file')
-    parser.add_argument('constraints', nargs='?',
-                        help='name of constraints file to create')
+    parser.add_argument('input', nargs=1, help='CSV or parquet file')
+    parser.add_argument(
+        'constraints', nargs='?', help='name of constraints file to create'
+    )
     return parser
 
 
@@ -127,4 +142,3 @@ def main(argv, verbose=True):
 
 if __name__ == '__main__':
     main(sys.argv)
-

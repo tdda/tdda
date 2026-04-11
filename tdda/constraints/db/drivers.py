@@ -41,13 +41,17 @@ from tdda.debug import dprint
 
 from tdda.constraints.base import UNICODE_TYPE
 from tdda.constraints.baseconstraints import unicode_string, long_type
-from tdda.constraints.flags import (discover_parser, discover_flags,
-                                    verify_parser, verify_flags)
+from tdda.constraints.flags import (
+    discover_parser,
+    discover_flags,
+    verify_parser,
+    verify_flags,
+)
 
 from tdda.utils import handle_tilde, cprint, TDDAError
 
 
-DATABASE_USAGE = '''
+DATABASE_USAGE = """
 
 Database connection flags:
 
@@ -67,7 +71,7 @@ prefixing the table name, such as postgresql:mytable), then a default
 connection file .tdda_db_conn_DBTYPE (in your home directory) is used,
 if present.
 
-'''
+"""
 
 
 def get_db_handler(table, dbtype=None, **kw):
@@ -170,36 +174,40 @@ def applicable(argv):
             if dbtype in DATABASE_HANDLERS:
                 return True
         elif a in ('-dbtype', '--dbtype'):
-            return (i < len(argv) - 1
-                    and argv[i+1] in DATABASE_HANDLERS)
+            return i < len(argv) - 1 and argv[i + 1] in DATABASE_HANDLERS
     return '-db' in argv or '--db' in argv
 
 
 def database_arg_parser(create_parser, usage):
     parser = create_parser(usage + DATABASE_USAGE)
-    parser.add_argument('-conn', '--conn', nargs=1,
-                        help='database connection file')
+    parser.add_argument(
+        '-conn', '--conn', nargs=1, help='database connection file'
+    )
     parser.add_argument('-dbtype', '--dbtype', nargs=1, help='database type')
     parser.add_argument('-db', '--db', nargs=1, help='database name')
-    parser.add_argument('-host', '--host', nargs=1,
-                        help='database server hostname')
-    parser.add_argument('-port', '--port',
-                        nargs=1, help='database server IP port')
+    parser.add_argument(
+        '-host', '--host', nargs=1, help='database server hostname'
+    )
+    parser.add_argument(
+        '-port', '--port', nargs=1, help='database server IP port'
+    )
     parser.add_argument('-user', '--user', nargs=1, help='username')
     parser.add_argument('-password', '--password', nargs=1, help='password')
     return parser
 
 
 def database_arg_flags(create_flags, parser, args, params):
-    params.update({
-        'conn': None,
-        'dbtype': None,
-        'db': None,
-        'host': None,
-        'port': None,
-        'user': None,
-        'password': None,
-    })
+    params.update(
+        {
+            'conn': None,
+            'dbtype': None,
+            'db': None,
+            'host': None,
+            'port': None,
+            'user': None,
+            'password': None,
+        }
+    )
     flags = create_flags(parser, args, params)
     if flags.conn:
         params['conn'] = flags.conn[0]
@@ -218,9 +226,19 @@ def database_arg_flags(create_flags, parser, args, params):
     return flags
 
 
-def database_connection(table=None, conn_file=None, dbtype=None, database=None,
-                        host=None, port=None, user=None, password=None,
-                        schema=None, db=None, conn=None):
+def database_connection(
+    table=None,
+    conn_file=None,
+    dbtype=None,
+    database=None,
+    host=None,
+    port=None,
+    user=None,
+    password=None,
+    schema=None,
+    db=None,
+    conn=None,
+):
     """
     Connect to a database, using an appropriate driver for the type
     of database specified.
@@ -230,25 +248,26 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
     database = database or db
     conn_file = conn_file or conn
 
-    dprint('CONNECTION PARAMETERS PASSED IN',
-           f'table={table},'
-           f'conn_file={conn_file},'
-           f'dbtype={dbtype},'
-           f'database={database},'
-           f'\nhost={host},'
-           f'port={port},'
-           f'user={user},'
-           f'password={password},'
-           f'schema={schema}\n')
+    dprint(
+        'CONNECTION PARAMETERS PASSED IN',
+        f'table={table},'
+        f'conn_file={conn_file},'
+        f'dbtype={dbtype},'
+        f'database={database},'
+        f'\nhost={host},'
+        f'port={port},'
+        f'user={user},'
+        f'password={password},'
+        f'schema={schema}\n',
+    )
     if conn_file:
         defaults = ConnectionSpec(conn_file)
     else:
         if dbtype:
             dbtypelower = dbtype.lower()
             dflt_conn_file = connection_file(dbtypelower)
-            if (
-                dbtypelower == 'postgres'
-                and not os.path.exists(dflt_conn_file)
+            if dbtypelower == 'postgres' and not os.path.exists(
+                dflt_conn_file
             ):
                 dflt_conn_file = connection_file('postgresql')
         else:
@@ -287,25 +306,28 @@ def database_connection(table=None, conn_file=None, dbtype=None, database=None,
         print('Database name required ("-db name")', file=sys.stderr)
         sys.exit(1)
     dprint('^^^', defaults)
-    dprint('\nCONNECTION PARAMETERS RESOLVED',
-           f'table={table},'
-           f'conn_file={conn_file},'
-           f'dbtype={dbtype},'
-           f'database={database},'
-           f'\nhost={host},'
-           f'port={port},'
-           f'user={user},'
-           f'password={password},'
-           f'schema={schema},')
+    dprint(
+        '\nCONNECTION PARAMETERS RESOLVED',
+        f'table={table},'
+        f'conn_file={conn_file},'
+        f'dbtype={dbtype},'
+        f'database={database},'
+        f'\nhost={host},'
+        f'port={port},'
+        f'user={user},'
+        f'password={password},'
+        f'schema={schema},',
+    )
 
     dbtypelower = dbtype.lower()
     if dbtypelower in DATABASE_CONNECTORS:
         connector = DATABASE_CONNECTORS[dbtypelower]
         conn = connector(host, port, database, user, password)
         if conn is None:
-            sys.exit(1)   # error message already reported
-        return DBConnector(conn, schema, host=host, port=port,
-                           database=database, user=user)
+            sys.exit(1)  # error message already reported
+        return DBConnector(
+            conn, schema, host=host, port=port, database=database, user=user
+        )
     else:
         print('Database type %s not supported' % dbtype, file=sys.stderr)
         sys.exit(1)
@@ -320,8 +342,9 @@ def database_connection_postgres(host, port, database, user, password):
     if pgdb:
         if port is not None:
             host = host + ':' + str(port)
-        return pgdb.connect(host=host, database=database,
-                            user=user, password=password)
+        return pgdb.connect(
+            host=host, database=database, user=user, password=password
+        )
     else:
         print('PostgreSQL driver not available', file=sys.stderr)
         sys.exit(1)
@@ -338,15 +361,26 @@ def database_connection_mysql(host, port, database, user, password):
             user = getpass.getuser()
         if password:
             try:
-                return MySQLdb.connect(host=host, port=port, db=database,
-                                       user=user, password=password)
+                return MySQLdb.connect(
+                    host=host,
+                    port=port,
+                    db=database,
+                    user=user,
+                    password=password,
+                )
             except:
                 # some versions of the MySQL driver use different names
-                return MySQLdb.connect(host=host, port=port, db=database,
-                                       username=user, passwd=password)
+                return MySQLdb.connect(
+                    host=host,
+                    port=port,
+                    db=database,
+                    username=user,
+                    passwd=password,
+                )
         else:
-            return MySQLdb.connect(host=host, port=port, db=database,
-                                   user=user)
+            return MySQLdb.connect(
+                host=host, port=port, db=database, user=user
+            )
     else:
         print('MySQL driver not available', file=sys.stderr)
 
@@ -391,6 +425,7 @@ class ConnectionSpec:
     """
     Class for reading a connection specification file.
     """
+
     def __init__(self, filename):
         with open(filename) as f:
             d = json.loads(f.read())
@@ -413,23 +448,31 @@ class ConnectionSpec:
             if env_var:
                 self.password = os.environ.get(env_var)
                 if not self.password:
-                    cprint('WARNING: No password found in environment variable '
-                          f'{env_var}.',
-                          colour='red', file=sys.stderr)
+                    cprint(
+                        'WARNING: No password found in environment variable '
+                        f'{env_var}.',
+                        colour='red',
+                        file=sys.stderr,
+                    )
 
-        if (self.dbtype and self.dbtype.lower() == 'sqlite'
-                    and self.database is not None
-                    and not os.path.isabs(self.database)):
+        if (
+            self.dbtype
+            and self.dbtype.lower() == 'sqlite'
+            and self.database is not None
+            and not os.path.isabs(self.database)
+        ):
             # if a .conn file for a sqlite connection specifies a .sqlite3
             # file,
             # then resolve that relative to the location of the .conn file.
-            self.database = os.path.join(os.path.dirname(filename),
-                                         self.database)
+            self.database = os.path.join(
+                os.path.dirname(filename), self.database
+            )
             self.db = self.database
 
     def __str__(self):
-        params=',\n    '.join('%s: %s' % (k, repr(v))
-                       for k, v in sorted(self.__dict__.items()))
+        params = ',\n    '.join(
+            '%s: %s' % (k, repr(v)) for k, v in sorted(self.__dict__.items())
+        )
         return 'ConnectionSpec(\n    %s\n)' % params
 
 
@@ -439,8 +482,16 @@ class DBConnector:
     database *connection*, as well as holding additional attributes
     about the connection.
     """
-    def __init__(self, connection, schema, host=None, port=None,
-                 database=None, user=None):
+
+    def __init__(
+        self,
+        connection,
+        schema,
+        host=None,
+        port=None,
+        database=None,
+        user=None,
+    ):
         self.connection = connection
         self.schema = schema
         self.host = host
@@ -449,8 +500,9 @@ class DBConnector:
         self.user = user
 
     def __str__(self):
-        params=',\n    '.join('%s: %s' % (k, repr(v))
-                       for k, v in sorted(self.__dict__.items()))
+        params = ',\n    '.join(
+            '%s: %s' % (k, repr(v)) for k, v in sorted(self.__dict__.items())
+        )
         return 'DBConnector(\n    %s\n)' % params
 
 
@@ -458,6 +510,7 @@ class DatabaseHandler:
     """
     Common SQL and NoSQL database support
     """
+
     def __init__(self, dbtype, dbc):
         handlerClass = self.check_db_type(dbtype)
         self.instance = handlerClass(dbtype, dbc)
@@ -479,6 +532,7 @@ class SQLDatabaseHandler:
     """
     Common database SQL support
     """
+
     def __init__(self, dbtype, db):
         self.dbtype = dbtype
         self.db = db
@@ -561,9 +615,8 @@ class SQLDatabaseHandler:
         if schema:
             result = '%s.%s' % (schema, table)
         else:
-            result =  table
+            result = table
         return self.quoted_parts(result) if quote else result
-
 
     def table_exists(self, tablename):
         """
@@ -573,19 +626,25 @@ class SQLDatabaseHandler:
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
                 allsql = 'SELECT COUNT(*) FROM information_schema.tables'
-                sql = '''SELECT COUNT(*) FROM information_schema.tables
+                sql = """SELECT COUNT(*) FROM information_schema.tables
                          WHERE table_schema = '%s'
-                         AND table_name = '%s';''' % (schema, table)
+                         AND table_name = '%s';""" % (schema, table)
             else:
-                #TODO: we need to pick a default schema in this case!
-                sql = '''SELECT COUNT(*) FROM information_schema.tables
-                         WHERE table_name = '%s';''' % table
+                # TODO: we need to pick a default schema in this case!
+                sql = (
+                    """SELECT COUNT(*) FROM information_schema.tables
+                         WHERE table_name = '%s';"""
+                    % table
+                )
         elif self.dbtype == 'sqlite':
             # no schemas
             allsql = 'SELECT COUNT(*) FROM sqlite_master'
-            sql = '''SELECT COUNT(*) FROM sqlite_master
+            sql = (
+                """SELECT COUNT(*) FROM sqlite_master
                             WHERE (type = 'table' OR type='view')
-                            AND name = '%s';''' % tablename
+                            AND name = '%s';"""
+                % tablename
+            )
         else:
             raise TDDAError('Unsupported database type %s' % self.dbtype)
 
@@ -626,12 +685,12 @@ class SQLDatabaseHandler:
     def get_database_column_names(self, tablename):
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
-            sql = '''
+            sql = """
                 SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = '%s'
                 AND TABLE_SCHEMA = '%s'
                 ORDER BY ORDINAL_POSITION;
-                ''' % (table, schema)
+                """ % (table, schema)
             rows = self.execute_all(sql)
             return [r[0] for r in rows]
         elif self.dbtype == 'sqlite':
@@ -643,60 +702,60 @@ class SQLDatabaseHandler:
 
     def get_database_column_type(self, tablename, colname):
         typeMap = {
-            'int'                        : 'int',
-            'int4'                       : 'int',
-            'int8'                       : 'int',
-            'long'                       : 'int',
-            'tinyint'                    : 'int',
-            'smallint'                   : 'int',
-            'bigint'                     : 'int',
-            'integer'                    : 'int',
-            'float'                      : 'real',
-            'float4'                     : 'real',
-            'float8'                     : 'real',
-            'float16'                    : 'real',
-            'double'                     : 'real',
-            'numeric'                    : 'real',
-            'number'                     : 'real',
-            'real'                       : 'real',
-            'double precision'           : 'real',
-            'bool'                       : 'bool',
-            'boolean'                    : 'bool',
-            'text'                       : 'string',
-            'text character set utf8'    : 'string',
-            'varchar'                    : 'string',
-            'varchar(max)'               : 'string',
-            'varchar2'                   : 'string',
-            'nvarchar'                   : 'string',
-            'nvarchar(max)'              : 'string',
-            'nvarchar2'                  : 'string',
-            'char'                       : 'string',
-            'nchar'                      : 'string',
-            'name'                       : 'string',
-            'oidvector'                  : 'string',
-            'timestamp'                  : 'date',
+            'int': 'int',
+            'int4': 'int',
+            'int8': 'int',
+            'long': 'int',
+            'tinyint': 'int',
+            'smallint': 'int',
+            'bigint': 'int',
+            'integer': 'int',
+            'float': 'real',
+            'float4': 'real',
+            'float8': 'real',
+            'float16': 'real',
+            'double': 'real',
+            'numeric': 'real',
+            'number': 'real',
+            'real': 'real',
+            'double precision': 'real',
+            'bool': 'bool',
+            'boolean': 'bool',
+            'text': 'string',
+            'text character set utf8': 'string',
+            'varchar': 'string',
+            'varchar(max)': 'string',
+            'varchar2': 'string',
+            'nvarchar': 'string',
+            'nvarchar(max)': 'string',
+            'nvarchar2': 'string',
+            'char': 'string',
+            'nchar': 'string',
+            'name': 'string',
+            'oidvector': 'string',
+            'timestamp': 'date',
             'timestamp without time zone': 'date',
-            'date'                       : 'date',
-            'datetime'                   : 'date',
-            None                         : None,
-            ''                           : None,
-            'any'                        : None,
+            'date': 'date',
+            'datetime': 'date',
+            None: None,
+            '': None,
+            'any': None,
         }
         (schema, table) = self.split_name(tablename)
         if self.dbtype in ('postgres', 'postgresql', 'mysql'):
             if schema:
-                sql = '''
+                sql = """
                     SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE TABLE_NAME = '%s'
                      AND TABLE_SCHEMA = '%s'
                      AND COLUMN_NAME = '%s';
-                    ''' % (table, schema, colname)
+                    """ % (table, schema, colname)
             else:
-                sql = '''
+                sql = """
                     SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE TABLE_NAME = '%s'
                      AND COLUMN_NAME = '%s';
-                    ''' % (tablename, colname)
+                    """ % (tablename, colname)
             typeresult = self.execute_scalar(sql)
         elif self.dbtype == 'sqlite':
             result = self.execute_all('PRAGMA table_info(%s)' % tablename)
@@ -715,13 +774,17 @@ class SQLDatabaseHandler:
         return self.execute_scalar(sql)
 
     def get_database_nnull(self, tablename, colname):
-        sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NULL'
-               % (tablename, self.quoted(colname)))
+        sql = 'SELECT COUNT(*) FROM %s WHERE %s IS NULL' % (
+            tablename,
+            self.quoted(colname),
+        )
         return self.execute_scalar(sql)
 
     def get_database_nnonnull(self, tablename, colname):
-        sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL'
-               % (tablename, self.quoted(colname)))
+        sql = 'SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL' % (
+            tablename,
+            self.quoted(colname),
+        )
         return self.execute_scalar(sql)
 
     def get_database_min(self, tablename, colname):
@@ -768,31 +831,40 @@ class SQLDatabaseHandler:
             else:
                 return None
         else:
-            sql = 'SELECT %s(LENGTH(%s)) FROM %s' % (sqlagg,
-                                                     self.quoted(colname),
-                                                     tablename)
+            sql = 'SELECT %s(LENGTH(%s)) FROM %s' % (
+                sqlagg,
+                self.quoted(colname),
+                tablename,
+            )
             return self.execute_scalar(sql)
 
     def get_database_nunique(self, tablename, colname):
         colname = self.quoted(colname)
-        sql = ('SELECT COUNT(DISTINCT %s) FROM %s WHERE %s IS NOT NULL'
-               % (colname, tablename, colname))
+        sql = 'SELECT COUNT(DISTINCT %s) FROM %s WHERE %s IS NOT NULL' % (
+            colname,
+            tablename,
+            colname,
+        )
         return self.execute_scalar(sql)
 
-    def get_database_unique_values(self, tablename, colname,
-                                   sorted_values=True, include_nulls=False):
+    def get_database_unique_values(
+        self, tablename, colname, sorted_values=True, include_nulls=False
+    ):
         colname = self.quoted(colname)
-        whereclause = ('' if include_nulls
-                       else 'WHERE %s IS NOT NULL' % colname)
+        whereclause = '' if include_nulls else 'WHERE %s IS NOT NULL' % colname
         orderby = ('ORDER BY %s ASC' % colname) if sorted_values else ''
-        sql = 'SELECT DISTINCT %s FROM %s %s %s' % (colname, tablename,
-                                                    whereclause, orderby)
+        sql = 'SELECT DISTINCT %s FROM %s %s %s' % (
+            colname,
+            tablename,
+            whereclause,
+            orderby,
+        )
         result = self.execute_all(sql)
         return [x[0] for x in result]
 
     def get_database_rex_match(self, tablename, colname, rexes):
-        if rexes is None:      # a null value is not considered to be an
-            return True        # active constraint, so is always satisfied
+        if rexes is None:  # a null value is not considered to be an
+            return True  # active constraint, so is always satisfied
         name = self.quoted(colname)
         if self.dbtype in ('postgres', 'postgresql'):
             # postgresql uses ~ syntax
@@ -809,13 +881,16 @@ class SQLDatabaseHandler:
         else:
             raise TDDAError('Unsupported database type')
 
-        sql = ('SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL AND NOT(%s)'
-               % (tablename, name, ' OR '.join(rexprs)))
+        sql = 'SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL AND NOT(%s)' % (
+            tablename,
+            name,
+            ' OR '.join(rexprs),
+        )
         return self.execute_scalar(sql) == 0
 
     def rex_match_sql(self, qname, rexes):
-        if rexes is None:      # a null value is not considered to be an
-            return ''          # active constraint, so is always satisfied
+        if rexes is None:  # a null value is not considered to be an
+            return ''  # active constraint, so is always satisfied
 
         if self.dbtype in ('postgres', 'postgresql'):
             # postgresql uses ~ syntax
@@ -843,11 +918,15 @@ class SQLDatabaseHandler:
 
     def cast_int_to_bool(self, s):
         if self.dbtype == 'mysql':
-            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
-                   'ELSE (%s <> 0) END' % (s, s))
+            sql = 'CASE WHEN (%s IS NULL) THEN NULL ELSE (%s <> 0) END' % (
+                s,
+                s,
+            )
         elif self.dbtype == 'sqlserver':
-            sql = ('CASE WHEN (%s IS NULL) THEN NULL '
-                   'WHEN (%s <> 0) THEN 1 ELSE 0 END' % (s, s))
+            sql = (
+                'CASE WHEN (%s IS NULL) THEN NULL '
+                'WHEN (%s <> 0) THEN 1 ELSE 0 END' % (s, s)
+            )
         else:
             sql = '(%s <> 0)' % s
         return sql
@@ -884,6 +963,7 @@ class MongoDBDatabaseHandler:
     """
     NoSQL MonggoDB support
     """
+
     def __init__(self, dbtype, dbc):
         self.dbtype = dbtype
         self.db = dbc
@@ -913,25 +993,35 @@ class MongoDBDatabaseHandler:
     def get_database_column_names(self, tablename):
         collection = self.find_collection(tablename)
         try:
-            keys = collection.aggregate([
-                {'$project': {'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}}},
-                {'$unwind': '$arrayofkeyvalue'},
-                {'$group': {'_id': None,
-                            'allkeys': {'$addToSet': '$arrayofkeyvalue.k'}}}
-            ]).next()['allkeys'];
+            keys = collection.aggregate(
+                [
+                    {
+                        '$project': {
+                            'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}
+                        }
+                    },
+                    {'$unwind': '$arrayofkeyvalue'},
+                    {
+                        '$group': {
+                            '_id': None,
+                            'allkeys': {'$addToSet': '$arrayofkeyvalue.k'},
+                        }
+                    },
+                ]
+            ).next()['allkeys']
             return keys
         except:
             # sometimes the aggregate approach above doesn't work (for
             # reasons that aren't completely clear), so here's an alternative
             # approach, which is slower.
-            mapfn = '''function() {
+            mapfn = """function() {
                             var keys = [];
                             for (var k in this) {
                                 keys.push(k);
                             }
                             emit(null, keys);
-                       }'''
-            redfn = '''function(key, values) {
+                       }"""
+            redfn = """function(key, values) {
                            var keyset = {};
                            for (var i = 0; i < values.length; i++) {
                                for (var j = 0; j < values[i].length; j++) {
@@ -945,7 +1035,7 @@ class MongoDBDatabaseHandler:
                                }
                            }
                            return JSON.stringify(keys);
-                       }'''
+                       }"""
             mr = collection.map_reduce(mapfn, redfn, 'inline')
             v = mr.find_one()['value']
             # the map/reduce op returns a json repr of the list of keys
@@ -991,16 +1081,20 @@ class MongoDBDatabaseHandler:
 
     def get_database_nunique(self, tablename, colname):
         collection = self.find_collection(tablename)
-        agg = collection.aggregate([
-            {'$match': {colname: {'$exists': True}}},
-            {'$match': {colname: {'$ne': None}}},
-            {'$group': {'_id': '$' + colname}},
-            {'$group': {'_id': None, 'nunique': {'$sum': 1}}},
-        ], allowDiskUse=True)
+        agg = collection.aggregate(
+            [
+                {'$match': {colname: {'$exists': True}}},
+                {'$match': {colname: {'$ne': None}}},
+                {'$group': {'_id': '$' + colname}},
+                {'$group': {'_id': None, 'nunique': {'$sum': 1}}},
+            ],
+            allowDiskUse=True,
+        )
         return agg.next()['nunique']
 
-    def get_database_unique_values(self, tablename, colname,
-                                   sorted_values=True, include_nulls=False):
+    def get_database_unique_values(
+        self, tablename, colname, sorted_values=True, include_nulls=False
+    ):
         collection = self.find_collection(tablename)
         try:
             values = collection.distinct(colname, allowDiskUse=True)
@@ -1029,30 +1123,38 @@ class MongoDBDatabaseHandler:
             values = self.get_database_unique_values(tablename, colname)
             v = agg([len(v) for v in values]) if values else None
         else:
-            mapfn = '''function() {
+            mapfn = """function() {
                            emit(null, this.name ? this.name.length : null);
-                       }'''
-            redfn = '''function(key, values) {
+                       }"""
+            redfn = (
+                """function(key, values) {
                            return Math.%s.apply(Math, values);
-                       }''' % aggstr
+                       }"""
+                % aggstr
+            )
             mr = collection.map_reduce(mapfn, redfn, 'inline')
             v = mr.find_one()['value']
         return int(v) if v is not None else None
 
     def get_database_min(self, tablename, colname):
         collection = self.find_collection(tablename)
-        agg = collection.aggregate([
-            {'$match': {colname: {'$exists': True}}},
-            {'$group': {'_id': None, 'min': {'$min': '$' + colname}}},
-        ], allowDiskUse=True)
+        agg = collection.aggregate(
+            [
+                {'$match': {colname: {'$exists': True}}},
+                {'$group': {'_id': None, 'min': {'$min': '$' + colname}}},
+            ],
+            allowDiskUse=True,
+        )
         return agg.next()['min']
 
     def get_database_max(self, tablename, colname):
         collection = self.find_collection(tablename)
-        agg = collection.aggregate([
-            {'$match': {colname: {'$exists': True}}},
-            {'$group': {'_id': None, 'max': {'$max': '$' + colname}}},
-        ])
+        agg = collection.aggregate(
+            [
+                {'$match': {colname: {'$exists': True}}},
+                {'$group': {'_id': None, 'max': {'$max': '$' + colname}}},
+            ]
+        )
         return agg.next()['max']
 
     def db_value_is_null(self, value):
@@ -1067,7 +1169,7 @@ DATABASE_CONNECTORS = {
     'postgresql': database_connection_postgres,
     'mysql': database_connection_mysql,
     'sqlite': database_connection_sqlite,
-    'mongodb': database_connection_mongodb
+    'mongodb': database_connection_mongodb,
 }
 
 DATABASE_HANDLERS = {
@@ -1077,4 +1179,3 @@ DATABASE_HANDLERS = {
     'sqlite': SQLDatabaseHandler,
     'mongodb': MongoDBDatabaseHandler,
 }
-

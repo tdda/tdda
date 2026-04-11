@@ -19,15 +19,11 @@ class TestX_VERIFY_BOOKEX13(ReferenceTestCase):
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'verify_bookex13')
 
-
     @classmethod
     def setUpClass(cls):
-        
-        (cls.output,
-         cls.error,
-         cls.exception,
-         cls.exit_code,
-         cls.duration) = exec_command(cls.command, cls.cwd)
+        (cls.output, cls.error, cls.exception, cls.exit_code, cls.duration) = (
+            exec_command(cls.command, cls.cwd)
+        )
 
     def test_no_exception(self):
         self.assertIsNone(self.exception)
@@ -36,12 +32,15 @@ class TestX_VERIFY_BOOKEX13(ReferenceTestCase):
         self.assertEqual(self.exit_code, 0)
 
     def test_stdout(self):
-        self.assertStringCorrect(self.output,
-                                 os.path.join(self.refdir, 'STDOUT'))
+        self.assertStringCorrect(
+            self.output, os.path.join(self.refdir, 'STDOUT')
+        )
 
     def test_stderr(self):
-        self.assertStringCorrect(self.error,
-                                 os.path.join(self.refdir, 'STDERR'))
+        self.assertStringCorrect(
+            self.error, os.path.join(self.refdir, 'STDERR')
+        )
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

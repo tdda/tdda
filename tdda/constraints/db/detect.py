@@ -4,7 +4,7 @@
 Support for database constraint detection from the command-line tool
 """
 
-USAGE = '''
+USAGE = """
 
 Parameters:
 
@@ -19,7 +19,7 @@ Parameters:
 
   * detection output file is not implemented yet.
 
-'''
+"""
 
 import argparse
 import os
@@ -28,17 +28,29 @@ import sys
 from tdda import __version__
 from tdda.constraints.flags import detect_parser, detect_flags
 from tdda.constraints.db.constraints import detect_db_table
-from tdda.constraints.db.drivers import (database_connection, parse_table_name,
-                                         database_arg_parser,
-                                         database_arg_flags)
+from tdda.constraints.db.drivers import (
+    database_connection,
+    parse_table_name,
+    database_arg_parser,
+    database_arg_flags,
+)
 from tdda.constraints.db.verify import verify_database_table_cli
 from tdda.utils import cprint
 
 
-def detect_database_table_cli(table, constraints_path, destination,
-                              conn=None, dbtype=None, db=None,
-                              host=None, port=None, user=None,
-                              password=None, **kwargs):
+def detect_database_table_cli(
+    table,
+    constraints_path,
+    destination,
+    conn=None,
+    dbtype=None,
+    db=None,
+    host=None,
+    port=None,
+    user=None,
+    password=None,
+    **kwargs,
+):
     """
     detect using the given database table, against constraints in the .tdda
     file specified.
@@ -48,29 +60,57 @@ def detect_database_table_cli(table, constraints_path, destination,
     if destination:
         (table, dbtype, conn_file) = parse_table_name(table, dbtype)
         dest_pair = parse_table_name(destination, dbtype)
-        dbc = database_connection(table=table, conn=conn, dbtype=dbtype, db=db,
-                                  host=host, port=port, conn_file=conn_file,
-                                  user=user, password=password)
-        cprint(detect_db_table(dbtype, dbc, table, constraints_path,
-                               destination=dest_pair, **kwargs))
+        dbc = database_connection(
+            table=table,
+            conn=conn,
+            dbtype=dbtype,
+            db=db,
+            host=host,
+            port=port,
+            conn_file=conn_file,
+            user=user,
+            password=password,
+        )
+        cprint(
+            detect_db_table(
+                dbtype,
+                dbc,
+                table,
+                constraints_path,
+                destination=dest_pair,
+                **kwargs,
+            )
+        )
     else:
-        return verify_database_table_cli(table, constraints_path,
-                                         conn=conn, dbtype=dbtype, db=db,
-                                         host=host, port=port, user=user,
-                                         password=password, **kwargs)
+        return verify_database_table_cli(
+            table,
+            constraints_path,
+            conn=conn,
+            dbtype=dbtype,
+            db=db,
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            **kwargs,
+        )
+
 
 def get_detect_params(args):
     parser = database_arg_parser(detect_parser, USAGE)
     parser.add_argument('table', nargs=1, help='database table name')
-    parser.add_argument('constraints', nargs=1,
-                        help='constraints file to verify against')
-    parser.add_argument('outpath', nargs='?',
-                        help='file to write detection results to')
+    parser.add_argument(
+        'constraints', nargs=1, help='constraints file to verify against'
+    )
+    parser.add_argument(
+        'outpath', nargs='?', help='file to write detection results to'
+    )
     params = {}
     flags = database_arg_flags(detect_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (flags.constraints[0] if flags.constraints
-                                  else None)
+    params['constraints_path'] = (
+        flags.constraints[0] if flags.constraints else None
+    )
     params['destination'] = flags.outpath
     return params
 
@@ -95,4 +135,3 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
-

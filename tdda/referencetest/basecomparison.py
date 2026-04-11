@@ -28,11 +28,13 @@ FieldDiff = namedtuple('FieldDiff', 'actual expected')
 DEFAULT_DIFF_ROWS = 10
 ROW_NUM_HEADER = '#'
 
-ESC_MAP = str.maketrans({
-    '\\': r'\\',
-    ' ': r'\ ',
-    "'": r'\'',
-})
+ESC_MAP = str.maketrans(
+    {
+        '\\': r'\\',
+        ' ': r'\ ',
+        "'": r'\'',
+    }
+)
 TDDA_DIFF = 'tdda diff'
 
 
@@ -40,8 +42,8 @@ class BaseComparison:
     """
     Common base class for different implementations of comparisons.
     """
-    def __init__(self, print_fn=None, verbose=True, tmp_dir=None,
-                 config=None):
+
+    def __init__(self, print_fn=None, verbose=True, tmp_dir=None, config=None):
         """
         Constructor for an instance of the BaseComparison class.
 
@@ -75,7 +77,7 @@ class BaseComparison:
         engine=None,
         backend=None,
         key=None,
-        quick=True
+        quick=True,
     ):
         """
         Compare two DataFrames.
@@ -185,8 +187,10 @@ class BaseComparison:
         self.precision = nvl(precision, 7)
         self.fuzzy_nulls = fuzzy_nulls
         if bool(fuzzy_nulls) and not fuzzy_nulls in (True, 'object'):
-            error(f'fuzzy_nulls value {fuzzy_nulls} unknown. '
-                  ' Should be True, False or "object"')
+            error(
+                f'fuzzy_nulls value {fuzzy_nulls} unknown. '
+                ' Should be True, False or "object"'
+            )
 
         check_types = self.resolve_option_flag(check_types, ref_df)
         check_extra_cols = self.resolve_option_flag(check_extra_cols, df)
@@ -194,7 +198,6 @@ class BaseComparison:
         df_names = col_names(df)
         ref_names = col_names(ref_df)
         common_cols = list(set(df_names).intersection(set(ref_names)))
-
 
         # Check whether they have the same number of records
         state = DiffState(len(df), len(ref_df), common_cols)
@@ -231,9 +234,7 @@ class BaseComparison:
             check_order = self.resolve_option_flag(check_order, ref_df)
             order1 = [c for c in df_names if c in check_order]
             order2 = [
-                c for c in ref_names
-                if c in check_order
-                and c in df_names
+                c for c in ref_names if c in check_order and c in df_names
             ]
             state.out_of_order = order1 != order2
 
@@ -273,8 +274,9 @@ class BaseComparison:
 
         if state.diff_nrows:
             # Log if not
-            self.different_numbers_of_rows(diffs, state.actual_nrows,
-                                           state.ref_nrows)
+            self.different_numbers_of_rows(
+                diffs, state.actual_nrows, state.ref_nrows
+            )
 
         cols = state.common_cols
         if not quick or state.same_ignoring_types:
@@ -283,21 +285,18 @@ class BaseComparison:
                 cols = [c for c in check_data if c in state.common_cols]
                 if idx:
                     cols.append(idx)
-                state.n_diff_values = self.same_structure_ddiff(df[cols],
-                                                                ref_df[cols],
-                                                                diffs,
-                                                                key=key,
-                                                                idx=idx)
+                state.n_diff_values = self.same_structure_ddiff(
+                    df[cols], ref_df[cols], diffs, key=key, idx=idx
+                )
         switches = []
         nc = len(cols)
         nL = len(list(df))
         if check_data and nc < nL:
             if nc < nL - nc:
-                switches.append('--fields \'%s\'' % escaped_list(cols))
+                switches.append("--fields '%s'" % escaped_list(cols))
             else:
-                rest = [f for f in df_names
-                        if f in set(df_names) - set(cols)]
-                switches.append('--xfields \'%s\'' % escaped_list(rest))
+                rest = [f for f in df_names if f in set(df_names) - set(cols)]
+                switches.append("--xfields '%s'" % escaped_list(rest))
         switches.append(f'--{type_matching}')
         if not state.same and create_temporaries:
             self.write_temporaries(df, ref_df, diffs, switches=switches)
@@ -319,17 +318,23 @@ class BaseComparison:
                 self.print_fn(s)
 
     @staticmethod
-    def compare_with(actual, expected, qualifier=None, binary=False,
-                     custom_diff_cmd='', switches=None):
+    def compare_with(
+        actual,
+        expected,
+        qualifier=None,
+        binary=False,
+        custom_diff_cmd='',
+        switches=None,
+    ):
         qualifier = '' if not qualifier else (qualifier + ' ')
         f = lambda p: os.path.normpath(os.path.abspath(p))
         if os.path.exists(expected):
-#            if binary:
-#                return None
-#            else:
-                msg = 'Compare %swith:\n    %s %s %s%s\n'
-                cmd = custom_diff_cmd or diffcmd()
-                suffix = ' '.join([''] + switches) if switches else ''
+            #            if binary:
+            #                return None
+            #            else:
+            msg = 'Compare %swith:\n    %s %s %s%s\n'
+            cmd = custom_diff_cmd or diffcmd()
+            suffix = ' '.join([''] + switches) if switches else ''
         else:
             suffix = ''
             msg = 'Initialize %sfrom actual content with:\n    %s %s %s%s'
@@ -344,8 +349,11 @@ class BaseComparison:
         Record the fact that there is type difference between matched
         dataframe columns.
         """
-        msg = ('Wrong column type for field %s actual: %s; expected: %s)'
-               % (c, actual_dtype, ref_dtype))
+        msg = 'Wrong column type for field %s actual: %s; expected: %s)' % (
+            c,
+            actual_dtype,
+            ref_dtype,
+        )
         self.info(diffs, msg)
         diffs.dfd.field_types[c] = FieldDiff(actual_dtype, ref_dtype)
 
@@ -356,9 +364,10 @@ class BaseComparison:
         """
         if extra_cols:
             ordered = [
-                c for (i, c) in sorted(
-                    (df_col_pos(c, df), c)
-                    for c in extra_cols)
+                c
+                for (i, c) in sorted(
+                    (df_col_pos(c, df), c) for c in extra_cols
+                )
             ]
             self.info(diffs, 'Extra columns: %s' % list(ordered))
             for c in ordered:
@@ -371,36 +380,38 @@ class BaseComparison:
         """
         if missing_cols:
             ordered = [
-                c for (i, c) in sorted(
-                    (df_col_pos(c, ref_df), c)
-                    for c in missing_cols)
+                c
+                for (i, c) in sorted(
+                    (df_col_pos(c, ref_df), c) for c in missing_cols
+                )
             ]
             self.info(diffs, 'Missing columns: %s' % list(ordered))
             for c in ordered:
                 diffs.dfd.extra[c] = ref_df[c].dtype
 
     def different_column_structure(self, diffs):
-            self.failure(
-                diffs,
-                'Data frames have different column structure.',
-            )
+        self.failure(
+            diffs,
+            'Data frames have different column structure.',
+        )
 
     def different_column_orders(self, diffs, df, ref_df):
-        self.info(diffs,
-           'Different column ordering between data frames.\n'
-           f'  Actual ordering: {" ".join(col_names(df))}\n'
-           f'Expected ordering: {" ".join(col_names(ref_df))}')
+        self.info(
+            diffs,
+            'Different column ordering between data frames.\n'
+            f'  Actual ordering: {" ".join(col_names(df))}\n'
+            f'Expected ordering: {" ".join(col_names(ref_df))}',
+        )
         diffs.dfd.actual_order = col_names(df)
         diffs.dfd.expected_order = col_names(ref_df)
 
     def different_numbers_of_rows(self, diffs, na, nr):
-            self.failure(
-                diffs, 'Data frames have different numbers of rows.',
-            )
-            self.info(
-                diffs, f'Actual records: {na:,}; Expected records: {nr:,}'
-            )
-            # same = False
+        self.failure(
+            diffs,
+            'Data frames have different numbers of rows.',
+        )
+        self.info(diffs, f'Actual records: {na:,}; Expected records: {nr:,}')
+        # same = False
 
     @classmethod
     def resolve_option_flag(self, flag, df):
@@ -424,9 +435,7 @@ class BaseComparison:
         else:
             return flag
 
-    def _write_reference_dataframe(
-        self, df, path, writer=None, **kwargs
-    ):
+    def _write_reference_dataframe(self, df, path, writer=None, **kwargs):
         """
         Function for saving a Pandas DataFrame to a CSV file.
         Used when regenerating DataFrame reference results.
@@ -446,9 +455,12 @@ class BaseComparison:
         if actual_path and expected_path:
             commonname = os.path.split(actual_path)[1]
             differ = self.compare_with(actual_path, expected_path)
-            tdda_differ = self.compare_with(actual_path, expected_path,
-                                            custom_diff_cmd=TDDA_DIFF,
-                                            switches=switches)
+            tdda_differ = self.compare_with(
+                actual_path,
+                expected_path,
+                custom_diff_cmd=TDDA_DIFF,
+                switches=switches,
+            )
         else:
             if actual_path:
                 commonname = os.path.split(actual_path)[1]
@@ -466,9 +478,11 @@ class BaseComparison:
                 if actual_path:
                     differ = self.compare_with(actual_path, tmpExpectedPath)
                     tdda_differ = self.compare_with(
-                        actual_path, tmpExpectedPath,
+                        actual_path,
+                        tmpExpectedPath,
                         custom_diff_cmd=TDDA_DIFF,
-                        switches=switches)
+                        switches=switches,
+                    )
             if actual is not None and not actual_path:
                 # no actual file, so write it
                 tmpActualPath = os.path.join(
@@ -478,8 +492,11 @@ class BaseComparison:
                 if expected_path:
                     differ = self.compare_with(tmpActualPath, expected_path)
                     tdda_differ = self.compare_with(
-                        tmpActualPath, expected_path,
-                        custom_diff_cmd=TDDA_DIFF, switches=switches)
+                        tmpActualPath,
+                        expected_path,
+                        custom_diff_cmd=TDDA_DIFF,
+                        switches=switches,
+                    )
 
         if differ:
             self.info(msgs, differ)
@@ -502,8 +519,9 @@ class BaseComparison:
         elif self.expected_path:
             self.info(msgs, 'Expected file %s' % self.expected_path)
         elif self.actual_path:
-            self.info(msgs, 'Actual file %s'
-                          % os.path.normpath(self.actual_path))
+            self.info(
+                msgs, 'Actual file %s' % os.path.normpath(self.actual_path)
+            )
         self.info(msgs, s)
 
     def check_serialized_dataframe(
@@ -739,11 +757,12 @@ class FailureDiffs:
     Failures diffs objects have a boolean value of True if there
     are failures (differences) and False if not.
     """
+
     def __init__(self, failures, diffs, df=None, ref_df=None):
-         self.failures = failures
-         self.diffs = diffs
-         self.df = df
-         self.ref_df = ref_df
+        self.failures = failures
+        self.diffs = diffs
+        self.df = df
+        self.ref_df = ref_df
 
     @property
     def count(self):
@@ -781,19 +800,28 @@ class DiffState:
     """
     Container for DataFrame differences state
     """
-    def __init__(self, actual_nrows, ref_nrows, common_cols,
-                 wrong_types=None, extra_cols=None, missing_cols=None,
-                 out_of_order=False, n_diff_values=0):
+
+    def __init__(
+        self,
+        actual_nrows,
+        ref_nrows,
+        common_cols,
+        wrong_types=None,
+        extra_cols=None,
+        missing_cols=None,
+        out_of_order=False,
+        n_diff_values=0,
+    ):
         self.actual_nrows = actual_nrows
         self.ref_nrows = ref_nrows
         self.common_cols = common_cols
         self.wrong_types = nvl(wrong_types, [])  # where type checking applied
-        self.extra_cols = nvl(extra_cols, [])    # where specified
+        self.extra_cols = nvl(extra_cols, [])  # where specified
         self.missing_cols = nvl(missing_cols, [])  # where specified
-        self.out_of_order = out_of_order         # if specified
-        self.n_diff_values = n_diff_values       # Only when not 'quick'
-                                                 # if there are structure
-                                                 # differences
+        self.out_of_order = out_of_order  # if specified
+        self.n_diff_values = n_diff_values  # Only when not 'quick'
+        # if there are structure
+        # differences
 
     @property
     def same_nrows(self):
@@ -850,6 +878,7 @@ class Diffs:
     a DataFrameDiffs object with structured information
     on the dataframe differences.
     """
+
     def __init__(self, lines=None):
         self.lines = lines or []
         self.reconstructions = []
@@ -894,29 +923,34 @@ class Diffs:
 
 
 class DataFrameDiffs:
-    def __init__(self, leftname='actual', rightname='expected',
-                 verbose=False):
+    def __init__(self, leftname='actual', rightname='expected', verbose=False):
         self.leftname = leftname
         self.rightname = rightname
-        self.field_types = {}      # keyed on name; value is FieldDiff
-        self.missing = {}          # keyed on name: value is dtype
-        self.extra = {}            # keyed on name: value is dtype
-        self.actual_order = []     # list of field names
-        self.expected_order = []   # list of field names
+        self.field_types = {}  # keyed on name; value is FieldDiff
+        self.missing = {}  # keyed on name: value is dtype
+        self.extra = {}  # keyed on name: value is dtype
+        self.actual_order = []  # list of field names
+        self.expected_order = []  # list of field names
         self.actual_length = None
         self.expected_length = None
         self.type_matching = 'strict'
         self.verbose = verbose
 
-        self.diff = None           # SameStructureDDiff
-
+        self.diff = None  # SameStructureDDiff
 
     @property
     def different_structure(self):
-        return any((self.field_types, self.missing, self.extra,
-                    self.actual_order, self.expected_order,
-                    self.actual_length is not None,
-                    self.expected_length is not None))
+        return any(
+            (
+                self.field_types,
+                self.missing,
+                self.extra,
+                self.actual_order,
+                self.expected_order,
+                self.actual_length is not None,
+                self.expected_length is not None,
+            )
+        )
 
     def __str__(self):
         msgs = []
@@ -929,9 +963,7 @@ class DataFrameDiffs:
         if self.field_types:
             msgs.append('Field types differ')
             for c, v in self.field_types.items():
-                msgs.append(
-                    f'  {c}: {lname} {v.actual}; {rname} {v.expected}'
-                )
+                msgs.append(f'  {c}: {lname} {v.actual}; {rname} {v.expected}')
             msgs.append('')
         elif self.verbose:
             msgs.append(
@@ -951,7 +983,7 @@ class DataFrameDiffs:
             msgs.append('Same fields in both dataframes.')
 
         if self.actual_order or self.expected_order:  # could be and; should
-                                                      # both be empty or full
+            # both be empty or full
             msgs.append('Different field orders.')
             L = ', '.join(self.actual_order)
             R = ', '.join(self.expected_order)
@@ -961,7 +993,7 @@ class DataFrameDiffs:
             msgs.append('Field order is same.')
 
         if self.actual_length or self.expected_length:  # could be and; should
-                                                        # both be empty or full
+            # both be empty or full
             delta = self.actual_length - self.expected_length
             desc = 'more' if delta > 0 else 'fewer'
             delta = abs(delta)
@@ -975,7 +1007,8 @@ class DataFrameDiffs:
         if self.diff:
             msgs.append(str(self.diff))
 
-        return'\n'.join(msgs)
+        return '\n'.join(msgs)
+
 
 def diffcmd():
     return 'fc' if os.name and os.name != 'posix' else 'diff'
@@ -1033,8 +1066,7 @@ def create_row_diffs_mask(masks):
     while len(masks) > 1:
         last = [masks[-1]] if len(masks) % 2 == 1 else []
         masks = [
-            (masks[2 * i] | masks[2 * i + 1])
-            for i in range(len(masks) // 2)
+            (masks[2 * i] | masks[2 * i + 1]) for i in range(len(masks) // 2)
         ] + last
     return masks[0]
 

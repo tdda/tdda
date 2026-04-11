@@ -16,6 +16,7 @@ class CaptureOutput(object):
         c.Restore()
         printed = str(c)
     """
+
     def __init__(self, echo=False, stream='stdout'):
         self.stream = stream
         if stream == 'stdout':
