@@ -19,6 +19,7 @@ from tdda.serial.metadata import (
     VERBOSITY,
     TDDASerialError,
     NAMED_FORMAT_TO_STRFTIME,
+    STRFTIME_TO_NAMED_FORMAT,
     ISO8601_NAMED_FORMATS,
     UNSPECIFIED_NAMED_FORMATS,
     ALL_NAMED_FORMATS,
@@ -36,7 +37,7 @@ from tdda.serial.utils import (
     PYTHON_TEMPLATES,
     fill_template,
 )
-from tdda.utils import nvl, error, warn, listify, delistify, Dummy
+from tdda.utils import nvl, error, warn, listify, delistify, is_sequence, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
 from tdda.referencetest.pddates import infer_date_format
 
@@ -268,18 +269,12 @@ def serial_to_pandas_write_csv_args(md, backend=None, config=None):
         md.single_date_format(), for_write=True
     )
 
-    date_fields = [f for f in md.fields if f.fieldtype.startswith('date')]
-    if date_fields:
-        kw['parse_dates'] = list(date_fields)
-
     null = md.single_null_indicator()
     if null is not None:
         kw['na_rep'] = null
 
     if md.header_row_count == 0:
-        kw['header'] = None
-    elif md.header_row_count == 1:
-        kw['header'] = 0
+        kw['header'] = False
 
     if md.stutter_quotes in (True, False):
         kw['doublequote'] = md.stutter_quotes
@@ -578,7 +573,7 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
 
 
 def pandas_col_to_field_metadata(
-    field, fieldtype=None, fmt=None, backend=None
+    field, fieldtype=None, fmt=None, date_fmt=None, backend=None
 ):
     """
     Produces a FieldMetadata object for the pandas series provided
@@ -591,7 +586,12 @@ def pandas_col_to_field_metadata(
         fieldtype:         Optional fieldtype to use. Must be compatible
                            with the data in the field if validate is True
 
-        fmt:               Optional format informaiton for the field
+        fmt:               Optional format information for the field
+
+        date_fmt:          Optional format to use for date/datetime fields
+                           instead of the ISO8601 default. Typically the
+                           actual write format used, expressed as a named
+                           format or strftime string.
 
         backend:           Preferred pandas backend
 
@@ -605,13 +605,10 @@ def pandas_col_to_field_metadata(
     else:
         fieldtype = pandas_dtype_to_fieldtype(field.dtype, col=field)
 
-    if not fmt:
-        if fieldtype == FieldType.DATE:
-            fmt = DateFormat.ISO8601_DATE
-        elif fieldtype == FieldType.DATETIME:
-            fmt = DateFormat.ISO8601_DATETIME
-        elif fieldtype == FieldType.DATETIME_WITH_TIMEZONE:
-            fmt = DateFormat.ISO8601_DATETIME_TZ
+    if not fmt and date_fmt:
+        if fieldtype in (FieldType.DATE, FieldType.DATETIME,
+                         FieldType.DATETIME_WITH_TIMEZONE):
+            fmt = date_fmt
     return FieldMetadata(field.name, fieldtype, format=fmt)
 
 

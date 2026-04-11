@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
+    "writer": "tdda.serial-3.0.00rc1",
     "tdda.serial": {
         "fields": [
             {
@@ -26,8 +26,7 @@
             },
             {
                 "name": "t",
-                "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "fieldtype": "datetime"
             }
         ],
         "encoding": "UTF-8",

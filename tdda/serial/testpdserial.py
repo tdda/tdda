@@ -1797,12 +1797,47 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
         )
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
-    @tag
     def test_us_allformats2unspec_serial(self):
         df = csv_to_pandas(
             tdpath('allformats2unspec.csv'), tdpath('allformats2unspec.serial')
         )
         self.assertDataFrameCorrect(df, tdpath('alldateformats2unspec.parquet'))
+
+class TestSerialNamedDateFormatsWrite(ReferenceTestCase):
+    """
+    Integration tests: write DataFrames via pandas_to_csv with euro date
+    formats, both via kw_overrides and via an input .serial file.
+    Verify that the written CSV and companion .serial file are correct.
+    """
+
+    def test_write_eu_datetime_via_kwargs(self):
+        df = pd.read_parquet(tdpath('datetimed.parquet'))
+        csv_path = tmppath('eurodt-write-kw.csv')
+        md_path = tmppath('eurodt-write-kw.serial')
+        pandas_to_csv(
+            df, csv_path, md_outpath=md_path, date_format='%d/%m/%Y %H:%M:%S'
+        )
+        self.assertFileCorrect(csv_path, tdpath('eurodt-write-kw.csv'))
+        self.assertFileCorrect(
+            md_path,
+            tdpath('eurodt-write-kw.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+    def test_write_eu_datetime_via_serial(self):
+        df = pd.read_parquet(tdpath('datetimed.parquet'))
+        csv_path = tmppath('eurodt-write-serial.csv')
+        md_path = tmppath('eurodt-write-serial.serial')
+        pandas_to_csv(
+            df, csv_path, md_inpath=tdpath('eurodt.serial'), md_outpath=md_path
+        )
+        self.assertFileCorrect(csv_path, tdpath('eurodt-write-serial.csv'))
+        self.assertFileCorrect(
+            md_path,
+            tdpath('eurodt-write-serial.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)
