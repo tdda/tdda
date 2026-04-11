@@ -23,6 +23,7 @@ from tdda.serial.metadata import (
     ISO8601_NAMED_FORMATS,
     UNSPECIFIED_NAMED_FORMATS,
     ALL_NAMED_FORMATS,
+    serial_format_to_strftime,
 )
 from tdda.serial.reader import (
     get_metadata_for_reader,
@@ -649,19 +650,9 @@ def to_pandas_date_format(v, for_write=False):
     """
     if v is None:
         return None
-    if v in UNSPECIFIED_NAMED_FORMATS and v != DateFormat.ISO8601_UNSPECIFIED:
-        raise NotImplementedError(
-            f'Date format "{v}" is not yet implemented. '
-            f'Use a specific format such as "{v}-date" or "{v}-datetime".'
-        )
-    if v in ISO8601_NAMED_FORMATS:
-        if for_write:
-            return NAMED_FORMAT_TO_STRFTIME.get(v, '%Y-%m-%dT%H:%M:%S')
-        else:
-            return 'ISO8601'
-    if v in NAMED_FORMAT_TO_STRFTIME:
-        return NAMED_FORMAT_TO_STRFTIME[v]
-    return v  # specific strftime string: pass through
+    if v in ISO8601_NAMED_FORMATS and not for_write:
+        return 'ISO8601'
+    return serial_format_to_strftime(v)
 
 
 def pandas_date_format_to_serial(fmt):

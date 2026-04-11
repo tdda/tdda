@@ -10,6 +10,12 @@ specific named files. A `.serial` file can also contain
 library-specific sections (for `pandas.read_csv`, `polars.read_csv`
 etc.) alongside or instead of the `tdda.serial` section.
 
+In general, it is preferable to use the `tdda.serial` section;
+the other sections are intended primarily for cases in which:
+ - Something is not capable of being expressed in `tdda.serial`;
+ - The intention is only to use a single library for reading/writing,
+   and higher fidelity may be guaranteed by using a custom section.
+
 ## File Structure
 
 A `.serial` file is a JSON object with the following top-level keys:
@@ -27,6 +33,9 @@ A `.serial` file is a JSON object with the following top-level keys:
     "python.csv.writer": { ... }
 }
 ```
+
+In fact, any key may be used for a custom format specification
+for some flat-file reader or writer.
 
 ### Top-level Keys
 

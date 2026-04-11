@@ -239,7 +239,7 @@ class TestPolarsLoad(ReferenceTestCase):
                 's2': ['àçéèïöô', 'aceeioo', None],
                 'dti': ['1999-12-31T23:59:59', None, '2003-03-03T03:03:03'],
                 'dte': ['31/12/1999 23:59:59', '02/02/2002 02:02:02', None],
-                'dtu': ['12/31/1999 11:59:59p', None, '04/03/2005 03:02:01a'],
+                'dtu': ['12/31/1999 11:59:59PM', None, '04/03/2005 03:02:01AM'],
                 'di': ['1999-12-31', '2002-01-02', None],
                 'de': ['31/12/1999', None, '03/03/2003'],
                 'du': ['12/31/1999', '01/02/2002', None],
@@ -318,7 +318,7 @@ class TestPolarsLoad(ReferenceTestCase):
                 ),
                 pl.Series(
                     'dtu',
-                    ['12/31/1999 11:59:59p', None, '04/03/2005 03:02:01a'],
+                    ['12/31/1999 11:59:59PM', None, '04/03/2005 03:02:01AM'],
                     dtype=pl.String,
                 ),
                 pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),

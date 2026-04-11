@@ -126,6 +126,27 @@ UNSPECIFIED_NAMED_FORMATS = {
 ALL_NAMED_FORMATS = set(NAMED_FORMAT_TO_STRFTIME) | UNSPECIFIED_NAMED_FORMATS
 
 
+def serial_format_to_strftime(v):
+    """
+    Convert a tdda.serial format string to a strftime format string.
+
+    - Named ISO8601/Euro/US formats → canonical strftime from NAMED_FORMAT_TO_STRFTIME
+    - Unspecified formats (eu, us) → raises NotImplementedError
+    - Raw strftime strings (contain %) → pass through unchanged
+    - None → None
+    """
+    if v is None:
+        return None
+    if v in UNSPECIFIED_NAMED_FORMATS and v != DateFormat.ISO8601_UNSPECIFIED:
+        raise NotImplementedError(
+            f'Date format "{v}" is not yet implemented. '
+            f'Use a specific format such as "{v}-date" or "{v}-datetime".'
+        )
+    if v in NAMED_FORMAT_TO_STRFTIME:
+        return NAMED_FORMAT_TO_STRFTIME[v]
+    return v  # raw strftime string: pass through
+
+
 class Defaults:
     ENCODING = 'UTF-8'
     DELIMITER = ','

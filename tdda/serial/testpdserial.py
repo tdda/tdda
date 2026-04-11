@@ -272,9 +272,9 @@ class TestPandasLoad(ReferenceTestCase):
                 'dti': ['1999-12-31T23:59:59', np.nan, '2003-03-03T03:03:03'],
                 'dte': ['31/12/1999 23:59:59', '02/02/2002 02:02:02', np.nan],
                 'dtu': [
-                    '12/31/1999 11:59:59p',
+                    '12/31/1999 11:59:59PM',
                     np.nan,
-                    '04/03/2005 03:02:01a',
+                    '04/03/2005 03:02:01AM',
                 ],
                 'di': ['1999-12-31', '2002-01-02', np.nan],
                 'de': ['31/12/1999', np.nan, '03/03/2003'],
@@ -1849,7 +1849,7 @@ class TestSerialSmallWrite(ReferenceTestCase):
 
     def test_write_small_via_kwargs(self):
         df = csv_to_pandas(
-            tdpath('small.csv'), md_path=tdpath('small-metadata.json')
+            tdpath('small.csv'), md_path=tdpath('small.serial')
         )
         csv_path = tmppath('small-write-kw.csv')
         md_path = tmppath('small-write-kw.serial')
@@ -1866,7 +1866,7 @@ class TestSerialSmallWrite(ReferenceTestCase):
 
     def test_write_small_via_serial(self):
         df = csv_to_pandas(
-            tdpath('small.csv'), md_path=tdpath('small-metadata.json')
+            tdpath('small.csv'), md_path=tdpath('small.serial')
         )
         csv_path = tmppath('small-write-serial.csv')
         md_path = tmppath('small-write-serial.serial')

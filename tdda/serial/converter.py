@@ -282,7 +282,7 @@ class SerialConverter:
                 pass
             elif fmt == 'frictionless':
                 pass
-            else:
+            elif self.broad_out != 'python':
                 convert = CONVERTER[fmt]
                 if not getattr(md_out, 'libs', None):
                     md_out.libs = {}
@@ -307,7 +307,7 @@ class SerialConverter:
                     error('No target library/format (e.g. pd.r) specified')
                 f.write(
                     python_writer(
-                        md_out, backend=self.backend, warner=Warn, **kw
+                        md_in, backend=self.backend, warner=Warn, **kw
                     )
                 )
         else:

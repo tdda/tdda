@@ -66,6 +66,20 @@ def read_data(inpath):
 
 """
 
+    POLARS_READ_POSTPROC = """
+import polars as pl
+
+def read_data(inpath):
+    df = pl.read_csv(
+        inpath,
+        %s
+    )
+
+%s
+    return df
+
+"""
+
 
 def find_metadata_type_from_path(path):
     """
@@ -130,7 +144,8 @@ def choose_md_path(path, flavour=None):
     return swap_ext(path, '.serial')
 
 
-def fill_template(template, kw, flavour=None, dtypes=None):
+def format_template_args(kw, flavour=None, dtypes=None):
+    """Format a kwargs dict as a string for use in a code template."""
     def f(x):
         s12 = ' ' * 12
         s8 = ' ' * 8
@@ -151,7 +166,11 @@ def fill_template(template, kw, flavour=None, dtypes=None):
         else:
             return repr(x)
 
-    args = ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
+    return ',\n        '.join(f'{k}={f(v)}' for k, v in kw.items())
+
+
+def fill_template(template, kw, flavour=None, dtypes=None):
+    args = format_template_args(kw, flavour=flavour, dtypes=dtypes)
     return (template % args).lstrip()
 
 

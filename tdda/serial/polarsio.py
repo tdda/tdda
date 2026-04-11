@@ -3,9 +3,9 @@ import os
 
 import polars as pl
 
-from tdda.serial.metadata import VERBOSITY, SerialMetadata
+from tdda.serial.metadata import VERBOSITY, SerialMetadata, serial_format_to_strftime
 from tdda.serial.reader import get_metadata_for_reader, set_delimiter_from_path
-from tdda.serial.utils import PYTHON_TEMPLATES, fill_template
+from tdda.serial.utils import PYTHON_TEMPLATES, fill_template, format_template_args
 
 from tdda.utils import listify, warn, nvl
 
@@ -82,6 +82,22 @@ def serial_to_polars_read_csv_args(
     map_other_bools_to_string=False,
     backend=None,
 ):
+    kw, _ = serial_to_polars_read_csv_args_and_postproc(
+        md,
+        warner=warner,
+        serializable=serializable,
+        map_other_bools_to_string=map_other_bools_to_string,
+    )
+    return kw
+
+
+def serial_to_polars_read_csv_args_and_postproc(
+    md,
+    warner=None,
+    serializable=False,
+    map_other_bools_to_string=False,
+    backend=None,
+):
     """
     Convert metadata to dictionary of keyword arguments for Polars.
 
@@ -102,7 +118,7 @@ def serial_to_polars_read_csv_args(
                     else:
                         Warn(f'Polars type "{v}" not known.\n')
                 params[s] = out
-        return params
+        return params, {}
 
     kw = {}
     if md.delimiter:
@@ -185,13 +201,18 @@ def serial_to_polars_read_csv_args(
                     f'the following boolean values:\n {non_pl_bools}.\n{m}\n'
                 )
 
+    postproc = {}
     for field, fmd in fields.items():
         if fmd.fieldtype.startswith('date'):
             if fmd.format and not fmd.format.lower().startswith('iso'):
                 schema[field] = f(pl.String)
+                fmt = serial_format_to_strftime(fmd.format)
+                op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
+                postproc[field] = {'op': op, 'format': fmt}
                 Warn(
                     f'Field {field} date format {fmd.format} will not be '
-                    'understood by Polars.\nSetting to pl.String.'
+                    f'understood by Polars read_csv.\n'
+                    f'Will parse post-read using str.{op}.'
                 )
         if fmd.fieldtype.lower().startswith('bool'):
             bads = ', '.join(
@@ -243,7 +264,7 @@ def serial_to_polars_read_csv_args(
     # truncate_ragged_lines
     # glob
 
-    return kw
+    return kw, postproc
 
 
 def csv_to_polars(
@@ -339,8 +360,9 @@ def csv_to_polars(
         verbosity=verbosity,
     )
 
+    postproc = {}
     if md:
-        md_kw = serial_to_polars_read_csv_args(
+        md_kw, postproc = serial_to_polars_read_csv_args_and_postproc(
             md,
             warner=warner,
             map_other_bools_to_string=map_other_bools_to_string,
@@ -353,6 +375,16 @@ def csv_to_polars(
 
     kw = set_delimiter_from_path(kw, path, 'separator')
     df = pl.read_csv(path, **kw)
+    Warn = nvl(warner, warn)
+    for name, info in postproc.items():
+        try:
+            if info['op'] == 'to_date':
+                expr = pl.col(name).str.to_date(format=info['format'])
+            else:
+                expr = pl.col(name).str.to_datetime(format=info['format'])
+            df = df.with_columns(expr)
+        except Exception:
+            pass  # format was wrong; field stays as string
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
@@ -400,12 +432,19 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     """
     backend is not used for polars.
     """
-    kw = serial_to_polars_read_csv_args(
-        md, backend=backend, warner=warner, **kw
+    csv_kw, postproc = serial_to_polars_read_csv_args_and_postproc(
+        md, warner=warner
     )
-    return fill_template(
-        PYTHON_TEMPLATES.POLARS_READ,
-        kw,
-        flavour='polars',
-        dtypes=FIELDTYPE_TO_POLARS_DTYPE,
+    if kw:
+        csv_kw.update(kw)
+    args = format_template_args(
+        csv_kw, flavour='polars', dtypes=FIELDTYPE_TO_POLARS_DTYPE
     )
+    if not postproc:
+        return (PYTHON_TEMPLATES.POLARS_READ % args).lstrip()
+    exprs = '\n'.join(
+        f"        pl.col({name!r}).str.{info['op']}(format={info['format']!r}),"
+        for name, info in postproc.items()
+    )
+    postproc_block = f'    df = df.with_columns([\n{exprs}\n    ])'
+    return (PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)).lstrip()

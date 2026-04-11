@@ -1,7 +1,7 @@
 import polars as pl
 
 def read_data(inpath):
-    return pl.read_csv(
+    df = pl.read_csv(
         inpath,
         separator=';',
         quote_char="'",
@@ -15,4 +15,9 @@ def read_data(inpath):
             'IAmDate': pl.String
         }
     )
+
+    df = df.with_columns([
+        pl.col('IAmDate').str.to_date(format='%d/%m/%Y'),
+    ])
+    return df
 
