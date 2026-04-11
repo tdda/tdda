@@ -1142,6 +1142,20 @@ def split_string_list(s):
     return [w for w in L if w]
 
 
+def plural(n, s, pl=None):
+    """
+    Returns a string like '23 fields' or '1 field' where the
+    number is n, the stem is s and the plural is either stem + 's'
+    or stem + pl (if provided).
+    """
+    if pl is None:
+        pl = 's'
+    if n == 1:
+        return '%s %s' % (n, s)
+    else:
+        return '%s %s%s' % (n, s, pl)
+
+
 def valid_level(level):
     if level == 'permissive':
         return 'loose'

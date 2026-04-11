@@ -158,7 +158,7 @@ class ReferenceTestConfig(BaseConfig):
         self.vertical = False
         self.force_val_prefixes = False
         self.type_checking = 'strict'
-        self.tag_failures = False
+        self.log_failures = False
 
     def left_diff(self, value, force_prefix=None):
         annotated = self.left_annotated(value, force_prefix)

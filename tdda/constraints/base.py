@@ -24,7 +24,7 @@ from tdda.utils import (
     nvl, richgood, richbad, richgoodbad, XML, write_or_return,
     tdda_css, constraint_val, indicator_field_name,
     rednz, redblack, coloured_tick_cross, print_stderr,
-    TDDAError, globlike_match
+    TDDAError, globlike_match, plural
 )
 from tdda.version import version
 
@@ -1471,18 +1471,6 @@ FIELD_CONSTRAINTS_MAP = {
 }
 
 
-def plural(n, s, pl=None):
-    """
-    Returns a string like '23 fields' or '1 field' where the
-    number is n, the stem is s and the plural is either stem + 's'
-    or stem + pl (if provided).
-    """
-    if pl is None:
-        pl = 's'
-    if n == 1:
-        return '%s %s' % (n, s)
-    else:
-        return '%s %s%s' % (n, s, pl)
 
 
 def native_definite(o):

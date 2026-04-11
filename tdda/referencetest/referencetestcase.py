@@ -122,7 +122,7 @@ import unittest
 
 from tdda.state import get_testing, set_testing, get_config
 from tdda.referencetest.referencetest import ReferenceTest, tag, DEFAULT_FAIL_DIR
-from tdda.utils import TDDAError, nvl
+from tdda.utils import TDDAError, nvl, plural
 
 
 class ReferenceTestCase(unittest.TestCase, ReferenceTest):
@@ -157,7 +157,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check, r, untag, tag_failures = _set_flags_from_argv(argv)
+        argv, tagged, check, r, untag, log_failures = _set_flags_from_argv(argv)
         report = nvl(r, report)
         if 'TDDAREPORT' in os.environ:
             report = True
@@ -166,7 +166,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         try:
             _run_tests(module=module, argv=argv, tagged=tagged,
                        check=check, report=report, untag=untag,
-                       tag_failures=tag_failures, **kw)
+                       log_failures=log_failures, **kw)
         finally:
             if testtdda:
                 if saved is not None:
@@ -175,7 +175,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
 
 
 def _run_tests(module=None, argv=None, tagged=False, check=False,
-               report=None, untag=False, tag_failures=False, **kw):
+               report=None, untag=False, log_failures=None, **kw):
     """
     Run tests
     """
@@ -206,10 +206,10 @@ def _run_tests(module=None, argv=None, tagged=False, check=False,
         if report:
             with open(outpath, 'w') as f:
                 json.dump(d, f)
-        if not tag_failures:
-            tag_failures = get_config(None).referencetest.tag_failures
-        if tag_failures:
-            _write_failing_tests(result)
+        if log_failures is None:
+            log_failures = get_config(None).referencetest.log_failures
+        if log_failures:
+            _record_failing_tests(result)
         sys.exit(0 if ok else 1)
     else:
         unittest.main(module=module, argv=argv, testLoader=loader, **kw)
@@ -252,7 +252,7 @@ def _set_flags_from_argv(argv=None):
     regenerate = False
     report = None
     untag = False
-    tag_failures = False
+    log_failures = None
 
     for i, arg in enumerate(rest):
         if arg.startswith('-') and not arg.startswith('--'):
@@ -270,7 +270,7 @@ def _set_flags_from_argv(argv=None):
                     untag = True
                     arg = arg.replace('9', '')
                 elif flag == 'F':
-                    tag_failures = True
+                    log_failures = True
                     arg = arg.replace('F', '')
                 elif flag == 'r':
                     report = True
@@ -330,19 +330,19 @@ def _set_flags_from_argv(argv=None):
         rest = rest[:idx] + rest[idx+1:]
         untag = True
 
-    if '--tag-failures' in rest:
-        idx = rest.index('--tag-failures')
+    if '--log-failures' in rest:
+        idx = rest.index('--log-failures')
         rest = rest[:idx] + rest[idx+1:]
-        tag_failures = True
+        log_failures = True
 
-    if '--no-tag-failures' in rest:
-        idx = rest.index('--no-tag-failures')
+    if '--no-log-failures' in rest:
+        idx = rest.index('--no-log-failures')
         rest = rest[:idx] + rest[idx+1:]
-        tag_failures = False
+        log_failures = False  # explicitly suppressed
 
     if regenerate:
         ReferenceTestCase.set_regeneration()
-    return (argv[:1] + rest, tagged, check, report, untag, tag_failures)
+    return (argv[:1] + rest, tagged, check, report, untag, log_failures)
 
 
 def _untag_tests(module=None, argv=None):
@@ -380,12 +380,12 @@ def _remove_tag_lines(filepath):
     if n_removed:
         with open(filepath, 'w') as f:
             f.write(''.join(new_lines))
-        print('Removed %d @tag decorator(s) from %s' % (n_removed, filepath))
+        print('Removed %s from %s' % (plural(n_removed, '@tag decorator'), filepath))
     else:
         print('No @tag decorators found in %s' % filepath)
 
 
-def _write_failing_tests(result):
+def _record_failing_tests(result):
     """
     Write the IDs of failing/erroring tests to a file in TDDA_FAIL_DIR,
     one per line in the format:
@@ -523,7 +523,7 @@ def _add_tag_lines(filepath, items):
     if n or not tag_imported:
         with open(filepath, 'w') as f:
             f.write(''.join(lines))
-        print('Added %d @tag decorator(s) to %s' % (n, filepath))
+        print('Added %s to %s' % (plural(n, '@tag decorator'), filepath))
     else:
         print('No new @tag decorators needed in %s' % filepath)
 
