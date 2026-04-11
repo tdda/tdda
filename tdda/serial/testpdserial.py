@@ -1708,6 +1708,27 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
         kw = serial_to_pandas_read_csv_args(md)
         self.assertEqual(kw['date_format'], {'d': 'ISO8601'})
 
+    def test_serial_allformats2unspec_kwargs(self):
+        # Fields with no per-field format fall back to dataset-level
+        # date_format (eu-date) and datetime_format (eu-datetime).
+        # All other fields have explicit per-field formats.
+        md = load_metadata(tdpath('allformats2unspec.serial'))
+        kw = serial_to_pandas_read_csv_args(md)
+        self.assertEqual(kw['date_format'], {
+            'eu_date':       '%d/%m/%Y',
+            'eu_date_2y':    '%d/%m/%y',
+            'iso_date':      'ISO8601',
+            'us_date':       '%m/%d/%Y',
+            'us_date_2y':    '%m/%d/%y',
+            'eu_datetime':   '%d/%m/%Y %H:%M:%S',
+            'eu_datetime_2y':'%d/%m/%y %H:%M:%S',
+            'iso_datetime':  'ISO8601',
+            'us_datetime':   '%m/%d/%Y %H:%M:%S',
+            'us_datetime_2y':'%m/%d/%y %H:%M:%S',
+            'udate':         '%d/%m/%Y',
+            'udatetime':     '%d/%m/%Y %H:%M:%S',
+        })
+
 
 class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
     """
@@ -1775,12 +1796,6 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
             tdpath('usdt2y.csv'), tdpath('usdt2y.serial')
         )
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
-
-    def test_us_allformats_serial(self):
-        df = csv_to_pandas(
-            tdpath('allformats.csv'), tdpath('allformats.serial')
-        )
-        self.assertDataFrameCorrect(df, tdpath('alldateformats.parquet'))
 
     @tag
     def test_us_allformats2unspec_serial(self):

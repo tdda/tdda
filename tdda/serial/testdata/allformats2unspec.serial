@@ -69,8 +69,8 @@
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "eurod",
-        "datetime_format": "usdt",
+        "date_format": "eu-date",
+        "datetime_format": "eu-datetime",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0
