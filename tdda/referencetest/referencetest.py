@@ -917,7 +917,7 @@ class ReferenceTest(object):
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_files(
-                actual_paths, expected_paths, lstrip=strip, rstrip=rstrip
+                actual_paths, expected_paths, lstrip=lstrip, rstrip=rstrip
             )
         else:
             mpc = max_permutation_cases

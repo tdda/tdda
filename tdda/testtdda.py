@@ -13,6 +13,8 @@ from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 from tdda.referencetest.testtddadiff import *
 from tdda.referencetest.testgentest import *
+from tdda.referencetest.testtagging import *
+from tdda.referencetest.test_tagging_meta import *
 from tdda.serial.testserial import *
 from tdda.testutils import *
 from tdda.testconfig import *

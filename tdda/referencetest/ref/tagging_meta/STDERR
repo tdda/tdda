@@ -1,0 +1,32 @@
+F.EF.
+======================================================================
+ERROR: testCerror (test_tagsc.TestC.testCerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/njr/python/tdda/tdda/referencetest/scratch/test_tagsc.py", line 11, in testCerror
+    self.assertTrue(0/0)
+                    ~^~
+ZeroDivisionError: division by zero
+
+======================================================================
+FAIL: testAfail (test_tagsa.TestA.testAfail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/njr/python/tdda/tdda/referencetest/scratch/test_tagsa.py", line 5, in testAfail
+    self.assertTrue(False)
+    ~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: testCfail (test_tagsc.TestC.testCfail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/njr/python/tdda/tdda/referencetest/scratch/test_tagsc.py", line 8, in testCfail
+    self.assertTrue(False)
+    ~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.000s
+
+FAILED (failures=2, errors=1)

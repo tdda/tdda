@@ -1,0 +1,3 @@
+/test_tagsa.py::TestA::testAfail
+/test_tagsc.py::TestC::testCfail
+/test_tagsc.py::TestC::testCerror
