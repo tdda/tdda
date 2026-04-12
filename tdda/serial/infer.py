@@ -7,7 +7,7 @@ from collections import namedtuple, Counter
 TypeStats = namedtuple('TypeStats', 'field stats')
 
 from tdda.serial.metadata import SerialMetadata, FieldMetadata, FieldType
-from tdda.utils import warn, error, nvl, debug
+from tdda.utils import warn, error, nvl, debug, testwarn
 from tdda.referencetest.utils import FileType
 from tdda.serial.utils import non_chars, dict_max_items
 
@@ -60,12 +60,14 @@ PRIVATE = chr(0)
 
 class MetadataInferrer:
     def __init__(
-        self, inpath, lines_to_use=1000, verbosity=None, single_field=None
+        self, inpath, lines_to_use=1000, verbosity=None, single_field=None,
+        warner=None
     ):
         self.inpath = os.path.expanduser(inpath)
         self.lines_to_use = lines_to_use
         self.verbosity = nvl(verbosity, 10)
         self.single_field = single_field
+        self.warn = nvl(warner, warn)
         self.read()
         self.process()
 
@@ -79,9 +81,9 @@ class MetadataInferrer:
             null_indicator=self.null,
         )
 
-    def print(self, msg, min_verbosity=1):
+    def vprint(self, msg, min_verbosity=1):
         if self.verbosity >= min_verbosity:
-            print(msg)
+            self.warn(msg)
 
     def read(self):
         enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
@@ -129,8 +131,8 @@ class MetadataInferrer:
         self.escape = escape
         self.stutter = stutter
 
-        self.print(f'Inferred escape: {escape}.', 2)
-        self.print(f'Inferred stutter: {stutter}.', 2)
+        self.vprint(f'Inferred escape: {escape}.', 2)
+        self.vprint(f'Inferred stutter: {stutter}.', 2)
         self.infer_fields()
 
     def find_separator(self):
@@ -158,7 +160,7 @@ class MetadataInferrer:
             if n_tabs == M
             else ';'
         )
-        self.print(f'Inferred separator: {sep} ({M} occurrences).', 2)
+        self.vprint(f'Inferred separator: {sep} ({M} occurrences).', 2)
         return sep
 
     def find_quote_char(self):
@@ -191,19 +193,19 @@ class MetadataInferrer:
         nFields = len(self.fieldnames)
         excel = not (m == M)
         if excel:
-            self.print('Rows have different numbers of values.', 2)
+            self.vprint('Rows have different numbers of values.', 2)
         else:
-            self.print('All rows complete', 2)
+            self.vprint('All rows complete', 2)
 
-        self.print(
+        self.vprint(
             f'Fieldnames {nFields}. '
             f'Min fields in row: {m}. Max fields in row: {M}\n',
             2,
         )
         if M > nFields:
-            self.print('More cols in some rows than fields (headers)', 2)
+            self.vprint('More cols in some rows than fields (headers)', 2)
         if nFields > M:
-            self.print('All rows lack at least one field.', 2)
+            self.vprint('All rows lack at least one field.', 2)
         n = max(nFields, M)
 
         # Number quoted by column index
@@ -211,9 +213,9 @@ class MetadataInferrer:
             i: sum((q[i] if i < len(q) else 0) for q in is_quoted)
             for i in range(n)
         }
-        self.print(f'Number quoted by col index: {n_quoted}', 2)
+        self.vprint(f'Number quoted by col index: {n_quoted}', 2)
         total_quoted = sum(n_quoted.values())
-        self.print(f'Total number quoted: {total_quoted}', 2)
+        self.vprint(f'Total number quoted: {total_quoted}', 2)
 
         n_cols = max(len(row) for row in data)
         n_fields = len(self.fieldnames)
@@ -238,8 +240,8 @@ class MetadataInferrer:
             self.describe_null()
         elif len(cand_nulls) > 1:
             m = mode_nulls[list(mode_nulls)[0]]
-            self.print(f'Multiple candidate nulls with frequency {m}', 2)
-            self.print('\n'.join(f'  "{n}"' for n in mode_nulls))
+            self.vprint(f'Multiple candidate nulls with frequency {m}', 2)
+            self.vprint('\n'.join(f'  "{n}"' for n in mode_nulls))
             knowns = {k for k in mode_nulls if k in KNOWN_NULLS}
             if knowns:
                 ranked = sorted(knowns, key=lambda k: KNOWN_NULLS.index(k))
@@ -247,7 +249,7 @@ class MetadataInferrer:
             else:
                 self.null = sorted(cand_nulls)[0]
         else:
-            self.print(f'No null detected.', 2)
+            self.vprint(f'No null detected.', 2)
             self.null = None
 
         self.fields = [
@@ -291,10 +293,10 @@ class MetadataInferrer:
 
     def describe_null(self):
         if self.null in KNOWN_NULLS:
-            self.print(f'Null: "{self.null}"', 2)
+            self.vprint(f'Null: "{self.null}"', 2)
         else:
             if self.verbosity > 0:
-                warn(f'Unusual null: "{self.null}".')
+                self.warn(f'Unusual null: "{self.null}".')
 
     def dequote(self, row):
         # Strip pairs of opening and closing quote for each element in row.
@@ -311,8 +313,8 @@ class MetadataInferrer:
         return out, is_quoted
 
 
-def infer_format_from_flat_file(path, lines_to_use=1000, **kw):
-    inferrer = MetadataInferrer(path, lines_to_use, **kw)
+def infer_format_from_flat_file(path, lines_to_use=1000, warner=None, **kw):
+    inferrer = MetadataInferrer(path, lines_to_use, warner=warner, **kw)
     return inferrer.metadata
 
 

@@ -754,8 +754,13 @@ class TestInference(ReferenceTestCase):
     weird_serial = tdpath('tiny1nd-weird.serial')
     IGL = ['tdda.serial-', 'writer']
 
+    def infer(self, path, **kw):
+        Warn, buf = testwarn()
+        md = infer_format_from_flat_file(path, warner=Warn, **kw)
+        return md, buf
+
     def testInferMetadataTiny1cdq(self):
-        md = infer_format_from_flat_file(tdpath('tiny1ndq.csv'), verbosity=0)
+        md, buf = self.infer(tdpath('tiny1ndq.csv'), verbosity=0)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('tiny1ndq-inferred.serial'),
@@ -797,9 +802,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataWeird(self):
-        md = infer_format_from_flat_file(
-            tdpath('tiny1nd-weird.ssv'), verbosity=0
-        )
+        md, buf = self.infer(tdpath('tiny1nd-weird.ssv'), verbosity=0)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('tiny1nd-weird-inferred.serial'),
@@ -807,7 +810,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataSimple(self):
-        md = infer_format_from_flat_file(tdpath('simple.csv'), verbosity=1)
+        md, buf = self.infer(tdpath('simple.csv'), verbosity=0)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('simple-inferred.serial'),
@@ -815,7 +818,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataMinimal(self):
-        md = infer_format_from_flat_file(tdpath('minimal.csv'), verbosity=1)
+        md, buf = self.infer(tdpath('minimal.csv'), verbosity=0)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('minimal-inferred.serial'),
