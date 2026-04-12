@@ -27,6 +27,7 @@
         "encoding": "UTF-8",
         "delimiter": ",",
         "quote_char": "\"",
+        "date_format": "%Y-%m-%d",
         "null_indicator": ""
     }
 }

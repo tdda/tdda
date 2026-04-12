@@ -6,7 +6,13 @@ from collections import namedtuple, Counter
 
 TypeStats = namedtuple('TypeStats', 'field stats')
 
-from tdda.serial.metadata import SerialMetadata, FieldMetadata, FieldType
+from tdda.serial.dateutils import infer_date_format_from_strings
+from tdda.serial.metadata import (
+    SerialMetadata,
+    FieldMetadata,
+    FieldType,
+    STRFTIME_TO_NAMED_FORMAT,
+)
 from tdda.utils import warn, error, nvl, debug, testwarn
 from tdda.referencetest.utils import FileType
 from tdda.serial.utils import non_chars, dict_max_items
@@ -81,6 +87,7 @@ class MetadataInferrer:
             escape_char=self.escape,
             quote_char=self._default(self.quote_char, '"', 'quote_char'),
             null_indicator=self.null,
+            date_format=self.date_format,
         )
 
     def vprint(self, msg, min_verbosity=1):
@@ -264,9 +271,45 @@ class MetadataInferrer:
             self.vprint(f'No null detected.', 2)
             self.null = None
 
+        null_val = self.null or ''
+        field_values = {
+            name: [
+                v
+                for v in [row[i] for row in data if len(row) > i]
+                if v != null_val and v != ''
+            ]
+            for i, name in enumerate(self.fieldnames)
+        }
+
+        date_formats = {}
+        for name in self.fieldnames:
+            t = type_info[name].most_likely_type
+            if isinstance(t, str) and t.startswith('date'):
+                fmt = infer_date_format_from_strings(field_values[name])
+                if fmt is not None:
+                    date_formats[name] = fmt
+
+        unique_fmts = set(date_formats.values())
+        if len(unique_fmts) == 1:
+            self.date_format = list(unique_fmts)[0]
+            field_fmts = {}
+        elif len(unique_fmts) > 1:
+            named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_fmts}
+            if len(named) == 1 and None not in named:
+                self.date_format = list(named)[0]
+                field_fmts = {}
+            else:
+                self.date_format = None
+                field_fmts = date_formats
+        else:
+            self.date_format = None
+            field_fmts = {}
+
         self.fields = [
             FieldMetadata(
-                name=name, fieldtype=type_info[name].most_likely_type
+                name=name,
+                fieldtype=type_info[name].most_likely_type,
+                format=field_fmts.get(name),
             )
             for name in self.fieldnames
         ]

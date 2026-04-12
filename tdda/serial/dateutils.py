@@ -106,8 +106,9 @@ def infer_date_format_from_strings(strings):
         strings: list of non-null string values believed to be dates
 
     Returns:
-        A named format string (e.g. 'iso8601-date', 'eu-date',
-        'us-datetime-2y') or None if the format cannot be determined
+        A strftime format string preserving the actual separators found
+        in the data (e.g. '%d-%m-%Y', '%m/%d/%Y %H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S'), or None if the format cannot be determined
         (e.g. ambiguous EU vs US with all values having both parts <= 12).
     """
     if not strings:
@@ -117,10 +118,18 @@ def infer_date_format_from_strings(strings):
 
     # ── ISO: year-first ───────────────────────────────────────────────────────
     if all(re.match(DateRE.ISO_DATEISH, s) for s in strings):
-        return 'iso8601-date'
+        m = re.match(DateRE.SEP_ISO, strings[0])
+        assert m
+        sep = m.group(1)
+        return '%%Y%s%%m%s%%d' % (sep, sep)
 
     if all(re.match(DateRE.ISO_DATETIMEISH, s) for s in strings):
-        return 'iso8601-datetime'
+        # Preserve date separator; time part is always T or space + HH:MM:SS
+        m = re.match(DateRE.SEP_ISO, strings[0])
+        assert m
+        sep = m.group(1)
+        dtsep = 'T' if 'T' in strings[0] else ' '
+        return '%%Y%s%%m%s%%d%s%%H:%%M:%%S' % (sep, sep, dtsep)
 
     # ── 4-digit year at end (EU or US) ────────────────────────────────────────
     matches = [re.match(DateRE.DATEISH4Y, s) for s in strings]
@@ -128,16 +137,13 @@ def infer_date_format_from_strings(strings):
         seps = get_date_separators(DateRE.SEPS4Y, strings[0])
         if seps is None:
             return None
-        # max of first and second positions across all rows disambiguates:
-        # if max(first) > 12 → day is first → Euro (DD/MM/YYYY)
-        # if max(second) > 12 → day is second → US (MM/DD/YYYY)
         m1 = max(int(m.group(1)) for m in matches)
         m2 = max(int(m.group(2)) for m in matches)
-        has_time = any(m.group(4) for m in matches)
-        if m1 > 12 and m2 <= 12:
-            return 'eu-datetime' if has_time else 'eu-date'
-        elif m1 <= 12 and m2 > 12:
-            return 'us-datetime' if has_time else 'us-date'
+        dsep = seps.date_sep
+        if m1 > 12 and m2 <= 12:  # Euro: day first
+            return ('%%d%s%%m%s%%Y' % (dsep, dsep)) + seps.time_part
+        elif m1 <= 12 and m2 > 12:  # US: month first
+            return ('%%m%s%%d%s%%Y' % (dsep, dsep)) + seps.time_part
         return None  # ambiguous: both parts <= 12 across all rows
 
     # ── 2-digit year at end (EU or US) ────────────────────────────────────────
@@ -148,11 +154,11 @@ def infer_date_format_from_strings(strings):
             return None
         m1 = max(int(m.group(1)) for m in matches)
         m2 = max(int(m.group(2)) for m in matches)
-        has_time = any(m.group(4) for m in matches)
-        if m1 > 12 and m2 <= 12:
-            return 'eu-datetime-2y' if has_time else 'eu-date-2y'
-        elif m1 <= 12 and m2 > 12:
-            return 'us-datetime-2y' if has_time else 'us-date-2y'
+        dsep = seps.date_sep
+        if m1 > 12 and m2 <= 12:  # Euro 2Y
+            return ('%%d%s%%m%s%%y' % (dsep, dsep)) + seps.time_part
+        elif m1 <= 12 and m2 > 12:  # US 2Y
+            return ('%%m%s%%d%s%%y' % (dsep, dsep)) + seps.time_part
         return None  # ambiguous
 
     return None

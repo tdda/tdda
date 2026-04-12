@@ -404,38 +404,38 @@ class TestDateFormatInference(ReferenceTestCase):
 
     def testDateFormatFromStrings(self):
         f = infer_date_format_from_strings
-        # ISO dates
-        self.assertEqual(f(['2024-01-01', '2024-01-20']), 'iso8601-date')
-        self.assertEqual(f(['2024/01/01', '2024/01/20']), 'iso8601-date')
-        # ISO datetimes
+        # ISO dates — separator preserved
+        self.assertEqual(f(['2024-01-01', '2024-01-20']), '%Y-%m-%d')
+        self.assertEqual(f(['2024/01/01', '2024/01/20']), '%Y/%m/%d')
+        # ISO datetimes — separator and T/space preserved
         self.assertEqual(
             f(['2024-01-01T12:34:56', '2024-01-20T21:22:23']),
-            'iso8601-datetime',
+            '%Y-%m-%dT%H:%M:%S',
         )
         self.assertEqual(
             f(['2024-01-01 12:34:56', '2024-01-20 21:22:23']),
-            'iso8601-datetime',
+            '%Y-%m-%d %H:%M:%S',
         )
-        # Euro 4Y (day > 12 disambiguates)
-        self.assertEqual(f(['01-01-2024', '20-01-2024']), 'eu-date')
-        self.assertEqual(f(['01/01/2024', '20/01/2024']), 'eu-date')
+        # Euro 4Y — separator preserved
+        self.assertEqual(f(['01-01-2024', '20-01-2024']), '%d-%m-%Y')
+        self.assertEqual(f(['01/01/2024', '20/01/2024']), '%d/%m/%Y')
         # Euro datetime 4Y
         self.assertEqual(
             f(['01-01-2024 12:34:56', '20-01-2024 21:22:23']),
-            'eu-datetime',
+            '%d-%m-%Y %H:%M:%S',
         )
-        # US 4Y (second part > 12 disambiguates)
-        self.assertEqual(f(['01-01-2024', '01-20-2024']), 'us-date')
-        self.assertEqual(f(['01/01/2024', '01/20/2024']), 'us-date')
+        # US 4Y — separator preserved
+        self.assertEqual(f(['01-01-2024', '01-20-2024']), '%m-%d-%Y')
+        self.assertEqual(f(['01/01/2024', '01/20/2024']), '%m/%d/%Y')
         # US datetime 4Y
         self.assertEqual(
             f(['01-01-2024 12:34:56', '01-20-2024 21:22:23']),
-            'us-datetime',
+            '%m-%d-%Y %H:%M:%S',
         )
         # Euro 2Y
-        self.assertEqual(f(['01-01-24', '20-01-24']), 'eu-date-2y')
+        self.assertEqual(f(['01-01-24', '20-01-24']), '%d-%m-%y')
         # US 2Y
-        self.assertEqual(f(['01-01-24', '01-20-24']), 'us-date-2y')
+        self.assertEqual(f(['01-01-24', '01-20-24']), '%m-%d-%y')
         # Ambiguous (all parts <= 12): returns None
         self.assertIsNone(f(['01-01-2024', '02-03-2024']))
         # Not dates at all
