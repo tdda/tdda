@@ -61,23 +61,25 @@ PRIVATE = chr(0)
 class MetadataInferrer:
     def __init__(
         self, inpath, lines_to_use=1000, verbosity=None, single_field=None,
-        warner=None
+        warner=None, add_defaults=False, report_added_defaults=True
     ):
         self.inpath = os.path.expanduser(inpath)
         self.lines_to_use = lines_to_use
         self.verbosity = nvl(verbosity, 10)
         self.single_field = single_field
         self.warn = nvl(warner, warn)
+        self.add_defaults = add_defaults
+        self.report_added_defaults = report_added_defaults
         self.read()
         self.process()
 
         self.metadata = SerialMetadata(
             fields=self.fields,
-            encoding=self.encoding,
+            encoding=self._default(self.encoding, 'UTF-8', 'encoding'),
             delimiter=self.sep,
             stutter_quotes=self.stutter,
             escape_char=self.escape,
-            quote_char=self.quote_char,
+            quote_char=self._default(self.quote_char, '"', 'quote_char'),
             null_indicator=self.null,
         )
 
@@ -85,9 +87,18 @@ class MetadataInferrer:
         if self.verbosity >= min_verbosity:
             self.warn(msg)
 
+    def _default(self, value, default, name):
+        if value is not None:
+            return value
+        if self.add_defaults:
+            if self.report_added_defaults:
+                self.warn(f'{name}: {default!r} (default, no evidence)')
+            return default
+        return None
+
     def read(self):
         enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
-        self.encoding = 'UTF-8' if enc == 'ascii' else enc
+        self.encoding = None if enc == 'ascii' else enc
         self.datalines = datalines = []
         with open(self.inpath, encoding=self.encoding) as f:
             self.header = f.readline().rstrip()
@@ -167,10 +178,11 @@ class MetadataInferrer:
         lines = self.all_lines
         n_dquotes = count('"', lines)
         n_squotes = count("'", lines)
-        quote = "'" if n_squotes > n_dquotes else '"'
-        self.n_quotes = n_squotes if n_squotes > n_dquotes else n_dquotes
+        self.n_quotes = max(n_dquotes, n_squotes)
+        if self.n_quotes == 0:
+            return None
         # But apostrophes...quoted or not.
-        return quote
+        return "'" if n_squotes > n_dquotes else '"'
 
     def find_fieldnames(self):
         fieldnames = self.header.split(self.sep)
@@ -313,8 +325,16 @@ class MetadataInferrer:
         return out, is_quoted
 
 
-def infer_format_from_flat_file(path, lines_to_use=1000, warner=None, **kw):
-    inferrer = MetadataInferrer(path, lines_to_use, warner=warner, **kw)
+def infer_format_from_flat_file(
+    path, lines_to_use=1000, warner=None,
+    add_defaults=False, report_added_defaults=True, **kw
+):
+    inferrer = MetadataInferrer(
+        path, lines_to_use, warner=warner,
+        add_defaults=add_defaults,
+        report_added_defaults=report_added_defaults,
+        **kw
+    )
     return inferrer.metadata
 
 

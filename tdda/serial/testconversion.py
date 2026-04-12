@@ -759,11 +759,24 @@ class TestInference(ReferenceTestCase):
         md = infer_format_from_flat_file(path, warner=Warn, **kw)
         return md, buf
 
+    def check_infer(self, name, **kw):
+        stem = name.rsplit('.', 1)[0]
+        outname = stem + '-prov-inferred.serial'
+        Warn, buf = testwarn()
+        md = infer_format_from_flat_file(tdpath(name), warner=Warn, **kw)
+        outpath = tmppath(outname)
+        with open(outpath, 'w') as f:
+            f.write(md.to_json())
+        self.assertFileCorrect(outpath, tdpath(outname), ignore_lines=self.IGL)
+        return buf
+
     def testInferMetadataTiny1cdq(self):
-        md, buf = self.infer(tdpath('tiny1ndq.csv'), verbosity=0)
+        md, buf = self.infer(
+            tdpath('tiny1ndq.csv'), verbosity=0, add_defaults=True
+        )
         self.assertStringCorrect(
             md.to_json(),
-            tdpath('tiny1ndq-inferred.serial'),
+            tdpath('tiny1ndq-with-defaults-inferred.serial'),
             ignore_lines=self.IGL,
         )
 
@@ -802,28 +815,42 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataWeird(self):
-        md, buf = self.infer(tdpath('tiny1nd-weird.ssv'), verbosity=0)
+        md, buf = self.infer(
+            tdpath('tiny1nd-weird.ssv'), verbosity=0, add_defaults=True
+        )
         self.assertStringCorrect(
             md.to_json(),
-            tdpath('tiny1nd-weird-inferred.serial'),
+            tdpath('tiny1nd-weird-with-defaults-inferred.serial'),
             ignore_lines=self.IGL,
         )
 
     def testInferMetadataSimple(self):
-        md, buf = self.infer(tdpath('simple.csv'), verbosity=0)
+        md, buf = self.infer(
+            tdpath('simple.csv'), verbosity=0, add_defaults=True
+        )
         self.assertStringCorrect(
             md.to_json(),
-            tdpath('simple-inferred.serial'),
+            tdpath('simple-with-defaults-inferred.serial'),
+            ignore_lines=self.IGL,
+        )
+        self.assertEqual(buf, [
+            "encoding: 'UTF-8' (default, no evidence)",
+            "quote_char: '\"' (default, no evidence)",
+        ])
+
+    def testInferMetadataMinimal(self):
+        md, buf = self.infer(
+            tdpath('minimal.csv'), verbosity=0, add_defaults=True
+        )
+        self.assertStringCorrect(
+            md.to_json(),
+            tdpath('minimal-with-defaults-inferred.serial'),
             ignore_lines=self.IGL,
         )
 
-    def testInferMetadataMinimal(self):
-        md, buf = self.infer(tdpath('minimal.csv'), verbosity=0)
-        self.assertStringCorrect(
-            md.to_json(),
-            tdpath('minimal-inferred.serial'),
-            ignore_lines=self.IGL,
-        )
+    def testInferAllformats(self):
+        buf = self.check_infer('allformats.csv', verbosity=0)
+        self.assertEqual(buf, [])
 
 
 class TestSerialUtilityFunction(ReferenceTestCase):

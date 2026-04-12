@@ -24,6 +24,7 @@
                 "fieldtype": "date"
             }
         ],
+        "encoding": "UTF-8",
         "delimiter": ";",
         "quote_char": "'",
         "null_indicator": "."

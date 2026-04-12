@@ -1,11 +1,15 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
+    "writer": "tdda.serial-3.0.00rc1",
     "tdda.serial": {
         "fields": [
             {
+                "name": "",
+                "fieldtype": "int"
+            },
+            {
                 "name": "b",
-                "fieldtype": "string"
+                "fieldtype": "bool"
             },
             {
                 "name": "i",
@@ -20,12 +24,13 @@
                 "fieldtype": "string"
             },
             {
-                "name": "t",
+                "name": "d",
                 "fieldtype": "date"
             }
         ],
-        "delimiter": ";",
-        "quote_char": "'",
-        "null_indicator": "."
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "null_indicator": ""
     }
 }
