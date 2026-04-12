@@ -1,3 +1,5 @@
+import re
+
 from collections import namedtuple
 
 from tdda.referencetest import ReferenceTestCase, tag
@@ -8,7 +10,12 @@ from tdda.serial.frictionless import (
     FrictionlessMetadata,
 )
 from tdda.serial.metadata import FieldType
-from tdda.serial.dateutils import infer_date_format_from_strings
+from tdda.serial.dateutils import (
+    DateRE,
+    Separators,
+    get_date_separators,
+    infer_date_format_from_strings,
+)
 from tdda.serial.infer import (
     analyse_values,
     careful_split,
@@ -332,6 +339,109 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                 c.generate, c.out_formats, c.broad_out, c.inpath, c.outpath
             )
             self.assertEqual((args, actual), (args, expected))
+
+
+class TestDateFormatInference(ReferenceTestCase):
+    def testDateRE(self):
+        R = DateRE
+        dates = {
+            '2024-01-20': R.ISO_DATEISH,
+            '2024/01/20': R.ISO_DATEISH,
+            '2024-01-20T12:34:56': R.ISO_DATETIMEISH,
+            '2024-01-20 12:34:56.12345': R.ISO_DATETIMEISH,
+            '2024/01/20T12:34:56': R.ISO_DATETIMEISH,
+            '2024/01/20 12:34:56.12345': R.ISO_DATETIMEISH,
+            '20-01-2024': R.DATEISH4Y,
+            '20/01/2024': R.DATEISH4Y,
+            '01-20-2024': R.DATEISH4Y,
+            '01/20/2024': R.DATEISH4Y,
+            '20-01-2024T12:34:56': R.DATEISH4Y,
+            '20-01-2024T12:34:56.123456': R.DATEISH4Y,
+            '20-01-24': R.DATEISH2Y,
+            '20/01/24': R.DATEISH2Y,
+            '01-20-24': R.DATEISH2Y,
+            '01/20/24': R.DATEISH2Y,
+            '20-01-24T12:34:56': R.DATEISH2Y,
+            '20-01-24T12:34:56.123456': R.DATEISH2Y,
+        }
+
+        for k, r in dates.items():
+            m = re.match(r, k)
+            if not m:
+                print(f'Failing: {k} {r.pattern}')
+            self.assertIsNotNone(m)
+
+            m = re.match(R.DATEISH, k)
+            if not m:
+                print(f'Failing: {k} (not DATEISH)')
+            self.assertIsNotNone(m)
+
+        sep_dates = {
+            '20-01-2024': (
+                R.SEPS4Y,
+                Separators('-', None, None, False, False, ''),
+            ),
+            '20-01-2024T12:34:56': (
+                R.SEPS4Y,
+                Separators('-', 'T', ':', True, False, 'T%H:%M:%S'),
+            ),
+            '20-01-2024T12:34:56.123': (
+                R.SEPS4Y,
+                Separators('-', 'T', ':', True, True, 'T%H:%M:%S.%f'),
+            ),
+            '20/01/2024 12.34.56.123': (
+                R.SEPS4Y,
+                Separators('/', ' ', '.', True, True, ' %H.%M.%S.%f'),
+            ),
+        }
+        for k, (r, expected) in sep_dates.items():
+            actual = get_date_separators(r, k)
+            if actual != expected:
+                print('-->   actual', actual)
+                print('--> expected', expected)
+                print()
+            self.assertEqual(actual, expected)
+
+    def testDateFormatFromStrings(self):
+        f = infer_date_format_from_strings
+        # ISO dates
+        self.assertEqual(f(['2024-01-01', '2024-01-20']), 'iso8601-date')
+        self.assertEqual(f(['2024/01/01', '2024/01/20']), 'iso8601-date')
+        # ISO datetimes
+        self.assertEqual(
+            f(['2024-01-01T12:34:56', '2024-01-20T21:22:23']),
+            'iso8601-datetime',
+        )
+        self.assertEqual(
+            f(['2024-01-01 12:34:56', '2024-01-20 21:22:23']),
+            'iso8601-datetime',
+        )
+        # Euro 4Y (day > 12 disambiguates)
+        self.assertEqual(f(['01-01-2024', '20-01-2024']), 'eu-date')
+        self.assertEqual(f(['01/01/2024', '20/01/2024']), 'eu-date')
+        # Euro datetime 4Y
+        self.assertEqual(
+            f(['01-01-2024 12:34:56', '20-01-2024 21:22:23']),
+            'eu-datetime',
+        )
+        # US 4Y (second part > 12 disambiguates)
+        self.assertEqual(f(['01-01-2024', '01-20-2024']), 'us-date')
+        self.assertEqual(f(['01/01/2024', '01/20/2024']), 'us-date')
+        # US datetime 4Y
+        self.assertEqual(
+            f(['01-01-2024 12:34:56', '01-20-2024 21:22:23']),
+            'us-datetime',
+        )
+        # Euro 2Y
+        self.assertEqual(f(['01-01-24', '20-01-24']), 'eu-date-2y')
+        # US 2Y
+        self.assertEqual(f(['01-01-24', '01-20-24']), 'us-date-2y')
+        # Ambiguous (all parts <= 12): returns None
+        self.assertIsNone(f(['01-01-2024', '02-03-2024']))
+        # Not dates at all
+        self.assertIsNone(f(['foo', 'bar']))
+        # Empty
+        self.assertIsNone(f([]))
 
 
 if __name__ == '__main__':

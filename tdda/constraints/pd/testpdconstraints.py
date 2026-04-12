@@ -8,7 +8,6 @@ import datetime
 import json
 import math
 import os
-import re
 import time
 import shutil
 import subprocess
@@ -59,12 +58,7 @@ from tdda.utils import (
 from tdda.examples import copy_accounts_data_unzipped
 
 from tdda.referencetest import ReferenceTestCase, tag
-from tdda.referencetest.pddates import (
-    infer_date_format,
-    DateRE,
-    Separators,
-    get_date_separators,
-)
+from tdda.referencetest.pddates import infer_date_format
 from tdda.serial import csv_to_pandas
 from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
@@ -2148,75 +2142,6 @@ class TestUtilityFunctions2(ReferenceTestCase):
                     print()
                 self.assertEqual(same, 2)
                 self.assertEqual(c.dtype, expected_df[k].dtype)
-
-    def testDateRE(self):
-        R = DateRE
-        dates = {
-            '2024-01-20': R.ISO_DATEISH,
-            '2024/01/20': R.ISO_DATEISH,
-            '2024-01-20T12:34:56': R.ISO_DATETIMEISH,
-            '2024-01-20 12:34:56.12345': R.ISO_DATETIMEISH,
-            '2024/01/20T12:34:56': R.ISO_DATETIMEISH,
-            '2024/01/20 12:34:56.12345': R.ISO_DATETIMEISH,
-            '20-01-2024': R.DATEISH4Y,
-            '20/01/2024': R.DATEISH4Y,
-            '01-20-2024': R.DATEISH4Y,
-            '01/20/2024': R.DATEISH4Y,
-            '20-01-2024': R.DATEISH4Y,
-            '20/01/2024': R.DATEISH4Y,
-            '01-20-2024': R.DATEISH4Y,
-            '01/20/2024': R.DATEISH4Y,
-            '20-01-2024T12:34:56': R.DATEISH4Y,
-            '20-01-2024T12:34:56.123456': R.DATEISH4Y,
-            '20-01-24': R.DATEISH2Y,
-            '20/01/24': R.DATEISH2Y,
-            '01-20-24': R.DATEISH2Y,
-            '01/20/24': R.DATEISH2Y,
-            '20-01-24': R.DATEISH2Y,
-            '20/01/24': R.DATEISH2Y,
-            '01-20-24': R.DATEISH2Y,
-            '01/20/24': R.DATEISH2Y,
-            '20-01-24T12:34:56': R.DATEISH2Y,
-            '20-01-24T12:34:56.123456': R.DATEISH2Y,
-        }
-
-        for k, r in dates.items():
-            m = re.match(r, k)
-            if not m:
-                print(f'Failing: {k} {r.pattern}')
-            self.assertIsNotNone(m)
-
-            m = re.match(R.DATEISH, k)
-            if not m:
-                print(f'Failing: {k} (not DATEISH)')
-            self.assertIsNotNone(m)
-
-        sep_dates = {
-            '20-01-2024': (
-                R.SEPS4Y,
-                Separators('-', None, None, False, False, ''),
-            ),
-            '20-01-2024T12:34:56': (
-                R.SEPS4Y,
-                Separators('-', 'T', ':', True, False, 'T%H:%M:%S'),
-            ),
-            '20-01-2024T12:34:56.123': (
-                R.SEPS4Y,
-                Separators('-', 'T', ':', True, True, 'T%H:%M:%S.%f'),
-            ),
-            '20/01/2024 12.34.56.123': (
-                R.SEPS4Y,
-                Separators('/', ' ', '.', True, True, ' %H.%M.%S.%f'),
-            ),
-        }
-        for k, (r, expected) in sep_dates.items():
-            actual = get_date_separators(r, k)
-            if actual != expected:
-                print('-->   actual', actual)
-                print('--> expected', expected)
-                print()
-            self.assertEqual(actual, expected)
-
 
 TestPandasMultipleConstraintVerifier.set_default_data_location(TESTDATADIR)
 TestPandasMultipleConstraintDetector.set_default_data_location(TESTDATADIR)
