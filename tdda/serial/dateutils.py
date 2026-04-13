@@ -121,6 +121,39 @@ def get_date_separators(r, s):
     return Separators(dsep, dtsep, tsep, time_component, frac != '', time_part)
 
 
+def resolve_ambiguous_format(strings, ambig_fmt, convention='eu'):
+    """
+    Resolve an ambiguous date/datetime format to a concrete strftime string,
+    using the given day/month convention.
+
+    Args:
+        strings:    list of date strings from the field (used to extract
+                    the date and time separators)
+        ambig_fmt:  one of the AmbiguousDateFormat.* constants
+        convention: 'eu' (day-first) or 'us' (month-first)
+
+    Returns:
+        strftime format string, or None if separators cannot be extracted.
+    """
+    if ambig_fmt in (AmbiguousDateFormat.EU_OR_US_DATE,
+                     AmbiguousDateFormat.EU_OR_US_DATETIME):
+        seps_re, year_code = DateRE.SEPS4Y, 'Y'
+    elif ambig_fmt in (AmbiguousDateFormat.EU_OR_US_DATE_2Y,
+                       AmbiguousDateFormat.EU_OR_US_DATETIME_2Y):
+        seps_re, year_code = DateRE.SEPS2Y, 'y'
+    else:
+        return None
+    seps = get_date_separators(seps_re, strings[0])
+    if seps is None:
+        return None
+    dsep = seps.date_sep
+    if convention == 'eu':
+        base = '%%d%s%%m%s%%%s' % (dsep, dsep, year_code)
+    else:
+        base = '%%m%s%%d%s%%%s' % (dsep, dsep, year_code)
+    return base + seps.time_part
+
+
 def infer_date_format_from_strings(strings):
     """
     Infer the date/datetime format from a list of string values.

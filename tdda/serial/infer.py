@@ -9,6 +9,7 @@ TypeStats = namedtuple('TypeStats', 'field stats')
 from tdda.serial.dateutils import (
     AMBIGUOUS_DATE_FORMATS,
     infer_date_format_from_strings,
+    resolve_ambiguous_format,
 )
 from tdda.serial.metadata import (
     SerialMetadata,
@@ -285,17 +286,57 @@ class MetadataInferrer:
             for i, name in enumerate(self.fieldnames)
         }
 
-        date_only_fmts = {}   # name -> fmt for 'date' type fields
-        datetime_fmts = {}    # name -> fmt for 'datetime' type fields
+        # Phase 1: infer raw format for each date/datetime field
+        raw_date_fmts = {}   # name -> fmt (may be AmbiguousDateFormat.*)
+        raw_dt_fmts = {}     # name -> fmt (may be AmbiguousDateFormat.*)
         for name in self.fieldnames:
             t = type_info[name].most_likely_type
             if isinstance(t, str) and t in ('date', 'datetime'):
                 fmt = infer_date_format_from_strings(field_values[name])
-                if fmt is not None and fmt not in AMBIGUOUS_DATE_FORMATS:
+                if fmt is not None:
                     if t == 'date':
-                        date_only_fmts[name] = fmt
+                        raw_date_fmts[name] = fmt
                     else:
-                        datetime_fmts[name] = fmt
+                        raw_dt_fmts[name] = fmt
+
+        # Phase 2: determine EU/US convention from unambiguous fields
+        eu_count = sum(
+            1 for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
+            if fmt not in AMBIGUOUS_DATE_FORMATS and fmt.startswith('%d')
+        )
+        us_count = sum(
+            1 for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
+            if fmt not in AMBIGUOUS_DATE_FORMATS and fmt.startswith('%m')
+        )
+        if eu_count > 0 or us_count > 0:
+            convention = 'eu' if eu_count >= us_count else 'us'
+            convention_reason = (
+                f'assuming {convention.upper()} based on other date fields'
+            )
+        else:
+            convention = 'eu'
+            convention_reason = 'defaulting to EU'
+
+        # Phase 3: resolve ambiguous formats, warn, build final dicts
+        date_only_fmts = {}
+        datetime_fmts = {}
+        for raw_fmts, final_fmts, label in (
+            (raw_date_fmts, date_only_fmts, 'date'),
+            (raw_dt_fmts, datetime_fmts, 'datetime'),
+        ):
+            for name, fmt in raw_fmts.items():
+                if fmt in AMBIGUOUS_DATE_FORMATS:
+                    resolved = resolve_ambiguous_format(
+                        field_values[name], fmt, convention
+                    )
+                    if resolved is not None:
+                        self.warn(
+                            f'Field "{name}": ambiguous {label} format'
+                            f' (EU or US); {convention_reason}.'
+                        )
+                        final_fmts[name] = resolved
+                else:
+                    final_fmts[name] = fmt
 
         # Hoist date_format (pure date fields only)
         unique_date_fmts = set(date_only_fmts.values())

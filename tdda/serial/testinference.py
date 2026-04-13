@@ -140,6 +140,30 @@ class TestInference(ReferenceTestCase):
         buf = self.check_infer('allformats.csv', verbosity=0)
         self.assertEqual(buf, [])
 
+    def testInferAmbiguousAllAmbiguous(self):
+        # All date fields ambiguous: should default to EU and warn
+        md, buf = self.infer(tdpath('ambig-all.csv'), verbosity=0)
+        self.assertEqual(md.date_format, '%d/%m/%Y')
+        self.assertEqual(len(buf), 1)
+        self.assertIn('defaulting to EU', buf[0])
+        self.assertIn('"dt"', buf[0])
+
+    def testInferAmbiguousGuidedByEU(self):
+        # One unambiguous EU field guides resolution of ambiguous field
+        md, buf = self.infer(tdpath('ambig-guided-eu.csv'), verbosity=0)
+        self.assertEqual(md.date_format, '%d/%m/%Y')
+        self.assertEqual(len(buf), 1)
+        self.assertIn('assuming EU', buf[0])
+        self.assertIn('"ambig"', buf[0])
+
+    def testInferAmbiguousGuidedByUS(self):
+        # One unambiguous US field guides resolution of ambiguous field
+        md, buf = self.infer(tdpath('ambig-guided-us.csv'), verbosity=0)
+        self.assertEqual(md.date_format, '%m/%d/%Y')
+        self.assertEqual(len(buf), 1)
+        self.assertIn('assuming US', buf[0])
+        self.assertIn('"ambig"', buf[0])
+
 
 class TestSerialUtilityFunction(ReferenceTestCase):
     def testTypeInference(self):
