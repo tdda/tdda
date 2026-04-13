@@ -56,7 +56,8 @@ class TestInference(ReferenceTestCase):
         suffix = '-prov-inferred.serial' if prov else '-inferred.serial'
         outname = stem + suffix
         Warn, buf = testwarn()
-        md = infer_format_from_flat_file(tdpath(name), warner=Warn, **kw)
+        md = infer_format_from_flat_file(tdpath(name), warner=Warn,
+                                         raise_error=True, **kw)
         outpath = tmppath(outname)
         with open(outpath, 'w') as f:
             f.write(md.to_json())

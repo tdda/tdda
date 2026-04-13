@@ -71,7 +71,8 @@ NO_DELIMITER = chr(0)
 class MetadataInferrer:
     def __init__(
         self, inpath, lines_to_use=1000, verbosity=None, single_field=None,
-        warner=None, add_defaults=False, report_added_defaults=True
+        warner=None, add_defaults=False, report_added_defaults=True,
+        raise_error=False
     ):
         self.inpath = os.path.expanduser(inpath)
         self.lines_to_use = lines_to_use
@@ -80,6 +81,7 @@ class MetadataInferrer:
         self.warn = nvl(warner, warn)
         self.add_defaults = add_defaults
         self.report_added_defaults = report_added_defaults
+        self.raise_error = raise_error
         self.read()
         self.process()
 
@@ -169,7 +171,7 @@ class MetadataInferrer:
             error(
                 'Separator does not appear to be comma, pipe, tab'
                 ' or semicolon. Abandoning.',
-                raise_error=True,
+                raise_error=self.raise_error,
             )
 
         sep = (
@@ -207,7 +209,10 @@ class MetadataInferrer:
 
     def infer_fields(self):
         sep = self.sep
-        combined = [self.dequote_and_split(row) for row in self.data]
+        combined = [
+            self.dequote_and_split(row, i)
+            for i, row in enumerate(self.data, 2)
+        ]
         is_quoted = [r[2] for r in combined]
         data = [r[1] for r in combined]
         raw = [r[0] for r in combined]
@@ -246,7 +251,7 @@ class MetadataInferrer:
             error(
                 f'Found more data columns ({n_cols}) than fieldnames '
                 f'({n_fields}). Giving up.',
-                raise_error=True,
+                raise_error=self.raise_error,
             )
 
         type_info = {
@@ -384,18 +389,22 @@ class MetadataInferrer:
         ]
         self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
 
-    def dequote_and_split(self, line):
+    def dequote_and_split(self, line, lineno=None):
         q = self.quote_char
         if q is not None and q in line:
             raw_row = careful_split(line, self.sep, q, self.escape)
             if raw_row is None:
-                error("Can't split line", raise_error=True)
+                error("Can't split line", raise_error=self.raise_error)
         else:
             raw_row = line.split(self.sep)
         n = len(raw_row)
         if n > self.n_fieldnames:
-            error(f'Too many values for header ({n} vs {self.n_fieldnames})',
-                  raise_error=True)
+            loc = f' at line {lineno}' if lineno is not None else ''
+            error(
+                f'Too many values for header ({n} vs {self.n_fieldnames})'
+                f'{loc}.',
+                raise_error=self.raise_error,
+            )
         if q:
             deq_row, is_quoted = self.dequote(raw_row)
         else:
@@ -435,12 +444,14 @@ class MetadataInferrer:
 
 def infer_format_from_flat_file(
     path, lines_to_use=1000, warner=None,
-    add_defaults=False, report_added_defaults=True, **kw
+    add_defaults=False, report_added_defaults=True,
+    raise_error=False, **kw
 ):
     inferrer = MetadataInferrer(
         path, lines_to_use, warner=warner,
         add_defaults=add_defaults,
         report_added_defaults=report_added_defaults,
+        raise_error=raise_error,
         **kw
     )
     return inferrer.metadata
@@ -548,7 +559,7 @@ class FieldTypeStats:
 
     def __str__(self):
         if not getattr(self, 'summarized'):
-            error('Not summarized', raise_error=True)
+            error('Not summarized', raise_error=self.raise_error)
         stats = '\n  '.join(str(v) for v in self.stats.values() if str(v))
         if not stats:
             stats = 'Poss string'
