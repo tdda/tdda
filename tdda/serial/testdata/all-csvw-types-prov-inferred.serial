@@ -1,0 +1,197 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "boolean",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "integer",
+                "fieldtype": "int"
+            },
+            {
+                "name": "string",
+                "fieldtype": "string"
+            },
+            {
+                "name": "number",
+                "fieldtype": "float"
+            },
+            {
+                "name": "datetime",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "date",
+                "fieldtype": "date"
+            },
+            {
+                "name": "double",
+                "fieldtype": "float"
+            },
+            {
+                "name": "decimal",
+                "fieldtype": "float"
+            },
+            {
+                "name": "float",
+                "fieldtype": "float"
+            },
+            {
+                "name": "long",
+                "fieldtype": "int"
+            },
+            {
+                "name": "int",
+                "fieldtype": "int"
+            },
+            {
+                "name": "short",
+                "fieldtype": "int"
+            },
+            {
+                "name": "byte",
+                "fieldtype": "int"
+            },
+            {
+                "name": "unsignedLong",
+                "fieldtype": "int"
+            },
+            {
+                "name": "unsignedInt",
+                "fieldtype": "int"
+            },
+            {
+                "name": "unsignedShort",
+                "fieldtype": "int"
+            },
+            {
+                "name": "unsignedByte",
+                "fieldtype": "int"
+            },
+            {
+                "name": "nonNegativeInteger",
+                "fieldtype": "int"
+            },
+            {
+                "name": "nonPositiveInteger",
+                "fieldtype": "int"
+            },
+            {
+                "name": "negativeInteger",
+                "fieldtype": "int"
+            },
+            {
+                "name": "positiveInteger",
+                "fieldtype": "int"
+            },
+            {
+                "name": "normalizedString",
+                "fieldtype": "string"
+            },
+            {
+                "name": "anyURI",
+                "fieldtype": "string"
+            },
+            {
+                "name": "token",
+                "fieldtype": "string"
+            },
+            {
+                "name": "language",
+                "fieldtype": "string"
+            },
+            {
+                "name": "Name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "NMTOKEN",
+                "fieldtype": "string"
+            },
+            {
+                "name": "xml",
+                "fieldtype": "string"
+            },
+            {
+                "name": "html",
+                "fieldtype": "string"
+            },
+            {
+                "name": "json",
+                "fieldtype": "int"
+            },
+            {
+                "name": "dateTime",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "base64Binary",
+                "fieldtype": "string"
+            },
+            {
+                "name": "binary",
+                "fieldtype": "string"
+            },
+            {
+                "name": "hexBinary",
+                "fieldtype": "string"
+            },
+            {
+                "name": "anyAtomicType",
+                "fieldtype": "int"
+            },
+            {
+                "name": "dateTimeStamp",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "duration",
+                "fieldtype": "string"
+            },
+            {
+                "name": "dayTimeDuration",
+                "fieldtype": "string"
+            },
+            {
+                "name": "yearMonthDuration",
+                "fieldtype": "string"
+            },
+            {
+                "name": "time",
+                "fieldtype": "date"
+            },
+            {
+                "name": "QName",
+                "fieldtype": "string"
+            },
+            {
+                "name": "gDay",
+                "fieldtype": "int"
+            },
+            {
+                "name": "gMonth",
+                "fieldtype": "int"
+            },
+            {
+                "name": "gMonthDay",
+                "fieldtype": "string"
+            },
+            {
+                "name": "gYear",
+                "fieldtype": "int"
+            },
+            {
+                "name": "gYearMonth",
+                "fieldtype": "string"
+            }
+        ],
+        "delimiter": ",",
+        "quote_char": "\"",
+        "date_format": "%Y-%m-%d",
+        "datetime_format": "%Y-%m-%dT%H:%M:%S",
+        "null_indicator": ""
+    }
+}

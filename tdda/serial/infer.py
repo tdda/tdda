@@ -17,7 +17,7 @@ from tdda.serial.metadata import (
     FieldType,
     STRFTIME_TO_NAMED_FORMAT,
 )
-from tdda.utils import warn, error, nvl, debug, testwarn
+from tdda.utils import TDDAError, warn, error, nvl, debug, testwarn
 from tdda.referencetest.utils import FileType
 from tdda.serial.utils import non_chars, dict_max_items
 
@@ -65,7 +65,7 @@ ADTISH = re.compile(
     '[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
 )
 
-PRIVATE = chr(0)
+NO_DELIMITER = chr(0)
 
 
 class MetadataInferrer:
@@ -126,7 +126,7 @@ class MetadataInferrer:
         self.all_lines = lines = [self.header] + self.datalines
 
         self.sep = sep = self.find_separator()
-        self.quote_char = quote = self.find_quote_char()
+        self.quote_char, self.escape, self.stutter = self.find_quote_chars()
 
         sep_replacement, qq_replacement = non_chars(lines, 2)
         restorations = self.restorations = {}
@@ -140,7 +140,7 @@ class MetadataInferrer:
         fieldnames = self.find_fieldnames()
         self.n_fieldnames = len(fieldnames)
 
-        escape = stutter = quoting = None
+        quote = self.quote_char
         plain_fieldnames, _ = self.dequote(fieldnames)
         if plain_fieldnames != fieldnames:
             self.quote_char = quote
@@ -151,16 +151,13 @@ class MetadataInferrer:
         self.fieldnames = plain_fieldnames
         self.data = lines[1:]
 
-        self.escape = escape
-        self.stutter = stutter
-
-        self.vprint(f'Inferred escape: {escape}.', 2)
-        self.vprint(f'Inferred stutter: {stutter}.', 2)
+        self.vprint(f'Inferred escape: {self.escape}.', 2)
+        self.vprint(f'Inferred stutter: {self.stutter}.', 2)
         self.infer_fields()
 
     def find_separator(self):
         if self.single_field:
-            return PRIVATE
+            return NO_DELIMITER
         lines = self.all_lines
         n_commas = count(',', lines)
         n_pipes = count('|', lines)
@@ -171,7 +168,8 @@ class MetadataInferrer:
         if M == 0:
             error(
                 'Separator does not appear to be comma, pipe, tab'
-                ' or semicolon. Abandoning.'
+                ' or semicolon. Abandoning.',
+                raise_error=True,
             )
 
         sep = (
@@ -186,15 +184,16 @@ class MetadataInferrer:
         self.vprint(f'Inferred separator: {sep} ({M} occurrences).', 2)
         return sep
 
-    def find_quote_char(self):
+    def find_quote_chars(self):
         lines = self.all_lines
         n_dquotes = count('"', lines)
         n_squotes = count("'", lines)
         self.n_quotes = max(n_dquotes, n_squotes)
         if self.n_quotes == 0:
-            return None
+            return None, None, None
         # But apostrophes...quoted or not.
-        return "'" if n_squotes > n_dquotes else '"'
+        quote = "'" if n_squotes > n_dquotes else '"'
+        return quote, None, None
 
     def find_fieldnames(self):
         fieldnames = self.header.split(self.sep)
@@ -246,7 +245,8 @@ class MetadataInferrer:
         if n_fields < n_cols:
             error(
                 f'Found more data columns ({n_cols}) than fieldnames '
-                f'({n_fields}). Giving up.'
+                f'({n_fields}). Giving up.',
+                raise_error=True,
             )
 
         type_info = {
@@ -385,21 +385,17 @@ class MetadataInferrer:
         self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
 
     def dequote_and_split(self, line):
-        raw_row = line.split(self.sep)
         q = self.quote_char
-        n = len(raw_row)
-        if len(raw_row) > self.n_fieldnames:
-            pass
-            # more values than fields in header
-            error(f'Too many values for header ({n} vs {self.n_fieldnames})')
-        elif q is not None and any(
-            v.startswith(q) and not v.endswith(q) for v in raw_row
-        ):
-            raw_row = careful_split(
-                line, self.sep, self.quote_char, self.escape_char
-            )
+        if q is not None and q in line:
+            raw_row = careful_split(line, self.sep, q, self.escape)
             if raw_row is None:
-                error("Can't split line")
+                error("Can't split line", raise_error=True)
+        else:
+            raw_row = line.split(self.sep)
+        n = len(raw_row)
+        if n > self.n_fieldnames:
+            error(f'Too many values for header ({n} vs {self.n_fieldnames})',
+                  raise_error=True)
         if q:
             deq_row, is_quoted = self.dequote(raw_row)
         else:
@@ -552,7 +548,7 @@ class FieldTypeStats:
 
     def __str__(self):
         if not getattr(self, 'summarized'):
-            error('Not summarized')
+            error('Not summarized', raise_error=True)
         stats = '\n  '.join(str(v) for v in self.stats.values() if str(v))
         if not stats:
             stats = 'Poss string'

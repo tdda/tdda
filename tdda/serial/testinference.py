@@ -1,3 +1,4 @@
+import os
 import re
 
 from collections import namedtuple
@@ -18,10 +19,12 @@ from tdda.serial.dateutils import (
     infer_date_format_from_strings,
 )
 from tdda.serial.infer import (
+    NO_DELIMITER,
     analyse_values,
     careful_split,
     infer_format_from_flat_file,
 )
+from tdda.utils import TDDAError
 
 
 from tdda.serial.testserial import (
@@ -47,16 +50,18 @@ class TestInference(ReferenceTestCase):
         md = infer_format_from_flat_file(path, warner=Warn, **kw)
         return md, buf
 
-    def check_infer(self, name, **kw):
-        stem = name.rsplit('.', 1)[0]
-        outname = stem + '-prov-inferred.serial'
+    def check_infer(self, name, prov=False, **kw):
+        base, ext = os.path.splitext(name)
+        stem = base if ext == '.csv' else base + '-' + ext[1:]
+        suffix = '-prov-inferred.serial' if prov else '-inferred.serial'
+        outname = stem + suffix
         Warn, buf = testwarn()
         md = infer_format_from_flat_file(tdpath(name), warner=Warn, **kw)
         outpath = tmppath(outname)
         with open(outpath, 'w') as f:
             f.write(md.to_json())
         self.assertFileCorrect(outpath, tdpath(outname), ignore_lines=self.IGL)
-        return buf
+        return buf, md
 
     def testInferMetadataTiny1cdq(self):
         md, buf = self.infer(
@@ -137,8 +142,13 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferAllformats(self):
-        buf = self.check_infer('allformats.csv', verbosity=0)
+        buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
         self.assertEqual(buf, [])
+
+    def testInferOnestringSingleField(self):
+        buf, md = self.check_infer('onestring.txt', prov=True,
+                                   verbosity=0, single_field=True)
+        self.assertEqual(md.delimiter, NO_DELIMITER)
 
     def testInferAmbiguousAllAmbiguous(self):
         # All date fields ambiguous: should default to EU and warn
@@ -504,6 +514,240 @@ class TestDateFormatInference(ReferenceTestCase):
         self.assertIsNone(f(['foo', 'bar']))
         # Empty
         self.assertIsNone(f([]))
+
+
+class TestInferAllFlatFiles(TestInference):
+    # One test per flat file in testdata. All provisional (prov=True).
+    # Add targeted assertions to specific tests as inference is validated.
+
+    def testInferAllCsvwTypes(self):
+        buf, md = self.check_infer('all-csvw-types.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferAllformats(self):
+        buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
+
+    def testInferAllformats2unspec(self):
+        buf, md = self.check_infer('allformats2unspec.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferAmbigAll(self):
+        buf, md = self.check_infer('ambig-all.csv', prov=True, verbosity=0)
+
+    def testInferAmbigGuidedEu(self):
+        buf, md = self.check_infer('ambig-guided-eu.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferAmbigGuidedUs(self):
+        buf, md = self.check_infer('ambig-guided-us.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferCodingUtf16(self):
+        buf, md = self.check_infer('coding-utf16.csv', prov=True, verbosity=0)
+
+    def testInferCodingUtf8(self):
+        buf, md = self.check_infer('coding-utf8.csv', prov=True, verbosity=0)
+
+    def testInferDdd(self):
+        buf, md = self.check_infer('ddd.csv', prov=True, verbosity=0)
+
+    def testInferDdd2(self):
+        buf, md = self.check_infer('ddd2.csv', prov=True, verbosity=0)
+
+    def testInferDdd3(self):
+        buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
+
+    def testInferElements3Old(self):
+        buf, md = self.check_infer('elements3-old.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferEurod(self):
+        buf, md = self.check_infer('eurod.csv', prov=True, verbosity=0)
+
+    def testInferEurod2y(self):
+        buf, md = self.check_infer('eurod2y.csv', prov=True, verbosity=0)
+
+    def testInferEurodtWriteKw(self):
+        buf, md = self.check_infer('eurodt-write-kw.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferEurodtWriteSerial(self):
+        buf, md = self.check_infer('eurodt-write-serial.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferEurodt(self):
+        buf, md = self.check_infer('eurodt.csv', prov=True, verbosity=0)
+
+    def testInferEurodt2y(self):
+        buf, md = self.check_infer('eurodt2y.csv', prov=True, verbosity=0)
+
+    def testInferIsod(self):
+        buf, md = self.check_infer('isod.csv', prov=True, verbosity=0)
+
+    def testInferIsodatetime(self):
+        buf, md = self.check_infer('isodatetime.csv', prov=True, verbosity=0)
+
+    def testInferIsodt(self):
+        buf, md = self.check_infer('isodt.csv', prov=True, verbosity=0)
+
+    def testInferMinimal(self):
+        buf, md = self.check_infer('minimal.csv', prov=True, verbosity=0)
+
+    def testInferNulls1(self):
+        buf, md = self.check_infer('nulls1.csv', prov=True, verbosity=0)
+
+    def testInferSigCp1252(self):
+        buf, md = self.check_infer('sig-cp1252.csv', prov=True, verbosity=0)
+
+    def testInferSigEquivUtf16(self):
+        buf, md = self.check_infer('sig-equiv-utf16.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferSigEquivUtf8(self):
+        buf, md = self.check_infer('sig-equiv-utf8.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferSigLatin1(self):
+        buf, md = self.check_infer('sig-latin1.csv', prov=True, verbosity=0)
+
+    def testInferSigLatin9(self):
+        buf, md = self.check_infer('sig-latin9.csv', prov=True, verbosity=0)
+
+    def testInferSimple(self):
+        buf, md = self.check_infer('simple.csv', prov=True, verbosity=0)
+
+    def testInferSmallCp1252(self):
+        buf, md = self.check_infer('small-cp1252.csv', prov=True, verbosity=0)
+
+    def testInferSmallLatin1(self):
+        buf, md = self.check_infer('small-latin1.csv', prov=True, verbosity=0)
+
+    def testInferSmallLatin9(self):
+        buf, md = self.check_infer('small-latin9.csv', prov=True, verbosity=0)
+
+    def testInferSmallWriteKw(self):
+        buf, md = self.check_infer('small-write-kw.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferSmallWriteSerial(self):
+        buf, md = self.check_infer('small-write-serial.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferSmall(self):
+        buf, md = self.check_infer('small.csv', prov=True, verbosity=0)
+
+    def testInferSmall2(self):
+        buf, md = self.check_infer('small2.csv', prov=True, verbosity=0)
+
+    def testInferStrings1(self):
+        buf, md = self.check_infer('strings1.csv', prov=True, verbosity=0)
+
+    def testInferTiny1cdPandas(self):
+        buf, md = self.check_infer('tiny1cd-pandas.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferTiny1cd(self):
+        buf, md = self.check_infer('tiny1cd.csv', prov=True, verbosity=0)
+
+    def testInferTiny1cd3(self):
+        buf, md = self.check_infer('tiny1cd3.csv', prov=True, verbosity=0)
+
+    def testInferTiny1cnPandas(self):
+        buf, md = self.check_infer('tiny1cn-pandas.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferTiny1cn(self):
+        buf, md = self.check_infer('tiny1cn.csv', prov=True, verbosity=0)
+
+    def testInferTiny1cn3(self):
+        buf, md = self.check_infer('tiny1cn3.csv', prov=True, verbosity=0)
+
+    def testInferTiny1ndDot(self):
+        buf, md = self.check_infer('tiny1nd-dot.csv', prov=True, verbosity=0)
+
+    def testInferTiny1ndNull(self):
+        buf, md = self.check_infer('tiny1nd-NULL.csv', prov=True, verbosity=0)
+
+    def testInferTiny1ndPandas(self):
+        buf, md = self.check_infer('tiny1nd-pandas.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferTiny1nd(self):
+        buf, md = self.check_infer('tiny1nd.csv', prov=True, verbosity=0)
+
+    def testInferTiny1nd3(self):
+        buf, md = self.check_infer('tiny1nd3.csv', prov=True, verbosity=0)
+
+    def testInferTiny1ndq(self):
+        buf, md = self.check_infer('tiny1ndq.csv', prov=True, verbosity=0)
+
+    def testInferTiny1nnPandas(self):
+        buf, md = self.check_infer('tiny1nn-pandas.csv', prov=True,
+                                   verbosity=0)
+
+    def testInferTiny1nn(self):
+        buf, md = self.check_infer('tiny1nn.csv', prov=True, verbosity=0)
+
+    def testInferTiny1nn3(self):
+        buf, md = self.check_infer('tiny1nn3.csv', prov=True, verbosity=0)
+
+    def testInferTz(self):
+        buf, md = self.check_infer('tz.csv', prov=True, verbosity=0)
+
+    def testInferUsd(self):
+        buf, md = self.check_infer('usd.csv', prov=True, verbosity=0)
+
+    def testInferUsd2y(self):
+        buf, md = self.check_infer('usd2y.csv', prov=True, verbosity=0)
+
+    def testInferUsdt(self):
+        buf, md = self.check_infer('usdt.csv', prov=True, verbosity=0)
+
+    def testInferUsdt2y(self):
+        buf, md = self.check_infer('usdt2y.csv', prov=True, verbosity=0)
+
+    # .txt files
+
+    def testInferOnebool(self):
+        with self.assertRaisesRegex(TDDAError, 'Separator does not appear'):
+            self.check_infer('onebool.txt', prov=True, verbosity=0)
+
+    def testInferOnereal(self):
+        with self.assertRaisesRegex(TDDAError, 'Separator does not appear'):
+            self.check_infer('onereal.txt', prov=True, verbosity=0)
+
+    def testInferOnestring(self):
+        with self.assertRaisesRegex(TDDAError, 'Too many values for header'):
+            self.check_infer('onestring.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon(self):
+        buf, md = self.check_infer('semicolon.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon2(self):
+        buf, md = self.check_infer('semicolon2.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon3(self):
+        buf, md = self.check_infer('semicolon3.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon4(self):
+        buf, md = self.check_infer('semicolon4.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon5(self):
+        buf, md = self.check_infer('semicolon5.txt', prov=True, verbosity=0)
+
+    def testInferSemicolon6(self):
+        buf, md = self.check_infer('semicolon6.txt', prov=True, verbosity=0)
+
+    # .tsv file
+
+    def testInferIsodtTsv(self):
+        buf, md = self.check_infer('isodt.tsv', prov=True, verbosity=0)
+
+    # .ssv file
+
+    def testInferTiny1ndWeirdSsv(self):
+        buf, md = self.check_infer('tiny1nd-weird.ssv', prov=True,
+                                   verbosity=0)
 
 
 if __name__ == '__main__':

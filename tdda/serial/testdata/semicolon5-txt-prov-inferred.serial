@@ -1,0 +1,30 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "b",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "i",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "name": "d",
+                "fieldtype": "string"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            }
+        ],
+        "delimiter": ";",
+        "null_indicator": ""
+    }
+}

@@ -1,0 +1,73 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "eu_date",
+                "fieldtype": "date",
+                "format": "%d/%m/%Y"
+            },
+            {
+                "name": "eu_date_2y",
+                "fieldtype": "date",
+                "format": "%d/%m/%y"
+            },
+            {
+                "name": "iso_date",
+                "fieldtype": "date",
+                "format": "%Y-%m-%d"
+            },
+            {
+                "name": "us_date",
+                "fieldtype": "date",
+                "format": "%m/%d/%Y"
+            },
+            {
+                "name": "us_date_2y",
+                "fieldtype": "date",
+                "format": "%m/%d/%y"
+            },
+            {
+                "name": "eu_datetime",
+                "fieldtype": "datetime",
+                "format": "%d/%m/%Y %H:%M:%S"
+            },
+            {
+                "name": "eu_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "%d/%m/%y %H:%M:%S"
+            },
+            {
+                "name": "iso_datetime",
+                "fieldtype": "datetime",
+                "format": "%Y-%m-%dT%H:%M:%S"
+            },
+            {
+                "name": "us_datetime",
+                "fieldtype": "datetime",
+                "format": "%m/%d/%Y %H:%M:%S"
+            },
+            {
+                "name": "us_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "%m/%d/%y %H:%M:%S"
+            },
+            {
+                "name": "udate",
+                "fieldtype": "date",
+                "format": "%d/%m/%Y"
+            },
+            {
+                "name": "udatetime",
+                "fieldtype": "datetime",
+                "format": "%m/%d/%Y %H:%M:%S"
+            }
+        ],
+        "delimiter": ","
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "date",
+                "fieldtype": "date"
+            }
+        ],
+        "delimiter": ",",
+        "date_format": "%Y-%m-%d"
+    }
+}

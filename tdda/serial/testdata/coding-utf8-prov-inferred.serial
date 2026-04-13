@@ -1,0 +1,55 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "EuroAmount",
+                "fieldtype": "string"
+            },
+            {
+                "name": "YenAmount",
+                "fieldtype": "string"
+            },
+            {
+                "name": "WideYenAmount",
+                "fieldtype": "string"
+            },
+            {
+                "name": "GBPAmount",
+                "fieldtype": "string"
+            },
+            {
+                "name": "DashKind",
+                "fieldtype": "string"
+            },
+            {
+                "name": "Dash",
+                "fieldtype": "string"
+            },
+            {
+                "name": "DQuoteKind",
+                "fieldtype": "string"
+            },
+            {
+                "name": "DQuote",
+                "fieldtype": "string"
+            },
+            {
+                "name": "SingleQuoteKind",
+                "fieldtype": "string"
+            },
+            {
+                "name": "SingleQuote",
+                "fieldtype": "string"
+            }
+        ],
+        "encoding": "utf-8",
+        "delimiter": ",",
+        "quote_char": "\""
+    }
+}

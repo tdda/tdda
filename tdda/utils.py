@@ -999,8 +999,10 @@ def warn(*args, buf=None, verbose=True, **kw):
         stderr_console.print(*args, style='yellow', **kw)
 
 
-def error(*args, **kw):
+def error(*args, raise_error=False, **kw):
     stderr_console.print(*args, style='red', **kw)
+    if raise_error:
+        raise TDDAError(args[0] if args else 'error')
     sys.exit(1)
 
 

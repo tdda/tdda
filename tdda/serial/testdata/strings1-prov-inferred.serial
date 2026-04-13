@@ -1,0 +1,30 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "s",
+                "fieldtype": "float"
+            },
+            {
+                "name": "n",
+                "fieldtype": "float"
+            },
+            {
+                "name": "r",
+                "fieldtype": "float"
+            },
+            {
+                "name": "d",
+                "fieldtype": "date"
+            }
+        ],
+        "delimiter": ",",
+        "quote_char": "\""
+    }
+}

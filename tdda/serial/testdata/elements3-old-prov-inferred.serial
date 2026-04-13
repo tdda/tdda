@@ -1,0 +1,40 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "Z",
+                "fieldtype": "int"
+            },
+            {
+                "name": "Name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "Symbol",
+                "fieldtype": "string"
+            },
+            {
+                "name": "Period",
+                "fieldtype": "int"
+            },
+            {
+                "name": "Group",
+                "fieldtype": "int"
+            },
+            {
+                "name": "AtomicWeight",
+                "fieldtype": "float"
+            },
+            {
+                "name": "ApproxDiscovery",
+                "fieldtype": "date"
+            }
+        ],
+        "delimiter": ",",
+        "quote_char": "\"",
+        "date_format": "%Y-%m-%d",
+        "null_indicator": "-"
+    }
+}

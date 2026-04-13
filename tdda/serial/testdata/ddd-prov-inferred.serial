@@ -1,0 +1,69 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evennulls",
+                "fieldtype": "int"
+            },
+            {
+                "name": "oddnulls",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evens",
+                "fieldtype": "int"
+            },
+            {
+                "name": "odds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evenreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "oddreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "evenstr",
+                "fieldtype": "int"
+            },
+            {
+                "name": "oddstr",
+                "fieldtype": "int"
+            },
+            {
+                "name": "elevens",
+                "fieldtype": "int"
+            },
+            {
+                "name": "binnedindex",
+                "fieldtype": "int"
+            },
+            {
+                "name": "binnedodds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "basedate",
+                "fieldtype": "date"
+            },
+            {
+                "name": "evendates",
+                "fieldtype": "datetime"
+            }
+        ],
+        "delimiter": ",",
+        "quote_char": "\"",
+        "date_format": "%Y-%m-%d",
+        "datetime_format": "%Y-%m-%d %H:%M:%S",
+        "null_indicator": ""
+    }
+}

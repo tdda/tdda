@@ -248,9 +248,11 @@ class SerialConverter:
         )
 
         parser.add_argument(
+            '--single-field',
             '--single',
             '-1',
             action='store_true',
+            dest='single',
             help='Declare that there is only a single field in the file.',
         )
 

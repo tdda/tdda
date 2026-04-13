@@ -1,0 +1,73 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "i1",
+                "fieldtype": "int"
+            },
+            {
+                "name": "i2",
+                "fieldtype": "int"
+            },
+            {
+                "name": "i3",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f1",
+                "fieldtype": "float"
+            },
+            {
+                "name": "f2",
+                "fieldtype": "float"
+            },
+            {
+                "name": "b1",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "b2",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "s1",
+                "fieldtype": "string"
+            },
+            {
+                "name": "s2",
+                "fieldtype": "string"
+            },
+            {
+                "name": "dti",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "dte",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "dtu",
+                "fieldtype": "datetime"
+            },
+            {
+                "name": "di",
+                "fieldtype": "date"
+            },
+            {
+                "name": "de",
+                "fieldtype": "date"
+            },
+            {
+                "name": "du",
+                "fieldtype": "date"
+            }
+        ],
+        "encoding": "utf-8",
+        "delimiter": "\t",
+        "date_format": "%Y-%m-%d",
+        "datetime_format": "%Y-%m-%d %H:%M:%S",
+        "null_indicator": "NULL"
+    }
+}
