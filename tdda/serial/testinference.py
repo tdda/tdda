@@ -11,6 +11,7 @@ from tdda.serial.frictionless import (
 )
 from tdda.serial.metadata import FieldType
 from tdda.serial.dateutils import (
+    AmbiguousDateFormat,
     DateRE,
     Separators,
     get_date_separators,
@@ -436,8 +437,45 @@ class TestDateFormatInference(ReferenceTestCase):
         self.assertEqual(f(['01-01-24', '20-01-24']), '%d-%m-%y')
         # US 2Y
         self.assertEqual(f(['01-01-24', '01-20-24']), '%m-%d-%y')
-        # Ambiguous (all parts <= 12): returns None
-        self.assertIsNone(f(['01-01-2024', '02-03-2024']))
+        # Ambiguous 4Y (all parts <= 12): returns AmbiguousDateFormat
+        self.assertEqual(
+            f(['01-01-2024', '02-03-2024']),
+            AmbiguousDateFormat.EU_OR_US_DATE,
+        )
+        # Ambiguous 4Y with time
+        self.assertEqual(
+            f(['01-01-2024 01:02:03', '02-03-2024 04:05:06']),
+            AmbiguousDateFormat.EU_OR_US_DATETIME,
+        )
+        # Ambiguous 2Y (all parts <= 12)
+        self.assertEqual(
+            f(['01-01-24', '02-03-24']),
+            AmbiguousDateFormat.EU_OR_US_DATE_2Y,
+        )
+        # Ambiguous 2Y with time
+        self.assertEqual(
+            f(['01-01-24 01:02:03', '02-03-24 04:05:06']),
+            AmbiguousDateFormat.EU_OR_US_DATETIME_2Y,
+        )
+        # ISO datetime with fractional seconds
+        self.assertEqual(
+            f(['2024-01-01T12:34:56.123', '2024-01-20T21:22:23.456789']),
+            '%Y-%m-%dT%H:%M:%S.%f',
+        )
+        # Mixed ISO datetime: some with frac, some without → include .%f
+        self.assertEqual(
+            f(['2024-01-01T12:34:56', '2024-01-20T21:22:23.456']),
+            '%Y-%m-%dT%H:%M:%S.%f',
+        )
+        # EU date with dot separator (unambiguous: day > 12)
+        self.assertEqual(f(['20.01.2024']), '%d.%m.%Y')
+        # US date with dot separator (unambiguous: second part > 12)
+        self.assertEqual(f(['01.20.2024']), '%m.%d.%Y')
+        # Ambiguous dot-separator date
+        self.assertEqual(
+            f(['01.01.2024', '02.03.2024']),
+            AmbiguousDateFormat.EU_OR_US_DATE,
+        )
         # Not dates at all
         self.assertIsNone(f(['foo', 'bar']))
         # Empty

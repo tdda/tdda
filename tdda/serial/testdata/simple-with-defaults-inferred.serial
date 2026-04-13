@@ -25,17 +25,17 @@
             },
             {
                 "name": "LastInFeb",
-                "fieldtype": "date",
-                "format": "%Y-%m-%d"
+                "fieldtype": "date"
             },
             {
                 "name": "LastIn2024",
-                "fieldtype": "datetime",
-                "format": "%Y-%m-%dT%H:%M:%S"
+                "fieldtype": "datetime"
             }
         ],
         "encoding": "UTF-8",
         "delimiter": ",",
-        "quote_char": "\""
+        "quote_char": "\"",
+        "date_format": "%Y-%m-%d",
+        "datetime_format": "%Y-%m-%dT%H:%M:%S"
     }
 }

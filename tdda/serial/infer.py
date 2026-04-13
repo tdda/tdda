@@ -6,7 +6,10 @@ from collections import namedtuple, Counter
 
 TypeStats = namedtuple('TypeStats', 'field stats')
 
-from tdda.serial.dateutils import infer_date_format_from_strings
+from tdda.serial.dateutils import (
+    AMBIGUOUS_DATE_FORMATS,
+    infer_date_format_from_strings,
+)
 from tdda.serial.metadata import (
     SerialMetadata,
     FieldMetadata,
@@ -88,6 +91,7 @@ class MetadataInferrer:
             quote_char=self._default(self.quote_char, '"', 'quote_char'),
             null_indicator=self.null,
             date_format=self.date_format,
+            datetime_format=self.datetime_format,
         )
 
     def vprint(self, msg, min_verbosity=1):
@@ -281,29 +285,53 @@ class MetadataInferrer:
             for i, name in enumerate(self.fieldnames)
         }
 
-        date_formats = {}
+        date_only_fmts = {}   # name -> fmt for 'date' type fields
+        datetime_fmts = {}    # name -> fmt for 'datetime' type fields
         for name in self.fieldnames:
             t = type_info[name].most_likely_type
-            if isinstance(t, str) and t.startswith('date'):
+            if isinstance(t, str) and t in ('date', 'datetime'):
                 fmt = infer_date_format_from_strings(field_values[name])
-                if fmt is not None:
-                    date_formats[name] = fmt
+                if fmt is not None and fmt not in AMBIGUOUS_DATE_FORMATS:
+                    if t == 'date':
+                        date_only_fmts[name] = fmt
+                    else:
+                        datetime_fmts[name] = fmt
 
-        unique_fmts = set(date_formats.values())
-        if len(unique_fmts) == 1:
-            self.date_format = list(unique_fmts)[0]
-            field_fmts = {}
-        elif len(unique_fmts) > 1:
-            named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_fmts}
+        # Hoist date_format (pure date fields only)
+        unique_date_fmts = set(date_only_fmts.values())
+        if len(unique_date_fmts) == 1:
+            self.date_format = list(unique_date_fmts)[0]
+            field_date_fmts = {}
+        elif len(unique_date_fmts) > 1:
+            named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_date_fmts}
             if len(named) == 1 and None not in named:
                 self.date_format = list(named)[0]
-                field_fmts = {}
+                field_date_fmts = {}
             else:
                 self.date_format = None
-                field_fmts = date_formats
+                field_date_fmts = date_only_fmts
         else:
             self.date_format = None
-            field_fmts = {}
+            field_date_fmts = {}
+
+        # Hoist datetime_format (datetime fields only)
+        unique_dt_fmts = set(datetime_fmts.values())
+        if len(unique_dt_fmts) == 1:
+            self.datetime_format = list(unique_dt_fmts)[0]
+            field_dt_fmts = {}
+        elif len(unique_dt_fmts) > 1:
+            named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_dt_fmts}
+            if len(named) == 1 and None not in named:
+                self.datetime_format = list(named)[0]
+                field_dt_fmts = {}
+            else:
+                self.datetime_format = None
+                field_dt_fmts = datetime_fmts
+        else:
+            self.datetime_format = None
+            field_dt_fmts = {}
+
+        field_fmts = {**field_date_fmts, **field_dt_fmts}
 
         self.fields = [
             FieldMetadata(
