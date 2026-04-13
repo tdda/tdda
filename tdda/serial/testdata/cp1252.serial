@@ -1,0 +1,6 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "encoding": "cp1252"
+    }
+}

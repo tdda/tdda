@@ -1,0 +1,26 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "encoding",
+                "fieldtype": "string"
+            },
+            {
+                "name": "altname",
+                "fieldtype": "date"
+            },
+            {
+                "name": "hello",
+                "fieldtype": "string"
+            },
+            {
+                "name": "sig",
+                "fieldtype": "string"
+            }
+        ],
+        "encoding": "cp1252",
+        "delimiter": ","
+    }
+}

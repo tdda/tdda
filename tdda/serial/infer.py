@@ -114,14 +114,51 @@ class MetadataInferrer:
         enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
         self.encoding = None if enc == 'ascii' else enc
         self.datalines = datalines = []
-        with open(self.inpath, encoding=self.encoding) as f:
-            self.header = f.readline().rstrip()
-            while not self.header.strip():
-                self.header = f.readline()
-            for i in range(self.lines_to_use):
-                line = f.readline().strip()
-                if line:
-                    datalines.append(line)
+        enc_used = self._open_with_fallback(datalines)
+        if enc_used != self.encoding:
+            self.encoding = enc_used
+
+    ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
+
+    def _open_with_fallback(self, datalines):
+        candidates = [self.encoding] + [
+            e for e in self.ENCODING_FALLBACKS if e != self.encoding
+        ]
+        last_exc = None
+        for enc in candidates:
+            try:
+                with open(self.inpath, encoding=enc) as f:
+                    self.header = f.readline().rstrip()
+                    while not self.header.strip():
+                        self.header = f.readline()
+                    for i in range(self.lines_to_use):
+                        line = f.readline().strip()
+                        if line:
+                            datalines.append(line)
+                if enc == 'latin-1' and self._has_cp1252_bytes():
+                    enc = 'cp1252'
+                if enc != self.encoding:
+                    self.warn(
+                        f'Encoding {self.encoding!r} failed; '
+                        f'reading as {enc!r}.'
+                    )
+                return enc
+            except UnicodeDecodeError as e:
+                last_exc = e
+                datalines.clear()
+                continue
+        error(
+            f'Cannot read file {self.inpath!r}: tried encodings '
+            f'{candidates}; all failed. Last error: {last_exc}',
+            raise_error=self.raise_error,
+        )
+
+    def _has_cp1252_bytes(self):
+        # Bytes 0x80-0x9F are printable in cp1252 but control codes in latin-1.
+        # If any are present the file is almost certainly cp1252.
+        with open(self.inpath, 'rb') as f:
+            chunk = f.read(65536)
+        return any(0x80 <= b <= 0x9F for b in chunk)
 
     def process(self):
         header = self.header
