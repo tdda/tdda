@@ -20,9 +20,11 @@ from tdda.serial.dateutils import (
 )
 from tdda.serial.infer import (
     NO_DELIMITER,
+    FirstLineStats,
     analyse_values,
     careful_split,
     infer_format_from_flat_file,
+    read_file_lines,
 )
 from tdda.utils import TDDAError
 
@@ -749,6 +751,322 @@ class TestInferAllFlatFiles(TestInference):
     def testInferTiny1ndWeirdSsv(self):
         buf, md = self.check_infer('tiny1nd-weird.ssv', prov=True,
                                    verbosity=0)
+
+
+class TestFirstLineStats(ReferenceTestCase):
+    """Tests for FirstLineStats using header*/noheader*/dataline1-* files."""
+
+    def check_fls(self, filename, **kw):
+        path = tdpath(filename)
+        line, _, _ = read_file_lines(path, lines_to_use=0)
+        fls = FirstLineStats(line, **kw)
+        base, ext = os.path.splitext(filename)
+        if ext in ('.csv', '.txt'):
+            stem = base
+        else:
+            stem = base + '-' + ext[1:]
+        refname = f'fls-{stem}.txt'
+        self.assertStringCorrect(str(fls), tdpath(refname))
+
+    def testFLS_header1(self):
+        self.check_fls('header1.txt')
+
+    def testFLS_header2quoted(self):
+        self.check_fls('header2quoted.txt')
+
+    def testFLS_header3squoted(self):
+        self.check_fls('header3squoted.txt')
+
+    def testFLS_header4pandas_style(self):
+        self.check_fls('header4pandas-style.txt')
+
+    def testFLS_header5ch(self):
+        self.check_fls('header5ch.txt')
+
+    def testFLS_header6dqstutter(self):
+        self.check_fls('header6dqstutter.txt')
+
+    def testFLS_header7dqstutter(self):
+        self.check_fls('header7dqstutter.txt')
+
+    def testFLS_header8sqstutter(self):
+        self.check_fls('header8sqstutter.txt')
+
+    def testFLS_header9sqstutter(self):
+        self.check_fls('header9sqstutter.txt')
+
+    def testFLS_header10dqesc(self):
+        self.check_fls('header10dqesc.txt')
+
+    def testFLS_header11sqesc(self):
+        self.check_fls('header11sqesc.txt')
+
+    def testFLS_header12dqesc(self):
+        self.check_fls('header12dqesc.txt')
+
+    def testFLS_header13sqesc(self):
+        self.check_fls('header13sqesc.txt')
+
+    def testFLS_header14spaces(self):
+        self.check_fls('header14spaces.txt')
+
+    def testFLS_header15nonletters(self):
+        self.check_fls('header15nonletters.txt')
+
+    def testFLS_header16nonletters(self):
+        self.check_fls('header16nonletters.txt')
+
+    def testFLS_header17apos(self):
+        self.check_fls('header17apos.txt')
+
+    def testFLS_header18allcaps(self):
+        self.check_fls('header18allcaps.txt')
+
+    def testFLS_header19nums(self):
+        self.check_fls('header19nums.txt')
+
+    def testFLS_header20accents(self):
+        self.check_fls('header20accents.txt')
+
+    def testFLS_header20dups(self):
+        self.check_fls('header20dups.txt')
+
+    def testFLS_header21gritbins(self):
+        self.check_fls('header21gritbins.txt')
+
+    def testFLS_header21single_name(self):
+        self.check_fls('header21single-name.txt')
+
+    def testFLS_header22single_ambig(self):
+        self.check_fls('header22single-ambig.txt')
+
+    def testFLS_header23tabs(self):
+        self.check_fls('header23tabs.txt')
+
+    def testFLS_header24pipes(self):
+        self.check_fls('header24pipes.txt')
+
+    def testFLS_header25semis(self):
+        self.check_fls('header25semis.txt')
+
+    def testFLS_noheader1(self):
+        self.check_fls('noheader1.txt')
+
+    def testFLS_noheader2(self):
+        self.check_fls('noheader2.txt')
+
+    def testFLS_noheader3(self):
+        self.check_fls('noheader3.txt')
+
+    def testFLS_noheader4single(self):
+        self.check_fls('noheader4single.txt')
+
+    def testFLS_noheader5dates(self):
+        self.check_fls('noheader5dates.txt')
+
+    def testFLS_noheader6nums(self):
+        self.check_fls('noheader6nums.txt')
+
+    def testFLS_dataline1_all_csvw_types(self):
+        self.check_fls('dataline1-all-csvw-types.csv')
+
+    def testFLS_dataline1_allformats(self):
+        self.check_fls('dataline1-allformats.csv')
+
+    def testFLS_dataline1_allformats2unspec(self):
+        self.check_fls('dataline1-allformats2unspec.csv')
+
+    def testFLS_dataline1_ambig_all(self):
+        self.check_fls('dataline1-ambig-all.csv')
+
+    def testFLS_dataline1_ambig_guided_eu(self):
+        self.check_fls('dataline1-ambig-guided-eu.csv')
+
+    def testFLS_dataline1_ambig_guided_us(self):
+        self.check_fls('dataline1-ambig-guided-us.csv')
+
+    def testFLS_dataline1_coding_utf16(self):
+        self.check_fls('dataline1-coding-utf16.csv')
+
+    def testFLS_dataline1_coding_utf8(self):
+        self.check_fls('dataline1-coding-utf8.csv')
+
+    def testFLS_dataline1_ddd(self):
+        self.check_fls('dataline1-ddd.csv')
+
+    def testFLS_dataline1_ddd2(self):
+        self.check_fls('dataline1-ddd2.csv')
+
+    def testFLS_dataline1_ddd3(self):
+        self.check_fls('dataline1-ddd3.csv')
+
+    def testFLS_dataline1_elements3_old(self):
+        self.check_fls('dataline1-elements3-old.csv')
+
+    def testFLS_dataline1_eurod(self):
+        self.check_fls('dataline1-eurod.csv')
+
+    def testFLS_dataline1_eurod2y(self):
+        self.check_fls('dataline1-eurod2y.csv')
+
+    def testFLS_dataline1_eurodt_write_kw(self):
+        self.check_fls('dataline1-eurodt-write-kw.csv')
+
+    def testFLS_dataline1_eurodt_write_serial(self):
+        self.check_fls('dataline1-eurodt-write-serial.csv')
+
+    def testFLS_dataline1_eurodt(self):
+        self.check_fls('dataline1-eurodt.csv')
+
+    def testFLS_dataline1_eurodt2y(self):
+        self.check_fls('dataline1-eurodt2y.csv')
+
+    def testFLS_dataline1_isod(self):
+        self.check_fls('dataline1-isod.csv')
+
+    def testFLS_dataline1_isodatetime(self):
+        self.check_fls('dataline1-isodatetime.csv')
+
+    def testFLS_dataline1_isodt(self):
+        self.check_fls('dataline1-isodt.csv')
+
+    def testFLS_dataline1_isodt_tsv(self):
+        self.check_fls('dataline1-isodt.tsv')
+
+    def testFLS_dataline1_minimal(self):
+        self.check_fls('dataline1-minimal.csv')
+
+    def testFLS_dataline1_nulls1(self):
+        self.check_fls('dataline1-nulls1.csv')
+
+    def testFLS_dataline1_onebool(self):
+        self.check_fls('dataline1-onebool.txt')
+
+    def testFLS_dataline1_onereal(self):
+        self.check_fls('dataline1-onereal.txt')
+
+    def testFLS_dataline1_onestring(self):
+        self.check_fls('dataline1-onestring.txt')
+
+    def testFLS_dataline1_semicolon(self):
+        self.check_fls('dataline1-semicolon.txt')
+
+    def testFLS_dataline1_semicolon2(self):
+        self.check_fls('dataline1-semicolon2.txt')
+
+    def testFLS_dataline1_semicolon3(self):
+        self.check_fls('dataline1-semicolon3.txt')
+
+    def testFLS_dataline1_semicolon4(self):
+        self.check_fls('dataline1-semicolon4.txt')
+
+    def testFLS_dataline1_semicolon5(self):
+        self.check_fls('dataline1-semicolon5.txt')
+
+    def testFLS_dataline1_semicolon6(self):
+        self.check_fls('dataline1-semicolon6.txt')
+
+    def testFLS_dataline1_sig_cp1252(self):
+        self.check_fls('dataline1-sig-cp1252.csv')
+
+    def testFLS_dataline1_sig_equiv_utf16(self):
+        self.check_fls('dataline1-sig-equiv-utf16.csv')
+
+    def testFLS_dataline1_sig_equiv_utf8(self):
+        self.check_fls('dataline1-sig-equiv-utf8.csv')
+
+    def testFLS_dataline1_sig_latin1(self):
+        self.check_fls('dataline1-sig-latin1.csv')
+
+    def testFLS_dataline1_sig_latin9(self):
+        self.check_fls('dataline1-sig-latin9.csv')
+
+    def testFLS_dataline1_simple(self):
+        self.check_fls('dataline1-simple.csv')
+
+    def testFLS_dataline1_small_cp1252(self):
+        self.check_fls('dataline1-small-cp1252.csv')
+
+    def testFLS_dataline1_small_latin1(self):
+        self.check_fls('dataline1-small-latin1.csv')
+
+    def testFLS_dataline1_small_latin9(self):
+        self.check_fls('dataline1-small-latin9.csv')
+
+    def testFLS_dataline1_small_write_kw(self):
+        self.check_fls('dataline1-small-write-kw.csv')
+
+    def testFLS_dataline1_small_write_serial(self):
+        self.check_fls('dataline1-small-write-serial.csv')
+
+    def testFLS_dataline1_small(self):
+        self.check_fls('dataline1-small.csv')
+
+    def testFLS_dataline1_small2(self):
+        self.check_fls('dataline1-small2.csv')
+
+    def testFLS_dataline1_strings1(self):
+        self.check_fls('dataline1-strings1.csv')
+
+    def testFLS_dataline1_tiny1cd_pandas(self):
+        self.check_fls('dataline1-tiny1cd-pandas.csv')
+
+    def testFLS_dataline1_tiny1cd(self):
+        self.check_fls('dataline1-tiny1cd.csv')
+
+    def testFLS_dataline1_tiny1cd3(self):
+        self.check_fls('dataline1-tiny1cd3.csv')
+
+    def testFLS_dataline1_tiny1cn_pandas(self):
+        self.check_fls('dataline1-tiny1cn-pandas.csv')
+
+    def testFLS_dataline1_tiny1cn(self):
+        self.check_fls('dataline1-tiny1cn.csv')
+
+    def testFLS_dataline1_tiny1cn3(self):
+        self.check_fls('dataline1-tiny1cn3.csv')
+
+    def testFLS_dataline1_tiny1nd_dot(self):
+        self.check_fls('dataline1-tiny1nd-dot.csv')
+
+    def testFLS_dataline1_tiny1nd_NULL(self):
+        self.check_fls('dataline1-tiny1nd-NULL.csv')
+
+    def testFLS_dataline1_tiny1nd_pandas(self):
+        self.check_fls('dataline1-tiny1nd-pandas.csv')
+
+    def testFLS_dataline1_tiny1nd(self):
+        self.check_fls('dataline1-tiny1nd.csv')
+
+    def testFLS_dataline1_tiny1nd3(self):
+        self.check_fls('dataline1-tiny1nd3.csv')
+
+    def testFLS_dataline1_tiny1ndq(self):
+        self.check_fls('dataline1-tiny1ndq.csv')
+
+    def testFLS_dataline1_tiny1nn_pandas(self):
+        self.check_fls('dataline1-tiny1nn-pandas.csv')
+
+    def testFLS_dataline1_tiny1nn(self):
+        self.check_fls('dataline1-tiny1nn.csv')
+
+    def testFLS_dataline1_tiny1nn3(self):
+        self.check_fls('dataline1-tiny1nn3.csv')
+
+    def testFLS_dataline1_tz(self):
+        self.check_fls('dataline1-tz.csv')
+
+    def testFLS_dataline1_usd(self):
+        self.check_fls('dataline1-usd.csv')
+
+    def testFLS_dataline1_usd2y(self):
+        self.check_fls('dataline1-usd2y.csv')
+
+    def testFLS_dataline1_usdt(self):
+        self.check_fls('dataline1-usdt.csv')
+
+    def testFLS_dataline1_usdt2y(self):
+        self.check_fls('dataline1-usdt2y.csv')
 
 
 if __name__ == '__main__':

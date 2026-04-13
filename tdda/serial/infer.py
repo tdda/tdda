@@ -67,6 +67,221 @@ ADTISH = re.compile(
 
 NO_DELIMITER = chr(0)
 
+# Strict: standard code identifier (letters, digits, underscores)
+STRICT_NAME_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+# Extended: allows dots, dashes, spaces (CH-style dotted/spaced names)
+EXTENDED_NAME_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_./ -]*$')
+# Human: starts with a Unicode letter or underscore, contains anything
+# printable that isn't a separator
+HUMAN_NAME_RE = re.compile(
+    r'^[^\W\d_].*$|^[a-zA-Z_]', re.UNICODE
+)
+NUMERIC_RE = re.compile(r'^-?[0-9]+(\.[0-9]+)?$')
+
+SEP_CHARS = (',', '|', '\t', ';')
+
+ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
+
+
+def _has_cp1252_bytes(path):
+    # Bytes 0x80-0x9F are printable in cp1252 but control codes in latin-1.
+    # If any are present the file is almost certainly cp1252.
+    with open(path, 'rb') as f:
+        chunk = f.read(65536)
+    return any(0x80 <= b <= 0x9F for b in chunk)
+
+
+def read_file_lines(path, initial_enc=None, lines_to_use=1000):
+    """Read header and data lines from path with encoding fallback.
+
+    Tries initial_enc first, then each encoding in ENCODING_FALLBACKS.
+    Promotes latin-1 to cp1252 when 0x80-0x9F bytes are present.
+
+    Returns (header, datalines, enc_used), or (None, [], None) if all
+    encodings fail.
+    """
+    candidates = [initial_enc] + [
+        e for e in ENCODING_FALLBACKS if e != initial_enc
+    ]
+    for enc in candidates:
+        datalines = []
+        try:
+            with open(path, encoding=enc) as f:
+                header = f.readline().rstrip()
+                while not header.strip():
+                    header = f.readline()
+                for _ in range(lines_to_use):
+                    line = f.readline().strip()
+                    if line:
+                        datalines.append(line)
+            if enc == 'latin-1' and _has_cp1252_bytes(path):
+                enc = 'cp1252'
+            return header, datalines, enc
+        except UnicodeDecodeError:
+            continue
+    return None, [], None
+
+
+class FirstLineStats:
+    """Stats and provisional conclusions from the first (header) line."""
+
+    def __init__(self, line, single_field=False):
+        self.line = line
+        self.n_commas = line.count(',')
+        self.n_pipes = line.count('|')
+        self.n_tabs = line.count('\t')
+        self.n_semis = line.count(';')
+        self.n_spaces = line.count(' ')
+        self.n_dquotes = line.count('"')
+        self.n_squotes = line.count("'")
+        self.n_backslashes = line.count('\\')
+
+        if single_field:
+            self.sep = NO_DELIMITER
+        else:
+            self.sep = self._infer_sep()
+        self.quote_char = self._infer_quote_char()
+        self.fieldnames = self._split_fieldnames()
+        self._analyse_fieldnames()
+        self._detect_escape_stutter()
+
+    def _infer_sep(self):
+        counts = {
+            ',': self.n_commas,
+            '|': self.n_pipes,
+            '\t': self.n_tabs,
+            ';': self.n_semis,
+        }
+        best = max(counts.values())
+        if best == 0:
+            return []
+        return [c for c, n in counts.items() if n == best]
+
+    def _infer_quote_char(self):
+        if self.n_dquotes > 0 and self.n_dquotes % 2 == 0:
+            return '"'
+        if (self.n_squotes > 0 and self.n_squotes % 2 == 0
+                and self.n_squotes > self.n_backslashes * 2):
+            return "'"
+        return None
+
+    def _split_fieldnames(self):
+        if not self.sep:
+            return [self.line]
+        # Use first candidate sep for splitting (ties resolved later)
+        s = self.sep[0]
+        q = self.quote_char
+        if q and q in self.line:
+            result = careful_split(self.line, s, q, '\\')
+            if result is not None:
+                return result
+        return self.line.split(s)
+
+    def _analyse_fieldnames(self):
+        names = self.fieldnames
+        self.n_fields = len(names)
+        q = self.quote_char
+        # Dequote for analysis purposes
+        stripped = [
+            n.strip()[1:-1] if q and n.strip().startswith(q)
+            and n.strip().endswith(q) and len(n.strip()) >= 2
+            else n.strip()
+            for n in names
+        ]
+        self.n_empty = sum(1 for n in stripped if not n)
+        self.n_numeric = sum(1 for n in stripped if NUMERIC_RE.match(n))
+        self.n_strict = sum(1 for n in stripped if STRICT_NAME_RE.match(n))
+        self.n_extended = sum(
+            1 for n in stripped
+            if not STRICT_NAME_RE.match(n) and EXTENDED_NAME_RE.match(n)
+        )
+        self.n_human = sum(
+            1 for n in stripped
+            if not EXTENDED_NAME_RE.match(n) and HUMAN_NAME_RE.match(n)
+        )
+        self.n_name_like = self.n_strict + self.n_extended + self.n_human
+        self.n_other = (
+            self.n_fields - self.n_empty
+            - self.n_numeric - self.n_name_like
+        )
+        self.n_with_space = sum(1 for n in stripped if n and ' ' in n)
+        total = self.n_fields
+        name_ratio = self.n_name_like / total if total else 0
+        self.looks_like_header = (
+            name_ratio >= 0.75
+            and self.n_empty <= 1
+            and self.n_numeric == 0
+        )
+
+    def _detect_escape_stutter(self):
+        q = self.quote_char
+        self.has_stutter = False
+        self.has_backslash_escape = False
+        if q:
+            qq = q + q
+            bq = f'\\{q}'
+            for field in self.fieldnames:
+                f = field.strip()
+                if bq in f:
+                    self.has_backslash_escape = True
+                # Only count qq as stutter if not preceded by backslash
+                s = f.replace(bq, '')
+                if qq in s:
+                    self.has_stutter = True
+
+    def __str__(self):
+        sep = (
+            repr(self.sep[0]) if len(self.sep) == 1
+            else repr(self.sep)
+            if self.sep
+            else '[]'
+        )
+        q = repr(self.quote_char)
+        return (
+            f'FirstLineStats(\n'
+            f'    sep={sep},\n'
+            f'    q={q},\n'
+            f'    fields={self.n_fields},\n'
+            f'    strict={self.n_strict},\n'
+            f'    ext={self.n_extended},\n'
+            f'    human={self.n_human},\n'
+            f'    empty={self.n_empty},\n'
+            f'    numeric={self.n_numeric},\n'
+            f'    other={self.n_other},\n'
+            f'    stutter={self.has_stutter},\n'
+            f'    esc={self.has_backslash_escape},\n'
+            f'    header={self.looks_like_header},\n'
+            f')'
+        )
+
+
+class SampleStats:
+    """Per-line character counts for separator consistency checking."""
+
+    def __init__(self, lines):
+        self.counts = {c: [] for c in SEP_CHARS}
+        self.counts['\\'] = []
+        self.counts['"'] = []
+        self.counts["'"] = []
+        for line in lines:
+            for c in self.counts:
+                self.counts[c].append(line.count(c))
+
+    def consistency(self, char):
+        """Return (min, max, mode) count for char across sample lines."""
+        vals = self.counts.get(char, [])
+        if not vals:
+            return 0, 0, 0
+        mn = min(vals)
+        mx = max(vals)
+        mode = Counter(vals).most_common(1)[0][0]
+        return mn, mx, mode
+
+    def consistent_sep(self, char):
+        """True if char count is identical across all sample lines."""
+        mn, mx, _ = self.consistency(char)
+        return mn == mx and mn > 0
+
 
 class MetadataInferrer:
     def __init__(
@@ -118,47 +333,24 @@ class MetadataInferrer:
         if enc_used != self.encoding:
             self.encoding = enc_used
 
-    ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
-
     def _open_with_fallback(self, datalines):
-        candidates = [self.encoding] + [
-            e for e in self.ENCODING_FALLBACKS if e != self.encoding
-        ]
-        last_exc = None
-        for enc in candidates:
-            try:
-                with open(self.inpath, encoding=enc) as f:
-                    self.header = f.readline().rstrip()
-                    while not self.header.strip():
-                        self.header = f.readline()
-                    for i in range(self.lines_to_use):
-                        line = f.readline().strip()
-                        if line:
-                            datalines.append(line)
-                if enc == 'latin-1' and self._has_cp1252_bytes():
-                    enc = 'cp1252'
-                if enc != self.encoding:
-                    self.warn(
-                        f'Encoding {self.encoding!r} failed; '
-                        f'reading as {enc!r}.'
-                    )
-                return enc
-            except UnicodeDecodeError as e:
-                last_exc = e
-                datalines.clear()
-                continue
-        error(
-            f'Cannot read file {self.inpath!r}: tried encodings '
-            f'{candidates}; all failed. Last error: {last_exc}',
-            raise_error=self.raise_error,
+        header, lines, enc = read_file_lines(
+            self.inpath, self.encoding, self.lines_to_use
         )
-
-    def _has_cp1252_bytes(self):
-        # Bytes 0x80-0x9F are printable in cp1252 but control codes in latin-1.
-        # If any are present the file is almost certainly cp1252.
-        with open(self.inpath, 'rb') as f:
-            chunk = f.read(65536)
-        return any(0x80 <= b <= 0x9F for b in chunk)
+        if header is None:
+            error(
+                f'Cannot read file {self.inpath!r}: tried encodings '
+                f'{ENCODING_FALLBACKS}; all failed.',
+                raise_error=self.raise_error,
+            )
+            return None
+        self.header = header
+        datalines.extend(lines)
+        if enc != self.encoding:
+            self.warn(
+                f'Encoding {self.encoding!r} failed; reading as {enc!r}.'
+            )
+        return enc
 
     def process(self):
         header = self.header

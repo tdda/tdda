@@ -1,0 +1,14 @@
+FirstLineStats(
+    sep=',',
+    q=None,
+    fields=15,
+    strict=3,
+    ext=0,
+    human=1,
+    empty=0,
+    numeric=5,
+    other=6,
+    stutter=False,
+    esc=False,
+    header=False,
+)
