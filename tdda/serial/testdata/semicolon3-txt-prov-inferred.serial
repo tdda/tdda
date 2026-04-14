@@ -27,6 +27,7 @@
         "delimiter": ";",
         "quote_char": "\"",
         "null_indicator": "NULL",
+        "map_missing_trailing_cols_to_null": true,
         "header_row_count": 1,
         "header_row": 0
     }

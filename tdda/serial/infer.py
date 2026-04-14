@@ -341,6 +341,7 @@ class MetadataInferrer:
             date_format=self.date_format,
             datetime_format=self.datetime_format,
             header_row_count=self.header_row_count,
+            map_missing_trailing_cols_to_null=self.excel or None,
         )
 
     def vprint(self, msg, min_verbosity=1):
@@ -612,8 +613,8 @@ class MetadataInferrer:
         m = min(len(row) for row in data)
         M = max(len(row) for row in data)
         nFields = len(self.fieldnames)
-        excel = not (m == M)
-        if excel:
+        self.excel = m < nFields
+        if self.excel:
             self.vprint('Rows have different numbers of values.', 2)
         else:
             self.vprint('All rows complete', 2)
@@ -870,7 +871,9 @@ def split_line(line, sep, counts):
     i = 0
     n = len(line)
 
+    last_was_sep = False
     while True:
+        last_was_sep = False
         if i < n and line[i] in ('"', "'"):
             # Quoted field
             q = line[i]
@@ -915,6 +918,7 @@ def split_line(line, sep, counts):
             # Skip separator after closing quote
             if i < n and line[i] == sep:
                 i += 1
+                last_was_sep = True
         else:
             # Unquoted field
             chars = []
@@ -922,6 +926,7 @@ def split_line(line, sep, counts):
                 c = line[i]
                 if c == sep:
                     i += 1
+                    last_was_sep = True
                     break
                 elif c == '\\':
                     nxt = line[i + 1] if i + 1 < n else ''
@@ -951,6 +956,10 @@ def split_line(line, sep, counts):
             is_quoted.append(False)
 
         if i >= n:
+            if last_was_sep:
+                # Trailing separator — add the implied empty last field
+                fields.append('')
+                is_quoted.append(False)
             break
 
     return fields, is_quoted

@@ -130,7 +130,7 @@ All dataset-level keys are optional.
 **`escape_char`** *(string)*
 : When this is set to `\\` (the only value it is likely to take)
   this means that quote characters in quoted strings are escaped
-  with backslash `"like \"this\" example". Backslash also escapes itself,
+  with backslash `"like \"this\" example"`. Backslash also escapes itself,
   and may be used to escape separators, whether quoted or not.
   It has no significance for common control escapes, which
   may appear as `\n`, `\r`, `\t`, `\f` in files regardless
