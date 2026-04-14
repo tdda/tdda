@@ -93,6 +93,8 @@ KNOWN_DATA_VALUES = {
 }
 
 MIN_VALID_OR_NULL_TYPE = 0.99  # At least this prop valid or null
+MIN_NAME_RATIO = 0.75
+DEFAULT_SAMPLE_LINES = 1000
 
 
 def _has_cp1252_bytes(path):
@@ -103,7 +105,8 @@ def _has_cp1252_bytes(path):
     return any(0x80 <= b <= 0x9F for b in chunk)
 
 
-def read_file_lines(path, initial_enc=None, lines_to_use=1000):
+def read_file_lines(path, initial_enc=None, lines_to_use=1000,
+                    raise_error=False):
     """Read header and data lines from path with encoding fallback.
 
     Tries initial_enc first, then each encoding in ENCODING_FALLBACKS.
@@ -131,6 +134,8 @@ def read_file_lines(path, initial_enc=None, lines_to_use=1000):
             return header, datalines, enc
         except UnicodeDecodeError:
             continue
+        except FileNotFounderror as e:
+            error(str(e), raise_error=raise_error)
     return None, [], None
 
 
@@ -225,7 +230,7 @@ class FirstLineStats:
         total = self.n_fields
         name_ratio = self.n_name_like / total if total else 0
         self.looks_like_header = (
-            name_ratio >= 0.75
+            name_ratio >= MIN_NAME_RATIO
             and self.n_empty <= 1
             and self.n_numeric == 0
             # Single-field: prose (has spaces) or known data value
@@ -320,20 +325,42 @@ class SplitCounts:
 
 class MetadataInferrer:
     def __init__(
-        self, inpath, lines_to_use=1000, verbosity=None, single_field=None,
+        self, inpath, lines_to_use=None, verbosity=None, single_field=None,
         warner=None, add_defaults=False, report_added_defaults=True,
-        raise_error=False
+        raise_error=False,
+        delimiter=None, quote_char=None,
+        escape=None, no_escape=False, stutter=None,
+        null=None, encoding=None,
+        date_format=None, datetime_format=None,
+        header_row_count=None,
     ):
-        self.inpath = os.path.expanduser(inpath)
-        self.lines_to_use = lines_to_use
+        self.inpath = os.path.expanduser(inpath) if inpath else None
+        self.lines_to_use = nvl(lines_to_use, DEFAULT_SAMPLE_LINES)
         self.verbosity = nvl(verbosity, 10)
         self.single_field = single_field
         self.warn = nvl(warner, warn)
         self.add_defaults = add_defaults
         self.report_added_defaults = report_added_defaults
         self.raise_error = raise_error
-        self.read()
-        self.process()
+        self._given = {
+            'sep': delimiter,
+            'quote_char': quote_char,
+            'escape': None if no_escape else escape,
+            'no_escape': no_escape,
+            'stutter': stutter,
+            'null': null,
+            'encoding': encoding,
+            'date_format': date_format,
+            'datetime_format': datetime_format,
+            'header_row_count': header_row_count,
+            'excel': None,
+        }
+        if inpath:
+            self.read()
+            self.process()
+        else:  # No file given: just generate from params (or defaults)
+            self.apply_all_given()
+            self.fields = []
 
         self.metadata = SerialMetadata(
             fields=self.fields,
@@ -349,6 +376,23 @@ class MetadataInferrer:
             map_missing_trailing_cols_to_null=self.excel or None,
         )
 
+    def apply_all_given(self):
+        for k in self._given:
+            self._apply_given(k)
+
+    def _apply_given(self, attr, name=None):
+        """
+        Apply a given value if provided, warning if it differs from inferred.
+        """
+        value = self._given.get(attr)
+        if value is None and hasattr(self, attr):
+            return
+        inferred = getattr(self, attr, None)
+        if inferred is not None and inferred != value:
+            name = nvl(name, attr)
+            self.vprint(f'{name}: {value!r} (inferred {inferred!r})')
+        setattr(self, attr, value)
+
     def vprint(self, msg, min_verbosity=1):
         if self.verbosity >= min_verbosity:
             self.warn(msg)
@@ -363,8 +407,9 @@ class MetadataInferrer:
         return None
 
     def read(self):
-        enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
-        self.encoding = None if enc == 'ascii' else enc
+        if self._given['encoding'] is None:
+            enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
+            self.encoding = None if enc == 'ascii' else enc
         self.datalines = datalines = []
         enc_used = self._open_with_fallback(datalines)
         if enc_used != self.encoding:
@@ -395,7 +440,7 @@ class MetadataInferrer:
 
         self.fls = FirstLineStats(header)
         self.ss = SampleStats(self.datalines)
-        self.sep = sep = self.reconcile_sep()
+        self.sep = sep = nvl(self._given['sep'], self.reconcile_sep())
 
         self.quote_char, self.escape, self.stutter = self.find_quote_chars()
 
@@ -432,9 +477,20 @@ class MetadataInferrer:
             self.data = lines  # all lines are data
 
         self.split_data_lines()
+        # Apply given quote/escape/stutter after split inference
+        self._apply_given('quote_char', 'quote_char')
+        if self._given['no_escape']:
+            self.escape = None
+        else:
+            self._apply_given('escape', 'escape_char')
+        self._apply_given('stutter', 'stutter_quotes')
         self.vprint(f'Inferred escape: {self.escape}.', 2)
         self.vprint(f'Inferred stutter: {self.stutter}.', 2)
         self.infer_fields()
+        # Apply given null/date formats after field type inference
+        self._apply_given('null', 'null_indicator')
+        self._apply_given('date_format', 'date_format')
+        self._apply_given('datetime_format', 'datetime_format')
 
     def split_data_lines(self):
         """Split all data lines, accumulating escape/stutter counts.
@@ -838,15 +894,29 @@ class MetadataInferrer:
 
 
 def infer_format_from_flat_file(
-    path, lines_to_use=1000, warner=None,
+    path, lines_to_use=None, warner=None,
     add_defaults=False, report_added_defaults=True,
-    raise_error=False, **kw
+    raise_error=False,
+    delimiter=None, quote_char=None,
+    escape=None, no_escape=False, stutter=None,
+    null=None, encoding=None,
+    date_format=None, datetime_format=None,
+    **kw
 ):
     inferrer = MetadataInferrer(
         path, lines_to_use, warner=warner,
         add_defaults=add_defaults,
         report_added_defaults=report_added_defaults,
         raise_error=raise_error,
+        delimiter=delimiter,
+        quote_char=quote_char,
+        escape=escape,
+        no_escape=no_escape,
+        stutter=stutter,
+        null=null,
+        encoding=encoding,
+        date_format=date_format,
+        datetime_format=datetime_format,
         **kw
     )
     return inferrer.metadata

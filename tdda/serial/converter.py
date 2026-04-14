@@ -231,10 +231,65 @@ class SerialConverter:
             '--gen',
             '-g',
             action='store_true',
-            help='Generate a bare-bones tdda.serial file for a '
+            help='Generate an inferred tdda.serial file for a '
             'CSV file provided',
         )
 
+        parser.add_argument(
+            '--sep', '--delimiter',
+            type=str, dest='delimiter',
+            help='Specify inferred field delimiter.',
+        )
+        parser.add_argument(
+            '--quote-char', '--quote',
+            type=str, dest='quote_char',
+            help='Specify quote character.',
+        )
+        parser.add_argument(
+            '--escape',
+            action='store_true',
+            help='Use \\ as escape character.',
+        )
+        parser.add_argument(
+            '--no-escape',
+            action='store_true', dest='no_escape',
+            help='Force no escape character.',
+        )
+        parser.add_argument(
+            '--stutter',
+            action='store_true', default=None,
+            help='Specify stutter (doubled) quote style.',
+        )
+        parser.add_argument(
+            '--no-stutter',
+            action='store_false', dest='stutter',
+            help='Specify no stutter quote style.',
+        )
+        parser.add_argument(
+            '--nulls',
+            type=str,
+            help='Specify null indicator or comma-separated null indicators.',
+        )
+        parser.add_argument(
+            '-e', '--encoding',
+            type=str,
+            help='Specify inferred encoding.',
+        )
+        parser.add_argument(
+            '-n', '--sample-lines',
+            type=int, dest='lines_to_use',
+            help='Number of data lines to sample for inference.',
+        )
+        parser.add_argument(
+            '--date-format',
+            type=str, dest='date_format',
+            help='Specify date format.',
+        )
+        parser.add_argument(
+            '--datetime-format',
+            type=str, dest='datetime_format',
+            help='Specify datetime format.',
+        )
         parser.add_argument(
             '--quiet', '-q', action='store_true', help='Be quiet'
         )
@@ -316,10 +371,26 @@ class SerialConverter:
             Warn(f'Invalid broad output type: {self.broad_out}.')
 
     def infer_from_flat_file(self):
+        nulls = getattr(self, 'nulls', None)
+        if nulls is not None:
+            null = [n for n in nulls.split(',')]
+            null = null[0] if len(null) == 1 else null
+        else:
+            null = None
         return infer_format_from_flat_file(
             self.inpath,
             single_field=self.single_field,
             verbosity=self.verbosity,
+            lines_to_use=getattr(self, 'lines_to_use', None),
+            delimiter=getattr(self, 'delimiter', None),
+            quote_char=getattr(self, 'quote_char', None),
+            escape='\\' if getattr(self, 'escape', None) else None,
+            no_escape=getattr(self, 'no_escape', False),
+            stutter=getattr(self, 'stutter', None),
+            null=null,
+            encoding=getattr(self, 'encoding', None),
+            date_format=getattr(self, 'date_format', None),
+            datetime_format=getattr(self, 'datetime_format', None),
         )
 
 
