@@ -13,6 +13,8 @@
             }
         ],
         "delimiter": ",",
-        "date_format": "%m/%d/%y"
+        "date_format": "%m/%d/%y",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

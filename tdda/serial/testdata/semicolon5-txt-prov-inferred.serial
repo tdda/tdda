@@ -25,6 +25,8 @@
             }
         ],
         "delimiter": ";",
-        "null_indicator": ""
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

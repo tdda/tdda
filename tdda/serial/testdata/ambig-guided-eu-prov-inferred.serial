@@ -17,6 +17,8 @@
             }
         ],
         "delimiter": ",",
-        "date_format": "%d/%m/%Y"
+        "date_format": "%d/%m/%Y",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

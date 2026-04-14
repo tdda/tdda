@@ -27,6 +27,8 @@
         "delimiter": ";",
         "quote_char": "'",
         "date_format": "%d/%m/%Y",
-        "null_indicator": "."
+        "null_indicator": ".",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

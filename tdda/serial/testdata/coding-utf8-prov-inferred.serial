@@ -50,6 +50,8 @@
         ],
         "encoding": "utf-8",
         "delimiter": ",",
-        "quote_char": "\""
+        "quote_char": "\"",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

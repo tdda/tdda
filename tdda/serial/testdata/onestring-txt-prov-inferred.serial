@@ -8,6 +8,8 @@
                 "fieldtype": "string"
             }
         ],
-        "delimiter": "\u0000"
+        "delimiter": "\u0000",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

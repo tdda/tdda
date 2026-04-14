@@ -68,6 +68,8 @@
         "delimiter": "\t",
         "date_format": "%Y-%m-%dT%H:%M:%S",
         "datetime_format": "%Y-%m-%dT%H:%M:%S",
-        "null_indicator": "NULL"
+        "null_indicator": "NULL",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

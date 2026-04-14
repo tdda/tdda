@@ -21,6 +21,8 @@
             }
         ],
         "encoding": "ISO-8859-1",
-        "delimiter": ","
+        "delimiter": ",",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

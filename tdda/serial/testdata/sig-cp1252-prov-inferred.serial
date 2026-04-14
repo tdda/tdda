@@ -21,6 +21,8 @@
             }
         ],
         "encoding": "cp1252",
-        "delimiter": ","
+        "delimiter": ",",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

@@ -326,6 +326,7 @@ class MetadataInferrer:
             null_indicator=self.null,
             date_format=self.date_format,
             datetime_format=self.datetime_format,
+            header_row_count=self.header_row_count,
         )
 
     def vprint(self, msg, min_verbosity=1):
@@ -372,7 +373,10 @@ class MetadataInferrer:
         header = self.header
         self.all_lines = lines = [self.header] + self.datalines
 
-        self.sep = sep = self.find_separator()
+        self.fls = FirstLineStats(header)
+        self.ss = SampleStats(self.datalines)
+        self.sep = sep = self.reconcile_sep()
+
         self.quote_char, self.escape, self.stutter = self.find_quote_chars()
 
         sep_replacement, qq_replacement = non_chars(lines, 2)
@@ -384,23 +388,79 @@ class MetadataInferrer:
                 lines[i] = line.replace(escaped_sep, sep_replacement)
                 restorations[sep_replacement] = sep
 
-        fieldnames = self.find_fieldnames()
-        self.n_fieldnames = len(fieldnames)
+        self.has_header = self.fls.looks_like_header
+        self.header_row_count = 1 if self.has_header else 0
+        self.vprint(f'Header row: {self.has_header}.', 2)
 
-        quote = self.quote_char
-        plain_fieldnames, _ = self.dequote(fieldnames)
-        if plain_fieldnames != fieldnames:
-            self.quote_char = quote
-            plain_fieldnames = header.split(sep)
-        if quote:
-            restorations[qq_replacement] = quote
-
-        self.fieldnames = plain_fieldnames
-        self.data = lines[1:]
+        if self.has_header:
+            fieldnames = self.find_fieldnames()
+            self.n_fieldnames = len(fieldnames)
+            quote = self.quote_char
+            plain_fieldnames, _ = self.dequote(fieldnames)
+            if plain_fieldnames != fieldnames:
+                self.quote_char = quote
+                plain_fieldnames = header.split(sep)
+            if quote:
+                restorations[qq_replacement] = quote
+            self.fieldnames = plain_fieldnames
+            self.data = lines[1:]
+        else:
+            # No header: generate synthetic field names from field count
+            n_fields = len(header.split(sep)) if sep != NO_DELIMITER else 1
+            self.fieldnames = [f'field{i}' for i in range(n_fields)]
+            self.n_fieldnames = n_fields
+            self.data = lines  # all lines are data
 
         self.vprint(f'Inferred escape: {self.escape}.', 2)
         self.vprint(f'Inferred stutter: {self.stutter}.', 2)
         self.infer_fields()
+
+    def reconcile_sep(self):
+        if self.single_field:
+            return NO_DELIMITER
+
+        fls = self.fls
+        ss = self.ss
+
+        # Candidates from header line (may be a list of tied winners)
+        header_candidates = fls.sep if isinstance(fls.sep, list) else [fls.sep]
+
+        # Consistency of each sep char across body lines
+        consistent = [c for c in SEP_CHARS if ss.consistent_sep(c)]
+
+        # Best case: header and body agree on a single separator
+        agreed = [c for c in header_candidates if c in consistent]
+        if len(agreed) == 1:
+            self.vprint(f'Separator {agreed[0]!r}: header and body agree.', 2)
+            return agreed[0]
+        if len(agreed) > 1:
+            # Multiple consistent candidates that header also suggests —
+            # pick the one with the highest body count (mode)
+            agreed.sort(
+                key=lambda c: ss.consistency(c)[2], reverse=True
+            )
+            self.vprint(
+                f'Separator {agreed[0]!r}: multiple agreeing candidates,'
+                f' picking by body frequency.',
+                2,
+            )
+            return agreed[0]
+
+        # Body consistent but header disagrees (or no header candidates)
+        if consistent:
+            consistent.sort(
+                key=lambda c: ss.consistency(c)[2], reverse=True
+            )
+            self.vprint(
+                f'Separator {consistent[0]!r}: body consistent'
+                f' (header disagrees or absent).',
+                2,
+            )
+            return consistent[0]
+
+        # Neither header nor body gives a clean answer — fall back to old method
+        self.vprint('Separator: no consistent candidate, falling back.', 2)
+        return self.find_separator()
 
     def find_separator(self):
         if self.single_field:

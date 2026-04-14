@@ -68,6 +68,8 @@
                 "format": "%m/%d/%Y %H:%M:%S"
             }
         ],
-        "delimiter": ","
+        "delimiter": ",",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

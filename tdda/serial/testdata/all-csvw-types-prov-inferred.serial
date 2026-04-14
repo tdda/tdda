@@ -192,6 +192,8 @@
         "quote_char": "\"",
         "date_format": "%Y-%m-%d",
         "datetime_format": "%Y-%m-%dT%H:%M:%S",
-        "null_indicator": ""
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }

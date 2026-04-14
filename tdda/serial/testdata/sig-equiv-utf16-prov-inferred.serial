@@ -25,6 +25,8 @@
             }
         ],
         "encoding": "UTF-16",
-        "delimiter": ","
+        "delimiter": ",",
+        "header_row_count": 1,
+        "header_row": 0
     }
 }
