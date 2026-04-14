@@ -10,5 +10,5 @@ FirstLineStats(
     other=0,
     stutter=False,
     esc=False,
-    header=True,
+    header=False,
 )

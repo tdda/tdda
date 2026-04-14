@@ -82,6 +82,14 @@ SEP_CHARS = (',', '|', '\t', ';')
 
 ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
 
+# Values that are almost certainly data, not field names, even if they
+# look like identifiers (e.g. 'false' matches STRICT_NAME_RE).
+KNOWN_DATA_VALUES = {
+    'true', 'false', 'yes', 'no', 'null', 'none', 'nan', 'na',
+    'True', 'False', 'Yes', 'No', 'Null', 'None', 'Nan', 'Na',
+    'TRUE', 'FALSE', 'YES', 'NO', 'NULL', 'NONE', 'NAN', 'NA',
+}
+
 
 def _has_cp1252_bytes(path):
     # Bytes 0x80-0x9F are printable in cp1252 but control codes in latin-1.
@@ -160,6 +168,10 @@ class FirstLineStats:
     def _infer_quote_char(self):
         if self.n_dquotes > 0 and self.n_dquotes % 2 == 0:
             return '"'
+        # Backslash-escaped single quote is strong evidence ' is the quote char,
+        # even when apostrophes make the plain even-count test unreliable.
+        if "\\'" in self.line:
+            return "'"
         if (self.n_squotes > 0 and self.n_squotes % 2 == 0
                 and self.n_squotes > self.n_backslashes * 2):
             return "'"
@@ -205,12 +217,16 @@ class FirstLineStats:
             - self.n_numeric - self.n_name_like
         )
         self.n_with_space = sum(1 for n in stripped if n and ' ' in n)
+        self.n_boolean = sum(1 for n in stripped if n in KNOWN_DATA_VALUES)
         total = self.n_fields
         name_ratio = self.n_name_like / total if total else 0
         self.looks_like_header = (
             name_ratio >= 0.75
             and self.n_empty <= 1
             and self.n_numeric == 0
+            # Single-field: prose (has spaces) or known data value → not a header
+            and not (self.n_fields == 1 and self.n_with_space > 0)
+            and not (self.n_fields == 1 and self.n_boolean > 0)
         )
 
     def _detect_escape_stutter(self):

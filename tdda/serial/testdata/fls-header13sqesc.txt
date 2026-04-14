@@ -1,6 +1,6 @@
 FirstLineStats(
     sep=',',
-    q=None,
+    q="'",
     fields=5,
     strict=4,
     ext=0,
@@ -9,6 +9,6 @@ FirstLineStats(
     numeric=0,
     other=1,
     stutter=False,
-    esc=False,
+    esc=True,
     header=True,
 )
