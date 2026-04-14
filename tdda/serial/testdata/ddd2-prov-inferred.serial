@@ -53,16 +53,15 @@
             },
             {
                 "name": "basedate",
-                "fieldtype": "date"
+                "fieldtype": "string"
             },
             {
                 "name": "evendates",
-                "fieldtype": "datetime"
+                "fieldtype": "string"
             }
         ],
         "delimiter": ",",
         "quote_char": "\"",
-        "date_format": "%Y-%m-%d %H:%M:%S",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0

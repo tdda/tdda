@@ -9,11 +9,11 @@
             },
             {
                 "name": "s",
-                "fieldtype": "float"
+                "fieldtype": "string"
             },
             {
                 "name": "n",
-                "fieldtype": "float"
+                "fieldtype": "int"
             },
             {
                 "name": "r",
@@ -26,6 +26,7 @@
         ],
         "delimiter": ",",
         "quote_char": "\"",
+        "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0
     }

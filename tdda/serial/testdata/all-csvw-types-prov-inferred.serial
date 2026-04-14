@@ -121,7 +121,7 @@
             },
             {
                 "name": "json",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "dateTime",
@@ -141,7 +141,7 @@
             },
             {
                 "name": "anyAtomicType",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "dateTimeStamp",
@@ -161,7 +161,7 @@
             },
             {
                 "name": "time",
-                "fieldtype": "date"
+                "fieldtype": "string"
             },
             {
                 "name": "QName",

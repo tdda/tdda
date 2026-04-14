@@ -232,7 +232,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                     '999-999-999 99:99:99ksjdhfkZ',
                 ],
             ).most_likely_type,
-            FieldType.DATETIME,
+            FieldType.STRING,  # 2/3 valid < 99% threshold → string
         )
 
         self.assertEqual(
@@ -244,7 +244,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                     '999-999-999 99:99:99ksjdhfkZ',
                 ],
             ).most_likely_type,
-            FieldType.DATETIME,
+            FieldType.STRING,  # 2/3 valid < 99% threshold → string
         )
 
         self.assertEqual(

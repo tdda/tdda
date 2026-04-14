@@ -4,8 +4,6 @@ import sys
 
 from collections import namedtuple, Counter
 
-TypeStats = namedtuple('TypeStats', 'field stats')
-
 from tdda.serial.dateutils import (
     AMBIGUOUS_DATE_FORMATS,
     infer_date_format_from_strings,
@@ -50,19 +48,23 @@ KNOWN_NULLS = [
     '1.#IND',
     '1.#QNAN',
     ' ',
+    'NaN',
+    'NaT',
+    'nat',
+    'NAT',
 ]
 
 DATEISH = re.compile('^[0-9]{2,4}[-./][0-9]{2}[-./][0-9]{2,4}$')
 ADATEISH = re.compile(
-    '^([0-9]{2,4}|[a-z]{3}).([0-9]{2,4}|[a-z]{3}).[0-9]{2,4}$'
+    r'^([0-9]{2,4}|[a-z]{3})[-./]([0-9]{2,4}|[a-z]{3})[-./][0-9]{2,4}$'
 )
 
 DTISH = re.compile(
-    '^[0-9]{2,4}[-./][0-9]{2,4}[-./][0-9]{2,4}.[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
+    r'^[0-9]{2,4}[-./][0-9]{2}[-./][0-9]{2,4}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
 )
 ADTISH = re.compile(
-    '^([0-9]{2,4}|[a-z]{3}).([0-9]{2,4}|[a-z]{3}).[0-9]{2,4}'
-    '[0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
+    r'^([0-9]{2,4}|[a-z]{3})[-./]([0-9]{2}|[a-z]{3})[-./][0-9]{2,4}'
+    r'[ T][0-9]{2}:[0-9]{2}:[0-9]{2}.*$'
 )
 
 NO_DELIMITER = chr(0)
@@ -89,6 +91,8 @@ KNOWN_DATA_VALUES = {
     'True', 'False', 'Yes', 'No', 'Null', 'None', 'Nan', 'Na',
     'TRUE', 'FALSE', 'YES', 'NO', 'NULL', 'NONE', 'NAN', 'NA',
 }
+
+MIN_VALID_OR_NULL_TYPE = 0.99  # At least this prop valid or null
 
 
 def _has_cp1252_bytes(path):
@@ -224,7 +228,8 @@ class FirstLineStats:
             name_ratio >= 0.75
             and self.n_empty <= 1
             and self.n_numeric == 0
-            # Single-field: prose (has spaces) or known data value → not a header
+            # Single-field: prose (has spaces) or known data value
+            #  → not a header
             and not (self.n_fields == 1 and self.n_with_space > 0)
             and not (self.n_fields == 1 and self.n_boolean > 0)
         )
@@ -613,6 +618,8 @@ class MetadataInferrer:
         m = min(len(row) for row in data)
         M = max(len(row) for row in data)
         nFields = len(self.fieldnames)
+        cand_nulls = Counter()
+
         self.excel = m < nFields
         if self.excel:
             self.vprint('Rows have different numbers of values.', 2)
@@ -649,15 +656,13 @@ class MetadataInferrer:
             )
 
         type_info = {
-            col: analyse_values(col, [row[i] for row in data if len(row) > i])
+            col: analyse_values(col, [row[i] for row in data if len(row) > i],
+                                cand_nulls)
             for i, col in enumerate(self.fieldnames)
         }
-        cand_nulls = Counter()
-        for t in type_info.values():
-            if t.poss_null is not None:
-                cand_nulls[t.poss_null] += 1
 
-        mode_nulls = dict_max_items(cand_nulls)
+        mode_nulls = dict_max_items(cand_nulls)  # might be too blunt
+
         if len(mode_nulls) == 1:
             self.null = list(mode_nulls)[0]
             self.describe_null()
@@ -675,12 +680,14 @@ class MetadataInferrer:
             self.vprint(f'No null detected.', 2)
             self.null = None
 
-        null_val = self.null or ''
+        for v in type_info.values():
+            v.summarize(self.null)
+
         field_values = {
             name: [
                 v
                 for v in [row[i] for row in data if len(row) > i]
-                if v != null_val and v != ''
+                if v != self.null and v != ''
             ]
             for i, name in enumerate(self.fieldnames)
         }
@@ -996,22 +1003,12 @@ class TypeStats:
         self.type_ = type_  # Not really used by this class (for info)
         self.n_valid = 0
         self.n_invalid = 0
-        self.invalids = Counter()
-        self.n_distinct_invalids = 0
-        self.poss_null = None
 
-    def summarize(self):
-        self.n_distinct_invalids = len(self.invalids)
-        self.n_invalid = sum(self.invalids.values())
-        if self.invalids:
-            modes = dict_max_items(self.invalids)
-            if len(modes) == 1:
-                self.poss_null = list(modes)[0]
-
+    def summarize(self, null, n_cand_nulls):
         # Potentially valid as this type if null is poss_null
-        self.all_poss_valid = self.n_invalid == 0 or (
-            self.n_distinct_invalids == 1 and self.poss_null is not None
-        )
+        self.all_poss_valid = self.n_invalid == 0
+        tot = max(self.n_valid + n_cand_nulls + self.n_invalid, 1)
+        self.prop_valid_or_null = (self.n_valid + n_cand_nulls) / tot
 
     def __str__(self):
         """
@@ -1028,6 +1025,12 @@ class TypeStats:
         )
         return f'poss {self.type_}{null}' if self.all_poss_valid else ''
 
+    @property
+    def counts(self):
+        return (f'n_valid: {self.n_valid} n_invalid: {self.n_invalid} '
+                f'n distinct poss_nulls: {self.n_distinct_poss_nulls}')
+
+
 
 class FieldTypeStats:
     def __init__(self, fieldname):
@@ -1039,14 +1042,15 @@ class FieldTypeStats:
             'date': TypeStats('date'),
             'datetime': TypeStats('datetime'),
         }
+        self.n_cand_nulls = 0
 
-    def summarize(self):
+    def summarize(self, null=None):
         for stats in self.stats.values():
-            stats.summarize()
+            stats.summarize(null, self.n_cand_nulls)
         m = max(stats.n_valid for stats in self.stats.values())
         if m == 0:
             self.most_likely_type = 'string'
-            self.poss_null = None
+            # self.poss_null = None
         else:
             most_likelies = {
                 k: v for k, v in self.stats.items() if v.n_valid == m
@@ -1058,7 +1062,8 @@ class FieldTypeStats:
             else:  # set to list if can't tell
                 self.most_likely_type = list(most_likelies)
                 t = self.most_likely_type[0]
-            self.poss_null = self.stats[t].poss_null
+            if self.stats[t].prop_valid_or_null < MIN_VALID_OR_NULL_TYPE:
+                self.most_likely_type = 'string'
         self.summarized = True
 
     def __str__(self):
@@ -1070,7 +1075,9 @@ class FieldTypeStats:
         return f'Field {self.fieldname}: {self.most_likely_type}\n  {stats}\n'
 
 
-def analyse_values(fieldname, values):
+def analyse_values(fieldname, values, cand_nulls=None):
+    if cand_nulls is None:
+        cand_nulls = Counter()
     stats = FieldTypeStats(fieldname)
     b = stats.stats['bool']
     i = stats.stats['int']
@@ -1078,32 +1085,40 @@ def analyse_values(fieldname, values):
     d = stats.stats['date']
     dt = stats.stats['datetime']
 
+
     for v in values:
+        poss_null = v in KNOWN_NULLS
+
         if v.lower() in ('true', 'false'):
             b.n_valid += 1
-        else:
-            b.invalids[v] += 1
+        elif not poss_null:
+            b.n_invalid += 1
 
         if v and v.isdigit() or (v[1:].isdigit() and v[:1] in '+-'):
             i.n_valid += 1
-        else:
-            i.invalids[v] += 1
+        elif not poss_null:
+            i.n_invalid += 1
 
-        try:
-            float(v)
-            f.n_valid += 1
-        except ValueError:
-            f.invalids[v] += 1
+        if not poss_null:
+            try:
+                float(v)
+                f.n_valid += 1
+            except ValueError:
+                f.n_invalid += 1
 
         if re.match(DATEISH, v) or re.match(ADATEISH, v):
             d.n_valid += 1
-        else:
-            d.invalids[v] += 1
+        elif not poss_null:
+            d.n_invalid += 1
 
         if re.match(DTISH, v) or re.match(ADTISH, v):
             dt.n_valid += 1
-        else:
-            dt.invalids[v] += 1
+        elif not poss_null:
+            dt.n_invalid += 1
+
+        if v in KNOWN_NULLS:
+            cand_nulls[v] += 1
+            stats.n_cand_nulls += 1
 
     stats.summarize()
     return stats

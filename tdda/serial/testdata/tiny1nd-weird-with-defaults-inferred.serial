@@ -9,11 +9,11 @@
             },
             {
                 "name": "i",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "f",
-                "fieldtype": "float"
+                "fieldtype": "string"
             },
             {
                 "name": "s",
@@ -21,14 +21,13 @@
             },
             {
                 "name": "t",
-                "fieldtype": "date"
+                "fieldtype": "string"
             }
         ],
         "encoding": "UTF-8",
         "delimiter": ";",
         "quote_char": "'",
-        "date_format": "%d/%m/%Y",
-        "null_indicator": ".",
+        "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0
     }

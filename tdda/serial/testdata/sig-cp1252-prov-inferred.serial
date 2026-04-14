@@ -9,7 +9,7 @@
             },
             {
                 "name": "altname",
-                "fieldtype": "date"
+                "fieldtype": "string"
             },
             {
                 "name": "hello",
