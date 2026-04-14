@@ -51,6 +51,8 @@
         "encoding": "utf-8",
         "delimiter": ",",
         "quote_char": "\"",
+        "escape_char": "\\",
+        "stutter_quotes": false,
         "header_row_count": 1,
         "header_row": 0
     }

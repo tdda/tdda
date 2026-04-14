@@ -128,12 +128,26 @@ All dataset-level keys are optional.
   newlines. Default: `"\""`.
 
 **`escape_char`** *(string)*
-: The character used to escape the quote character within a quoted
-  field (when not using stutter quoting). Default: `"\\"`.
+: When this is set to `\\` (the only value it is likely to take)
+  this means that quote characters in quoted strings are escaped
+  with backslash `"like \"this\" example". Backslash also escapes itself,
+  and may be used to escape separators, whether quoted or not.
+  It has no significance for common control escapes, which
+  may appear as `\n`, `\r`, `\t`, `\f` in files regardless
+  of this setting.
+  Overescaping is common (escaping characters that don't
+  need to be escaped in context) and this setting has no
+  particular bearing on the cases. Most readers simply remove
+  unnecessary escape characters.
+  Default: `"\\"`.
 
 **`stutter_quotes`** *(boolean)*
-: If `true`, the quote character is escaped by doubling it (Excel
-  style). If `false`, the escape character is used. Default: `false`.
+: If `true`, the quote character is escaped by doubling it,
+  `"like ""this"" example"`.
+  If `false`, the escape character is used to escape embedded quotes.
+  `"""this"""` would be used to represent thr word this in double
+  quotes when stutter is `true`.
+  Default: `false`.
 
 **`null_indicator`** *(string or array of strings)*
 : The string or strings used to represent null/missing values.

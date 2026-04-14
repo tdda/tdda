@@ -299,6 +299,20 @@ class SampleStats:
         return mn == mx and mn > 0
 
 
+class SplitCounts:
+    """Accumulated escape/stutter pattern counts across data lines."""
+
+    def __init__(self):
+        self.n_dq_stutter = 0    # "" inside a dq-quoted field
+        self.n_sq_stutter = 0    # '' inside a sq-quoted field
+        self.n_dq_esc = 0        # \" anywhere
+        self.n_sq_esc = 0        # \' anywhere
+        self.n_bs_esc = 0        # \\ anywhere
+        self.n_esc_sep = 0       # \sep in unquoted field
+        self.n_fast = 0          # lines taking fast path
+        self.n_careful = 0       # lines taking careful path
+
+
 class MetadataInferrer:
     def __init__(
         self, inpath, lines_to_use=1000, verbosity=None, single_field=None,
@@ -411,9 +425,88 @@ class MetadataInferrer:
             self.n_fieldnames = n_fields
             self.data = lines  # all lines are data
 
+        self.split_data_lines()
         self.vprint(f'Inferred escape: {self.escape}.', 2)
         self.vprint(f'Inferred stutter: {self.stutter}.', 2)
         self.infer_fields()
+
+    def split_data_lines(self):
+        """Split all data lines, accumulating escape/stutter counts.
+
+        Sets self.split_rows, self.is_quoted_rows, self.split_counts.
+        Then calls _infer_quote_escape_stutter() to update quote_char,
+        stutter, escape from the evidence gathered.
+        """
+        sep = self.sep
+        counts = SplitCounts()
+        rows = []
+        is_quoted_rows = []
+        start_lineno = 2 if self.has_header else 1
+
+        for lineno, line in enumerate(self.data, start_lineno):
+            if sep == NO_DELIMITER:
+                fields = [line]
+                iq = [False]
+                counts.n_fast += 1
+            elif '"' not in line and "'" not in line and '\\' not in line:
+                fields = line.split(sep)
+                iq = [False] * len(fields)
+                counts.n_fast += 1
+            else:
+                fields, iq = split_line(line, sep, counts)
+                # Apply restorations (escaped-sep substitution from process())
+                for k, v in self.restorations.items():
+                    fields = [f.replace(k, v) for f in fields]
+                counts.n_careful += 1
+
+            n = len(fields)
+            if n > self.n_fieldnames:
+                loc = f' at line {lineno}'
+                error(
+                    f'Too many values for header ({n} vs'
+                    f' {self.n_fieldnames}){loc}.',
+                    raise_error=self.raise_error,
+                )
+
+            rows.append(fields)
+            is_quoted_rows.append(iq)
+
+        self.split_rows = rows
+        self.is_quoted_rows = is_quoted_rows
+        self.split_counts = counts
+        self._infer_quote_escape_stutter()
+
+    def _infer_quote_escape_stutter(self):
+        """Update quote_char, stutter, escape from split_counts evidence.
+
+        stutter semantics:
+          True  — saw doubled quotes (stuttering confirmed)
+          False — saw backslash-escaped quotes (stutter ruled out)
+          None  — no evidence either way
+
+        escape_char semantics:
+          '\\'  — saw \\, \\quote, or \\sep (meaningful backslash usage)
+          None  — no such evidence (\\n etc. are not counted as evidence)
+        """
+        counts = self.split_counts
+        dq_ev = counts.n_dq_stutter + counts.n_dq_esc
+        sq_ev = counts.n_sq_stutter + counts.n_sq_esc
+        if dq_ev > 0 or sq_ev > 0:
+            self.quote_char = '"' if dq_ev >= sq_ev else "'"
+        elif self.fls.quote_char:
+            self.quote_char = self.fls.quote_char
+
+        stutter_ev = counts.n_dq_stutter + counts.n_sq_stutter
+        esc_quote_ev = counts.n_dq_esc + counts.n_sq_esc
+        esc_ev = esc_quote_ev + counts.n_bs_esc + counts.n_esc_sep
+
+        if stutter_ev > 0:
+            self.stutter = True
+        elif esc_quote_ev > 0:
+            self.stutter = False
+
+        if esc_ev > 0:
+            self.escape = '\\'
 
     def reconcile_sep(self):
         if self.single_field:
@@ -514,13 +607,8 @@ class MetadataInferrer:
 
     def infer_fields(self):
         sep = self.sep
-        combined = [
-            self.dequote_and_split(row, i)
-            for i, row in enumerate(self.data, 2)
-        ]
-        is_quoted = [r[2] for r in combined]
-        data = [r[1] for r in combined]
-        raw = [r[0] for r in combined]
+        data = self.split_rows
+        is_quoted = self.is_quoted_rows
         m = min(len(row) for row in data)
         M = max(len(row) for row in data)
         nFields = len(self.fieldnames)
@@ -764,6 +852,108 @@ def infer_format_from_flat_file(
 
 def count(char, lines):
     return sum(sum(c == char for c in line) for line in lines)
+
+
+def split_line(line, sep, counts):
+    """Split line on sep with quote/escape handling.
+
+    Returns (fields, is_quoted): fields are dequoted values, is_quoted is
+    a per-field bool list. Accumulates escape/stutter evidence into counts.
+
+    Detects quote char per-field from the opening character (either " or ').
+    Handles backslash-escape and stutter (doubled quote) styles.
+    Fast-path lines (no quotes, no backslashes) should be handled by the
+    caller to avoid overhead.
+    """
+    fields = []
+    is_quoted = []
+    i = 0
+    n = len(line)
+
+    while True:
+        if i < n and line[i] in ('"', "'"):
+            # Quoted field
+            q = line[i]
+            i += 1
+            chars = []
+            while i < n:
+                c = line[i]
+                if c == '\\':
+                    nxt = line[i + 1] if i + 1 < n else ''
+                    if nxt == '\\':
+                        counts.n_bs_esc += 1
+                        chars.append('\\')
+                        i += 2
+                    elif nxt == q:
+                        if q == '"':
+                            counts.n_dq_esc += 1
+                        else:
+                            counts.n_sq_esc += 1
+                        chars.append(q)
+                        i += 2
+                    else:
+                        chars.append(c)
+                        i += 1
+                elif c == q:
+                    if i + 1 < n and line[i + 1] == q:
+                        # Stutter: doubled quote inside quoted field
+                        if q == '"':
+                            counts.n_dq_stutter += 1
+                        else:
+                            counts.n_sq_stutter += 1
+                        chars.append(q)
+                        i += 2
+                    else:
+                        # Closing quote
+                        i += 1
+                        break
+                else:
+                    chars.append(c)
+                    i += 1
+            fields.append(''.join(chars))
+            is_quoted.append(True)
+            # Skip separator after closing quote
+            if i < n and line[i] == sep:
+                i += 1
+        else:
+            # Unquoted field
+            chars = []
+            while i < n:
+                c = line[i]
+                if c == sep:
+                    i += 1
+                    break
+                elif c == '\\':
+                    nxt = line[i + 1] if i + 1 < n else ''
+                    if nxt == sep:
+                        counts.n_esc_sep += 1
+                        chars.append(sep)
+                        i += 2
+                    elif nxt == '\\':
+                        counts.n_bs_esc += 1
+                        chars.append('\\')
+                        i += 2
+                    elif nxt == '"':
+                        counts.n_dq_esc += 1
+                        chars.append('"')
+                        i += 2
+                    elif nxt == "'":
+                        counts.n_sq_esc += 1
+                        chars.append("'")
+                        i += 2
+                    else:
+                        chars.append(c)
+                        i += 1
+                else:
+                    chars.append(c)
+                    i += 1
+            fields.append(''.join(chars))
+            is_quoted.append(False)
+
+        if i >= n:
+            break
+
+    return fields, is_quoted
 
 
 def careful_split(line, sep, quote, escape):
