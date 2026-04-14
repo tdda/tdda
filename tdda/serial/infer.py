@@ -661,33 +661,26 @@ class MetadataInferrer:
             for i, col in enumerate(self.fieldnames)
         }
 
-        mode_nulls = dict_max_items(cand_nulls)  # might be too blunt
-
-        if len(mode_nulls) == 1:
-            self.null = list(mode_nulls)[0]
+        if cand_nulls:
+            nulls = sorted(cand_nulls, key=lambda k: (-cand_nulls[k], k))
+            self.null = nulls[0] if len(nulls) == 1 else nulls
             self.describe_null()
-        elif len(cand_nulls) > 1:
-            m = mode_nulls[list(mode_nulls)[0]]
-            self.vprint(f'Multiple candidate nulls with frequency {m}', 2)
-            self.vprint('\n'.join(f'  "{n}"' for n in mode_nulls))
-            knowns = {k for k in mode_nulls if k in KNOWN_NULLS}
-            if knowns:
-                ranked = sorted(knowns, key=lambda k: KNOWN_NULLS.index(k))
-                self.null = ranked[0]
-            else:
-                self.null = sorted(cand_nulls)[0]
         else:
-            self.vprint(f'No null detected.', 2)
+            self.vprint('No null detected.', 2)
             self.null = None
 
         for v in type_info.values():
             v.summarize(self.null)
 
+        null_set = (
+            set(self.null) if isinstance(self.null, list)
+            else ({self.null} if self.null is not None else set())
+        )
         field_values = {
             name: [
                 v
                 for v in [row[i] for row in data if len(row) > i]
-                if v != self.null and v != ''
+                if v not in null_set and v != ''
             ]
             for i, name in enumerate(self.fieldnames)
         }
@@ -822,11 +815,12 @@ class MetadataInferrer:
         debug(self.fields)
 
     def describe_null(self):
-        if self.null in KNOWN_NULLS:
-            self.vprint(f'Null: "{self.null}"', 2)
-        else:
-            if self.verbosity > 0:
-                self.warn(f'Unusual null: "{self.null}".')
+        nulls = self.null if isinstance(self.null, list) else [self.null]
+        for null in nulls:
+            if null in KNOWN_NULLS:
+                self.vprint(f'Null: "{null}"', 2)
+            elif self.verbosity > 0:
+                self.warn(f'Unusual null: "{null}".')
 
     def dequote(self, row):
         # Strip pairs of opening and closing quote for each element in row.

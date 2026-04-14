@@ -53,7 +53,10 @@
         "quote_char": "\"",
         "escape_char": "\\",
         "stutter_quotes": false,
-        "null_indicator": "",
+        "null_indicator": [
+            "",
+            "-"
+        ],
         "header_row_count": 1,
         "header_row": 0
     }

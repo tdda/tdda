@@ -30,7 +30,10 @@
         ],
         "delimiter": ",",
         "date_format": "%Y-%m-%d",
-        "null_indicator": "NULL",
+        "null_indicator": [
+            "NULL",
+            ""
+        ],
         "header_row_count": 1,
         "header_row": 0
     }
