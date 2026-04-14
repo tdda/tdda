@@ -1,12 +1,16 @@
 import os
 import re
 
+import pandas
+import polars
+
 from collections import namedtuple
 
 from tdda.referencetest import ReferenceTestCase, tag
 
+from tdda.serial import csv_to_pandas, csv_to_polars
 from tdda.serial.converter import SerialConverter
-from tdda.serial.csvw import CSVWMetadata
+from tdda.serial.csvw import CSVWMetadata, serial_to_csvw
 from tdda.serial.frictionless import (
     FrictionlessMetadata,
 )
@@ -524,8 +528,28 @@ class TestInferAllFlatFiles(TestInference):
     # Add targeted assertions to specific tests as inference is validated.
 
     def testInferAllCsvwTypes(self):
-        buf, md = self.check_infer('all-csvw-types.csv', prov=True,
+        buf, md = self.check_infer('all-csvw-types.csv', prov=False,
                                    verbosity=0)
+        self.assertEqual(buf, [])
+        df = csv_to_pandas(
+            tdpath('all-csvw-types.csv'),
+            tdpath('all-csvw-types-inferred.serial'),
+        )
+        ref_df = pandas.read_parquet(tdpath('all-csvw-types.parquet'))
+        # gDay/gMonth/gYear are int in inferred serial (correctly) but
+        # object in the parquet (written without type info); exclude them
+        exclude = ['gDay', 'gMonth', 'gYear']
+        df = df.drop(columns=exclude)
+        ref_df = ref_df.drop(columns=exclude)
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        csvw = serial_to_csvw(md, 'all-csvw-types.csv')
+        outpath = tmppath('all-csvw-types.csvwvalidated.json')
+        csvw.write_csvw(outpath, csvfile='all-csvw-types.csv')
+        self.assertFileCorrect(
+            outpath,
+            tdpath('all-csvw-types.csvwvalidated.json'),
+            ignore_lines=self.IGL,
+        )
 
     def testInferAllformats(self):
         buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
@@ -561,8 +585,18 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
 
     def testInferElements3Old(self):
-        buf, md = self.check_infer('elements3-old.csv', prov=True,
+        buf, md = self.check_infer('elements3-old.csv', prov=False,
                                    verbosity=0)
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('elements3-old.csv'),
+            tdpath('elements3-old-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = polars.read_parquet(tdpath('elements3-old.parquet'))
+        self.assertDataFramesEqual(df, ref_df)
+        self.assertEqual(buf2, [])
 
     def testInferEurod(self):
         buf, md = self.check_infer('eurod.csv', prov=True, verbosity=0)
@@ -660,7 +694,8 @@ class TestInferAllFlatFiles(TestInference):
                                    verbosity=0)
 
     def testInferTiny1cn(self):
-        buf, md = self.check_infer('tiny1cn.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1cn.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
 
     def testInferTiny1cn3(self):
         buf, md = self.check_infer('tiny1cn3.csv', prov=True, verbosity=0)

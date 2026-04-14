@@ -1,0 +1,217 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:creator": "tdda.serial-3.0.00rc1",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "name": "boolean",
+                        "datatype": "boolean"
+                    },
+                    {
+                        "name": "integer",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "string",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "number",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "datetime",
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "yyyy-MM-ddTHH:mm:ss"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "datatype": {
+                            "base": "date",
+                            "format": "yyyy-MM-dd"
+                        }
+                    },
+                    {
+                        "name": "double",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "decimal",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "float",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "long",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "int",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "short",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "byte",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "unsignedLong",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "unsignedInt",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "unsignedShort",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "unsignedByte",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "nonNegativeInteger",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "nonPositiveInteger",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "negativeInteger",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "positiveInteger",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "normalizedString",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "anyURI",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "token",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "language",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "Name",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "NMTOKEN",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "xml",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "html",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "json",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "dateTime",
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "yyyy-MM-ddTHH:mm:ss"
+                        }
+                    },
+                    {
+                        "name": "base64Binary",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "binary",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "hexBinary",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "anyAtomicType",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "dateTimeStamp",
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "yyyy-MM-ddTHH:mm:ss"
+                        }
+                    },
+                    {
+                        "name": "duration",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "dayTimeDuration",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "yearMonthDuration",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "time",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "QName",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "gDay",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "gMonth",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "gMonthDay",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "gYear",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "gYearMonth",
+                        "datatype": "string"
+                    }
+                ]
+            },
+            "url": "all-csvw-types.csv"
+        }
+    ],
+    "dialect": {
+        "delimiter": ",",
+        "headerRowCount": 1,
+        "doubleQuote": true,
+        "quoteChar": "\""
+    },
+    "null": ""
+}

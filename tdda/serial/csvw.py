@@ -168,24 +168,33 @@ class CSVWMetadata(SerialMetadata):
     def field_to_csvw_json(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
-        self.set_if_non_null(
-            d, 'datatype', FIELDTYPE_TO_CSVW.get(field.fieldtype)
-        )
+        csvw_type = FIELDTYPE_TO_CSVW.get(field.fieldtype)
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
         if fmt is None and field.fieldtype.startswith('date'):
-            fmt = self.date_format
-            d['format'] = serial_date_format_to_csvw(fmt, field.fieldtype)
-        elif field.true_values and field.false_values:
-            d['format'] = booleans_to_csvw(
-                field.true_values, field.false_values
-            )
-        elif (
-            field.fieldtype == FieldType.BOOL
-            and self.true_values
-            and self.false_values
-        ):
-            d['format'] = booleans_to_csvw(self.true_values, self.false_values)
+            if field.fieldtype == FieldType.DATETIME:
+                fmt = nvl(self.datetime_format, self.date_format)
+            else:
+                fmt = self.date_format
+            csvw_fmt = serial_date_format_to_csvw(fmt, field.fieldtype)
+            if csvw_type is not None:
+                d['datatype'] = {'base': csvw_type, 'format': csvw_fmt}
+            else:
+                self.set_if_non_null(d, 'datatype', csvw_type)
+        else:
+            self.set_if_non_null(d, 'datatype', csvw_type)
+            if field.true_values and field.false_values:
+                d['format'] = booleans_to_csvw(
+                    field.true_values, field.false_values
+                )
+            elif (
+                field.fieldtype == FieldType.BOOL
+                and self.true_values
+                and self.false_values
+            ):
+                d['format'] = booleans_to_csvw(
+                    self.true_values, self.false_values
+                )
         self.set_if_attr_non_null(d, 'dc:description', 'description')
         return d
 
