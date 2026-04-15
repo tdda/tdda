@@ -11,9 +11,7 @@ from tdda.serial import csv_to_pandas
 from tdda.serial.converter import SerialConverter
 from tdda.serial.csvw import serial_to_csvw
 from tdda.serial.datautils import tiny_pandas_df, tiny_polars_df
-from tdda.serial.frictionless import (
-    serial_to_frictionless
-)
+from tdda.serial.frictionless import serial_to_frictionless
 from tdda.serial.reader import load_metadata
 
 
@@ -22,9 +20,7 @@ from tdda.serial.testserial import (
     tmppath,
 )
 
-from tdda.serial import (
-    csv_to_polars
-)
+from tdda.serial import csv_to_polars
 
 from tdda.utils import testwarn
 

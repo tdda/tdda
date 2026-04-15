@@ -63,8 +63,9 @@ class TestInference(ReferenceTestCase):
         suffix = '-prov-inferred.serial' if prov else '-inferred.serial'
         outname = stem + suffix
         Warn, buf = testwarn()
-        md = infer_format_from_flat_file(tdpath(name), warner=Warn,
-                                         raise_error=True, **kw)
+        md = infer_format_from_flat_file(
+            tdpath(name), warner=Warn, raise_error=True, **kw
+        )
         outpath = tmppath(outname)
         with open(outpath, 'w') as f:
             f.write(md.to_json())
@@ -134,10 +135,13 @@ class TestInference(ReferenceTestCase):
             tdpath('simple-with-defaults-inferred.serial'),
             ignore_lines=self.IGL,
         )
-        self.assertEqual(buf, [
-            "encoding: 'UTF-8' (default, no evidence)",
-            "quote_char: '\"' (default, no evidence)",
-        ])
+        self.assertEqual(
+            buf,
+            [
+                "encoding: 'UTF-8' (default, no evidence)",
+                "quote_char: '\"' (default, no evidence)",
+            ],
+        )
 
     def testInferMetadataMinimal(self):
         md, buf = self.infer(
@@ -154,8 +158,9 @@ class TestInference(ReferenceTestCase):
         self.assertEqual(buf, [])
 
     def testInferOnestringSingleField(self):
-        buf, md = self.check_infer('onestring.txt', prov=True,
-                                   verbosity=0, single_field=True)
+        buf, md = self.check_infer(
+            'onestring.txt', prov=True, verbosity=0, single_field=True
+        )
         self.assertEqual(md.delimiter, NO_DELIMITER)
 
     def testInferAmbiguousAllAmbiguous(self):
@@ -529,8 +534,9 @@ class TestInferAllFlatFiles(TestInference):
     # Add targeted assertions to specific tests as inference is validated.
 
     def testInferAllCsvwTypes(self):
-        buf, md = self.check_infer('all-csvw-types.csv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'all-csvw-types.csv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         df = csv_to_pandas(
             tdpath('all-csvw-types.csv'),
@@ -556,19 +562,22 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
 
     def testInferAllformats2unspec(self):
-        buf, md = self.check_infer('allformats2unspec.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'allformats2unspec.csv', prov=True, verbosity=0
+        )
 
     def testInferAmbigAll(self):
         buf, md = self.check_infer('ambig-all.csv', prov=True, verbosity=0)
 
     def testInferAmbigGuidedEu(self):
-        buf, md = self.check_infer('ambig-guided-eu.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'ambig-guided-eu.csv', prov=True, verbosity=0
+        )
 
     def testInferAmbigGuidedUs(self):
-        buf, md = self.check_infer('ambig-guided-us.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'ambig-guided-us.csv', prov=True, verbosity=0
+        )
 
     def testInferCodingUtf16(self):
         buf, md = self.check_infer('coding-utf16.csv', prov=True, verbosity=0)
@@ -581,8 +590,11 @@ class TestInferAllFlatFiles(TestInference):
         # Quoting style detection reclassifies evenstr, oddstr, elevens
         self.assertTrue(all('reclassified' in w for w in buf))
         self.assertEqual(
-            [w for w in buf if 'evenstr' in w or 'oddstr' in w
-             or 'elevens' in w],
+            [
+                w
+                for w in buf
+                if 'evenstr' in w or 'oddstr' in w or 'elevens' in w
+            ],
             buf,
         )
         Warn, buf2 = testwarn()
@@ -604,8 +616,9 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
 
     def testInferElements3Old(self):
-        buf, md = self.check_infer('elements3-old.csv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'elements3-old.csv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         Warn, buf2 = testwarn()
         df = csv_to_polars(
@@ -624,12 +637,14 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('eurod2y.csv', prov=True, verbosity=0)
 
     def testInferEurodtWriteKw(self):
-        buf, md = self.check_infer('eurodt-write-kw.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'eurodt-write-kw.csv', prov=True, verbosity=0
+        )
 
     def testInferEurodtWriteSerial(self):
-        buf, md = self.check_infer('eurodt-write-serial.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'eurodt-write-serial.csv', prov=True, verbosity=0
+        )
 
     def testInferEurodt(self):
         buf, md = self.check_infer('eurodt.csv', prov=True, verbosity=0)
@@ -651,32 +666,36 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferNullInference1(self):
         # Unquoted strings: no quoting evidence, '' not inferred as null
-        buf, md = self.check_infer('nullinference1.csv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'nullinference1.csv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         self.assertIsNone(md.null_indicator)
         self.assertEqual(md.quoting, 'QUOTE_NONE')
 
     def testInferNullInference2(self):
         # Quoted strings, only "" empty: '' dropped (empty string, not null)
-        buf, md = self.check_infer('nullinference2.csv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'nullinference2.csv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         self.assertIsNone(md.null_indicator)
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
     def testInferNullInference3(self):
         # Quoted strings, quoted "" and unquoted empty: '' is genuine null
-        buf, md = self.check_infer('nullinference3.psv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'nullinference3.psv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         self.assertEqual(md.null_indicator, '')
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
     def testInferNullInference4(self):
         # Quoted "" in string col, unquoted empty in non-string col: '' is null
-        buf, md = self.check_infer('nullinference4.csv', prov=False,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'nullinference4.csv', prov=False, verbosity=0
+        )
         self.assertEqual(buf, [])
         self.assertEqual(md.null_indicator, '')
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
@@ -688,12 +707,14 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('sig-cp1252.csv', prov=True, verbosity=0)
 
     def testInferSigEquivUtf16(self):
-        buf, md = self.check_infer('sig-equiv-utf16.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'sig-equiv-utf16.csv', prov=True, verbosity=0
+        )
 
     def testInferSigEquivUtf8(self):
-        buf, md = self.check_infer('sig-equiv-utf8.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'sig-equiv-utf8.csv', prov=True, verbosity=0
+        )
 
     def testInferSigLatin1(self):
         buf, md = self.check_infer('sig-latin1.csv', prov=True, verbosity=0)
@@ -714,12 +735,14 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('small-latin9.csv', prov=True, verbosity=0)
 
     def testInferSmallWriteKw(self):
-        buf, md = self.check_infer('small-write-kw.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'small-write-kw.csv', prov=True, verbosity=0
+        )
 
     def testInferSmallWriteSerial(self):
-        buf, md = self.check_infer('small-write-serial.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'small-write-serial.csv', prov=True, verbosity=0
+        )
 
     def testInferSmall(self):
         buf, md = self.check_infer('small.csv', prov=True, verbosity=0)
@@ -731,8 +754,9 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('strings1.csv', prov=True, verbosity=0)
 
     def testInferTiny1cdPandas(self):
-        buf, md = self.check_infer('tiny1cd-pandas.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'tiny1cd-pandas.csv', prov=True, verbosity=0
+        )
 
     def testInferTiny1cd(self):
         buf, md = self.check_infer('tiny1cd.csv', prov=True, verbosity=0)
@@ -741,8 +765,9 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('tiny1cd3.csv', prov=True, verbosity=0)
 
     def testInferTiny1cnPandas(self):
-        buf, md = self.check_infer('tiny1cn-pandas.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'tiny1cn-pandas.csv', prov=True, verbosity=0
+        )
 
     def testInferTiny1cn(self):
         buf, md = self.check_infer('tiny1cn.csv', prov=False, verbosity=0)
@@ -758,8 +783,9 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('tiny1nd-NULL.csv', prov=True, verbosity=0)
 
     def testInferTiny1ndPandas(self):
-        buf, md = self.check_infer('tiny1nd-pandas.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'tiny1nd-pandas.csv', prov=True, verbosity=0
+        )
 
     def testInferTiny1nd(self):
         buf, md = self.check_infer('tiny1nd.csv', prov=True, verbosity=0)
@@ -771,8 +797,9 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('tiny1ndq.csv', prov=True, verbosity=0)
 
     def testInferTiny1nnPandas(self):
-        buf, md = self.check_infer('tiny1nn-pandas.csv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer(
+            'tiny1nn-pandas.csv', prov=True, verbosity=0
+        )
 
     def testInferTiny1nn(self):
         buf, md = self.check_infer('tiny1nn.csv', prov=True, verbosity=0)
@@ -835,8 +862,7 @@ class TestInferAllFlatFiles(TestInference):
     # .ssv file
 
     def testInferTiny1ndWeirdSsv(self):
-        buf, md = self.check_infer('tiny1nd-weird.ssv', prov=True,
-                                   verbosity=0)
+        buf, md = self.check_infer('tiny1nd-weird.ssv', prov=True, verbosity=0)
 
 
 class TestFirstLineStats(ReferenceTestCase):

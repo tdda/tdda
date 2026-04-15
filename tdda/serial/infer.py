@@ -75,9 +75,7 @@ STRICT_NAME_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 EXTENDED_NAME_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_./ -]*$')
 # Human: starts with a Unicode letter or underscore, contains anything
 # printable that isn't a separator
-HUMAN_NAME_RE = re.compile(
-    r'^[^\W\d_].*$|^[a-zA-Z_]', re.UNICODE
-)
+HUMAN_NAME_RE = re.compile(r'^[^\W\d_].*$|^[a-zA-Z_]', re.UNICODE)
 NUMERIC_RE = re.compile(r'^-?[0-9]+(\.[0-9]+)?$')
 
 SEP_CHARS = (',', '|', '\t', ';')
@@ -87,9 +85,30 @@ ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
 # Values that are almost certainly data, not field names, even if they
 # look like identifiers (e.g. 'false' matches STRICT_NAME_RE).
 KNOWN_DATA_VALUES = {
-    'true', 'false', 'yes', 'no', 'null', 'none', 'nan', 'na',
-    'True', 'False', 'Yes', 'No', 'Null', 'None', 'Nan', 'Na',
-    'TRUE', 'FALSE', 'YES', 'NO', 'NULL', 'NONE', 'NAN', 'NA',
+    'true',
+    'false',
+    'yes',
+    'no',
+    'null',
+    'none',
+    'nan',
+    'na',
+    'True',
+    'False',
+    'Yes',
+    'No',
+    'Null',
+    'None',
+    'Nan',
+    'Na',
+    'TRUE',
+    'FALSE',
+    'YES',
+    'NO',
+    'NULL',
+    'NONE',
+    'NAN',
+    'NA',
 }
 
 MIN_VALID_OR_NULL_TYPE = 0.99  # At least this prop valid or null
@@ -105,8 +124,9 @@ def _has_cp1252_bytes(path):
     return any(0x80 <= b <= 0x9F for b in chunk)
 
 
-def read_file_lines(path, initial_enc=None, lines_to_use=1000,
-                    raise_error=False):
+def read_file_lines(
+    path, initial_enc=None, lines_to_use=1000, raise_error=False
+):
     """Read header and data lines from path with encoding fallback.
 
     Tries initial_enc first, then each encoding in ENCODING_FALLBACKS.
@@ -181,8 +201,11 @@ class FirstLineStats:
         # even when apostrophes make the plain even-count test unreliable.
         if "\\'" in self.line:
             return "'"
-        if (self.n_squotes > 0 and self.n_squotes % 2 == 0
-                and self.n_squotes > self.n_backslashes * 2):
+        if (
+            self.n_squotes > 0
+            and self.n_squotes % 2 == 0
+            and self.n_squotes > self.n_backslashes * 2
+        ):
             return "'"
         return None
 
@@ -204,8 +227,11 @@ class FirstLineStats:
         q = self.quote_char
         # Dequote for analysis purposes
         stripped = [
-            n.strip()[1:-1] if q and n.strip().startswith(q)
-            and n.strip().endswith(q) and len(n.strip()) >= 2
+            n.strip()[1:-1]
+            if q
+            and n.strip().startswith(q)
+            and n.strip().endswith(q)
+            and len(n.strip()) >= 2
             else n.strip()
             for n in names
         ]
@@ -213,17 +239,18 @@ class FirstLineStats:
         self.n_numeric = sum(1 for n in stripped if NUMERIC_RE.match(n))
         self.n_strict = sum(1 for n in stripped if STRICT_NAME_RE.match(n))
         self.n_extended = sum(
-            1 for n in stripped
+            1
+            for n in stripped
             if not STRICT_NAME_RE.match(n) and EXTENDED_NAME_RE.match(n)
         )
         self.n_human = sum(
-            1 for n in stripped
+            1
+            for n in stripped
             if not EXTENDED_NAME_RE.match(n) and HUMAN_NAME_RE.match(n)
         )
         self.n_name_like = self.n_strict + self.n_extended + self.n_human
         self.n_other = (
-            self.n_fields - self.n_empty
-            - self.n_numeric - self.n_name_like
+            self.n_fields - self.n_empty - self.n_numeric - self.n_name_like
         )
         self.n_with_space = sum(1 for n in stripped if n and ' ' in n)
         self.n_boolean = sum(1 for n in stripped if n in KNOWN_DATA_VALUES)
@@ -257,7 +284,8 @@ class FirstLineStats:
 
     def __str__(self):
         sep = (
-            repr(self.sep[0]) if len(self.sep) == 1
+            repr(self.sep[0])
+            if len(self.sep) == 1
             else repr(self.sep)
             if self.sep
             else '[]'
@@ -313,25 +341,36 @@ class SplitCounts:
     """Accumulated escape/stutter pattern counts across data lines."""
 
     def __init__(self):
-        self.n_dq_stutter = 0    # "" inside a dq-quoted field
-        self.n_sq_stutter = 0    # '' inside a sq-quoted field
-        self.n_dq_esc = 0        # \" anywhere
-        self.n_sq_esc = 0        # \' anywhere
-        self.n_bs_esc = 0        # \\ anywhere
-        self.n_esc_sep = 0       # \sep in unquoted field
-        self.n_fast = 0          # lines taking fast path
-        self.n_careful = 0       # lines taking careful path
+        self.n_dq_stutter = 0  # "" inside a dq-quoted field
+        self.n_sq_stutter = 0  # '' inside a sq-quoted field
+        self.n_dq_esc = 0  # \" anywhere
+        self.n_sq_esc = 0  # \' anywhere
+        self.n_bs_esc = 0  # \\ anywhere
+        self.n_esc_sep = 0  # \sep in unquoted field
+        self.n_fast = 0  # lines taking fast path
+        self.n_careful = 0  # lines taking careful path
 
 
 class MetadataInferrer:
     def __init__(
-        self, inpath, lines_to_use=None, verbosity=None, single_field=None,
-        warner=None, add_defaults=False, report_added_defaults=True,
+        self,
+        inpath,
+        lines_to_use=None,
+        verbosity=None,
+        single_field=None,
+        warner=None,
+        add_defaults=False,
+        report_added_defaults=True,
         raise_error=False,
-        delimiter=None, quote_char=None,
-        escape=None, no_escape=False, stutter=None,
-        null=None, encoding=None,
-        date_format=None, datetime_format=None,
+        delimiter=None,
+        quote_char=None,
+        escape=None,
+        no_escape=False,
+        stutter=None,
+        null=None,
+        encoding=None,
+        date_format=None,
+        datetime_format=None,
         header_row_count=None,
     ):
         self.inpath = os.path.expanduser(inpath) if inpath else None
@@ -592,9 +631,7 @@ class MetadataInferrer:
         if len(agreed) > 1:
             # Multiple consistent candidates that header also suggests —
             # pick the one with the highest body count (mode)
-            agreed.sort(
-                key=lambda c: ss.consistency(c)[2], reverse=True
-            )
+            agreed.sort(key=lambda c: ss.consistency(c)[2], reverse=True)
             self.vprint(
                 f'Separator {agreed[0]!r}: multiple agreeing candidates,'
                 f' picking by body frequency.',
@@ -604,9 +641,7 @@ class MetadataInferrer:
 
         # Body consistent but header disagrees (or no header candidates)
         if consistent:
-            consistent.sort(
-                key=lambda c: ss.consistency(c)[2], reverse=True
-            )
+            consistent.sort(key=lambda c: ss.consistency(c)[2], reverse=True)
             self.vprint(
                 f'Separator {consistent[0]!r}: body consistent'
                 f' (header disagrees or absent).',
@@ -713,8 +748,9 @@ class MetadataInferrer:
             )
 
         type_info = {
-            col: analyse_values(col, [row[i] for row in data if len(row) > i],
-                                cand_nulls)
+            col: analyse_values(
+                col, [row[i] for row in data if len(row) > i], cand_nulls
+            )
             for i, col in enumerate(self.fieldnames)
         }
 
@@ -730,7 +766,8 @@ class MetadataInferrer:
             v.summarize(self.null)
 
         null_set = (
-            set(self.null) if isinstance(self.null, list)
+            set(self.null)
+            if isinstance(self.null, list)
             else ({self.null} if self.null is not None else set())
         )
         field_values_hashes = {
@@ -743,14 +780,14 @@ class MetadataInferrer:
         }
 
         # Phase 1: infer raw format for each date/datetime field
-        raw_date_fmts = {}   # name -> fmt (may be AmbiguousDateFormat.*)
-        raw_dt_fmts = {}     # name -> fmt (may be AmbiguousDateFormat.*)
+        raw_date_fmts = {}  # name -> fmt (may be AmbiguousDateFormat.*)
+        raw_dt_fmts = {}  # name -> fmt (may be AmbiguousDateFormat.*)
         for name in self.fieldnames:
             t = type_info[name].most_likely_type
             if isinstance(t, str) and t in ('date', 'datetime'):
                 fmt = infer_date_format_from_strings(
-                          list(field_values_hashes[name])
-                      )
+                    list(field_values_hashes[name])
+                )
                 if fmt is not None:
                     if t == 'date':
                         raw_date_fmts[name] = fmt
@@ -759,11 +796,13 @@ class MetadataInferrer:
 
         # Phase 2: determine EU/US convention from unambiguous fields
         eu_count = sum(
-            1 for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
+            1
+            for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
             if fmt not in AMBIGUOUS_DATE_FORMATS and fmt.startswith('%d')
         )
         us_count = sum(
-            1 for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
+            1
+            for fmt in {**raw_date_fmts, **raw_dt_fmts}.values()
             if fmt not in AMBIGUOUS_DATE_FORMATS and fmt.startswith('%m')
         )
         if eu_count > 0 or us_count > 0:
@@ -855,7 +894,8 @@ class MetadataInferrer:
         Returns True if '' was removed (caller should re-run infer_quoting).
         """
         null_list = (
-            self.null if isinstance(self.null, list)
+            self.null
+            if isinstance(self.null, list)
             else ([self.null] if self.null is not None else [])
         )
         if '' not in null_list:
@@ -889,7 +929,8 @@ class MetadataInferrer:
             # distinguishes null from empty string, so don't infer '' as null.
             new_nulls = [v for v in null_list if v != '']
             self.null = (
-                new_nulls[0] if len(new_nulls) == 1
+                new_nulls[0]
+                if len(new_nulls) == 1
                 else (new_nulls if new_nulls else None)
             )
             return True
@@ -900,7 +941,8 @@ class MetadataInferrer:
         # '' only seen as quoted "" in string cols: it's empty string, not null
         new_nulls = [v for v in null_list if v != '']
         self.null = (
-            new_nulls[0] if len(new_nulls) == 1
+            new_nulls[0]
+            if len(new_nulls) == 1
             else (new_nulls if new_nulls else None)
         )
         return True
@@ -941,7 +983,8 @@ class MetadataInferrer:
             return None
 
         null_set = (
-            set(self.null) if isinstance(self.null, list)
+            set(self.null)
+            if isinstance(self.null, list)
             else ({self.null} if self.null is not None else set())
         )
 
@@ -967,11 +1010,11 @@ class MetadataInferrer:
         # Tri-state per column: True=all quoted, False=none quoted, None=mixed
         def quoting_state(nq, nt):
             if nt == 0:
-                return None   # unknown: no non-null values
+                return None  # unknown: no non-null values
             if nq == 0:
                 return False  # all unquoted
             if nq == nt:
-                return True   # all quoted
+                return True  # all quoted
             return 'mixed'
 
         col_type = [f.fieldtype for f in self.fields]
@@ -1008,9 +1051,7 @@ class MetadataInferrer:
         unquoted_non_string = [
             i for i in non_string_idxs if states[i] is False
         ]
-        quoted_non_string = [
-            i for i in non_string_idxs if states[i] is True
-        ]
+        quoted_non_string = [i for i in non_string_idxs if states[i] is True]
         any_mixed = any(s == 'mixed' for s in states)
 
         if unquoted_non_string:
@@ -1047,12 +1088,14 @@ class MetadataInferrer:
                 # No date/bool cols to distinguish; numeric unquoted is enough
                 return 'QUOTE_STRINGS_ONLY'
 
-        if any_mixed and not any(s is True for s in [
-            states[i] for i in non_string_idxs
-        ]):
+        if any_mixed and not any(
+            s is True for s in [states[i] for i in non_string_idxs]
+        ):
             return 'QUOTE_MINIMAL'
 
-        self.warn('Quoting appears inconsistent: no quoting style has been set.')
+        self.warn(
+            'Quoting appears inconsistent: no quoting style has been set.'
+        )
         return None
 
     def describe_null(self):
@@ -1079,17 +1122,27 @@ class MetadataInferrer:
 
 
 def infer_format_from_flat_file(
-    path, lines_to_use=None, warner=None,
-    add_defaults=False, report_added_defaults=True,
+    path,
+    lines_to_use=None,
+    warner=None,
+    add_defaults=False,
+    report_added_defaults=True,
     raise_error=False,
-    delimiter=None, quote_char=None,
-    escape=None, no_escape=False, stutter=None,
-    null=None, encoding=None,
-    date_format=None, datetime_format=None,
-    **kw
+    delimiter=None,
+    quote_char=None,
+    escape=None,
+    no_escape=False,
+    stutter=None,
+    null=None,
+    encoding=None,
+    date_format=None,
+    datetime_format=None,
+    **kw,
 ):
     inferrer = MetadataInferrer(
-        path, lines_to_use, warner=warner,
+        path,
+        lines_to_use,
+        warner=warner,
         add_defaults=add_defaults,
         report_added_defaults=report_added_defaults,
         raise_error=raise_error,
@@ -1102,7 +1155,7 @@ def infer_format_from_flat_file(
         encoding=encoding,
         date_format=date_format,
         datetime_format=datetime_format,
-        **kw
+        **kw,
     )
     return inferrer.metadata
 
@@ -1276,9 +1329,10 @@ class TypeStats:
 
     @property
     def counts(self):
-        return (f'n_valid: {self.n_valid} n_invalid: {self.n_invalid} '
-                f'n distinct poss_nulls: {self.n_distinct_poss_nulls}')
-
+        return (
+            f'n_valid: {self.n_valid} n_invalid: {self.n_invalid} '
+            f'n distinct poss_nulls: {self.n_distinct_poss_nulls}'
+        )
 
 
 class FieldTypeStats:
@@ -1333,7 +1387,6 @@ def analyse_values(fieldname, values, cand_nulls=None):
     f = stats.stats['float']
     d = stats.stats['date']
     dt = stats.stats['datetime']
-
 
     for v in values:
         poss_null = v in KNOWN_NULLS

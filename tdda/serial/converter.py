@@ -236,13 +236,17 @@ class SerialConverter:
         )
 
         parser.add_argument(
-            '--sep', '--delimiter',
-            type=str, dest='delimiter',
+            '--sep',
+            '--delimiter',
+            type=str,
+            dest='delimiter',
             help='Specify inferred field delimiter.',
         )
         parser.add_argument(
-            '--quote-char', '--quote',
-            type=str, dest='quote_char',
+            '--quote-char',
+            '--quote',
+            type=str,
+            dest='quote_char',
             help='Specify quote character.',
         )
         parser.add_argument(
@@ -252,17 +256,20 @@ class SerialConverter:
         )
         parser.add_argument(
             '--no-escape',
-            action='store_true', dest='no_escape',
+            action='store_true',
+            dest='no_escape',
             help='Force no escape character.',
         )
         parser.add_argument(
             '--stutter',
-            action='store_true', default=None,
+            action='store_true',
+            default=None,
             help='Specify stutter (doubled) quote style.',
         )
         parser.add_argument(
             '--no-stutter',
-            action='store_false', dest='stutter',
+            action='store_false',
+            dest='stutter',
             help='Specify no stutter quote style.',
         )
         parser.add_argument(
@@ -271,23 +278,28 @@ class SerialConverter:
             help='Specify null indicator or comma-separated null indicators.',
         )
         parser.add_argument(
-            '-e', '--encoding',
+            '-e',
+            '--encoding',
             type=str,
             help='Specify inferred encoding.',
         )
         parser.add_argument(
-            '-n', '--sample-lines',
-            type=int, dest='lines_to_use',
+            '-n',
+            '--sample-lines',
+            type=int,
+            dest='lines_to_use',
             help='Number of data lines to sample for inference.',
         )
         parser.add_argument(
             '--date-format',
-            type=str, dest='date_format',
+            type=str,
+            dest='date_format',
             help='Specify date format.',
         )
         parser.add_argument(
             '--datetime-format',
-            type=str, dest='datetime_format',
+            type=str,
+            dest='datetime_format',
             help='Specify datetime format.',
         )
         parser.add_argument(

@@ -12,6 +12,7 @@ from collections import namedtuple
 
 # ── Regex patterns ────────────────────────────────────────────────────────────
 
+
 class DateRE:
     # Any date-ish string: starts with 1-4 digits, sep, 1-2 digits, sep, ...
     DATEISH = re.compile(r'^[0-9]{1,4}[-./][0-9]{1,2}[-./][0-9]{1,2}.*$')
@@ -25,9 +26,7 @@ class DateRE:
     )
 
     # ISO separator extraction: captures the date separator
-    SEP_ISO = re.compile(
-        r'^[0-9]{4}([-/])[0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$'
-    )
+    SEP_ISO = re.compile(r'^[0-9]{4}([-/])[0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$')
 
     # Detect fractional seconds: colon + 2 digits + decimal point + digit
     HAS_FRAC = re.compile(r':[0-9]{2}\.[0-9]')
@@ -67,18 +66,21 @@ class AmbiguousDateFormat:
     order cannot be determined (all values <= 12) but year size and time
     presence are known.
     """
+
     EU_OR_US_DATE = 'eu-or-us-date'
     EU_OR_US_DATETIME = 'eu-or-us-datetime'
     EU_OR_US_DATE_2Y = 'eu-or-us-date-2y'
     EU_OR_US_DATETIME_2Y = 'eu-or-us-datetime-2y'
 
 
-AMBIGUOUS_DATE_FORMATS = frozenset({
-    AmbiguousDateFormat.EU_OR_US_DATE,
-    AmbiguousDateFormat.EU_OR_US_DATETIME,
-    AmbiguousDateFormat.EU_OR_US_DATE_2Y,
-    AmbiguousDateFormat.EU_OR_US_DATETIME_2Y,
-})
+AMBIGUOUS_DATE_FORMATS = frozenset(
+    {
+        AmbiguousDateFormat.EU_OR_US_DATE,
+        AmbiguousDateFormat.EU_OR_US_DATETIME,
+        AmbiguousDateFormat.EU_OR_US_DATE_2Y,
+        AmbiguousDateFormat.EU_OR_US_DATETIME_2Y,
+    }
+)
 
 # Named tuple for separator information extracted from a date/time string
 Separators = namedtuple(
@@ -87,6 +89,7 @@ Separators = namedtuple(
 
 
 # ── Functions ─────────────────────────────────────────────────────────────────
+
 
 def get_date_separators(r, s):
     """
@@ -135,11 +138,15 @@ def resolve_ambiguous_format(strings, ambig_fmt, convention='eu'):
     Returns:
         strftime format string, or None if separators cannot be extracted.
     """
-    if ambig_fmt in (AmbiguousDateFormat.EU_OR_US_DATE,
-                     AmbiguousDateFormat.EU_OR_US_DATETIME):
+    if ambig_fmt in (
+        AmbiguousDateFormat.EU_OR_US_DATE,
+        AmbiguousDateFormat.EU_OR_US_DATETIME,
+    ):
         seps_re, year_code = DateRE.SEPS4Y, 'Y'
-    elif ambig_fmt in (AmbiguousDateFormat.EU_OR_US_DATE_2Y,
-                       AmbiguousDateFormat.EU_OR_US_DATETIME_2Y):
+    elif ambig_fmt in (
+        AmbiguousDateFormat.EU_OR_US_DATE_2Y,
+        AmbiguousDateFormat.EU_OR_US_DATETIME_2Y,
+    ):
         seps_re, year_code = DateRE.SEPS2Y, 'y'
     else:
         return None
@@ -185,7 +192,11 @@ def infer_date_format_from_strings(strings):
         assert m
         sep = m.group(1)
         dtsep = 'T' if 'T' in strings[0] else ' '
-        frac = '.%f' if any(re.search(DateRE.HAS_FRAC, s) for s in strings) else ''
+        frac = (
+            '.%f'
+            if any(re.search(DateRE.HAS_FRAC, s) for s in strings)
+            else ''
+        )
         return '%%Y%s%%m%s%%d%s%%H:%%M:%%S%s' % (sep, sep, dtsep, frac)
 
     # ── 4-digit year at end (EU or US) ────────────────────────────────────────

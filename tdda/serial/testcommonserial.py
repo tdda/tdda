@@ -30,8 +30,9 @@ from tdda.utils import testwarn
 THISDIR = os.path.abspath(os.path.dirname(__file__))
 TESTDATADIR = os.path.join(THISDIR, 'testdata')
 EXAMPLESDIR = os.path.join(THISDIR, 'examples')
-REFTESTDATA = os.path.normpath(os.path.join(THISDIR, '..', 'constraints',
-                                             'testdata'))
+REFTESTDATA = os.path.normpath(
+    os.path.join(THISDIR, '..', 'constraints', 'testdata')
+)
 
 TMPDIR = tempfile.mkdtemp()
 
