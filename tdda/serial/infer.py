@@ -740,6 +740,14 @@ class MetadataInferrer:
             ]
             for i, name in enumerate(self.fieldnames)
         }
+        field_values_hashes = {
+            name: Counter(
+                v
+                for v in [row[i] for row in data if len(row) > i]
+                if v not in null_set and v != ''
+            )
+            for i, name in enumerate(self.fieldnames)
+        }
 
         # Phase 1: infer raw format for each date/datetime field
         raw_date_fmts = {}   # name -> fmt (may be AmbiguousDateFormat.*)

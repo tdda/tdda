@@ -210,8 +210,11 @@ VERBOSITY = 2  # show errors and warnings. 1 for errors only. 0 for none
 
 FIELDTYPES = tuple(FieldType.__dict__.values())
 
-QUOTING_CODES = None
-QUOTING_NAMES = None
+QUOTING_CODES = {
+    k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')
+}
+QUOTING_CODES['STRING_ONLY'] = -1
+QUOTING_NAMES = {v: k for k, v in QUOTING_CODES.items()}
 
 
 class FieldMetadata:
@@ -782,21 +785,9 @@ def is_iso8601_format(fmt, inc_names=True, return_specific=False):
         return False
 
 
-def get_quoting_codes():
-    global QUOTING_CODES, QUOTING_NAMES
-
-    QUOTING_CODES = {
-        k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')
-    }
-    QUOTING_CODES['STRING_ONLY'] = -1
-    QUOTING_NAMES = {v: k for k, v in QUOTING_CODES.items()}
-
-
 def quoting_as_code(name):
     if name is None:
         return None
-    if QUOTING_CODES is None:
-        get_quoting_codes()
 
     return name if isinstance(name, int) else QUOTING_CODES[name]
 
@@ -804,8 +795,6 @@ def quoting_as_code(name):
 def quoting_as_name(code):
     if code is None:
         return None
-    if QUOTING_NAMES is None:
-        get_quoting_codes()
 
     return code if isinstance(code, str) else QUOTING_NAMES[code]
 
