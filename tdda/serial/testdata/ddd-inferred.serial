@@ -33,15 +33,15 @@
             },
             {
                 "name": "evenstr",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "oddstr",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "elevens",
-                "fieldtype": "int"
+                "fieldtype": "string"
             },
             {
                 "name": "binnedindex",
@@ -66,6 +66,7 @@
         "datetime_format": "%Y-%m-%d %H:%M:%S",
         "null_indicator": "",
         "header_row_count": 1,
-        "header_row": 0
+        "header_row": 0,
+        "quoting": "QUOTE_STRINGS_ONLY"
     }
 }

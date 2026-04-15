@@ -23,6 +23,7 @@
         "encoding": "ISO-8859-1",
         "delimiter": ",",
         "header_row_count": 1,
-        "header_row": 0
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
     }
 }

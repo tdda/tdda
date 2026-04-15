@@ -70,6 +70,7 @@
         "datetime_format": "%Y-%m-%dT%H:%M:%S",
         "null_indicator": "NULL",
         "header_row_count": 1,
-        "header_row": 0
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
     }
 }

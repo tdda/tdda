@@ -36,6 +36,7 @@ from tdda.utils import TDDAError
 from tdda.serial.testserial import (
     tdpath,
     tmppath,
+    REFTESTDATA,
 )
 
 
@@ -576,7 +577,25 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('coding-utf8.csv', prov=True, verbosity=0)
 
     def testInferDdd(self):
-        buf, md = self.check_infer('ddd.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('ddd.csv', prov=False, verbosity=0)
+        # Quoting style detection reclassifies evenstr, oddstr, elevens
+        self.assertTrue(all('reclassified' in w for w in buf))
+        self.assertEqual(
+            [w for w in buf if 'evenstr' in w or 'oddstr' in w
+             or 'elevens' in w],
+            buf,
+        )
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('ddd.csv'),
+            tdpath('ddd-inferred.serial'),
+            warner=Warn,
+        )
+        parquet = os.path.join(REFTESTDATA, 'ddd.parquet')
+        ref_df = polars.read_parquet(parquet)
+        ref_df = ref_df.drop('greek')
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        self.assertEqual(buf2, [])
 
     def testInferDdd2(self):
         buf, md = self.check_infer('ddd2.csv', prov=True, verbosity=0)

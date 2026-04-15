@@ -374,6 +374,7 @@ class MetadataInferrer:
             datetime_format=self.datetime_format,
             header_row_count=self.header_row_count,
             map_missing_trailing_cols_to_null=self.excel or None,
+            quoting=self.quoting,
         )
 
     def apply_all_given(self):
@@ -871,12 +872,131 @@ class MetadataInferrer:
         return raw_row, deq_row, is_quoted
 
     def infer_quoting(self, data, quoted, n_quoted):
-        return
-        debug('DATA:\n', data)
-        debug('QUOTED:\n', quoted)
-        debug('N QUOTED:\n', n_quoted)
-        debug('QUOTE CHAR:', self.quote_char)
-        debug(self.fields)
+        """Infer quoting style from per-column quoted value counts.
+
+        Returns a quoting style name (e.g. 'QUOTE_STRINGS_ONLY') or None.
+        May also update self.fields to reclassify quoted int/float as string
+        when QUOTE_STRINGS_ONLY is detected.
+        """
+        if not self.quote_char:
+            return 'QUOTE_NONE'
+        if not data:
+            return None
+
+        null_set = (
+            set(self.null) if isinstance(self.null, list)
+            else ({self.null} if self.null is not None else set())
+        )
+
+        n = len(self.fieldnames)
+        nonnull_total = [0] * n
+        nonnull_quoted = [0] * n
+        null_total = [0] * n
+        null_quoted = [0] * n
+
+        for row, iq in zip(data, quoted):
+            for i in range(min(n, len(row))):
+                val = row[i]
+                q = iq[i] if i < len(iq) else False
+                if val in null_set or val == '':
+                    null_total[i] += 1
+                    if q:
+                        null_quoted[i] += 1
+                else:
+                    nonnull_total[i] += 1
+                    if q:
+                        nonnull_quoted[i] += 1
+
+        # Tri-state per column: True=all quoted, False=none quoted, None=mixed
+        def quoting_state(nq, nt):
+            if nt == 0:
+                return None   # unknown: no non-null values
+            if nq == 0:
+                return False  # all unquoted
+            if nq == nt:
+                return True   # all quoted
+            return 'mixed'
+
+        col_type = [f.fieldtype for f in self.fields]
+        states = [
+            quoting_state(nonnull_quoted[i], nonnull_total[i])
+            for i in range(n)
+        ]
+
+        string_idxs = [i for i, t in enumerate(col_type) if t == 'string']
+        numeric_idxs = [
+            i for i, t in enumerate(col_type) if t in ('int', 'float')
+        ]
+        date_idxs = [
+            i for i, t in enumerate(col_type) if t in ('date', 'datetime')
+        ]
+        bool_idxs = [i for i, t in enumerate(col_type) if t == 'bool']
+
+        # QUOTE_NONE: nothing quoted anywhere
+        if sum(nonnull_quoted) + sum(null_quoted) == 0:
+            return 'QUOTE_NONE'
+
+        # QUOTE_ALL / QUOTE_NOTNULL: every non-null value is quoted
+        total_nonnull = sum(nonnull_total)
+        if total_nonnull > 0 and sum(nonnull_quoted) == total_nonnull:
+            total_null = sum(null_total)
+            if total_null > 0 and sum(null_quoted) == total_null:
+                return 'QUOTE_ALL'
+            return 'QUOTE_NOTNULL'
+
+        # Use unquoted non-string cols as anchor: if we see genuinely unquoted
+        # numeric/date/bool cols, any quoted col of those types was misclassified
+        # and should be string.
+        non_string_idxs = numeric_idxs + date_idxs + bool_idxs
+        unquoted_non_string = [
+            i for i in non_string_idxs if states[i] is False
+        ]
+        quoted_non_string = [
+            i for i in non_string_idxs if states[i] is True
+        ]
+        any_mixed = any(s == 'mixed' for s in states)
+
+        if unquoted_non_string:
+            if quoted_non_string:
+                # Quoted cols inferred as non-string are actually string.
+                for i in quoted_non_string:
+                    f = self.fields[i]
+                    self.warn(
+                        f'Field {f.name!r}: reclassified from '
+                        f'{col_type[i]} to string (quoted in '
+                        f'QUOTE_STRINGS_ONLY file).'
+                    )
+                    self.fields[i] = FieldMetadata(
+                        name=f.name,
+                        fieldtype='string',
+                        format=f.format,
+                    )
+            # Determine style from which non-string types are unquoted.
+            # If dates/bools are among the unquoted, strings-only; if they're
+            # quoted (or absent but numeric is unquoted), nonnumeric.
+            unquoted_date_bool = [
+                i for i in date_idxs + bool_idxs if states[i] is False
+            ]
+            quoted_date_bool = [
+                i for i in date_idxs + bool_idxs if states[i] is True
+            ]
+            if date_idxs or bool_idxs:
+                if unquoted_date_bool and not quoted_date_bool:
+                    return 'QUOTE_STRINGS_ONLY'
+                elif quoted_date_bool and not unquoted_date_bool:
+                    return 'QUOTE_NONNUMERIC'
+                # Mixed date/bool quoting: fall through to inconsistent
+            else:
+                # No date/bool cols to distinguish; numeric unquoted is enough
+                return 'QUOTE_STRINGS_ONLY'
+
+        if any_mixed and not any(s is True for s in [
+            states[i] for i in non_string_idxs
+        ]):
+            return 'QUOTE_MINIMAL'
+
+        self.warn('Quoting appears inconsistent: no quoting style has been set.')
+        return None
 
     def describe_null(self):
         nulls = self.null if isinstance(self.null, list) else [self.null]

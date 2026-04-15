@@ -10,6 +10,7 @@
         ],
         "delimiter": "\u0000",
         "header_row_count": 1,
-        "header_row": 0
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
     }
 }
