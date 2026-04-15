@@ -5,7 +5,7 @@
         "fields": [
             {
                 "name": "encoding",
-                "fieldtype": "date"
+                "fieldtype": "string"
             },
             {
                 "name": "altname",

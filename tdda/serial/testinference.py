@@ -207,11 +207,11 @@ class TestSerialUtilityFunction(ReferenceTestCase):
         self.assertEqual(
             analyse_values('f', ['inf', 'nan', 'nan']).most_likely_type,
             FieldType.FLOAT,
-        )  # !!!
+        )
 
         self.assertEqual(
             analyse_values(
-                'd', ['2000.01.01', '31-12-2000', '12/31/2000', '999-999-999']
+                'd', ['2000.01.01', '31-12-2000', '12/31/2000', '999-99-999']
             ).most_likely_type,  # !!!
             FieldType.DATE,
         )
@@ -223,11 +223,11 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                     '2000.01.01',
                     '31-12-2000',
                     '12/31/2000',
-                    '999-999-999',
+                    '999-99-999',
                     '2000.jan.01',
                     '31-feb-2000',
                     'dec-31/2000',
-                    'zzz-999-999',
+                    'zzz-99-999',
                 ],
             ).most_likely_type,  # !!!
             FieldType.DATE,
@@ -243,7 +243,9 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                 ],
             ).most_likely_type,
             FieldType.STRING,  # 2/3 valid < 99% threshold → string
-        )
+        ) # Note: Changing to 999-99-999 99:99:99ksjdhfkZ would break
+          # because the .* on the end permits ksjdhfkZ.
+          # That should be tightened up later.
 
         self.assertEqual(
             analyse_values(
@@ -255,7 +257,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                 ],
             ).most_likely_type,
             FieldType.STRING,  # 2/3 valid < 99% threshold → string
-        )
+        ) # Note: as previous comment.
 
         self.assertEqual(
             analyse_values(
