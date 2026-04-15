@@ -1,0 +1,36 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "b",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "i",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            },
+            {
+                "name": "t",
+                "fieldtype": "datetime",
+                "format": "iso8601-datetime"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "null_indicator": ".",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

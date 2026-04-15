@@ -30,7 +30,8 @@ from tdda.serial.infer import (
     infer_format_from_flat_file,
     read_file_lines,
 )
-from tdda.utils import TDDAError
+from tdda.serial.reader import load_metadata
+from tdda.utils import TDDAError, nvl
 
 
 from tdda.serial.testserial import (
@@ -243,9 +244,9 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                 ],
             ).most_likely_type,
             FieldType.STRING,  # 2/3 valid < 99% threshold → string
-        ) # Note: Changing to 999-99-999 99:99:99ksjdhfkZ would break
-          # because the .* on the end permits ksjdhfkZ.
-          # That should be tightened up later.
+        )  # Note: Changing to 999-99-999 99:99:99ksjdhfkZ would break
+        # because the .* on the end permits ksjdhfkZ.
+        # That should be tightened up later.
 
         self.assertEqual(
             analyse_values(
@@ -257,7 +258,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
                 ],
             ).most_likely_type,
             FieldType.STRING,  # 2/3 valid < 99% threshold → string
-        ) # Note: as previous comment.
+        )  # Note: as previous comment.
 
         self.assertEqual(
             analyse_values(
@@ -535,6 +536,24 @@ class TestInferAllFlatFiles(TestInference):
     # One test per flat file in testdata. All provisional (prov=True).
     # Add targeted assertions to specific tests as inference is validated.
 
+    def validate_inferred_serial_wrt_handmade_serial(self, stem, lib='polars',
+                                                     inf_path=None,
+                                                     prov=False):
+        """Compare prov-inferred serial+DF against plain .serial.
+
+        md is the inferred metadata returned by check_infer(prov=True).
+        """
+        plain_path = tdpath(stem + '.serial')
+        p = '-prov' if prov else ''
+        infpath = nvl(inf_path, tdpath(stem + f'{p}-inferred.serial'))
+        csv_path = tdpath(stem + '.csv')
+        Warn1, _buf1 = testwarn()
+        Warn2, _buf2 = testwarn()
+        convert = csv_to_pandas  if lib == 'pandas' else csv_to_polars
+        df_prov = convert(csv_path, infpath, warner=Warn1)
+        df_plain = convert(csv_path, plain_path, warner=Warn2)
+        self.assertDataFramesEqual(df_prov, df_plain, type_matching='loose')
+
     def testInferAllCsvwTypes(self):
         buf, md = self.check_infer(
             'all-csvw-types.csv', prov=False, verbosity=0
@@ -599,7 +618,7 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('coding-utf8.csv', prov=True, verbosity=0)
 
     def testInferDdd(self):
-        buf, md = self.check_infer('ddd.csv', prov=False, verbosity=0)
+        buf, md = self.check_infer('ddd.csv', verbosity=0)
         # Quoting style detection reclassifies evenstr, oddstr, elevens
         self.assertTrue(all('reclassified' in w for w in buf))
         self.assertEqual(
@@ -644,32 +663,41 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf2, [])
 
     def testInferEurod(self):
-        buf, md = self.check_infer('eurod.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('eurod.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('eurod')
 
     def testInferEurod2y(self):
-        buf, md = self.check_infer('eurod2y.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('eurod2y.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('eurod2y')
 
     def testInferEurodtWriteKw(self):
         buf, md = self.check_infer(
-            'eurodt-write-kw.csv', prov=True, verbosity=0
+            'eurodt-write-kw.csv', verbosity=0
         )
+        self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-kw')
 
     def testInferEurodtWriteSerial(self):
         buf, md = self.check_infer(
-            'eurodt-write-serial.csv', prov=True, verbosity=0
+            'eurodt-write-serial.csv', verbosity=0
         )
+        self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-serial')
 
     def testInferEurodt(self):
-        buf, md = self.check_infer('eurodt.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('eurodt.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('eurodt')
 
     def testInferEurodt2y(self):
         buf, md = self.check_infer('eurodt2y.csv', prov=True, verbosity=0)
+        # No date format so pandas post-processing fails.
+        # self.validate_inferred_serial_wrt_handmade_serial('eurodt2y')
 
     def testInferIsod(self):
-        buf, md = self.check_infer('isod.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('isod.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('isod')
 
     def testInferIsodatetime(self):
-        buf, md = self.check_infer('isodatetime.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('isodatetime.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('isodatetime')
 
     def testInferIsodt(self):
         buf, md = self.check_infer('isodt.csv', prov=True, verbosity=0)
@@ -822,16 +850,22 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferSmallWriteKw(self):
         buf, md = self.check_infer(
-            'small-write-kw.csv', prov=True, verbosity=0
+            'small-write-kw.csv', verbosity=0
         )
+        self.validate_inferred_serial_wrt_handmade_serial('small-write-kw')
 
     def testInferSmallWriteSerial(self):
         buf, md = self.check_infer(
-            'small-write-serial.csv', prov=True, verbosity=0
+            'small-write-serial.csv', verbosity=0
         )
+        self.validate_inferred_serial_wrt_handmade_serial('small-write-serial')
 
     def testInferSmall(self):
         buf, md = self.check_infer('small.csv', prov=True, verbosity=0)
+        # Fails to infer 12 us datetime.
+        # Fine for now. Triggers Pandas warning, which is nasty
+        # Don't compare dataframe for now
+        # self.validate_inferred_serial_wrt_handmade_serial('small')
 
     def testInferSmall2(self):
         buf, md = self.check_infer('small2.csv', prov=True, verbosity=0)
@@ -841,14 +875,19 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferTiny1cdPandas(self):
         buf, md = self.check_infer(
-            'tiny1cd-pandas.csv', prov=True, verbosity=0
+            'tiny1cd-pandas.csv', verbosity=0
+        )
+        self.validate_inferred_serial_wrt_handmade_serial(
+            'tiny1cd-pandas', lib='pandas'
         )
 
     def testInferTiny1cd(self):
-        buf, md = self.check_infer('tiny1cd.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1cd.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1cd')
 
     def testInferTiny1cd3(self):
-        buf, md = self.check_infer('tiny1cd3.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1cd3.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1cd3')
 
     def testInferTiny1cnPandas(self):
         buf, md = self.check_infer(
@@ -860,53 +899,83 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf, [])
 
     def testInferTiny1cn3(self):
-        buf, md = self.check_infer('tiny1cn3.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1cn3.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1cn3')
 
     def testInferTiny1ndDot(self):
         buf, md = self.check_infer('tiny1nd-dot.csv', prov=True, verbosity=0)
+        # Infer can't handle the dot
+        # So we override:
+        Warn, buf = testwarn()
+        md2 = infer_format_from_flat_file(
+            tdpath('tiny1nd-dot.csv'), warner=Warn, raise_error=True,
+            null=['.']
+        )
+        outpath = tmppath('tiny1cn-force-dot-null.serial')
+        with open(outpath, 'w') as f:
+            f.write(md2.to_json())
+        self.validate_inferred_serial_wrt_handmade_serial(
+            'tiny1nd-dot', lib='pandas', inf_path=outpath
+        )
 
     def testInferTiny1ndNull(self):
         buf, md = self.check_infer('tiny1nd-NULL.csv', prov=True, verbosity=0)
 
     def testInferTiny1ndPandas(self):
         buf, md = self.check_infer(
-            'tiny1nd-pandas.csv', prov=True, verbosity=0
+            'tiny1nd-pandas.csv', verbosity=0
+        )
+        self.validate_inferred_serial_wrt_handmade_serial(
+            'tiny1nd-pandas', lib='pandas'
         )
 
     def testInferTiny1nd(self):
-        buf, md = self.check_infer('tiny1nd.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1nd.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1nd')
 
     def testInferTiny1nd3(self):
-        buf, md = self.check_infer('tiny1nd3.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1nd3.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1nd3')
 
     def testInferTiny1ndq(self):
         buf, md = self.check_infer('tiny1ndq.csv', prov=True, verbosity=0)
 
     def testInferTiny1nnPandas(self):
         buf, md = self.check_infer(
-            'tiny1nn-pandas.csv', prov=True, verbosity=0
+            'tiny1nn-pandas.csv', verbosity=0
+        )
+        self.validate_inferred_serial_wrt_handmade_serial(
+            'tiny1nn-pandas', lib='pandas'
         )
 
     def testInferTiny1nn(self):
-        buf, md = self.check_infer('tiny1nn.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1nn.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1nn')
 
     def testInferTiny1nn3(self):
-        buf, md = self.check_infer('tiny1nn3.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('tiny1nn3.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('tiny1nn3')
 
     def testInferTz(self):
         buf, md = self.check_infer('tz.csv', prov=True, verbosity=0)
 
     def testInferUsd(self):
-        buf, md = self.check_infer('usd.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('usd.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('usd')
 
     def testInferUsd2y(self):
-        buf, md = self.check_infer('usd2y.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('usd2y.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('usd2y')
 
     def testInferUsdt(self):
         buf, md = self.check_infer('usdt.csv', prov=True, verbosity=0)
+        # No date format so pandas post-processing fails.
+        # self.validate_inferred_serial_wrt_handmade_serial('usdt')
 
     def testInferUsdt2y(self):
         buf, md = self.check_infer('usdt2y.csv', prov=True, verbosity=0)
+        # No date format so pandas post-processing fails.
+        # self.validate_inferred_serial_wrt_handmade_serial('usdt2y')
 
     # .txt files
 

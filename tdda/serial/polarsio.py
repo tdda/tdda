@@ -212,7 +212,14 @@ def serial_to_polars_read_csv_args_and_postproc(
     postproc = {}
     for field, fmd in fields.items():
         if fmd.fieldtype.startswith('date'):
-            if fmd.format and not fmd.format.lower().startswith('iso'):
+            attr = (
+                'datetime_format' if fmd.fieldtype.startswith('datetime')
+                else 'date_format'
+            )
+            fmt = nvl(fmd.format, getattr(md, attr, None))
+            if (fmt and not fmt.lower().startswith('iso')
+                    and not fmt.startswith("%Y-%m-%d")):
+                # TODO: Second condition might be too loose
                 schema[field] = f(pl.String)
                 fmt = serial_format_to_strftime(fmd.format)
                 op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
@@ -222,6 +229,11 @@ def serial_to_polars_read_csv_args_and_postproc(
                     f'understood by Polars read_csv.\n'
                     f'Will parse post-read using str.{op}.'
                 )
+            # Possible fallback for no date format set.
+            # But prevents unspecified iso formats from working.
+            # So probably not good.
+            # elif not fmt:
+                # schema[field] = f(pl.String)
         if fmd.fieldtype.lower().startswith('bool'):
             bads = ', '.join(
                 v

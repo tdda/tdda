@@ -747,9 +747,17 @@ class MetadataInferrer:
                 raise_error=self.raise_error,
             )
 
+        given_null = self._given.get('null')
+        if given_null is not None:
+            # User-supplied null: use only those values as nulls during
+            # inference, not the default KNOWN_NULLS list.
+            kn = given_null if isinstance(given_null, list) else [given_null]
+        else:
+            kn = None
         type_info = {
             col: analyse_values(
-                col, [row[i] for row in data if len(row) > i], cand_nulls
+                col, [row[i] for row in data if len(row) > i], cand_nulls,
+                known_nulls=kn,
             )
             for i, col in enumerate(self.fieldnames)
         }
@@ -1100,8 +1108,12 @@ class MetadataInferrer:
 
     def describe_null(self):
         nulls = self.null if isinstance(self.null, list) else [self.null]
+        given = self._given.get('null')
+        given_set = (
+            set(given) if isinstance(given, list) else {given}
+        ) if given is not None else set()
         for null in nulls:
-            if null in KNOWN_NULLS:
+            if null in KNOWN_NULLS or null in given_set:
                 self.vprint(f'Null: "{null}"', 2)
             elif self.verbosity > 0:
                 self.warn(f'Unusual null: "{null}".')
@@ -1378,9 +1390,11 @@ class FieldTypeStats:
         return f'Field {self.fieldname}: {self.most_likely_type}\n  {stats}\n'
 
 
-def analyse_values(fieldname, values, cand_nulls=None):
+def analyse_values(fieldname, values, cand_nulls=None, known_nulls=None):
     if cand_nulls is None:
         cand_nulls = Counter()
+    if known_nulls is None:
+        known_nulls = KNOWN_NULLS
     stats = FieldTypeStats(fieldname)
     b = stats.stats['bool']
     i = stats.stats['int']
@@ -1389,7 +1403,7 @@ def analyse_values(fieldname, values, cand_nulls=None):
     dt = stats.stats['datetime']
 
     for v in values:
-        poss_null = v in KNOWN_NULLS
+        poss_null = v in known_nulls
 
         if v.lower() in ('true', 'false'):
             b.n_valid += 1
@@ -1418,7 +1432,7 @@ def analyse_values(fieldname, values, cand_nulls=None):
         elif not poss_null:
             dt.n_invalid += 1
 
-        if v in KNOWN_NULLS:
+        if v in known_nulls:
             cand_nulls[v] += 1
             stats.n_cand_nulls += 1
 
