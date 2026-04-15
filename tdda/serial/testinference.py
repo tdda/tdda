@@ -154,7 +154,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferAllformats(self):
-        buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('allformats.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
     def testInferOnestringSingleField(self):
@@ -561,7 +561,18 @@ class TestInferAllFlatFiles(TestInference):
         )
 
     def testInferAllformats(self):
-        buf, md = self.check_infer('allformats.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('allformats.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('allformats.csv'),
+            tdpath('allformats-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = polars.read_parquet(tdpath('allformats.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        # date format warnings for post-read strptime parsing are expected
+        self.assertTrue(all('parse post-read' in w for w in buf2))
 
     def testInferAllformats2unspec(self):
         buf, md = self.check_infer(
@@ -703,26 +714,99 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
     def testInferNulls1(self):
-        buf, md = self.check_infer('nulls1.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('nulls1.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_pandas(
+            tdpath('nulls1.csv'),
+            tdpath('nulls1-inferred.serial'),
+            warner=Warn,
+        )
+        # nulls1n.parquet was written from nulls1.csv via a good .serial
+        # file, so known null strings are already converted to null
+        # and type checking should be perfect.
+        ref_df = pandas.read_parquet(tdpath('nulls1n.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+        self.assertEqual(buf2, [])
 
     def testInferSigCp1252(self):
-        buf, md = self.check_infer('sig-cp1252.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('sig-cp1252.csv', prov=False, verbosity=0)
+        # encoding fallback warning is expected for non-UTF-8 files
+        self.assertEqual(len(buf), 1)
+        self.assertIn('cp1252', buf[0])
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('sig-cp1252.csv'),
+            tdpath('sig-cp1252-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = polars.read_parquet(tdpath('sig-cp1252.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        self.assertEqual(buf2, [])
 
     def testInferSigEquivUtf16(self):
         buf, md = self.check_infer(
-            'sig-equiv-utf16.csv', prov=True, verbosity=0
+            'sig-equiv-utf16.csv', prov=False, verbosity=0
         )
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_pandas(
+            tdpath('sig-equiv-utf16.csv'),
+            tdpath('sig-equiv-utf16-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = pandas.read_parquet(tdpath('sig-equiv-utf16.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        self.assertEqual(buf2, [])
 
     def testInferSigEquivUtf8(self):
         buf, md = self.check_infer(
-            'sig-equiv-utf8.csv', prov=True, verbosity=0
+            'sig-equiv-utf8.csv', prov=False, verbosity=0
         )
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('sig-equiv-utf8.csv'),
+            tdpath('sig-equiv-utf8-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = polars.read_parquet(tdpath('sig-equiv-utf8.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        self.assertEqual(buf2, [])
 
     def testInferSigLatin1(self):
-        buf, md = self.check_infer('sig-latin1.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('sig-latin1.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_pandas(
+            tdpath('sig-latin1.csv'),
+            tdpath('sig-latin1-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = pandas.read_parquet(tdpath('sig-latin1.parquet'))
+        self.assertDataFramesEqual(df, ref_df, type_matching='loose')
+        self.assertEqual(buf2, [])
 
     def testInferSigLatin9(self):
-        buf, md = self.check_infer('sig-latin9.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('sig-latin9.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+        Warn, buf2 = testwarn()
+        df = csv_to_polars(
+            tdpath('sig-latin9.csv'),
+            tdpath('sig-latin9-inferred.serial'),
+            warner=Warn,
+        )
+        ref_df = polars.read_parquet(tdpath('sig-latin9.parquet'))
+        # latin-9 (iso-8859-15) is indistinguishable from latin-1 at inference
+        # time; the sig column will be the latin-9 bytes misread as latin-1
+        self.assertEqual(
+            df['sig'][0],
+            ref_df['sig'][0].encode('iso-8859-15').decode('iso-8859-1'),
+        )
+        self.assertDataFramesEqual(
+            df.drop('sig'), ref_df.drop('sig'), type_matching='loose'
+        )
+        self.assertEqual(buf2, [])
 
     def testInferSimple(self):
         buf, md = self.check_infer('simple.csv', prov=True, verbosity=0)
