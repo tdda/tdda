@@ -841,6 +841,69 @@ class MetadataInferrer:
             for name in self.fieldnames
         ]
         self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
+        if self._refine_empty_null(data, is_quoted):
+            self.quoting = self.infer_quoting(data, is_quoted, n_quoted)
+
+    def _refine_empty_null(self, data, quoted):
+        """Remove '' from null list if only seen as quoted "" in string cols.
+
+        If '' is a null candidate but every empty field in string columns
+        is quoted ("") and no empty fields appear in non-string columns,
+        then "" is empty string rather than null, and '' should not be
+        treated as a null indicator.
+
+        Returns True if '' was removed (caller should re-run infer_quoting).
+        """
+        null_list = (
+            self.null if isinstance(self.null, list)
+            else ([self.null] if self.null is not None else [])
+        )
+        if '' not in null_list:
+            return False
+
+        n = len(self.fieldnames)
+        string_idxs = {
+            i for i, f in enumerate(self.fields) if f.fieldtype == 'string'
+        }
+
+        has_unquoted_empty_in_string = False
+        has_quoted_nonempty_in_string = False
+        has_empty_in_nonstring = False
+
+        for row, iq in zip(data, quoted):
+            for i in range(min(n, len(row))):
+                q = iq[i] if i < len(iq) else False
+                if i in string_idxs:
+                    if row[i] == '':
+                        if not q:
+                            has_unquoted_empty_in_string = True
+                    elif q:
+                        has_quoted_nonempty_in_string = True
+                elif row[i] == '':
+                    has_empty_in_nonstring = True
+
+        if has_empty_in_nonstring:
+            return False
+        if not has_quoted_nonempty_in_string:
+            # No quoted values in string cols: no quoting evidence that
+            # distinguishes null from empty string, so don't infer '' as null.
+            new_nulls = [v for v in null_list if v != '']
+            self.null = (
+                new_nulls[0] if len(new_nulls) == 1
+                else (new_nulls if new_nulls else None)
+            )
+            return True
+        if has_unquoted_empty_in_string:
+            # Quoted non-empty strings + unquoted empty: '' is genuine null.
+            return False
+
+        # '' only seen as quoted "" in string cols: it's empty string, not null
+        new_nulls = [v for v in null_list if v != '']
+        self.null = (
+            new_nulls[0] if len(new_nulls) == 1
+            else (new_nulls if new_nulls else None)
+        )
+        return True
 
     def dequote_and_split(self, line, lineno=None):
         q = self.quote_char

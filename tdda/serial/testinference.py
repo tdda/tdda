@@ -649,6 +649,38 @@ class TestInferAllFlatFiles(TestInference):
     def testInferMinimal(self):
         buf, md = self.check_infer('minimal.csv', prov=True, verbosity=0)
 
+    def testInferNullInference1(self):
+        # Unquoted strings: no quoting evidence, '' not inferred as null
+        buf, md = self.check_infer('nullinference1.csv', prov=False,
+                                   verbosity=0)
+        self.assertEqual(buf, [])
+        self.assertIsNone(md.null_indicator)
+        self.assertEqual(md.quoting, 'QUOTE_NONE')
+
+    def testInferNullInference2(self):
+        # Quoted strings, only "" empty: '' dropped (empty string, not null)
+        buf, md = self.check_infer('nullinference2.csv', prov=False,
+                                   verbosity=0)
+        self.assertEqual(buf, [])
+        self.assertIsNone(md.null_indicator)
+        self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
+
+    def testInferNullInference3(self):
+        # Quoted strings, quoted "" and unquoted empty: '' is genuine null
+        buf, md = self.check_infer('nullinference3.psv', prov=False,
+                                   verbosity=0)
+        self.assertEqual(buf, [])
+        self.assertEqual(md.null_indicator, '')
+        self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
+
+    def testInferNullInference4(self):
+        # Quoted "" in string col, unquoted empty in non-string col: '' is null
+        buf, md = self.check_infer('nullinference4.csv', prov=False,
+                                   verbosity=0)
+        self.assertEqual(buf, [])
+        self.assertEqual(md.null_indicator, '')
+        self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
+
     def testInferNulls1(self):
         buf, md = self.check_infer('nulls1.csv', prov=True, verbosity=0)
 

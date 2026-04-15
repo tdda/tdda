@@ -4,28 +4,19 @@
     "tdda.serial": {
         "fields": [
             {
-                "name": "b",
-                "fieldtype": "bool"
-            },
-            {
                 "name": "i",
                 "fieldtype": "int"
             },
             {
-                "name": "f",
+                "name": "r",
                 "fieldtype": "float"
             },
             {
                 "name": "s",
                 "fieldtype": "string"
-            },
-            {
-                "name": "t",
-                "fieldtype": "date"
             }
         ],
         "delimiter": ",",
-        "date_format": "%Y-%m-%d",
         "header_row_count": 1,
         "header_row": 0,
         "quoting": "QUOTE_NONE"
