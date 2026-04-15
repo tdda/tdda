@@ -213,7 +213,7 @@ FIELDTYPES = tuple(FieldType.__dict__.values())
 QUOTING_CODES = {
     k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')
 }
-QUOTING_CODES['STRING_ONLY'] = -1
+QUOTING_CODES['QUOTE_STRINGS_ONLY'] = -1
 QUOTING_NAMES = {v: k for k, v in QUOTING_CODES.items()}
 
 
