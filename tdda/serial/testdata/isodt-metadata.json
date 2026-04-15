@@ -1,22 +1,30 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:replaces": "{\"resources\": [{\"name\": \"isodt\", \"type\": \"table\", \"path\": \"testdata/isodt.csv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"utf-8\", \"schema\": {\"fields\": [{\"name\": \"row\", \"type\": \"integer\"}, {\"name\": \"time\", \"type\": \"datetime\"}]}}], \"profile\": \"data-package\"}",
+    "dc:creator": "tdda.serial-3.0.00rc1",
     "tables": [
         {
             "tableSchema": {
                 "columns": [
                     {
-                        "datatype": "integer",
-                        "name": "row"
+                        "name": "row",
+                        "datatype": "integer"
                     },
                     {
-                        "datatype": "datetime",
-                        "name": "time"
+                        "name": "time",
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "yyyy-MM-ddTHH:mm:ss"
+                        }
                     }
                 ]
             },
-            "url": "testdata/isodt.csv"
+            "url": "isodt.tsv"
         }
-    ]
+    ],
+    "dialect": {
+        "delimiter": "\t",
+        "headerRowCount": 1
+    },
+    "null": ""
 }

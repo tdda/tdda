@@ -221,11 +221,11 @@ def serial_to_polars_read_csv_args_and_postproc(
                     and not fmt.startswith("%Y-%m-%d")):
                 # TODO: Second condition might be too loose
                 schema[field] = f(pl.String)
-                fmt = serial_format_to_strftime(fmd.format)
+                strfmt = serial_format_to_strftime(fmt)
                 op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
-                postproc[field] = {'op': op, 'format': fmt}
+                postproc[field] = {'op': op, 'format': strfmt}
                 Warn(
-                    f'Field {field} date format {fmd.format} will not be '
+                    f'Field {field} date format {fmt} will not be '
                     f'understood by Polars read_csv.\n'
                     f'Will parse post-read using str.{op}.'
                 )

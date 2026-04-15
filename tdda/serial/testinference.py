@@ -687,9 +687,8 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('eurodt')
 
     def testInferEurodt2y(self):
-        buf, md = self.check_infer('eurodt2y.csv', prov=True, verbosity=0)
-        # No date format so pandas post-processing fails.
-        # self.validate_inferred_serial_wrt_handmade_serial('eurodt2y')
+        buf, md = self.check_infer('eurodt2y.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('eurodt2y')
 
     def testInferIsod(self):
         buf, md = self.check_infer('isod.csv', verbosity=0)
@@ -700,7 +699,8 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('isodatetime')
 
     def testInferIsodt(self):
-        buf, md = self.check_infer('isodt.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('isodt.csv', verbosity=0)
+        # verified by hand
 
     def testInferMinimal(self):
         buf, md = self.check_infer('minimal.csv', prov=True, verbosity=0)
@@ -968,14 +968,12 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('usd2y')
 
     def testInferUsdt(self):
-        buf, md = self.check_infer('usdt.csv', prov=True, verbosity=0)
-        # No date format so pandas post-processing fails.
-        # self.validate_inferred_serial_wrt_handmade_serial('usdt')
+        buf, md = self.check_infer('usdt.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('usdt')
 
     def testInferUsdt2y(self):
-        buf, md = self.check_infer('usdt2y.csv', prov=True, verbosity=0)
-        # No date format so pandas post-processing fails.
-        # self.validate_inferred_serial_wrt_handmade_serial('usdt2y')
+        buf, md = self.check_infer('usdt2y.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial('usdt2y')
 
     # .txt files
 
@@ -1012,7 +1010,11 @@ class TestInferAllFlatFiles(TestInference):
     # .tsv file
 
     def testInferIsodtTsv(self):
-        buf, md = self.check_infer('isodt.tsv', prov=True, verbosity=0)
+        buf, md = self.check_infer('isodt.tsv', verbosity=0)
+        # Verifued by hand
+        # Also successfully converts to csvw and csvwvalidate validates it.
+        # TODO: Could add tests around that. isodt-metadata.json
+        # is for this TSV file (not the CSV file).
 
     # .ssv file
 
