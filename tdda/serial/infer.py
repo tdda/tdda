@@ -733,14 +733,6 @@ class MetadataInferrer:
             set(self.null) if isinstance(self.null, list)
             else ({self.null} if self.null is not None else set())
         )
-        field_values = {
-            name: [
-                v
-                for v in [row[i] for row in data if len(row) > i]
-                if v not in null_set and v != ''
-            ]
-            for i, name in enumerate(self.fieldnames)
-        }
         field_values_hashes = {
             name: Counter(
                 v
@@ -756,7 +748,9 @@ class MetadataInferrer:
         for name in self.fieldnames:
             t = type_info[name].most_likely_type
             if isinstance(t, str) and t in ('date', 'datetime'):
-                fmt = infer_date_format_from_strings(field_values[name])
+                fmt = infer_date_format_from_strings(
+                          list(field_values_hashes[name])
+                      )
                 if fmt is not None:
                     if t == 'date':
                         raw_date_fmts[name] = fmt
@@ -791,7 +785,7 @@ class MetadataInferrer:
             for name, fmt in raw_fmts.items():
                 if fmt in AMBIGUOUS_DATE_FORMATS:
                     resolved = resolve_ambiguous_format(
-                        field_values[name], fmt, convention
+                        list(field_values_hashes[name]), fmt, convention
                     )
                     if resolved is not None:
                         self.warn(
