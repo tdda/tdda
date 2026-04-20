@@ -170,7 +170,8 @@ def normalize_yaml(s, remove_keys=None):
     if isinstance(s, list):
         s = '\n'.join(s)  # lines from .splitlines()
     obj = yaml.load(s, Loader=YAMLLoader)
-    obj = remove_dict_keys_and_sort(obj, set(remove_keys or []))
+    if remove_keys:
+        obj = remove_dict_keys(obj, set(remove_keys or []))
     return yaml.dump(obj, indent=2, sort_keys=True, allow_unicode=True)
 
 
