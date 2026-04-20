@@ -418,6 +418,7 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
+    @tag
     def testConversionToCSVWObject(self):
         md = load_metadata(self.tiny1nd_serial)
         csvw = serial_to_csvw(md, 'tiny1nd.csv')
@@ -426,6 +427,7 @@ class TestSerialConversions(ReferenceTestCase):
             csvw.to_json(), csvw_ref, ignore_lines=self.IGL
         )
 
+    @tag
     def testConversionToCSVW_t1nds(self):
         md = load_metadata(self.tiny1nd_serial)
         csvw_md = serial_to_csvw(md)
@@ -434,6 +436,7 @@ class TestSerialConversions(ReferenceTestCase):
             csvw_json, tdpath('tiny1nd-metadata.json'), ignore_lines=self.IGL
         )
 
+    @tag
     def testConversionToCSVW_t1nds_file(self):
         md = load_metadata(self.tiny1nd_serial)
         csvw_md = serial_to_csvw(md)
@@ -443,6 +446,7 @@ class TestSerialConversions(ReferenceTestCase):
             outpath, tdpath('tiny1nd-metadata.json'), ignore_lines=self.IGL
         )
 
+    @tag
     def testConversionToCSVW_t1nds_file_cli(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         outpath = tmppath('tiny1nd-metadata.json')
@@ -675,6 +679,7 @@ class TestSerialConversions(ReferenceTestCase):
             frictionless.to_json(), tiny1nd_serial, ignore_lines=self.IGL
         )
 
+    @tag
     def testConversionToFrictionless_t1nds(self):
         md = load_metadata(self.tiny1nd_serial)
         frictionless_md = serial_to_frictionless(md)
@@ -686,6 +691,7 @@ class TestSerialConversions(ReferenceTestCase):
             ignore_patterns=['(UTF-8|utf-8)'],
         )
 
+    @tag
     def testConversionToFrictionless_t1nds_file(self):
         md = load_metadata(self.tiny1nd_serial)
         frictionless_md = serial_to_frictionless(md)
@@ -695,6 +701,7 @@ class TestSerialConversions(ReferenceTestCase):
             outpath, tdpath('tiny1nd.package.json'), ignore_lines=self.IGL
         )
 
+    @tag
     def testConversionToFrictionless_t1nds_file_cli(self):
         tiny1nd_serial = tdpath('tiny1nd.serial')
         outpath = tmppath('tiny1nd.resource.json')
@@ -706,6 +713,7 @@ class TestSerialConversions(ReferenceTestCase):
             ignore_patterns=['(UTF-8|utf-8)'],
         )
 
+    @tag
     def testSerialToFrictionlessFrictionlessJSONExtra(self):
         outpath = tmppath('tiny1nd-ref.package.json')
         refpath = tdpath('tiny1nd-ref.package.json')
@@ -717,6 +725,7 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
 
+    @tag
     def testSerialToFrictionlessFrictionlessYAMLExtra(self):
         outpath = tmppath('tiny1nd-ref.resource.yaml')
         refpath = tdpath('tiny1nd-ref.resource.yaml')

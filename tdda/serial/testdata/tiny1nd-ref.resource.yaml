@@ -17,6 +17,10 @@ schema:
   fields:
   - name: b
     type: boolean
+    trueValues:
+    - 'True'
+    falseValues:
+    - 'False'
   - name: i
     type: integer
   - name: f

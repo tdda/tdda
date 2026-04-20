@@ -5,7 +5,13 @@
         "fields": [
             {
                 "name": "b",
-                "fieldtype": "bool"
+                "fieldtype": "bool",
+                "true_values": [
+                    "True"
+                ],
+                "false_values": [
+                    "False"
+                ]
             },
             {
                 "name": "i",

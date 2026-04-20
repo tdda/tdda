@@ -21,7 +21,13 @@
         "fields": [
             {
                 "name": "b",
-                "type": "boolean"
+                "type": "boolean",
+                "trueValues": [
+                    "True"
+                ],
+                "falseValues": [
+                    "False"
+                ]
             },
             {
                 "name": "i",

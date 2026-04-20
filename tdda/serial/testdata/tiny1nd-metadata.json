@@ -8,7 +8,8 @@
                 "columns": [
                     {
                         "name": "b",
-                        "datatype": "boolean"
+                        "datatype": "boolean",
+                        "format": "True|False"
                     },
                     {
                         "name": "i",

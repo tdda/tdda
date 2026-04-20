@@ -5,7 +5,7 @@
     "scheme": "file",
     "format": "csv",
     "mediatype": "text/csv",
-    "encoding": "utf-8",
+    "encoding": "UTF-8",
     "dialect": {
         "header": true,
         "headerRows": [
@@ -21,7 +21,13 @@
         "fields": [
             {
                 "name": "b",
-                "type": "boolean"
+                "type": "boolean",
+                "trueValues": [
+                    "True"
+                ],
+                "falseValues": [
+                    "False"
+                ]
             },
             {
                 "name": "i",
