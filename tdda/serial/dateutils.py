@@ -10,6 +10,19 @@ import re
 from collections import namedtuple
 
 
+# ── Month name sets ───────────────────────────────────────────────────────────
+
+MONTH_ABBREVS = frozenset({
+    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+})
+
+MONTH_FULLS = frozenset({
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+})
+
+
 # ── Regex patterns ────────────────────────────────────────────────────────────
 
 
@@ -55,6 +68,25 @@ class DateRE:
         r'((.)[0-9]{2}([:.])[0-9]{2}[:.][0-9]{2}(\.[0-9]+)?)?$'
     )
 
+    # Alpha-month patterns: backreference \2 ensures consistent separator.
+    # Groups: see infer_alpha_date_format for layout.
+    ALPHA_DMY = re.compile(  # dd-Mon-yyyy or dd Mon yyyy
+        r'^([0-9]{1,2})([-. /])([a-zA-Z]{3,9})\2([0-9]{2,4})'
+        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+    )
+    ALPHA_MDY = re.compile(  # Mon-dd-yyyy or Mon dd yyyy
+        r'^([a-zA-Z]{3,9})([-. /])([0-9]{1,2})\2([0-9]{2,4})'
+        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+    )
+    ALPHA_YMD = re.compile(  # yyyy-Mon-dd or yyyy Mon dd
+        r'^([0-9]{4})([-. /])([a-zA-Z]{3,9})\2([0-9]{1,2})'
+        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+    )
+    ALPHA_MDY_COMMA = re.compile(  # Mon dd, yyyy  (US prose style)
+        r'^([a-zA-Z]{3,9}) ([0-9]{1,2}), ([0-9]{2,4})'
+        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+    )
+
 
 # Sentinel return value for ISO datetimes from infer_date_format (pddates)
 ISODT = 'ISO8601'
@@ -89,6 +121,89 @@ Separators = namedtuple(
 
 
 # ── Functions ─────────────────────────────────────────────────────────────────
+
+
+def _is_valid_month(s):
+    """Return True if s (lowercased) is a valid English month name."""
+    return s in MONTH_ABBREVS or s in MONTH_FULLS
+
+
+def _alpha_month_code(month_str):
+    """Return '%b' for 3-char abbreviations, '%B' for full month names."""
+    return '%b' if len(month_str) == 3 else '%B'
+
+
+def _alpha_time_part(m):
+    """
+    Build strftime time suffix from an alpha-date match.
+
+    Groups 5-7 are the optional time components: datetime separator,
+    HH:MM:SS, and fractional seconds.
+    """
+    if m.group(5) is None:
+        return ''
+    frac = '.%f' if m.group(7) else ''
+    return '%s%%H:%%M:%%S%s' % (m.group(5), frac)
+
+
+def infer_alpha_date_format(strings):
+    """
+    Infer strftime format for dates with alphabetical month names.
+
+    Handles three field orderings with any of -, /, . as separator:
+      - day-first:   dd-Mon-yyyy  → %d-%b-%Y  (or %B for full names)
+      - month-first: Mon-dd-yyyy  → %b-%d-%Y
+      - year-first:  yyyy-Mon-dd  → %Y-%b-%d
+
+    Also handles optional HH:MM:SS time components and 2-digit years.
+    Month names must be valid English abbreviations or full names.
+
+    Args:
+        strings: list of non-null string values believed to be dates
+
+    Returns:
+        strftime format string, or None if strings don't match.
+    """
+    # Mon dd, yyyy  (US prose — comma after day, groups differ from others)
+    matches = [DateRE.ALPHA_MDY_COMMA.match(s) for s in strings]
+    if all(matches):
+        if all(_is_valid_month(m.group(1).lower()) for m in matches):
+            m0 = matches[0]
+            mon_code = _alpha_month_code(m0.group(1))
+            yr_code = '%Y' if len(m0.group(3)) == 4 else '%y'
+            # time groups are 4 (dtsep), 5 (HH:MM:SS), 6 (frac)
+            if m0.group(4) is None:
+                time_part = ''
+            else:
+                frac = '.%f' if m0.group(6) else ''
+                time_part = '%s%%H:%%M:%%S%s' % (m0.group(4), frac)
+            return '%s %%d, %s%s' % (mon_code, yr_code, time_part)
+
+    # (pattern, day_group, mon_group, yr_group)
+    candidates = [
+        (DateRE.ALPHA_DMY, 1, 3, 4),
+        (DateRE.ALPHA_MDY, 3, 1, 4),
+        (DateRE.ALPHA_YMD, 4, 3, 1),
+    ]
+    for pattern, day_grp, mon_grp, yr_grp in candidates:
+        matches = [pattern.match(s) for s in strings]
+        if not all(matches):
+            continue
+        if not all(_is_valid_month(m.group(mon_grp).lower()) for m in matches):
+            continue
+        m0 = matches[0]
+        sep = m0.group(2)
+        mon_code = _alpha_month_code(m0.group(mon_grp))
+        yr_code = '%Y' if len(m0.group(yr_grp)) == 4 else '%y'
+        time_part = _alpha_time_part(m0)
+        if pattern is DateRE.ALPHA_DMY:
+            base = '%%d%s%s%s%s' % (sep, mon_code, sep, yr_code)
+        elif pattern is DateRE.ALPHA_MDY:
+            base = '%s%s%%d%s%s' % (mon_code, sep, sep, yr_code)
+        else:
+            base = '%s%s%s%s%%d' % (yr_code, sep, mon_code, sep)
+        return base + time_part
+    return None
 
 
 def get_date_separators(r, s):
@@ -176,6 +291,9 @@ def infer_date_format_from_strings(strings):
     """
     if not strings:
         return None
+    alpha_fmt = infer_alpha_date_format(strings)
+    if alpha_fmt is not None:
+        return alpha_fmt
     if not all(re.match(DateRE.DATEISH, s) for s in strings):
         return None
 

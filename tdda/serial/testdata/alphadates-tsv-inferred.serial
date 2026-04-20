@@ -1,0 +1,66 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "EOE_date",
+                "fieldtype": "date",
+                "format": "%d/%b/%Y"
+            },
+            {
+                "name": "eu_date_2y",
+                "fieldtype": "date",
+                "format": "%d/%b/%y"
+            },
+            {
+                "name": "iso_date",
+                "fieldtype": "date",
+                "format": "%Y-%b-%d"
+            },
+            {
+                "name": "us_date",
+                "fieldtype": "date",
+                "format": "%b/%d/%Y"
+            },
+            {
+                "name": "us_date_2y",
+                "fieldtype": "date",
+                "format": "%b/%d/%y"
+            },
+            {
+                "name": "eu_datetime",
+                "fieldtype": "datetime",
+                "format": "%d/%b/%Y %H:%M:%S"
+            },
+            {
+                "name": "eu_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "%d/%b/%y %H:%M:%S"
+            },
+            {
+                "name": "iso_datetime",
+                "fieldtype": "datetime",
+                "format": "%Y-%b-%dT%H:%M:%S"
+            },
+            {
+                "name": "us_datetime",
+                "fieldtype": "datetime",
+                "format": "%b/%d/%Y %H:%M:%S"
+            },
+            {
+                "name": "us_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "%b/%d/%y %H:%M:%S"
+            }
+        ],
+        "delimiter": "\t",
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
+    }
+}

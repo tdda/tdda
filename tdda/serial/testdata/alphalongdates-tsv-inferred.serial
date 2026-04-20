@@ -1,0 +1,76 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "EOE_adate",
+                "fieldtype": "date",
+                "format": "%d/%B/%Y"
+            },
+            {
+                "name": "eu_adate_2y",
+                "fieldtype": "date",
+                "format": "%d/%B/%y"
+            },
+            {
+                "name": "iso_adate",
+                "fieldtype": "date",
+                "format": "%Y-%B-%d"
+            },
+            {
+                "name": "us_adate",
+                "fieldtype": "date",
+                "format": "%B/%d/%Y"
+            },
+            {
+                "name": "us_adate_2y",
+                "fieldtype": "date",
+                "format": "%B/%d/%y"
+            },
+            {
+                "name": "eu_adatetime",
+                "fieldtype": "datetime",
+                "format": "%d/%B/%Y %H:%M:%S"
+            },
+            {
+                "name": "eu_adatetime_2y",
+                "fieldtype": "datetime",
+                "format": "%d/%B/%y %H:%M:%S"
+            },
+            {
+                "name": "iso_adatetime",
+                "fieldtype": "datetime",
+                "format": "%Y-%B-%dT%H:%M:%S"
+            },
+            {
+                "name": "us_adatetime",
+                "fieldtype": "datetime",
+                "format": "%B/%d/%Y %H:%M:%S"
+            },
+            {
+                "name": "us_adatetime_2y",
+                "fieldtype": "datetime",
+                "format": "%B/%d/%y %H:%M:%S"
+            },
+            {
+                "name": "euro_adates",
+                "fieldtype": "date",
+                "format": "%d %B %Y"
+            },
+            {
+                "name": "us_adates",
+                "fieldtype": "date",
+                "format": "%B %d, %Y"
+            }
+        ],
+        "delimiter": "\t",
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
+    }
+}

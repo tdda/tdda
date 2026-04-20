@@ -1,0 +1,4 @@
+row	EOE_adate	eu_adate_2y	iso_adate	us_adate	us_adate_2y	eu_adatetime	eu_adatetime_2y	iso_adatetime	us_adatetime	us_adatetime_2y	euro_adates	us_adates
+2	02/march/2024	02/march/24	2024-march-02	march/02/2024	march/02/24	02/march/2024 12:34:56	02/march/24 12:34:56	2024-march-02T12:34:56	march/02/2024 12:34:56	march/02/24 12:34:56	02 march 2024	march 02, 2024
+15	15/december/2024	15/december/24	2024-december-15	december/15/2024	december/15/24	15/december/2024 12:34:56	15/december/24 12:34:56	2024-december-15T12:34:56	december/15/2024 12:34:56	december/15/24 12:34:56	15 december 2024	december 15, 2024
+

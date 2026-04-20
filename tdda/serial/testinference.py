@@ -647,6 +647,16 @@ class TestInferAllFlatFiles(TestInference):
     def testInferDdd3(self):
         buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
 
+    def testInferAlphaDates(self):
+        buf, md = self.check_infer('alphadates.tsv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+
+    def testInferAlphaLongDates(self):
+        buf, md = self.check_infer(
+            'alphalongdates.tsv', prov=False, verbosity=0
+        )
+        self.assertEqual(buf, [])
+
     def testInferElements3Old(self):
         buf, md = self.check_infer(
             'elements3-old.csv', prov=False, verbosity=0
