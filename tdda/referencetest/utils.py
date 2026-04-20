@@ -133,6 +133,7 @@ def normabspath(p):
 
 # Helper functions for reference testing of JSON and YAML
 
+
 def normalize_json(s, remove_keys=None):
     """
     Take a JSON string and normalize it by
