@@ -1,0 +1,35 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "i",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "name": "b",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "d",
+                "fieldtype": "date"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            }
+        ],
+        "delimiter": ",",
+        "date_format": "%Y-%m-%d",
+        "null_indicator": "",
+        "map_missing_trailing_cols_to_null": true,
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_NONE"
+    }
+}

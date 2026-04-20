@@ -690,6 +690,18 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('eurodt2y.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurodt2y')
 
+    def testInferExcel1(self):
+        buf, md = self.check_infer('excel1.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+
+    def testInferExcel2(self):
+        buf, md = self.check_infer('excel2.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+
+    def testInferExcel3(self):
+        buf, md = self.check_infer('excel3.csv', prov=False, verbosity=0)
+        self.assertEqual(buf, [])
+
     def testInferIsod(self):
         buf, md = self.check_infer('isod.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('isod')
