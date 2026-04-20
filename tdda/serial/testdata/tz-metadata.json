@@ -70,15 +70,15 @@
                         "name": "du"
                     },
                     {
-                        "datatype": {"base": "datetime", "format": "yyyy-MM-ddTHH:mm:ss+ZZ:zz"},
+                        "datatype": {"base": "datetime", "format": "yyyy-MM-ddTHH:mm:ssxxx"},
                         "name": "dtzi"
                     },
                     {
-                        "datatype": {"base": "datetime", "format": "dd/MM/yyyy HH:mm:ss+ZZzz"},
+                        "datatype": {"base": "datetime", "format": "dd/MM/yyyy HH:mm:ssxx"},
                         "name": "dtze"
                     },
                     {
-                        "datatype": {"base": "datetime", "format": "MM/dd/yyyy HH:mm:ss+ZZzz"},
+                        "datatype": {"base": "datetime", "format": "MM/dd/yyyy HH:mm:ssxx"},
                         "name": "dtzu"
                     }
                 ]

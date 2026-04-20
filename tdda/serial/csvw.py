@@ -650,6 +650,7 @@ def csvw_date_format_to_serial(fmt, extensions=False):
         .replace('S', '%f')
         .replace('ss', '%S')
     )
+    outfmt = outfmt.replace('xxx', '%:z').replace('xx', '%z')
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
     # TODO: why? Just leave?
@@ -665,7 +666,7 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
         return (
             'yyyy-MM-dd'
             if fieldtype == FieldType.DATE
-            else 'yyyy-MM-ddTHH:mm:ss+ZZ:zz'
+            else 'yyyy-MM-ddTHH:mm:ssxxx'
             if fieldtype == FieldType.DATETIME_WITH_TIMEZONE
             else 'yyyy-MM-ddTHH:mm:ss'
         )
@@ -699,7 +700,7 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
         .replace('%d', 'dd')
     )
     if extensions:
-        outfmt = outfmt.replace('%:z', '+ZZ:zz').replace('%z', '+ZZzz')
+        outfmt = outfmt.replace('%:z', 'xxx').replace('%z', 'xx')
     return outfmt
 
 
