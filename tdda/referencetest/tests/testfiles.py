@@ -4,11 +4,15 @@
 
 import json
 import os
+import yaml
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.referencetest.basecomparison import diffcmd
-from tdda.referencetest.utils import normabspath
+from tdda.referencetest.utils import (
+    normabspath, normalize_json, normalize_yaml,
+    json_normalizer, yaml_normalizer
+)
 
 
 def refloc(filename):
@@ -437,7 +441,7 @@ class TestFiles(ReferenceTestCase):
         difflines[2] = 'And:'
         self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)
 
-    def testJsonNormalization(self):
+    def testJsonNormalization1(self):
         p1 = refloc('json1.json')
         p2 = refloc('json1a.json')
         compare = FilesComparison()
@@ -447,6 +451,45 @@ class TestFiles(ReferenceTestCase):
 
         compare = FilesComparison()
         (code, msgs) = compare.check_file(p1, p2, preprocess=normalize_json)
+        self.assertEqual(code, 0)
+
+    def testYAMLNormalization1(self):
+        p1 = refloc('json1.yaml')
+        p2 = refloc('json1a.yaml')
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(p1, p2)
+        self.assertEqual(code, 1)  # differences
+        self.assertTrue(bool(msgs))
+
+        compare = FilesComparison()
+        norm = normalize_yaml
+        (code, msgs) = compare.check_file(p1, p2, preprocess=normalize_yaml)
+        self.assertEqual(code, 0)
+
+    def testJsonNormalization2(self):
+        p1 = refloc('json2.json')
+        p2 = refloc('json2a.json')
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(p1, p2)
+        self.assertEqual(code, 1)  # differences
+        self.assertTrue(bool(msgs))
+
+        compare = FilesComparison()
+        norm = json_normalizer(['context'])
+        (code, msgs) = compare.check_file(p1, p2, preprocess=norm)
+        self.assertEqual(code, 0)
+
+    def testYAMLNormalization2(self):
+        p1 = refloc('json2.yaml')
+        p2 = refloc('json2a.yaml')
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(p1, p2)
+        self.assertEqual(code, 1)  # differences
+        self.assertTrue(bool(msgs))
+
+        compare = FilesComparison()
+        norm = yaml_normalizer(['context'])
+        (code, msgs) = compare.check_file(p1, p2, preprocess=norm)
         self.assertEqual(code, 0)
 
 

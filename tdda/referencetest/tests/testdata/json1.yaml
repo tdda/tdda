@@ -1,0 +1,8 @@
+one:
+- 1
+- 2
+- 3
+two:
+    b: true
+    c: null
+three: 7.5

@@ -15,6 +15,8 @@ from tdda.referencetest.tests.testreftestutils import *
 from tdda.referencetest.tests.testregeneration import *
 from tdda.referencetest.tests.testpddfcomparisons import *
 from tdda.referencetest.tests.testpldfcomparisons import *
+from tdda.referencetest.tests.testutils import *
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

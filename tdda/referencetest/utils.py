@@ -1,5 +1,12 @@
+import json
 import os
 import sys
+import yaml
+try:
+    from yaml import CLoader as YAMLLoader, CDumper as YAMLDumper
+except ImportError:
+    from yaml import Loader as YAMLLoader, Dumper as YAMLDumper
+
 
 import chardet
 
@@ -144,10 +151,10 @@ def normalize_json(s, remove_keys=None):
     The JSON can be provided as a string or as a list of lines.
     """
     if isinstance(s, list):
-        s = ''.join(s)  # lines from .splitlines()
+        s = '\n'.join(s)  # lines from .splitlines()
     obj = json.loads(s)
     if remove_keys:
-        obj = remove_json_keys(obj, set(remove_keys))
+        obj = remove_dict_keys(obj, set(remove_keys))
     return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
 
 
@@ -161,44 +168,44 @@ def normalize_yaml(s, remove_keys=None):
     The JSON can be provided as a string or as a list of lines.
     """
     if isinstance(s, list):
-        s = ''.join(s)  # lines from .splitlines()
-    obj = yaml.loads(s)
-    obj = remove_json_keys_and_sort(obj, set(remove_keys or []))
-    return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+        s = '\n'.join(s)  # lines from .splitlines()
+    obj = yaml.load(s, Loader=YAMLLoader)
+    obj = remove_dict_keys_and_sort(obj, set(remove_keys or []))
+    return yaml.dump(obj, indent=2, sort_keys=True, allow_unicode=True)
 
 
-def remove_keys(o, keys):
+def remove_dict_keys(o, keys):
     """
     Remove any keys from o if o is a dictionary and recurse.
     """
     if isinstance(o, dict):
         return {
-            k: remove_keys(v, keys)
+            k: remove_dict_keys(v, keys)
             for k, v in o.items()
             if k not in keys
         }
     elif isinstance(o, list) or isinstance(o, tuple):
         return [
-            remove_keys(v, keys)
+            remove_dict_keys(v, keys)
             for v in o
         ]
     else:
         return o
 
 
-def remove_keys_and_sort(o, keys):
+def remove_dict_keys_and_sort(o, keys):
     """
     Remove any keys from o if o is a dictionary and recurse.
     """
     if isinstance(o, dict):
         return {
-            k: remove_keys_and_sort(v, keys)
+            k: remove_dict_keys_and_sort(v, keys)
             for k, v in sorted(o.items())
             if k not in keys
         }
     elif isinstance(o, list) or isinstance(o, tuple):
         return [
-            remove_keys_and_sort(v, keys)
+            remove_dict_keys_and_sort(v, keys)
             for v in o
         ]
     else:
