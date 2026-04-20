@@ -642,7 +642,7 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf2, [])
 
     def testInferDdd2(self):
-        buf, md = self.check_infer('ddd2.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('ddd2.csv', verbosity=0)
 
     def testInferDdd3(self):
         buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
@@ -883,14 +883,14 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('small-write-serial')
 
     def testInferSmall(self):
-        buf, md = self.check_infer('small.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('small.csv', verbosity=0)
         # Fails to infer 12 us datetime.
         # Fine for now. Triggers Pandas warning, which is nasty
         # Don't compare dataframe for now
         # self.validate_inferred_serial_wrt_handmade_serial('small')
 
     def testInferSmall2(self):
-        buf, md = self.check_infer('small2.csv', prov=True, verbosity=0)
+        buf, md = self.check_infer('small2.csv', verbosity=0)
 
     def testInferStrings1(self):
         buf, md = self.check_infer('strings1.csv', prov=True, verbosity=0)
