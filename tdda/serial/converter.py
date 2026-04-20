@@ -173,7 +173,7 @@ class SerialConverter:
         else:
             error('Cannot infer output format. Use --to FMT to specify.')
 
-        self.for_csv = getattr(self, 'for', None)
+        self.for_csv = nvl(self.for_csv, getattr(self, 'for', None))
 
         _, in_ext = os.path.splitext(self.inpath)
         is_flat_file = in_ext in ('.csv', '.psv', '.tsv', '.txt')

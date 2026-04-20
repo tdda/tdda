@@ -41,6 +41,7 @@
         "null_indicator": ".",
         "header_row_count": 1,
         "n_resources": 1,
-        "header": true
+        "header": true,
+        "num_header_rows": 1
     }
 }

@@ -129,3 +129,98 @@ def protected_readlines(path, filetype):
 
 def normabspath(p):
     return os.path.normpath(os.path.abspath(p))
+
+
+# Helper functions for reference testing of JSON and YAML
+
+def normalize_json(s, remove_keys=None):
+    """
+    Take a JSON string and normalize it by
+    indenting consistently and sorting dictionary keys.
+    If an iterable remove_keys is provided, remove all
+    specified keys from all dictionaries in lines.
+
+    The JSON can be provided as a string or as a list of lines.
+    """
+    if isinstance(s, list):
+        s = ''.join(s)  # lines from .splitlines()
+    obj = json.loads(s)
+    if remove_keys:
+        obj = remove_json_keys(obj, set(remove_keys))
+    return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+
+
+def normalize_yaml(s, remove_keys=None):
+    """
+    Take a YAML string and normalize it by
+    indenting consistently and sorting dictionary keys.
+    If an iterable remove_keys is provided, remove all
+    specified keys from all dictionaries in lines.
+
+    The JSON can be provided as a string or as a list of lines.
+    """
+    if isinstance(s, list):
+        s = ''.join(s)  # lines from .splitlines()
+    obj = yaml.loads(s)
+    obj = remove_json_keys_and_sort(obj, set(remove_keys or []))
+    return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+
+
+def remove_keys(o, keys):
+    """
+    Remove any keys from o if o is a dictionary and recurse.
+    """
+    if isinstance(o, dict):
+        return {
+            k: remove_keys(v, keys)
+            for k, v in o.items()
+            if k not in keys
+        }
+    elif isinstance(o, list) or isinstance(o, tuple):
+        return [
+            remove_keys(v, keys)
+            for v in o
+        ]
+    else:
+        return o
+
+
+def remove_keys_and_sort(o, keys):
+    """
+    Remove any keys from o if o is a dictionary and recurse.
+    """
+    if isinstance(o, dict):
+        return {
+            k: remove_keys_and_sort(v, keys)
+            for k, v in sorted(o.items())
+            if k not in keys
+        }
+    elif isinstance(o, list) or isinstance(o, tuple):
+        return [
+            remove_keys_and_sort(v, keys)
+            for v in o
+        ]
+    else:
+        return o
+
+
+def json_normalizer(remove_keys=None):
+    """
+    Returns a JSON normalizer with key removal
+    (if remove_keys are supplied).
+    """
+    if remove_keys is None:
+        return normalize_json
+    else:
+        return lambda s: normalize_json(s, remove_keys=remove_keys)
+
+
+def yaml_normalizer(remove_keys=None):
+    """
+    Returns a YAML normalizer with key removal
+    (if remove_keys are supplied).
+    """
+    if remove_keys is None:
+        return normalize_yaml
+    else:
+        return lambda s: normalize_yaml(s, remove_keys=remove_keys)

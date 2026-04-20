@@ -168,18 +168,15 @@ class FrictionlessMetadata(SerialMetadata):
     def to_frictionless_dict(
         self, csvfile=None, lang=None, resource_type=None
     ):
-        csv = {}
-        self.set_if_attr_non_null(csv, 'delimiter')
-        self.set_if_attr_non_null(csv, 'quoteChar', 'quote_char')
-        self.set_if_attr_non_null(csv, 'doubleQuote', 'stutter_quotes')
-        self.set_if_attr_non_null(csv, 'escapeChar', 'escape_char')
         dialect = {}
         self.set_if_attr_non_null(dialect, 'header', 'header_row')
         if self.header_row_count > 0:
             dialect['header'] = True
             dialect['headerRows'] = list(range(nvl(self.header_row_count, 1)))
-        if csv:
-            dialect['csv'] = csv
+        self.set_if_attr_non_null(dialect, 'delimiter')
+        self.set_if_attr_non_null(dialect, 'quoteChar', 'quote_char')
+        self.set_if_attr_non_null(dialect, 'doubleQuote', 'stutter_quotes')
+        self.set_if_attr_non_null(dialect, 'escapeChar', 'escape_char')
         name = nvl(csvfile, nvl(self.path, 'data.csv'))
         d = {
             'name': os.path.splitext(os.path.basename(name))[0],
@@ -219,7 +216,12 @@ class FrictionlessMetadata(SerialMetadata):
     def write_frictionless(self, path, csvfile=None, indent=None, lang=None):
         if not csvfile:
             csvfile = self.choose_csv_from_frictionless_name(path)
-        d = self.to_frictionless_dict(csvfile=csvfile, lang=lang)
+        basename = os.path.basename(path)
+        is_pkg = bool(re.search(r'\.package\.(json|yaml)$', basename))
+        resource_type = 'package' if is_pkg else None
+        d = self.to_frictionless_dict(
+            csvfile=csvfile, lang=lang, resource_type=resource_type
+        )
         write_json_or_yaml(d, path, indent=indent)
 
     def set_if_attr_non_null(self, d, key, attribute=None):
@@ -330,12 +332,20 @@ class FrictionlessMetadata(SerialMetadata):
 
         If there no dialect section, reads it from 'dc:replaces'
         instead, if there is one.
+
+        Supports both flat dialect (frictionless v4: delimiter etc. at
+        top level) and nested {'csv': {...}} form we used to write.
         """
         self._dialect = dialect = self._resource.get('dialect', {})
-        csv = self._dialect.get('csv', {})
+        # Flat form (correct v4): CSV keys at top level of dialect.
+        # Nested form (older): CSV keys under dialect['csv'].
+        # If 'csv' key present use it; otherwise treat dialect as flat.
+        csv = dialect.get('csv') or dialect
 
         self.header = dialect.get('header')
-        self._header_rows = dialect.get('headerRows')
+        self._header_rows = (
+            dialect.get('headerRows') or dialect.get('header_rows')
+        )
         if self._header_rows is not None:
             self.num_header_rows = len(self._header_rows)
         self._header_join = dialect.get('headerJoin')

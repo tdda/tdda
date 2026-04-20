@@ -1,6 +1,6 @@
-name: tiny1nd-ref
+name: tiny1nd
 type: table
-path: tiny1nd-ref.csv
+path: tiny1nd.csv
 scheme: file
 format: csv
 mediatype: text/csv
@@ -9,10 +9,9 @@ dialect:
   header: true
   headerRows:
   - 0
-  csv:
-    delimiter: ','
-    quoteChar: '"'
-    escapeChar: \
+  delimiter: ','
+  quoteChar: '"'
+  escapeChar: \
 schema:
   fields:
   - name: b

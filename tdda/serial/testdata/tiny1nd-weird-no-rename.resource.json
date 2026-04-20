@@ -8,14 +8,12 @@
     "encoding": "latin-1",
     "dialect": {
         "header": true,
-        "header_rows": [
+        "headerRows": [
             0
         ],
-        "csv": {
-            "delimiter": ";",
-            "quoteChar": "'",
-            "doubleQuote": false
-        }
+        "delimiter": ";",
+        "quoteChar": "'",
+        "doubleQuote": false
     },
     "schema": {
         "fields": [

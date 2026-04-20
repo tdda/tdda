@@ -2,9 +2,10 @@
 # Unit tests for file functions from tdda.referencetest.checkfiles
 #
 
+import json
 import os
 
-from tdda.referencetest import ReferenceTestCase
+from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest.utils import normabspath
@@ -435,6 +436,18 @@ class TestFiles(ReferenceTestCase):
         self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
         difflines[2] = 'And:'
         self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)
+
+    def testJsonNormalization(self):
+        p1 = refloc('json1.json')
+        p2 = refloc('json1a.json')
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(p1, p2)
+        self.assertEqual(code, 1)  # differences
+        self.assertTrue(bool(msgs))
+
+        compare = FilesComparison()
+        (code, msgs) = compare.check_file(p1, p2, preprocess=normalize_json)
+        self.assertEqual(code, 0)
 
 
 if __name__ == '__main__':

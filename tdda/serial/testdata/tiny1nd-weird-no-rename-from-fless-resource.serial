@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
+    "writer": "tdda.serial-3.0.00rc1",
     "tdda.serial": {
         "fields": [
             {
@@ -40,6 +40,7 @@
         "stutter_quotes": false,
         "null_indicator": ".",
         "header_row_count": 1,
-        "header": true
+        "header": true,
+        "num_header_rows": 1
     }
 }

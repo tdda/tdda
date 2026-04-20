@@ -1,36 +1,35 @@
-dialect:
-  csv:
-    delimiter: ;
-    doubleQuote: false
-    quoteChar: ''''
-  header: true
-  header_rows:
-  - 0
-encoding: latin-1
+name: tiny1nd
+type: table
+path: tiny1nd-weird.ssv
+scheme: file
 format: csv
 mediatype: text/csv
-name: tiny1nd
-path: tiny1nd-weird.ssv
+encoding: latin-1
+dialect:
+  header: true
+  headerRows:
+  - 0
+  delimiter: ;
+  quoteChar: ''''
+  doubleQuote: false
 schema:
   fields:
-  - falseValues:
-    - 'No'
-    - n
-    name: b
+  - name: b
+    type: boolean
     trueValues:
     - 'Yes'
     - y
-    type: boolean
+    falseValues:
+    - 'No'
+    - n
   - name: i
     type: integer
   - name: f
     type: number
   - name: s
     type: string
-  - format: '%d/%m/%Y'
-    name: t
+  - name: t
     type: date
+    format: '%d/%m/%Y'
   missingValues:
   - .
-scheme: file
-type: table

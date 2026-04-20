@@ -11,11 +11,9 @@
         "headerRows": [
             0
         ],
-        "csv": {
-            "delimiter": ",",
-            "quoteChar": "\"",
-            "escapeChar": "\\"
-        }
+        "delimiter": ",",
+        "quoteChar": "\"",
+        "escapeChar": "\\"
     },
     "schema": {
         "fields": [
