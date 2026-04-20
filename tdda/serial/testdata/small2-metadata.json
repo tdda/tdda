@@ -46,35 +46,28 @@
                         "name": "s2"
                     },
                     {
-                        "datatype": "datetime",
-                        "name": "dti",
-                        "format": "yyyy-MM-ddTHH:mm:ss"
-
+                        "datatype": {"base": "datetime", "format": "yyyy-MM-ddTHH:mm:ss"},
+                        "name": "dti"
                     },
                     {
-                        "datatype": "datetime",
-                        "name": "dte",
-                        "format": "dd-MM-yyyy HH:mm:ss"
+                        "datatype": {"base": "datetime", "format": "dd/MM/yyyy HH:mm:ss"},
+                        "name": "dte"
                     },
                     {
-                        "datatype": "datetime",
-                        "name": "dtu",
-                        "format": "MM-dd-yyyy HH:mm:ss"
+                        "datatype": {"base": "datetime", "format": "MM/dd/yyyy HH:mm:ss"},
+                        "name": "dtu"
                     },
                     {
-                        "datatype": "date",
-                        "name": "di",
-                        "format": "yyyy-MM-dd"
+                        "datatype": {"base": "date", "format": "yyyy-MM-dd"},
+                        "name": "di"
                     },
                     {
-                        "datatype": "date",
-                        "name": "de",
-                        "format": "dd-MM-yyyy"
+                        "datatype": {"base": "date", "format": "dd/MM/yyyy"},
+                        "name": "de"
                     },
                     {
-                        "datatype": "date",
-                        "name": "du",
-                        "format": "MM-dd-yyyy"
+                        "datatype": {"base": "date", "format": "MM/dd/yyyy"},
+                        "name": "du"
                     }
                 ]
             },

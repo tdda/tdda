@@ -6,6 +6,7 @@ from tdda.serial.metadata import (
     DateFormat,
     FieldMetadata,
     FieldType,
+    NAMED_FORMAT_TO_STRFTIME,
     RE_ISO8601,
     SerialMetadata,
     TDDASerialError,
@@ -15,6 +16,15 @@ from tdda.serial.utils import CSVW_MD_RE
 
 from tdda.utils import nvl, listify, warn, error
 
+
+# ISO8601 named formats: CSVW date/datetime type defaults to ISO8601,
+# so no format object needed for these.
+_ISO8601_NAMED = frozenset({
+    DateFormat.ISO8601_DATE,
+    DateFormat.ISO8601_DATETIME,
+    DateFormat.ISO8601_DATETIME_TZ,
+    DateFormat.ISO8601_UNSPECIFIED,
+})
 
 # From https://w3c.github.io/csvw/primer/#datatypes
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
@@ -171,30 +181,37 @@ class CSVWMetadata(SerialMetadata):
         csvw_type = FIELDTYPE_TO_CSVW.get(field.fieldtype)
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
-        if fmt is None and field.fieldtype.startswith('date'):
-            if field.fieldtype == FieldType.DATETIME:
-                fmt = nvl(self.datetime_format, self.date_format)
-            else:
-                fmt = self.date_format
-            csvw_fmt = serial_date_format_to_csvw(fmt, field.fieldtype)
-            if csvw_type is not None:
-                d['datatype'] = {'base': csvw_type, 'format': csvw_fmt}
+        if field.fieldtype and field.fieldtype.startswith('date'):
+            if fmt is None:
+                if field.fieldtype == FieldType.DATETIME:
+                    fmt = nvl(self.datetime_format, self.date_format)
+                else:
+                    fmt = self.date_format
+            if fmt and fmt not in _ISO8601_NAMED:
+                csvw_fmt = serial_date_format_to_csvw(
+                    fmt, fieldtype=field.fieldtype
+                )
+                if csvw_type is not None and csvw_fmt is not None:
+                    d['datatype'] = {'base': csvw_type, 'format': csvw_fmt}
+                else:
+                    self.set_if_non_null(d, 'datatype', csvw_type)
             else:
                 self.set_if_non_null(d, 'datatype', csvw_type)
         else:
-            self.set_if_non_null(d, 'datatype', csvw_type)
-            if field.true_values and field.false_values:
-                d['format'] = booleans_to_csvw(
-                    field.true_values, field.false_values
-                )
-            elif (
-                field.fieldtype == FieldType.BOOL
-                and self.true_values
-                and self.false_values
-            ):
-                d['format'] = booleans_to_csvw(
-                    self.true_values, self.false_values
-                )
+            true_vals = field.true_values or (
+                self.true_values if field.fieldtype == FieldType.BOOL else None
+            )
+            false_vals = field.false_values or (
+                self.false_values if field.fieldtype == FieldType.BOOL else None
+            )
+            if true_vals and false_vals:
+                csvw_fmt = booleans_to_csvw(true_vals, false_vals)
+                if csvw_type is not None:
+                    d['datatype'] = {'base': csvw_type, 'format': csvw_fmt}
+                else:
+                    self.set_if_non_null(d, 'datatype', csvw_type)
+            else:
+                self.set_if_non_null(d, 'datatype', csvw_type)
         self.set_if_attr_non_null(d, 'dc:description', 'description')
         return d
 
@@ -645,12 +662,30 @@ def csvw_date_format_to_serial(fmt, extensions=False):
 def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
     if fmt == DateFormat.ISO8601_UNSPECIFIED:
         return (
-            'yyyy-mm-dd'
-            if fieldtype == 'date'
-            else 'yyyy-mm-ddTHH:MM:SS+ZZ:zz'
-            if fieldtype == 'datetime_tz'
-            else 'yyyy-mm-ddTHH:MM:SS'
+            'yyyy-MM-dd'
+            if fieldtype == FieldType.DATE
+            else 'yyyy-MM-ddTHH:mm:ss+ZZ:zz'
+            if fieldtype == FieldType.DATETIME_WITH_TIMEZONE
+            else 'yyyy-MM-ddTHH:mm:ss'
         )
+
+    # Resolve named formats (e.g. 'iso8601-date', 'eu-date') to strftime
+    strftime = NAMED_FORMAT_TO_STRFTIME.get(fmt)
+    if strftime:
+        fmt = strftime
+
+    if '%b' in fmt or '%B' in fmt:
+        warn(
+            f'Date format {fmt!r} uses alpha month names which CSVW'
+            ' cannot represent. Omitting date format.'
+        )
+        return None
+    if '%p' in fmt:
+        warn(
+            f'Date format {fmt!r} uses AM/PM which CSVW cannot'
+            ' represent. Omitting date format.'
+        )
+        return None
 
     outfmt = (
         fmt.replace('%S', 'ss')
@@ -663,7 +698,7 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
         .replace('%d', 'dd')
     )
     if extensions:
-        outfmt = outfmt.replace('%:z', '+ZZ:zz')
+        outfmt = outfmt.replace('%:z', '+ZZ:zz').replace('%z', '+ZZzz')
     return outfmt
 
 

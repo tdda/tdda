@@ -11,13 +11,12 @@
                         "name": "row"
                     },
                     {
-                        "datatype": "date",
-                        "name": "date",
-                        "format": "dd/MM/yyyy"
+                        "datatype": {"base": "date", "format": "dd/MM/yyyy"},
+                        "name": "date"
                     }
                 ]
             },
-            "url": "testdata/eurod.csv"
+            "url": "eurod.csv"
         }
     ]
 }

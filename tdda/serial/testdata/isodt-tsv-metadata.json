@@ -2,6 +2,9 @@
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
     "dc:replaces": "{\"resources\": [{\"name\": \"isodt\", \"type\": \"table\", \"path\": \"testdata/isodt.tsv\", \"scheme\": \"file\", \"format\": \"csv\", \"mediatype\": \"text/csv\", \"encoding\": \"utf-8\", \"dialect\": {\"csv\": {\"delimiter\": \"\\t\"}}, \"schema\": {\"fields\": [{\"name\": \"row\", \"type\": \"integer\"}, {\"name\": \"time\", \"type\": \"datetime\"}]}}], \"profile\": \"data-package\"}",
+    "dialect": {
+        "delimiter": "\t"
+    },
     "tables": [
         {
             "tableSchema": {

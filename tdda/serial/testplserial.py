@@ -315,23 +315,15 @@ class TestPolarsLoad(ReferenceTestCase):
                 pl.Series('s1', ['hello', None, 'goodbye'], dtype=pl.String),
                 pl.Series('s2', ['àçéèïöô', 'aceeioo', None], dtype=pl.String),
                 pl.Series('dti', [dt_m1, None, dt_333333], dtype=pl.Datetime),
-                pl.Series(
-                    'dte',
-                    ['31/12/1999 23:59:59', '02/02/2002 02:02:02', None],
-                    dtype=pl.String,
-                ),
+                pl.Series('dte', [dt_m1, dt_222222, None], dtype=pl.Datetime),
                 pl.Series(
                     'dtu',
                     ['12/31/1999 11:59:59PM', None, '04/03/2005 03:02:01AM'],
                     dtype=pl.String,
                 ),
                 pl.Series('di', [d_m1, d_212, None], dtype=pl.Datetime),
-                pl.Series(
-                    'de', ['31/12/1999', None, '03/03/2003'], dtype=pl.String
-                ),
-                pl.Series(
-                    'du', ['12/31/1999', '01/02/2002', None], dtype=pl.String
-                ),
+                pl.Series('de', [d_m1, None, d_333], dtype=pl.Date),
+                pl.Series('du', [d_m1, d_212, None], dtype=pl.Date),
             )
         )
 
