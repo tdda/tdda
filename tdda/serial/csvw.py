@@ -531,7 +531,8 @@ class CSVWMetadata(SerialMetadata):
             self.trim = False
 
     def get_non_dialect_attrs(self):
-        nulls = self._csvw.get('null')
+        table = self._table or {}
+        nulls = self._csvw.get('null') or table.get('null')
         if nulls:
             self.null_indicator = nulls
 

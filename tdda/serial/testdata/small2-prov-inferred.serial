@@ -72,10 +72,7 @@
         "encoding": "utf-8",
         "delimiter": "|",
         "quote_char": "\"",
-        "null_indicator": [
-            "NULL",
-            ""
-        ],
+        "null_indicator": "NULL",
         "header_row_count": 1,
         "header_row": 0,
         "quoting": "QUOTE_NOTNULL"

@@ -6,9 +6,8 @@
             "tableSchema": {
                 "columns": [
                     {
-                        "datatype": "boolean",
-                        "name": "b",
-                        "format": "Yes|n"
+                        "datatype": {"base": "boolean", "format": "Yes|n"},
+                        "name": "b"
                     },
                     {
                         "datatype": "int",
@@ -23,9 +22,8 @@
                         "name": "s"
                     },
                     {
-                        "datatype": "date",
-                        "name": "t",
-                        "format": "dd/MM/yyyy"
+                        "datatype": {"base": "date", "format": "dd/MM/yyyy"},
+                        "name": "t"
                     }
                 ]
             },
@@ -34,9 +32,9 @@
                 "delimiter": ";",
                 "quoteChar": "'",
                 "header": true,
-                "headerRowCount": 1,
-                "null": "."
+                "headerRowCount": 1
             },
+            "null": ".",
             "url": "tiny1nd-weird.ssv"
         }
     ]
