@@ -418,7 +418,7 @@ class MetadataInferrer:
             datetime_format=self.datetime_format,
             header_row_count=self.header_row_count,
             map_missing_trailing_cols_to_null=self.excel or None,
-            quoting=self.quoting,
+            quoting=getattr(self, 'quoting', None),
         )
 
     def apply_all_given(self):

@@ -108,6 +108,7 @@ Contents
    constraints-api.txt
    rexpy-api.txt
    tdda-diff.md
+   serialformat.md
    windows.txt
    tests.txt
    examples.txt

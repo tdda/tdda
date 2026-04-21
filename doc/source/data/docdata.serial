@@ -1,0 +1,49 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-2.2.15",
+    "tdda.serial": {
+        "fields": [
+            {
+                "csvname": "b",
+                "name": "IAmBoolean",
+                "fieldtype": "bool",
+                "true_values": [
+                    "Yes",
+                    "y"
+                ],
+                "false_values": [
+                    "No",
+                    "n"
+                ]
+            },
+            {
+                "csvname": "i",
+                "name": "IAmInt",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f",
+                "fieldtype": "float"
+            },
+            {
+                "csvname": "s",
+                "name": "IAmString",
+                "fieldtype": "string"
+            },
+            {
+                "csvname": "t",
+                "name": "IAmDate",
+                "fieldtype": "datetime",
+                "format": "%d/%m/%Y"
+            }
+        ],
+        "encoding": "latin-1",
+        "delimiter": ";",
+        "quote_char": "'",
+        "escape_char": "`",
+        "null_indicator": ".",
+        "header_row_count": 1,
+        "header_row": 0,
+        "path": "docdata.txt"
+    }
+}

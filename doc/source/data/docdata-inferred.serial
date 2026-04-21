@@ -1,0 +1,34 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "b",
+                "fieldtype": "string"
+            },
+            {
+                "name": "i",
+                "fieldtype": "string"
+            },
+            {
+                "name": "f",
+                "fieldtype": "string"
+            },
+            {
+                "name": "s",
+                "fieldtype": "string"
+            },
+            {
+                "name": "t",
+                "fieldtype": "string"
+            }
+        ],
+        "delimiter": ";",
+        "quote_char": "'",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_MINIMAL"
+    }
+}

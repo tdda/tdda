@@ -299,6 +299,7 @@ def csv_to_polars(
     use_table_name=False,
     preferred=None,
     map_other_bools_to_string=False,
+    include_data_path_in_md=None,
     verbosity=VERBOSITY,
     warner=None,
     infer_datetime_formats=False,
@@ -362,6 +363,12 @@ def csv_to_polars(
                                    non-true/false values as bools
                                    the boolean fields are read as strings.
                                    Default: False
+
+       include_data_path_in_md: If None, the path is not set in tdda.serial
+                                metadata. If set to any Truthy value,
+                                the path to the datafile is included.
+                                For csvw and frictionless,
+                                None causes a url/path to be written
 
        verbosity   For metadata reader
 

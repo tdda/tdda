@@ -105,42 +105,6 @@ be specified explicitly with both the API and the command-line tools.
 ### Example
 
 %% data/example.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "tdda.serial": {
-        "encoding": "UTF-8",
-        "delimiter": "|",
-        "quote_char": "\"",
-        "escape_char": "\\",
-        "stutter_quotes": false,
-        "null_indicator": "",
-        "date_format": "iso8601-date",
-        "datetime_format": "eu-datetime",
-        "header_row_count": 1,
-        "header_row": 0,
-        "fields": [
-            {
-                "name": "id",
-                "fieldtype": "int"
-            },
-            {
-                "name": "name",
-                "fieldtype": "string"
-            },
-            {
-                "name": "joined",
-                "fieldtype": "date"
-            },
-            {
-                "name": "last_seen",
-                "fieldtype": "datetime",
-                "format": "us-datetime"
-            }
-        ]
-    }
-}
-```
 
 
 ### The `tdda.serial` Section
@@ -528,79 +492,15 @@ format (though all of its features are individually not particularly
 uncommon).
 
 %% data/docdata.txt
-```text
-b;i;f;s;t
-'n';0;0.5;;31/01/1970
-.;.;.;.;.
-'Yes';1;1.5;'a';31/12/1999
-```
 
 and the following (starting) `tdda.serial` file:
 
 %% data/docdata.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
-    "tdda.serial": {
-        "fields": [
-            {
-                "csvname": "b",
-                "name": "IAmBoolean",
-                "fieldtype": "bool",
-                "true_values": [
-                    "Yes",
-                    "y"
-                ],
-                "false_values": [
-                    "No",
-                    "n"
-                ]
-            },
-            {
-                "csvname": "i",
-                "name": "IAmInt",
-                "fieldtype": "int"
-            },
-            {
-                "name": "f",
-                "fieldtype": "float"
-            },
-            {
-                "csvname": "s",
-                "name": "IAmString",
-                "fieldtype": "string"
-            },
-            {
-                "csvname": "t",
-                "name": "IAmDate",
-                "fieldtype": "datetime",
-                "format": "%d/%m/%Y"
-            }
-        ],
-        "encoding": "latin-1",
-        "delimiter": ";",
-        "quote_char": "'",
-        "escape_char": "`",
-        "null_indicator": ".",
-        "header_row_count": 1,
-        "header_row": 0,
-        "path": "docdata.txt"
-    }
-}
-```
 
 When read correctly in Pandas, this produces (with the nullable backend
 for Pandas to which `tdda.serial` default):
 
 %% data/docdata-output.txt
-```text
-   IAmBoolean  IAmInt     f IAmString    IAmDate
-0       False       0   0.5           1970-01-31
-1        <NA>    <NA>  <NA>      <NA>        NaT
-2        True       1   1.5         a 1999-12-31
-dtypes: boolean Int64 Float64 string datetime64[ns]
-```
 
 ### Reading Flat Files with Metadata from Python using the API
 
@@ -609,14 +509,6 @@ is to use the `csv_to_x` functions.  In its simplest forms,
 
 
 %% data/csv2pandas.py
-```python
-from tdda.serial import csv_to_pandas
-
-df1 = csv_to_pandas('docdata.txt', 'docdata.serial')
-df2 = csv_to_pandas('docdata.txt:docdata.serial')
-df3 = csv_to_pandas('docdata.txt:')
-df4 = csv_to_pandas('docdata.txt', find_md=True)
-```
 
 all do the same thing, reading the flat file `docdata.csv` using the metadata
 specification in `docdata.serial`. The last two forms are only available when the
@@ -625,11 +517,6 @@ specification in `docdata.serial`. The last two forms are only available when th
 The pandas `dtype` back end can also be passed in, e.g.
 
 %% data/csv2pandasbackend.py
-```python
-from tdda.serial import csv_to_pandas
-dfb = csv_to_pandas('docdata.txt', 'docdata.serial', backend='original')
-print(dfb)
-```
 
 for the original Pandas `dtype` back end.
 
@@ -637,14 +524,6 @@ Similarly
 % TODO: polars needs to handle boolean conversion (like dates)
 
 %% data/csv2polars.py
-```python
-from tdda.serial import csv_to_polars
-
-df1 = csv_to_polars('docdata.txt', 'docdata.serial')
-df2 = csv_to_polars('docdata.txt:docdata.serial')
-df3 = csv_to_polars('docdata.txt:')
-df4 = csv_to_polars('docdata.txt', find_md=True)
-```
 
 are the equivalent forms for Polars.
 
@@ -710,13 +589,6 @@ for csvw and Frictionless, and allowed for tdda.serial) then the
 metadata file itself can be specified instead. For example:
 
 %% data/pandas-and-polars-reads.py
-```python
-from tdda.serial import csv_to_polars, csv_to_pandas
-
-df1 = csv_to_pandas('docdata.serial')
-df2 = csv_to_polars('docdata-metadata.json')
-df3 = csv_to_polars('docdata.resource.yaml')
-```
 
 would use three different metadata files that point to data
 to read them into three dataframes, the first using Pandas
@@ -734,9 +606,6 @@ The `tdda serial` command can generate Python code or sets of keyword
 arguments for `read_csv` methods from Pandas or Polars.
 
 %% data/tddaserial1.sh
-```bash
-tdda serial docdata.serial docdata_pandas.py --to pd.r
-```
 
 This command generates stand-alone Python code `docdata.py` containing
 a function for reading flat file in the format specified by `docdata.serial`
@@ -744,9 +613,6 @@ with Pandas, taking the path to the datafile as an argument.
 (Standalone, here, means code that does not require the `tdda` library.)
 
 %% data/tddaserial2.sh
-```bash
-tdda serial docdata.serial docdata_polars.py --to pl.r
-```
 
 This command generates Python code `docdata.py` containing a function
 for reading flat file in the format specified by docdata.serial
@@ -758,10 +624,6 @@ calls the function with the appropriate inpath. For example:
 % TODO: This doesn't seem to work currently
 
 %% data/tddaserial3.sh
-```bash
-tdda serial docdata.serial docdata_polars.py --to pl.r --for docdata.txt
-
-```
 
 
 ## Writing Data with `tdda.serial` (API)
@@ -784,12 +646,6 @@ The simplest form for writing a Pandas dataframe to CSV *with
 metadata* is:
 
 %% data/pandas2csv1.py
-```python
-from tdda.serial import pandas_to_csv, csv_to_pandas
-
-df = csv_to_pandas('docdata.txt:')
-pandas_to_csv(df, 'docdata1pd.csv', md_outpath='docdata1pd.serial')
-```
 
 This will write a the Pandas dataframe `df` to `docdata2.csv` using
 `df.to_csv`, with default settings,
@@ -800,13 +656,6 @@ Specific write formatting parameters can be passed directly to
 affect the written metadata in the `.serial` file. For example:
 
 %% data/pandas2csv2.py
-```python
-from tdda.serial import pandas_to_csv, csv_to_pandas
-
-df = csv_to_pandas('docdata.txt:')
-pandas_to_csv(df, 'docdata2pd.csv', md_outpath='docdata2pd.serial',
-              sep='|', na_rep='NULL', quotechar="'")
-```
 
 will write the data using a pipe separator (`|`), single quotes (`'`),
 and `NULL` as the null marker, and the resulting `.serial` file
@@ -818,12 +667,6 @@ can be used to determine the flat-file write settings using the
 using the metadata in `docdata.serial`, we can use:
 
 %% data/pandas2csv3.py
-```python
-from tdda.serial import pandas_to_csv, csv_to_pandas
-
-df = csv_to_pandas('docdata.txt:')
-pandas_to_csv(df, 'docdata3pd.csv', md_inpath='docdata.serial')
-```
 
 This does *not* write a serial file.
 
@@ -831,14 +674,6 @@ It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
 %% data/pandas2csv4.py
-```python
-from tdda.serial import pandas_to_csv, csv_to_pandas
-
-df = csv_to_pandas('docdata.txt:')
-pandas_to_csv(df, 'docdata4pd.csv', md_inpath='docdata.serial',
-              md_outpath='docdata4pd.serial')
-
-```
 
 The reasons for wanting to write metadata when a metadata file is
 used to specify the write format might include:
@@ -860,12 +695,6 @@ The simplest form for writing a polars dataframe to CSV *with
 metadata* is:
 
 %% data/polars2csv1.py
-```python
-from tdda.serial import polars_to_csv, csv_to_polars
-
-df = csv_to_polars('docdata.txt:')
-polars_to_csv(df, 'docdata1pl.csv', md_outpath='docdata1pl.serial')
-```
 
 This will write a the Polars dataframe `df` to `docdata2.csv` using
 `df.to_csv`, with default settings,
@@ -876,13 +705,6 @@ Specific write formatting parameters can be passed directly to
 affect the written metadata in the `.serial` file. For example:
 
 %% data/polars2csv2.py
-```python
-from tdda.serial import polars_to_csv, csv_to_polars
-
-df = csv_to_polars('docdata.txt:')
-polars_to_csv(df, 'docdata2pl.csv', md_outpath='docdata2pl.serial',
-              sep='|', na_rep='NULL', quotechar="'")
-```
 
 will write the data using a pipe separator (`|`), single quotes (`'`),
 and `NULL` as the null marker, and the resulting `.serial` file
@@ -894,12 +716,6 @@ can be used to determine the flat-file write settings using the
 using the metadata in `docdata.serial`, we can use:
 
 %% data/polars2csv3.py
-```python
-from tdda.serial import polars_to_csv, csv_to_polars
-
-df = csv_to_polars('docdata.txt:')
-polars_to_csv(df, 'docdata3pl.csv', md_inpath='docdata.serial')
-```
 
 This does *not* write a serial file.
 
@@ -907,14 +723,6 @@ It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
 %% data/polars2csv4.py
-```python
-from tdda.serial import polars_to_csv, csv_to_polars
-
-df = csv_to_polars('docdata.txt:')
-polars_to_csv(df, 'docdata4pl.csv', md_inpath='docdata.serial',
-              md_outpath='docdata4pl.serial')
-
-```
 
 The reasons for wanting to write metadata when a metadata file is
 used to specify the write format might include:
@@ -955,9 +763,6 @@ be written to the file.
 Basic usage is as follows:
 
 %% data/inference1.sh
-```bash
-tdda serial --generate docdata.txt docdata-inferred.serial
-```
 
 Warnings will be issued in some cases if the inference process has
 sinificant ambiguity, and the process may fail if `tdda.serial` cannot
@@ -1038,25 +843,10 @@ with command-line switches. If the filename is set to empty, such
 a metadata file can be generated. For example:
 
 %% data/generation1.sh
-```bash
-tdda serial --generate '' generated.serial --null NULL --sep '|' --quote-char "'"
-
-```
 
 will generate a `tdda.serial` file with only those properties specified:
 
 %% data/generated.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
-    "tdda.serial": {
-        "delimiter": "|",
-        "quote_char": "'",
-        "null_indicator": "NULL"
-    }
-}
-```
 
 This can either be used directly, allowing the chosen flat-file reader
 to figure out field names, types and per-field formats, or can be used
@@ -1077,11 +867,6 @@ the most important specifications generally work.
 Here are some example conversion commands:
 
 %% data/convert1.sh
-```bash
-tdda serial docdata.serial docdata-metadata.json
-tdda serial docdata.serial docdata-metadata-from-serial2.json --to csvw
-
-```
 
 The first command produces `docdata-metadata.json` as CSVW, assuming
 a CSVW target because the pattern fits the normal CSVW convention.
@@ -1093,67 +878,12 @@ format.
 The result is:
 
 %% data/docdata-metadata-from-serial2.json
-```json
-{
-    "@context": "http://www.w3.org/ns/csvw",
-    "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.0.00rc1",
-    "tables": [
-        {
-            "tableSchema": {
-                "columns": [
-                    {
-                        "name": "b",
-                        "datatype": {
-                            "base": "boolean",
-                            "format": "Yes|No"
-                        }
-                    },
-                    {
-                        "name": "i",
-                        "datatype": "integer"
-                    },
-                    {
-                        "name": "f",
-                        "datatype": "float"
-                    },
-                    {
-                        "name": "s",
-                        "datatype": "string"
-                    },
-                    {
-                        "name": "t",
-                        "datatype": {
-                            "base": "datetime",
-                            "format": "dd/MM/yyyy"
-                        }
-                    }
-                ]
-            },
-            "url": "docdata-metadata-from-serial2.ssv"
-        }
-    ],
-    "dialect": {
-        "encoding": "latin-1",
-        "delimiter": ";",
-        "headerRowCount": 1,
-        "quoteChar": "'"
-    },
-    "null": "."
-}
-```
 
 % Why is a warning issued? Doesn't CSVW understand that format?
 
 ---
 
 %% data/convert2.sh
-```bash
-tdda serial docdata.serial docdata.package.yaml
-tdda serial docdata.serial docdata.resource.json
-
-
-```
 
 These two commands produce Frictionless metadata specifications.
 The first produces a Frictionless package metadata files as YAML,
@@ -1167,102 +897,10 @@ be used to specify this if an unconventional name were used.
 The YAML package output is:
 
 %% data/docdata.package.yaml
-```yaml
-resources:
-- name: docdata
-  type: table
-  path: docdata.ssv
-  scheme: file
-  format: csv
-  mediatype: text/csv
-  encoding: latin-1
-  dialect:
-    header: true
-    headerRows:
-    - 0
-    delimiter: ;
-    quoteChar: ''''
-    escapeChar: '`'
-  schema:
-    fields:
-    - name: b
-      type: boolean
-      trueValues:
-      - 'Yes'
-      - y
-      falseValues:
-      - 'No'
-      - n
-    - name: i
-      type: integer
-    - name: f
-      type: number
-    - name: s
-      type: string
-    - name: t
-      type: datetime
-    missingValues:
-    - .
-```
 
 and the JSON resource output is
 
 %% data/docdata.resource.json
-```json
-{
-    "name": "docdata",
-    "type": "table",
-    "path": "docdata.ssv",
-    "scheme": "file",
-    "format": "csv",
-    "mediatype": "text/csv",
-    "encoding": "latin-1",
-    "dialect": {
-        "header": true,
-        "headerRows": [
-            0
-        ],
-        "delimiter": ";",
-        "quoteChar": "'",
-        "escapeChar": "`"
-    },
-    "schema": {
-        "fields": [
-            {
-                "name": "b",
-                "type": "boolean",
-                "trueValues": [
-                    "Yes",
-                    "y"
-                ],
-                "falseValues": [
-                    "No",
-                    "n"
-                ]
-            },
-            {
-                "name": "i",
-                "type": "integer"
-            },
-            {
-                "name": "f",
-                "type": "number"
-            },
-            {
-                "name": "s",
-                "type": "string"
-            },
-            {
-                "name": "t",
-                "type": "datetime"
-            }
-        ],
-        "missingValues": [
-            "."
-        ]
-    }
-}
-```
 
 ---
 
@@ -1270,12 +908,6 @@ In the case of converting to a Pandas `csv_read` specification, a
 `dtype` back end can be specified. So we might say:
 
 %% data/convert3.sh
-```bash
-tdda serial docdata.serial docdata-pd.r-o.serial --to pd.r -B o
-
-
-
-```
 
 will ask for the `pandas.read_csv` version of a `tdda.serial` file
 using the original Pandas `dtype` backend.
@@ -1283,47 +915,6 @@ using the original Pandas `dtype` backend.
 The result is:
 
 %% data/docdata-pd.r-o.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
-    "pandas.read_csv": {
-        "sep": ";",
-        "encoding": "latin-1",
-        "escapechar": "`",
-        "quotechar": "'",
-        "dtype": {
-            "IAmBoolean": "object",
-            "f": "float",
-            "IAmString": "object"
-        },
-        "date_format": {
-            "IAmDate": "%d/%m/%Y"
-        },
-        "parse_dates": [
-            "IAmDate"
-        ],
-        "na_values": ".",
-        "keep_default_na": false,
-        "names": [
-            "IAmBoolean",
-            "IAmInt",
-            "f",
-            "IAmString",
-            "IAmDate"
-        ],
-        "header": 0,
-        "true_values": [
-            "Yes",
-            "y"
-        ],
-        "false_values": [
-            "No",
-            "n"
-        ]
-    }
-}
-```
 
 ---
 
@@ -1354,9 +945,6 @@ to ond that contains custom sections for Pandas `read_csv` function
 and `DataFrame.to_csv` methods as follows:
 
 %% data/converttopd.sh
-```bash
-tdda serial example.serial examplepd.serial --to pd.r,pd.w
-```
 
 (Here we have specified both `pd.r` and `pd.w`, but we could have requested
 only one of them.)
@@ -1364,42 +952,6 @@ only one of them.)
 The result is the following file:
 
 %% data/examplepd.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
-    "pandas.read_csv": {
-        "sep": "|",
-        "encoding": "UTF-8",
-        "escapechar": "\\",
-        "quotechar": "\"",
-        "doublequote": false,
-        "dtype": {
-            "id": "Int64",
-            "name": "string"
-        },
-        "date_format": {
-            "joined": "ISO8601",
-            "last_seen": "%m/%d/%Y %H:%M:%S"
-        },
-        "parse_dates": [
-            "joined",
-            "last_seen"
-        ],
-        "na_values": "",
-        "keep_default_na": false
-    },
-    "pandas.DataFrame.to_csv": {
-        "sep": "|",
-        "encoding": "UTF-8",
-        "escapechar": "\\",
-        "quotechar": "\"",
-        "doublequote": false,
-        "date_format": "%Y-%m-%d",
-        "na_rep": ""
-    }
-}
-```
 
 The reason `tdda.serial` supports both read and write sections for
 libraries such as Pandas and Polars is that the parameters for reading
@@ -1418,69 +970,19 @@ So, considering only the read case, the Polars equivalent conversion is:
 % TODO: pl.w
 
 %% data/converttopl.sh
-```bash
-tdda serial example.serial examplepl.serial --to pl.r
-```
 
 which produces:
 
 %% data/examplepl.serial
-```
-{
-    "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
-    "polars.read_csv": {
-        "separator": "|",
-        "quote_char": "\"",
-        "null_values": [
-            ""
-        ],
-        "encoding": "UTF-8",
-        "schema": {
-            "id": "Int64",
-            "name": "String",
-            "joined": "Datetime",
-            "last_seen": "String"
-        }
-    }
-}
-```
 
 Here, `last_seen` set to type `String` (i.e. `polars.String`) because
 Polars will no understand the date format. However, if the Python read
 code is generated with
 
 %% data/converttopl.sh
-```bash
-tdda serial example.serial examplepl.serial --to pl.r
-```
 
 all is handled:
 
 %% data/examplereadpl.py
-```python
-import polars as pl
-
-def read_data(inpath):
-    df = pl.read_csv(
-        inpath,
-        separator='|',
-        quote_char='"',
-        null_values=[''],
-        encoding='UTF-8',
-        schema={
-            'id': pl.Int64,
-            'name': pl.String,
-            'joined': pl.Datetime,
-            'last_seen': pl.String
-        }
-    )
-
-    df = df.with_columns([
-        pl.col('last_seen').str.to_datetime(format='%m/%d/%Y %H:%M:%S'),
-    ])
-    return df
-
-```
 
 

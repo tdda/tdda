@@ -260,7 +260,7 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     return kw
 
 
-def serial_to_pandas_write_csv_args(md, backend=None, config=None):
+def serial_to_pandas_write_csv_args(md, backend=None, config=None, warner=None):
     backend = get_backend(backend, config)
     if PANDAS.write_key in md.libs:
         return md.libs[PANDAS.write_key]
@@ -830,6 +830,7 @@ def pandas_to_csv(
     preferred_in_flavour=None,
     in_table_number=None,
     find_safe_null=False,
+    include_data_path_in_md=None,
     warner=None,
     **kw_overrides,
 ):
@@ -876,6 +877,12 @@ def pandas_to_csv(
     find_safe_null: If true, a null representation will be chosen
                     that is safe for this data (not present in any
                     string column).
+
+    include_data_path_in_md: If None, the path is not set in tdda.serial
+                             metadata. If set to any Truthy value,
+                             the path to the datafile is included.
+                             For csvw and frictionless,
+                             None causes a url/path to be written
 
     **kw_overrides: keyword parameters are passed straight to DataFrame.to_csv.
           Any specified here override those generated be reading

@@ -197,7 +197,7 @@ class SerialConverter:
             'frictionless (yaml/json) or flat file (.csv, .psv etc.)',
         )
         parser.add_argument(
-            'outpath', nargs='?', help='output metadata file or python script)'
+            'outpath', nargs='?', help='output metadata file or python script'
         )
 
         parser.add_argument(

@@ -7,8 +7,8 @@
 
 #### SYNOPSIS
 ```x
-tdda serial [FLAGS] inmetadata outmetadata
-tdda serial --to FMT [FLAGS] inmetadata outmetadata
+tdda serial [FLAGS] inmetadata outmetadata  
+tdda serial --to FMT [FLAGS] inmetadata outmetadata  
 
 Converts metadata from one metadata format, in inpath,
 to another, in outpath.
