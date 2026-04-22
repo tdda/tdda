@@ -22,7 +22,7 @@
             {
                 "name": "t",
                 "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "format": "YYYY-MM-DDTHH:MM:SS"
             }
         ],
         "encoding": "UTF-8",

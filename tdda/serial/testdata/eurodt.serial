@@ -15,7 +15,7 @@
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "eu-datetime",
+        "date_format": "DD/MM/YYYY HH:MM:SS",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0

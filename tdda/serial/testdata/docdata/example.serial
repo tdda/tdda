@@ -7,8 +7,8 @@
         "escape_char": "\\",
         "stutter_quotes": false,
         "null_indicator": "",
-        "date_format": "iso8601-date",
-        "datetime_format": "eu-datetime",
+        "date_format": "YYYY-MM-DD",
+        "datetime_format": "DD/MM/YYYY HH:MM:SS",
         "header_row_count": 1,
         "header_row": 0,
         "fields": [
@@ -27,7 +27,7 @@
             {
                 "name": "last_seen",
                 "fieldtype": "datetime",
-                "format": "us-datetime"
+                "format": "MM/DD/YYYY HH:MM:SS"
             }
         ]
     }

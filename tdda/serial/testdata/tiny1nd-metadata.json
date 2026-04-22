@@ -1,7 +1,7 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.0.00rc1",
+    "dc:creator": "tdda.serial-0.0.0",
     "tables": [
         {
             "tableSchema": {
@@ -27,7 +27,10 @@
                     },
                     {
                         "name": "t",
-                        "datatype": "date"
+                        "datatype": {
+                            "base": "date",
+                            "format": "yyyy-MM-dd"
+                        }
                     }
                 ]
             },

@@ -28,7 +28,7 @@
             {
                 "name": "t",
                 "fieldtype": "date",
-                "format": "iso8601-date"
+                "format": "YYYY-MM-DD"
             }
         ],
         "encoding": "UTF-8",

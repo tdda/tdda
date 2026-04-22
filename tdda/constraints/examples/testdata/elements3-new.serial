@@ -41,7 +41,7 @@
         "quote_char": "\"",
         "escape_char": "\\",
         "stutter_quotes": false,
-        "date_format": "iso8601-date",
+        "date_format": "YYYY-MM-DD",
         "null_indicators": "-",
         "accept_percentages_as_floats": false,
         "header_row_count": 1

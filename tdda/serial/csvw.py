@@ -188,7 +188,7 @@ class CSVWMetadata(SerialMetadata):
                     fmt = nvl(self.datetime_format, self.date_format)
                 else:
                     fmt = self.date_format
-            if fmt and fmt not in _ISO8601_NAMED:
+            if fmt:
                 csvw_fmt = serial_date_format_to_csvw(
                     fmt, fieldtype=field.fieldtype
                 )

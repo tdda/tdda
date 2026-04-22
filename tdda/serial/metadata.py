@@ -776,7 +776,15 @@ def is_iso8601_format(fmt, inc_names=True, return_specific=False):
     if inc_names:
         if fmt.lower() in ISO8601_NAMED_FORMATS:
             return fmt.lower() if return_specific else True
-    m = re.match(RE_ISO8601, fmt)
+    style = detect_format_style(fmt)
+    if style in ('yyyydate', 'literaldate'):
+        try:
+            strftime = to_strftime(fmt)
+        except ValueError:
+            return False
+    else:
+        strftime = fmt
+    m = re.match(RE_ISO8601, strftime)
     if m:
         if return_specific:
             if m.group(1):

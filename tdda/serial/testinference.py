@@ -73,7 +73,6 @@ class TestInference(ReferenceTestCase):
         self.assertFileCorrect(outpath, tdpath(outname), ignore_lines=self.IGL)
         return buf, md
 
-    @tag
     def testInferMetadataTiny1cdq(self):
         md, buf = self.infer(
             tdpath('tiny1ndq.csv'), verbosity=0, add_defaults=True
@@ -128,7 +127,6 @@ class TestInference(ReferenceTestCase):
             ignore_lines=self.IGL,
         )
 
-    @tag
     def testInferMetadataSimple(self):
         md, buf = self.infer(
             tdpath('simple.csv'), verbosity=0, add_defaults=True
@@ -146,7 +144,6 @@ class TestInference(ReferenceTestCase):
             ],
         )
 
-    @tag
     def testInferMetadataMinimal(self):
         md, buf = self.infer(
             tdpath('minimal.csv'), verbosity=0, add_defaults=True
@@ -157,7 +154,6 @@ class TestInference(ReferenceTestCase):
             ignore_lines=self.IGL,
         )
 
-    @tag
     def testInferAllformats(self):
         buf, md = self.check_infer('allformats.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
@@ -168,7 +164,6 @@ class TestInference(ReferenceTestCase):
         )
         self.assertEqual(md.delimiter, NO_DELIMITER)
 
-    @tag
     def testInferAmbiguousAllAmbiguous(self):
         # All date fields ambiguous: should default to EU and warn
         md, buf = self.infer(tdpath('ambig-all.csv'), verbosity=0)
@@ -177,7 +172,6 @@ class TestInference(ReferenceTestCase):
         self.assertIn('defaulting to EU', buf[0])
         self.assertIn('"dt"', buf[0])
 
-    @tag
     def testInferAmbiguousGuidedByEU(self):
         # One unambiguous EU field guides resolution of ambiguous field
         md, buf = self.infer(tdpath('ambig-guided-eu.csv'), verbosity=0)
@@ -186,7 +180,6 @@ class TestInference(ReferenceTestCase):
         self.assertIn('assuming EU', buf[0])
         self.assertIn('"ambig"', buf[0])
 
-    @tag
     def testInferAmbiguousGuidedByUS(self):
         # One unambiguous US field guides resolution of ambiguous field
         md, buf = self.infer(tdpath('ambig-guided-us.csv'), verbosity=0)
@@ -601,23 +594,19 @@ class TestInferAllFlatFiles(TestInference):
         # date format warnings for post-read strptime parsing are expected
         self.assertTrue(all('parse post-read' in w for w in buf2))
 
-    @tag
     def testInferAllformats2unspec(self):
         buf, md = self.check_infer(
             'allformats2unspec.csv', prov=True, verbosity=0
         )
 
-    @tag
     def testInferAmbigAll(self):
         buf, md = self.check_infer('ambig-all.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferAmbigGuidedEu(self):
         buf, md = self.check_infer(
             'ambig-guided-eu.csv', prov=True, verbosity=0
         )
 
-    @tag
     def testInferAmbigGuidedUs(self):
         buf, md = self.check_infer(
             'ambig-guided-us.csv', prov=True, verbosity=0
@@ -629,7 +618,6 @@ class TestInferAllFlatFiles(TestInference):
     def testInferCodingUtf8(self):
         buf, md = self.check_infer('coding-utf8.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferDdd(self):
         buf, md = self.check_infer('ddd.csv', verbosity=0)
         # Quoting style detection reclassifies evenstr, oddstr, elevens
@@ -660,19 +648,16 @@ class TestInferAllFlatFiles(TestInference):
     def testInferDdd3(self):
         buf, md = self.check_infer('ddd3.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferAlphaDates(self):
         buf, md = self.check_infer('alphadates.tsv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
-    @tag
     def testInferAlphaLongDates(self):
         buf, md = self.check_infer(
             'alphalongdates.tsv', prov=False, verbosity=0
         )
         self.assertEqual(buf, [])
 
-    @tag
     def testInferElements3Old(self):
         buf, md = self.check_infer(
             'elements3-old.csv', prov=False, verbosity=0
@@ -688,71 +673,58 @@ class TestInferAllFlatFiles(TestInference):
         self.assertDataFramesEqual(df, ref_df)
         self.assertEqual(buf2, [])
 
-    @tag
     def testInferEurod(self):
         buf, md = self.check_infer('eurod.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurod')
 
-    @tag
     def testInferEurod2y(self):
         buf, md = self.check_infer('eurod2y.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurod2y')
 
-    @tag
     def testInferEurodtWriteKw(self):
         buf, md = self.check_infer(
             'eurodt-write-kw.csv', verbosity=0
         )
         self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-kw')
 
-    @tag
     def testInferEurodtWriteSerial(self):
         buf, md = self.check_infer(
             'eurodt-write-serial.csv', verbosity=0
         )
         self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-serial')
 
-    @tag
     def testInferEurodt(self):
         buf, md = self.check_infer('eurodt.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurodt')
 
-    @tag
     def testInferEurodt2y(self):
         buf, md = self.check_infer('eurodt2y.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurodt2y')
 
-    @tag
     def testInferExcel1(self):
         buf, md = self.check_infer('excel1.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
-    @tag
     def testInferExcel2(self):
         buf, md = self.check_infer('excel2.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
-    @tag
     def testInferExcel3(self):
         buf, md = self.check_infer('excel3.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
-    @tag
     def testInferIsod(self):
         buf, md = self.check_infer('isod.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('isod')
 
-    @tag
     def testInferIsodatetime(self):
         buf, md = self.check_infer('isodatetime.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('isodatetime')
 
-    @tag
     def testInferIsodt(self):
         buf, md = self.check_infer('isodt.csv', verbosity=0)
         # verified by hand
 
-    @tag
     def testInferMinimal(self):
         buf, md = self.check_infer('minimal.csv', prov=True, verbosity=0)
 
@@ -792,7 +764,6 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(md.null_indicator, '')
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
-    @tag
     def testInferNulls1(self):
         buf, md = self.check_infer('nulls1.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
@@ -888,37 +859,30 @@ class TestInferAllFlatFiles(TestInference):
         )
         self.assertEqual(buf2, [])
 
-    @tag
     def testInferSimple(self):
         buf, md = self.check_infer('simple.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferSmallCp1252(self):
         buf, md = self.check_infer('small-cp1252.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferSmallLatin1(self):
         buf, md = self.check_infer('small-latin1.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferSmallLatin9(self):
         buf, md = self.check_infer('small-latin9.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferSmallWriteKw(self):
         buf, md = self.check_infer(
             'small-write-kw.csv', verbosity=0
         )
         self.validate_inferred_serial_wrt_handmade_serial('small-write-kw')
 
-    @tag
     def testInferSmallWriteSerial(self):
         buf, md = self.check_infer(
             'small-write-serial.csv', verbosity=0
         )
         self.validate_inferred_serial_wrt_handmade_serial('small-write-serial')
 
-    @tag
     def testInferSmall(self):
         buf, md = self.check_infer('small.csv', verbosity=0)
         # Fails to infer 12 us datetime.
@@ -926,15 +890,12 @@ class TestInferAllFlatFiles(TestInference):
         # Don't compare dataframe for now
         # self.validate_inferred_serial_wrt_handmade_serial('small')
 
-    @tag
     def testInferSmall2(self):
         buf, md = self.check_infer('small2.csv', verbosity=0)
 
-    @tag
     def testInferStrings1(self):
         buf, md = self.check_infer('strings1.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferTiny1cdPandas(self):
         buf, md = self.check_infer(
             'tiny1cd-pandas.csv', verbosity=0
@@ -943,28 +904,23 @@ class TestInferAllFlatFiles(TestInference):
             'tiny1cd-pandas', lib='pandas'
         )
 
-    @tag
     def testInferTiny1cd(self):
         buf, md = self.check_infer('tiny1cd.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1cd')
 
-    @tag
     def testInferTiny1cd3(self):
         buf, md = self.check_infer('tiny1cd3.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1cd3')
 
-    @tag
     def testInferTiny1cnPandas(self):
         buf, md = self.check_infer(
             'tiny1cn-pandas.csv', prov=True, verbosity=0
         )
 
-    @tag
     def testInferTiny1cn(self):
         buf, md = self.check_infer('tiny1cn.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
-    @tag
     def testInferTiny1cn3(self):
         buf, md = self.check_infer('tiny1cn3.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1cn3')
@@ -985,11 +941,9 @@ class TestInferAllFlatFiles(TestInference):
             'tiny1nd-dot', lib='pandas', inf_path=outpath
         )
 
-    @tag
     def testInferTiny1ndNull(self):
         buf, md = self.check_infer('tiny1nd-NULL.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferTiny1ndPandas(self):
         buf, md = self.check_infer(
             'tiny1nd-pandas.csv', verbosity=0
@@ -998,21 +952,17 @@ class TestInferAllFlatFiles(TestInference):
             'tiny1nd-pandas', lib='pandas'
         )
 
-    @tag
     def testInferTiny1nd(self):
         buf, md = self.check_infer('tiny1nd.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1nd')
 
-    @tag
     def testInferTiny1nd3(self):
         buf, md = self.check_infer('tiny1nd3.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1nd3')
 
-    @tag
     def testInferTiny1ndq(self):
         buf, md = self.check_infer('tiny1ndq.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferTiny1nnPandas(self):
         buf, md = self.check_infer(
             'tiny1nn-pandas.csv', verbosity=0
@@ -1021,36 +971,29 @@ class TestInferAllFlatFiles(TestInference):
             'tiny1nn-pandas', lib='pandas'
         )
 
-    @tag
     def testInferTiny1nn(self):
         buf, md = self.check_infer('tiny1nn.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1nn')
 
-    @tag
     def testInferTiny1nn3(self):
         buf, md = self.check_infer('tiny1nn3.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('tiny1nn3')
 
-    @tag
     def testInferTz(self):
         buf, md = self.check_infer('tz.csv', prov=True, verbosity=0)
 
-    @tag
     def testInferUsd(self):
         buf, md = self.check_infer('usd.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('usd')
 
-    @tag
     def testInferUsd2y(self):
         buf, md = self.check_infer('usd2y.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('usd2y')
 
-    @tag
     def testInferUsdt(self):
         buf, md = self.check_infer('usdt.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('usdt')
 
-    @tag
     def testInferUsdt2y(self):
         buf, md = self.check_infer('usdt2y.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('usdt2y')
@@ -1078,7 +1021,6 @@ class TestInferAllFlatFiles(TestInference):
     def testInferSemicolon3(self):
         buf, md = self.check_infer('semicolon3.txt', prov=True, verbosity=0)
 
-    @tag
     def testInferSemicolon4(self):
         buf, md = self.check_infer('semicolon4.txt', prov=True, verbosity=0)
 
@@ -1090,7 +1032,6 @@ class TestInferAllFlatFiles(TestInference):
 
     # .tsv file
 
-    @tag
     def testInferIsodtTsv(self):
         buf, md = self.check_infer('isodt.tsv', verbosity=0)
         # Verifued by hand

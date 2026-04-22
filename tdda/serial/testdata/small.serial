@@ -41,12 +41,12 @@
             {
                 "name": "dti",
                 "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "format": "YYYY-MM-DDTHH:MM:SS"
             },
             {
                 "name": "dte",
                 "fieldtype": "datetime",
-                "format": "eu-datetime"
+                "format": "DD/MM/YYYY HH:MM:SS"
             },
             {
                 "name": "dtu",
@@ -56,17 +56,17 @@
             {
                 "name": "di",
                 "fieldtype": "date",
-                "format": "iso8601-date"
+                "format": "YYYY-MM-DD"
             },
             {
                 "name": "de",
                 "fieldtype": "date",
-                "format": "eu-date"
+                "format": "DD/MM/YYYY"
             },
             {
                 "name": "du",
                 "fieldtype": "date",
-                "format": "us-date"
+                "format": "MM/DD/YYYY"
             }
         ],
         "encoding": "UTF-8",

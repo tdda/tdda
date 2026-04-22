@@ -1,7 +1,7 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.0.00rc1",
+    "dc:creator": "tdda.serial-0.0.0",
     "tables": [
         {
             "tableSchema": {
@@ -28,11 +28,17 @@
                     },
                     {
                         "name": "LastInFeb",
-                        "datatype": "date"
+                        "datatype": {
+                            "base": "date",
+                            "format": "yyyy-MM-dd"
+                        }
                     },
                     {
                         "name": "LastIn2024",
-                        "datatype": "datetime"
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "yyyy-MM-ddTHH:mm:ss"
+                        }
                     }
                 ]
             },
