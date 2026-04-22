@@ -105,10 +105,15 @@ for tdda.serial, CSVW, and frictionless.
 
 `--exclude-path`             Do not include in `.serial` output
 
+`--quoting Q`                Set `quoting` to `Q`. Q must be one of:
 
-
-
-
+                              * `QUOTE_ALL`
+                              * `QUOTE_MINIMAL`
+                              * `QUOTE_NONNUMERIC`
+                              * `QUOTE_NONE`
+                              * `QUOTE_NOTNULL`
+                              * `QUOTE_STRINGS`
+                              * `QUOTE_ONLY_STRINGS`
 
 
 ## EXAMPLES

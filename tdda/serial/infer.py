@@ -13,6 +13,7 @@ from tdda.serial.metadata import (
     SerialMetadata,
     FieldMetadata,
     FieldType,
+    QUOTING_CODES,
     STRFTIME_TO_NAMED_FORMAT,
 )
 from tdda.utils import TDDAError, warn, error, nvl, debug, testwarn
@@ -377,6 +378,7 @@ class MetadataInferrer:
         date_format=None,
         datetime_format=None,
         header_row_count=None,
+        quoting=None,
     ):
         self.inpath = os.path.expanduser(inpath) if inpath else None
         self.lines_to_use = nvl(lines_to_use, DEFAULT_SAMPLE_LINES)
@@ -405,6 +407,15 @@ class MetadataInferrer:
         else:  # No file given: just generate from params (or defaults)
             self.apply_all_given()
             self.fields = []
+        if quoting is not None:
+            quoting = quoting.upper()
+            if quoting not in QUOTING_CODES:
+                valid = ', '.join(sorted(QUOTING_CODES))
+                raise TDDAError(
+                    f'Invalid quoting style {quoting!r}.'
+                    f' Valid values: {valid}.'
+                )
+            self.quoting = quoting
 
         self.metadata = SerialMetadata(
             fields=self.fields,
@@ -1154,6 +1165,7 @@ def infer_format_from_flat_file(
     encoding=None,
     date_format=None,
     datetime_format=None,
+    quoting=None,
     **kw,
 ):
     inferrer = MetadataInferrer(
@@ -1172,6 +1184,7 @@ def infer_format_from_flat_file(
         encoding=encoding,
         date_format=date_format,
         datetime_format=datetime_format,
+        quoting=quoting,
         **kw,
     )
     return inferrer.metadata

@@ -77,6 +77,68 @@ for tdda.serial, CSVW, and frictionless.
 \fB-v, --verbose\fR          Verose output
 \fB-V, --Verbose\fR          More verose output
 
+.SH Options used primarily or exclusibely with \fB--generate\fR/\fB--gen\fR/\fB-g\fR
+\fB--sep D, --delimiter D\fR     Specify \fBD\fR as the field separator.
+
+.PP
+\fB--quote_char Q, --quote Q\fR  Specify \fBQ\fR as the quote character.
+                             (Q is always \fB"\fR or \fB\&'\fR in practice.)
+
+.PP
+\fB--escape\fR                   Use backslash as escape character.
+                             \fBNOTE:\fP Always backslash: does not take argument.
+
+.PP
+\fB--no-escape\fR                Do not support backslash escaping with \fB-g\fR\&.
+                             \fBNOTE:\fP This only affects quotes, separators,
+                             and backslashes. Standard escapes for control
+                             sequences (\\t, \\n, \\t, \\f) are always supported.
+
+.PP
+\fB--stutter\fR                  Specify quote stuttering.
+                             Usually an alternative to \fB--escape\fR\&.
+
+.PP
+\fB--no-stutter\fR               Do not use quote stuttering.
+                             Usually used with \fB--escape\fR\&.
+
+.PP
+\fB--encoding ENC, -e ENC\fR     Specify \fBENC\fR as encoding.
+
+.PP
+\fB--data-format D\fR            Specify \fBD\fR as the (file-wide default) date format.
+
+.PP
+\fB--datatime-format D\fR        Specify \fBD\fR as the (file-wide default) format
+                             for \fBdatetime\fR fields.
+
+.PP
+\fB--sample-lines N, -n N\fR     Use (up to) \fBN\fR sample lines when inferring
+                             metadata.
+
+.PP
+\fB--single-field, -1\fR         Inform the metadata inferred that the file
+                             contains only a single field (column).
+
+.PP
+\fB--include-path\fR             Include \fBpath\fR in \fB\&.serial\fR output
+
+.PP
+\fB--exclude-path\fR             Do not include in \fB\&.serial\fR output
+
+.PP
+\fB--quoting Q\fR                Set \fBquoting\fR to \fBQ\fR\&. Q must be one of:
+
+.EX
+                          * `QUOTE_ALL`
+                          * `QUOTE_MINIMAL`
+                          * `QUOTE_NONNUMERIC`
+                          * `QUOTE_NONE`
+                          * `QUOTE_NOTNULL`
+                          * `QUOTE_STRINGS`
+                          * `QUOTE_ONLY_STRINGS`
+.EE
+
 .SH EXAMPLES
 \fBtdda serial a.csv a.serial\fR
    Generate tdda.serial metadata describing format of \fBa.csv\fR in \fBa.serial\fR\&.

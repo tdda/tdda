@@ -761,7 +761,7 @@ calls the function with the appropriate inpath. For example:
 
 %% data/tddaserial3.sh
 ```bash
-tdda serial docdata.serial docdata_polars.py --to pl.r --for docdata.txt
+tdda serial docdata.serial docdata_polars2.py --to pl.r --for docdata.txt
 
 ```
 

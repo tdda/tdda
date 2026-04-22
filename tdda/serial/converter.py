@@ -273,6 +273,14 @@ class SerialConverter:
             help='Specify no stutter quote style.',
         )
         parser.add_argument(
+            '--quoting',
+            type=str,
+            help='Specify quoting style'
+            ' (QUOTE_ALL, QUOTE_MINIMAL, QUOTE_NONNUMERIC,'
+            ' QUOTE_NONE, QUOTE_NOTNULL, QUOTE_STRINGS,'
+            ' QUOTE_STRINGS_ONLY).',
+        )
+        parser.add_argument(
             '--nulls',
             type=str,
             help='Specify null indicator or comma-separated null indicators.',
@@ -429,6 +437,7 @@ class SerialConverter:
             encoding=getattr(self, 'encoding', None),
             date_format=getattr(self, 'date_format', None),
             datetime_format=getattr(self, 'datetime_format', None),
+            quoting=getattr(self, 'quoting', None),
         )
 
 

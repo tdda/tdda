@@ -66,6 +66,56 @@ for tdda.serial, CSVW, and frictionless.
 `-v, --verbose`          Verose output
 `-V, --Verbose`          More verose output
 
+#### Options used primarily or exclusibely with `--generate`/`--gen`/`-g`
+
+`--sep D, --delimiter D`     Specify `D` as the field separator.
+
+`--quote_char Q, --quote Q`  Specify `Q` as the quote character.
+                             (Q is always `"` or `'` in practice.)
+
+`--escape`                   Use backslash as escape character.
+                             **NOTE:** Always backslash: does not take argument.
+
+`--no-escape`                Do not support backslash escaping with `-g`.
+                             **NOTE:** This only affects quotes, separators,
+                             and backslashes. Standard escapes for control
+                             sequences (\t, \n, \t, \f) are always supported.
+
+`--stutter`                  Specify quote stuttering.
+                             Usually an alternative to `--escape`.
+
+`--no-stutter`               Do not use quote stuttering.
+                             Usually used with `--escape`.
+
+
+
+`--encoding ENC, -e ENC`     Specify `ENC` as encoding.
+
+`--data-format D`            Specify `D` as the (file-wide default) date format.
+
+`--datatime-format D`        Specify `D` as the (file-wide default) format
+                             for `datetime` fields.
+
+`--sample-lines N, -n N`     Use (up to) `N` sample lines when inferring
+                             metadata.
+
+`--single-field, -1`         Inform the metadata inferred that the file
+                             contains only a single field (column).
+
+`--include-path`             Include `path` in `.serial` output
+
+`--exclude-path`             Do not include in `.serial` output
+
+`--quoting Q`                Set `quoting` to `Q`. Q must be one of:
+
+                              * `QUOTE_ALL`
+                              * `QUOTE_MINIMAL`
+                              * `QUOTE_NONNUMERIC`
+                              * `QUOTE_NONE`
+                              * `QUOTE_NOTNULL`
+                              * `QUOTE_STRINGS`
+                              * `QUOTE_ONLY_STRINGS`
+
 
 #### EXAMPLES
 

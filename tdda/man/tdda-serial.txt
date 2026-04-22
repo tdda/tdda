@@ -63,6 +63,54 @@ above)
   [1m‐v, ‐‐verbose          [22mVerose output
   [1m‐V, ‐‐Verbose          [22mMore verose output
 
+Options used primarily or exclusibely with [1m‐‐generate[22m/[1m‐‐gen[22m/[1m‐g[0m
+
+  [1m‐‐sep D, ‐‐delimiter D     [22mSpecify [1mD [22mas the field separator.
+
+  [1m‐‐quote_char Q, ‐‐quote Q  [22mSpecify [1mQ [22mas the quote character.
+                               (Q is always [1m" [22mor [1m’ [22min practice.)
+
+  [1m‐‐escape                   [22mUse backslash as escape character.
+                               [1mNOTE: [22mAlways backslash: does not take argument.
+
+  [1m‐‐no‐escape                [22mDo not support backslash escaping with [1m‐g[22m.
+                               [1mNOTE: [22mThis only affects quotes, separators,
+                               and backslashes. Standard escapes for control
+                               sequences (\t, \n, \t, \f) are always supported.
+
+  [1m‐‐stutter                  [22mSpecify quote stuttering.
+                               Usually an alternative to [1m‐‐escape[22m.
+
+  [1m‐‐no‐stutter               [22mDo not use quote stuttering.
+                               Usually used with [1m‐‐escape[22m.
+
+  [1m‐‐encoding ENC, ‐e ENC     [22mSpecify [1mENC [22mas encoding.
+
+  [1m‐‐data‐format D            [22mSpecify [1mD [22mas the (file‐wide default) date format.
+
+  [1m‐‐datatime‐format D        [22mSpecify [1mD [22mas the (file‐wide default) format
+                               for [1mdatetime [22mfields.
+
+  [1m‐‐sample‐lines N, ‐n N     [22mUse (up to) [1mN [22msample lines when inferring
+                               metadata.
+
+  [1m‐‐single‐field, ‐1         [22mInform the metadata inferred that the file
+                               contains only a single field (column).
+
+  [1m‐‐include‐path             [22mInclude [1mpath [22min [1m.serial [22moutput
+
+  [1m‐‐exclude‐path             [22mDo not include in [1m.serial [22moutput
+
+  [1m‐‐quoting Q                [22mSet [1mquoting [22mto [1mQ[22m. Q must be one of:
+
+                            * ‘QUOTE_ALL‘
+                            * ‘QUOTE_MINIMAL‘
+                            * ‘QUOTE_NONNUMERIC‘
+                            * ‘QUOTE_NONE‘
+                            * ‘QUOTE_NOTNULL‘
+                            * ‘QUOTE_STRINGS‘
+                            * ‘QUOTE_ONLY_STRINGS‘
+
 EXAMPLES
 
   [1mtdda serial a.csv a.serial[0m
@@ -89,6 +137,24 @@ BUGS
 
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
   still many bugs an undesirable features in the implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
