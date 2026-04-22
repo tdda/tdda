@@ -8,6 +8,7 @@ import csv
 
 from tdda.version import writable_version
 from tdda.serial.constants import URI, TDDASERIAL
+from tdda.serial.dateutils import detect_format_style, to_strftime
 from tdda.utils import listify, nvl, warn, swap_ext, error
 
 
@@ -144,6 +145,9 @@ def serial_format_to_strftime(v):
         )
     if v in NAMED_FORMAT_TO_STRFTIME:
         return NAMED_FORMAT_TO_STRFTIME[v]
+    style = detect_format_style(v)
+    if style in ('yyyydate', 'literaldate'):
+        return to_strftime(v)
     return v  # raw strftime string: pass through
 
 

@@ -9,52 +9,52 @@
             {
                 "name": "eu_date",
                 "fieldtype": "date",
-                "format": "eu-date"
+                "format": "31/12/2000"
             },
             {
                 "name": "eu_date_2y",
                 "fieldtype": "date",
-                "format": "eu-date-2y"
+                "format": "31/12/00"
             },
             {
                 "name": "iso_date",
                 "fieldtype": "date",
-                "format": "iso8601-date"
+                "format": "2000-12-31"
             },
             {
                 "name": "us_date",
                 "fieldtype": "date",
-                "format": "us-date"
+                "format": "12/31/2000"
             },
             {
                 "name": "us_date_2y",
                 "fieldtype": "date",
-                "format": "us-date-2y"
+                "format": "12/31/00"
             },
             {
                 "name": "eu_datetime",
                 "fieldtype": "datetime",
-                "format": "eu-datetime"
+                "format": "31/12/2000 12:34:56"
             },
             {
                 "name": "eu_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "eu-datetime-2y"
+                "format": "31/12/00 12:34:56"
             },
             {
                 "name": "iso_datetime",
                 "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "format": "2000-12-31T12:34:56"
             },
             {
                 "name": "us_datetime",
                 "fieldtype": "datetime",
-                "format": "us-datetime"
+                "format": "12/31/2000 12:34:56"
             },
             {
                 "name": "us_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "us-datetime-2y"
+                "format": "12/31/00 12:34:56"
             },
             {
                 "name": "udate",
@@ -69,8 +69,8 @@
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "eu-date",
-        "datetime_format": "eu-datetime",
+        "date_format": "31/12/2000",
+        "datetime_format": "31/12/2000 12:34:56",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0

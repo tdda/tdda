@@ -45,6 +45,8 @@ from tdda.referencetest.pddates import infer_date_format
 DATETIME_RE = re.compile(r'^datetime[0-9]+\[[a-z]+(,?)(.*)\]$')
 DTYPE_RE = re.compile(r'^([A-Za-z])([0-9]+)?(\[[a-z]+(,?)(.*)\])$')
 
+PANDAS_ISO8601 = 'ISO8601'
+
 FIELDTYPE_TO_PANDAS_OLD_DTYPE = {
     'bool': 'object',
     'int': None,
@@ -426,7 +428,7 @@ def pandas_dtype_to_fieldtype(dtype, col=None):
 
 def pandas_write_to_read_params(df, warner=None, **kw):
     Warn = nvl(warner, warn)
-    date_format = kw.get('date_format', 'ISO8601')
+    date_format = kw.get('date_format', PANDAS_ISO8601)
     d = {
         'encoding': kw.get('encoding', Defaults.ENCODING),
         'delimiter': kw.get('sep', Defaults.DELIMITER),
@@ -654,12 +656,15 @@ def to_pandas_date_format(v, for_write=False):
     if v is None:
         return None
     if v in ISO8601_NAMED_FORMATS and not for_write:
-        return 'ISO8601'
-    return serial_format_to_strftime(v)
+        return PANDAS_ISO8601
+    strftime = serial_format_to_strftime(v)
+    if not for_write and STRFTIME_TO_NAMED_FORMAT.get(strftime) in ISO8601_NAMED_FORMATS:
+        return PANDAS_ISO8601
+    return strftime
 
 
 def pandas_date_format_to_serial(fmt):
-    if fmt == 'ISO8601':
+    if fmt == PANDAS_ISO8601:
         return DateFormat.ISO8601_UNSPECIFIED
     else:
         return fmt

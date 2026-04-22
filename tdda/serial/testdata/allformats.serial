@@ -9,60 +9,60 @@
             {
                 "name": "eu_date",
                 "fieldtype": "date",
-                "format": "eu-date"
+                "format": "DD/MM/YYYY"
             },
             {
                 "name": "eu_date_2y",
                 "fieldtype": "date",
-                "format": "eu-date-2y"
+                "format": "DD/MM/YY"
             },
             {
                 "name": "iso_date",
                 "fieldtype": "date",
-                "format": "iso8601-date"
+                "format": "YYYY-MM-DD"
             },
             {
                 "name": "us_date",
                 "fieldtype": "date",
-                "format": "us-date"
+                "format": "MM/DD/YYYY"
             },
             {
                 "name": "us_date_2y",
                 "fieldtype": "date",
-                "format": "us-date-2y"
+                "format": "MM/DD/YY"
             },
             {
                 "name": "eu_datetime",
                 "fieldtype": "datetime",
-                "format": "eu-datetime"
+                "format": "DD/MM/YYYY HH:MM:SS"
             },
             {
                 "name": "eu_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "eu-datetime-2y"
+                "format": "DD/MM/YY HH:MM:SS"
             },
             {
                 "name": "iso_datetime",
                 "fieldtype": "datetime",
-                "format": "iso8601-datetime"
+                "format": "YYYY-MM-DDTHH:MM:SS"
             },
             {
                 "name": "us_datetime",
                 "fieldtype": "datetime",
-                "format": "us-datetime"
+                "format": "MM/DD/YYYY HH:MM:SS"
             },
             {
                 "name": "us_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "us-datetime-2y"
+                "format": "MM/DD/YY HH:MM:SS"
             }
         ],
         "encoding": "UTF-8",
         "delimiter": ",",
         "quote_char": "\"",
         "escape_char": "\\",
-        "date_format": "eu-date",
-        "datetime_format": "eu-datetime",
+        "date_format": "DD/MM/YYYY",
+        "datetime_format": "DD/MM/YYYY HH:MM:SS",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0

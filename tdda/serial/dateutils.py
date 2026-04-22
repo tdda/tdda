@@ -526,7 +526,7 @@ def literaldate_to_strftime(s):
 
     fmt = infer_date_format_from_strings([s_bare])
     if fmt is None:
-        raise ValueError('Unrecognisable date example: %r' % s)
+        raise ValueError('Unrecognized date format: %r' % s)
     if fmt in AMBIGUOUS_DATE_FORMATS:
         raise ValueError(
             'Ambiguous date example (day/month order unclear): %r' % s
