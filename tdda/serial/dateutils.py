@@ -1,10 +1,26 @@
 """
-Date format inference utilities for flat-file (CSV) metadata.
+Date format utilities for flat-file (CSV) metadata in tdda.serial.
 
-Provides regex patterns and functions for detecting date and datetime
-formats from lists of string values, with no pandas dependency.
+Covers two related concerns:
+
+  Inference: detecting date/datetime formats from lists of string values
+             (infer_date_format_from_strings and helpers).
+
+  Formats:   parsing, translating and canonicalizing the four format styles
+             supported in .serial files:
+
+               isodate:     Named ISO8601 variants  (iso8601-date, ...)
+               yyyydate:    Component tokens        (YYYY-MM-DD, HH:MM:SS)
+               literaldate: Unambiguous date/time   (31/12/2000, 12:34:56PM)
+               pcdate:      Python strftime strings (%Y-%m-%d, %H:%M:%S)
+
+             Internally, % strings are used as the pivot format (needed by
+             pandas/polars).  The canonical literaldate date is
+             2000-12-31T12:34:56.789 — every component is unambiguous
+             (day=31>12, month=12>12, year=2000 4-digit, hour=12=noon/PM).
 """
 
+import datetime
 import re
 
 from collections import namedtuple
@@ -23,7 +39,22 @@ MONTH_FULLS = frozenset({
 })
 
 
-# ── Regex patterns ────────────────────────────────────────────────────────────
+# ── ISO8601 named format names ────────────────────────────────────────────────
+
+ISO_FORMAT_NAMES = frozenset({
+    'iso8601-date',
+    'iso8601-datetime',
+    'iso8601-datetime-tz',
+    'iso8601',
+})
+
+# ── Canonical date/time used for literaldate normalization ───────────────────
+
+CANONICAL_DT = datetime.datetime(2000, 12, 31, 12, 34, 56, 789000,
+                                  tzinfo=datetime.timezone.utc)
+
+
+# ── Regex patterns: inference ─────────────────────────────────────────────────
 
 
 class DateRE:
@@ -70,23 +101,67 @@ class DateRE:
 
     # Alpha-month patterns: backreference \2 ensures consistent separator.
     # Groups: see infer_alpha_date_format for layout.
+    # Date-time separator allows space, T, or : (colon covers Apache format).
     ALPHA_DMY = re.compile(  # dd-Mon-yyyy or dd Mon yyyy
         r'^([0-9]{1,2})([-. /])([a-zA-Z]{3,9})\2([0-9]{2,4})'
-        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+        r'(?:([ T:])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
     )
     ALPHA_MDY = re.compile(  # Mon-dd-yyyy or Mon dd yyyy
         r'^([a-zA-Z]{3,9})([-. /])([0-9]{1,2})\2([0-9]{2,4})'
-        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+        r'(?:([ T:])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
     )
     ALPHA_YMD = re.compile(  # yyyy-Mon-dd or yyyy Mon dd
         r'^([0-9]{4})([-. /])([a-zA-Z]{3,9})\2([0-9]{1,2})'
-        r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
+        r'(?:([ T:])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
     )
     ALPHA_MDY_COMMA = re.compile(  # Mon dd, yyyy  (US prose style)
         r'^([a-zA-Z]{3,9}) ([0-9]{1,2}), ([0-9]{2,4})'
         r'(?:([ T])([0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?)?$'
     )
 
+
+# ── Regex patterns: format style detection ───────────────────────────────────
+
+# Longer alternatives first: YYYY before YY, MONTH before MON, SS.S+ before SS
+_TOKEN_SPLIT_RE = re.compile(
+    r'(yyyy|yy|month|mon|mm|dd|hh|ss\.s+|ss|am|pm|[+-]zz:zz|[+-]zzzz)',
+    re.IGNORECASE,
+)
+
+_HAS_TOKEN_RE = re.compile(
+    r'yyyy|yy|month|mon|mm|dd|hh|ss\.s+|ss|am|pm|[+-]zz:zz|[+-]zzzz',
+    re.IGNORECASE,
+)
+
+# Time-only literaldate: HH:MM:SS or HH.MM.SS, optional frac (no AM/PM —
+# AM/PM is stripped before this is applied)
+_TIME_ONLY_RE = re.compile(
+    r'^(\d{1,2})([:.])\d{2}\2\d{2}(\.\d+)?$',
+)
+
+# Timezone suffix in literaldate examples: +HHMM, +HH:MM, -HHMM, -HH:MM
+# (optionally preceded by a space, as in Apache format: 12:34:56 +0000)
+_TZ_SUFFIX_RE = re.compile(r' ?[+-]\d{4}$| ?[+-]\d{2}:\d{2}$')
+
+# strftime code → yyyydate token; longest/most-specific substitutions first
+_STRFTIME_TO_TOKEN = [
+    ('%S.%f', 'SS.SSS'),
+    ('%Y',    'YYYY'),
+    ('%y',    'YY'),
+    ('%m',    'MM'),
+    ('%M',    'MM'),
+    ('%d',    'DD'),
+    ('%H',    'HH'),
+    ('%I',    'HH'),
+    ('%S',    'SS'),
+    ('%p',    'PM'),
+    ('%z',    '+ZZ:ZZ'),
+    ('%b',    'MON'),
+    ('%B',    'MONTH'),
+]
+
+
+# ── Inference support types ───────────────────────────────────────────────────
 
 # Sentinel return value for ISO datetimes from infer_date_format (pddates)
 ISODT = 'ISO8601'
@@ -120,7 +195,7 @@ Separators = namedtuple(
 )
 
 
-# ── Functions ─────────────────────────────────────────────────────────────────
+# ── Inference functions ───────────────────────────────────────────────────────
 
 
 def _is_valid_month(s):
@@ -354,3 +429,335 @@ def infer_date_format_from_strings(strings):
         return AmbiguousDateFormat.EU_OR_US_DATE_2Y
 
     return None
+
+
+# ── Format style detection ────────────────────────────────────────────────────
+
+
+def detect_format_style(s):
+    """
+    Return the style of a date format string.
+
+    Returns one of: 'isodate', 'yyyydate', 'literaldate', 'pcdate'.
+
+    Args:
+        s (str): date format string
+
+    Raises:
+        ValueError: if s is empty.
+    """
+    if not s:
+        raise ValueError('Empty date format string')
+    if s.startswith('%'):
+        return 'pcdate'
+    if s.lower() in ISO_FORMAT_NAMES:
+        return 'isodate'
+    if _HAS_TOKEN_RE.search(s):
+        return 'yyyydate'
+    return 'literaldate'
+
+
+# ── Inward converters (any style → %) ────────────────────────────────────────
+
+
+def yyyydate_to_strftime(s):
+    """
+    Convert a yyyydate token format string to a strftime format string.
+
+    Token strings use YYYY, MM, DD, HH, SS etc. as placeholders.
+    MM is resolved to month or minute by context (adjacent tokens).
+
+    Args:
+        s (str): token format such as 'YYYY-MM-DD HH:MM:SS'
+
+    Returns:
+        strftime format string such as '%Y-%m-%d %H:%M:%S'
+
+    Raises:
+        ValueError: if s contains no tokens or MM context is unresolvable.
+    """
+    parts = _TOKEN_SPLIT_RE.split(s)
+    tokens_raw = [parts[i].upper() for i in range(1, len(parts), 2)]
+    seps = [parts[i] for i in range(0, len(parts), 2)]
+
+    if not tokens_raw:
+        raise ValueError('No date tokens found: %r' % s)
+
+    has_ampm = any(t in ('AM', 'PM') for t in tokens_raw)
+    resolved = _resolve_mm(tokens_raw, s)
+
+    result = [seps[0]]
+    for i, t in enumerate(resolved):
+        result.append(_token_to_strftime(t, has_ampm))
+        result.append(seps[i + 1])
+    return ''.join(result)
+
+
+def literaldate_to_strftime(s):
+    """
+    Convert a literaldate unambiguous example date/time to a strftime format.
+
+    The example must satisfy:
+      - For numeric day/month, one must be > 12.
+      - Two-digit years must be 00 or >= 60.
+
+    Handles Apache-style bracket-wrapped dates: [31/Dec/2000:12:34:56 +0000]
+
+    Args:
+        s (str): example such as '31/12/2000', '12:34:56PM',
+                 or '[31/Dec/2000:12:34:56 +0000]'
+
+    Returns:
+        strftime format string
+
+    Raises:
+        ValueError: if the example is ambiguous or unrecognisable.
+    """
+    s = s.strip()
+    bracketed, s = _strip_brackets(s)
+    ampm, s_bare = _strip_ampm(s)
+
+    m = _TIME_ONLY_RE.match(s_bare)
+    if m:
+        fmt = _time_only_strftime(m, ampm is not None)
+        return ('[' + fmt + ']') if bracketed else fmt
+
+    has_tz, s_bare = _strip_tz(s_bare)
+
+    fmt = infer_date_format_from_strings([s_bare])
+    if fmt is None:
+        raise ValueError('Unrecognisable date example: %r' % s)
+    if fmt in AMBIGUOUS_DATE_FORMATS:
+        raise ValueError(
+            'Ambiguous date example (day/month order unclear): %r' % s
+        )
+
+    if has_tz:
+        fmt += '%z'
+
+    _check_two_digit_year(s_bare, fmt)
+
+    if ampm is not None:
+        fmt = fmt.replace('%H', '%I') + '%p'
+
+    return ('[' + fmt + ']') if bracketed else fmt
+
+
+def to_strftime(s):
+    """
+    Convert any date format style to a strftime format string.
+
+    isodate formats are passed through unchanged (caller should resolve
+    them via serial_format_to_strftime in metadata.py if needed).
+
+    Args:
+        s (str): format string in any style, or None.
+
+    Returns:
+        strftime format string, or None if s is None.
+    """
+    if s is None:
+        return None
+    style = detect_format_style(s)
+    if style == 'pcdate':
+        return s
+    if style == 'isodate':
+        return s  # caller resolves via serial_format_to_strftime
+    if style == 'yyyydate':
+        return yyyydate_to_strftime(s)
+    return literaldate_to_strftime(s)
+
+
+# ── Outward converters (% → other styles) ────────────────────────────────────
+
+
+def strftime_to_yyyydate(s):
+    """
+    Convert a strftime format string to a yyyydate token string.
+
+    Used when writing .serial files with --use-yyyy-dates.
+
+    Args:
+        s (str): strftime format such as '%Y-%m-%d %H:%M:%S'
+
+    Returns:
+        yyyydate token string such as 'YYYY-MM-DD HH:MM:SS'
+    """
+    result = s
+    for code, token in _STRFTIME_TO_TOKEN:
+        result = result.replace(code, token)
+    return result
+
+
+def strftime_to_literaldate(s):
+    """
+    Convert a strftime format string to a canonicalized literaldate string.
+
+    Applies the format to the canonical datetime (2000-12-31T12:34:56.789+0000)
+    to produce a concrete date string in the target format.
+
+    Used when writing .serial files with --use-literal-dates.
+
+    Args:
+        s (str): strftime format such as '%d/%m/%Y'
+
+    Returns:
+        canonical example string such as '31/12/2000'
+    """
+    return CANONICAL_DT.strftime(s)
+
+
+def canonicalize_date_format(s):
+    """
+    Canonicalize a date format string, preserving its style.
+
+    - yyyydate:    uppercase  (YYYY-MM-DD, not yyyy-mm-dd)
+    - literaldate: replace date components with canonical values
+    - isodate and pcdate: returned unchanged
+
+    Args:
+        s (str): date format string in any style.
+
+    Returns:
+        canonicalized format string in the same style.
+    """
+    if s is None:
+        return None
+    style = detect_format_style(s)
+    if style == 'yyyydate':
+        return s.upper()
+    if style == 'literaldate':
+        fmt = literaldate_to_strftime(s)
+        return strftime_to_literaldate(fmt)
+    return s
+
+
+# ── Private helpers ───────────────────────────────────────────────────────────
+
+
+def _strip_brackets(s):
+    """
+    Strip outer [ ] from s if present.
+
+    Returns:
+        (bracketed, bare): bracketed is True if brackets were found.
+    """
+    if s.startswith('[') and s.endswith(']'):
+        return True, s[1:-1]
+    return False, s
+
+
+def _strip_tz(s):
+    """
+    Strip a trailing timezone suffix from s (e.g. '+0000', ' +00:00').
+
+    Returns:
+        (has_tz, bare): has_tz is True if a TZ suffix was stripped.
+    """
+    m = _TZ_SUFFIX_RE.search(s)
+    if m:
+        return True, s[:m.start()]
+    return False, s
+
+
+def _strip_ampm(s):
+    """
+    Strip a trailing AM/PM suffix (with optional preceding space) from s.
+
+    Returns:
+        (ampm, bare): ampm is 'am'/'pm' or None; bare is s without the suffix.
+    """
+    lower = s.lower()
+    for suffix in (' pm', ' am', 'pm', 'am'):
+        if lower.endswith(suffix):
+            return suffix.strip(), s[:len(s) - len(suffix)].rstrip()
+    return None, s
+
+
+def _resolve_mm(tokens, original):
+    """
+    Resolve each MM token to NUMMON or MINUTE based on adjacent tokens.
+
+    MM adjacent to YYYY/YY/DD/MON/MONTH → NUMMON (numeric month).
+    MM adjacent to HH/SS*               → MINUTE.
+    """
+    resolved = list(tokens)
+    for i, t in enumerate(tokens):
+        if t != 'MM':
+            continue
+        prev = tokens[i - 1] if i > 0 else None
+        nxt = tokens[i + 1] if i < len(tokens) - 1 else None
+        if _is_date_tok(prev) or _is_date_tok(nxt):
+            resolved[i] = 'NUMMON'
+        elif _is_time_tok(prev) or _is_time_tok(nxt):
+            resolved[i] = 'MINUTE'
+        else:
+            raise ValueError(
+                'Cannot determine if MM is month or minute in: %r' % original
+            )
+    return resolved
+
+
+def _is_date_tok(t):
+    return t in ('YYYY', 'YY', 'DD', 'MON', 'MONTH')
+
+
+def _is_time_tok(t):
+    return t == 'HH' or (t is not None and t.startswith('SS'))
+
+
+def _token_to_strftime(t, has_ampm):
+    if t == 'YYYY':
+        return '%Y'
+    if t == 'YY':
+        return '%y'
+    if t == 'NUMMON':
+        return '%m'
+    if t == 'MINUTE':
+        return '%M'
+    if t == 'DD':
+        return '%d'
+    if t == 'MON':
+        return '%b'
+    if t == 'MONTH':
+        return '%B'
+    if t == 'HH':
+        return '%I' if has_ampm else '%H'
+    if t.startswith('SS.'):
+        return '%S.%f'
+    if t == 'SS':
+        return '%S'
+    if t in ('AM', 'PM'):
+        return '%p'
+    if t.endswith('ZZ:ZZ'):
+        return '%z'
+    if t.endswith('ZZZZ'):
+        return '%z'
+    raise ValueError('Unknown token: %r' % t)
+
+
+def _time_only_strftime(m, has_ampm):
+    sep = m.group(2)
+    frac = '.%f' if m.group(3) is not None else ''
+    hour = '%I' if has_ampm else '%H'
+    ampm_code = '%p' if has_ampm else ''
+    return '%s%s%%M%s%%S%s%s' % (hour, sep, sep, frac, ampm_code)
+
+
+def _check_two_digit_year(s, fmt):
+    """
+    Raise ValueError if fmt uses %y and the year value in s is ambiguous
+    (not 00 and < 60).
+    """
+    if '%y' not in fmt:
+        return
+    try:
+        dt = datetime.datetime.strptime(s, fmt)
+    except ValueError:
+        return
+    yr2 = dt.year % 100
+    if yr2 != 0 and yr2 < 60:
+        raise ValueError(
+            'Ambiguous 2-digit year %02d in %r '
+            '(must be 00 or >= 60)' % (yr2, s)
+        )

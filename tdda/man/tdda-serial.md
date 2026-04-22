@@ -115,6 +115,18 @@ for tdda.serial, CSVW, and frictionless.
                               * `QUOTE_STRINGS`
                               * `QUOTE_STRINGS_ONLY`
 
+`--use-literal-dates`         Specifies that date formats should be written
+                              to `.serial` files with unambiguous
+                              literal examples such as `2000-12-31T12:34:56`.
+
+`--use-yyyy-dates`            Specifies that date formats should be written
+                              to `.serial` files in the form examplified
+                              by `YYYY-MM-DD HH:MM:SS`.
+
+`--use-pc-dates`              Specifies that date formats should be written
+                              to `.serial` files in Python
+                              `strftime`-compatible % formats, exemplified by
+                              `%Y-%m-%dT%H:%M:%S`.
 
 ## EXAMPLES
 

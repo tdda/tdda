@@ -80,9 +80,8 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
             [
                 'Polars does not understand escape characters.\n'
                 'Ignoring escape value: \\\n',
-                'Field bool2 booleans yes, no will not be understood by Polars.\n'
-                'If they are present, you may need to set them to pl.String.\n'
-                '(Use map_other_bools_to_string=True.)\n',
+                'Field bool2 booleans yes, no will not be understood by Polars read_csv.\n'
+                'Will convert post-read using replace.',
             ],
         )
 

@@ -352,76 +352,139 @@ the `.serial` has the field entries in the same order as the data file.
 : A human-readable description of the field.
 
 
-### Date and Datetime Formats
+### TDDA Serial Date and Datetime Formats
 
-Date and datetime formats can be specified as either a **named format**
-or a **Python strftime string**.
+1. ISO8601
 
-#### Named Formats
+ISO8601 is the most widely understood, unproblematical format for
+dates and times and is recommended for new data and date written.
 
-Named formats are portable identifiers for common date and datetime
-conventions. In principle, they are intended to be more prescriptive
-on write that read, in much the same way that many read libraries
-accept variations on ISO8601 formats on read, but are strict on write.
+This can be specified in tdda serial as follows.
 
-In practice, the named formats can only safely be used as synonyms
-for specific `strftime`-type formats as most read libraries require
-a specific format for non-ISO8601 formats on read, including
-speficiation of the separators of various components.
+ - `iso8601-date` can be used for ISO8601 dates (2000-12-31)
+ - `iso8601-datetime` can be used for ISO8601 datetimes (2000-12-31T12:34:56)
+ - `iso8601-datetime-tz` can be used for ISO8601 datetimes with timezone
+    (2000-12-31T12:34:56+00:00) etc.
+ - `iso8601` can be used to indicate “any of the above”.
+
+With the ISO8601 variants, reading is liberal, allowing some
+variation in separators, whereas writing is strict.
+
+
+The `tdda.serial` format allows date formats to be specified in three
+other ways:
+
+2. Dates can specified using:
+
+    - YYYY for four-digit years
+    - YY for two-digit years
+    - MM for *numeric* month
+    - DD for day
+    - HH for hour
+    - MM for minute (Same as month! That's OK. Context disambiguates.)
+    - MON for a spelt-out three letter month line Jan
+    - MONTH for a spelt-out full month line January
+    - SS for whole seconds
+    - SS.S, SS.SS etc. (any number of S's after period) for fractional seconds.
+    - +ZZ:ZZ or +ZZZZ for timezone. (Can use `-` instead of `+`)
+    - AM or PM for 12-hour clock AM/PM indicator
+
+   Any case may be used. MM for minutes and month is disambiguated
+   by saying that MM when adjacent to YY or DD (other than a separator)
+   is a month,
+   and when adjacent to SS or HH indicates minutes.
+
+For example:
+
+  YYYY-MM-DDTHH:MM:SS.S+ZZ:ZZ
+  YYYY-MM-DDTHH:MM:SS.S-ZZ:ZZ
+  YYYY-MM-DD HH:MM:SS+ZZZZ
+  YYYY-MM-DDTHH:MM:SS
+  YYYY-MM-DD HH:MM
+  YYYY-MM-DD
+  YY-MM-DD
+  YY-MM-DDTHH:MM:SS.SPM
+  YY-MM-DDTHH:MM:SSAM
+  DD/MM/YYYY HH:MM:SS
+  MM/DD/YYYY HH:MM:SS
+  MM.DD.YY HH:MM:SSAM
+
+The string will always be standarized to upper case on write, but is
+case insensitive on read, for `.serial` files. (For `CSVW` files,
+mixed case is used, followings CSVW's conventions).
+
+3. Any **unambigous** date or datetime in the specified format
+   can be used as a specifier. By unambigous, we mean:
+    - The day is at least 13
+    - The year is either four digits or 60 or greater or 00
+   So
+
+   2000-12-31T12:34:56.789+0000
+   31/12/2000T12:34:56.789+00:00
+   31-12-2000T12:34:56.789-0000
+   31.12.2000T12:34:56-00:00
+   31/12/2000T12:34:56
+   31/12/2000 12:34:56
+   31/12/2000
+   12/31/2000
+   12/31/00
+   31/12/00
+   31 Dec 2000
+   31 December 2000
+   Dec 31 00
+   2000-12-31T12:34:56.789AM
+   2000-12-31T12:34:56.789PM
+
+   etc. are all acceptable. Things like
+
+   2000-02-01T12:34:56.789+0000
+   01/02/2000T12:34:56.789+00:00
+   01-02-2000T12:34:56.789+0000
+   01.02.2000T12:34:56+0000
+   01/02/2000T12:34:56
+   01/02/2000 12:34:56
+   01/02/2000
+   02/01/2000
+   02/01/00
+   01/02/00
+   01 Dec 22
+   22 Dec 01
+
+   are not, because they are ambigous.
+
+When reading `.serial` files the `tdda` library will accept
+any unambiguous date and reject anything it considers ambiguous.
+On writing, it will replace any other specific date with
+components from 2000-12-31T12:34:56.789+0000.
+
+4. Strings usable by [Python `strftime`](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
+   can be used.
+   These are typified by `%Y-%m-%dT%H:%M:%S`.
+
+
+On writing new `.serial` files, the library will default to named
+`iso8601` formats when the format is conformant with ISO8601,
+and will then choose the YYYY/MM/DD type specifier or
+`strftime-conforming` strings.
+
+You can specify a preferred form at the command line with
+--use-literal-dates, --use-yyyy-dates, --use-pc-dates.
 
 
 ##### ISO 8601 Formats
 
-| Named Format        | `strftime` equivalent                | Example                   |
-|:--------------------|:-------------------------------------|:--------------------------|
-| `iso8601-date`      | `%Y-%m-%d`                        | `2024-01-15`              |
-| `iso8601-datetime`  | `%Y-%m-%dT%H:%M:%S`        | `2024-01-15T12:34:56`     |
-| `iso8601-datetime-tz` | `%Y-%m-%dT%H:%M:%S%z`    | `2024-01-15T12:34:56+01:00` |
-| `iso8601`           | Any ISO 8601 date or datetime | Any of the above    |
+| Named Format          | `strftime` equivalent         | Example                   |
+|:----------------------|:------------------------------|:--------------------------|
+| `iso8601-date`        | `%Y-%m-%d`                    | `2000-12-31`              |
+| `iso8601-datetime`    | `%Y-%m-%dT%H:%M:%S`           | `2000-12-31T12:34:56`     |
+| `iso8601-datetime-tz` | `%Y-%m-%dT%H:%M:%S%z`         | `2000-12-31T12:34:56+00:00` |
+| `iso8601`             | Any ISO 8601 date or datetime | Any of the above    |
 
-On read, ISO formats should ideally also accept `/` and `.`
-as separators in
-addition to `-` (e.g. `15/01/2024`, `15.01.2024`),
-and should accept space (`" "`) instead of T,
+On read, ISO8601 formats should ideally accept `/` and `.`
+as separators for date components in addition to `-` (e.g. `2000/12/31`, `2000.12.31`),
+should accept space (`" "`) instead of T,
 and should also accept fractional seconds on times.
 
-##### European Formats
-
-Day before month (`DD/MM/YYYY`).
-
-| Named Format        | `strftime` equivalent    | Example                   |
-|:--------------------|:-------------------------|:--------------------------|
-| `eu-date`           | `%d/%m/%Y`               | `15/01/2024`              |
-| `eu-date-2y`        | `%d/%m/%y`               | `15/01/24`                |
-| `eu-datetime`       | `%d/%m/%Y %H:%M:%S`      | `15/01/2024 12:34:56`     |
-| `eu-datetime-2y`    | `%d/%m/%y %H:%M:%S`      | `15/01/24 12:34:56`       |
-
-On read, European formats should ideally also accept `-` and `.`
-as separators in
-addition to `/` (e.g. `15-01-2024`, `15.01.2024`),
-though many readers cannot do this.
-
-##### US Formats
-
-Month before day (`MM/DD/YYYY`).
-
-| Named Format        | `strftime` equivalent    | Example                   |
-|:--------------------|:-------------------------|:--------------------------|
-| `us-date`           | `%m/%d/%Y`               | `01/15/2024`              |
-| `us-date-2y`        | `%m/%d/%y`               | `01/15/24`                |
-| `us-datetime`       | `%m/%d/%Y %H:%M:%S`      | `01/15/2024 12:34:56`     |
-| `us-datetime-2y`    | `%m/%d/%y %H:%M:%S`      | `01/15/24 12:34:56`       |
-
-On read, US formats should ideally also accept `-` and `.`
-as separators in
-addition to `/` (e.g. `15-01-2024`, `15.01.2024`),
-though many readers cannot do this.
-
-#### `strftime` Strings
-
-Any Python strftime format string is also accepted, e.g. `"%d/%m/%Y"`
-or `"%Y-%m-%d %H:%M:%S"`. Named formats are preferred where one
-exists, as they are more portable across libraries.
 
 #### Format Precedence
 
@@ -1048,5 +1111,4 @@ code is generated with
 all is handled:
 
 %% data/examplereadpl.py
-
 

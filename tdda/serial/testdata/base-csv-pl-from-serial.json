@@ -10,7 +10,7 @@
         "int": "Int64",
         "float": "Float64",
         "bool1": "Boolean",
-        "bool2": "Boolean",
+        "bool2": "String",
         "bool3": "Boolean",
         "stri": "String",
         "strf": "String",

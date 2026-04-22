@@ -149,7 +149,6 @@ class TestConversion(ReferenceTestCase):
         )
         self.dfEqual(df, expected)
 
-    @tag
     def test_simple2metadata(self):
         md_path = os.path.join(TESTDATADIR, 'simple-metadata.json')
         md = CSVWMetadata(md_path)
