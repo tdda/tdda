@@ -235,8 +235,10 @@ Optional. No default.
 **`path`** *(string)*
 : Optional path to a datafile. Not usually populated since `.serial`
   data usually applies to a set of datafiles rather than a single one.
-  Can be relative or absolute.
-
+  Can be relative or absolute. The path should be considered advisory
+  rather than definitive, i.e. there is no problem at all to use
+  a `.serial` file specifying a particular flat file with a different
+  flat file. Indeed, this is common.
 
 **`fields`** *(array or object)*
 : Descriptions of the fields in the file. See

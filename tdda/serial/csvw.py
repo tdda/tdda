@@ -279,7 +279,7 @@ class CSVWMetadata(SerialMetadata):
 
     def write_csvw(self, path, csvfile=None, lang=None, indent=4):
         if not csvfile:
-            csvfile = self.choose_csv_from_csvw_name(path)
+            csvfile = self.path or self.choose_csv_from_csvw_name(path)
         out = self.to_csvw_json(csvfile=csvfile, lang=lang, indent=indent)
         with open(path, 'w') as f:
             f.write(out)

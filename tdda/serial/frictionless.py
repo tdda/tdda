@@ -215,7 +215,7 @@ class FrictionlessMetadata(SerialMetadata):
 
     def write_frictionless(self, path, csvfile=None, indent=None, lang=None):
         if not csvfile:
-            csvfile = self.choose_csv_from_frictionless_name(path)
+            csvfile = self.path or self.choose_csv_from_frictionless_name(path)
         basename = os.path.basename(path)
         is_pkg = bool(re.search(r'\.package\.(json|yaml)$', basename))
         resource_type = 'package' if is_pkg else None

@@ -1,7 +1,7 @@
 {
     "name": "docdata",
     "type": "table",
-    "path": "docdata.ssv",
+    "path": "docdata.txt",
     "scheme": "file",
     "format": "csv",
     "mediatype": "text/csv",

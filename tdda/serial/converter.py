@@ -323,6 +323,22 @@ class SerialConverter:
             help='Declare that there is only a single field in the file.',
         )
 
+        parser.add_argument(
+            '--include-path',
+            action='store_true',
+            default=None,
+            dest='include_path',
+            help='Include path to data file in .serial output.',
+        )
+
+        parser.add_argument(
+            '--exclude-path',
+            action='store_true',
+            default=None,
+            dest='exclude_path',
+            help='Exclude path to data file from .serial output.',
+        )
+
         return parser
 
     def convert(self, debug=False, warner=None):
@@ -362,6 +378,14 @@ class SerialConverter:
                 )
 
         if self.broad_out == 'tdda.serial':
+            if getattr(self, 'exclude_path', None):
+                md_out.path = None
+            elif getattr(self, 'include_path', None):
+                md_out.path = (
+                    self.for_csv
+                    or getattr(md_in, 'path', None)
+                    or (self.inpath if self.generate else None)
+                )
             md_out.write(self.outpath, verbose=self.verbosity > 1)
         elif self.broad_out == 'csvw':
             c = serial_to_csvw(md_in)
