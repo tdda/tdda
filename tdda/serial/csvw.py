@@ -10,6 +10,7 @@ from tdda.serial.metadata import (
     RE_ISO8601,
     SerialMetadata,
     TDDASerialError,
+    serial_format_to_strftime,
     writer,
 )
 from tdda.serial.utils import CSVW_MD_RE
@@ -671,10 +672,7 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
             else 'yyyy-MM-ddTHH:mm:ss'
         )
 
-    # Resolve named formats (e.g. 'iso8601-date', 'eu-date') to strftime
-    strftime = NAMED_FORMAT_TO_STRFTIME.get(fmt)
-    if strftime:
-        fmt = strftime
+    fmt = serial_format_to_strftime(fmt) or fmt
 
     if '%b' in fmt or '%B' in fmt:
         warn(

@@ -8,17 +8,26 @@ from tdda.serial.dateutils import (
     AMBIGUOUS_DATE_FORMATS,
     infer_date_format_from_strings,
     resolve_ambiguous_format,
+    strftime_to_yyyydate,
 )
 from tdda.serial.metadata import (
     SerialMetadata,
     FieldMetadata,
     FieldType,
     QUOTING_CODES,
+    NAMED_FORMAT_TO_STRFTIME,
     STRFTIME_TO_NAMED_FORMAT,
 )
 from tdda.utils import TDDAError, warn, error, nvl, debug, testwarn
 from tdda.referencetest.utils import FileType
 from tdda.serial.utils import non_chars, dict_max_items
+
+
+def _to_yyyy(fmt):
+    if fmt is None:
+        return None
+    yyyy = strftime_to_yyyydate(fmt)
+    return yyyy if '%' not in yyyy else fmt
 
 
 KNOWN_NULLS = [
@@ -862,16 +871,19 @@ class MetadataInferrer:
         # Hoist date_format (pure date fields only)
         unique_date_fmts = set(date_only_fmts.values())
         if len(unique_date_fmts) == 1:
-            self.date_format = list(unique_date_fmts)[0]
+            self.date_format = _to_yyyy(list(unique_date_fmts)[0])
             field_date_fmts = {}
         elif len(unique_date_fmts) > 1:
             named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_date_fmts}
             if len(named) == 1 and None not in named:
-                self.date_format = list(named)[0]
+                self.date_format = _to_yyyy(
+                    NAMED_FORMAT_TO_STRFTIME[list(named)[0]]
+                )
                 field_date_fmts = {}
             else:
                 self.date_format = None
-                field_date_fmts = date_only_fmts
+                field_date_fmts = {k: _to_yyyy(v)
+                                   for k, v in date_only_fmts.items()}
         else:
             self.date_format = None
             field_date_fmts = {}
@@ -879,16 +891,19 @@ class MetadataInferrer:
         # Hoist datetime_format (datetime fields only)
         unique_dt_fmts = set(datetime_fmts.values())
         if len(unique_dt_fmts) == 1:
-            self.datetime_format = list(unique_dt_fmts)[0]
+            self.datetime_format = _to_yyyy(list(unique_dt_fmts)[0])
             field_dt_fmts = {}
         elif len(unique_dt_fmts) > 1:
             named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_dt_fmts}
             if len(named) == 1 and None not in named:
-                self.datetime_format = list(named)[0]
+                self.datetime_format = _to_yyyy(
+                    NAMED_FORMAT_TO_STRFTIME[list(named)[0]]
+                )
                 field_dt_fmts = {}
             else:
                 self.datetime_format = None
-                field_dt_fmts = datetime_fmts
+                field_dt_fmts = {k: _to_yyyy(v)
+                                 for k, v in datetime_fmts.items()}
         else:
             self.datetime_format = None
             field_dt_fmts = {}

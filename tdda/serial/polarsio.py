@@ -262,11 +262,11 @@ def serial_to_polars_read_csv_args_and_postproc(
                 else 'date_format'
             )
             fmt = nvl(fmd.format, getattr(md, attr, None))
+            strfmt = serial_format_to_strftime(fmt) if fmt else None
             if (fmt and not fmt.lower().startswith('iso')
-                    and not fmt.startswith("%Y-%m-%d")):
+                    and not strfmt.startswith("%Y-%m-%d")):
                 # TODO: Second condition might be too loose
                 schema[field] = f(pl.String)
-                strfmt = serial_format_to_strftime(fmt)
                 op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
                 postproc[field] = {'op': op, 'format': strfmt}
                 Warn(

@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -10,52 +10,52 @@
             {
                 "name": "EOE_date",
                 "fieldtype": "date",
-                "format": "%d/%b/%Y"
+                "format": "DD/MON/YYYY"
             },
             {
                 "name": "eu_date_2y",
                 "fieldtype": "date",
-                "format": "%d/%b/%y"
+                "format": "DD/MON/YY"
             },
             {
                 "name": "iso_date",
                 "fieldtype": "date",
-                "format": "%Y-%b-%d"
+                "format": "YYYY-MON-DD"
             },
             {
                 "name": "us_date",
                 "fieldtype": "date",
-                "format": "%b/%d/%Y"
+                "format": "MON/DD/YYYY"
             },
             {
                 "name": "us_date_2y",
                 "fieldtype": "date",
-                "format": "%b/%d/%y"
+                "format": "MON/DD/YY"
             },
             {
                 "name": "eu_datetime",
                 "fieldtype": "datetime",
-                "format": "%d/%b/%Y %H:%M:%S"
+                "format": "DD/MON/YYYY HH:MM:SS"
             },
             {
                 "name": "eu_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "%d/%b/%y %H:%M:%S"
+                "format": "DD/MON/YY HH:MM:SS"
             },
             {
                 "name": "iso_datetime",
                 "fieldtype": "datetime",
-                "format": "%Y-%b-%dT%H:%M:%S"
+                "format": "YYYY-MON-DDTHH:MM:SS"
             },
             {
                 "name": "us_datetime",
                 "fieldtype": "datetime",
-                "format": "%b/%d/%Y %H:%M:%S"
+                "format": "MON/DD/YYYY HH:MM:SS"
             },
             {
                 "name": "us_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "%b/%d/%y %H:%M:%S"
+                "format": "MON/DD/YY HH:MM:SS"
             }
         ],
         "delimiter": "\t",

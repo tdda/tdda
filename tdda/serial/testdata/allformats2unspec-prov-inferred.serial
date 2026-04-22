@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -10,62 +10,62 @@
             {
                 "name": "eu_date",
                 "fieldtype": "date",
-                "format": "%d/%m/%Y"
+                "format": "DD/MM/YYYY"
             },
             {
                 "name": "eu_date_2y",
                 "fieldtype": "date",
-                "format": "%d/%m/%y"
+                "format": "DD/MM/YY"
             },
             {
                 "name": "iso_date",
                 "fieldtype": "date",
-                "format": "%Y-%m-%d"
+                "format": "YYYY-MM-DD"
             },
             {
                 "name": "us_date",
                 "fieldtype": "date",
-                "format": "%m/%d/%Y"
+                "format": "MM/DD/YYYY"
             },
             {
                 "name": "us_date_2y",
                 "fieldtype": "date",
-                "format": "%m/%d/%y"
+                "format": "MM/DD/YY"
             },
             {
                 "name": "eu_datetime",
                 "fieldtype": "datetime",
-                "format": "%d/%m/%Y %H:%M:%S"
+                "format": "DD/MM/YYYY HH:MM:SS"
             },
             {
                 "name": "eu_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "%d/%m/%y %H:%M:%S"
+                "format": "DD/MM/YY HH:MM:SS"
             },
             {
                 "name": "iso_datetime",
                 "fieldtype": "datetime",
-                "format": "%Y-%m-%dT%H:%M:%S"
+                "format": "YYYY-MM-DDTHH:MM:SS"
             },
             {
                 "name": "us_datetime",
                 "fieldtype": "datetime",
-                "format": "%m/%d/%Y %H:%M:%S"
+                "format": "MM/DD/YYYY HH:MM:SS"
             },
             {
                 "name": "us_datetime_2y",
                 "fieldtype": "datetime",
-                "format": "%m/%d/%y %H:%M:%S"
+                "format": "MM/DD/YY HH:MM:SS"
             },
             {
                 "name": "udate",
                 "fieldtype": "date",
-                "format": "%d/%m/%Y"
+                "format": "DD/MM/YYYY"
             },
             {
                 "name": "udatetime",
                 "fieldtype": "datetime",
-                "format": "%m/%d/%Y %H:%M:%S"
+                "format": "MM/DD/YYYY HH:MM:SS"
             }
         ],
         "delimiter": ",",

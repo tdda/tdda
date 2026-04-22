@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -10,62 +10,62 @@
             {
                 "name": "EOE_adate",
                 "fieldtype": "date",
-                "format": "%d/%B/%Y"
+                "format": "DD/MONTH/YYYY"
             },
             {
                 "name": "eu_adate_2y",
                 "fieldtype": "date",
-                "format": "%d/%B/%y"
+                "format": "DD/MONTH/YY"
             },
             {
                 "name": "iso_adate",
                 "fieldtype": "date",
-                "format": "%Y-%B-%d"
+                "format": "YYYY-MONTH-DD"
             },
             {
                 "name": "us_adate",
                 "fieldtype": "date",
-                "format": "%B/%d/%Y"
+                "format": "MONTH/DD/YYYY"
             },
             {
                 "name": "us_adate_2y",
                 "fieldtype": "date",
-                "format": "%B/%d/%y"
+                "format": "MONTH/DD/YY"
             },
             {
                 "name": "eu_adatetime",
                 "fieldtype": "datetime",
-                "format": "%d/%B/%Y %H:%M:%S"
+                "format": "DD/MONTH/YYYY HH:MM:SS"
             },
             {
                 "name": "eu_adatetime_2y",
                 "fieldtype": "datetime",
-                "format": "%d/%B/%y %H:%M:%S"
+                "format": "DD/MONTH/YY HH:MM:SS"
             },
             {
                 "name": "iso_adatetime",
                 "fieldtype": "datetime",
-                "format": "%Y-%B-%dT%H:%M:%S"
+                "format": "YYYY-MONTH-DDTHH:MM:SS"
             },
             {
                 "name": "us_adatetime",
                 "fieldtype": "datetime",
-                "format": "%B/%d/%Y %H:%M:%S"
+                "format": "MONTH/DD/YYYY HH:MM:SS"
             },
             {
                 "name": "us_adatetime_2y",
                 "fieldtype": "datetime",
-                "format": "%B/%d/%y %H:%M:%S"
+                "format": "MONTH/DD/YY HH:MM:SS"
             },
             {
                 "name": "euro_adates",
                 "fieldtype": "date",
-                "format": "%d %B %Y"
+                "format": "DD MONTH YYYY"
             },
             {
                 "name": "us_adates",
                 "fieldtype": "date",
-                "format": "%B %d, %Y"
+                "format": "MONTH DD, YYYY"
             }
         ],
         "delimiter": "\t",

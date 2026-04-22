@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -62,8 +62,8 @@
         ],
         "delimiter": ",",
         "quote_char": "\"",
-        "date_format": "%Y-%m-%d",
-        "datetime_format": "%Y-%m-%d %H:%M:%S",
+        "date_format": "YYYY-MM-DD",
+        "datetime_format": "YYYY-MM-DD HH:MM:SS",
         "null_indicator": "",
         "header_row_count": 1,
         "header_row": 0,

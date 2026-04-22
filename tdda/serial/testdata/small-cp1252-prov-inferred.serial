@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -42,12 +42,12 @@
             {
                 "name": "dti",
                 "fieldtype": "datetime",
-                "format": "%Y-%m-%dT%H:%M:%S"
+                "format": "YYYY-MM-DDTHH:MM:SS"
             },
             {
                 "name": "dte",
                 "fieldtype": "datetime",
-                "format": "%d/%m/%Y %H:%M:%S"
+                "format": "DD/MM/YYYY HH:MM:SS"
             },
             {
                 "name": "dtu",
@@ -56,17 +56,17 @@
             {
                 "name": "di",
                 "fieldtype": "date",
-                "format": "%Y-%m-%d"
+                "format": "YYYY-MM-DD"
             },
             {
                 "name": "de",
                 "fieldtype": "date",
-                "format": "%d/%m/%Y"
+                "format": "DD/MM/YYYY"
             },
             {
                 "name": "du",
                 "fieldtype": "date",
-                "format": "%m/%d/%Y"
+                "format": "MM/DD/YYYY"
             }
         ],
         "encoding": "windows-1255",
