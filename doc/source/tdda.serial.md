@@ -543,6 +543,65 @@ The `tdda.serial` `csv_to_polars` works around this by instructing
 polars to read fields it cannot parse with `read_csv` as strings
 and then post-processing them to convert them to date or datetime fields.
 
+### Metadata Matching and `@` wildcards
+
+When a colon is added to the end of a flat file name or path
+to request that `tdda.serial` finds matching metadata,
+and then `find_metadata=True` is passed into relevant API calls,
+`tdda`'s matching process for a file `foo.ext` is as follows:
+
+1. It first looks for `foo.ext.serial` (in the same directory as `foo.ext`).
+
+2. It first looks for `foo.serial` (in the same directory as `foo.ext`).
+   (This the most common pattern; `foo.ext.serial` is checked first to
+   allow matching of metadata when the same stem appears with multiple
+   extensions, e.g. `.csv` and `.psv`)
+
+3. Failing that, it looks for any wildcard matches using `@` as a wildcard
+   similar to how `*` is used in globbing, i.e. `@` matches any characters
+   or no characters. So for example any of
+
+    - `@.serial`
+    - `foo@.serial`
+    - `@foo.serial`
+    - `@f@o@.serial`
+
+   will match, but none of
+
+    - `Foo.serial`
+    - `fool*.serial`
+    - `f0*.serial`
+
+   will do so. If a single metadata file containing `@` matches,
+   that will be used. If multiple `.serial` files with wildcards
+   match, an error will be raised.
+
+4. Next, the following are checked:
+
+    - `foo-metadata.json`
+    - `foo-csvmetadata.json`
+    - `foo-csv-metadata.json`
+    - `foo.csvmetadata`
+    - `foo.csv-metadata`
+
+   These are common patterns for CSVW, and will be used as CSVW
+   if the `@context` attribute indicates csvw, and as `tdda.serial`
+   if the `format` attribute indicates that.
+
+5. Common Frictionless patterns are explored. Frictionless usually
+   used either `.yaml` or `.json`, and includes either `.resource`,
+   `.package`, or `.schema` in the filename before it, so any of:
+
+    - `foo.resource.json`
+    - `foo.package.json`
+    - `foo.schema.json`
+    - `foo.resource.yaml`
+    - `foo.package.yaml`
+    - `foo.schema.yaml`
+
+   will match.
+
+
 ### Pandas `dtype` Back Ends
 
 Pandas has three different back ends for storing data.
@@ -630,7 +689,6 @@ calls the function with the appropriate inpath. For example:
 % TODO: This doesn't seem to work currently
 
 %% data/tddaserial3.sh
-
 
 ## Writing Data with `tdda.serial` (API)
 
