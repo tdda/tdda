@@ -238,23 +238,27 @@ def serial_to_polars_read_csv_args_and_postproc(
             bads = ', '.join(
                 v
                 for v in (listify(fmd.true_values) + listify(fmd.false_values))
-                if v.lower not in ['true', 'false']
+                if v.lower() not in ('true', 'false')
             )
-            # What if swapped?
             if any(bads):
-                start = (
-                    f'Field {field} booleans {bads} will not be '
-                    'understood by Polars.'
-                )
-                param = 'map_other_bools_to_string=True'
+                trues = listify(fmd.true_values)
+                falses = listify(fmd.false_values)
+                schema[field] = f(pl.String)
                 if map_other_bools_to_string:
-                    Warn(f'{start}\nSetting to pl.String ({param}).\n')
-                    schema[field] = f(pl.String)
-                else:
                     Warn(
-                        f'{start}\nIf they are present, '
-                        f'you may need to set them to pl.String.\n'
-                        f'(Use {param}.)\n'
+                        f'Field {field} booleans {bads} will not be '
+                        f'understood by Polars.\nMapping to pl.String.\n'
+                    )
+                else:
+                    postproc[field] = {
+                        'op': 'bool_map',
+                        'trues': trues,
+                        'falses': falses,
+                    }
+                    Warn(
+                        f'Field {field} booleans {bads} will not be '
+                        f'understood by Polars read_csv.\n'
+                        f'Will convert post-read using replace.'
                     )
 
     if any(f.name != f.csvname for f in md.fields):
@@ -407,6 +411,10 @@ def csv_to_polars(
         try:
             if info['op'] == 'to_date':
                 expr = pl.col(name).str.to_date(format=info['format'])
+            elif info['op'] == 'bool_map':
+                mapping = {v: True for v in info['trues']}
+                mapping.update({v: False for v in info['falses']})
+                expr = pl.col(name).replace(mapping, return_dtype=pl.Boolean)
             else:
                 expr = pl.col(name).str.to_datetime(format=info['format'])
             df = df.with_columns(expr)
@@ -470,6 +478,12 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     if not postproc:
         return (PYTHON_TEMPLATES.POLARS_READ % args).lstrip()
     exprs = '\n'.join(
+        (
+            f'        pl.col({name!r})'
+            f'.replace({{{", ".join(f"{v!r}: True" for v in info["trues"])}'
+            f', {", ".join(f"{v!r}: False" for v in info["falses"])}}}'
+            f', return_dtype=pl.Boolean),'
+        ) if info['op'] == 'bool_map' else
         f'        pl.col({name!r}).str.{info["op"]}(format={info["format"]!r}),'
         for name, info in postproc.items()
     )
