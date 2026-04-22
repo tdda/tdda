@@ -20,7 +20,7 @@ from tdda.utils import listify, warn, nvl
 
 class POLARS:
     read_key = 'polars.read_csv'
-    write_key = 'polars.DataFrame.to_csv'
+    write_key = 'polars.DataFrame.write_csv'
 
 
 POLARS_DTYPES = [
@@ -97,6 +97,51 @@ def serial_to_polars_read_csv_args(
         map_other_bools_to_string=map_other_bools_to_string,
     )
     return kw
+
+
+POLARS_QUOTE_STYLE = {
+    'QUOTE_ALL': 'always',
+    'QUOTE_MINIMAL': 'necessary',
+    'QUOTE_NONNUMERIC': 'non_numeric',
+    'QUOTE_NONE': 'never',
+    'QUOTE_NOTNULL': 'always',
+    'QUOTE_STRINGS': 'non_numeric',
+    'QUOTE_STRINGS_ONLY': 'non_numeric',
+}
+
+
+def serial_to_polars_write_csv_args(md, backend=None, warner=None, **kw):
+    if POLARS.write_key in md.libs:
+        return md.libs[POLARS.write_key]
+
+    out = {}
+    if md.delimiter:
+        out['separator'] = md.delimiter
+
+    if md.quote_char:
+        out['quote_char'] = md.quote_char
+
+    if md.header_row_count == 0:
+        out['include_header'] = False
+
+    null = md.single_null_indicator()
+    if null is not None:
+        out['null_value'] = null
+
+    if md.date_format:
+        out['date_format'] = serial_format_to_strftime(md.date_format)
+
+    if md.datetime_format:
+        out['datetime_format'] = serial_format_to_strftime(
+            md.datetime_format
+        )
+
+    if md.quoting:
+        style = POLARS_QUOTE_STYLE.get(md.quoting)
+        if style:
+            out['quote_style'] = style
+
+    return out
 
 
 def serial_to_polars_read_csv_args_and_postproc(

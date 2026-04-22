@@ -39,15 +39,15 @@ SHORT FORM  LONG FORM/Description
   \fB\&.\fR         \fBtdda.serial\fR
   \fBpd.r\fR      \fBpandas.read_csv\fR
   \fBpd.w\fR      \fBpandas.DataFrame.to_csv\fR
-  \fBpl.\fR       \fBpolars.read_csv\fR
+  \fBpl.r\fR      \fBpolars.read_csv\fR
   \fBpl.w\fR      \fBpolars.DataFrame.write_csv\fR
   \fBcsv.r\fR     \fBpython.csv.reader\fR
   \fBcsv.w\fR     \fBpython.csv.writer\fR
   \fBcsvw\fR      \fBCSVW\fR
   \fBfl\fR        \fBfrictionless\fR
-  \fBfless\fR     \fBfrictionless
-\fRfl.rfrictionless.resource\fB
-\fRfl.pfrictionless.package`
+  \fBfless\fR     \fBfrictionless\fR
+  \fBfl.r\fR      \fBfrictionless.resource\fR
+  \fBfl.p\fR      \fBfrictionless.package\fR
 
 .PP
 Multiple formats can be separated by commas.
@@ -136,7 +136,7 @@ for tdda.serial, CSVW, and frictionless.
                           * `QUOTE_NONE`
                           * `QUOTE_NOTNULL`
                           * `QUOTE_STRINGS`
-                          * `QUOTE_ONLY_STRINGS`
+                          * `QUOTE_STRINGS_ONLY`
 .EE
 
 .SH EXAMPLES

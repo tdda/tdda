@@ -32,13 +32,13 @@ Supported formats `FMT`:
   `.`         `tdda.serial`
   `pd.r`      `pandas.read_csv`
   `pd.w`      `pandas.DataFrame.to_csv`
-  `pl.`       `polars.read_csv`
+  `pl.r`      `polars.read_csv`
   `pl.w`      `polars.DataFrame.write_csv`
   `csv.r`     `python.csv.reader`
   `csv.w`     `python.csv.writer`
   `csvw`      `CSVW`
   `fl`        `frictionless`
-  `fless`     `frictionless
+  `fless`     `frictionless`
   `fl.r`      `frictionless.resource`
   `fl.p`      `frictionless.package`
 
@@ -113,7 +113,7 @@ for tdda.serial, CSVW, and frictionless.
                               * `QUOTE_NONE`
                               * `QUOTE_NOTNULL`
                               * `QUOTE_STRINGS`
-                              * `QUOTE_ONLY_STRINGS`
+                              * `QUOTE_STRINGS_ONLY`
 
 
 ## EXAMPLES

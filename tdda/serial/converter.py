@@ -16,6 +16,7 @@ from tdda.serial.pandasio import (
 from tdda.serial.polarsio import (
     serial_to_polars_read_csv_args,
     serial_to_polars_read_csv_python,
+    serial_to_polars_write_csv_args,
 )
 from tdda.serial.reader import load_metadata
 from tdda.serial.utils import find_metadata_type_from_path
@@ -26,6 +27,7 @@ CONVERTER = {
     'pandas.read_csv': serial_to_pandas_read_csv_args,
     'pandas.DataFrame.to_csv': serial_to_pandas_write_csv_args,
     'polars.read_csv': serial_to_polars_read_csv_args,
+    'polars.DataFrame.write_csv': serial_to_polars_write_csv_args,
 }
 
 

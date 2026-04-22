@@ -29,15 +29,15 @@ SYNOPSIS
     [1m.         tdda.serial[0m
     [1mpd.r      pandas.read_csv[0m
     [1mpd.w      pandas.DataFrame.to_csv[0m
-    [1mpl.       polars.read_csv[0m
+    [1mpl.r      polars.read_csv[0m
     [1mpl.w      polars.DataFrame.write_csv[0m
     [1mcsv.r     python.csv.reader[0m
     [1mcsv.w     python.csv.writer[0m
     [1mcsvw      CSVW[0m
     [1mfl        frictionless[0m
     [1mfless     frictionless[0m
-  fl.rfrictionless.resource
-  fl.pfrictionless.package‘
+    [1mfl.r      frictionless.resource[0m
+    [1mfl.p      frictionless.package[0m
 
   Multiple formats can be separated by commas.
 
@@ -109,7 +109,7 @@ Options used primarily or exclusibely with [1m‐‐generate[22m/[1m‐‐gen
                             * ‘QUOTE_NONE‘
                             * ‘QUOTE_NOTNULL‘
                             * ‘QUOTE_STRINGS‘
-                            * ‘QUOTE_ONLY_STRINGS‘
+                            * ‘QUOTE_STRINGS_ONLY‘
 
 EXAMPLES
 

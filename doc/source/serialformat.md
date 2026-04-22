@@ -261,7 +261,7 @@ All dataset-level keys are optional.
 
 The extra value supported by `tdda.serial` is
 
-  - `QUOTE_ONLY_STRINGS`: Only string values are quoted: nulls and values
+  - `QUOTE_STRINGS_ONLY`: Only string values are quoted: nulls and values
     of all non-string types are not quoted. (This is essentially what
     JSON does, except that JSON has no date/datetime types, so those are
     usually stored as strings, and therefore quoted.)
@@ -1007,7 +1007,7 @@ The available Override switches are:
 `--quoting STYLE`
 : Specifies that the quoting style should be set to `STYLE`,
   which must be one of Python `csv`'s `QUOTE` styles or
-  the `tdda`-specific JSON-style `QUOTE_ONLY_STRINGS`.
+  the `tdda`-specific JSON-style `QUOTE_STRINGS_ONLY`.
 
 
 In addition to these overrides, other useful switches for inference are:
