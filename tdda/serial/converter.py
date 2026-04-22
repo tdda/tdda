@@ -378,7 +378,12 @@ class SerialConverter:
             elif fmt == 'frictionless':
                 pass
             elif self.broad_out != 'python':
-                convert = CONVERTER[fmt]
+                convert = CONVERTER.get(fmt)
+                if convert is None:
+                    error(
+                        f'Metadata format {fmt} is planned'
+                        f' but not yet implemented.'
+                    )
                 if not getattr(md_out, 'libs', None):
                     md_out.libs = {}
                 if self.map_other_bools_to_string:

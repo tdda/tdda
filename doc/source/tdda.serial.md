@@ -239,6 +239,10 @@ Optional. No default.
   rather than definitive, i.e. there is no problem at all to use
   a `.serial` file specifying a particular flat file with a different
   flat file. Indeed, this is common.
+  Note: since `path` is only really for information, it can be set
+  to a glob (wildcard) pattern like '*.csv' or 'foo*.csv' to indicate
+  a set of files. `@` can also be used as the wildcard
+  to match `tdda.serial` filename conventions (see below).
 
 **`fields`** *(array or object)*
 : Descriptions of the fields in the file. See

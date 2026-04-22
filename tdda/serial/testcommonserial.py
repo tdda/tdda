@@ -23,13 +23,17 @@ from tdda.serial.pandasio import (
 from tdda.serial.reader import (
     find_metadata_kind,
 )
-from tdda.serial.utils import find_metadata_type_from_path
-from tdda.utils import testwarn
+from tdda.serial.utils import (
+    find_associated_metadata_file,
+    find_metadata_type_from_path,
+)
+from tdda.utils import TDDAError, testwarn
 
 
 THISDIR = os.path.abspath(os.path.dirname(__file__))
 TESTDATADIR = os.path.join(THISDIR, 'testdata')
 EXAMPLESDIR = os.path.join(THISDIR, 'examples')
+GLOBDIR = os.path.join(TESTDATADIR, 'globfiles')
 REFTESTDATA = os.path.normpath(
     os.path.join(THISDIR, '..', 'constraints', 'testdata')
 )
@@ -575,6 +579,37 @@ class TestLegacyDatetimeFormat(ReferenceTestCase):
         # date_format takes precedence over datetime_format
         m = SerialMetadata(date_format='eu-date', datetime_format='iso8601')
         self.assertEqual(m.date_format, 'eu-date')
+
+
+class TestWildcardSerialLookup(ReferenceTestCase):
+    def gpath(self, name):
+        return os.path.join(GLOBDIR, name)
+
+    def testSimpleWildcard(self):
+        result = find_associated_metadata_file(self.gpath('foobar.csv'))
+        self.assertEqual(result, self.gpath('foo@.serial'))
+
+    def testWildcardDifferentExtension(self):
+        result = find_associated_metadata_file(self.gpath('fooqux.txt'))
+        self.assertEqual(result, self.gpath('foo@.serial'))
+
+    def testTwoWildcards(self):
+        result = find_associated_metadata_file(self.gpath('pre1mid2.csv'))
+        self.assertEqual(result, self.gpath('pre@mid@.serial'))
+
+    def testExactBeatsWildcard(self):
+        result = find_associated_metadata_file(self.gpath('exact.csv'))
+        self.assertEqual(result, self.gpath('exact.serial'))
+
+    def testAmbiguousWildcard(self):
+        with self.assertRaisesRegex(TDDAError, 'Ambiguous wildcard'):
+            find_associated_metadata_file(
+                self.gpath('foobaz.csv'), raise_error=True
+            )
+
+    def testNoMatch(self):
+        result = find_associated_metadata_file(self.gpath('nomatch.csv'))
+        self.assertIsNone(result)
 
 
 if __name__ == '__main__':

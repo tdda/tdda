@@ -98,7 +98,7 @@ def find_metadata_type_from_path(path):
     return None, None
 
 
-def find_associated_metadata_file(path):
+def find_associated_metadata_file(path, raise_error=False):
     """
     Check whether there appears to be a metadata file associated with the
     (presumed) CSV file given.
@@ -112,11 +112,35 @@ def find_associated_metadata_file(path):
     base = os.path.expanduser(path)
     pathstem = os.path.splitext(base)[0]
 
-    # tdda.serial
+    # tdda.serial — exact match
     for name in (base, pathstem):
         md_path = name + TDDASERIAL.ext
         if os.path.exists(md_path):
             return md_path
+
+    # tdda.serial — wildcard match (@ acts as glob *)
+    data_stem = os.path.basename(pathstem)
+    directory = os.path.dirname(base) or '.'
+    serial_ext = TDDASERIAL.ext
+    matches = []
+    try:
+        entries = os.listdir(directory)
+    except OSError:
+        entries = []
+    for entry in entries:
+        if '@' in entry and entry.endswith(serial_ext):
+            pattern_stem = entry[: -len(serial_ext)]
+            pattern = re.escape(pattern_stem).replace('@', '.*')
+            if re.fullmatch(pattern, data_stem):
+                matches.append(os.path.join(directory, entry))
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        error(
+            f'Ambiguous wildcard metadata for {path!r}:\n'
+            + '\n'.join(f'  {m}' for m in sorted(matches)),
+            raise_error=raise_error,
+        )
 
     for suffixes, exts in METADATA_STYLES:
         for suffix in suffixes:
