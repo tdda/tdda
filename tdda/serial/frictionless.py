@@ -393,6 +393,8 @@ class FrictionlessMetadata(SerialMetadata):
                 if fieldtype in (FieldType.FLOAT, FieldType.NUMBER):
                     dp = f.get('decimal')
             fmt = f.get('format')
+            if fieldtype in (FieldType.DATE, FieldType.DATETIME):
+                fmt = frictionless_date_format_to_serial(fmt, fieldtype)
 
             titles = f.get('titles')
             altnames = None
@@ -467,35 +469,21 @@ class FrictionlessMultiMetadata:
             )
 
 
-def frictionless_date_format_to_serial(fmt, extensions=False):
+def frictionless_date_format_to_serial(fmt, fieldtype=None):
     """
-    Converts Frictionless date formats to nearest equivalent Python
-    data format.
+    Converts a Frictionless date format string to a serial format string.
+
+    Frictionless uses Python strptime patterns, 'default', or 'any'.
     """
-    if '%' in fmt:
-        return fmt
-    outfmt = (
-        fmt.replace('dd', 'd')
-        .replace('d', '%d')
-        .replace('MM', 'M')
-        .replace('M', '%m')
-        .replace('yyyy', '%Y')
-        .replace('yy', '%y')
-        .replace('HH', '%H')
-        .replace('mm', '%M')
-        .replace('SSS', 'S')
-        .replace('SS', 'S')
-        .replace('S', '%f')
-        .replace('ss', '%S')
-    )
-    if extensions:
-        outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
-    # TODO: why? Just leave?
-    return (
-        DateFormat.ISO8601_UNSPECIFIED
-        if (re.match(RE_ISO8601, outfmt) or fmt == '')
-        else outfmt
-    )
+    if not fmt or fmt == 'default':
+        if fieldtype == FieldType.DATE:
+            return DateFormat.ISO8601_DATE
+        elif fieldtype == FieldType.DATETIME:
+            return DateFormat.ISO8601_DATETIME
+        return DateFormat.ISO8601_UNSPECIFIED
+    if fmt == 'any':
+        return None
+    return fmt
 
 
 def serial_date_format_to_frictionless(fmt, extensions=False, fieldtype=None):

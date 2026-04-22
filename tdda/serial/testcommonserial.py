@@ -16,6 +16,7 @@ from tdda.serial.metadata import (
     is_iso8601_format,
 )
 from tdda.serial.csvw import csvw_date_format_to_serial
+from tdda.serial.frictionless import frictionless_date_format_to_serial
 from tdda.serial.pandasio import (
     to_pandas_date_format,
     pandas_date_format_to_serial,
@@ -107,6 +108,20 @@ class TestDateSanityRE(ReferenceTestCase):
             map_date_format('MM-dd-yyyy HH:mm:ss'), 'MM-DD-YYYY HH:MM:SS'
         )
         self.assertEqual(map_date_format('dd-MM-yy HH:mm'), 'DD-MM-YY HH:MM')
+
+    def testFrictionlessDateFormatsMapping(self):
+        f = frictionless_date_format_to_serial
+        self.assertEqual(f(None, 'date'), DateFormat.ISO8601_DATE)
+        self.assertEqual(f(None, 'datetime'), DateFormat.ISO8601_DATETIME)
+        self.assertEqual(f(None), DateFormat.ISO8601_UNSPECIFIED)
+        self.assertEqual(f('default', 'date'), DateFormat.ISO8601_DATE)
+        self.assertEqual(f('default', 'datetime'), DateFormat.ISO8601_DATETIME)
+        self.assertEqual(f('default'), DateFormat.ISO8601_UNSPECIFIED)
+        self.assertIsNone(f('any', 'date'))
+        self.assertIsNone(f('any', 'datetime'))
+        self.assertEqual(f('%d/%m/%Y', 'date'), '%d/%m/%Y')
+        self.assertEqual(f('%d/%m/%Y %H:%M:%S', 'datetime'), '%d/%m/%Y %H:%M:%S')
+        self.assertEqual(f('%Y-%m-%d', 'date'), '%Y-%m-%d')
 
     def testSingleDateFormat(self):
         # Nothing. Use ISO 8601
