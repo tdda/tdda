@@ -1,0 +1,18 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "polars.read_csv": {
+        "separator": "|",
+        "quote_char": "\"",
+        "null_values": [
+            ""
+        ],
+        "encoding": "UTF-8",
+        "schema": {
+            "id": "Int64",
+            "name": "String",
+            "joined": "Datetime",
+            "last_seen": "String"
+        }
+    }
+}

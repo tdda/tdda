@@ -1,3 +1,3 @@
 all:
-	sh run-all-examples.sh
+	sh test-gen-all-examples.sh
 	python show-docdata-pd.py > docdata-output.txt

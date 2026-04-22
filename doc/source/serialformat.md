@@ -104,7 +104,7 @@ be specified explicitly with both the API and the command-line tools.
 
 ### Example
 
-%% data/example.serial
+%% docdata/example.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -275,6 +275,10 @@ Optional. No default.
   rather than definitive, i.e. there is no problem at all to use
   a `.serial` file specifying a particular flat file with a different
   flat file. Indeed, this is common.
+  Note: since `path` is only really for information, it can be set
+  to a glob (wildcard) pattern like '*.csv' or 'foo*.csv' to indicate
+  a set of files. `@` can also be used as the wildcard
+  to match `tdda.serial` filename conventions (see below).
 
 **`fields`** *(array or object)*
 : Descriptions of the fields in the file. See
@@ -384,76 +388,139 @@ the `.serial` has the field entries in the same order as the data file.
 : A human-readable description of the field.
 
 
-### Date and Datetime Formats
+### TDDA Serial Date and Datetime Formats
 
-Date and datetime formats can be specified as either a **named format**
-or a **Python strftime string**.
+1. ISO8601
 
-#### Named Formats
+ISO8601 is the most widely understood, unproblematical format for
+dates and times and is recommended for new data and date written.
 
-Named formats are portable identifiers for common date and datetime
-conventions. In principle, they are intended to be more prescriptive
-on write that read, in much the same way that many read libraries
-accept variations on ISO8601 formats on read, but are strict on write.
+This can be specified in tdda serial as follows.
 
-In practice, the named formats can only safely be used as synonyms
-for specific `strftime`-type formats as most read libraries require
-a specific format for non-ISO8601 formats on read, including
-speficiation of the separators of various components.
+ - `iso8601-date` can be used for ISO8601 dates (2000-12-31)
+ - `iso8601-datetime` can be used for ISO8601 datetimes (2000-12-31T12:34:56)
+ - `iso8601-datetime-tz` can be used for ISO8601 datetimes with timezone
+    (2000-12-31T12:34:56+00:00) etc.
+ - `iso8601` can be used to indicate “any of the above”.
+
+With the ISO8601 variants, reading is liberal, allowing some
+variation in separators, whereas writing is strict.
+
+
+The `tdda.serial` format allows date formats to be specified in three
+other ways:
+
+2. Dates can specified using:
+
+    - YYYY for four-digit years
+    - YY for two-digit years
+    - MM for *numeric* month
+    - DD for day
+    - HH for hour
+    - MM for minute (Same as month! That's OK. Context disambiguates.)
+    - MON for a spelt-out three letter month line Jan
+    - MONTH for a spelt-out full month line January
+    - SS for whole seconds
+    - SS.S, SS.SS etc. (any number of S's after period) for fractional seconds.
+    - +ZZ:ZZ or +ZZZZ for timezone. (Can use `-` instead of `+`)
+    - AM or PM for 12-hour clock AM/PM indicator
+
+   Any case may be used. MM for minutes and month is disambiguated
+   by saying that MM when adjacent to YY or DD (other than a separator)
+   is a month,
+   and when adjacent to SS or HH indicates minutes.
+
+For example:
+
+  YYYY-MM-DDTHH:MM:SS.S+ZZ:ZZ
+  YYYY-MM-DDTHH:MM:SS.S-ZZ:ZZ
+  YYYY-MM-DD HH:MM:SS+ZZZZ
+  YYYY-MM-DDTHH:MM:SS
+  YYYY-MM-DD HH:MM
+  YYYY-MM-DD
+  YY-MM-DD
+  YY-MM-DDTHH:MM:SS.SPM
+  YY-MM-DDTHH:MM:SSAM
+  DD/MM/YYYY HH:MM:SS
+  MM/DD/YYYY HH:MM:SS
+  MM.DD.YY HH:MM:SSAM
+
+The string will always be standarized to upper case on write, but is
+case insensitive on read, for `.serial` files. (For `CSVW` files,
+mixed case is used, followings CSVW's conventions).
+
+3. Any **unambigous** date or datetime in the specified format
+   can be used as a specifier. By unambigous, we mean:
+    - The day is at least 13
+    - The year is either four digits or 60 or greater or 00
+   So
+
+   2000-12-31T12:34:56.789+0000
+   31/12/2000T12:34:56.789+00:00
+   31-12-2000T12:34:56.789-0000
+   31.12.2000T12:34:56-00:00
+   31/12/2000T12:34:56
+   31/12/2000 12:34:56
+   31/12/2000
+   12/31/2000
+   12/31/00
+   31/12/00
+   31 Dec 2000
+   31 December 2000
+   Dec 31 00
+   2000-12-31T12:34:56.789AM
+   2000-12-31T12:34:56.789PM
+
+   etc. are all acceptable. Things like
+
+   2000-02-01T12:34:56.789+0000
+   01/02/2000T12:34:56.789+00:00
+   01-02-2000T12:34:56.789+0000
+   01.02.2000T12:34:56+0000
+   01/02/2000T12:34:56
+   01/02/2000 12:34:56
+   01/02/2000
+   02/01/2000
+   02/01/00
+   01/02/00
+   01 Dec 22
+   22 Dec 01
+
+   are not, because they are ambigous.
+
+When reading `.serial` files the `tdda` library will accept
+any unambiguous date and reject anything it considers ambiguous.
+On writing, it will replace any other specific date with
+components from 2000-12-31T12:34:56.789+0000.
+
+4. Strings usable by [Python `strftime`](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
+   can be used.
+   These are typified by `%Y-%m-%dT%H:%M:%S`.
+
+
+On writing new `.serial` files, the library will default to named
+`iso8601` formats when the format is conformant with ISO8601,
+and will then choose the YYYY/MM/DD type specifier or
+`strftime-conforming` strings.
+
+You can specify a preferred form at the command line with
+--use-literal-dates, --use-yyyy-dates, --use-pc-dates.
 
 
 ##### ISO 8601 Formats
 
-| Named Format        | `strftime` equivalent                | Example                   |
-|:--------------------|:-------------------------------------|:--------------------------|
-| `iso8601-date`      | `%Y-%m-%d`                        | `2024-01-15`              |
-| `iso8601-datetime`  | `%Y-%m-%dT%H:%M:%S`        | `2024-01-15T12:34:56`     |
-| `iso8601-datetime-tz` | `%Y-%m-%dT%H:%M:%S%z`    | `2024-01-15T12:34:56+01:00` |
-| `iso8601`           | Any ISO 8601 date or datetime | Any of the above    |
+| Named Format          | `strftime` equivalent         | Example                   |
+|:----------------------|:------------------------------|:--------------------------|
+| `iso8601-date`        | `%Y-%m-%d`                    | `2000-12-31`              |
+| `iso8601-datetime`    | `%Y-%m-%dT%H:%M:%S`           | `2000-12-31T12:34:56`     |
+| `iso8601-datetime-tz` | `%Y-%m-%dT%H:%M:%S%z`         | `2000-12-31T12:34:56+00:00` |
+| `iso8601`             | Any ISO 8601 date or datetime | Any of the above    |
 
-On read, ISO formats should ideally also accept `/` and `.`
-as separators in
-addition to `-` (e.g. `15/01/2024`, `15.01.2024`),
-and should accept space (`" "`) instead of T,
+On read, ISO8601 formats should ideally accept `/` and `.`
+as separators for date components in addition to `-` (e.g. `2000/12/31`, `2000.12.31`),
+should accept space (`" "`) instead of T,
 and should also accept fractional seconds on times.
 
-##### European Formats
-
-Day before month (`DD/MM/YYYY`).
-
-| Named Format        | `strftime` equivalent    | Example                   |
-|:--------------------|:-------------------------|:--------------------------|
-| `eu-date`           | `%d/%m/%Y`               | `15/01/2024`              |
-| `eu-date-2y`        | `%d/%m/%y`               | `15/01/24`                |
-| `eu-datetime`       | `%d/%m/%Y %H:%M:%S`      | `15/01/2024 12:34:56`     |
-| `eu-datetime-2y`    | `%d/%m/%y %H:%M:%S`      | `15/01/24 12:34:56`       |
-
-On read, European formats should ideally also accept `-` and `.`
-as separators in
-addition to `/` (e.g. `15-01-2024`, `15.01.2024`),
-though many readers cannot do this.
-
-##### US Formats
-
-Month before day (`MM/DD/YYYY`).
-
-| Named Format        | `strftime` equivalent    | Example                   |
-|:--------------------|:-------------------------|:--------------------------|
-| `us-date`           | `%m/%d/%Y`               | `01/15/2024`              |
-| `us-date-2y`        | `%m/%d/%y`               | `01/15/24`                |
-| `us-datetime`       | `%m/%d/%Y %H:%M:%S`      | `01/15/2024 12:34:56`     |
-| `us-datetime-2y`    | `%m/%d/%y %H:%M:%S`      | `01/15/24 12:34:56`       |
-
-On read, US formats should ideally also accept `-` and `.`
-as separators in
-addition to `/` (e.g. `15-01-2024`, `15.01.2024`),
-though many readers cannot do this.
-
-#### `strftime` Strings
-
-Any Python strftime format string is also accepted, e.g. `"%d/%m/%Y"`
-or `"%Y-%m-%d %H:%M:%S"`. Named formats are preferred where one
-exists, as they are more portable across libraries.
 
 #### Format Precedence
 
@@ -529,7 +596,7 @@ will use this small flat file, which is in a deliberately obscure
 format (though all of its features are individually not particularly
 uncommon).
 
-%% data/docdata.txt
+%% docdata/docdata.txt
 ```text
 b;i;f;s;t
 'n';0;0.5;;31/01/1970
@@ -539,7 +606,7 @@ b;i;f;s;t
 
 and the following (starting) `tdda.serial` file:
 
-%% data/docdata.serial
+%% docdata/docdata.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -595,7 +662,7 @@ and the following (starting) `tdda.serial` file:
 When read correctly in Pandas, this produces (with the nullable backend
 for Pandas to which `tdda.serial` default):
 
-%% data/docdata-output.txt
+%% docdata/docdata-output.txt
 ```text
    IAmBoolean  IAmInt     f IAmString    IAmDate
 0       False       0   0.5           1970-01-31
@@ -610,7 +677,7 @@ The simplest way to read a flat file with accompanying metadata
 is to use the `csv_to_x` functions.  In its simplest forms,
 
 
-%% data/csv2pandas.py
+%% docdata/csv2pandas.py
 ```python
 from tdda.serial import csv_to_pandas
 
@@ -626,7 +693,7 @@ specification in `docdata.serial`. The last two forms are only available when th
 
 The pandas `dtype` back end can also be passed in, e.g.
 
-%% data/csv2pandasbackend.py
+%% docdata/csv2pandasbackend.py
 ```python
 from tdda.serial import csv_to_pandas
 dfb = csv_to_pandas('docdata.txt', 'docdata.serial', backend='original')
@@ -638,7 +705,7 @@ for the original Pandas `dtype` back end.
 Similarly
 % TODO: polars needs to handle boolean conversion (like dates)
 
-%% data/csv2polars.py
+%% docdata/csv2polars.py
 ```python
 from tdda.serial import csv_to_polars
 
@@ -659,6 +726,65 @@ that polars can only read ISO8601-formatted dates and datestamps.
 The `tdda.serial` `csv_to_polars` works around this by instructing
 polars to read fields it cannot parse with `read_csv` as strings
 and then post-processing them to convert them to date or datetime fields.
+
+### Metadata Matching and `@` wildcards
+
+When a colon is added to the end of a flat file name or path
+to request that `tdda.serial` finds matching metadata,
+and then `find_metadata=True` is passed into relevant API calls,
+`tdda`'s matching process for a file `foo.ext` is as follows:
+
+1. It first looks for `foo.ext.serial` (in the same directory as `foo.ext`).
+
+2. It first looks for `foo.serial` (in the same directory as `foo.ext`).
+   (This the most common pattern; `foo.ext.serial` is checked first to
+   allow matching of metadata when the same stem appears with multiple
+   extensions, e.g. `.csv` and `.psv`)
+
+3. Failing that, it looks for any wildcard matches using `@` as a wildcard
+   similar to how `*` is used in globbing, i.e. `@` matches any characters
+   or no characters. So for example any of
+
+    - `@.serial`
+    - `foo@.serial`
+    - `@foo.serial`
+    - `@f@o@.serial`
+
+   will match, but none of
+
+    - `Foo.serial`
+    - `fool*.serial`
+    - `f0*.serial`
+
+   will do so. If a single metadata file containing `@` matches,
+   that will be used. If multiple `.serial` files with wildcards
+   match, an error will be raised.
+
+4. Next, the following are checked:
+
+    - `foo-metadata.json`
+    - `foo-csvmetadata.json`
+    - `foo-csv-metadata.json`
+    - `foo.csvmetadata`
+    - `foo.csv-metadata`
+
+   These are common patterns for CSVW, and will be used as CSVW
+   if the `@context` attribute indicates csvw, and as `tdda.serial`
+   if the `format` attribute indicates that.
+
+5. Common Frictionless patterns are explored. Frictionless usually
+   used either `.yaml` or `.json`, and includes either `.resource`,
+   `.package`, or `.schema` in the filename before it, so any of:
+
+    - `foo.resource.json`
+    - `foo.package.json`
+    - `foo.schema.json`
+    - `foo.resource.yaml`
+    - `foo.package.yaml`
+    - `foo.schema.yaml`
+
+   will match.
+
 
 ### Pandas `dtype` Back Ends
 
@@ -711,7 +837,7 @@ If the metadata specifies the name of the flat file (which is usual
 for csvw and Frictionless, and allowed for tdda.serial) then the
 metadata file itself can be specified instead. For example:
 
-%% data/pandas-and-polars-reads.py
+%% docdata/pandas-and-polars-reads.py
 ```python
 from tdda.serial import csv_to_polars, csv_to_pandas
 
@@ -735,7 +861,7 @@ see the detailed API documentation for details.
 The `tdda serial` command can generate Python code or sets of keyword
 arguments for `read_csv` methods from Pandas or Polars.
 
-%% data/tddaserial1.sh
+%% docdata/tddaserial1.sh
 ```bash
 tdda serial docdata.serial docdata_pandas.py --to pd.r
 ```
@@ -745,7 +871,7 @@ a function for reading flat file in the format specified by `docdata.serial`
 with Pandas, taking the path to the datafile as an argument.
 (Standalone, here, means code that does not require the `tdda` library.)
 
-%% data/tddaserial2.sh
+%% docdata/tddaserial2.sh
 ```bash
 tdda serial docdata.serial docdata_polars.py --to pl.r
 ```
@@ -759,12 +885,11 @@ calls the function with the appropriate inpath. For example:
 
 % TODO: This doesn't seem to work currently
 
-%% data/tddaserial3.sh
+%% docdata/tddaserial3.sh
 ```bash
 tdda serial docdata.serial docdata_polars2.py --to pl.r --for docdata.txt
 
 ```
-
 
 ## Writing Data with `tdda.serial` (API)
 
@@ -785,7 +910,7 @@ These two roles can be combined.
 The simplest form for writing a Pandas dataframe to CSV *with
 metadata* is:
 
-%% data/pandas2csv1.py
+%% docdata/pandas2csv1.py
 ```python
 from tdda.serial import pandas_to_csv, csv_to_pandas
 
@@ -801,7 +926,7 @@ Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
 affect the written metadata in the `.serial` file. For example:
 
-%% data/pandas2csv2.py
+%% docdata/pandas2csv2.py
 ```python
 from tdda.serial import pandas_to_csv, csv_to_pandas
 
@@ -819,7 +944,7 @@ can be used to determine the flat-file write settings using the
 `md_inpath` argument. So if we want to write the data in a DataFrame
 using the metadata in `docdata.serial`, we can use:
 
-%% data/pandas2csv3.py
+%% docdata/pandas2csv3.py
 ```python
 from tdda.serial import pandas_to_csv, csv_to_pandas
 
@@ -832,7 +957,7 @@ This does *not* write a serial file.
 It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
-%% data/pandas2csv4.py
+%% docdata/pandas2csv4.py
 ```python
 from tdda.serial import pandas_to_csv, csv_to_pandas
 
@@ -861,7 +986,7 @@ The polars function works in the same was as its Pandas counterpart.
 The simplest form for writing a polars dataframe to CSV *with
 metadata* is:
 
-%% data/polars2csv1.py
+%% docdata/polars2csv1.py
 ```python
 from tdda.serial import polars_to_csv, csv_to_polars
 
@@ -877,7 +1002,7 @@ Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
 affect the written metadata in the `.serial` file. For example:
 
-%% data/polars2csv2.py
+%% docdata/polars2csv2.py
 ```python
 from tdda.serial import polars_to_csv, csv_to_polars
 
@@ -895,7 +1020,7 @@ can be used to determine the flat-file write settings using the
 `md_inpath` argument. So if we want to write the data in a DataFrame
 using the metadata in `docdata.serial`, we can use:
 
-%% data/polars2csv3.py
+%% docdata/polars2csv3.py
 ```python
 from tdda.serial import polars_to_csv, csv_to_polars
 
@@ -908,7 +1033,7 @@ This does *not* write a serial file.
 It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
-%% data/polars2csv4.py
+%% docdata/polars2csv4.py
 ```python
 from tdda.serial import polars_to_csv, csv_to_polars
 
@@ -956,7 +1081,7 @@ be written to the file.
 
 Basic usage is as follows:
 
-%% data/inference1.sh
+%% docdata/inference1.sh
 ```bash
 tdda serial --generate docdata.txt docdata-inferred.serial
 ```
@@ -1039,7 +1164,7 @@ quote character etc.---in fact, the very things that support overrides
 with command-line switches. If the filename is set to empty, such
 a metadata file can be generated. For example:
 
-%% data/generation1.sh
+%% docdata/generation1.sh
 ```bash
 tdda serial --generate '' generated.serial --null NULL --sep '|' --quote-char "'"
 
@@ -1047,7 +1172,7 @@ tdda serial --generate '' generated.serial --null NULL --sep '|' --quote-char "'
 
 will generate a `tdda.serial` file with only those properties specified:
 
-%% data/generated.serial
+%% docdata/generated.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -1078,7 +1203,7 @@ the most important specifications generally work.
 
 Here are some example conversion commands:
 
-%% data/convert1.sh
+%% docdata/convert1.sh
 ```bash
 tdda serial docdata.serial docdata-metadata.json
 tdda serial docdata.serial docdata-metadata-from-serial2.json --to csvw
@@ -1094,7 +1219,7 @@ format.
 
 The result is:
 
-%% data/docdata-metadata-from-serial2.json
+%% docdata/docdata-metadata-from-serial2.json
 ```json
 {
     "@context": "http://www.w3.org/ns/csvw",
@@ -1149,7 +1274,7 @@ The result is:
 
 ---
 
-%% data/convert2.sh
+%% docdata/convert2.sh
 ```bash
 tdda serial docdata.serial docdata.package.yaml
 tdda serial docdata.serial docdata.resource.json
@@ -1168,7 +1293,7 @@ be used to specify this if an unconventional name were used.
 
 The YAML package output is:
 
-%% data/docdata.package.yaml
+%% docdata/docdata.package.yaml
 ```yaml
 resources:
 - name: docdata
@@ -1209,7 +1334,7 @@ resources:
 
 and the JSON resource output is
 
-%% data/docdata.resource.json
+%% docdata/docdata.resource.json
 ```json
 {
     "name": "docdata",
@@ -1271,7 +1396,7 @@ and the JSON resource output is
 In the case of converting to a Pandas `csv_read` specification, a
 `dtype` back end can be specified. So we might say:
 
-%% data/convert3.sh
+%% docdata/convert3.sh
 ```bash
 tdda serial docdata.serial docdata-pd.r-o.serial --to pd.r -B o
 
@@ -1284,7 +1409,7 @@ using the original Pandas `dtype` backend.
 
 The result is:
 
-%% data/docdata-pd.r-o.serial
+%% docdata/docdata-pd.r-o.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -1355,7 +1480,7 @@ For example, we can convert the [Example](#Example) `tdda.serial` file
 to ond that contains custom sections for Pandas `read_csv` function
 and `DataFrame.to_csv` methods as follows:
 
-%% data/converttopd.sh
+%% docdata/converttopd.sh
 ```bash
 tdda serial example.serial examplepd.serial --to pd.r,pd.w
 ```
@@ -1365,7 +1490,7 @@ only one of them.)
 
 The result is the following file:
 
-%% data/examplepd.serial
+%% docdata/examplepd.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -1419,14 +1544,14 @@ to strings and the `csv_to_polars` method handles this when it uses them.
 So, considering only the read case, the Polars equivalent conversion is:
 % TODO: pl.w
 
-%% data/converttopl.sh
+%% docdata/converttopl.sh
 ```bash
 tdda serial example.serial examplepl.serial --to pl.r
 ```
 
 which produces:
 
-%% data/examplepl.serial
+%% docdata/examplepl.serial
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
@@ -1452,14 +1577,14 @@ Here, `last_seen` set to type `String` (i.e. `polars.String`) because
 Polars will no understand the date format. However, if the Python read
 code is generated with
 
-%% data/converttopl.sh
+%% docdata/converttopl.sh
 ```bash
 tdda serial example.serial examplepl.serial --to pl.r
 ```
 
 all is handled:
 
-%% data/examplereadpl.py
+%% docdata/examplereadpl.py
 ```python
 import polars as pl
 
@@ -1484,5 +1609,4 @@ def read_data(inpath):
     return df
 
 ```
-
 

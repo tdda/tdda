@@ -1,0 +1,35 @@
+resources:
+- name: docdata
+  type: table
+  path: docdata.txt
+  scheme: file
+  format: csv
+  mediatype: text/csv
+  encoding: latin-1
+  dialect:
+    header: true
+    headerRows:
+    - 0
+    delimiter: ;
+    quoteChar: ''''
+    escapeChar: '`'
+  schema:
+    fields:
+    - name: b
+      type: boolean
+      trueValues:
+      - 'Yes'
+      - y
+      falseValues:
+      - 'No'
+      - n
+    - name: i
+      type: integer
+    - name: f
+      type: number
+    - name: s
+      type: string
+    - name: t
+      type: datetime
+    missingValues:
+    - .

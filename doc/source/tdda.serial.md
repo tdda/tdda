@@ -104,7 +104,7 @@ be specified explicitly with both the API and the command-line tools.
 
 ### Example
 
-%% data/example.serial
+%% docdata/example.serial
 
 
 ### The `tdda.serial` Section
@@ -560,16 +560,16 @@ will use this small flat file, which is in a deliberately obscure
 format (though all of its features are individually not particularly
 uncommon).
 
-%% data/docdata.txt
+%% docdata/docdata.txt
 
 and the following (starting) `tdda.serial` file:
 
-%% data/docdata.serial
+%% docdata/docdata.serial
 
 When read correctly in Pandas, this produces (with the nullable backend
 for Pandas to which `tdda.serial` default):
 
-%% data/docdata-output.txt
+%% docdata/docdata-output.txt
 
 ### Reading Flat Files with Metadata from Python using the API
 
@@ -577,7 +577,7 @@ The simplest way to read a flat file with accompanying metadata
 is to use the `csv_to_x` functions.  In its simplest forms,
 
 
-%% data/csv2pandas.py
+%% docdata/csv2pandas.py
 
 all do the same thing, reading the flat file `docdata.csv` using the metadata
 specification in `docdata.serial`. The last two forms are only available when the
@@ -585,14 +585,14 @@ specification in `docdata.serial`. The last two forms are only available when th
 
 The pandas `dtype` back end can also be passed in, e.g.
 
-%% data/csv2pandasbackend.py
+%% docdata/csv2pandasbackend.py
 
 for the original Pandas `dtype` back end.
 
 Similarly
 % TODO: polars needs to handle boolean conversion (like dates)
 
-%% data/csv2polars.py
+%% docdata/csv2polars.py
 
 are the equivalent forms for Polars.
 
@@ -716,7 +716,7 @@ If the metadata specifies the name of the flat file (which is usual
 for csvw and Frictionless, and allowed for tdda.serial) then the
 metadata file itself can be specified instead. For example:
 
-%% data/pandas-and-polars-reads.py
+%% docdata/pandas-and-polars-reads.py
 
 would use three different metadata files that point to data
 to read them into three dataframes, the first using Pandas
@@ -733,14 +733,14 @@ see the detailed API documentation for details.
 The `tdda serial` command can generate Python code or sets of keyword
 arguments for `read_csv` methods from Pandas or Polars.
 
-%% data/tddaserial1.sh
+%% docdata/tddaserial1.sh
 
 This command generates stand-alone Python code `docdata.py` containing
 a function for reading flat file in the format specified by `docdata.serial`
 with Pandas, taking the path to the datafile as an argument.
 (Standalone, here, means code that does not require the `tdda` library.)
 
-%% data/tddaserial2.sh
+%% docdata/tddaserial2.sh
 
 This command generates Python code `docdata.py` containing a function
 for reading flat file in the format specified by docdata.serial
@@ -751,7 +751,7 @@ calls the function with the appropriate inpath. For example:
 
 % TODO: This doesn't seem to work currently
 
-%% data/tddaserial3.sh
+%% docdata/tddaserial3.sh
 
 ## Writing Data with `tdda.serial` (API)
 
@@ -772,7 +772,7 @@ These two roles can be combined.
 The simplest form for writing a Pandas dataframe to CSV *with
 metadata* is:
 
-%% data/pandas2csv1.py
+%% docdata/pandas2csv1.py
 
 This will write a the Pandas dataframe `df` to `docdata2.csv` using
 `df.to_csv`, with default settings,
@@ -782,7 +782,7 @@ Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
 affect the written metadata in the `.serial` file. For example:
 
-%% data/pandas2csv2.py
+%% docdata/pandas2csv2.py
 
 will write the data using a pipe separator (`|`), single quotes (`'`),
 and `NULL` as the null marker, and the resulting `.serial` file
@@ -793,14 +793,14 @@ can be used to determine the flat-file write settings using the
 `md_inpath` argument. So if we want to write the data in a DataFrame
 using the metadata in `docdata.serial`, we can use:
 
-%% data/pandas2csv3.py
+%% docdata/pandas2csv3.py
 
 This does *not* write a serial file.
 
 It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
-%% data/pandas2csv4.py
+%% docdata/pandas2csv4.py
 
 The reasons for wanting to write metadata when a metadata file is
 used to specify the write format might include:
@@ -821,7 +821,7 @@ The polars function works in the same was as its Pandas counterpart.
 The simplest form for writing a polars dataframe to CSV *with
 metadata* is:
 
-%% data/polars2csv1.py
+%% docdata/polars2csv1.py
 
 This will write a the Polars dataframe `df` to `docdata2.csv` using
 `df.to_csv`, with default settings,
@@ -831,7 +831,7 @@ Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
 affect the written metadata in the `.serial` file. For example:
 
-%% data/polars2csv2.py
+%% docdata/polars2csv2.py
 
 will write the data using a pipe separator (`|`), single quotes (`'`),
 and `NULL` as the null marker, and the resulting `.serial` file
@@ -842,14 +842,14 @@ can be used to determine the flat-file write settings using the
 `md_inpath` argument. So if we want to write the data in a DataFrame
 using the metadata in `docdata.serial`, we can use:
 
-%% data/polars2csv3.py
+%% docdata/polars2csv3.py
 
 This does *not* write a serial file.
 
 It is occasionally useful to specify both an `in_metadata`
 and an `out_metadata` path, like this:
 
-%% data/polars2csv4.py
+%% docdata/polars2csv4.py
 
 The reasons for wanting to write metadata when a metadata file is
 used to specify the write format might include:
@@ -889,7 +889,7 @@ be written to the file.
 
 Basic usage is as follows:
 
-%% data/inference1.sh
+%% docdata/inference1.sh
 
 Warnings will be issued in some cases if the inference process has
 sinificant ambiguity, and the process may fail if `tdda.serial` cannot
@@ -969,11 +969,11 @@ quote character etc.---in fact, the very things that support overrides
 with command-line switches. If the filename is set to empty, such
 a metadata file can be generated. For example:
 
-%% data/generation1.sh
+%% docdata/generation1.sh
 
 will generate a `tdda.serial` file with only those properties specified:
 
-%% data/generated.serial
+%% docdata/generated.serial
 
 This can either be used directly, allowing the chosen flat-file reader
 to figure out field names, types and per-field formats, or can be used
@@ -993,7 +993,7 @@ the most important specifications generally work.
 
 Here are some example conversion commands:
 
-%% data/convert1.sh
+%% docdata/convert1.sh
 
 The first command produces `docdata-metadata.json` as CSVW, assuming
 a CSVW target because the pattern fits the normal CSVW convention.
@@ -1004,13 +1004,13 @@ format.
 
 The result is:
 
-%% data/docdata-metadata-from-serial2.json
+%% docdata/docdata-metadata-from-serial2.json
 
 % Why is a warning issued? Doesn't CSVW understand that format?
 
 ---
 
-%% data/convert2.sh
+%% docdata/convert2.sh
 
 These two commands produce Frictionless metadata specifications.
 The first produces a Frictionless package metadata files as YAML,
@@ -1023,25 +1023,25 @@ be used to specify this if an unconventional name were used.
 
 The YAML package output is:
 
-%% data/docdata.package.yaml
+%% docdata/docdata.package.yaml
 
 and the JSON resource output is
 
-%% data/docdata.resource.json
+%% docdata/docdata.resource.json
 
 ---
 
 In the case of converting to a Pandas `csv_read` specification, a
 `dtype` back end can be specified. So we might say:
 
-%% data/convert3.sh
+%% docdata/convert3.sh
 
 will ask for the `pandas.read_csv` version of a `tdda.serial` file
 using the original Pandas `dtype` backend.
 
 The result is:
 
-%% data/docdata-pd.r-o.serial
+%% docdata/docdata-pd.r-o.serial
 
 ---
 
@@ -1071,14 +1071,14 @@ For example, we can convert the [Example](#Example) `tdda.serial` file
 to ond that contains custom sections for Pandas `read_csv` function
 and `DataFrame.to_csv` methods as follows:
 
-%% data/converttopd.sh
+%% docdata/converttopd.sh
 
 (Here we have specified both `pd.r` and `pd.w`, but we could have requested
 only one of them.)
 
 The result is the following file:
 
-%% data/examplepd.serial
+%% docdata/examplepd.serial
 
 The reason `tdda.serial` supports both read and write sections for
 libraries such as Pandas and Polars is that the parameters for reading
@@ -1096,19 +1096,19 @@ to strings and the `csv_to_polars` method handles this when it uses them.
 So, considering only the read case, the Polars equivalent conversion is:
 % TODO: pl.w
 
-%% data/converttopl.sh
+%% docdata/converttopl.sh
 
 which produces:
 
-%% data/examplepl.serial
+%% docdata/examplepl.serial
 
 Here, `last_seen` set to type `String` (i.e. `polars.String`) because
 Polars will no understand the date format. However, if the Python read
 code is generated with
 
-%% data/converttopl.sh
+%% docdata/converttopl.sh
 
 all is handled:
 
-%% data/examplereadpl.py
+%% docdata/examplereadpl.py
 

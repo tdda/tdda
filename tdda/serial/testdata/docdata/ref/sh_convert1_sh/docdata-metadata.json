@@ -1,0 +1,47 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:creator": "tdda.serial-3.0.00rc1",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "name": "b",
+                        "datatype": {
+                            "base": "boolean",
+                            "format": "Yes|No"
+                        }
+                    },
+                    {
+                        "name": "i",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "f",
+                        "datatype": "float"
+                    },
+                    {
+                        "name": "s",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "t",
+                        "datatype": {
+                            "base": "datetime",
+                            "format": "dd/MM/yyyy"
+                        }
+                    }
+                ]
+            },
+            "url": "docdata.txt"
+        }
+    ],
+    "dialect": {
+        "encoding": "latin-1",
+        "delimiter": ";",
+        "headerRowCount": 1,
+        "quoteChar": "'"
+    },
+    "null": "."
+}
