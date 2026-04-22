@@ -1643,42 +1643,6 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
         field = FieldMetadata('d', fieldtype=fieldtype, format=fmt)
         return SerialMetadata(fields=[field])
 
-    def test_serial_eu_date_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('date', DateFormat.EURO_DATE)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%d/%m/%Y'})
-
-    def test_serial_eu_datetime_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('datetime', DateFormat.EURO_DATETIME)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%d/%m/%Y %H:%M:%S'})
-
-    def test_serial_eu_date_2y_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('date', DateFormat.EURO_DATE_2Y)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%d/%m/%y'})
-
-    def test_serial_us_date_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('date', DateFormat.US_DATE)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%m/%d/%Y'})
-
-    def test_serial_us_datetime_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('datetime', DateFormat.US_DATETIME)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%m/%d/%Y %H:%M:%S'})
-
-    def test_serial_us_date_2y_kwargs(self):
-        kw = serial_to_pandas_read_csv_args(
-            self._md('date', DateFormat.US_DATE_2Y)
-        )
-        self.assertEqual(kw['date_format'], {'d': '%m/%d/%y'})
-
     def test_serial_iso8601_date_kwargs_read(self):
         # ISO8601 named formats → 'ISO8601' on read
         kw = serial_to_pandas_read_csv_args(
@@ -1691,13 +1655,6 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
             self._md('datetime', DateFormat.ISO8601_DATETIME)
         )
         self.assertEqual(kw['date_format'], {'d': 'ISO8601'})
-
-    def test_serial_dataset_date_format_euro(self):
-        # date_format at dataset level (no field-level format)
-        field = FieldMetadata('d', fieldtype='date')
-        md = SerialMetadata(fields=[field], date_format=DateFormat.EURO_DATE)
-        kw = serial_to_pandas_read_csv_args(md)
-        self.assertEqual(kw['date_format'], {'d': '%d/%m/%Y'})
 
     def test_serial_dataset_date_format_iso8601(self):
         # dataset-level iso8601 → 'ISO8601' on read

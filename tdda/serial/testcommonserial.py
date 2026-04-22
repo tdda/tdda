@@ -517,17 +517,21 @@ class TestToPandasDateFormat(ReferenceTestCase):
                 f'format {fmt!r} should give strftime on write',
             )
 
-    def testEuroUSNamedFormats(self):
-        # Euro and US named formats → canonical strftime for both read and write
+    def testYYYYDateAndLiteralDateFormats(self):
+        # yyyydate and literaldate Euro/US formats → canonical strftime
         cases = {
-            DateFormat.EURO_DATE: '%d/%m/%Y',
-            DateFormat.EURO_DATETIME: '%d/%m/%Y %H:%M:%S',
-            DateFormat.EURO_DATE_2Y: '%d/%m/%y',
-            DateFormat.EURO_DATETIME_2Y: '%d/%m/%y %H:%M:%S',
-            DateFormat.US_DATE: '%m/%d/%Y',
-            DateFormat.US_DATETIME: '%m/%d/%Y %H:%M:%S',
-            DateFormat.US_DATE_2Y: '%m/%d/%y',
-            DateFormat.US_DATETIME_2Y: '%m/%d/%y %H:%M:%S',
+            'DD/MM/YYYY': '%d/%m/%Y',
+            'DD/MM/YYYY HH:MM:SS': '%d/%m/%Y %H:%M:%S',
+            'DD/MM/YY': '%d/%m/%y',
+            'MM/DD/YYYY': '%m/%d/%Y',
+            'MM/DD/YYYY HH:MM:SS': '%m/%d/%Y %H:%M:%S',
+            'MM/DD/YY': '%m/%d/%y',
+            '31/12/2000': '%d/%m/%Y',
+            '31/12/2000 12:34:56': '%d/%m/%Y %H:%M:%S',
+            '31/12/00': '%d/%m/%y',
+            '12/31/2000': '%m/%d/%Y',
+            '12/31/2000 12:34:56': '%m/%d/%Y %H:%M:%S',
+            '12/31/00': '%m/%d/%y',
         }
         for fmt, expected in cases.items():
             self.assertEqual(

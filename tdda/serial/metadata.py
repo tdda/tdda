@@ -66,14 +66,6 @@ NAMED_FORMAT_TO_STRFTIME = {
     DateFormat.ISO8601_DATETIME: '%Y-%m-%dT%H:%M:%S',
     DateFormat.ISO8601_DATETIME_TZ: '%Y-%m-%dT%H:%M:%S%z',
     DateFormat.ISO8601_UNSPECIFIED: '%Y-%m-%dT%H:%M:%S',
-    DateFormat.EURO_DATE: '%d/%m/%Y',
-    DateFormat.EURO_DATETIME: '%d/%m/%Y %H:%M:%S',
-    DateFormat.EURO_DATE_2Y: '%d/%m/%y',
-    DateFormat.EURO_DATETIME_2Y: '%d/%m/%y %H:%M:%S',
-    DateFormat.US_DATE: '%m/%d/%Y',
-    DateFormat.US_DATETIME: '%m/%d/%Y %H:%M:%S',
-    DateFormat.US_DATE_2Y: '%m/%d/%y',
-    DateFormat.US_DATETIME_2Y: '%m/%d/%y %H:%M:%S',
 }
 
 # Specific strftime strings → generic named format (many to one)
