@@ -43,7 +43,7 @@ from tdda.utils import (
     globlike_match,
     plural,
 )
-from tdda.version import version
+from tdda.version import writable_version
 
 from rich import print as rprint
 
@@ -253,7 +253,7 @@ class DatasetConstraints(object):
         return self._table
 
     def set_creator(self, creator=None):
-        self.creator = creator or 'TDDA %s' % version
+        self.creator = creator or 'TDDA %s' % writable_version()
 
     def set_rdbms(self, rdbms):
         self.rdbms = rdbms

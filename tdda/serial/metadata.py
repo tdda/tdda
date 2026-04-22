@@ -6,7 +6,7 @@ import sys
 from collections import Counter
 import csv
 
-from tdda.version import version as VERSION
+from tdda.version import writable_version
 from tdda.serial.constants import URI, TDDASERIAL
 from tdda.utils import listify, nvl, warn, swap_ext, error
 
@@ -765,7 +765,7 @@ def nonnull(v):
 
 
 def writer():
-    return f'{TDDASERIAL.key}-{VERSION}'
+    return f'{TDDASERIAL.key}-{writable_version()}'
 
 
 def is_iso8601_format(fmt, inc_names=True, return_specific=False):

@@ -26,7 +26,7 @@ from tdda.referencetest.diffutils import (
     find_usable_key,
 )
 
-from tdda.state import set_testing, reset_config
+from tdda.state import reset_config
 from tdda.utils import swap_ext, rprint
 
 from tdda.referencetest.test_diff_book_sd1 import *
@@ -333,6 +333,4 @@ class TestKeyFunctionsPolars(TestKeyFunctions, ReferenceTestCase):
 
 if __name__ == '__main__':
     TDDA_CONFIG_TESTS = 'TDDA_CONFIG_TESTS' in os.environ
-    set_testing(True)
-
-    ReferenceTestCase.main()
+    ReferenceTestCase.main(testtdda=1)

@@ -2,7 +2,6 @@ import os
 import sys
 import unittest
 
-
 class TestSystemConfig(unittest.TestCase):
     def test_01_tdda_path(self):
         print('\ntype tdda')

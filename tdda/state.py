@@ -25,7 +25,7 @@ def set_load(v):
     return old_val
 
 
-def set_testing(v):
+def set_testing(v=True):
     global testing, config
     old_val = testing
     testing = v
