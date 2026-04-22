@@ -2,6 +2,7 @@ import json
 import os
 import re
 
+from tdda.serial.dateutils import strftime_to_yyyydate
 from tdda.serial.metadata import (
     DateFormat,
     FieldMetadata,
@@ -632,8 +633,7 @@ class CSVWMultiMetadata:
 
 def csvw_date_format_to_serial(fmt, extensions=False):
     """
-    Converts CSVW date formats to nearest equivalent Python
-    data format.
+    Converts CSVW date formats to nearest equivalent yyyydate format.
     """
     if '%' in fmt:
         return fmt
@@ -654,12 +654,10 @@ def csvw_date_format_to_serial(fmt, extensions=False):
     outfmt = outfmt.replace('xxx', '%:z').replace('xx', '%z')
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
-    # TODO: why? Just leave?
-    return (
-        DateFormat.ISO8601_UNSPECIFIED
-        if (re.match(RE_ISO8601, outfmt) or fmt == '')
-        else outfmt
-    )
+    if re.match(RE_ISO8601, outfmt) or fmt == '':
+        return DateFormat.ISO8601_UNSPECIFIED
+    yyyy = strftime_to_yyyydate(outfmt)
+    return yyyy if '%' not in yyyy else outfmt
 
 
 def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):

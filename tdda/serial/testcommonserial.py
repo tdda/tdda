@@ -78,35 +78,35 @@ class TestDateSanityRE(ReferenceTestCase):
     def testDateFormatsMapping(self):
         map_date_format = csvw_date_format_to_serial
         self.assertEqual(map_date_format('yyyy-MM-dd'), 'iso8601')
-        self.assertEqual(map_date_format('yyyyMMdd'), '%Y%m%d')
-        self.assertEqual(map_date_format('dd-MM-yyyy'), '%d-%m-%Y')
-        self.assertEqual(map_date_format('d-M-yyyy'), '%d-%m-%Y')
-        self.assertEqual(map_date_format('MM-dd-yyyy'), '%m-%d-%Y')
-        self.assertEqual(map_date_format('M-d-yyyy'), '%m-%d-%Y')
-        self.assertEqual(map_date_format('dd/MM/yyyy'), '%d/%m/%Y')
-        self.assertEqual(map_date_format('d/M/yyyy'), '%d/%m/%Y')
-        self.assertEqual(map_date_format('MM/dd/yyyy'), '%m/%d/%Y')
-        self.assertEqual(map_date_format('M/d/yyyy'), '%m/%d/%Y')
-        self.assertEqual(map_date_format('dd.MM.yyyy'), '%d.%m.%Y')
-        self.assertEqual(map_date_format('d.M.yyyy'), '%d.%m.%Y')
-        self.assertEqual(map_date_format('MM.dd.yyyy'), '%m.%d.%Y')
-        self.assertEqual(map_date_format('M.d.yyyy'), '%m.%d.%Y')
+        self.assertEqual(map_date_format('yyyyMMdd'), 'YYYYMMDD')
+        self.assertEqual(map_date_format('dd-MM-yyyy'), 'DD-MM-YYYY')
+        self.assertEqual(map_date_format('d-M-yyyy'), 'DD-MM-YYYY')
+        self.assertEqual(map_date_format('MM-dd-yyyy'), 'MM-DD-YYYY')
+        self.assertEqual(map_date_format('M-d-yyyy'), 'MM-DD-YYYY')
+        self.assertEqual(map_date_format('dd/MM/yyyy'), 'DD/MM/YYYY')
+        self.assertEqual(map_date_format('d/M/yyyy'), 'DD/MM/YYYY')
+        self.assertEqual(map_date_format('MM/dd/yyyy'), 'MM/DD/YYYY')
+        self.assertEqual(map_date_format('M/d/yyyy'), 'MM/DD/YYYY')
+        self.assertEqual(map_date_format('dd.MM.yyyy'), 'DD.MM.YYYY')
+        self.assertEqual(map_date_format('d.M.yyyy'), 'DD.MM.YYYY')
+        self.assertEqual(map_date_format('MM.dd.yyyy'), 'MM.DD.YYYY')
+        self.assertEqual(map_date_format('M.d.yyyy'), 'MM.DD.YYYY')
 
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm'), '%Y-%m-%dT%H:%M')
+        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm'), 'YYYY-MM-DDTHH:MM')
 
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'), '%Y-%m-%d %H:%M')
+        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'), 'YYYY-MM-DD HH:MM')
 
         self.assertEqual(
-            map_date_format('dd-MM-yyyy HH:mm:ss.S'), '%d-%m-%Y %H:%M:%S.%f'
+            map_date_format('dd-MM-yyyy HH:mm:ss.S'), 'DD-MM-YYYY HH:MM:SS.SSS'
         )
         self.assertEqual(
-            map_date_format('MM-dd-yyyy HH:mm:ss'), '%m-%d-%Y %H:%M:%S'
+            map_date_format('MM-dd-yyyy HH:mm:ss'), 'MM-DD-YYYY HH:MM:SS'
         )
-        self.assertEqual(map_date_format('dd-MM-yy HH:mm'), '%d-%m-%y %H:%M')
+        self.assertEqual(map_date_format('dd-MM-yy HH:mm'), 'DD-MM-YY HH:MM')
 
     def testSingleDateFormat(self):
         # Nothing. Use ISO 8601

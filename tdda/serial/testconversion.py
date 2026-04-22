@@ -309,7 +309,7 @@ class TestSerialConversions(ReferenceTestCase):
                 ' Yes, n.\n'
                 'If they actually occur in the file, fields will need to be set to string.\n'
                 '(Use map_other_bools_to_string=True.)\n',
-                'Field t date format %d/%m/%Y will not be understood by Polars read_csv.\n'
+                'Field t date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
                 'Will parse post-read using str.to_date.',
             ],
         )
@@ -370,7 +370,7 @@ class TestSerialConversions(ReferenceTestCase):
                 ' Yes, n.\n'
                 'If they actually occur in the file, fields will need to be set to string.\n'
                 '(Use map_other_bools_to_string=True.)\n',
-                'Field IAmDate date format %d/%m/%Y will not be understood by Polars read_csv.\n'
+                'Field IAmDate date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
                 'Will parse post-read using str.to_date.',
             ],
         )
