@@ -380,7 +380,7 @@ class SerialConverter:
         if self.broad_out == 'tdda.serial':
             if getattr(self, 'exclude_path', None):
                 md_out.path = None
-            elif getattr(self, 'include_path', None):
+            elif getattr(self, 'include_path', None) or self.for_csv:
                 md_out.path = (
                     self.for_csv
                     or getattr(md_in, 'path', None)
@@ -403,6 +403,8 @@ class SerialConverter:
                         md_in, backend=self.backend, warner=Warn, **kw
                     )
                 )
+                if self.for_csv:
+                    f.write(f'\ndf = read_data({self.for_csv!r})\n')
         else:
             Warn(f'Invalid broad output type: {self.broad_out}.')
 
