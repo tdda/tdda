@@ -13,6 +13,7 @@ from tdda.serial.utils import (
     PYTHON_TEMPLATES,
     fill_template,
     format_template_args,
+    DataFrameWithMetadata,
 )
 
 from tdda.utils import listify, warn, nvl
@@ -69,6 +70,9 @@ FIELDTYPE_TO_POLARS_DTYPE = {
     'float': pl.Float64,
     'datetime': pl.Datetime,
     'date': pl.Datetime,
+    'time': pl.Time,
+    'datatime_tz': pl.Datetime,
+    'iso8601': pl.Datetime,
 }
 
 
@@ -256,7 +260,7 @@ def serial_to_polars_read_csv_args_and_postproc(
 
     postproc = {}
     for field, fmd in fields.items():
-        if fmd.fieldtype.startswith('date'):
+        if fmd.fieldtype and fmd.fieldtype.startswith('date'):
             attr = (
                 'datetime_format' if fmd.fieldtype.startswith('datetime')
                 else 'date_format'
@@ -279,7 +283,7 @@ def serial_to_polars_read_csv_args_and_postproc(
             # So probably not good.
             # elif not fmt:
                 # schema[field] = f(pl.String)
-        if fmd.fieldtype.lower().startswith('bool'):
+        if fmd.fieldtype and fmd.fieldtype.lower().startswith('bool'):
             bads = ', '.join(
                 v
                 for v in (listify(fmd.true_values) + listify(fmd.false_values))

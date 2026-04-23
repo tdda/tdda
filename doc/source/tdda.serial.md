@@ -394,20 +394,20 @@ other ways:
    is a month,
    and when adjacent to SS or HH indicates minutes.
 
-For example:
+   For example:
 
-  YYYY-MM-DDTHH:MM:SS.S+ZZ:ZZ
-  YYYY-MM-DDTHH:MM:SS.S-ZZ:ZZ
-  YYYY-MM-DD HH:MM:SS+ZZZZ
-  YYYY-MM-DDTHH:MM:SS
-  YYYY-MM-DD HH:MM
-  YYYY-MM-DD
-  YY-MM-DD
-  YY-MM-DDTHH:MM:SS.SPM
-  YY-MM-DDTHH:MM:SSAM
-  DD/MM/YYYY HH:MM:SS
-  MM/DD/YYYY HH:MM:SS
-  MM.DD.YY HH:MM:SSAM
+    - `YYYY-MM-DDTHH:MM:SS.S+ZZ:ZZ`
+    - `YYYY-MM-DDTHH:MM:SS.S-ZZ:ZZ`
+    - `YYYY-MM-DD HH:MM:SS+ZZZZ`
+    - `YYYY-MM-DDTHH:MM:SS`
+    - `YYYY-MM-DD HH:MM`
+    - `YYYY-MM-DD`
+    - `YY-MM-DD`
+    - `YY-MM-DDTHH:MM:SS.SPM`
+    - `YY-MM-DDTHH:MM:SSAM`
+    - `DD/MM/YYYY HH:MM:SS`
+    - `MM/DD/YYYY HH:MM:SS`
+    - `MM.DD.YY HH:MM:SSAM`
 
 The string will always be standarized to upper case on write, but is
 case insensitive on read, for `.serial` files. (For `CSVW` files,
@@ -419,36 +419,36 @@ mixed case is used, followings CSVW's conventions).
     - The year is either four digits or 60 or greater or 00
    So
 
-   2000-12-31T12:34:56.789+0000
-   31/12/2000T12:34:56.789+00:00
-   31-12-2000T12:34:56.789-0000
-   31.12.2000T12:34:56-00:00
-   31/12/2000T12:34:56
-   31/12/2000 12:34:56
-   31/12/2000
-   12/31/2000
-   12/31/00
-   31/12/00
-   31 Dec 2000
-   31 December 2000
-   Dec 31 00
-   2000-12-31T12:34:56.789AM
-   2000-12-31T12:34:56.789PM
+    - ` 2000-12-31T12:34:56.789+0000`
+    - ` 31/12/2000T12:34:56.789+00:00`
+    - ` 31-12-2000T12:34:56.789-0000`
+    - ` 31.12.2000T12:34:56-00:00`
+    - ` 31/12/2000T12:34:56`
+    - ` 31/12/2000 12:34:56`
+    - ` 31/12/2000`
+    - ` 12/31/2000`
+    - ` 12/31/00`
+    - ` 31/12/00`
+    - ` 31 Dec 2000`
+    - ` 31 December 2000`
+    - ` Dec 31 00`
+    - ` 2000-12-31T12:34:56.789AM`
+    - ` 2000-12-31T12:34:56.789PM`
 
    etc. are all acceptable. Things like
 
-   2000-02-01T12:34:56.789+0000
-   01/02/2000T12:34:56.789+00:00
-   01-02-2000T12:34:56.789+0000
-   01.02.2000T12:34:56+0000
-   01/02/2000T12:34:56
-   01/02/2000 12:34:56
-   01/02/2000
-   02/01/2000
-   02/01/00
-   01/02/00
-   01 Dec 22
-   22 Dec 01
+    - ` 2000-02-01T12:34:56.789+0000`
+    - ` 01/02/2000T12:34:56.789+00:00`
+    - ` 01-02-2000T12:34:56.789+0000`
+    - ` 01.02.2000T12:34:56+0000`
+    - ` 01/02/2000T12:34:56`
+    - ` 01/02/2000 12:34:56`
+    - ` 01/02/2000`
+    - ` 02/01/2000`
+    - ` 02/01/00`
+    - ` 01/02/00`
+    - ` 01 Dec 22`
+    - ` 22 Dec 01`
 
    are not, because they are ambigous.
 

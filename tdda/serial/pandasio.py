@@ -37,6 +37,7 @@ from tdda.serial.utils import (
     choose_md_path,
     PYTHON_TEMPLATES,
     fill_template,
+    DataFrameWithMetadata,
 )
 from tdda.utils import nvl, error, warn, listify, delistify, is_sequence, Dummy
 from tdda.pd.utils import first_non_null, is_string_col, find_safe_null_rep
@@ -107,7 +108,6 @@ PANDAS_DTYPE_TO_FIELDTYPE = {
 }
 
 
-DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 WriteInfo = namedtuple('WriteInfo', 'path md_outpath md_inpath kw')
 
 

@@ -572,14 +572,14 @@ class TestCSVWTests(ReferenceTestCase):
     def test001(self):
         self._test_csv_json('test001')
 
-    def test002(self):
-        pass
+    # def test002(self):
+    #     pass
 
-    def test003(self):
-        pass
+    # def test003(self):
+    #     pass
 
-    def test004(self):
-        pass
+    # def test004(self):
+    #     pass
 
     def test005(self):
         # csvw expects the IDs to be read as strings
@@ -839,17 +839,17 @@ class TestCSVWTests(ReferenceTestCase):
         # medium because of object/string comparisons
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    def test019(self):
-        pass
+    # def test019(self):
+    #     pass
 
-    def test020(self):
-        pass
+    # def test020(self):
+    #     pass
 
-    def test021(self):
-        pass
+    # def test021(self):
+    #     pass
 
-    def test022(self):
-        pass
+    # def test022(self):
+    #     pass
 
     def test023(self):
         test = this_function_name()
@@ -867,14 +867,14 @@ class TestCSVWTests(ReferenceTestCase):
         # medium because of object/string comparisons
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    def test024(self):
-        pass
+    # def test024(self):
+    #     pass
 
-    def test025(self):
-        pass
+    # def test025(self):
+    #     pass
 
-    def test026(self):
-        pass
+    # def test026(self):
+    #     pass
 
     def test027(self):
         test = this_function_name()
@@ -951,10 +951,10 @@ class TestCSVWTests(ReferenceTestCase):
         )
         self.assertDataFramesEqual(df2, ref_df2, type_matching='medium')
 
-    def test031(self):
-        # single json output with different kinds of records
-        # not really appropriate for what tdda.serial is trying to do
-        pass
+    # def test031(self):
+    #     # single json output with different kinds of records
+    #     # not really appropriate for what tdda.serial is trying to do
+    #     pass
 
     def test032(self):
         test = this_function_name()
@@ -967,8 +967,8 @@ class TestCSVWTests(ReferenceTestCase):
         # Compare against known correct result (not from csvw project)
         self.assertDataFrameCorrect(df, resultspath, type_matching='loose')
 
-    def test033(self):
-        pass  # same as 32 for our purposes
+    # def test033(self):
+    #     pass  # same as 32 for our purposes
 
     def test034(self):
         test = this_function_name()
@@ -1018,8 +1018,8 @@ class TestCSVWTests(ReferenceTestCase):
             jdf, pqp(f'{test}-organizations.parquet'), type_matching='loose'
         )
 
-    def test035(self):
-        pass  # same as 34 for our purposes
+    # def test035(self):
+    #     pass  # same as 34 for our purposes
 
     def test036(self):
         test = this_function_name()

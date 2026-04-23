@@ -1,5 +1,5 @@
 Polars does not understand escape characters.
 Ignoring escape value: \
 
-Field last_seen date format us-datetime will not be understood by Polars read_csv.
+Field last_seen date format MM/DD/YYYY HH:MM:SS will not be understood by Polars read_csv.
 Will parse post-read using str.to_datetime.

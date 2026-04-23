@@ -1,6 +1,8 @@
 import os
 import re
 
+from collections import namedtuple
+
 from tdda.serial.constants import TDDASERIAL
 from tdda.state import get_config
 from tdda.utils import error, swap_ext
@@ -80,6 +82,8 @@ def read_data(inpath):
 
 """
 
+
+DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 
 def find_metadata_type_from_path(path):
     """
