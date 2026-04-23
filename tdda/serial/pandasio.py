@@ -696,7 +696,7 @@ def csv_to_pandas(
 
        path     The path to the data file (usually CSV) to be read.
                 If this is None, the md_path must be set and contain
-                the path to the data.
+                the path to the data. Can contain ':' to trigger md search.
 
        md_path   The optional path to the associated metadata file.
 

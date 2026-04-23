@@ -1818,6 +1818,15 @@ class TestSerialSmallWrite(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
+    def test_all_date_formats_working(self):
+        df = csv_to_pandas(tdpath('allformats.csv:'))
+        pcdf = csv_to_pandas(tdpath('allformats.csv'),
+                             tdpath('allformats-pc.serial'))
+        ldf = csv_to_pandas(tdpath('allformats.csv'),
+                            tdpath('allformats-literal.serial'))
+        self.assertDataFramesEquivalent(pcdf, df)
+        self.assertDataFramesEquivalent(ldf, df)
+
 
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)
