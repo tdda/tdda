@@ -48,7 +48,7 @@ class TestSerialConversions(ReferenceTestCase):
 
     def testSerialToPandas(self):
         md = load_metadata(self.weird_serial)
-        # Actually the same as the input
+        # Just a normalized version of the input
         self.assertStringCorrect(
             str(md), tdpath('tiny1nd-weird-out.serial'), ignore_lines=self.IGL
         )

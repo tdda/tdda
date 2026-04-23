@@ -1,0 +1,70 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "row",
+                "fieldtype": "int"
+            },
+            {
+                "name": "eu_date",
+                "fieldtype": "date",
+                "format": "13/12/2044"
+            },
+            {
+                "name": "eu_date_2y",
+                "fieldtype": "date",
+                "format": "28/02/60"
+            },
+            {
+                "name": "iso_date",
+                "fieldtype": "date",
+                "format": "1989-01-13"
+            },
+            {
+                "name": "us_date",
+                "fieldtype": "date",
+                "format": "05/22/1999"
+            },
+            {
+                "name": "us_date_2y",
+                "fieldtype": "date",
+                "format": "11/30/00"
+            },
+            {
+                "name": "eu_datetime",
+                "fieldtype": "datetime",
+                "format": "13/12/2000 11:11:11"
+            },
+            {
+                "name": "eu_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "19/03/00 24:00:00"
+            },
+            {
+                "name": "iso_datetime",
+                "fieldtype": "datetime",
+                "format": "2100-07-15T00:00:00"
+            },
+            {
+                "name": "us_datetime",
+                "fieldtype": "datetime",
+                "format": "12/31/2000 12:34:56"
+            },
+            {
+                "name": "us_datetime_2y",
+                "fieldtype": "datetime",
+                "format": "08/14/99 23:59:59"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "escape_char": "\\",
+        "date_format": "31/07/1965",
+        "datetime_format": "17/04/2000 02:30:00",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

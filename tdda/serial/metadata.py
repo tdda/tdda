@@ -8,7 +8,12 @@ import csv
 
 from tdda.version import writable_version
 from tdda.serial.constants import URI, TDDASERIAL
-from tdda.serial.dateutils import detect_format_style, to_strftime
+from tdda.serial.dateutils import (
+    detect_format_style,
+    strftime_to_literaldate,
+    strftime_to_yyyydate,
+    to_strftime,
+)
 from tdda.utils import listify, nvl, warn, swap_ext, error
 
 
@@ -58,6 +63,32 @@ class DateFormat:
     US_DATE_2Y = 'us-date-2y'  # write: %m/%d/%y
     US_DATETIME_2Y = 'us-datetime-2y'  # write: %m/%d/%y %H:%M:%S
     US_UNSPECIFIED = 'us'  # not yet implemented
+
+
+class DateStyle:
+    LITERAL = 'literal'
+    YYYY = 'yyyy'
+    PERCENT = 'percent'
+
+
+def restyle_format(fmt, date_style):
+    """Convert a format string to the requested DateStyle.
+
+    ISO8601 named formats are left unchanged.
+    Returns fmt unchanged if date_style is None.
+    """
+    if not fmt or not date_style:
+        return fmt
+    if fmt.lower().startswith('iso'):
+        return fmt
+    strftime = to_strftime(fmt)
+    if date_style == DateStyle.PERCENT:
+        return strftime
+    if date_style == DateStyle.LITERAL:
+        result = strftime_to_literaldate(strftime)
+    else:
+        result = strftime_to_yyyydate(strftime)
+    return result if '%' not in result else strftime
 
 
 # Canonical write strftime for each named generic format
@@ -592,7 +623,7 @@ class SerialMetadata:
 
         self._valid = valid
 
-    def unobjectify(self):
+    def unobjectify(self, date_style=None):
         d = {
             'format': URI.TDDASERIAL,
             'writer': writer(),
@@ -611,17 +642,29 @@ class SerialMetadata:
             m['quoting'] = quoting_as_name(quoting)
         if type(nulls) == list and len(nulls) == 1:
             m['null_indicator'] = nulls[0]
+        if date_style:
+            for key in ('date_format', 'datetime_format'):
+                if key in m:
+                    m[key] = restyle_format(m[key], date_style)
+            for field_d in m.get('fields', []):
+                if 'format' in field_d:
+                    old = field_d['format']
+                    field_d['format'] = restyle_format(
+                        field_d['format'], date_style
+                    )
         if m:
             d[TDDASERIAL.key] = m
 
         for lib, params in self.libs.items():
-            d[lib] = {k: unobjectify(v) for (k, v) in params.items()}
+            if lib != TDDASERIAL.key:
+                d[lib] = {k: unobjectify(v) for (k, v) in params.items()}
         return d
 
-    def to_json(self, indent=4):
-        return json.dumps(self.unobjectify(), indent=indent)
+    def to_json(self, indent=4, date_style=None):
+        return json.dumps(self.unobjectify(date_style=date_style), indent=indent)
 
-    def write(self, path, use_serial_ext=True, indent=4, verbose=0):
+    def write(self, path, use_serial_ext=True, indent=4, verbose=0,
+              date_style=None):
         """
         Writes metadata to file.
 
@@ -630,10 +673,12 @@ class SerialMetadata:
                   is will be changed to .serial unless keep_ext is set to True
 
             use_serial_ext: Set to True to keep the extension provided in path.
+
+            date_style: DateStyle value controlling output format style.
         """
         outpath = swap_ext(path, '.serial') if use_serial_ext else path
         with open(outpath, 'w') as f:
-            f.write(self.to_json(indent=indent))
+            f.write(self.to_json(indent=indent, date_style=date_style))
         if verbose:
             print(f'Written {outpath}.')
 

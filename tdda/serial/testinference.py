@@ -554,7 +554,6 @@ class TestInferAllFlatFiles(TestInference):
         df_plain = convert(csv_path, plain_path, warner=Warn2)
         self.assertDataFramesEqual(df_prov, df_plain, type_matching='loose')
 
-    @tag
     def testInferAllCsvwTypes(self):
         buf, md = self.check_infer(
             'all-csvw-types.csv', prov=False, verbosity=0

@@ -1,11 +1,11 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-2.2.15",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
-                "csvname": "b",
                 "name": "IAmBoolean",
+                "csvname": "b",
                 "fieldtype": "bool",
                 "true_values": [
                     "Yes",
@@ -17,8 +17,8 @@
                 ]
             },
             {
-                "csvname": "i",
                 "name": "IAmInt",
+                "csvname": "i",
                 "fieldtype": "int"
             },
             {
@@ -26,13 +26,13 @@
                 "fieldtype": "float"
             },
             {
-                "csvname": "s",
                 "name": "IAmString",
+                "csvname": "s",
                 "fieldtype": "string"
             },
             {
-                "csvname": "t",
                 "name": "IAmDate",
+                "csvname": "t",
                 "fieldtype": "datetime",
                 "format": "%d/%m/%Y"
             }

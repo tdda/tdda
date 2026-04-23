@@ -313,6 +313,21 @@ class SerialConverter:
             help='Specify datetime format.',
         )
         parser.add_argument(
+            '--use-yyyy-dates',
+            action='store_const', const='yyyy', dest='date_style',
+            help='Write date formats in YYYY-style (e.g. DD/MM/YYYY).',
+        )
+        parser.add_argument(
+            '--use-literal-dates',
+            action='store_const', const='literal', dest='date_style',
+            help='Write date formats as literal strings (e.g. dd/mm/yyyy).',
+        )
+        parser.add_argument(
+            '--use-pc-dates',
+            action='store_const', const='percent', dest='date_style',
+            help='Write date formats in %%-style (e.g. %%d/%%m/%%Y).',
+        )
+        parser.add_argument(
             '--quiet', '-q', action='store_true', help='Be quiet'
         )
 
@@ -401,7 +416,8 @@ class SerialConverter:
                     or getattr(md_in, 'path', None)
                     or (self.inpath if self.generate else None)
                 )
-            md_out.write(self.outpath, verbose=self.verbosity > 1)
+            md_out.write(self.outpath, verbose=self.verbosity > 1,
+                         date_style=getattr(self, 'date_style', None))
         elif self.broad_out == 'csvw':
             c = serial_to_csvw(md_in)
             c.write_csvw(self.outpath, self.for_csv)
