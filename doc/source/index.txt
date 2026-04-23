@@ -109,6 +109,7 @@ Contents
    rexpy-api.txt
    tdda-diff.md
    serialformat.md
+   configuration.md
    windows.txt
    tests.txt
    examples.txt

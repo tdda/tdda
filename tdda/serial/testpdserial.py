@@ -73,7 +73,6 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
             csvw_to_pandas_kwargs(md_path),
             {
                 'dtype': {'row': 'Int64'},
-                'date_format': {'date': 'ISO8601'},
                 'parse_dates': ['date'],
                 'encoding': 'utf-8',
             },
@@ -84,10 +83,6 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
         self.assertEqual(
             csvw_to_pandas_kwargs(md_path),
             {
-                'date_format': {
-                    'LastIn2024': 'ISO8601',
-                    'LastInFeb': 'ISO8601',
-                },
                 'dtype': {
                     'Even': 'boolean',
                     'Index': 'Int64',
@@ -106,7 +101,6 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
             csvw_to_pandas_kwargs(md_path),
             {
                 'dtype': {'row': 'Int64'},
-                'date_format': {'time': 'ISO8601'},
                 'parse_dates': ['time'],
                 'sep': '\t',
                 'encoding': 'utf-8',
@@ -170,10 +164,6 @@ class TestConversion(ReferenceTestCase):
         self.assertEqual(
             kw,
             {
-                'date_format': {
-                    'LastIn2024': 'ISO8601',
-                    'LastInFeb': 'ISO8601',
-                },
                 'dtype': {
                     'Even': 'boolean',
                     'Index': 'Int64',

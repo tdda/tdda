@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import tomli
+import json
 
 import pandas as pd
 
@@ -24,6 +25,22 @@ class BaseConfig:
                     f'ignored{(" " + part) if part else ""}.',
                     file=sys.stderr,
                 )
+
+    def __str__(self):
+        out = ['# TDDA Serial Configuration\n']
+        for k, v in self.__dict__.items():
+            if isinstance(v, BaseConfig):
+                out.append(v._section_str())
+            elif not k.startswith('_'):
+                out.append(f'{k} = {repr(v)}')
+        return '\n'.join(out)
+
+    def _section_str(self):
+        out = [f'\n\n[{self._part}]\n']
+        for k, v in self.__dict__.items():
+            if not k.startswith('_'):
+                out.append(f'{k} = {repr(v)}')
+        return '\n'.join(out)
 
     def get(self, key, preferred=None, raiseOnFailure=True):
         """
@@ -280,3 +297,5 @@ def cross_platform_dot_file(unix_dot_path):
         if os.path.exists(alt_path):
             return alt_path
     return path
+
+

@@ -108,6 +108,7 @@ class TestDateSanityRE(ReferenceTestCase):
             map_date_format('MM-dd-yyyy HH:mm:ss'), 'MM-DD-YYYY HH:MM:SS'
         )
         self.assertEqual(map_date_format('dd-MM-yy HH:mm'), 'DD-MM-YY HH:MM')
+        self.assertIsNone(map_date_format(''))
 
     def testFrictionlessDateFormatsMapping(self):
         f = frictionless_date_format_to_serial

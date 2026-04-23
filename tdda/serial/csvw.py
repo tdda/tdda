@@ -579,7 +579,7 @@ class CSVWMetadata(SerialMetadata):
                     )
                 field.format = fmt
             elif fieldtype and fieldtype.startswith('date'):
-                field.format = DateFormat.ISO8601_UNSPECIFIED
+                pass
 
             titles = field.get_val(f, 'titles')
             if titles:
@@ -635,6 +635,8 @@ def csvw_date_format_to_serial(fmt, extensions=False):
     """
     Converts CSVW date formats to nearest equivalent yyyydate format.
     """
+    if not fmt:
+        return None
     if '%' in fmt:
         return fmt
     outfmt = (
@@ -654,7 +656,7 @@ def csvw_date_format_to_serial(fmt, extensions=False):
     outfmt = outfmt.replace('xxx', '%:z').replace('xx', '%z')
     if extensions:
         outfmt = outfmt.replace('+ZZ:zz', '%:z').replace('+ZZzz', '%z')
-    if re.match(RE_ISO8601, outfmt) or fmt == '':
+    if re.match(RE_ISO8601, outfmt):
         return DateFormat.ISO8601_UNSPECIFIED
     yyyy = strftime_to_yyyydate(outfmt)
     return yyyy if '%' not in yyyy else outfmt

@@ -28,17 +28,11 @@
                     },
                     {
                         "name": "LastInFeb",
-                        "datatype": {
-                            "base": "date",
-                            "format": "yyyy-MM-dd"
-                        }
+                        "datatype": "date"
                     },
                     {
                         "name": "LastIn2024",
-                        "datatype": {
-                            "base": "datetime",
-                            "format": "yyyy-MM-ddTHH:mm:ss"
-                        }
+                        "datatype": "datetime"
                     }
                 ]
             },
