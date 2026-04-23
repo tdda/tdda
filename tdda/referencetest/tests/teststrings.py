@@ -2,8 +2,15 @@
 # Unit tests for string functions from tdda.referencetest.checkfiles
 #
 
+import os
+import tempfile
+
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
+
+
+def refloc(filename):
+    return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
 class TestInternals(ReferenceTestCase):
@@ -344,6 +351,33 @@ class TestStrings(ReferenceTestCase):
                 max_permutation_cases=3,
             )
         )
+
+
+    def test_remove_lines_raw_file_is_unfiltered(self):
+        # When check_strings fails and writes a raw actual temp file,
+        # lines removed by remove_lines must still appear in that file.
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            compare = FilesComparison(tmp_dir=tmp_dir)
+            actual = [
+                'This is a file containing some optional lines.',
+                "Here's one: I am optional",
+                'And:',
+                "Here's another one: I am optional and I have some trailing stuff",
+                "And here's a line on its own:",
+                'I am optional',
+                "That's different",
+            ]
+            expected = actual[:-1] + ["That's all"]
+            compare.check_strings(
+                actual,
+                expected,
+                expected_path=refloc('removals.txt'),
+                remove_lines=['I am optional'],
+            )
+            raw_path = os.path.join(tmp_dir, 'actual-raw-removals.txt')
+            with open(raw_path) as f:
+                raw_contents = f.read()
+        self.assertIn('I am optional', raw_contents)
 
 
 if __name__ == "__main__":
