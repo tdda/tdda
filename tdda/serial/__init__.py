@@ -13,6 +13,7 @@ from tdda.serial.pandasio import (
 from tdda.serial.polarsio import csv_to_polars, serial_to_polars_read_csv_args
 from tdda.serial.metadata import (
     DateFormat,
+    DateStyle,
     FieldMetadata,
     FieldType,
     SerialMetadata,

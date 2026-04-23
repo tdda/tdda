@@ -1043,6 +1043,23 @@ class TestInferAllFlatFiles(TestInference):
     def testInferTiny1ndWeirdSsv(self):
         buf, md = self.check_infer('tiny1nd-weird.ssv', prov=True, verbosity=0)
 
+    def testInferenceLiteralDates(self):
+        outpath = tmppath('ddd-literal-inferred.serial')
+        c = SerialConverter(
+            cli_args=[
+                tdpath('ddd.csv'),
+                outpath,
+                '--generate',
+                '--use-literal-dates',
+            ]
+        )
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(
+            outpath, tdpath('ddd-literal-inferred.serial'),
+            ignore_lines=self.IGL
+        )
+
 
 class TestFirstLineStats(ReferenceTestCase):
     """Tests for FirstLineStats using header*/noheader*/dataline1-* files."""

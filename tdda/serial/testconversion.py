@@ -727,5 +727,44 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(buf, [])
 
 
+    def testDateStyleDefault(self):
+        outpath = tmppath('small-default.serial')
+        c = SerialConverter(cli_args=[tdpath('small.serial'), outpath])
+        c.convert()
+        self.assertFileCorrect(
+            outpath, tdpath('small-default.serial'), ignore_lines=self.IGL
+        )
+
+    def testDateStyleLiteral(self):
+        outpath = tmppath('small-literal.serial')
+        c = SerialConverter(
+            cli_args=[tdpath('small.serial'), outpath, '--use-literal-dates']
+        )
+        c.convert()
+        self.assertFileCorrect(
+            outpath, tdpath('small-literal.serial'), ignore_lines=self.IGL
+        )
+
+    def testDateStyleYYYY(self):
+        outpath = tmppath('small-yyyy.serial')
+        c = SerialConverter(
+            cli_args=[tdpath('small.serial'), outpath, '--use-yyyy-dates']
+        )
+        c.convert()
+        self.assertFileCorrect(
+            outpath, tdpath('small-yyyy.serial'), ignore_lines=self.IGL
+        )
+
+    def testDateStylePC(self):
+        outpath = tmppath('small-pc.serial')
+        c = SerialConverter(
+            cli_args=[tdpath('small.serial'), outpath, '--use-pc-dates']
+        )
+        c.convert()
+        self.assertFileCorrect(
+            outpath, tdpath('small-pc.serial'), ignore_lines=self.IGL
+        )
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

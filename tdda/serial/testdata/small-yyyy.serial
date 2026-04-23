@@ -1,0 +1,80 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "i1",
+                "fieldtype": "int"
+            },
+            {
+                "name": "i2",
+                "fieldtype": "int"
+            },
+            {
+                "name": "i3",
+                "fieldtype": "int"
+            },
+            {
+                "name": "f1",
+                "fieldtype": "float"
+            },
+            {
+                "name": "f2",
+                "fieldtype": "float"
+            },
+            {
+                "name": "b1",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "b2",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "s1",
+                "fieldtype": "string"
+            },
+            {
+                "name": "s2",
+                "fieldtype": "string"
+            },
+            {
+                "name": "dti",
+                "fieldtype": "datetime",
+                "format": "YYYY-MM-DDTHH:MM:SS"
+            },
+            {
+                "name": "dte",
+                "fieldtype": "datetime",
+                "format": "DD/MM/YYYY HH:MM:SS"
+            },
+            {
+                "name": "dtu",
+                "fieldtype": "datetime",
+                "format": "MM/DD/YYYY HH:MM:SSPM"
+            },
+            {
+                "name": "di",
+                "fieldtype": "date",
+                "format": "YYYY-MM-DD"
+            },
+            {
+                "name": "de",
+                "fieldtype": "date",
+                "format": "DD/MM/YYYY"
+            },
+            {
+                "name": "du",
+                "fieldtype": "date",
+                "format": "MM/DD/YYYY"
+            }
+        ],
+        "encoding": "UTF-8",
+        "delimiter": ",",
+        "quote_char": "\"",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0
+    }
+}

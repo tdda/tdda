@@ -384,7 +384,7 @@ class SerialConverter:
         )
         kw = {}
         if self.generate:
-            md_out = self.infer_from_flat_file()
+            md_out = self.infer_from_flat_file(warner=Warn)
         for fmt in self.out_formats:
             if fmt == 'tdda.serial':
                 pass
@@ -439,7 +439,7 @@ class SerialConverter:
         else:
             Warn(f'Invalid broad output type: {self.broad_out}.')
 
-    def infer_from_flat_file(self):
+    def infer_from_flat_file(self, warner=None):
         nulls = getattr(self, 'nulls', None)
         if nulls is not None:
             null = [n for n in nulls.split(',')]
@@ -461,6 +461,7 @@ class SerialConverter:
             date_format=getattr(self, 'date_format', None),
             datetime_format=getattr(self, 'datetime_format', None),
             quoting=getattr(self, 'quoting', None),
+            warner=warner,
         )
 
 

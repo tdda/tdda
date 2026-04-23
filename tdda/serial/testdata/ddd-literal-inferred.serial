@@ -1,0 +1,72 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.00rc1",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "index",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evennulls",
+                "fieldtype": "int"
+            },
+            {
+                "name": "oddnulls",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evens",
+                "fieldtype": "int"
+            },
+            {
+                "name": "odds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "evenreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "oddreals",
+                "fieldtype": "float"
+            },
+            {
+                "name": "evenstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "oddstr",
+                "fieldtype": "string"
+            },
+            {
+                "name": "elevens",
+                "fieldtype": "string"
+            },
+            {
+                "name": "binnedindex",
+                "fieldtype": "int"
+            },
+            {
+                "name": "binnedodds",
+                "fieldtype": "int"
+            },
+            {
+                "name": "basedate",
+                "fieldtype": "date"
+            },
+            {
+                "name": "evendates",
+                "fieldtype": "datetime"
+            }
+        ],
+        "delimiter": ",",
+        "quote_char": "\"",
+        "date_format": "2000-12-31",
+        "datetime_format": "2000-12-31 12:34:56",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_STRINGS_ONLY"
+    }
+}
