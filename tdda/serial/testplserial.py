@@ -572,7 +572,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test012(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
@@ -585,7 +584,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test013(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}-user-metadata.json')
@@ -598,7 +596,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test014(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/linked-metadata.json')
@@ -611,7 +608,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test015(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
@@ -624,7 +620,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test016(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
@@ -637,7 +632,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test017(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
@@ -668,7 +662,6 @@ class TestCSVWTests:
 # def test021(self): pass  # Same as pandas; no separate polars test needed
 # def test022(self): pass  # Same as pandas; no separate polars test needed
 
-    @tag
     def test023(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}-user-metadata.json')
@@ -684,7 +677,6 @@ class TestCSVWTests:
 # def test025(self): pass  # Same as pandas; no separate polars test needed
 # def test026(self): pass  # Same as pandas; no separate polars test needed
 
-    @tag
     def test027(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}-user-metadata.json')
@@ -718,7 +710,6 @@ class TestCSVWTests:
         ref_df = string_to_float(ref_df, 'longitude')
         self.assertDataFramesEqual(df, ref_df)
 
-    @tag
     def test030(self):
         test = this_function_name()
         csvpath = self.fullpath('countries.csv')
@@ -749,7 +740,6 @@ class TestCSVWTests:
 
     # def test031(self): pass  # single json output; not appropriate here
 
-    @tag
     def test032(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/events-listing.csv')
@@ -761,7 +751,6 @@ class TestCSVWTests:
 
     # def test033(self): pass  # same as 32 for our purposes
 
-    @tag
     def test034(self):
         test = this_function_name()
         f = self.fullpath
@@ -803,7 +792,6 @@ class TestCSVWTests:
 
     # def test035(self): pass  # same as 34 for our purposes
 
-    @tag
     def test036(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')

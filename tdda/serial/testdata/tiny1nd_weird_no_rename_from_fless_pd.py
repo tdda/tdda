@@ -13,7 +13,9 @@ def read_data(inpath):
             'f': 'Float64',
             's': 'string'
         },
-        date_format={'t': '%d/%m/%Y'},
+        date_format={
+            't': '%d/%m/%Y'
+        },
         parse_dates=['t'],
         na_values='.',
         keep_default_na=False,

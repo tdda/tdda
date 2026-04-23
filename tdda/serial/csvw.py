@@ -175,7 +175,6 @@ class CSVWMetadata(SerialMetadata):
             self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
         else:
             self._csvw = spec
-            print('0000', spec)
 
     def field_to_csvw_json(self, field):
         d = {}

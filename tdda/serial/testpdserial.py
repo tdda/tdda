@@ -1004,7 +1004,7 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(
-            jdf, pqp(f'{test}-professions.parquet'), type_matching='loose'
+            pdf, pqp(f'{test}-professions.parquet'), type_matching='loose'
         )
 
         odf = csv_to_pandas(
@@ -1015,7 +1015,7 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(
-            jdf, pqp(f'{test}-organizations.parquet'), type_matching='loose'
+            odf, pqp(f'{test}-organizations.parquet'), type_matching='loose'
         )
 
     # def test035(self):

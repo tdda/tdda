@@ -94,7 +94,7 @@ def serial_to_polars_read_csv_args(
     map_other_bools_to_string=False,
     backend=None,
 ):
-    kw, _ = serial_to_polars_read_csv_args_and_postproc(
+    kw, _, _r = serial_to_polars_read_csv_args_and_postproc(
         md,
         warner=warner,
         serializable=serializable,
@@ -175,7 +175,7 @@ def serial_to_polars_read_csv_args_and_postproc(
                     else:
                         Warn(f'Polars type "{v}" not known.\n')
                 params[s] = out
-        return params, {}
+        return params, {}, {}
 
     kw = {}
     if md.delimiter:
@@ -199,16 +199,36 @@ def serial_to_polars_read_csv_args_and_postproc(
     if md.encoding:
         kw['encoding'] = md.encoding
 
+    has_unknowns = False
+    use_rename_postproc = False
+    rename_map = {}
+
     if isinstance(md.fields, list):  # full schema
-        schema = kw['schema'] = {
-            field.name: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
+        raw_dtypes = {
+            field.csvname: FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype)
             for field in md.fields
         }
+        has_unknowns = any(v is None for v in raw_dtypes.values())
+        if has_unknowns:
+            known = {k: f(v) for k, v in raw_dtypes.items() if v is not None}
+            schema = known
+            if known:
+                kw['schema_overrides'] = schema
+            use_rename_postproc = True
+            rename_map = {
+                fld.csvname: fld.name
+                for fld in md.fields
+                if fld.csvname != fld.name
+            }
+        else:
+            schema = {k: f(v) for k, v in raw_dtypes.items()}
+            if schema:
+                kw['schema'] = schema
         fields = {field.name: field for field in md.fields}
 
     elif isinstance(md.fields, dict):  # partial schema
         schema = kw['schema_overrides'] = {
-            field.name: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
+            field.csvname: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
             for field in md.fields.values()
         }
         fields = md.fields
@@ -238,14 +258,14 @@ def serial_to_polars_read_csv_args_and_postproc(
                 + [v for v in falses if v.lower() != 'false']
             )
             bool_str_fields = [
-                f.name for f in md.fields if f.fieldtype == 'bool'
+                fld for fld in md.fields if fld.fieldtype == 'bool'
             ]
             if non_pl_bools and bool_str_fields:
                 if map_other_bools_to_string:
-                    flist = ','.join(bool_str_fields)
+                    flist = ','.join(fld.name for fld in bool_str_fields)
                     m = f'Mapping to String: {flist}'
-                    for field in bool_str_fields:
-                        schema[field] = f(pl.String)
+                    for fld in bool_str_fields:
+                        schema[fld.csvname] = f(pl.String)
                 else:
                     bool_str_fields = []
                     m = (
@@ -270,7 +290,7 @@ def serial_to_polars_read_csv_args_and_postproc(
             if (fmt and not fmt.lower().startswith('iso')
                     and not strfmt.startswith("%Y-%m-%d")):
                 # TODO: Second condition might be too loose
-                schema[field] = f(pl.String)
+                schema[fmd.csvname] = f(pl.String)
                 op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
                 postproc[field] = {'op': op, 'format': strfmt}
                 Warn(
@@ -292,7 +312,7 @@ def serial_to_polars_read_csv_args_and_postproc(
             if any(bads):
                 trues = listify(fmd.true_values)
                 falses = listify(fmd.false_values)
-                schema[field] = f(pl.String)
+                schema[fmd.csvname] = f(pl.String)
                 if map_other_bools_to_string:
                     Warn(
                         f'Field {field} booleans {bads} will not be '
@@ -310,8 +330,9 @@ def serial_to_polars_read_csv_args_and_postproc(
                         f'Will convert post-read using replace.'
                     )
 
-    if any(f.name != f.csvname for f in md.fields):
-        kw['new_columns'] = [f.name for f in md.fields]
+    if not use_rename_postproc:
+        if any(fld.name != fld.csvname for fld in md.fields):
+            kw['new_columns'] = [fld.name for fld in md.fields]
 
     # 'missing_utf8_is_empty_string'
     # infer_schema
@@ -337,7 +358,7 @@ def serial_to_polars_read_csv_args_and_postproc(
     # truncate_ragged_lines
     # glob
 
-    return kw, postproc
+    return kw, postproc, rename_map
 
 
 def csv_to_polars(
@@ -441,8 +462,9 @@ def csv_to_polars(
     )
 
     postproc = {}
+    rename_map = {}
     if md:
-        md_kw, postproc = serial_to_polars_read_csv_args_and_postproc(
+        md_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
             md,
             warner=warner,
             map_other_bools_to_string=map_other_bools_to_string,
@@ -455,6 +477,8 @@ def csv_to_polars(
 
     kw = set_delimiter_from_path(kw, path, 'separator')
     df = pl.read_csv(path, **kw)
+    if rename_map:
+        df = df.rename(rename_map)
     Warn = nvl(warner, warn)
     for name, info in postproc.items():
         try:
@@ -516,7 +540,7 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     """
     backend is not used for polars.
     """
-    csv_kw, postproc = serial_to_polars_read_csv_args_and_postproc(
+    csv_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
         md, warner=warner
     )
     if kw:
@@ -524,19 +548,27 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     args = format_template_args(
         csv_kw, flavour='polars', dtypes=FIELDTYPE_TO_POLARS_DTYPE
     )
-    if not postproc:
+    if not postproc and not rename_map:
         return (PYTHON_TEMPLATES.POLARS_READ % args).lstrip()
-    exprs = '\n'.join(
-        (
-            f'        pl.col({name!r})'
-            f'.replace({{{", ".join(f"{v!r}: True" for v in info["trues"])}'
-            f', {", ".join(f"{v!r}: False" for v in info["falses"])}}}'
-            f', return_dtype=pl.Boolean),'
-        ) if info['op'] == 'bool_map' else
-        f'        pl.col({name!r}).str.{info["op"]}(format={info["format"]!r}),'
-        for name, info in postproc.items()
-    )
-    postproc_block = f'    df = df.with_columns([\n{exprs}\n    ])'
+    postproc_lines = []
+    if rename_map:
+        postproc_lines.append(f'    df = df.rename({rename_map!r})')
+    if postproc:
+        exprs = '\n'.join(
+            (
+                f'        pl.col({name!r})'
+                f'.replace({{{", ".join(f"{v!r}: True" for v in info["trues"])}'
+                f', {", ".join(f"{v!r}: False" for v in info["falses"])}}}'
+                f', return_dtype=pl.Boolean),'
+            ) if info['op'] == 'bool_map' else
+            f'        pl.col({name!r}).str.{info["op"]}'
+            f'(format={info["format"]!r}),'
+            for name, info in postproc.items()
+        )
+        postproc_lines.append(
+            f'    df = df.with_columns([\n{exprs}\n    ])'
+        )
+    postproc_block = '\n'.join(postproc_lines)
     return (
         PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)
     ).lstrip()

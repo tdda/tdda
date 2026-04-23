@@ -8,11 +8,11 @@ def read_data(inpath):
         null_values=['.'],
         encoding='latin-1',
         schema={
-            'IAmBoolean': pl.String,
-            'IAmInt': pl.Int64,
+            'b': pl.String,
+            'i': pl.Int64,
             'f': pl.Float64,
-            'IAmString': pl.String,
-            'IAmDate': pl.String
+            's': pl.String,
+            't': pl.String
         },
         new_columns=[
             'IAmBoolean',

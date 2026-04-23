@@ -179,7 +179,7 @@ def format_template_args(kw, flavour=None, dtypes=None):
         s12 = ' ' * 12
         s8 = ' ' * 8
         joint = f',\n{s12}'
-        if isinstance(x, dict) and len(x) > 1:
+        if isinstance(x, dict) and len(x) >= 1:
             prefix = ''
             if flavour == 'polars' and dtypes:
                 vals = list(dtypes.values())

@@ -13,7 +13,9 @@ def read_data(inpath):
             'f': 'double[pyarrow]',
             'IAmString': 'string[pyarrow]'
         },
-        date_format={'IAmDate': '%d/%m/%Y'},
+        date_format={
+            'IAmDate': '%d/%m/%Y'
+        },
         parse_dates=['IAmDate'],
         na_values='.',
         keep_default_na=False,

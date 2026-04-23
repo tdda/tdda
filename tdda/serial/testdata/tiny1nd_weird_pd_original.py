@@ -12,7 +12,9 @@ def read_data(inpath):
             'f': 'float',
             'IAmString': 'object'
         },
-        date_format={'IAmDate': '%d/%m/%Y'},
+        date_format={
+            'IAmDate': '%d/%m/%Y'
+        },
         parse_dates=['IAmDate'],
         na_values='.',
         keep_default_na=False,
