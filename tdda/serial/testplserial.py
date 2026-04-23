@@ -161,7 +161,6 @@ class TestConversion(ReferenceTestCase):
         })
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
-    @tag
     def test_isodate_tsv2pl(self):
         md_path = tdpath('isodt-tsv-metadata.json')
         csvpath = tdpath('isodt.tsv')
@@ -175,7 +174,6 @@ class TestConversion(ReferenceTestCase):
         })
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
-    @tag
     def test_eurodate2pl(self):
         md_path = tdpath('eurod-metadata.json')
         csvpath = tdpath('eurod.csv')
