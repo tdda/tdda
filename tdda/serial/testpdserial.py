@@ -1824,8 +1824,8 @@ class TestSerialSmallWrite(ReferenceTestCase):
                              tdpath('allformats-pc.serial'))
         ldf = csv_to_pandas(tdpath('allformats.csv'),
                             tdpath('allformats-literal.serial'))
-        self.assertDataFramesEquivalent(pcdf, df)
-        self.assertDataFramesEquivalent(ldf, df)
+        self.assertDataFramesEquivalent(pcdf, df, type_matching='strict')
+        self.assertDataFramesEquivalent(ldf, df, type_matching='strict')
 
 
 if __name__ == '__main__':
