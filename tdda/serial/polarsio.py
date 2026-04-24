@@ -478,6 +478,8 @@ def csv_to_polars(
     kw = set_delimiter_from_path(kw, path, 'separator')
     df = pl.read_csv(path, **kw)
     if rename_map:
+        rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
+    if rename_map:
         df = df.rename(rename_map)
     Warn = nvl(warner, warn)
     for name, info in postproc.items():
@@ -552,7 +554,17 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
         return (PYTHON_TEMPLATES.POLARS_READ % args).lstrip()
     postproc_lines = []
     if rename_map:
-        postproc_lines.append(f'    df = df.rename({rename_map!r})')
+        entries = ['    rename_map = {']
+        for k, v in rename_map.items():
+            entries.append(f'        {k!r}: {v!r},')
+        entries.extend([
+            '    }',
+            '    rename_map = '
+            '{k: v for k, v in rename_map.items() if k in df.columns}',
+            '    if rename_map:',
+            '        df = df.rename(rename_map)',
+        ])
+        postproc_lines.extend(entries)
     if postproc:
         exprs = '\n'.join(
             (

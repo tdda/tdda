@@ -151,6 +151,7 @@ class TestSerialConversions(ReferenceTestCase):
             ref_df[col] = ref_df[col].astype(typ)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
+    @tag
     def testSerialToPandasWeird_Python_PyArrow(self):
         name = 'tiny1nd_weird_pd_pyarrow.py'
         outpath = tmppath(name)
@@ -169,6 +170,7 @@ class TestSerialConversions(ReferenceTestCase):
         # Yes/n booleans.
         # Not much point checking for the Exception here
 
+    @tag
     def testSerialToPandasWeird_Python_Original(self):
         name = 'tiny1nd_weird_pd_original.py'
         outpath = tmppath(name)
@@ -202,6 +204,7 @@ class TestSerialConversions(ReferenceTestCase):
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
+    @tag
     def testSerialToPandasWeirdPythonCLI(self):
         name = 'tiny1nd_weird_pd.py'
         outpath = tmppath(name)
@@ -221,6 +224,7 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
+    @tag
     def testSerialToPolarsWeird(self):
         name = 'tiny1nd-weird-pl.serial'
         outpath = tmppath(name)
@@ -240,6 +244,7 @@ class TestSerialConversions(ReferenceTestCase):
             ],
         )
 
+    @tag
     def testSerialToPolarsPythonWeird(self):
         name = 'tiny1nd_weird_pl.py'
         outpath = tmppath(name)
@@ -263,6 +268,7 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertEqual(buf, [])
 
+    @tag
     def testCSVWToSerialPandas(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath_pd = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
@@ -511,6 +517,7 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertEqual(buf, [])
 
+    @tag
     def testFrictionlessToSerialPandas(self):
         frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.json')
         outpath_pd = tmppath('tiny1nd-weird-no-rename-from-fless-pd.serial')

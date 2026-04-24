@@ -503,8 +503,8 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertFalse(diffs)  # Actually reads it correctly!
 
 
-#class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
-class TestCSVWTests:
+class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
+#class TestCSVWTests:
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
     parquet_d = os.path.join(os.path.dirname(__file__),
                              'testdata/csvw-parquet')
@@ -644,7 +644,6 @@ class TestCSVWTests:
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-    @tag
     def test018(self):
         test = this_function_name()
         md_path = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
@@ -746,7 +745,7 @@ class TestCSVWTests:
         resultspath = self.parquet_path(f'{test}-result.parquet')
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         df, md = csv_to_polars(csvpath, md_path, return_md=True, verbosity=1)
-        self.assertEqual(len(md.warnings), 5)  # 5 virtual fields
+        self.assertEqual(len(md._warnings), 5)  # 5 virtual fields
         self.assertDataFrameCorrect(df, resultspath)
 
     # def test033(self): pass  # same as 32 for our purposes
