@@ -178,9 +178,10 @@ class CSVWMetadata(SerialMetadata):
 
     def field_to_csvw_json(self, field):
         d = {}
-        self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
+        self.set_if_non_null(d, 'name', field.name)
         csvw_type = FIELDTYPE_TO_CSVW.get(field.fieldtype)
-        self.set_if_attr_non_null(d, 'titles', 'name')
+        if field.csvname and field.csvname != field.name:
+            d['titles'] = field.csvname
         fmt = field.format
         if field.fieldtype and field.fieldtype.startswith('date'):
             if fmt is None:
@@ -583,11 +584,9 @@ class CSVWMetadata(SerialMetadata):
             titles = field.get_val(f, 'titles')
             if titles:
                 if isinstance(titles, list):
-                    field.altnames = titles
-                elif isinstance(titles, dict):
-                    field.altnames = titles
+                    field.csvname = titles[0]
                 elif type(titles) is str:
-                    field.altnames = [titles]
+                    field.csvname = titles
                 else:
                     self.warn(
                         f'Did not understand value "{titles}"'
