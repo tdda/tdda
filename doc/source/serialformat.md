@@ -1230,14 +1230,16 @@ The result is:
             "tableSchema": {
                 "columns": [
                     {
-                        "name": "b",
+                        "name": "IAmBoolean",
+                        "titles": "b",
                         "datatype": {
                             "base": "boolean",
                             "format": "Yes|No"
                         }
                     },
                     {
-                        "name": "i",
+                        "name": "IAmInt",
+                        "titles": "i",
                         "datatype": "integer"
                     },
                     {
@@ -1245,11 +1247,13 @@ The result is:
                         "datatype": "float"
                     },
                     {
-                        "name": "s",
+                        "name": "IAmString",
+                        "titles": "s",
                         "datatype": "string"
                     },
                     {
-                        "name": "t",
+                        "name": "IAmDate",
+                        "titles": "t",
                         "datatype": {
                             "base": "datetime",
                             "format": "dd/MM/yyyy"

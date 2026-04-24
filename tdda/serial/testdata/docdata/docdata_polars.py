@@ -8,11 +8,11 @@ def read_data(inpath):
         null_values=['.'],
         encoding='latin-1',
         schema={
-            'IAmBoolean': pl.String,
-            'IAmInt': pl.Int64,
+            'b': pl.String,
+            'i': pl.Int64,
             'f': pl.Float64,
-            'IAmString': pl.String,
-            'IAmDate': pl.String
+            's': pl.String,
+            't': pl.String
         },
         new_columns=[
             'IAmBoolean',
@@ -24,7 +24,7 @@ def read_data(inpath):
     )
 
     df = df.with_columns([
-        pl.col('IAmBoolean').replace({'Yes': True, 'y': True, 'No': False, 'n': False}, return_dtype=pl.Boolean),
+        pl.col('IAmBoolean').replace_strict({'Yes': 1, 'y': 1, 'No': 0, 'n': 0}).cast(pl.Boolean),
         pl.col('IAmDate').str.to_datetime(format='%d/%m/%Y'),
     ])
     return df

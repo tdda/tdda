@@ -1,7 +1,2 @@
 Polars does not understand escape characters.
 Ignoring escape value: `
-
-Field IAmBoolean booleans Yes, y, No, n will not be understood by Polars read_csv.
-Will convert post-read using replace.
-Field IAmDate date format %d/%m/%Y will not be understood by Polars read_csv.
-Will parse post-read using str.to_datetime.
