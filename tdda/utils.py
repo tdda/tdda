@@ -999,11 +999,12 @@ def warn(*args, buf=None, verbose=True, **kw):
         stderr_console.print(*args, style='yellow', **kw)
 
 
-def error(*args, raise_error=False, **kw):
+def error(*args, raise_error=False, exit=True, **kw):
     if raise_error:
         raise TDDAError('\n'.join(args) if args else 'error')
     stderr_console.print(*args, style='red', **kw)
-    sys.exit(1)
+    if exit:
+        sys.exit(1)
 
 
 def debug(*args, buf=None, verbose=True, **kw):
@@ -1225,18 +1226,42 @@ def split_string_list(s):
     return [w for w in L if w]
 
 
-def plural(n, s, pl=None):
+def plural(n, s, pl=None, inc_n=True, full_plural=None):
     """
     Returns a string like '23 fields' or '1 field' where the
-    number is n, the stem is s and the plural is either stem + 's'
-    or stem + pl (if provided).
+    number is n, the stem is s and the plural is either stem + 's',
+    stem + pl, or full_plural (if provided).
+
+    If inc_n is False, just returns s, singular or pluralized (no number)
+    based on n.
     """
-    if pl is None:
-        pl = 's'
-    if n == 1:
-        return '%s %s' % (n, s)
+    if full_plural is not None:
+        p = full_plural
+    elif pl is None:
+        p = s + 's'
     else:
-        return '%s %s%s' % (n, s, pl)
+        p = '%s%s' % (s, pl)
+
+    if inc_n:
+        return '%s %s' % (n, s if n == 1 else p)
+    else:
+        return s if n == 1 else p
+
+
+def string_list(list_, conjunction='and', oxford=False):
+    """Returns a string from the list of the form "A, B, C and D"""
+    list_ = list(list_)
+    if len(list_) == 0:
+        return 'none'
+    if len(list_) == 1:
+        return str(list_[0])
+    oxford_comma = ',' if (oxford and len(list_) > 2) else ''
+    return (', '.join((str(L) for L in list_[:-1]))
+            + '%s %s %s' % (oxford_comma, conjunction, list_[-1]))
+
+
+def oxford_list(list_, conjunction='and'):
+    return string_list(list_, conjunction, oxford=True)
 
 
 def valid_level(level):

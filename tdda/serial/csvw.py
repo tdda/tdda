@@ -16,7 +16,7 @@ from tdda.serial.metadata import (
 )
 from tdda.serial.utils import CSVW_MD_RE
 
-from tdda.utils import nvl, listify, warn, error
+from tdda.utils import nvl, listify, oxford_list, plural, warn, error
 
 
 # ISO8601 named formats: CSVW date/datetime type defaults to ISO8601,
@@ -544,6 +544,7 @@ class CSVWMetadata(SerialMetadata):
 
     def get_fields_metadata(self):
         fields = self.fields  # empty dict
+        multi_title_fields = []
         for i, f in enumerate(self._columns, 1):
             name = f.get('name')
             virtual = f.get('virtual')
@@ -588,6 +589,8 @@ class CSVWMetadata(SerialMetadata):
             titles = field.get_val(f, 'titles')
             if titles:
                 if isinstance(titles, list):
+                    if len(titles) > 1:
+                        multi_title_fields.append(name)
                     field.csvname = titles[0]
                 elif type(titles) is str:
                     field.csvname = titles
@@ -600,6 +603,15 @@ class CSVWMetadata(SerialMetadata):
             description = field.get_val(f, 'dc:description')
             if description:
                 field.description = description
+
+        if multi_title_fields:
+            n = len(multi_title_fields)
+            self.warn(
+                f'{plural(n, "Field", inc_n=False)} '
+                f'{oxford_list(multi_title_fields)} '
+                f'{plural(n, "has", full_plural="have")} '
+                f'multiple titles: only using first.'
+            )
 
     def choose_csv_from_csvw_name(self, csvw_name):
         sep = self.delimiter or ','

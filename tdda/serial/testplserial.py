@@ -115,7 +115,7 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
         self.assertEqual(buf, [])
 
 
-class TestConversion(ReferenceTestCase):
+class TestPolarsConversion(ReferenceTestCase):
     def test_isodate2pl(self):
         md_path = tdpath('isod-metadata.json')
         csvpath = tdpath('isod.csv')
@@ -516,7 +516,7 @@ class TestPolarsLoad(ReferenceTestCase):
 #         self.assertFalse(diffs)  # Actually reads it correctly!
 
 
-class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
+class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
     # class TestCSVWTests:
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
     parquet_d = os.path.join(
@@ -582,7 +582,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         resultspath = self.fullpath(f'{test}/result.json')
-        df = csv_to_polars(csvpath, find_md=True)
+        df = csv_to_polars(csvpath, find_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -599,7 +599,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -616,7 +616,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -633,7 +633,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/linked-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -650,7 +650,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -667,7 +667,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -684,7 +684,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -701,7 +701,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         md_path = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
-        df, md = csv_to_polars(md_path=md_path, return_md=True)
+        df, md = csv_to_polars(md_path=md_path, return_md=True, verbosity=1)
         df = string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -739,7 +739,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         md_path = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
         Warn, buf = testwarn()
-        df = csv_to_polars(md_path=md_path, warner=Warn)
+        df = csv_to_polars(md_path=md_path, warner=Warn, verbosity=1)
         fields = [
             'GID',
             'on_street',
@@ -803,9 +803,11 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
     # def test031(self): pass  # single json output; not appropriate here
 
     def test032(self):
+        # NOTE: The csv actually separates field headers with ', '.
+        # But 
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/events-listing.csv')
-        resultspath = self.parquet_path(f'{test}-result.parquet')
+        resultspath = self.parquet_path(f'{test}-result-pl.parquet')
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         df, md = csv_to_polars(csvpath, md_path, return_md=True, verbosity=1)
         self.assertEqual(len(md._warnings), 5)  # 5 virtual fields
@@ -857,7 +859,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')
         resultspath = self.parquet_path(f'{test}-result.parquet')
-        df = csv_to_polars(csvpath, find_md=True)
+        df = csv_to_polars(csvpath, find_md=True, verbosity=1)
         self.assertDataFrameCorrect(df, resultspath)
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False, to_ints=None):

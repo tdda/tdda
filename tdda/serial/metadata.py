@@ -607,19 +607,19 @@ class SerialMetadata:
         valid = True
         if self._verbosity > 0:
             for msg in self._errors:
-                print(f'** FATAL ERROR: {msg}', file=sys.stderr)
+                error(f'** FATAL ERROR: {msg}', exit=False)
                 valid = False
             for field in self.fields:
                 field.validate()
                 for msg in field._errors:
-                    print(f'** FATAL ERROR: {msg}', file=sys.stderr)
+                    error(f'** FATAL ERROR: {msg}', exit=False)
                     valid = False
-        if self._verbosity > 1:
-            for msg in self._warnings:
-                print(f'** WARNING: {msg}', file=sys.stderr)
-            for field in self.fields:
-                for msg in field._warnings:
-                    print(f'** WARNING: {msg}', file=sys.stderr)
+        v = self._verbosity > 1
+        for msg in self._warnings:
+            warn(f'** WARNING: {msg}', verbose=v)
+        for field in self.fields:
+            for msg in field._warnings:
+                warn(f'** WARNING: {msg}', verbose=v)
 
         self._valid = valid
 

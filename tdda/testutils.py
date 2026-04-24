@@ -26,6 +26,9 @@ from tdda.utils import (
     is_sequence,
     listify,
     globlike_match,
+    oxford_list,
+    plural,
+    string_list,
     tex_name,
     tex_encode,
 )
@@ -562,6 +565,61 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(type(listify(())), list)
 
         self.assertEqual(listify({'foo': 1}), [{'foo': 1}])
+
+    def testPlural(self):
+        # with count
+        self.assertEqual(plural(1, 'field'), '1 field')
+        self.assertEqual(plural(2, 'field'), '2 fields')
+        self.assertEqual(plural(0, 'field'), '0 fields')
+        # custom suffix
+        self.assertEqual(plural(1, 'match', 'es'), '1 match')
+        self.assertEqual(plural(2, 'match', 'es'), '2 matches')
+        # full_plural overrides suffix
+        self.assertEqual(plural(1, 'has', full_plural='have'), '1 has')
+        self.assertEqual(plural(2, 'has', full_plural='have'), '2 have')
+        # inc_n=False: word only
+        self.assertEqual(plural(1, 'Field', inc_n=False), 'Field')
+        self.assertEqual(plural(2, 'Field', inc_n=False), 'Fields')
+        # inc_n=False with full_plural
+        self.assertEqual(
+            plural(1, 'has', full_plural='have', inc_n=False), 'has'
+        )
+        self.assertEqual(
+            plural(2, 'has', full_plural='have', inc_n=False), 'have'
+        )
+
+    def testOxfordList(self):
+        self.assertEqual(oxford_list([]), 'none')
+        self.assertEqual(oxford_list(['a']), 'a')
+        self.assertEqual(oxford_list(['a', 'b']), 'a and b')
+        self.assertEqual(oxford_list(['a', 'b', 'c']), 'a, b, and c')
+        self.assertEqual(
+            oxford_list(['a', 'b'], conjunction='or'), 'a or b'
+        )
+        self.assertEqual(
+            oxford_list(['a', 'b', 'c'], conjunction='or'), 'a, b, or c'
+        )
+
+    def testStringList(self):
+        self.assertEqual(string_list([]), 'none')
+        self.assertEqual(string_list(['a']), 'a')
+        self.assertEqual(string_list(['a', 'b']), 'a and b')
+        # no oxford comma by default
+        self.assertEqual(string_list(['a', 'b', 'c']), 'a, b and c')
+        self.assertEqual(
+            string_list(['a', 'b', 'c'], oxford=True), 'a, b, and c'
+        )
+        self.assertEqual(
+            string_list(['a', 'b'], conjunction='or'), 'a or b'
+        )
+        self.assertEqual(
+            string_list(['a', 'b', 'c'], conjunction='or'),
+            'a, b or c'
+        )
+        self.assertEqual(
+            string_list(['a', 'b', 'c'], conjunction='or', oxford=True),
+            'a, b, or c'
+        )
 
     def testGloblikeMatch(self):
         names = [f'a{i}' for i in range(21)]

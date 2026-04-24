@@ -386,7 +386,7 @@ class SerialConverter:
             print(f'GENERATE: {self.generate}')
 
         if not self.generate:
-            md_in = load_metadata(self.inpath)
+            md_in = load_metadata(self.inpath, verbosity=self.verbosity)
         md_out = (
             md_in.copy_serial()
             if 'tdda.serial' in self.out_formats and not self.generate

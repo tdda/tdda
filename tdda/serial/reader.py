@@ -179,6 +179,7 @@ def _get_metadata(
                 table_number=table_number,
                 for_table_name=for_table_name,
                 preferred_serial_flavour=preferred,
+                verbosity=verbosity,
             )
             path = md._fullpath
             if path is None:
@@ -199,6 +200,7 @@ def _get_metadata(
                         table_number=table_number,
                         for_table_name=for_table_name,
                         preferred_serial_flavour=preferred,
+                        verbosity=verbosity,
                     )
                     actual_path = getattr(md, '_fullpath', md.path)
                     if actual_path is None:

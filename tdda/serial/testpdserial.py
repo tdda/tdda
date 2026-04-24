@@ -120,7 +120,7 @@ class TestPandasKeywordArgsGeneration(ReferenceTestCase):
         )
 
 
-class TestConversion(ReferenceTestCase):
+class TestPandasConversion(ReferenceTestCase):
     dfEqual = dfEqual
 
     def test_isodate2pd(self):
@@ -548,7 +548,7 @@ class TestPandasLoad(ReferenceTestCase):
         self.assertFalse(diffs)  # Actually reads it correctly!
 
 
-class TestCSVWTests(ReferenceTestCase):
+class TestPandasCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
     parquet_d = os.path.join(
         os.path.dirname(__file__), 'testdata/csvw-parquet'
@@ -621,7 +621,7 @@ class TestCSVWTests(ReferenceTestCase):
         test = this_function_name()  # function name
         csvpath = self.fullpath(f'{test}/tree-ops.csv')
         resultspath = self.fullpath(f'{test}/result.json')
-        df = csv_to_pandas(csvpath, find_md=True)
+        df = csv_to_pandas(csvpath, find_md=True, verbosity=1)
         string_to_int(df, 'GID')
         fields = [
             'GID',
@@ -648,7 +648,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         csvpath = self.fullpath('test012/tree-ops.csv')
         fields = [
@@ -676,7 +676,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath('tree-ops.csv')
         fields = [
@@ -704,7 +704,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/linked-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = [
@@ -732,7 +732,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = [
@@ -760,7 +760,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = [
@@ -788,7 +788,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = [
@@ -816,7 +816,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}/tree-ops.csv-metadata.json')
         resultspath = self.fullpath(f'{test}/result.json')
 
-        df, md = csv_to_pandas(md_path=md_path, return_md=True)
+        df, md = csv_to_pandas(md_path=md_path, return_md=True, verbosity=1)
         string_to_int(df, 'GID')
         # csvpath = self.fullpath(f'{test}/tree-ops.csv')
         fields = [
@@ -881,7 +881,7 @@ class TestCSVWTests(ReferenceTestCase):
         md_path = self.fullpath(f'{test}-user-metadata.json')
         resultspath = self.fullpath(f'{test}.json')
 
-        df = csv_to_pandas(md_path=md_path)
+        df = csv_to_pandas(md_path=md_path, verbosity=1)
         fields = [
             'GID',
             'on_street',
@@ -1015,7 +1015,7 @@ class TestCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(
-            odf, pqp(f'{test}-organizations.parquet'), type_matching='loose'
+            odf, pqp(f'{test}-organizations.parquet'), type_checking='loose'
         )
 
     # def test035(self):
@@ -1029,8 +1029,8 @@ class TestCSVWTests(ReferenceTestCase):
         # md = load_metadata(
         #     self.fullpath(f'{test}/tree-ops-ext.csv-metadata.json')
         # )
-        df = csv_to_pandas(csvpath, find_md=True)
-        self.assertDataFrameCorrect(df, resultspath)
+        df = csv_to_pandas(csvpath, find_md=True, verbosity=1)
+        self.assertDataFrameCorrect(df, resultspath, type_matching='loose')
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False, to_ints=None):
         csvpath, resultspath = self.csv_json_paths(stem)
@@ -1622,7 +1622,7 @@ def remove_common_key_vals(left, right):
             del right[k]
 
 
-class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
+class TestSerialPandasKwargsNamedDateFormats(ReferenceTestCase):
     """
     Tests that serial_to_pandas_read_csv_args produces correct pandas
     date_format kwargs when SerialMetadata uses named date formats.
@@ -1680,7 +1680,7 @@ class TestSerialKwargsNamedDateFormats(ReferenceTestCase):
         )
 
 
-class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
+class TestSerialPandasNamedDateFormatsLoad(ReferenceTestCase):
     """
     Integration tests: load CSVs via .serial metadata with named
     euro/US date formats. Both parse to the same datetime values,
@@ -1738,7 +1738,7 @@ class TestSerialNamedDateFormatsLoad(ReferenceTestCase):
         )
 
 
-class TestSerialNamedDateFormatsWrite(ReferenceTestCase):
+class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
     """
     Integration tests: write DataFrames via pandas_to_csv with euro date
     formats, both via kw_overrides and via an input .serial file.
@@ -1774,7 +1774,7 @@ class TestSerialNamedDateFormatsWrite(ReferenceTestCase):
         )
 
 
-class TestSerialSmallWrite(ReferenceTestCase):
+class TestSerialPandasSmallWrite(ReferenceTestCase):
     """
     Integration tests: write a multi-type DataFrame (read from small.csv)
     via pandas_to_csv with tab delimiter, single-quote char, and NULL
