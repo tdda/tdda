@@ -75,6 +75,11 @@ FIELDTYPE_TO_POLARS_DTYPE = {
     'iso8601': pl.Datetime,
 }
 
+GEN_PY = (
+    'Generate Python with .py target and --to pl.r to '
+    'see required post-processing.'
+)
+
 
 def pl_dtype_to_str(t):
     return str(t).split('.')[-1] if t else str(t)
@@ -136,9 +141,7 @@ def serial_to_polars_write_csv_args(md, backend=None, warner=None, **kw):
         out['date_format'] = serial_format_to_strftime(md.date_format)
 
     if md.datetime_format:
-        out['datetime_format'] = serial_format_to_strftime(
-            md.datetime_format
-        )
+        out['datetime_format'] = serial_format_to_strftime(md.datetime_format)
 
     if md.quoting:
         style = POLARS_QUOTE_STYLE.get(md.quoting)
@@ -154,6 +157,7 @@ def serial_to_polars_read_csv_args_and_postproc(
     serializable=False,
     map_other_bools_to_string=False,
     backend=None,
+    no_postproc_warnings=False,
 ):
     """
     Convert metadata to dictionary of keyword arguments for Polars.
@@ -228,7 +232,9 @@ def serial_to_polars_read_csv_args_and_postproc(
 
     elif isinstance(md.fields, dict):  # partial schema
         schema = kw['schema_overrides'] = {
-            field.csvname: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
+            field.csvname: f(
+                FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None)
+            )
             for field in md.fields.values()
         }
         fields = md.fields
@@ -239,27 +245,31 @@ def serial_to_polars_read_csv_args_and_postproc(
     for field, fmd in fields.items():
         if fmd.fieldtype and fmd.fieldtype.startswith('date'):
             attr = (
-                'datetime_format' if fmd.fieldtype.startswith('datetime')
+                'datetime_format'
+                if fmd.fieldtype.startswith('datetime')
                 else 'date_format'
             )
             fmt = nvl(fmd.format, getattr(md, attr, None))
             strfmt = serial_format_to_strftime(fmt) if fmt else None
-            if (fmt and not fmt.lower().startswith('iso')
-                    and not strfmt.startswith("%Y-%m-%d")):
+            if (
+                fmt
+                and not fmt.lower().startswith('iso')
+                and not strfmt.startswith('%Y-%m-%d')
+            ):
                 # TODO: Second condition might be too loose
                 schema[fmd.csvname] = f(pl.String)
                 op = 'to_date' if fmd.fieldtype == 'date' else 'to_datetime'
                 postproc[field] = {'op': op, 'format': strfmt}
-                Warn(
-                    f'Field {field} date format {fmt} will not be '
-                    f'understood by Polars read_csv.\n'
-                    f'Will parse post-read using str.{op}.'
-                )
+                if not no_postproc_warnings:
+                    Warn(
+                        f'Field {field} date format {fmt} will not be '
+                        f'understood by Polars read_csv.\n{GEN_PY}'
+                    )
             # Possible fallback for no date format set.
             # But prevents unspecified iso formats from working.
             # So probably not good.
             # elif not fmt:
-                # schema[field] = f(pl.String)
+            # schema[field] = f(pl.String)
         if fmd.fieldtype and fmd.fieldtype.lower().startswith('bool'):
             trues = listify(fmd.true_values)
             falses = listify(fmd.false_values)
@@ -273,27 +283,30 @@ def serial_to_polars_read_csv_args_and_postproc(
                         f' {field} not understood; ignoring.\n'
                     )
             bads = ', '.join(
-                v for v in (trues + falses)
+                v
+                for v in (trues + falses)
                 if v.lower() not in ('true', 'false')
             )
             if bads:
                 schema[fmd.csvname] = f(pl.String)
                 if map_other_bools_to_string:
-                    Warn(
-                        f'Field {field} booleans {bads} will not be '
-                        f'understood by Polars.\nMapping to pl.String.\n'
-                    )
+                    if not no_postproc_warnings:
+                        Warn(
+                            f'Field {field} booleans {bads} will not be '
+                            f'understood by Polars read_csv.\n'
+                            f'Mapping to pl.String.'
+                        )
                 else:
                     postproc[field] = {
                         'op': 'bool_map',
                         'trues': trues,
                         'falses': falses,
                     }
-                    Warn(
-                        f'Field {field} booleans {bads} will not be '
-                        f'understood by Polars read_csv.\n'
-                        f'Will convert post-read using replace.'
-                    )
+                    if not no_postproc_warnings:
+                        Warn(
+                            f'Field {field} booleans {bads} will not be '
+                            f'understood by Polars read_csv.\n{GEN_PY}'
+                        )
 
     if not use_rename_postproc:
         if any(fld.name != fld.csvname for fld in md.fields):
@@ -426,13 +439,17 @@ def csv_to_polars(
         verbosity=verbosity,
     )
 
+    Warn = warner or (warn if verbosity else lambda *a, **kw: None)
     postproc = {}
     rename_map = {}
     if md:
-        md_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
-            md,
-            warner=warner,
-            map_other_bools_to_string=map_other_bools_to_string,
+        md_kw, postproc, rename_map = (
+            serial_to_polars_read_csv_args_and_postproc(
+                md,
+                warner=Warn,
+                map_other_bools_to_string=map_other_bools_to_string,
+                no_postproc_warnings=True,
+            )
         )
     if md and kw:
         md_kw.update(kw)
@@ -446,7 +463,6 @@ def csv_to_polars(
         rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
     if rename_map:
         df = df.rename(rename_map)
-    Warn = nvl(warner, warn)
     for name, info in postproc.items():
         try:
             if info['op'] == 'to_date':
@@ -508,7 +524,7 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
     backend is not used for polars.
     """
     csv_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
-        md, warner=warner
+        md, warner=warner, no_postproc_warnings=True
     )
     if kw:
         csv_kw.update(kw)
@@ -522,13 +538,15 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
         entries = ['    rename_map = {']
         for k, v in rename_map.items():
             entries.append(f'        {k!r}: {v!r},')
-        entries.extend([
-            '    }',
-            '    rename_map = '
-            '{k: v for k, v in rename_map.items() if k in df.columns}',
-            '    if rename_map:',
-            '        df = df.rename(rename_map)',
-        ])
+        entries.extend(
+            [
+                '    }',
+                '    rename_map = '
+                '{k: v for k, v in rename_map.items() if k in df.columns}',
+                '    if rename_map:',
+                '        df = df.rename(rename_map)',
+            ]
+        )
         postproc_lines.extend(entries)
     if postproc:
         exprs = '\n'.join(
@@ -537,14 +555,13 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
                 f'.replace_strict({{{", ".join(f"{v!r}: 1" for v in info["trues"])}'
                 f', {", ".join(f"{v!r}: 0" for v in info["falses"])}}})'
                 f'.cast(pl.Boolean),'
-            ) if info['op'] == 'bool_map' else
-            f'        pl.col({name!r}).str.{info["op"]}'
+            )
+            if info['op'] == 'bool_map'
+            else f'        pl.col({name!r}).str.{info["op"]}'
             f'(format={info["format"]!r}),'
             for name, info in postproc.items()
         )
-        postproc_lines.append(
-            f'    df = df.with_columns([\n{exprs}\n    ])'
-        )
+        postproc_lines.append(f'    df = df.with_columns([\n{exprs}\n    ])')
     postproc_block = '\n'.join(postproc_lines)
     return (
         PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)

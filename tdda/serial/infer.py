@@ -781,7 +781,9 @@ class MetadataInferrer:
             kn = None
         type_info = {
             col: analyse_values(
-                col, [row[i] for row in data if len(row) > i], cand_nulls,
+                col,
+                [row[i] for row in data if len(row) > i],
+                cand_nulls,
                 known_nulls=kn,
             )
             for i, col in enumerate(self.fieldnames)
@@ -882,8 +884,9 @@ class MetadataInferrer:
                 field_date_fmts = {}
             else:
                 self.date_format = None
-                field_date_fmts = {k: _to_yyyy(v)
-                                   for k, v in date_only_fmts.items()}
+                field_date_fmts = {
+                    k: _to_yyyy(v) for k, v in date_only_fmts.items()
+                }
         else:
             self.date_format = None
             field_date_fmts = {}
@@ -902,8 +905,9 @@ class MetadataInferrer:
                 field_dt_fmts = {}
             else:
                 self.datetime_format = None
-                field_dt_fmts = {k: _to_yyyy(v)
-                                 for k, v in datetime_fmts.items()}
+                field_dt_fmts = {
+                    k: _to_yyyy(v) for k, v in datetime_fmts.items()
+                }
         else:
             self.datetime_format = None
             field_dt_fmts = {}
@@ -1141,8 +1145,10 @@ class MetadataInferrer:
         nulls = self.null if isinstance(self.null, list) else [self.null]
         given = self._given.get('null')
         given_set = (
-            set(given) if isinstance(given, list) else {given}
-        ) if given is not None else set()
+            (set(given) if isinstance(given, list) else {given})
+            if given is not None
+            else set()
+        )
         for null in nulls:
             if null in KNOWN_NULLS or null in given_set:
                 self.vprint(f'Null: "{null}"', 2)

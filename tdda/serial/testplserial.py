@@ -80,8 +80,10 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
             [
                 'Polars does not understand escape characters.\n'
                 'Ignoring escape value: \\\n',
-                'Field bool2 booleans yes, no will not be understood by Polars read_csv.\n'
-                'Will convert post-read using replace.',
+                'Field bool2 booleans yes, no will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
             ],
         )
 
@@ -114,64 +116,73 @@ class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
 
 
 class TestConversion(ReferenceTestCase):
-
     def test_isodate2pl(self):
         md_path = tdpath('isod-metadata.json')
         csvpath = tdpath('isod.csv')
         df = csv_to_polars(csvpath, md_path)
-        expected = pl.DataFrame({
-            'row': pl.Series([1, 15], dtype=pl.Int64),
-            'date': [
-                datetime.date(2024, 1, 1),
-                datetime.date(2024, 1, 15),
-            ]
-        })
+        expected = pl.DataFrame(
+            {
+                'row': pl.Series([1, 15], dtype=pl.Int64),
+                'date': [
+                    datetime.date(2024, 1, 1),
+                    datetime.date(2024, 1, 15),
+                ],
+            }
+        )
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
     def test_simple2metadata(self):
         md_path = tdpath('simple-metadata.json')
         md = CSVWMetadata(md_path)
-        self.assertStringCorrect(str(md), tdpath('expected/simple-md.json'),
-                                 ignore_substrings=[
-                                    'metadata_source_path',
-                                    'metadata_source_dir'
-                                 ],
-                                 ignore_patterns=TDDASERIAL_PATTERNS)
+        self.assertStringCorrect(
+            str(md),
+            tdpath('expected/simple-md.json'),
+            ignore_substrings=['metadata_source_path', 'metadata_source_dir'],
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
 
     def test_simple2pl(self):
         md_path = tdpath('simple-metadata.json')
         csvpath = tdpath('simple.csv')
         df = csv_to_polars(csvpath, md_path)
-        expected = pl.DataFrame({
-            'Index': pl.Series([0, 1, 2], dtype=pl.Int64),
-            'Odd': pl.Series([False, True, False], dtype=pl.Boolean),
-            'Even': pl.Series([True, False, True], dtype=pl.Boolean),
-            'Real': pl.Series([0.0, 1.125, 2.25], dtype=pl.Float64),
-            'Name': pl.Series(['zero', 'one', 'two'], dtype=pl.String),
-            'LastInFeb': pl.Series([
-                datetime.date(2024, 2, 20),
-                datetime.date(2024, 2, 21),
-                datetime.date(2024, 2, 22),
-            ]),
-            'LastIn2024': pl.Series([
-                datetime.datetime(2024, 2, 29, 23, 59, 50),
-                datetime.datetime(2024, 2, 29, 23, 59, 51),
-                datetime.datetime(2024, 2, 29, 23, 59, 52),
-            ]),
-        })
+        expected = pl.DataFrame(
+            {
+                'Index': pl.Series([0, 1, 2], dtype=pl.Int64),
+                'Odd': pl.Series([False, True, False], dtype=pl.Boolean),
+                'Even': pl.Series([True, False, True], dtype=pl.Boolean),
+                'Real': pl.Series([0.0, 1.125, 2.25], dtype=pl.Float64),
+                'Name': pl.Series(['zero', 'one', 'two'], dtype=pl.String),
+                'LastInFeb': pl.Series(
+                    [
+                        datetime.date(2024, 2, 20),
+                        datetime.date(2024, 2, 21),
+                        datetime.date(2024, 2, 22),
+                    ]
+                ),
+                'LastIn2024': pl.Series(
+                    [
+                        datetime.datetime(2024, 2, 29, 23, 59, 50),
+                        datetime.datetime(2024, 2, 29, 23, 59, 51),
+                        datetime.datetime(2024, 2, 29, 23, 59, 52),
+                    ]
+                ),
+            }
+        )
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
     def test_isodate_tsv2pl(self):
         md_path = tdpath('isodt-tsv-metadata.json')
         csvpath = tdpath('isodt.tsv')
         df = csv_to_polars(csvpath, md_path)
-        expected = pl.DataFrame({
-            'row': pl.Series([1, 15], dtype=pl.Int64),
-            'time': [
-                datetime.datetime(2024, 1, 1, 11, 11, 11),
-                datetime.datetime(2024, 1, 15, 22, 22, 22),
-            ]
-        })
+        expected = pl.DataFrame(
+            {
+                'row': pl.Series([1, 15], dtype=pl.Int64),
+                'time': [
+                    datetime.datetime(2024, 1, 1, 11, 11, 11),
+                    datetime.datetime(2024, 1, 15, 22, 22, 22),
+                ],
+            }
+        )
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
     def test_eurodate2pl(self):
@@ -179,13 +190,15 @@ class TestConversion(ReferenceTestCase):
         csvpath = tdpath('eurod.csv')
         Warn, buf = testwarn()
         df = csv_to_polars(csvpath, md_path, warner=Warn)
-        expected = pl.DataFrame({
-            'row': pl.Series([1, 15], dtype=pl.Int64),
-            'date': [
-                datetime.date(2024, 1, 1),
-                datetime.date(2024, 1, 15),
-            ]
-        })
+        expected = pl.DataFrame(
+            {
+                'row': pl.Series([1, 15], dtype=pl.Int64),
+                'date': [
+                    datetime.date(2024, 1, 1),
+                    datetime.date(2024, 1, 15),
+                ],
+            }
+        )
         self.assertDataFramesEqual(df, expected, type_matching='medium')
 
 
@@ -410,7 +423,7 @@ class TestPolarsLoad(ReferenceTestCase):
         md_path = tdpath('small2-metadata.json')
         warn, buf = testwarn()
         df = csv_to_polars(md_path=md_path, warner=warn)
-        self.assertEqual(len(buf), 4)  # 4 bad date fields
+        self.assertEqual(len(buf), 0)  # 4 bad date fields; all handled
         self.assertTrue(df.equals(self.dfisodates))
 
         # self.assertDataFramesEqual(df, self.correct_df)
@@ -504,10 +517,11 @@ class TestPolarsLoad(ReferenceTestCase):
 
 
 class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
-#class TestCSVWTests:
+    # class TestCSVWTests:
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
-    parquet_d = os.path.join(os.path.dirname(__file__),
-                             'testdata/csvw-parquet')
+    parquet_d = os.path.join(
+        os.path.dirname(__file__), 'testdata/csvw-parquet'
+    )
 
     def fullpath(self, path):
         return os.path.normpath(os.path.join(self.csvw_d, path))
@@ -518,32 +532,36 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
     def csv_json_paths(self, stem):
         return (
             os.path.join(self.csvw_d, stem + '.csv'),
-            os.path.join(self.csvw_d, stem + '.json')
+            os.path.join(self.csvw_d, stem + '.json'),
         )
 
     def _fix_inventory_date(self, ref_df):
         # String dates in result.json are not zero-padded; correct here
         return ref_df.with_columns(
-            pl.Series('inventory_date', [
-                datetime.date(2010, 10, 18),
-                datetime.date(2010, 6, 2),
-            ])
+            pl.Series(
+                'inventory_date',
+                [
+                    datetime.date(2010, 10, 18),
+                    datetime.date(2010, 6, 2),
+                ],
+            )
         )
 
     def test001(self):
         self._test_csv_json('test001')
 
-# def test002(self): pass  # Same as pandas; no separate polars test needed
-# def test003(self): pass  # Same as pandas; no separate polars test needed
-# def test004(self): pass  # Same as pandas; no separate polars test needed
+    # def test002(self): pass  # Same as pandas; no separate polars test needed
+    # def test003(self): pass  # Same as pandas; no separate polars test needed
+    # def test004(self): pass  # Same as pandas; no separate polars test needed
 
     def test005(self):
         # csvw expects IDs as strings but polars reads id as int,
         # child_id as float (nulls). Polars behaviour is better.
         # upgrade_possible_ints gives Int64 for child_id; to_ints coerces
         # the string fields in ref_df so they match.
-        self._test_csv_json('test005', upgrade_possible_ints=True,
-                            to_ints=['id', 'child_id'])
+        self._test_csv_json(
+            'test005', upgrade_possible_ints=True, to_ints=['id', 'child_id']
+        )
 
     def test006(self):
         self._test_csv_json('test006')
@@ -566,8 +584,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df = csv_to_polars(csvpath, find_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -578,8 +601,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -590,8 +618,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -602,8 +635,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -614,8 +652,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -626,8 +669,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -638,8 +686,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
@@ -650,16 +703,21 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}/result.json')
         df, md = csv_to_polars(md_path=md_path, return_md=True)
         df = string_to_int(df, 'GID')
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=['GID'])
         ref_df = self._fix_inventory_date(ref_df)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-# def test019(self): pass  # Same as pandas; no separate polars test needed
-# def test020(self): pass  # Same as pandas; no separate polars test needed
-# def test021(self): pass  # Same as pandas; no separate polars test needed
-# def test022(self): pass  # Same as pandas; no separate polars test needed
+    # def test019(self): pass  # Same as pandas; no separate polars test needed
+    # def test020(self): pass  # Same as pandas; no separate polars test needed
+    # def test021(self): pass  # Same as pandas; no separate polars test needed
+    # def test022(self): pass  # Same as pandas; no separate polars test needed
 
     def test023(self):
         test = this_function_name()
@@ -672,9 +730,9 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         ref_df = csvw_json_to_df(resultspath, fields)
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
-# def test024(self): pass  # Same as pandas; no separate polars test needed
-# def test025(self): pass  # Same as pandas; no separate polars test needed
-# def test026(self): pass  # Same as pandas; no separate polars test needed
+    # def test024(self): pass  # Same as pandas; no separate polars test needed
+    # def test025(self): pass  # Same as pandas; no separate polars test needed
+    # def test026(self): pass  # Same as pandas; no separate polars test needed
 
     def test027(self):
         test = this_function_name()
@@ -682,8 +740,13 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         resultspath = self.fullpath(f'{test}.json')
         Warn, buf = testwarn()
         df = csv_to_polars(md_path=md_path, warner=Warn)
-        fields = ['GID', 'on_street', 'species', 'trim_cycle',
-                  'inventory_date']
+        fields = [
+            'GID',
+            'on_street',
+            'species',
+            'trim_cycle',
+            'inventory_date',
+        ]
         ref_path = tdpath('csvw_027_pl.parquet')
         self.assertDataFrameCorrect(df, ref_path, type_matching='medium')
 
@@ -790,7 +853,6 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         self.assertDataFrameCorrect(odf, pqp(f'{test}-organizations.parquet'))
 
     # def test035(self): pass  # same as 34 for our purposes
-    @tag
     def test036(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')
@@ -798,8 +860,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         df = csv_to_polars(csvpath, find_md=True)
         self.assertDataFrameCorrect(df, resultspath)
 
-    def _test_csv_json(self, stem, upgrade_possible_ints=False,
-                       to_ints=None):
+    def _test_csv_json(self, stem, upgrade_possible_ints=False, to_ints=None):
         csvpath, resultspath = self.csv_json_paths(stem)
         df = csv_to_polars(
             csvpath, upgrade_possible_ints=upgrade_possible_ints
@@ -1159,11 +1220,13 @@ def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
     with open(path) as f:
         d = json.load(f)
     rows = d['tables'][table_number]['row']
-    df = pl.DataFrame({
-        field: [r['describes'][0].get(field, None) for r in rows]
-        for field in fields
-    })
-    for k in (to_ints or []):
+    df = pl.DataFrame(
+        {
+            field: [r['describes'][0].get(field, None) for r in rows]
+            for field in fields
+        }
+    )
+    for k in to_ints or []:
         df = string_to_int(df, k)
     return df
 
@@ -1172,11 +1235,10 @@ def csvw_bare_json_to_df(path, fields, to_ints=None, to_dates=None):
     with open(path) as f:
         d = json.load(f)
     rows = d
-    df = pl.DataFrame({
-        field: [r.get(field, None) for r in rows]
-        for field in fields
-    })
-    for k in (to_ints or []):
+    df = pl.DataFrame(
+        {field: [r.get(field, None) for r in rows] for field in fields}
+    )
+    for k in to_ints or []:
         df = string_to_int(df, k)
     return df
 

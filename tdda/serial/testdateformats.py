@@ -19,14 +19,11 @@ from tdda.serial.dateutils import (
 
 
 class TestDetectFormatStyle(ReferenceTestCase):
-
     def test_pcdate(self):
         self.assertEqual(detect_format_style('%Y-%m-%d'), 'pcdate')
 
     def test_pcdate_datetime(self):
-        self.assertEqual(
-            detect_format_style('%Y-%m-%dT%H:%M:%S'), 'pcdate'
-        )
+        self.assertEqual(detect_format_style('%Y-%m-%dT%H:%M:%S'), 'pcdate')
 
     def test_isodate_date(self):
         self.assertEqual(detect_format_style('iso8601-date'), 'isodate')
@@ -35,9 +32,7 @@ class TestDetectFormatStyle(ReferenceTestCase):
         self.assertEqual(detect_format_style('iso8601-datetime'), 'isodate')
 
     def test_isodate_datetime_tz(self):
-        self.assertEqual(
-            detect_format_style('iso8601-datetime-tz'), 'isodate'
-        )
+        self.assertEqual(detect_format_style('iso8601-datetime-tz'), 'isodate')
 
     def test_isodate_generic(self):
         self.assertEqual(detect_format_style('iso8601'), 'isodate')
@@ -249,19 +244,13 @@ class TestLiteraldateToStrftime(ReferenceTestCase):
         )
 
     def test_time_only_pm(self):
-        self.assertEqual(
-            literaldate_to_strftime('12:34:56PM'), '%I:%M:%S%p'
-        )
+        self.assertEqual(literaldate_to_strftime('12:34:56PM'), '%I:%M:%S%p')
 
     def test_time_only_space_pm(self):
-        self.assertEqual(
-            literaldate_to_strftime('12:34:56 PM'), '%I:%M:%S%p'
-        )
+        self.assertEqual(literaldate_to_strftime('12:34:56 PM'), '%I:%M:%S%p')
 
     def test_alpha_month_abbrev(self):
-        self.assertEqual(
-            literaldate_to_strftime('31 Dec 2000'), '%d %b %Y'
-        )
+        self.assertEqual(literaldate_to_strftime('31 Dec 2000'), '%d %b %Y')
 
     def test_alpha_month_full(self):
         self.assertEqual(
@@ -396,7 +385,6 @@ class TestStrftimeToLiteraldate(ReferenceTestCase):
 
 
 class TestCanonicalize(ReferenceTestCase):
-
     def test_yyyydate_uppercase(self):
         self.assertEqual(canonicalize_date_format('yyyy-mm-dd'), 'YYYY-MM-DD')
 
@@ -416,7 +404,9 @@ class TestCanonicalize(ReferenceTestCase):
         self.assertEqual(canonicalize_date_format('%Y-%m-%d'), '%Y-%m-%d')
 
     def test_isodate_unchanged(self):
-        self.assertEqual(canonicalize_date_format('iso8601-date'), 'iso8601-date')
+        self.assertEqual(
+            canonicalize_date_format('iso8601-date'), 'iso8601-date'
+        )
 
     def test_none(self):
         self.assertIsNone(canonicalize_date_format(None))

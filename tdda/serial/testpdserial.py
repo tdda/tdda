@@ -1820,10 +1820,12 @@ class TestSerialSmallWrite(ReferenceTestCase):
 
     def test_all_date_formats_working(self):
         df = csv_to_pandas(tdpath('allformats.csv:'))
-        pcdf = csv_to_pandas(tdpath('allformats.csv'),
-                             tdpath('allformats-pc.serial'))
-        ldf = csv_to_pandas(tdpath('allformats.csv'),
-                            tdpath('allformats-literal.serial'))
+        pcdf = csv_to_pandas(
+            tdpath('allformats.csv'), tdpath('allformats-pc.serial')
+        )
+        ldf = csv_to_pandas(
+            tdpath('allformats.csv'), tdpath('allformats-literal.serial')
+        )
         self.assertDataFramesEquivalent(pcdf, df, type_matching='strict')
         self.assertDataFramesEquivalent(ldf, df, type_matching='strict')
 

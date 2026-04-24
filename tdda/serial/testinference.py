@@ -536,9 +536,9 @@ class TestInferAllFlatFiles(TestInference):
     # One test per flat file in testdata. All provisional (prov=True).
     # Add targeted assertions to specific tests as inference is validated.
 
-    def validate_inferred_serial_wrt_handmade_serial(self, stem, lib='polars',
-                                                     inf_path=None,
-                                                     prov=False):
+    def validate_inferred_serial_wrt_handmade_serial(
+        self, stem, lib='polars', inf_path=None, prov=False
+    ):
         """Compare prov-inferred serial+DF against plain .serial.
 
         md is the inferred metadata returned by check_infer(prov=True).
@@ -549,7 +549,7 @@ class TestInferAllFlatFiles(TestInference):
         csv_path = tdpath(stem + '.csv')
         Warn1, _buf1 = testwarn()
         Warn2, _buf2 = testwarn()
-        convert = csv_to_pandas  if lib == 'pandas' else csv_to_polars
+        convert = csv_to_pandas if lib == 'pandas' else csv_to_polars
         df_prov = convert(csv_path, infpath, warner=Warn1)
         df_plain = convert(csv_path, plain_path, warner=Warn2)
         self.assertDataFramesEqual(df_prov, df_plain, type_matching='loose')
@@ -681,16 +681,14 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('eurod2y')
 
     def testInferEurodtWriteKw(self):
-        buf, md = self.check_infer(
-            'eurodt-write-kw.csv', verbosity=0
-        )
+        buf, md = self.check_infer('eurodt-write-kw.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-kw')
 
     def testInferEurodtWriteSerial(self):
-        buf, md = self.check_infer(
-            'eurodt-write-serial.csv', verbosity=0
+        buf, md = self.check_infer('eurodt-write-serial.csv', verbosity=0)
+        self.validate_inferred_serial_wrt_handmade_serial(
+            'eurodt-write-serial'
         )
-        self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-serial')
 
     def testInferEurodt(self):
         buf, md = self.check_infer('eurodt.csv', verbosity=0)
@@ -871,15 +869,11 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('small-latin9.csv', prov=True, verbosity=0)
 
     def testInferSmallWriteKw(self):
-        buf, md = self.check_infer(
-            'small-write-kw.csv', verbosity=0
-        )
+        buf, md = self.check_infer('small-write-kw.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('small-write-kw')
 
     def testInferSmallWriteSerial(self):
-        buf, md = self.check_infer(
-            'small-write-serial.csv', verbosity=0
-        )
+        buf, md = self.check_infer('small-write-serial.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial('small-write-serial')
 
     def testInferSmall(self):
@@ -896,9 +890,7 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('strings1.csv', prov=True, verbosity=0)
 
     def testInferTiny1cdPandas(self):
-        buf, md = self.check_infer(
-            'tiny1cd-pandas.csv', verbosity=0
-        )
+        buf, md = self.check_infer('tiny1cd-pandas.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial(
             'tiny1cd-pandas', lib='pandas'
         )
@@ -930,8 +922,10 @@ class TestInferAllFlatFiles(TestInference):
         # So we override:
         Warn, buf = testwarn()
         md2 = infer_format_from_flat_file(
-            tdpath('tiny1nd-dot.csv'), warner=Warn, raise_error=True,
-            null=['.']
+            tdpath('tiny1nd-dot.csv'),
+            warner=Warn,
+            raise_error=True,
+            null=['.'],
         )
         outpath = tmppath('tiny1cn-force-dot-null.serial')
         with open(outpath, 'w') as f:
@@ -944,9 +938,7 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('tiny1nd-NULL.csv', prov=True, verbosity=0)
 
     def testInferTiny1ndPandas(self):
-        buf, md = self.check_infer(
-            'tiny1nd-pandas.csv', verbosity=0
-        )
+        buf, md = self.check_infer('tiny1nd-pandas.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial(
             'tiny1nd-pandas', lib='pandas'
         )
@@ -963,9 +955,7 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('tiny1ndq.csv', prov=True, verbosity=0)
 
     def testInferTiny1nnPandas(self):
-        buf, md = self.check_infer(
-            'tiny1nn-pandas.csv', verbosity=0
-        )
+        buf, md = self.check_infer('tiny1nn-pandas.csv', verbosity=0)
         self.validate_inferred_serial_wrt_handmade_serial(
             'tiny1nn-pandas', lib='pandas'
         )
@@ -1056,8 +1046,9 @@ class TestInferAllFlatFiles(TestInference):
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(
-            outpath, tdpath('ddd-literal-inferred.serial'),
-            ignore_lines=self.IGL
+            outpath,
+            tdpath('ddd-literal-inferred.serial'),
+            ignore_lines=self.IGL,
         )
 
 

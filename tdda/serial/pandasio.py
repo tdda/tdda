@@ -262,7 +262,9 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     return kw
 
 
-def serial_to_pandas_write_csv_args(md, backend=None, config=None, warner=None):
+def serial_to_pandas_write_csv_args(
+    md, backend=None, config=None, warner=None
+):
     backend = get_backend(backend, config)
     if PANDAS.write_key in md.libs:
         return md.libs[PANDAS.write_key]
@@ -658,7 +660,10 @@ def to_pandas_date_format(v, for_write=False):
     if v in ISO8601_NAMED_FORMATS and not for_write:
         return PANDAS_ISO8601
     strftime = serial_format_to_strftime(v)
-    if not for_write and STRFTIME_TO_NAMED_FORMAT.get(strftime) in ISO8601_NAMED_FORMATS:
+    if (
+        not for_write
+        and STRFTIME_TO_NAMED_FORMAT.get(strftime) in ISO8601_NAMED_FORMATS
+    ):
         return PANDAS_ISO8601
     return strftime
 

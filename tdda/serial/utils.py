@@ -85,6 +85,7 @@ def read_data(inpath):
 
 DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 
+
 def find_metadata_type_from_path(path):
     """
     Check whether path follows a known pattern for a metadata file path

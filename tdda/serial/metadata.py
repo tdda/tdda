@@ -661,10 +661,13 @@ class SerialMetadata:
         return d
 
     def to_json(self, indent=4, date_style=None):
-        return json.dumps(self.unobjectify(date_style=date_style), indent=indent)
+        return json.dumps(
+            self.unobjectify(date_style=date_style), indent=indent
+        )
 
-    def write(self, path, use_serial_ext=True, indent=4, verbose=0,
-              date_style=None):
+    def write(
+        self, path, use_serial_ext=True, indent=4, verbose=0, date_style=None
+    ):
         """
         Writes metadata to file.
 

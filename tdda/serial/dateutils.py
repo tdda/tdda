@@ -28,30 +28,57 @@ from collections import namedtuple
 
 # ── Month name sets ───────────────────────────────────────────────────────────
 
-MONTH_ABBREVS = frozenset({
-    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
-})
+MONTH_ABBREVS = frozenset(
+    {
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'jun',
+        'jul',
+        'aug',
+        'sep',
+        'oct',
+        'nov',
+        'dec',
+    }
+)
 
-MONTH_FULLS = frozenset({
-    'january', 'february', 'march', 'april', 'may', 'june',
-    'july', 'august', 'september', 'october', 'november', 'december',
-})
+MONTH_FULLS = frozenset(
+    {
+        'january',
+        'february',
+        'march',
+        'april',
+        'may',
+        'june',
+        'july',
+        'august',
+        'september',
+        'october',
+        'november',
+        'december',
+    }
+)
 
 
 # ── ISO8601 named format names ────────────────────────────────────────────────
 
-ISO_FORMAT_NAMES = frozenset({
-    'iso8601-date',
-    'iso8601-datetime',
-    'iso8601-datetime-tz',
-    'iso8601',
-})
+ISO_FORMAT_NAMES = frozenset(
+    {
+        'iso8601-date',
+        'iso8601-datetime',
+        'iso8601-datetime-tz',
+        'iso8601',
+    }
+)
 
 # ── Canonical date/time used for literaldate normalization ───────────────────
 
-CANONICAL_DT = datetime.datetime(2000, 12, 31, 12, 34, 56, 789000,
-                                  tzinfo=datetime.timezone.utc)
+CANONICAL_DT = datetime.datetime(
+    2000, 12, 31, 12, 34, 56, 789000, tzinfo=datetime.timezone.utc
+)
 
 
 # ── Regex patterns: inference ─────────────────────────────────────────────────
@@ -146,18 +173,18 @@ _TZ_SUFFIX_RE = re.compile(r' ?[+-]\d{4}$| ?[+-]\d{2}:\d{2}$')
 # strftime code → yyyydate token; longest/most-specific substitutions first
 _STRFTIME_TO_TOKEN = [
     ('%S.%f', 'SS.SSS'),
-    ('%Y',    'YYYY'),
-    ('%y',    'YY'),
-    ('%m',    'MM'),
-    ('%M',    'MM'),
-    ('%d',    'DD'),
-    ('%H',    'HH'),
-    ('%I',    'HH'),
-    ('%S',    'SS'),
-    ('%p',    'PM'),
-    ('%z',    '+ZZ:ZZ'),
-    ('%b',    'MON'),
-    ('%B',    'MONTH'),
+    ('%Y', 'YYYY'),
+    ('%y', 'YY'),
+    ('%m', 'MM'),
+    ('%M', 'MM'),
+    ('%d', 'DD'),
+    ('%H', 'HH'),
+    ('%I', 'HH'),
+    ('%S', 'SS'),
+    ('%p', 'PM'),
+    ('%z', '+ZZ:ZZ'),
+    ('%b', 'MON'),
+    ('%B', 'MONTH'),
 ]
 
 
@@ -656,7 +683,7 @@ def _strip_tz(s):
     """
     m = _TZ_SUFFIX_RE.search(s)
     if m:
-        return True, s[:m.start()]
+        return True, s[: m.start()]
     return False, s
 
 
@@ -670,7 +697,7 @@ def _strip_ampm(s):
     lower = s.lower()
     for suffix in (' pm', ' am', 'pm', 'am'):
         if lower.endswith(suffix):
-            return suffix.strip(), s[:len(s) - len(suffix)].rstrip()
+            return suffix.strip(), s[: len(s) - len(suffix)].rstrip()
     return None, s
 
 

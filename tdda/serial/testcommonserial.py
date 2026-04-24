@@ -95,11 +95,15 @@ class TestDateSanityRE(ReferenceTestCase):
 
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm'), 'YYYY-MM-DDTHH:MM')
+        self.assertEqual(
+            map_date_format('yyyy-MM-ddTHH:mm'), 'YYYY-MM-DDTHH:MM'
+        )
 
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'), 'YYYY-MM-DD HH:MM')
+        self.assertEqual(
+            map_date_format('yyyy-MM-dd HH:mm'), 'YYYY-MM-DD HH:MM'
+        )
 
         self.assertEqual(
             map_date_format('dd-MM-yyyy HH:mm:ss.S'), 'DD-MM-YYYY HH:MM:SS.SSS'
@@ -121,7 +125,9 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertIsNone(f('any', 'date'))
         self.assertIsNone(f('any', 'datetime'))
         self.assertEqual(f('%d/%m/%Y', 'date'), '%d/%m/%Y')
-        self.assertEqual(f('%d/%m/%Y %H:%M:%S', 'datetime'), '%d/%m/%Y %H:%M:%S')
+        self.assertEqual(
+            f('%d/%m/%Y %H:%M:%S', 'datetime'), '%d/%m/%Y %H:%M:%S'
+        )
         self.assertEqual(f('%Y-%m-%d', 'date'), '%Y-%m-%d')
 
     def testSingleDateFormat(self):

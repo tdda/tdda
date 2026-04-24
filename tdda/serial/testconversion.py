@@ -151,7 +151,6 @@ class TestSerialConversions(ReferenceTestCase):
             ref_df[col] = ref_df[col].astype(typ)
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    @tag
     def testSerialToPandasWeird_Python_PyArrow(self):
         name = 'tiny1nd_weird_pd_pyarrow.py'
         outpath = tmppath(name)
@@ -170,7 +169,6 @@ class TestSerialConversions(ReferenceTestCase):
         # Yes/n booleans.
         # Not much point checking for the Exception here
 
-    @tag
     def testSerialToPandasWeird_Python_Original(self):
         name = 'tiny1nd_weird_pd_original.py'
         outpath = tmppath(name)
@@ -204,7 +202,6 @@ class TestSerialConversions(ReferenceTestCase):
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
-    @tag
     def testSerialToPandasWeirdPythonCLI(self):
         name = 'tiny1nd_weird_pd.py'
         outpath = tmppath(name)
@@ -224,7 +221,6 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
-    @tag
     def testSerialToPolarsWeird(self):
         name = 'tiny1nd-weird-pl.serial'
         outpath = tmppath(name)
@@ -236,15 +232,19 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Polars does not understand escape characters.\nIgnoring escape value: `\n',
-                'Field IAmBoolean booleans Yes, y, No, n will not be understood by Polars read_csv.\n'
-                'Will convert post-read using replace.',
-                'Field IAmDate date format %d/%m/%Y will not be understood by Polars read_csv.\n'
-                'Will parse post-read using str.to_datetime.',
+                'Polars does not understand escape characters.\n'
+                'Ignoring escape value: `\n',
+                'Field IAmBoolean booleans Yes, y, No, n will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
+                'Field IAmDate date format %d/%m/%Y will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
             ],
         )
 
-    @tag
     def testSerialToPolarsPythonWeird(self):
         name = 'tiny1nd_weird_pl.py'
         outpath = tmppath(name)
@@ -253,7 +253,8 @@ class TestSerialConversions(ReferenceTestCase):
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
-        self.assertEqual(len(buf), 3)  # Escape; Booleans; date format
+        self.assertEqual(len(buf), 1)  # Escape; Booleans; date format
+        # Last two handled by converter
 
     def testCSVWToSerial(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
@@ -268,7 +269,6 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertEqual(buf, [])
 
-    @tag
     def testCSVWToSerialPandas(self):
         csvwpath = tdpath('tiny1nd-weird-no-rename-metadata.json')
         outpath_pd = tmppath('tiny1nd-weird-no-rename-from-csvw-pd.serial')
@@ -311,10 +311,14 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Field b booleans Yes, n will not be understood by Polars read_csv.\n'
-                'Will convert post-read using replace.',
-                'Field t date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
-                'Will parse post-read using str.to_date.',
+                'Field b booleans Yes, n will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
+                'Field t date format DD/MM/YYYY will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
             ],
         )
 
@@ -328,7 +332,7 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(csvwpath, outpath_py, out_format='pl.r')
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
-        self.assertEqual(len(buf), 2)  # booleans, date
+        self.assertEqual(len(buf), 0)  # booleans, date; both handled
         # ^^^ Code doesn't work because of booleans. But does warn.
 
     def testCSVWToSerialPolars2(self):
@@ -370,10 +374,14 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Field IAmBoolean booleans Yes, n will not be understood by Polars read_csv.\n'
-                'Will convert post-read using replace.',
-                'Field IAmDate date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
-                'Will parse post-read using str.to_date.',
+                'Field IAmBoolean booleans Yes, n will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
+                'Field IAmDate date format DD/MM/YYYY will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
             ],
         )
 
@@ -387,7 +395,7 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(csvwpath, outpath_py, out_format='pl.r')
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath_py, refpath_py)
-        self.assertEqual(len(buf), 2)  # booleans, date
+        self.assertEqual(len(buf), 0)  # booleans, date; both handled
         # ^^^ Code doesn't work because of booleans. But does warn.
 
     def testCSVWToSerialPolarsWithRename2(self):
@@ -513,7 +521,6 @@ class TestSerialConversions(ReferenceTestCase):
         )
         self.assertEqual(buf, [])
 
-    @tag
     def testFrictionlessToSerialPandas(self):
         frictionlesspath = tdpath('tiny1nd-weird-no-rename.resource.json')
         outpath_pd = tmppath('tiny1nd-weird-no-rename-from-fless-pd.serial')
@@ -556,10 +563,14 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Field b booleans Yes, y, No, n will not be understood by Polars read_csv.\n'
-                'Will convert post-read using replace.',
-                'Field t date format %d/%m/%Y will not be understood by Polars read_csv.\n'
-                'Will parse post-read using str.to_date.',
+                'Field b booleans Yes, y, No, n will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
+                'Field t date format %d/%m/%Y will not be '
+                'understood by Polars read_csv.\n'
+                'Generate Python with .py target and --to pl.r to '
+                'see required post-processing.',
             ],
         )
 
@@ -573,7 +584,7 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath_py, out_format='pl.r')
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath_py, refpath_py, ignore_lines=self.IGL)
-        self.assertEqual(len(buf), 2)  # booleans, date
+        self.assertEqual(len(buf), 0)  # booleans, date; both handled
         # ^^^ Code doesn't work because of booleans. But does warn.
 
     def testFrictionlessToSerialPolars2(self):
@@ -617,9 +628,11 @@ class TestSerialConversions(ReferenceTestCase):
             [
                 'Polars will not understand the following boolean values:\n'
                 ' Yes, n.\n'
-                'If they actually occur in the file, fields will need to be set to string.\n'
+                'If they actually occur in the file, fields will need '
+                'to be set to string.\n'
                 '(Use map_other_bools_to_string=True.)\n',
-                'Field IAmDate date format %d/%m/%Y will not be understood by Polars read_csv.\n'
+                'Field IAmDate date format %d/%m/%Y will not be understood '
+                'by Polars read_csv.\n'
                 'Will parse post-read using str.to_date.',
             ],
         )
@@ -634,7 +647,7 @@ class TestSerialConversions(ReferenceTestCase):
         c = SerialConverter(frictionlesspath, outpath_py, out_format='pl.r')
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath_py, refpath_py)
-        self.assertEqual(len(buf), 2)  # booleans, date
+        self.assertEqual(len(buf), 0)  # booleans, date; both handled
         # ^^^ Code doesn't work because of booleans. But does warn.
 
     def atestFrictionlessToSerialPolarsWithRename2(self):
@@ -728,7 +741,6 @@ class TestSerialConversions(ReferenceTestCase):
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath)
         self.assertEqual(buf, [])
-
 
     def testDateStyleDefault(self):
         outpath = tmppath('small-default.serial')

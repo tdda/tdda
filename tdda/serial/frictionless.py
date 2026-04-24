@@ -343,8 +343,8 @@ class FrictionlessMetadata(SerialMetadata):
         csv = dialect.get('csv') or dialect
 
         self.header = dialect.get('header')
-        self._header_rows = (
-            dialect.get('headerRows') or dialect.get('header_rows')
+        self._header_rows = dialect.get('headerRows') or dialect.get(
+            'header_rows'
         )
         if self._header_rows is not None:
             self.num_header_rows = len(self._header_rows)

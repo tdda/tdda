@@ -21,12 +21,14 @@ from tdda.utils import nvl, listify, warn, error
 
 # ISO8601 named formats: CSVW date/datetime type defaults to ISO8601,
 # so no format object needed for these.
-_ISO8601_NAMED = frozenset({
-    DateFormat.ISO8601_DATE,
-    DateFormat.ISO8601_DATETIME,
-    DateFormat.ISO8601_DATETIME_TZ,
-    DateFormat.ISO8601_UNSPECIFIED,
-})
+_ISO8601_NAMED = frozenset(
+    {
+        DateFormat.ISO8601_DATE,
+        DateFormat.ISO8601_DATETIME,
+        DateFormat.ISO8601_DATETIME_TZ,
+        DateFormat.ISO8601_UNSPECIFIED,
+    }
+)
 
 # From https://w3c.github.io/csvw/primer/#datatypes
 # Diag: From https://w3c.github.io/csvw/primer/datatypes.svg
@@ -204,7 +206,9 @@ class CSVWMetadata(SerialMetadata):
                 self.true_values if field.fieldtype == FieldType.BOOL else None
             )
             false_vals = field.false_values or (
-                self.false_values if field.fieldtype == FieldType.BOOL else None
+                self.false_values
+                if field.fieldtype == FieldType.BOOL
+                else None
             )
             if true_vals and false_vals:
                 csvw_fmt = booleans_to_csvw(true_vals, false_vals)
