@@ -2,7 +2,10 @@ import datetime
 import os
 import re
 import sys
-import tomli
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 import json
 
 import pandas as pd
@@ -91,7 +94,7 @@ class Config(BaseConfig):
         config_path = cross_platform_dot_file('~/.tdda.toml')
         if os.path.exists(config_path):
             with open(config_path, 'rb') as f:
-                d = tomli.load(f)
+                d = tomllib.load(f)
                 rc = d.get('referencetest', None)
                 if rc:
                     self.referencetest.override(rc, complain)

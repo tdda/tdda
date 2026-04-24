@@ -66,7 +66,7 @@ setup(
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
         'tdda': ['README.md', 'LICENSE.txt', 'templates/tdda/css'],
-        'tdda.serial': data(['tdda', 'serial'], ['testdata']),
+        'tdda.serial': data(['tdda', 'serial'], ['testdata', 'examples']),
     },
     entry_points = {
         'console_scripts': [
@@ -76,13 +76,16 @@ setup(
     },
     zip_safe=False,
     install_requires=[
-        'numpy>=1.20.3',
+        'numpy>=1.23.5',
         'pandas>=1.5.2',
         'pyarrow >= 15.0',
         'pyyaml >= 6.0',
         'pytest',
         'chardet >= 5.2',
         'rich >= 13.3',
+        'regex',
+        'tomli_w >= 1.2.0',
+        'tomli >= 2.0; python_version < "3.11"',
     ],
 )
 
