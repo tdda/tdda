@@ -804,7 +804,15 @@ class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
 
     def test032(self):
         # NOTE: The csv actually separates field headers with ', '.
-        # But 
+        # But the csvw doesn't have spaces in the titles.
+        # So tdda.serial doesn't know (without sniffing the csv).
+        # Polars rejects the rename because it reads all fields
+        # after the first with a leading space. (Silly.)
+        # So we get the CSV names, mostly, with spaces, instead
+        # of the target names.
+        # But it's not really tdda.serial doing anything much wrong.
+        # So this uses a polars-specific reference.
+        # Pandas gets this right.
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/events-listing.csv')
         resultspath = self.parquet_path(f'{test}-result-pl.parquet')
