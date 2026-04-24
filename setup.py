@@ -89,7 +89,7 @@ setup(
         'pyyaml >= 6.0',
         'pytest',
         'chardet >= 5.2, < 6',
-        'rich >= 13.3, < 15',
+        'rich == 14.0.0',
         'regex',
         'tomli_w >= 1.2.0',
         'tomli >= 2.0; python_version < "3.11"',
