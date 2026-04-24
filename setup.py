@@ -28,6 +28,8 @@ def data(path, pathitems, exclusions=None):
     for relpath in pathitems:
         subpath = path + [relpath]
         dirname = os.path.join(*subpath)
+        if not os.path.isdir(dirname):
+                continue
         for name in os.listdir(dirname):
             if exclusions and name in exclusions:
                 continue
@@ -41,7 +43,7 @@ def data(path, pathitems, exclusions=None):
 
 
 setup(
-    name='tdda',
+    name='tddatddatdda',
     version=__version__,
     description='Test Driven Data Analysis',
     long_description=read('README.md'),
@@ -53,19 +55,24 @@ setup(
     keywords='tdda constraint referencetest rexpy',
     packages=find_packages(),
     package_data={
-        'tdda.referencetest': data(['tdda', 'referencetest'], ['examples']),
+        'tdda.referencetest': data(['tdda', 'referencetest'],
+                                   ['examples', 'testdata', 'ref',
+                                    'diffexamples', 'testgentest']),
         'tdda.referencetest.tests': data(['tdda', 'referencetest', 'tests'],
                                          ['testdata']),
         'tdda.constraints': data(['tdda', 'constraints'],
-                                 ['testdata', 'examples'],
+                                 ['testdata', 'examples', 'ref',
+                                  'clitests', 'testexamples'],
                                  exclusions=['accounts1k.csv',
                                              'accounts25k.csv'])
                             + ['tdda_json_file_format.md'],
+        'tdda': data(['tdda'], ['man'])
+                + data(['tdda'], ['testdata'])
+                + ['README.md', 'LICENSE.txt', 'templates/tdda/css'],
         'tdda.constraints.db': data(['tdda', 'constraints', 'db'],
                                     ['init']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
-        'tdda': ['README.md', 'LICENSE.txt', 'templates/tdda/css'],
         'tdda.serial': data(['tdda', 'serial'], ['testdata', 'examples']),
     },
     entry_points = {
@@ -77,15 +84,17 @@ setup(
     zip_safe=False,
     install_requires=[
         'numpy>=1.23.5',
-        'pandas>=1.5.2',
+        'pandas >= 2.0, < 3',
         'pyarrow >= 15.0',
         'pyyaml >= 6.0',
         'pytest',
-        'chardet >= 5.2',
-        'rich >= 13.3',
+        'chardet >= 5.2, < 6',
+        'rich >= 13.3, < 15',
         'regex',
         'tomli_w >= 1.2.0',
         'tomli >= 2.0; python_version < "3.11"',
+        'polars >= 1.30.0',
+        'requests >= 2.28',
     ],
 )
 

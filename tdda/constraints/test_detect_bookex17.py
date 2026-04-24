@@ -15,14 +15,17 @@ from tdda.referencetest.gentest import exec_command
 
 
 class TestX_DETECT_BOOKEX17(ReferenceTestCase):
-    command = 'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda scratch/a25k-bads-v2c.csv --report txt --key account_number'
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'detect_bookex17')
+    tmpdir = tempfile.mkdtemp()
+    csv_out = os.path.join(tmpdir, 'a25k-bads-v2c.csv')
+    txt_out = os.path.join(tmpdir, 'a25k-bads-v2c.txt')
+    command = (
+        'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda'
+        ' %s --report txt --key account_number' % csv_out
+    )
 
-    generated_files = [
-        os.path.join(cwd, 'scratch/a25k-bads-v2c.csv'),
-        os.path.join(cwd, 'scratch/a25k-bads-v2c.txt'),
-    ]
+    generated_files = [csv_out, txt_out]
 
     @classmethod
     def setUpClass(cls):
@@ -51,14 +54,14 @@ class TestX_DETECT_BOOKEX17(ReferenceTestCase):
 
     def test_a25k_bads_v2c_csv(self):
         self.assertTextFileCorrect(
-            os.path.join(self.cwd, 'scratch/a25k-bads-v2c.csv'),
+            self.csv_out,
             os.path.join(self.refdir, 'a25k-bads-v2c.csv'),
             encoding='ascii',
         )
 
     def test_a25k_bads_v2c_txt(self):
         self.assertTextFileCorrect(
-            os.path.join(self.cwd, 'scratch/a25k-bads-v2c.txt'),
+            self.txt_out,
             os.path.join(self.refdir, 'a25k-bads-v2c.txt'),
             encoding='utf-8',
         )

@@ -15,13 +15,15 @@ from tdda.referencetest.gentest import exec_command
 
 
 class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
-    command = (
-        'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdda'
-    )
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'discover_bookex12')
+    tmpdir = tempfile.mkdtemp()
+    tdda_out = os.path.join(tmpdir, 'accountsex12.tdda')
+    command = (
+        'tdda discover -xG testdata/accounts1k.csv %s' % tdda_out
+    )
 
-    generated_files = [os.path.join(cwd, 'scratch/accountsex12.tdda')]
+    generated_files = [tdda_out]
 
     @classmethod
     def setUpClass(cls):
@@ -57,9 +59,11 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
             '2026-04-09',
             'gardot.local',
             'njr',
+            '"tddafile": ',
+            '"creator": ',
         ]
         self.assertTextFileCorrect(
-            os.path.join(self.cwd, 'scratch/accountsex12.tdda'),
+            self.tdda_out,
             os.path.join(self.refdir, 'accountsex12.tdda'),
             ignore_patterns=patterns,
             ignore_substrings=substrings,
