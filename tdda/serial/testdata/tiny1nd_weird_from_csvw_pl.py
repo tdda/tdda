@@ -8,7 +8,7 @@ def read_data(inpath):
         null_values=['.'],
         encoding='latin-1',
         schema={
-            'IAmBoolean': pl.Boolean,
+            'IAmBoolean': pl.String,
             'IAmInt': pl.Int64,
             'f': pl.Float64,
             'IAmString': pl.String,
@@ -17,6 +17,7 @@ def read_data(inpath):
     )
 
     df = df.with_columns([
+        pl.col('IAmBoolean').replace_strict({'Yes': 1, 'n': 0}).cast(pl.Boolean),
         pl.col('IAmDate').str.to_date(format='%d/%m/%Y'),
     ])
     return df

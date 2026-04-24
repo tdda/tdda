@@ -235,49 +235,6 @@ def serial_to_polars_read_csv_args_and_postproc(
     else:
         fields = {}
 
-    booleans = [
-        f.format
-        for f in md.fields
-        if getattr(f, 'format', None) and f.fieldtype == 'bool'
-    ]
-    bool_str_fields = []
-    trues, falses = set(), set()
-    if booleans:
-        for b in booleans:
-            parts = b.split('|')
-            if len(parts) == 2:
-                trues.add(parts[0])
-                falses.add(parts[1])
-            else:
-                Warn(
-                    f'*** Warning: Boolean specification {b} not understood;'
-                    ' ignoring.\n'
-                )
-            non_pl_bools = ', '.join(
-                [v for v in trues if v.lower() != 'true']
-                + [v for v in falses if v.lower() != 'false']
-            )
-            bool_str_fields = [
-                fld for fld in md.fields if fld.fieldtype == 'bool'
-            ]
-            if non_pl_bools and bool_str_fields:
-                if map_other_bools_to_string:
-                    flist = ','.join(fld.name for fld in bool_str_fields)
-                    m = f'Mapping to String: {flist}'
-                    for fld in bool_str_fields:
-                        schema[fld.csvname] = f(pl.String)
-                else:
-                    bool_str_fields = []
-                    m = (
-                        'If they actually occur in the file, fields '
-                        'will need to be set to string.\n'
-                        '(Use map_other_bools_to_string=True.)'
-                    )
-                Warn(
-                    'Polars will not understand '
-                    f'the following boolean values:\n {non_pl_bools}.\n{m}\n'
-                )
-
     postproc = {}
     for field, fmd in fields.items():
         if fmd.fieldtype and fmd.fieldtype.startswith('date'):
@@ -304,14 +261,22 @@ def serial_to_polars_read_csv_args_and_postproc(
             # elif not fmt:
                 # schema[field] = f(pl.String)
         if fmd.fieldtype and fmd.fieldtype.lower().startswith('bool'):
+            trues = listify(fmd.true_values)
+            falses = listify(fmd.false_values)
+            if not trues and not falses and fmd.format and '|' in fmd.format:
+                parts = fmd.format.split('|')
+                if len(parts) == 2:
+                    trues, falses = [parts[0]], [parts[1]]
+                else:
+                    Warn(
+                        f'Boolean specification {fmd.format!r} for field'
+                        f' {field} not understood; ignoring.\n'
+                    )
             bads = ', '.join(
-                v
-                for v in (listify(fmd.true_values) + listify(fmd.false_values))
+                v for v in (trues + falses)
                 if v.lower() not in ('true', 'false')
             )
-            if any(bads):
-                trues = listify(fmd.true_values)
-                falses = listify(fmd.false_values)
+            if bads:
                 schema[fmd.csvname] = f(pl.String)
                 if map_other_bools_to_string:
                     Warn(
@@ -487,9 +452,9 @@ def csv_to_polars(
             if info['op'] == 'to_date':
                 expr = pl.col(name).str.to_date(format=info['format'])
             elif info['op'] == 'bool_map':
-                mapping = {v: True for v in info['trues']}
-                mapping.update({v: False for v in info['falses']})
-                expr = pl.col(name).replace(mapping, return_dtype=pl.Boolean)
+                mapping = {v: 1 for v in info['trues']}
+                mapping.update({v: 0 for v in info['falses']})
+                expr = pl.col(name).replace_strict(mapping).cast(pl.Boolean)
             else:
                 expr = pl.col(name).str.to_datetime(format=info['format'])
             df = df.with_columns(expr)
@@ -569,9 +534,9 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
         exprs = '\n'.join(
             (
                 f'        pl.col({name!r})'
-                f'.replace({{{", ".join(f"{v!r}: True" for v in info["trues"])}'
-                f', {", ".join(f"{v!r}: False" for v in info["falses"])}}}'
-                f', return_dtype=pl.Boolean),'
+                f'.replace_strict({{{", ".join(f"{v!r}: 1" for v in info["trues"])}'
+                f', {", ".join(f"{v!r}: 0" for v in info["falses"])}}})'
+                f'.cast(pl.Boolean),'
             ) if info['op'] == 'bool_map' else
             f'        pl.col({name!r}).str.{info["op"]}'
             f'(format={info["format"]!r}),'

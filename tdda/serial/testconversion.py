@@ -311,10 +311,8 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Polars will not understand the following boolean values:\n'
-                ' Yes, n.\n'
-                'If they actually occur in the file, fields will need to be set to string.\n'
-                '(Use map_other_bools_to_string=True.)\n',
+                'Field b booleans Yes, n will not be understood by Polars read_csv.\n'
+                'Will convert post-read using replace.',
                 'Field t date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
                 'Will parse post-read using str.to_date.',
             ],
@@ -372,10 +370,8 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                'Polars will not understand the following boolean values:\n'
-                ' Yes, n.\n'
-                'If they actually occur in the file, fields will need to be set to string.\n'
-                '(Use map_other_bools_to_string=True.)\n',
+                'Field IAmBoolean booleans Yes, n will not be understood by Polars read_csv.\n'
+                'Will convert post-read using replace.',
                 'Field IAmDate date format DD/MM/YYYY will not be understood by Polars read_csv.\n'
                 'Will parse post-read using str.to_date.',
             ],

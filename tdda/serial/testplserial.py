@@ -790,7 +790,7 @@ class TestCSVWTests(ReferenceTestCase):  ## Disable as tests
         self.assertDataFrameCorrect(odf, pqp(f'{test}-organizations.parquet'))
 
     # def test035(self): pass  # same as 34 for our purposes
-
+    @tag
     def test036(self):
         test = this_function_name()
         csvpath = self.fullpath(f'{test}/tree-ops-ext.csv')

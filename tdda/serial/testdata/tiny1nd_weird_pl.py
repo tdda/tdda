@@ -24,7 +24,7 @@ def read_data(inpath):
     )
 
     df = df.with_columns([
-        pl.col('IAmBoolean').replace({'Yes': True, 'y': True, 'No': False, 'n': False}, return_dtype=pl.Boolean),
+        pl.col('IAmBoolean').replace_strict({'Yes': 1, 'y': 1, 'No': 0, 'n': 0}).cast(pl.Boolean),
         pl.col('IAmDate').str.to_datetime(format='%d/%m/%Y'),
     ])
     return df
