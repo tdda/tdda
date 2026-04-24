@@ -231,7 +231,6 @@ METADATA_FLAVOUR_MAP = {
     'fl.p': 'frictionless.package',
 }
 
-
 VERBOSITY = 2  # show errors and warnings. 1 for errors only. 0 for none
 # 3 for extra information
 

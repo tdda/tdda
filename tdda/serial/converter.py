@@ -23,6 +23,33 @@ from tdda.serial.utils import find_metadata_type_from_path
 from tdda.utils import error, warn, nvl
 
 
+UNSUPPORTED_FMT_MSG = '''
+You have requested %s.
+This is not yet implemented.
+
+There is fairly comprehensive support in tdda.serial for:
+
+  tdda.serial
+  pd.r  (pandas.read_csv)
+  pd.w  (pandas.DataFrame.to_csv)
+  pl.r  (polars.read_csv)
+  CSVW  (CSV on the Web, where it overlaps)
+  Frictionless packages and resources
+         (schemas to follow)
+
+The Pandas support includes dtype backends:
+  o  (original)
+  n  (numpy_nullable)
+  a  (Apache PyArrow)
+
+Next planned is pl.w (polars.DataFrame.write_csv),
+which currently has only partial support,
+followed by Python csv module and then native PyArrow.
+
+DuckDB and Excel will probably follow later.
+'''.lstrip()
+
+
 CONVERTER = {
     'pandas.read_csv': serial_to_pandas_read_csv_args,
     'pandas.DataFrame.to_csv': serial_to_pandas_write_csv_args,
@@ -405,10 +432,7 @@ class SerialConverter:
             elif self.broad_out != 'python':
                 convert = CONVERTER.get(fmt)
                 if convert is None:
-                    error(
-                        f'Metadata format {fmt} is planned'
-                        f' but not yet implemented.'
-                    )
+                    error(UNSUPPORTED_FMT_MSG % fmt)
                 if not getattr(md_out, 'libs', None):
                     md_out.libs = {}
                 if self.map_other_bools_to_string:
@@ -441,7 +465,11 @@ class SerialConverter:
             with open(self.outpath, 'w') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
                 if python_writer is None:
-                    error('No target library/format (e.g. pd.r) specified')
+                    error(
+                        'Only pd.r (pandas.read_csv) and pl.r'
+                        ' (polars.read_csv) are supported\n'
+                        'for Python generation at this time.'
+                    )
                 f.write(
                     python_writer(
                         md_in, backend=self.backend, warner=Warn, **kw
