@@ -1,17 +1,26 @@
 import os
+import sys
 import tempfile
+import unittest
 from tdda.referencetest import ReferenceTestCase
 
 
 from tdda.referencetest.tagutils import copy_files
 from tdda.referencetest.gentest import exec_command
 
-TMP = tempfile.TemporaryDirectory(delete=False).name
+IS_NOT_PY_312_PLUS = sys.version_info < (3, 12)
+
+TMP = (
+    tempfile.TemporaryDirectory().name
+    if IS_NOT_PY_312_PLUS
+    else tempfile.TemporaryDirectory(delete=False).name
+)
 
 THISDIR = os.path.dirname(__file__)
 REFDIR = os.path.join(THISDIR, 'testdata')
 
 
+@unittest.skipIf(IS_NOT_PY_312_PLUS, "requires Python 3.12+")
 class TestTagFailures(ReferenceTestCase):
     def testTagFailures(self):
         # Copy the files into place

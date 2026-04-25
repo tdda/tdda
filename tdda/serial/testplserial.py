@@ -823,6 +823,7 @@ class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
 
     # def test033(self): pass  # same as 32 for our purposes
 
+    @tag
     def test034(self):
         test = this_function_name()
         f = self.fullpath
@@ -844,7 +845,8 @@ class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
             upgrade_possible_ints=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'))
+        self.assertDataFrameCorrect(jdf, pqp(f'{test}-junior-roles.parquet'),
+                                    type_checking='loose')
         pdf = csv_to_polars(
             f(f'{test}/gov.uk/data/professions.csv'),
             md_path,

@@ -32,6 +32,8 @@ def pandas_types_match(t1, t2, level=None):
     if level == 'strict' or t1 == t2:
         if t1.lower() == t2.lower() and t1.lower().startswith('float'):
             return True  # Float64 and float64 are not meaningfully different
+        if t1.startswith('datetime') and t2.startswith('datetime'):
+            return True  # us, ns and even ms OK.
         return t1 == t2
 
     t1loose = loosen_pandas_type(t1)

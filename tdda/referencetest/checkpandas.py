@@ -27,6 +27,7 @@ from tdda.pd.utils import is_string_col, first_non_null
 
 import pandas as pd
 import numpy as np
+pd3 = int(pd.__version__.split('.')[0]) > 3
 
 
 # TDDA_DIFF = 'diff'
@@ -71,9 +72,9 @@ class PandasComparison(BaseComparison):
         assert df.shape[1] == ref_df.shape[1]
 
         if self.precision is not None:
-            df = df.round(self.precision).reset_index(drop=True)
-            ref_df = ref_df.round(self.precision).reset_index(drop=True)
-
+            kw = {'numeric_only': True} if pd3 else {}
+            df = df.round(self.precision, **kw).reset_index(drop=True)
+            ref_df = ref_df.round(self.precision, **kw).reset_index(drop=True)
         if self.fuzzy_nulls:
             dtypes = ['object']
             if self.fuzzy_nulls == True:

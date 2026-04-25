@@ -122,19 +122,22 @@ class TestPandasDataFrames(ReferenceTestCase):
         f32 = np.dtype('float32')
 
         dms = np.dtype('datetime64[ms]')
+        dus = np.dtype('datetime64[us]')
         dns = np.dtype('datetime64[ns]')
 
         S = pd.core.arrays.string_.StringDtype
 
         o = np.dtype('O')
 
-        dtypes = (i64, i32, I, f64, f32, dms, dns, b, B, S, o)
+        dtypes = (i64, i32, I, f64, f32, dms, dus, dns, b, B, S, o)
+        ndtypes = (i64, i32, I, f64, f32, b, B, S, o)
         ltypes = (
             'int',
             'int',
             'int',
             'float',
             'float',
+            'datetime',
             'datetime',
             'datetime',
             'bool',
@@ -149,7 +152,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         for level in ('strict', 'medium', 'permissive'):
             for t in dtypes:
                 self.assertTrue(pandas_types_match(t, t, level))
-        for t1 in dtypes:
+        for t1 in ndtypes:
             for t2 in dtypes:
                 if t1 != t2:
                     self.assertFalse(pandas_types_match(t1, t2))
@@ -158,6 +161,13 @@ class TestPandasDataFrames(ReferenceTestCase):
             for level in ('medium', 'loose'):
                 self.assertTrue(pandas_types_match(t, o, level))
                 self.assertTrue(pandas_types_match(o, t, level))
+
+        # Change from ns to us in Pandas3.
+        # Probably best to allow ns, us, ms to match
+        # even at strict
+        self.assertTrue(pandas_types_match(dms, dns, 'strict'))
+        self.assertTrue(pandas_types_match(dus, dns, 'strict'))
+        self.assertTrue(pandas_types_match(dus, dms, 'strict'))
 
         for t1 in (I, i64, i32):
             for t2 in (I, i64, i32):

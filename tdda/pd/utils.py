@@ -25,7 +25,8 @@ def is_string_dtype(dtype):
     --- object or categorical
     """
     return (
-        dtype == np.dtype('O')
+        isinstance(dtype, pd.StringDtype)
+        or dtype == np.dtype('O')
         or is_categorical_dtype(dtype)
         or str(dtype).startswith('string')  # includes pyarrow
     )

@@ -167,9 +167,9 @@ def read_file_lines(
             if enc == 'latin-1' and _has_cp1252_bytes(path):
                 enc = 'cp1252'
             return header, datalines, enc
-        except UnicodeDecodeError:
+        except UnicodeError:
             continue
-        except FileNotFounderror as e:
+        except FileNotFoundError as e:
             error(str(e), raise_error=raise_error)
     return None, [], None
 

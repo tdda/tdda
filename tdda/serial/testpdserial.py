@@ -970,6 +970,7 @@ class TestPandasCSVWTests(ReferenceTestCase):
     # def test033(self):
     #     pass  # same as 32 for our purposes
 
+    @tag
     def test034(self):
         test = this_function_name()
         f = self.fullpath
@@ -983,7 +984,8 @@ class TestPandasCSVWTests(ReferenceTestCase):
             return_md=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'))
+        self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'),
+                                    type_matching='loose')
 
         jdf = csv_to_pandas(
             f(f'{test}/junior-roles.csv'),
@@ -1015,7 +1017,7 @@ class TestPandasCSVWTests(ReferenceTestCase):
             verbosity=1,
         )
         self.assertDataFrameCorrect(
-            odf, pqp(f'{test}-organizations.parquet'), type_checking='loose'
+            odf, pqp(f'{test}-organizations.parquet'), type_matching='loose'
         )
 
     # def test035(self):

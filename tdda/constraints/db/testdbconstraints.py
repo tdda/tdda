@@ -352,6 +352,7 @@ class TestPostgresDB(
         cls.dbh = DatabaseHandler(dbtype, cls.db)
 
 
+
 @unittest.skipIf(
     MySQLdb is None or not os.path.exists(MYSQL_CONN_FILE),
     'MySQLdb not available, or no tdda mysql connection file',

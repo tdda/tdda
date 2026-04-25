@@ -96,8 +96,9 @@ def find_metadata_type_from_path(path):
       - or 'frictionless package'.
     Returns None if the path is not recognized as some kinds of CSV metadata.
     """
+    name = os.path.basename(path)
     for r, kind in METADATA_STYLE_MAP.items():
-        m = re.match(r, path)
+        m = re.match(r, name)
         if m:
             return kind, m.groups()
     return None, None
