@@ -45,16 +45,15 @@ class TestPandasUtils(ReferenceTestCase):
                           None])
 
     def test_object_col_underlying_type(self):
-        self.assertEqual(
-            [object_col_underlying_type(self.df[c]) for c in self.df],
-            ['int64', 'float64', 'Int64',
-             'float64',
-             'bool', 'boolean',
-             'str', 'string',
-             'date',
-             'datetime64[ns]',
-             'NoneType']
-        )
+        types = [object_col_underlying_type(self.df[c]) for c in self.df]
+        self.assertEqual(types[:-2],
+                         ['int64', 'float64', 'Int64',
+                          'float64',
+                          'bool', 'boolean',
+                          'str', 'string',
+                          'date'])
+        self.assertTrue(types[-2].startswith('datetime64'))
+        self.assertEqual(types[-1], 'NoneType')
 
     def test_find_safe_null_rep(self):
         df = pd.DataFrame({

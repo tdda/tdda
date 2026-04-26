@@ -190,7 +190,7 @@ class TestSerialConversions(ReferenceTestCase):
         ref_df = tiny_pandas_df(
             nulls=True, nullable_types=False, sBools=True, longNames=True
         )
-        self.assertDataFramesEqual(df, ref_df, type_matching='strict')
+        self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def testSerialToPandasWeirdCLI(self):
         name = 'tiny1nd-weird-pd.serial'

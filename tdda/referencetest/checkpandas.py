@@ -23,11 +23,10 @@ from tdda.referencetest.diffutils import (
 from tdda.serial.pandasio import csv_to_pandas, pandas_read_df, infer_dates
 from tdda.utils import debug
 
-from tdda.pd.utils import is_string_col, first_non_null
+from tdda.pd.utils import is_string_col, first_non_null, round_df
 
 import pandas as pd
 import numpy as np
-pd3 = int(pd.__version__.split('.')[0]) > 3
 
 
 # TDDA_DIFF = 'diff'
@@ -72,11 +71,10 @@ class PandasComparison(BaseComparison):
         assert df.shape[1] == ref_df.shape[1]
 
         if self.precision is not None:
-            kw = {'numeric_only': True} if pd3 else {}
-            df = df.round(self.precision, **kw).reset_index(drop=True)
-            ref_df = ref_df.round(self.precision, **kw).reset_index(drop=True)
+            df = round_df(df, self.precision)
+            ref_df = round_df(ref_df, self.precision)
         if self.fuzzy_nulls:
-            dtypes = ['object']
+            dtypes = ['object', 'str']
             if self.fuzzy_nulls == True:
                 dtypes.append('string')
 

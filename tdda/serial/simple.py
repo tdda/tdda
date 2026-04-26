@@ -72,7 +72,8 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
     ]
 
     # Don't specify these types (typically strings, bools, and dates)
-    objects = [col for col in df if df[col].dtype.name == 'object']
+    string_dtypes = {'object', 'str', 'string'}
+    objects = [col for col in df if df[col].dtype.name in string_dtypes]
 
     # Find any object columns with dates:
     for col in objects:

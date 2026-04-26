@@ -387,7 +387,7 @@ def pandas_dtype_to_fieldtype(dtype, col=None):
         return FieldType.INT
     elif dtl.startswith('float'):
         return FieldType.FLOAT
-    elif dt.startswith('string'):
+    elif dt.startswith('str'):
         return FieldType.STRING
     elif dt.startswith('datetime'):
         m = re.match(DATETIME_RE, dt)
@@ -793,13 +793,19 @@ def csv_to_pandas(
             dates = list(dfmt.keys())
             # should be using these!
         for k in df:
-            if df[k].dtype == np.dtype('O'):
+            if is_string_col(df[k]):
                 specified_type = specified_types.get(k)
                 try:
                     if specified_type:
                         df[k] = df[k].astype(specified_type)
                     elif k in dates:
-                        df[k] = df[k].astype('datetime64[ns]')
+                        try:
+                            df[k] = df[k].astype('datetime64[ns]')
+                        except (ValueError, TypeError):
+                            try:
+                                df[k] = pd.to_datetime(df[k])
+                            except Exception:
+                                df[k] = pd.to_datetime(df[k], utc=True)
                 except ValueError:  # probably time-zone aware date
                     pass
 

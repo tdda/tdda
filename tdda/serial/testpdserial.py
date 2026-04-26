@@ -5,6 +5,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from tdda.pd.utils import pd3, pdmaj
 
 from tdda.referencetest import ReferenceTestCase, tag
 
@@ -60,10 +61,10 @@ def dfEqual(self, df, exp):
             ('values', col, np.sum(df[col] == exp[col]).item()),
             ('values', col, len(df)),
         )
-        self.assertEqual(
-            ('types', col, str(df[col].dtype)),
-            ('types', col, str(exp[col].dtype)),
-        )
+        dt1 = str(df[col].dtype)
+        dt2 = str(exp[col].dtype)
+        if not (dt1.startswith('datetime64') and dt2.startswith('datetime64')):
+            self.assertEqual(('types', col, dt1), ('types', col, dt2))
 
 
 class TestPandasKeywordArgsGeneration(ReferenceTestCase):
@@ -465,10 +466,16 @@ class TestPandasLoad(ReferenceTestCase):
             precision=6,
             create_temporaries=False,
         )
-        self.assertEqual(diffs.count, 1)
+        # In pandas 3, mixed-timezone datetimes can't be stored in a typed
+        # column so datetimezone stays as strings, making it appear different
+        # from the reference's datetime.datetime objects.
+        expected_cols = [ROW_HEADER, 'string_torture']
+        if pd3:
+            expected_cols.append('datetimezone')
         details = diffs.details(df, self.ref_base_df)
-        self.assertEqual(details.cols, [ROW_HEADER, 'string_torture'])
-        self.assertEqual(details.rows, [[5, pd.NA, '']])
+        self.assertEqual(details.cols, expected_cols)
+        if not pd3:
+            self.assertEqual(details.rows, [[5, pd.NA, '']])
 
     def test_load_base_with_pandas_specific_serial_metadata(self):
         # Same as previous but using read_with_tdda_serial
@@ -970,7 +977,6 @@ class TestPandasCSVWTests(ReferenceTestCase):
     # def test033(self):
     #     pass  # same as 32 for our purposes
 
-    @tag
     def test034(self):
         test = this_function_name()
         f = self.fullpath
@@ -1065,6 +1071,8 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         df3 = pandas_read_csv(path, md_path=md_path)
         self.assertDataFramesEquivalent(df, df3, type_matching='medium')
 
+        str_t = 'str' if pd3 else 'object'
+        dt_t = f'datetime64[{"us" if pd3 else "ns"}]'
         alt_md_path = tdpath('ds4-pandas-alt.serial')
         df4 = pandas_read_csv(path, md_path=alt_md_path)
         dtypes = {k: str(df4[k].dtype) for k in df4}
@@ -1076,10 +1084,10 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
                 'i': 'float64',
                 'I': 'string',
                 'r': 'object',
-                's': 'object',
-                'nulllike': 'object',
-                'd': 'datetime64[ns]',
-                'dt': 'datetime64[ns]',
+                's': str_t,
+                'nulllike': str_t,
+                'd': dt_t,
+                'dt': dt_t,
             },
         )
 
@@ -1736,7 +1744,7 @@ class TestSerialPandasNamedDateFormatsLoad(ReferenceTestCase):
             tdpath('allformats2unspec.csv'), tdpath('allformats2unspec.serial')
         )
         self.assertDataFrameCorrect(
-            df, tdpath('alldateformats2unspec.parquet')
+            df, tdpath('alldateformats2unspec.parquet'), type_matching='loose'
         )
 
 

@@ -36,7 +36,7 @@ class ColDiff:
     def __init__(self, mask, extra):
         self.mask = mask  # Boolean mask, 1 where different
         # within common area (length)
-        self.n = int(sum(mask))  # Number of differences in common area
+        self.n = int(mask.sum())  # Number of differences in common area
         self.extra = extra  # Number of extra rows (left - right)
         self.total = self.n + abs(extra)  # Total rows with differences
         # including extra/missing rows
@@ -279,11 +279,14 @@ def single_col_diffs(left, right, missings=None):
     elif nR > nL:
         R = right[:nL]
     if col_types_match(L, R, level='loose'):
+        if (ispd and str(L.dtype).startswith('datetime')
+                and str(R.dtype).startswith('datetime')
+                and L.dtype != R.dtype):
+            L = L.astype(R.dtype)
         different = ~(L.eq(R) | (isnull_col(L) & isnull_col(R)))
     else:
         different = ~(isnull_col(L) & isnull_col(R))
-    if different.dtype == bool_type(left):
-        different = fillnull_col(different, True)
+    different = fillnull_col(different, True)
     if missings is not None:
         difference = different | missings
     return ColDiff(different, df_len_diff(left, right))

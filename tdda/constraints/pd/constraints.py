@@ -771,7 +771,7 @@ def pandas_tdda_type(x):
                 return 'date'
         # if it was all null, there's no way to tell its type, so say string
         return 'string'
-    if is_categorical_dtype(dt) or dts.startswith('string'):
+    if is_categorical_dtype(dt) or dts.startswith('str'):
         return 'string'
     if type(x) == bool or 'bool' in dts:
         return 'bool'

@@ -1,6 +1,20 @@
 import numpy as np
 import pandas as pd
 
+pdmaj = int(pd.__version__.split('.')[0])
+pd3 = pdmaj >= 3
+
+if pd3:
+    def round_df(df, precision):
+        num_cols = df.select_dtypes(include='number').columns
+        df = df.copy()
+        df[num_cols] = df[num_cols].round(precision)
+        return df.reset_index(drop=True)
+else:
+    def round_df(df, precision):
+        return df.round(precision).reset_index(drop=True)
+
+
 NULL_REPS = [
     '',
     'NULL',

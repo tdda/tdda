@@ -21,7 +21,11 @@ def loosen_pandas_type(t):
     name = ''.join(c for c in t if not c.isdigit()).lower()
     p = name.find('[')
     name = name[:p] if p > -1 else name
-    return 'bool' if name == 'boolean' else name
+    if name == 'boolean':
+        return 'bool'
+    if name == 'str':
+        return 'string'
+    return name
 
 
 def pandas_types_match(t1, t2, level=None):
@@ -38,7 +42,7 @@ def pandas_types_match(t1, t2, level=None):
 
     t1loose = loosen_pandas_type(t1)
     t2loose = loosen_pandas_type(t2)
-    object_types = ('string', 'boolean', 'datetime', 'bool')
+    object_types = ('string', 'str', 'boolean', 'datetime', 'bool')
     if (
         t1loose == t2loose
         or t1loose == 'object'
