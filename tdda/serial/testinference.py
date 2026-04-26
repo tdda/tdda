@@ -563,7 +563,7 @@ class TestInferAllFlatFiles(TestInference):
             tdpath('all-csvw-types.csv'),
             tdpath('all-csvw-types-inferred.serial'),
         )
-        ref_df = pandas.read_parquet(tdpath('all-csvw-types.parquet'))
+        ref_df = pandas.read_parquet(tdpath('all-csvw-types-v2dates.parquet'))
         # gDay/gMonth/gYear are int in inferred serial (correctly) but
         # object in the parquet (written without type info); exclude them
         exclude = ['gDay', 'gMonth', 'gYear']

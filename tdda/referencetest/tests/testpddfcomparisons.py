@@ -117,10 +117,15 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertEqual(r.failures, 1)
         self.assertStringCorrect(str(r.diffs), fp('diff-col-types-int-str.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
-            ])
-        self.assertStringCorrect(str(r.diffs.dfd),
-            fp('ddiff-col-types-int-str.txt'))
+                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                r'(str|object)',
+            ]
+        )
+        self.assertStringCorrect(
+            str(r.diffs.dfd),
+            fp('ddiff-col-types-int-str.txt'),
+            ignore_patterns=[r'(str|object)'],
+        )
 
     def testDiffColTypeInMemIntFloat(self):
         c = PandasComparison(verbose=False)

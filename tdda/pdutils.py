@@ -42,7 +42,7 @@ def pandas_types_match(t1, t2, level=None):
 
     t1loose = loosen_pandas_type(t1)
     t2loose = loosen_pandas_type(t2)
-    object_types = ('string', 'str', 'boolean', 'datetime', 'bool')
+    object_types = ('string', 'boolean', 'datetime', 'bool')
     if (
         t1loose == t2loose
         or t1loose == 'object'

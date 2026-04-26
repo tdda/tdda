@@ -463,9 +463,9 @@ def pandas_write_to_read_params(df, warner=None, **kw):
             typemap[col] = t
         elif is_dtype_datelike(t):
             dts.append(col)
-        elif t != 'object':
+        elif t not in ('object', 'str'):
             Warn(f'Unhandled pandas dtype "{t}"')
-        if t == 'object':
+        if t in ('object', 'str'):
             v = first_non_null(df[col])
             if type(v) in (datetime.date, datetime.datetime):
                 dts.append(col)

@@ -58,7 +58,7 @@ def dfEqual(self, df, exp):
     self.assertEqual(list(df), list(exp))
     for col in df:
         self.assertEqual(
-            ('values', col, np.sum(df[col] == exp[col]).item()),
+            ('values', col, int((df[col] == exp[col]).sum())),
             ('values', col, len(df)),
         )
         dt1 = str(df[col].dtype)
@@ -131,7 +131,7 @@ class TestPandasConversion(ReferenceTestCase):
         df = pd.read_csv(csvpath, **csvw_to_pandas_kwargs(md_path))
 
         self.assertEqual(df.row.dtype, 'Int64')
-        self.assertEqual(df.date.dtype, 'datetime64[ns]')
+        self.assertTrue(str(df.date.dtype).startswith('datetime64'))
 
         expected = pd.DataFrame(
             {
@@ -896,8 +896,8 @@ class TestPandasCSVWTests(ReferenceTestCase):
             'trim_cycle',
             'inventory_date',
         ]
-        ref_df = csvw_bare_json_to_df(resultspath, fields)
-        # medium because of object/string comparisons
+        ref_df = csvw_bare_json_to_df(resultspath, fields,
+                                       to_dates=['inventory_date'])
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test028(self):
@@ -1483,7 +1483,7 @@ def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
     return df
 
 
-def csvw_bare_json_to_df(path, fields, to_ints=None):
+def csvw_bare_json_to_df(path, fields, to_ints=None, to_dates=None):
     with open(path) as f:
         d = json.load(f)
     rows = d
@@ -1492,6 +1492,8 @@ def csvw_bare_json_to_df(path, fields, to_ints=None):
     )
     for k in to_ints or []:
         string_to_int(df, k)
+    for k in to_dates or []:
+        df[k] = pd.to_datetime(df[k])
     return df
 
 
