@@ -42,7 +42,7 @@ def is_pandas_obj(o):
         return True
     elif isinstance(o, pl.DataFrame) or isinstance(o, pl.Series):
         return False
-    raise ValueError(f'{df} is not a Python or Polars DataFrame or Series')
+    raise ValueError(f'{o} is not a Python or Polars DataFrame or Series')
 
 
 def is_polars_df(df):
@@ -104,7 +104,7 @@ def df_definite(df, engine):
     elif engine == 'polars' and dft == 'pandas':
         return pl.from_pandas(df)
     else:
-        error(f'Cannot convert {rft} data frame to {engine}.')
+        error(f'Cannot convert {dft} data frame to {engine}.')
 
 
 def specialize(df, fn, *args, **kwargs):
@@ -259,7 +259,6 @@ def csv_to_dataframe(
             backend=backend,
             infer_datetime_formats=infer_datetime_formats,
         )
-        return df
     else:
         error(f'Unknown DateFrame engine: {engine}.')
 

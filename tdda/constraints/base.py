@@ -321,9 +321,10 @@ class DatasetConstraints(object):
                         constraint.value = get_date(constraint.value)
                     fc.append(constraint)
                 elif not kind.startswith('#'):
-                    print_error(
+                    print(
                         'Constraint kind %s for field %s unknown: ignored.'
-                        % (kind, fieldname)
+                        % (kind, fieldname),
+                        file=sys.stderr,
                     )
             if fc:
                 self.add_field(FieldConstraints(fieldname, fc))

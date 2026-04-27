@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from tdda.serial.pandasio import gen_pandas_kwargs
+from tdda.serial.pandasio import gen_pandas_kwargs, csvw_to_pandas_kwargs
 
 
 USAGE = """

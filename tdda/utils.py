@@ -212,7 +212,7 @@ class XML:
 
     def Flush(self):
         if self.out:
-            self.out.write(UTF8Definite(self.xml(flushing=True)))
+            self.out.write(utf8_definite(self.xml(flushing=True)))
             self.xmlbuf = []
 
     def Entitize(self, s, entitize=1):
@@ -1282,3 +1282,7 @@ def valid_level(level):
 
 def unicode_definite(s):
     return s.decode('UTF-8') if type(s) == bytes else s
+
+
+def utf8_definite(s):
+    return s if type(s) == bytes else s.encode('UTF-8')
