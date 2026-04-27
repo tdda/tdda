@@ -58,9 +58,6 @@ from tdda.constraints.baseconstraints import (
     BaseConstraintVerifier,
     BaseConstraintDiscoverer,
     MAX_CATEGORIES,
-    unicode_string,
-    byte_string,
-    long_type,
 )
 from tdda.pd.utils import (
     is_string_col,
@@ -513,7 +510,7 @@ class PandasConstraintVerifier(
                     for limit in ('min', 'max'):
                         if limit in constraints[c]:
                             limitval = constraints[c][limit].value
-                            if type(limitval) in (int, long_type, float):
+                            if type(limitval) in (int, float):
                                 if type(limitval) == float:
                                     is_real = True
                             else:
@@ -735,7 +732,7 @@ def pandas_tdda_type(x):
         for v in x:
             if type(v) in (bool, np.bool_):
                 return 'bool'
-            elif type(v) in (unicode_string, byte_string):
+            elif type(v) in (str, bytes):
                 return 'string'
             elif isinstance(v, datetime.datetime):
                 return 'date'
@@ -747,7 +744,7 @@ def pandas_tdda_type(x):
         return 'string'
     if type(x) == bool or 'bool' in dts:
         return 'bool'
-    if type(x) in (int, long_type) or 'int' in dts:
+    if type(x) is int or 'int' in dts:
         return 'int'
     if type(x) == float or 'float' in dts or 'double' in dts:
         return 'real'

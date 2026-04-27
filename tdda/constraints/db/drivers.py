@@ -40,7 +40,6 @@ from tdda.debug import dprint
 
 
 from tdda.constraints.base import UNICODE_TYPE
-from tdda.constraints.baseconstraints import unicode_string, long_type
 from tdda.constraints.flags import (
     discover_parser,
     discover_flags,
@@ -809,7 +808,7 @@ class SQLDatabaseHandler:
         if self.dbtype == 'mysql':
             uniqs = self.get_database_unique_values(tablename, colname)
             if uniqs:
-                if type(uniqs[0]) is unicode_string:
+                if type(uniqs[0]) is str:
                     lengths = [len(v) for v in uniqs]
                 else:
                     lengths = [len(v.decode('UTF-8')) for v in uniqs]
@@ -1031,7 +1030,7 @@ class MongoDBDatabaseHandler:
             valtype = type(val)
             if valtype == bool:
                 return 'bool'
-            elif valtype in (int, long_type):
+            elif valtype is int:
                 return 'int'
             elif valtype == float:
                 return 'real'

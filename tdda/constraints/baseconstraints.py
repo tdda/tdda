@@ -41,15 +41,6 @@ from tdda.constraints.extension import (
     BaseConstraintDetector,
 )
 
-if sys.version_info[0] >= 3:
-    unicode_string = str
-    byte_string = bytes
-    long_type = int
-else:
-    unicode_string = unicode
-    byte_string = str
-    long_type = long
-
 DEBUG = False
 
 TYPE_CHECKING_OPTIONS = ('strict', 'sloppy')
@@ -361,10 +352,10 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
             return good_none  # no values: cannot violate constraint
 
         val = m
-        if type(m) not in (bool, int, long_type, float):
+        if type(m) not in (bool, int, float):
             ok = False
             val = m
-        elif type(M) not in (bool, int, long_type, float):
+        elif type(M) not in (bool, int, float):
             ok = False
             val = M
         elif value == 'null':
@@ -665,7 +656,7 @@ class BaseConstraintDiscoverer(BaseConstraintCalculator):
                         # them all before, but we need them now.
                         uniqs = self.calc_unique_values(fieldname, include_nulls=False)
                     if uniqs:
-                        if type(uniqs[0]) is unicode_string:
+                        if type(uniqs[0]) is str:
                             L = [len(v) for v in uniqs]
                         else:
                             L = [len(v.decode('UTF-8')) for v in uniqs]

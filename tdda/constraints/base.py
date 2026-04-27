@@ -110,7 +110,7 @@ RDTM = re.compile(
     r'\.(\d+)$'
 )
 
-UNICODE_TYPE = str if sys.version_info[0] >= 3 else unicode
+UNICODE_TYPE = str
 
 EPSILON_DEFAULT = 0.0  # no tolerance for min/max constraints for
 # real (i.e. floating point) fields.
@@ -1670,7 +1670,7 @@ def NativeDefiniteObject(s):
     to native strings.
     Handles lists, tuples and dictionaries, as well as scalars.
     """
-    NON_NATIVE_STR = bytes if sys.version_info[0] >= 3 else unicode
+    NON_NATIVE_STR = bytes
     if type(s) is NON_NATIVE_STR:
         return native_definite(s)
     elif type(s) is list:
