@@ -64,14 +64,15 @@ class Test_TAGGING_META(ReferenceTestCase):
     def test_stderr(self):
         substrings = [
             '/Users/njr/python/tdda/tdda/referencetest/scratch',
-            '~~~',  # Python 3.13+ enhanced traceback expression markers
         ]
         patterns = ['Ran 5 tests in (0.[0-9]+)s']
+        remove = ['~~~']  # Python 3.13+ enhanced traceback expression markers
         self.assertStringCorrect(
             self.error,
             os.path.join(self.refdir, 'STDERR'),
             ignore_substrings=substrings,
             ignore_patterns=patterns,
+            remove_lines=remove,
         )
 
     def test_test_failures_file(self):
