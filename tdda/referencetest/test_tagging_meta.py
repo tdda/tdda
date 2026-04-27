@@ -64,6 +64,7 @@ class Test_TAGGING_META(ReferenceTestCase):
     def test_stderr(self):
         substrings = [
             '/Users/njr/python/tdda/tdda/referencetest/scratch',
+            '~~~',  # Python 3.13+ enhanced traceback expression markers
         ]
         patterns = ['Ran 5 tests in (0.[0-9]+)s']
         self.assertStringCorrect(
