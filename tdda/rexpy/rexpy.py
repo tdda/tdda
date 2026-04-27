@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Python API
 ----------
@@ -11,7 +10,6 @@ programs.
 
 import random
 import re
-import string
 import sys
 
 from array import array
@@ -1265,6 +1263,8 @@ class Extractor(object):
         rlec = []  # run-length encoded list of characters
         last_fc = None  # last fine class
         last_c = None  # last character
+        nfc = 0
+        nc = 0
 
         for c in s:
             fc = self.fine_class(c)
@@ -2525,7 +2525,7 @@ def rexpy_streams(
             print('Reading file %s.' % in_path)
         with open(in_path) as f:
             strings = f.read().splitlines()
-        if show(verbose, VERBOSTY.PREPROCESSING):
+        if show(verbose, VERBOSITY.PREPROCESSING):
             print('Read file %s' % in_path)
     else:
         if show_pp:
@@ -2783,9 +2783,9 @@ def ilist(L=None):
     return array(INT_ARRAY, L or [])
 
 
-def dquote(string):
+def dquote(s):
     parts = [
-        p.replace('\\', r'\\').replace('\n', r'\n') for p in string.split('"')
+        p.replace('\\', r'\\').replace('\n', r'\n') for p in s.split('"')
     ]
     quoted = ('\\"').join(parts)
     return '"%s"' % quoted
