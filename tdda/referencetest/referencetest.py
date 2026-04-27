@@ -17,7 +17,6 @@ from tdda.abstractdf import (
     df_definite,
     is_pandas_df,
     is_polars_df,
-    lib,
 )
 
 
