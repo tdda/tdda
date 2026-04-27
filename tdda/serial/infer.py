@@ -748,7 +748,7 @@ class MetadataInferrer:
         if quote and any(
             f.startswith(quote) and not f.endswith(quote) for f in fieldnames
         ):
-            return careful_split(self.header, sep, quote, '\\')
+            return careful_split(self.header, self.sep, quote, '\\')
         else:
             return fieldnames
 

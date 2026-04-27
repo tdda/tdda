@@ -56,7 +56,7 @@ def find_diff_lines(left_path, right_path, filetype):
             if not L:
                 offset += 1  # context line at the start (skip over)
         else:
-            print('DID NOT EXPECT THIS', prev_source, line_source)
+            print('DID NOT EXPECT THIS', line_source)
     if L or R:
         add_pairs(pairs, L, R, left_num, right_num, offset)
 
@@ -88,7 +88,7 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
                     rexes[rex].append((p.left_line_num, p.right_line_num))
                 else:
                     print('*** Could not find RE.')
-                    fails.append((left, right))
+                    fails.append((p.left_content, p.right_content))
                 print()
             print(
                 '%d pattern%s for %d line pair%s'

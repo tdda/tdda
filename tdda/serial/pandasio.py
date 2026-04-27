@@ -931,9 +931,9 @@ def pandas_to_csv(
 
     if find_safe_null:
         spec = kw_overrides.get('na_rep')
-        null = find_safe_null_rep(df, preferred=overrides.get('na_rep'))
+        null = find_safe_null_rep(df, preferred=kw_overrides.get('na_rep'))
         kw['na_rep'] = null
-        if specified_null is not None and spec != null:
+        if spec is not None and spec != null:
             Warn(
                 f'Specified null rep "{spec}" was not safe. '
                 f'Using "{null}".\n(Safe null rep was requested.)'

@@ -13,6 +13,7 @@ from tdda.referencetest.checkfiles import FilesComparison
 from tdda.state import get_config
 from tdda.utils import TDDAError, nvl, error
 from tdda.abstractdf import (
+    all_fields_except,
     df_type,
     df_definite,
     is_pandas_df,
@@ -655,7 +656,7 @@ class ReferenceTest(object):
             kind = 'csv'  # it's just a key; can be parquet
 
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
-        lib = get_comparison_lib(engine=engine)
+        lib = self.get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
             lib._write_reference_dataframes_from_files(
                 actual_paths, expected_paths

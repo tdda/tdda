@@ -116,7 +116,7 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         assert kw == kw2
         df2 = fns.read(path, **kw2)
         c = fns.Comparison()
-        diffs = c.check_dataframe(df1, df2, type_matching='strict')
+        diffs = c.check_dataframe(df, df2, type_matching='strict')
         assert diffs == FailureDiffs(0, [])
 
 

@@ -9,6 +9,7 @@ import sys
 import tomli_w
 import types
 import unicodedata
+import urllib.parse
 import yaml
 
 from fnmatch import fnmatch
@@ -307,7 +308,7 @@ class XML:
         self.xmlbuf.append('>')
         if urlsafe:
             self.xmlbuf.append(
-                '<![CDATA[' + str(encode_uri_component(content)) + ']]>'
+                '<![CDATA[' + urllib.parse.quote(str(content), safe='') + ']]>'
             )
         else:
             content = unicode_definite(content)

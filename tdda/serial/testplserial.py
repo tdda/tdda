@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 
+import numpy as np
 import polars as pl
 
 from tdda.referencetest import ReferenceTestCase, tag

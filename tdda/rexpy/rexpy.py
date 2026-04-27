@@ -1612,7 +1612,7 @@ class Extractor(object):
         return results, tree
 
 
-def example_check_function(rexes, maxN=None):
+def example_check_function(rexes, strings, maxN=None):
     """
     **CHECK FUNCTIONS**
     This is an example check function
@@ -1653,14 +1653,13 @@ def example_check_function(rexes, maxN=None):
     need to test against other patterns in case the string also matches
     more than one.)
     """
-    # STRINGS = ['some', 'strings', 'in', 'scope']
-    # In this example function, we are assuming each string in STRINGS
+    # In this example function, we are assuming each string in strings
     # is distinct.
     failures = []
     re_freqs = [0] * len(rexes)
     if rexes:
         patterns = [re.compile(r) for r in rexes]  # compile for efficiency
-        for u in STRINGS:
+        for u in strings:
             for i, r in enumerate(patterns):
                 if re.match(r, u):
                     re_freqs[i] += 1  # record the fact that this rex matched
@@ -1668,7 +1667,7 @@ def example_check_function(rexes, maxN=None):
             else:  # Record strings that don't match any rex
                 failures.append(u)
     else:
-        failures = STRINGS  # If there are no rexes, all strings fail
+        failures = strings  # If there are no rexes, all strings fail
     if maxN is not None and len(failures) > maxN:
         failures = random.sample(failures, maxN)
     return Examples(failures), re_freqs

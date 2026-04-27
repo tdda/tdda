@@ -144,7 +144,7 @@ class Specifics:
         return (
             'Specifics(%s)'
             % (',\n              '.join('%s=%s' % (k, repr(getattr(self, k)))))
-            for k in __slots__
+            for k in self.__slots__
         )
 
 
