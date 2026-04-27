@@ -5,6 +5,7 @@ from tdda.utils import swap_ext
 TDDADIR = os.path.dirname(os.path.dirname(__file__))
 MANDIR = os.path.join(TDDADIR, 'man')
 
+
 def get_help(command):
     path = os.path.join(MANDIR, f'{command}.txt')
     tddapath = os.path.join(MANDIR, f'tdda-{command}.txt')

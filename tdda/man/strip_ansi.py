@@ -1,7 +1,8 @@
 import sys
 import re
 
-ansi_escape_8bit = re.compile(r'''
+ansi_escape_8bit = re.compile(
+    r"""
     (?: # either 7-bit C1, two bytes, ESC Fe (omitting CSI)
         \x1B
         [@-Z\\-_]
@@ -17,8 +18,8 @@ ansi_escape_8bit = re.compile(r'''
         [ -/]*  # Intermediate bytes
         [@-~]   # Final byte
     )
-''', re.VERBOSE)
+""",
+    re.VERBOSE,
+)
 data = sys.stdin.read()
 print(ansi_escape_8bit.sub('', data))
-
-

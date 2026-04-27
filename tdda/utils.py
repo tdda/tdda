@@ -64,9 +64,7 @@ ENDASH = '–'  # chr(0x2013)
 MINUS_SIGN = '−'  # chr(0x2212)
 
 
-TDDAPathInfo = namedtuple(
-    'TDDAPathInfo', 'path stem ext md_path find_md combined'
-)
+TDDAPathInfo = namedtuple('TDDAPathInfo', 'path stem ext md_path find_md combined')
 
 
 class TDDAError(Exception):
@@ -138,9 +136,7 @@ class XML:
         self.out = None
         self.tab = '\t' if useHardTabs else '        '
         self.float_precision = float_precision
-        self.float_fmt = (
-            ('%%.%df' % float_precision) if float_precision else None
-        )
+        self.float_fmt = ('%%.%df' % float_precision) if float_precision else None
         self.altnbsp = None
         self.debug = debug
         self.hardTabs = hardTabs
@@ -297,18 +293,14 @@ class XML:
             forceNL=forceNL,
         )
 
-    def WriteCDElement(
-        self, name, content='', attributes={}, leave='close', urlsafe=0
-    ):
+    def WriteCDElement(self, name, content='', attributes={}, leave='close', urlsafe=0):
         indent = self.IndentString()
         self.xmlbuf.append(indent + '<' + self.toString(name))
         if attributes:
             self.WriteAttributes(attributes)
         self.xmlbuf.append('>')
         if urlsafe:
-            self.xmlbuf.append(
-                '<![CDATA[' + str(encode_uri_component(content)) + ']]>'
-            )
+            self.xmlbuf.append('<![CDATA[' + str(encode_uri_component(content)) + ']]>')
         else:
             content = UnicodeDefinite(content)
             self.xmlbuf.append('<![CDATA[' + content + ']]>')
@@ -326,9 +318,9 @@ class XML:
 
     def IndentString(self):
         if self.hardTabs:
-            return self.tab * (
-                (self.indentLevel * self.tabSize) // 8
-            ) + ' ' * ((self.indentLevel * self.tabSize) % 8)
+            return self.tab * ((self.indentLevel * self.tabSize) // 8) + ' ' * (
+                (self.indentLevel * self.tabSize) % 8
+            )
         else:
             return ' ' * (self.indentLevel * self.tabSize)
 
@@ -423,8 +415,7 @@ class XML:
         else:
             c = comment.replace('--', '- - ')
             self.xmlbuf.append(
-                '%s%s<!-- %s -->%s\n'
-                % (padding, self.IndentString(), comment, padding)
+                '%s%s<!-- %s -->%s\n' % (padding, self.IndentString(), comment, padding)
             )
 
     def __str__(self):
@@ -523,9 +514,7 @@ def xml_element(
         out.append('>')
     if link:
         out.append('<a href="xml_entitize{%s}">' % link)
-    if re.match('^[ \t]+$', content) or (
-        pad and content == '' and leave == 'close'
-    ):
+    if re.match('^[ \t]+$', content) or (pad and content == '' and leave == 'close'):
         xmlc = '&#160;'
     elif entitize:
         xmlc = xml_entitize(content, entitize=entitize)
@@ -828,9 +817,9 @@ def is_sequence(L):
     Tests whether L is a list, tuple or something similar
     (in particular, that it can be indexed).
     """
-    return (
-        hasattr(L, '__getitem__') or hasattr(L, '__iter__')
-    ) and not hasattr(L, 'strip')
+    return (hasattr(L, '__getitem__') or hasattr(L, '__iter__')) and not hasattr(
+        L, 'strip'
+    )
 
 
 def is_parquet(path):
@@ -956,9 +945,7 @@ def normal_form_tk(
     form = 'NFKD' if nfkd else 'NFKC'
     normalized = unicodedata.normalize('NFKD', s)
     if remove_accents:
-        normalized = ''.join(
-            c for c in normalized if not unicodedata.combining(c)
-        )
+        normalized = ''.join(c for c in normalized if not unicodedata.combining(c))
     normalized = normalized.translate(TDDA_NF_MAP)
     if strip:
         normalized = normalized.strip()
@@ -1049,9 +1036,7 @@ def tdda_path_info(inpath):
         if len(parts) == 2:
             path, md_path = parts
             stem, ext = os.path.splitext(path)
-            return TDDAPathInfo(
-                path, stem, ext, handle_tilde(md_path), False, inpath
-            )
+            return TDDAPathInfo(path, stem, ext, handle_tilde(md_path), False, inpath)
         # else
         # ignore for now
 
@@ -1091,8 +1076,7 @@ def is_windows():
 
 def dict_to_tex_macros(d, outpath=None, verbose=False):
     defs = ''.join(
-        '\\def\\%s{%s}\n' % (tex_name(k), tex_encode(str(v)))
-        for k, v in d.items()
+        '\\def\\%s{%s}\n' % (tex_name(k), tex_encode(str(v))) for k, v in d.items()
     )
     if outpath:
         with open(outpath, 'w') as f:
@@ -1104,9 +1088,7 @@ def dict_to_tex_macros(d, outpath=None, verbose=False):
 
 def tex_encode(s, number=False, para=False):
     if not type(s) is str:
-        print(
-            'tex_encode: input type (%s); expected type (%s)' % (type(s), str)
-        )
+        print('tex_encode: input type (%s); expected type (%s)' % (type(s), str))
         print(s)
         raise Exception('Wrong type sent to tex_encode')
     if s is None:
@@ -1256,8 +1238,11 @@ def string_list(list_, conjunction='and', oxford=False):
     if len(list_) == 1:
         return str(list_[0])
     oxford_comma = ',' if (oxford and len(list_) > 2) else ''
-    return (', '.join((str(L) for L in list_[:-1]))
-            + '%s %s %s' % (oxford_comma, conjunction, list_[-1]))
+    return ', '.join((str(L) for L in list_[:-1])) + '%s %s %s' % (
+        oxford_comma,
+        conjunction,
+        list_[-1],
+    )
 
 
 def oxford_list(list_, conjunction='and'):

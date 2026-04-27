@@ -69,9 +69,7 @@ class TestTDDAUtils(ReferenceTestCase):
             (1, 2_000_000_001): '0.00000005%',
         }
         for (a, b), expected in cases.items():
-            self.assertEqual(
-                (f'{a} / {b}', to_pc(a / b)), (f'{a} / {b}', expected)
-            )
+            self.assertEqual((f'{a} / {b}', to_pc(a / b)), (f'{a} / {b}', expected))
 
     def test_n_glyphs(self):
         for s in ('é', 'q̣̇'):
@@ -89,13 +87,7 @@ class TestTDDAUtils(ReferenceTestCase):
         okF = '\U0001f44c\U0001f3ff'
 
         mmh = (
-            '👨'
-            + chr(0x1F3FB)
-            + chr(0x200D)
-            + '🤝'
-            + chr(0x200D)
-            + '👨'
-            + chr(0x1F3FF)
+            '👨' + chr(0x1F3FB) + chr(0x200D) + '🤝' + chr(0x200D) + '👨' + chr(0x1F3FF)
         )
         mmh2 = '\U0001f468\U0001f3fb\u200d\U0001f91d\u200d\U0001f468\U0001f3ff'
 
@@ -115,10 +107,7 @@ class TestTDDAUtils(ReferenceTestCase):
             bwthumbsup,
         )
         actual = (
-            '\n'.join(
-                (f"""('{c}', {len(c)}, {n_glyphs(c)})""") for c in glyphs
-            )
-            + '\n'
+            '\n'.join((f"""('{c}', {len(c)}, {n_glyphs(c)})""") for c in glyphs) + '\n'
         )
         self.assertStringCorrect(actual, os.path.join(TESTDIR, 'emoji.txt'))
 
@@ -130,9 +119,7 @@ class TestTDDAUtils(ReferenceTestCase):
         homedir = os.path.expanduser('~')
         user = os.path.split(homedir)[-1]
 
-        self.assertEqual(
-            handle_tilde('~/foo.csv'), os.path.join(homedir, 'foo.csv')
-        )
+        self.assertEqual(handle_tilde('~/foo.csv'), os.path.join(homedir, 'foo.csv'))
         self.assertEqual(
             handle_tilde('~%s/foo.csv' % user),
             os.path.join(homedir, 'foo.csv'),
@@ -226,9 +213,7 @@ class TestXMLGeneration(ReferenceTestCase):
         )
         x.WriteElement(
             'bas',
-            'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode(
-                'latin9'
-            ),
+            'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode('latin9'),
         )
         x.CloseElement()
         stripped = x.xml().strip()
@@ -248,17 +233,13 @@ class TestXMLGeneration(ReferenceTestCase):
         x = XML(html=5, title='Test Page', css=['style.css', 'theme.css'])
         x.WriteElement('h1', 'Hello World')
         x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-ext.html')
-        )
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-ext.html'))
 
     def testHTML5InlineCSS(self):
         x = XML(html=5, title='Test Page', css='body { margin: 0; }')
         x.WriteElement('p', 'Content')
         x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-inline.html')
-        )
+        self.assertStringCorrect(x.xml(), os.path.join(TESTDIR, 'html5-inline.html'))
 
     def testHTML5EmptyElements(self):
         x = XML(html=5, omitHeader=1)
@@ -299,9 +280,7 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(squote(''), "''")
         self.assertEqual(squote("''"), r"""'\'\''""")
         self.assertEqual(squote("It's"), r"'It\'s'")
-        self.assertEqual(
-            squote("It's\na\ndog's\nlife."), r"'It\'s\na\ndog\'s\nlife.'"
-        )
+        self.assertEqual(squote("It's\na\ndog's\nlife."), r"'It\'s\na\ndog\'s\nlife.'")
 
     def testDQuote(self):
         self.assertEqual(DQuote(''), '""')
@@ -408,26 +387,14 @@ class TestXMLGeneration(ReferenceTestCase):
         em_dash = unicodedata.lookup('EM DASH')
         minus_sign = unicodedata.lookup('MINUS SIGN')
 
-        left_single_quotation_mark = unicodedata.lookup(
-            'LEFT SINGLE QUOTATION MARK'
-        )
-        right_single_quotation_mark = unicodedata.lookup(
-            'RIGHT SINGLE QUOTATION MARK'
-        )
-        modifier_letter_apostrophe = unicodedata.lookup(
-            'MODIFIER LETTER APOSTROPHE'
-        )
+        left_single_quotation_mark = unicodedata.lookup('LEFT SINGLE QUOTATION MARK')
+        right_single_quotation_mark = unicodedata.lookup('RIGHT SINGLE QUOTATION MARK')
+        modifier_letter_apostrophe = unicodedata.lookup('MODIFIER LETTER APOSTROPHE')
         grave_accent = unicodedata.lookup('GRAVE ACCENT')
 
-        fullwidth_quotation_mark = unicodedata.lookup(
-            'FULLWIDTH QUOTATION MARK'
-        )
-        left_double_quotation_mark = unicodedata.lookup(
-            'LEFT DOUBLE QUOTATION MARK'
-        )
-        right_double_quotation_MARK = unicodedata.lookup(
-            'RIGHT DOUBLE QUOTATION MARK'
-        )
+        fullwidth_quotation_mark = unicodedata.lookup('FULLWIDTH QUOTATION MARK')
+        left_double_quotation_mark = unicodedata.lookup('LEFT DOUBLE QUOTATION MARK')
+        right_double_quotation_MARK = unicodedata.lookup('RIGHT DOUBLE QUOTATION MARK')
 
         no_break_space = unicodedata.lookup('NO-BREAK SPACE')
         en_space = unicodedata.lookup('EN SPACE')
@@ -445,9 +412,7 @@ class TestXMLGeneration(ReferenceTestCase):
         parenthesized_digit_one = unicodedata.lookup('PARENTHESIZED DIGIT ONE')
         digit_one_full_stop = unicodedata.lookup('DIGIT ONE FULL STOP')
 
-        greek_capital_letter_alpha = unicodedata.lookup(
-            'GREEK CAPITAL LETTER ALPHA'
-        )
+        greek_capital_letter_alpha = unicodedata.lookup('GREEK CAPITAL LETTER ALPHA')
         latin_capital_letter_a_with_ring_above = unicodedata.lookup(
             'LATIN CAPITAL LETTER A WITH RING ABOVE'
         )
@@ -456,9 +421,7 @@ class TestXMLGeneration(ReferenceTestCase):
         horizontal_ellipsis = unicodedata.lookup('HORIZONTAL ELLIPSIS')
         vertical_ellipsis = unicodedata.lookup('VERTICAL ELLIPSIS')
 
-        midline_horizontal_ellipsis = unicodedata.lookup(
-            'MIDLINE HORIZONTAL ELLIPSIS'
-        )
+        midline_horizontal_ellipsis = unicodedata.lookup('MIDLINE HORIZONTAL ELLIPSIS')
         down_right_diagonal_ellipsis = unicodedata.lookup(
             'DOWN RIGHT DIAGONAL ELLIPSIS'
         )
@@ -502,9 +465,7 @@ class TestXMLGeneration(ReferenceTestCase):
             unicodedata.lookup('LATIN SMALL LIGATURE IJ'): 'ij',
         }
         for raw, expected in mapping.items():
-            self.assertEqual(
-                (raw, normal_form_tk(raw, strip=False)), (raw, expected)
-            )
+            self.assertEqual((raw, normal_form_tk(raw, strip=False)), (raw, expected))
             if expected != ' ':
                 self.assertEqual(
                     (raw, normal_form_tk(raw, strip=True)), (raw, expected)
@@ -581,24 +542,16 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(plural(1, 'Field', inc_n=False), 'Field')
         self.assertEqual(plural(2, 'Field', inc_n=False), 'Fields')
         # inc_n=False with full_plural
-        self.assertEqual(
-            plural(1, 'has', full_plural='have', inc_n=False), 'has'
-        )
-        self.assertEqual(
-            plural(2, 'has', full_plural='have', inc_n=False), 'have'
-        )
+        self.assertEqual(plural(1, 'has', full_plural='have', inc_n=False), 'has')
+        self.assertEqual(plural(2, 'has', full_plural='have', inc_n=False), 'have')
 
     def testOxfordList(self):
         self.assertEqual(oxford_list([]), 'none')
         self.assertEqual(oxford_list(['a']), 'a')
         self.assertEqual(oxford_list(['a', 'b']), 'a and b')
         self.assertEqual(oxford_list(['a', 'b', 'c']), 'a, b, and c')
-        self.assertEqual(
-            oxford_list(['a', 'b'], conjunction='or'), 'a or b'
-        )
-        self.assertEqual(
-            oxford_list(['a', 'b', 'c'], conjunction='or'), 'a, b, or c'
-        )
+        self.assertEqual(oxford_list(['a', 'b'], conjunction='or'), 'a or b')
+        self.assertEqual(oxford_list(['a', 'b', 'c'], conjunction='or'), 'a, b, or c')
 
     def testStringList(self):
         self.assertEqual(string_list([]), 'none')
@@ -606,19 +559,11 @@ class TestXMLGeneration(ReferenceTestCase):
         self.assertEqual(string_list(['a', 'b']), 'a and b')
         # no oxford comma by default
         self.assertEqual(string_list(['a', 'b', 'c']), 'a, b and c')
+        self.assertEqual(string_list(['a', 'b', 'c'], oxford=True), 'a, b, and c')
+        self.assertEqual(string_list(['a', 'b'], conjunction='or'), 'a or b')
+        self.assertEqual(string_list(['a', 'b', 'c'], conjunction='or'), 'a, b or c')
         self.assertEqual(
-            string_list(['a', 'b', 'c'], oxford=True), 'a, b, and c'
-        )
-        self.assertEqual(
-            string_list(['a', 'b'], conjunction='or'), 'a or b'
-        )
-        self.assertEqual(
-            string_list(['a', 'b', 'c'], conjunction='or'),
-            'a, b or c'
-        )
-        self.assertEqual(
-            string_list(['a', 'b', 'c'], conjunction='or', oxford=True),
-            'a, b, or c'
+            string_list(['a', 'b', 'c'], conjunction='or', oxford=True), 'a, b, or c'
         )
 
     def testGloblikeMatch(self):

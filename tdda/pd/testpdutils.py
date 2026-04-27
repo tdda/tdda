@@ -21,8 +21,8 @@ TESTDIR = os.path.join(os.path.dirname(__file__), 'testdata')
 
 
 class TestPandasUtils(ReferenceTestCase):
-
-    df = pd.DataFrame({
+    df = pd.DataFrame(
+        {
             'i': [0, 1, 2],
             'fi': [None, 1, 2],
             'I': pd.Series([None, 1, 2], dtype='Int64'),
@@ -34,33 +34,55 @@ class TestPandasUtils(ReferenceTestCase):
             'd': [None] + [datetime.date(2020, 1, 2)] * 2,
             't': [None] + [datetime.datetime(2020, 1, 2, 12, 34, 56)] * 2,
             'nil': [None] * 3,
-    })
+        }
+    )
 
     def test_first_non_null(self):
         firsts = [first_non_null(self.df[c]) for c in self.df]
-        self.assertEqual(firsts,
-                         [0, 1, 1, 1.5, True, True, 'a', 'a',
-                          datetime.date(2020, 1, 2),
-                          pd.Timestamp('2020-01-02 12:34:56'),
-                          None])
+        self.assertEqual(
+            firsts,
+            [
+                0,
+                1,
+                1,
+                1.5,
+                True,
+                True,
+                'a',
+                'a',
+                datetime.date(2020, 1, 2),
+                pd.Timestamp('2020-01-02 12:34:56'),
+                None,
+            ],
+        )
 
     def test_object_col_underlying_type(self):
         types = [object_col_underlying_type(self.df[c]) for c in self.df]
-        self.assertEqual(types[:-2],
-                         ['int64', 'float64', 'Int64',
-                          'float64',
-                          'bool', 'boolean',
-                          'str', 'string',
-                          'date'])
+        self.assertEqual(
+            types[:-2],
+            [
+                'int64',
+                'float64',
+                'Int64',
+                'float64',
+                'bool',
+                'boolean',
+                'str',
+                'string',
+                'date',
+            ],
+        )
         self.assertTrue(types[-2].startswith('datetime64'))
         self.assertEqual(types[-1], 'NoneType')
 
     def test_find_safe_null_rep(self):
-        df = pd.DataFrame({
-            'a': ['a', 'b', None],
-            'n': [1, 2, 3],
-            'b': [True, False, True],
-        })
+        df = pd.DataFrame(
+            {
+                'a': ['a', 'b', None],
+                'n': [1, 2, 3],
+                'b': [True, False, True],
+            }
+        )
         self.assertEqual(find_safe_null_rep(df), '')  # '' OK
         self.assertEqual(find_safe_null_rep(df, non_ascii=True), '∙')  # '' OK
 
@@ -93,8 +115,6 @@ class TestPandasUtils(ReferenceTestCase):
         df['b'] = [chr(n) for n in range(FIRST_BRAILLE, FIRST_BRAILLE + N)]
         expected = chr(FIRST_BRAILLE + N)
         self.assertEqual(find_safe_null_rep(df), expected)  # first braille
-
-
 
 
 if __name__ == '__main__':

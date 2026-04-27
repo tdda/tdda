@@ -5,12 +5,14 @@ pdmaj = int(pd.__version__.split('.')[0])
 pd3 = pdmaj >= 3
 
 if pd3:
+
     def round_df(df, precision):
         num_cols = df.select_dtypes(include='number').columns
         df = df.copy()
         df[num_cols] = df[num_cols].round(precision)
         return df.reset_index(drop=True)
 else:
+
     def round_df(df, precision):
         return df.round(precision).reset_index(drop=True)
 
@@ -82,8 +84,7 @@ def find_safe_null_rep(df, preferred=None, non_ascii=False):
     In this case, centred dot ('∙', BULLET OPERTOR) or EMPTY SET ('∅')
     are most likely, followed by a 0xA? character.
     """
-    cols = [c for c in df
-            if object_col_underlying_type(df[c]) in ('str', 'string')]
+    cols = [c for c in df if object_col_underlying_type(df[c]) in ('str', 'string')]
     sdf = df[cols]
     standards = NON_ASCII_REPS if non_ascii else NULL_REPS
     for c in (preferred or []) + standards:

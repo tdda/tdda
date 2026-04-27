@@ -14,6 +14,7 @@ version = TDDA_VERSION
 
 def writable_version():
     from tdda.state import get_testing
+
     return TDDA_ZERO_VERSION if get_testing() else version
 
 

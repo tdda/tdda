@@ -4,6 +4,7 @@ import re
 
 from tdda.utils import swap_ext
 
+
 def main():
     seealso = False
     sources = glob.glob('*.1')
@@ -26,6 +27,7 @@ def main():
                             line = line[:p] + '\n'
                 f.write(line)
         print(f'Written {outpath}')
+
 
 def form_outpath(inpath):
     return swap_ext(inpath, 'txt').replace('tdda-', '')

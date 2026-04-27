@@ -3,6 +3,7 @@ import sys
 
 TITLE_RE = r'^.*"([^"]+) manual"\s*$'
 
+
 def main(f, fw):
     out = []
     synopsis = False

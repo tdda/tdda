@@ -40,12 +40,13 @@ def create_parquet_files():
     accounts_files = []
     for name in FILES:
         inpath = os.path.join(TESTDIR, name)
-        outpath = os.path.splitext(inpath)[0] +  '.parquet'
+        outpath = os.path.splitext(inpath)[0] + '.parquet'
         df = default_csv_loader(inpath)
         df.to_parquet(outpath)
         if name.startswith('accounts'):
             accounts_files.extend([inpath, outpath])
     return accounts_files
+
 
 def zip_for_examples(accounts_files):
     zippath = os.path.join(EXAMPLESDIR, 'accounts.zip')
@@ -60,9 +61,11 @@ def zip_for_examples(accounts_files):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1] != '-f':
-        print('USAGE: python create_parquet_examples.py -f.\n'
-              'Only run this if you really know what you\'re doing!',
-              file=sys.stderr)
+        print(
+            'USAGE: python create_parquet_examples.py -f.\n'
+            "Only run this if you really know what you're doing!",
+            file=sys.stderr,
+        )
         sys.exit(1)
     files = create_parquet_files()
     zip_for_examples(files)

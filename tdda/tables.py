@@ -41,11 +41,7 @@ def colour_class(fn):
     if fn is not None and fn != 'None' and cls is None:
         raise TDDAError(
             ('Unknown text colour function %s.\nFunctions available:\n' % fn)
-            + (
-                '\n'.join(
-                    '    %s: %s' % (k, v.__doc__) for (k, v) in fns.items()
-                )
-            )
+            + ('\n'.join('    %s: %s' % (k, v.__doc__) for (k, v) in fns.items()))
         )
     return cls
 
@@ -251,13 +247,9 @@ class Table:
 
     def AddIndex(self, colName='Index', first=1):
         self.header = [colName] + self.header
-        self.rows = [
-            [f'{i + first:,}'] + row for i, row in enumerate(self.rows)
-        ]
+        self.rows = [[f'{i + first:,}'] + row for i, row in enumerate(self.rows)]
 
-        self.cellValues = [
-            [i + first] + vals for i, vals in enumerate(self.cellValues)
-        ]
+        self.cellValues = [[i + first] + vals for i, vals in enumerate(self.cellValues)]
 
     def Annotate(self, annotation):
         if type(annotation) == str:
@@ -295,9 +287,7 @@ class Table:
         uHeader = header if not transpose else []
         if uHeader:
             headerWidths = [len(h) for h in uHeader]
-            fullColWidths = [
-                max(h, c) for h, c in zip(headerWidths, colWidths)
-            ]
+            fullColWidths = [max(h, c) for h, c in zip(headerWidths, colWidths)]
         else:
             fullColWidths = colWidths
 
@@ -306,9 +296,7 @@ class Table:
             if self.gridlines:
                 sep = '|' if self.gridlines == 1 else ' | '
                 pad = 2 if self.gridlines == 2 else 0
-                interline = '+%s+' % '+'.join(
-                    '-' * (c + pad) for c in fullColWidths
-                )
+                interline = '+%s+' % '+'.join('-' * (c + pad) for c in fullColWidths)
                 pre = '|' if self.gridlines == 1 else '| '
                 post = '|' if self.gridlines == 1 else ' |'
             if self.groupHeader is not None and not transpose:
@@ -337,20 +325,14 @@ class Table:
             else:
                 sign = '-' if self.justify == 'l' else ''
                 sign = [sign] * len(colWidths)
-                colFormat = [
-                    '%%%s%ds' % (sf, w) for sf, w in zip(sign, colWidths)
-                ]
+                colFormat = ['%%%s%ds' % (sf, w) for sf, w in zip(sign, colWidths)]
             for row2D in u2Drows:
                 if self.gridlines:
                     s.append(interline)
-                nOutRows = (
-                    max(len(rows) for rows in row2D) if row2D else 1
-                ) or 1
+                nOutRows = (max(len(rows) for rows in row2D) if row2D else 1) or 1
                 z = list(zip(colFormat, row2D))
                 for i in range(nOutRows):
-                    line = sep.join(
-                        f % (c[i] if len(c) > i else '') for f, c in z
-                    )
+                    line = sep.join(f % (c[i] if len(c) > i else '') for f, c in z)
                     if self.gridlines:
                         s.append(pre + line + post)
                     else:
@@ -382,9 +364,7 @@ class Table:
             print([type(S) for S in s])
             raise
 
-    def toMarkdown(
-        self, format=True, transpose=False, flavour='github', pretty=True
-    ):
+    def toMarkdown(self, format=True, transpose=False, flavour='github', pretty=True):
         """
         Creates a markdown version of the table
         """
@@ -408,17 +388,13 @@ class Table:
         uHeader = header if not transpose else []
         if uHeader:
             headerWidths = [len(h) for h in uHeader]
-            fullColWidths = [
-                max(h, c) for h, c in zip(headerWidths, colWidths)
-            ]
+            fullColWidths = [max(h, c) for h, c in zip(headerWidths, colWidths)]
             fullColWidths = [max(3, f) for f in fullColWidths]
         else:
             fullColWidths = colWidths
 
         if flavour == 'mmd':
-            inner = sep.join(
-                mmd_justify_marker(c, justify) for c in fullColWidths
-            )
+            inner = sep.join(mmd_justify_marker(c, justify) for c in fullColWidths)
         else:  # currently flavour == 'github':
             inner = sep.join('-' * c for c in fullColWidths)
         interline = pre + inner + post
@@ -448,18 +424,12 @@ class Table:
                 s.append(interline)
                 sign = '-' if self.justify == 'l' else ''
                 sign = [sign] * len(colWidths)
-                colFormat = [
-                    '%%%s%ds' % (sf, w) for sf, w in zip(sign, colWidths)
-                ]
+                colFormat = ['%%%s%ds' % (sf, w) for sf, w in zip(sign, colWidths)]
             for row2D in u2Drows:
-                nOutRows = (
-                    max(len(rows) for rows in row2D) if row2D else 1
-                ) or 1
+                nOutRows = (max(len(rows) for rows in row2D) if row2D else 1) or 1
                 z = list(zip(colFormat, row2D))
                 for i in range(nOutRows):
-                    line = sep.join(
-                        f % (c[i] if len(c) > i else '') for f, c in z
-                    )
+                    line = sep.join(f % (c[i] if len(c) > i else '') for f, c in z)
                     s.append(pre + line + post)
         else:
             sep = ' '
@@ -494,9 +464,7 @@ class Table:
         uHeader = header if not transpose else []
         if uHeader:
             headerWidths = [len(h) for h in uHeader]
-            fullColWidths = [
-                max(h, c) for h, c in zip(headerWidths, colWidths)
-            ]
+            fullColWidths = [max(h, c) for h, c in zip(headerWidths, colWidths)]
         else:
             fullColWidths = colWidths
         return fullColWidths
@@ -532,9 +500,7 @@ class Table:
         for row in self.rows:
             uRow = list([u.splitlines() for u in row])  # list of lists
             for i, cell in enumerate(uRow):
-                colWidths[i] = max(
-                    max(f(c) for c in cell) if cell else 0, colWidths[i]
-                )
+                colWidths[i] = max(max(f(c) for c in cell) if cell else 0, colWidths[i])
             u2Drows.append(uRow)
         return u2Drows, colWidths
 
@@ -652,11 +618,7 @@ class Table:
             return
 
         if row is not None:
-            if (
-                not self.repeatHeader
-                or row == 0
-                or (row % self.repeatHeader != 0)
-            ):
+            if not self.repeatHeader or row == 0 or (row % self.repeatHeader != 0):
                 return
 
         if self.groupHeader is not None:
@@ -708,11 +670,7 @@ class Table:
             h.CloseElement('tr')
 
     def AddHeaderHover(self, a, i):
-        if (
-            self.headerHovers
-            and len(self.headerHovers) > i
-            and self.headerHovers[i]
-        ):
+        if self.headerHovers and len(self.headerHovers) > i and self.headerHovers[i]:
             a.append(('title', self.headerHovers[i]))
 
     def DoHTMLTable(self, h, useBGColour=True):
@@ -815,9 +773,7 @@ class Table:
         attr, classSet = self.AnyExplicitClassAttributes(i, j, cs, cf)
         if self.HandleURLs(h, v, attr):
             return
-        if useBGColour and (
-            (not cf[j]) if self.forceBGColour and cf else not cf
-        ):
+        if useBGColour and ((not cf[j]) if self.forceBGColour and cf else not cf):
             # i.e. if any coloured text function, no coloured backgrounds
             # anywhere in table, unless forced, in which case columns without
             # colour-text will be background-coloured.
@@ -976,13 +932,8 @@ def TableFromList(list_, command, nCols=4):
     N = len(list_)
     values = list_ + [''] * ((nCols - (N % nCols)) if (N % nCols) else 0)
     nRows = len(values) // nCols
-    rows = [
-        [values[row * nCols + col] for col in range(nCols)]
-        for row in range(nRows)
-    ]
-    return Table(
-        None, rows, attr={'class': 'clicklist'}, command=command, justify='l'
-    )
+    rows = [[values[row * nCols + col] for col in range(nCols)] for row in range(nRows)]
+    return Table(None, rows, attr={'class': 'clicklist'}, command=command, justify='l')
 
 
 def EmptyTable():

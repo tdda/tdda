@@ -40,6 +40,7 @@ def copy_examples(name, destination='.', verbose=True):
     shutil.rmtree(outdir, ignore_errors=True)
     if name == 'book':
         import requests
+
         if verbose:
             print('Fetching book examples...,')
         zip_path = os.path.join(destination, 'book_examples.zip')
