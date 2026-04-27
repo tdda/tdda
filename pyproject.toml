@@ -51,6 +51,7 @@ skip-string-normalization = true
 include = '\.pyi?$'
 
 [tool.ruff]
+line-length = 79
 exclude = [
     "tdda/serial/testdata",
     "tdda/serial/examples",

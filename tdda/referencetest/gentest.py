@@ -19,8 +19,6 @@ import timeit
 
 from collections import OrderedDict
 
-is_python3 = sys.version_info.major >= 3
-actual_input = input if is_python3 else raw_input
 
 from tdda.referencetest.gentest_boilerplate import HEADER, TAIL
 
@@ -1424,7 +1422,7 @@ def getline(prompt='', empty_ok=True, default=None):
     while not done:
         if prompt:
             print(prompt + ((' [%s]:' % default) if default else ':'), end=' ')
-        line = actual_input().strip()
+        line = input().strip()
         if line == '' and default:
             line = default
         done = empty_ok or line

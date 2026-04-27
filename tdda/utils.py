@@ -302,7 +302,7 @@ class XML:
         if urlsafe:
             self.xmlbuf.append('<![CDATA[' + str(encode_uri_component(content)) + ']]>')
         else:
-            content = UnicodeDefinite(content)
+            content = unicode_definite(content)
             self.xmlbuf.append('<![CDATA[' + content + ']]>')
         if leave == 'close':
             self.xmlbuf.append('</' + name + '>\n')
@@ -1260,3 +1260,7 @@ def valid_level(level):
             f'or loose(/permissive), not {level}'
         )
     return level
+
+
+def unicode_definite(s):
+    return s.decode('UTF-8') if type(s) == bytes else s

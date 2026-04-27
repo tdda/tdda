@@ -37,7 +37,7 @@ from tdda.constraints.base import (
     DatasetConstraints,
     Fields,
     FieldConstraints,
-    native_definite,
+    unicode_definite,
     NativeDefiniteObject,
     fuzzy_less_than,
     fuzzy_greater_than,
@@ -72,8 +72,6 @@ TDDA_MD_IGNORES = [
 ]
 
 
-isPython2 = sys.version_info[0] < 3
-
 SMALL = 2.48e-324
 MILLION = 1000 * 1000
 REAL_MILLION = 1000 * 1000.0
@@ -96,7 +94,7 @@ DATES = (
     datetime.datetime.now(datetime.timezone.utc),
 )
 OTHERS = (3 + 4j, lambda x: 1, [], (), {}, Exception) + (
-    ('u',) if isPython2 else (b'u',)
+    (b'u',)
 )
 
 E118_SUMMARY = """
@@ -1209,7 +1207,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             }
         }
         constraints = DatasetConstraints()
-        constraints.initialize_from_dict(native_definite(cdict))
+        constraints.initialize_from_dict(unicode_definite(cdict))
         v = verify(df, cdict, repair=False)
         self.assertFalse(v.fields['a']['type'])
         self.assertFalse(v.fields['a']['sign'])
@@ -1226,7 +1224,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             }
         }
         constraints = DatasetConstraints()
-        constraints.initialize_from_dict(native_definite(cdict))
+        constraints.initialize_from_dict(unicode_definite(cdict))
         v = verify(df, cdict, repair=False)
         self.assertFalse(v.fields['a']['type'])
         self.assertFalse(v.fields['a']['min_length'])
@@ -1250,7 +1248,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             }
         }
         constraints = DatasetConstraints()
-        constraints.initialize_from_dict(native_definite(cdict))
+        constraints.initialize_from_dict(unicode_definite(cdict))
         v = detect(
             df,
             cdict,
@@ -1282,7 +1280,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
         for cdict in cdicts:
             constraints = DatasetConstraints()
             with self.assertRaises(Exception):
-                constraints.initialize_from_dict(native_definite(cdict))
+                constraints.initialize_from_dict(unicode_definite(cdict))
                 v = verify(df, cdict, repair=False)
 
 
@@ -1678,10 +1676,10 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
             old_refjson = f.read()
         with open(new_ref_constraints_path) as f:
             new_refjson = f.read()
-        old_ref = native_definite(json.loads(old_refjson))
-        new_ref = native_definite(json.loads(new_refjson))
+        old_ref = unicode_definite(json.loads(old_refjson))
+        new_ref = unicode_definite(json.loads(new_refjson))
         constraints = discover(df, inc_rex=inc_rex, group_rexes=True, verbose=False)
-        discovered = native_definite(json.loads(constraints.to_json()))
+        discovered = unicode_definite(json.loads(constraints.to_json()))
         discovered_fields = discovered['fields']
         old_ref_fields = old_ref['fields']
         new_ref_fields = new_ref['fields']
@@ -2100,7 +2098,7 @@ def rmdirs(parent, dirs):
 
 def check_shell_output(args):
     result = subprocess.check_output(NativeDefiniteObject(args))
-    return native_definite(result).replace('\r', '')
+    return unicode_definite(result).replace('\r', '')
 
 
 if __name__ == '__main__':

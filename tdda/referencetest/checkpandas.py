@@ -21,7 +21,7 @@ from tdda.referencetest.diffutils import (
     single_col_diffs,
 )
 from tdda.serial.pandasio import csv_to_pandas, pandas_read_df, infer_dates
-from tdda.utils import debug
+from tdda.utils import debug, unicode_definite
 
 from tdda.pd.utils import is_string_col, first_non_null, round_df
 
@@ -389,9 +389,6 @@ def bytes_to_unicode(df, bytes_cols):
             cols[unicode_definite(c)] = df[c]
     return pd.DataFrame(cols, index=df.index.copy())
 
-
-def unicode_definite(s):
-    return s if type(s) == str else s.decode('UTF-8')
 
 
 def sample_format2(values, precision=None):

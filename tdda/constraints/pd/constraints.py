@@ -43,7 +43,7 @@ from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
     STANDARD_CONSTRAINT_SUFFIXES,
     CONSTRAINT_SUFFIX_MAP,
-    native_definite,
+    unicode_definite,
     DatasetConstraints,
     Verification,
     Detection,
@@ -94,8 +94,6 @@ if hasattr(pd, 'Timestamp'):
     pandas_Timestamp = pd.Timestamp
 else:
     pandas_Timestamp = pd.tslib.Timestamp
-
-isPy3 = sys.version_info[0] >= 3
 
 DEBUG = False
 RE_FLAGS = re.UNICODE | re.DOTALL
@@ -148,16 +146,10 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return M
 
     def calc_min_length(self, colname):
-        if isPy3:
-            return self.df[colname].str.len().min()
-        else:
-            return self.df[colname].str.decode('UTF-8').str.len().min()
+        return self.df[colname].str.len().min()
 
     def calc_max_length(self, colname):
-        if isPy3:
-            return self.df[colname].str.len().max()
-        else:
-            return self.df[colname].str.decode('UTF-8').str.len().max()
+        return self.df[colname].str.len().max()
 
     def calc_tdda_type(self, colname):
         return pandas_tdda_type(self.df[colname])
@@ -211,7 +203,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             return None  # to be an active constraint,
             # so is always satisfied
         rexes = [re.compile(r, RE_FLAGS) for r in rexes]
-        strings = [native_definite(s) for s in self.df[colname].dropna().unique()]
+        strings = [unicode_definite(s) for s in self.df[colname].dropna().unique()]
 
         failures = set()
         for s in strings:
@@ -907,7 +899,7 @@ def verify_df(
     pdv = PandasConstraintVerifier(df, epsilon=epsilon, type_checking=type_checking)
     if isinstance(constraints_path, dict):
         constraints = DatasetConstraints()
-        constraints.initialize_from_dict(native_definite(constraints_path))
+        constraints.initialize_from_dict(unicode_definite(constraints_path))
     else:
         constraints = DatasetConstraints(loadpath=constraints_path)
     if repair and backend == OG_BACKEND:

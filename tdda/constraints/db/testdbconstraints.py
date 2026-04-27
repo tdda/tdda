@@ -86,9 +86,6 @@ if pgdb and not os.path.exists(POSTGRES_CONN_FILE):
 if MySQLdb and not os.path.exists(MYSQL_CONN_FILE):
     print('Skipping MySQL because no connection file exists at %s.' % MYSQL_CONN_FILE)
 
-isPython2 = sys.version_info[0] < 3
-
-
 class TestDatabaseHandlers:
     """
     Mix-in class, to be used in a subclass that also inherits ReferenceTestCase
@@ -191,14 +188,9 @@ class TestDatabaseConstraintDiscoverers:
         j = constraints.to_json()
         # compare against the right expected file, depending on whether the
         # version of python we're running under has escaped commas or not.
-        if isPython2:
-            expected_file = (
-                'elements118oldrex.tdda' if '\\,' in j else 'elements118rex.tdda'
-            )
-        else:
-            expected_file = (
-                'elements118oldrex-3.tdda' if '\\,' in j else 'elements118rex-3.tdda'
-            )
+        expected_file = (
+            'elements118oldrex-3.tdda' if '\\,' in j else 'elements118rex-3.tdda'
+        )
         self.assertStringCorrect(
             j,
             expected_file,

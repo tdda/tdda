@@ -50,10 +50,6 @@ from tdda.utils import (
 from tdda import rexpy
 
 
-if sys.version_info[0] >= 3:
-    long = int
-
-
 SIGN_OP = {
     'positive': '>',
     'non-negative': '>=',
@@ -570,8 +566,8 @@ def types_compatible(x, y, colname):
     If *colname* is provided, and the check fails, a warning is issued
     to stderr.
     """
-    tx = int if type(x) is long else type(x)
-    ty = int if type(y) is long else type(y)
+    tx = type(x)
+    ty = type(y)
     ok = tx == ty
     if not ok and colname:
         print(

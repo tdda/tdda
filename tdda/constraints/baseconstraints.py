@@ -16,7 +16,7 @@ from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
     verify,
     detect,
-    native_definite,
+    unicode_definite,
     DatasetConstraints,
     FieldConstraints,
     Verification,

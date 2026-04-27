@@ -22,10 +22,7 @@ from tdda import __version__
 from tdda.utils import nvl, TDDAError
 
 
-isPython2 = sys.version_info[0] < 3
-str_type = unicode if isPython2 else str
-bytes_type = str if isPython2 else bytes
-INT_ARRAY = b'i' if sys.version_info[0] < 3 else 'i'
+INT_ARRAY = 'i'
 UNESCAPES = """!"%',/:;<=>@_` """
 
 VERBOSITY_LEVEL_RE = r'^-v(-?[0-9]+)$'
@@ -1468,7 +1465,7 @@ class Extractor(object):
             return self.examples.n_strings
 
     def __str__(self):
-        return str_type(self.results or 'No results (yet)')
+        return str(self.results or 'No results (yet)')
 
     def build_tree(self, vrles):
         fulls = vrles[:]
@@ -2262,7 +2259,7 @@ def pdextract(cols, seed=None):
     try:
         return extract(strings, seed=seed)
     except:
-        if not all(type(s) == str_type for s in strings):
+        if not all(type(s) == str for s in strings):
             raise ValueError('Non-null, non-string values found in input.')
         else:
             raise
@@ -2450,7 +2447,7 @@ def rexpy_streams(
         if show_pp:
             print('Ingesting strings')
         strings = [s.strip() for s in sys.stdin.readlines()]
-        if strings and type(strings[0]) == bytes_type:
+        if strings and type(strings[0]) == bytes:
             strings = [s.decode('UTF-8') for s in strings]
         if show_pp:
             print('Ingested strings.')

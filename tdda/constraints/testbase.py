@@ -30,8 +30,6 @@ from tdda.constraints.base import (
     InvalidConstraintSpecification,
 )
 
-isPython2 = sys.version_info[0] < 3
-
 TESTDATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'testdata')
 
 
@@ -96,20 +94,12 @@ class TestConstraints(ReferenceTestCase):
             self.assertEqual(constraint_class(k), v)
 
     def testBadConstraints(self):
-        if isPython2:
-            self.assertRaisesRegexp(
-                TypeError,
-                'unexpected keyword',
-                SignConstraint,
-                precision='closed',
-            )
-        else:
-            self.assertRaisesRegex(
-                TypeError,
-                'unexpected keyword',
-                SignConstraint,
-                precision='closed',
-            )
+        self.assertRaisesRegex(
+            TypeError,
+            'unexpected keyword',
+            SignConstraint,
+            precision='closed',
+        )
         self.assertRaises(
             InvalidConstraintSpecification,
             MinConstraint,
