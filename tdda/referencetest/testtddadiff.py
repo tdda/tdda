@@ -44,6 +44,9 @@ DOCDIR = os.path.join(BASEDIR, 'doc')  # tdda/doc
 SVGDIR = os.path.join(DOCDIR, 'svg', 'diff')  # tdda/doc/svg/diff
 
 
+# rich changed table title centering between versions; ignore the title line
+RICH_TITLE_PAT = ['Value Differences (all rows with differences)']
+
 GENSVG = 'GENSVG' in os.environ  # Set env var GENSVG to regenerate SVG output
 if GENSVG:
     rprint(
@@ -98,7 +101,8 @@ class TestTDDADiff(ReferenceTestCase):
             console.save_svg(
                 svgpath(filename), title=title, theme=DIMMED_MONOKAI
             )
-        self.assertStringCorrect(actual, expected)
+        self.assertStringCorrect(actual, expected,
+                                 ignore_lines=RICH_TITLE_PAT)
         return actual
 
     # IDENTICAL FILES a vs a
@@ -185,6 +189,7 @@ class TestTDDADiff(ReferenceTestCase):
 
     # DATE DIFFERENCES
 
+    @tag
     def test_a_csv_d_csv(self):
         """One different date value: fails"""
         actual = self.difftest('a.csv', 'd.csv')
@@ -194,38 +199,46 @@ class TestTDDADiff(ReferenceTestCase):
 
     # DIFFERENT NUMBER OF ROWS
 
+    @tag
     def test_a_csv_f5_tsv(self):
         """One extra row"""
         actual = self.difftest('a.csv', 'f5.tsv', width=154)
 
+    @tag
     def test_a_csv_f5_3f_tsv(self):
         """One extra row and 2 diffs"""
         actual = self.difftest('a.csv', 'f5-3d.tsv', width=164)
 
+    @tag
     def test_f5_3f_tsv_a_csv(self):
         """One extra row and 2 diffs, reversed"""
         actual = self.difftest('f5-3d.tsv', 'a.csv', width=164)
 
+    @tag
     def test_a_csv_f5_3f_tsv_vertical(self):
         """One extra row"""
         self.difftest('a.csv', 'f5-3d.tsv', ['--vertical'], width=82)
         # test against same file
         self.difftest('a.csv', 'f5-3d.tsv', ['-V'], '--vertical', width=82)
 
+    @tag
     def test_a_tsv_f5_tsv_join(self):
         """One extra row, with join key"""
         self.difftest('a.csv', 'f5.tsv', ['--key', 'row'], width=120)
 
+    @tag
     def test_a_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
         self.difftest(
             'a.csv', 'f5.tsv', ['--key', 'row', '--polars'], width=120
         )
 
+    @tag
     def test_f5_3d_tsv_a_tsv_join(self):
         """One extra row, with join key"""
         self.difftest('f5-3d.tsv', 'a.tsv', ['--key', 'row'], width=130)
 
+    @tag
     def test_f5_3d_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
         self.difftest(

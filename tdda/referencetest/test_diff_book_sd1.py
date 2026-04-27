@@ -10,7 +10,7 @@ import os
 import sys
 import tempfile
 
-from tdda.referencetest import ReferenceTestCase
+from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.gentest import exec_command
 
 
@@ -31,9 +31,11 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
     def test_exit_code(self):
         self.assertEqual(self.exit_code, 0)
 
+    @tag
     def test_stdout(self):
         self.assertStringCorrect(
-            self.output, os.path.join(self.refdir, 'STDOUT')
+            self.output, os.path.join(self.refdir, 'STDOUT'),
+            ignore_lines=[r'Value Differences (all rows with differences)'],
         )
 
     def test_stderr(self):
