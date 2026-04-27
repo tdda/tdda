@@ -154,8 +154,8 @@ def main_with_argv(argv, verbose=True):
     elif name == 'examples':
         items = ['referencetest', 'constraints', 'rexpy', 'gentest']
         args = argv[2:]
+        outdir = '.'
         if args:
-            outdir = '.'
             if 'all' in args:
                 items.append('book')
             else:

@@ -536,6 +536,7 @@ class BaseComparison:
         sortby=None,
         precision=6,
         type_matching=None,
+        fuzzy_nulls=False,
         msgs=None,
         **kwargs,
     ):
@@ -606,6 +607,7 @@ class BaseComparison:
             sortby=sortby,
             precision=precision,
             type_matching=type_matching,
+            fuzzy_nulls=fuzzy_nulls,
             msgs=msgs,
         )
 
@@ -621,6 +623,7 @@ class BaseComparison:
         condition=None,
         sortby=None,
         type_matching=None,
+        fuzzy_nulls=False,
         msgs=None,
         **kwargs,
     ):
@@ -696,6 +699,7 @@ class BaseComparison:
                     check_order=check_order,
                     sortby=sortby,
                     type_matching=type_matching,
+                    fuzzy_nulls=fuzzy_nulls,
                     condition=condition,
                     msgs=msgs,
                     **kwargs,

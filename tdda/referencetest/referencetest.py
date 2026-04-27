@@ -447,6 +447,10 @@ class ReferenceTest(object):
                 loader=csv_read_fn,
                 backend=backend,
             )
+            if type_matching is None and not str(expected_path).lower().endswith(
+                '.parquet'
+            ):
+                type_matching = 'medium'
             self.assertDataFramesEqual(
                 df,
                 ref_df,
@@ -477,6 +481,7 @@ class ReferenceTest(object):
         sortby=None,
         precision=None,
         type_matching=None,
+        fuzzy_nulls=False,
         engine=None,
         **kwargs,
     ):
@@ -535,6 +540,10 @@ class ReferenceTest(object):
                 actual_path, expected_path
             )
         else:
+            if type_matching is None and not str(expected_path).lower().endswith(
+                '.parquet'
+            ):
+                type_matching = 'medium'
             r = lib.check_serialized_dataframe(
                 actual_path,
                 expected_path,
@@ -545,6 +554,7 @@ class ReferenceTest(object):
                 sortby=sortby,
                 precision=precision,
                 type_matching=type_matching,
+                fuzzy_nulls=fuzzy_nulls,
                 loader=csv_read_fn,
                 **kwargs,
             )
