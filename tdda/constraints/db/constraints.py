@@ -392,7 +392,7 @@ SELECT * FROM DETECTED
                 f'({field} NOT IN ({", ".join(squote(x) for x in val)}){andnn}'
             )
         if kind == 'rex':
-            rex_sql = rex_match_sql(field, v)
+            rex_sql = self.rex_match_sql(field, val)
             if rex_sql:
                 return a(f'{rex_sql} {andnn}')
             else:
