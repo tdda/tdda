@@ -192,9 +192,7 @@ class CSVWMetadata(SerialMetadata):
                 else:
                     fmt = self.date_format
             if fmt:
-                csvw_fmt = serial_date_format_to_csvw(
-                    fmt, fieldtype=field.fieldtype
-                )
+                csvw_fmt = serial_date_format_to_csvw(fmt, fieldtype=field.fieldtype)
                 if csvw_type is not None and csvw_fmt is not None:
                     d['datatype'] = {'base': csvw_type, 'format': csvw_fmt}
                 else:
@@ -206,9 +204,7 @@ class CSVWMetadata(SerialMetadata):
                 self.true_values if field.fieldtype == FieldType.BOOL else None
             )
             false_vals = field.false_values or (
-                self.false_values
-                if field.fieldtype == FieldType.BOOL
-                else None
+                self.false_values if field.fieldtype == FieldType.BOOL else None
             )
             if true_vals and false_vals:
                 csvw_fmt = booleans_to_csvw(true_vals, false_vals)
@@ -221,9 +217,7 @@ class CSVWMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'dc:description', 'description')
         return d
 
-    def to_csvw_json(
-        self, csvfile=None, lang=None, indent=4, resource_type=None
-    ):
+    def to_csvw_json(self, csvfile=None, lang=None, indent=4, resource_type=None):
         csvfile = nvl(csvfile, nvl(self._url, 'data.csv'))
         dialect = {}
 
@@ -330,11 +324,7 @@ class CSVWMetadata(SerialMetadata):
             tables = self._csvw.get('tables')
             if tables:
                 N = self.n_tables = len(tables)
-                if (
-                    N > 1
-                    and self.table_number is None
-                    and not self.for_table_name
-                ):
+                if N > 1 and self.table_number is None and not self.for_table_name:
                     self.warn(f'Only processing first table of {N}.')
                 name = self.for_table_name
                 if name:
@@ -367,9 +357,7 @@ class CSVWMetadata(SerialMetadata):
             )
 
         if type(self._schema) is str:
-            path = os.path.join(
-                nvl(self._metadata_source_dir, ''), self._schema
-            )
+            path = os.path.join(nvl(self._metadata_source_dir, ''), self._schema)
             with open(path) as f:
                 self._schema = json.load(f)
 
@@ -419,9 +407,7 @@ class CSVWMetadata(SerialMetadata):
         if context == CSVW.CONTEXT:
             self._metadata_source = context
         else:
-            self.warn(
-                'Unexpected value "{context}" for purported CSVW source.'
-            )
+            self.warn('Unexpected value "{context}" for purported CSVW source.')
         if properties:
             self._csvw_base_url = properties.get('@base')
             self._csvw_language = properties.get('@language')
@@ -516,9 +502,7 @@ class CSVWMetadata(SerialMetadata):
         self.skip_columns = self.get_val(dialect, 'skipCols')
         header_row_count = self.get_val(dialect, 'headerRowCount')
         header = self.get_val(dialect, 'header')
-        self.header_row_count = (
-            0 if header == False else nvl(header_row_count, 1)
-        )
+        self.header_row_count = 0 if header == False else nvl(header_row_count, 1)
 
         # Allowed to be a boolean or string value. If string:
         # string value: true false, start, end
@@ -527,8 +511,7 @@ class CSVWMetadata(SerialMetadata):
         if self.trim is not None:
             if self.trim not in (True, False, 'true', 'false', 'start', 'end'):
                 self.warn(
-                    f'Illegal value "{self.trim}" for delect attribute '
-                    '"trim". Ignoring'
+                    f'Illegal value "{self.trim}" for delect attribute "trim". Ignoring'
                 )
                 self.trim = None
         if self.trim == 'true':
@@ -566,9 +549,7 @@ class CSVWMetadata(SerialMetadata):
             if datatype:
                 if isinstance(datatype, dict):
                     fmt = datatype.get('format')
-                    fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(
-                        datatype.get('base')
-                    )
+                    fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(datatype.get('base'))
                 else:
                     fieldtype = CSVW_TYPE_TO_FIELDTYPE.get(datatype)
                 field.fieldtype = fieldtype
@@ -579,9 +560,7 @@ class CSVWMetadata(SerialMetadata):
             if fmt:
                 if fieldtype and fieldtype.startswith('date'):
                     self._csvw_date_format = fmt
-                    fmt = csvw_date_format_to_serial(
-                        fmt, extensions=self._extensions
-                    )
+                    fmt = csvw_date_format_to_serial(fmt, extensions=self._extensions)
                 field.format = fmt
             elif fieldtype and fieldtype.startswith('date'):
                 pass

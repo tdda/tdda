@@ -311,15 +311,9 @@ class TestPandasLoad(ReferenceTestCase):
                 'b2': pd.Series([False, False, np.nan], dtype='boolean'),
                 's1': pd.Series(['hello', pd.NA, 'goodbye'], dtype='string'),
                 's2': pd.Series(['àçéèïöô', 'aceeioo', pd.NA], dtype='string'),
-                'dti': pd.Series(
-                    [dt_m1, pd.NaT, dt_333333], dtype='datetime64[ns]'
-                ),
-                'dte': pd.Series(
-                    [dt_m1, dt_222222, pd.NaT], dtype='datetime64[ns]'
-                ),
-                'dtu': pd.Series(
-                    [dt_m1, pd.NaT, dt_543_321], dtype='datetime64[ns]'
-                ),
+                'dti': pd.Series([dt_m1, pd.NaT, dt_333333], dtype='datetime64[ns]'),
+                'dte': pd.Series([dt_m1, dt_222222, pd.NaT], dtype='datetime64[ns]'),
+                'dtu': pd.Series([dt_m1, pd.NaT, dt_543_321], dtype='datetime64[ns]'),
                 'di': pd.Series([d_m1, d_212, pd.NaT], dtype='datetime64[ns]'),
                 'de': pd.Series([d_m1, pd.NaT, d_333], dtype='datetime64[ns]'),
                 'du': pd.Series([d_m1, d_212, pd.NaT], dtype='datetime64[ns]'),
@@ -339,9 +333,7 @@ class TestPandasLoad(ReferenceTestCase):
         # No date parsing so all date/datetime fields end up as strings
         csvpath = os.path.join(TESTDATADIR, 'small.csv')
         df = pd.read_csv(csvpath)
-        self.assertDataFramesEqual(
-            df, self.default_read_csv_df, type_matching='medium'
-        )
+        self.assertDataFramesEqual(df, self.default_read_csv_df, type_matching='medium')
 
     def test_csvw_load_small(self):
         # Test loading of small.csv with correct CSVW associated
@@ -542,9 +534,7 @@ class TestPandasLoad(ReferenceTestCase):
 
     def test_load_base_csv_with_pandas_serial_dot_null(self):
         # Using ∙ (bullet operator) as null marker
-        df = csv_to_pandas(
-            epath('base-dot-null.csv'), epath('base-dot-csv.serial')
-        )
+        df = csv_to_pandas(epath('base-dot-null.csv'), epath('base-dot-csv.serial'))
         diffs = pd_diff(
             df,
             self.ref_base_df,
@@ -557,9 +547,7 @@ class TestPandasLoad(ReferenceTestCase):
 
 class TestPandasCSVWTests(ReferenceTestCase):
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
-    parquet_d = os.path.join(
-        os.path.dirname(__file__), 'testdata/csvw-parquet'
-    )
+    parquet_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw-parquet')
 
     def fullpath(self, path):
         return os.path.normpath(os.path.join(self.csvw_d, path))
@@ -896,8 +884,7 @@ class TestPandasCSVWTests(ReferenceTestCase):
             'trim_cycle',
             'inventory_date',
         ]
-        ref_df = csvw_bare_json_to_df(resultspath, fields,
-                                       to_dates=['inventory_date'])
+        ref_df = csvw_bare_json_to_df(resultspath, fields, to_dates=['inventory_date'])
         self.assertDataFramesEqual(df, ref_df, type_matching='medium')
 
     def test028(self):
@@ -953,9 +940,7 @@ class TestPandasCSVWTests(ReferenceTestCase):
         df2 = csv_to_pandas(slice_csvpath, md_path, table_number=1)
         slice_fields = fields_from(slice_csvpath)
         ref_df2 = csvw_json_to_df(resultspath, slice_fields, table_number=1)
-        ref_df2['countryRef'] = ref_df2['countryRef'].apply(
-            lambda s: s.split('#')[-1]
-        )
+        ref_df2['countryRef'] = ref_df2['countryRef'].apply(lambda s: s.split('#')[-1])
         self.assertDataFramesEqual(df2, ref_df2, type_matching='medium')
 
     # def test031(self):
@@ -990,8 +975,9 @@ class TestPandasCSVWTests(ReferenceTestCase):
             return_md=True,
             verbosity=1,
         )
-        self.assertDataFrameCorrect(sdf, pqp(f'{test}-senior-roles.parquet'),
-                                    type_matching='loose')
+        self.assertDataFrameCorrect(
+            sdf, pqp(f'{test}-senior-roles.parquet'), type_matching='loose'
+        )
 
         jdf = csv_to_pandas(
             f(f'{test}/junior-roles.csv'),
@@ -1042,9 +1028,7 @@ class TestPandasCSVWTests(ReferenceTestCase):
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False, to_ints=None):
         csvpath, resultspath = self.csv_json_paths(stem)
-        df = csv_to_pandas(
-            csvpath, upgrade_possible_ints=upgrade_possible_ints
-        )
+        df = csv_to_pandas(csvpath, upgrade_possible_ints=upgrade_possible_ints)
         fields = fields_from(csvpath)
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
         # self.assertDataFramesEqual(df, ref_df)
@@ -1238,9 +1222,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-        pandas_to_csv(
-            df, csv_path, md_outpath=md_path, flavour=PANDAS2, index=True
-        )
+        pandas_to_csv(df, csv_path, md_outpath=md_path, flavour=PANDAS2, index=True)
         self.assertFileCorrect(csv_path, tdpath('tiny1cn-pandas.csv'))
         self.assertFileCorrect(
             md_path,
@@ -1369,9 +1351,7 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         diffs = diff_dataframes(df2, df, create_temporaries=False)
         self.assertEqual(diffs.failures, 1)  # types
         msg = str(diffs.diffs)
-        self.assertTrue(
-            msg.startswith('Data frames have different column structure.')
-        )
+        self.assertTrue(msg.startswith('Data frames have different column structure.'))
         diffs2 = diff_dataframes(df2, df, type_matching='medium')
         self.assertEqual(diffs2.failures, 0)
 
@@ -1383,9 +1363,7 @@ class TestPandasParquetRoundTrips(ReferenceTestCase):
         diffs = diff_dataframes(df2, df, create_temporaries=False)
         self.assertEqual(diffs.failures, 1)  # types
         msg = str(diffs.diffs)
-        self.assertTrue(
-            msg.startswith('Data frames have different column structure.')
-        )
+        self.assertTrue(msg.startswith('Data frames have different column structure.'))
 
         diffs2 = diff_dataframes(df2, df, type_matching='medium')
         self.assertEqual(diffs2.failures, 0)
@@ -1396,10 +1374,7 @@ class TestPandasToMetadata(ReferenceTestCase):
         # WITH col passed in, prefer nullable types (defaults)
 
         df, expected_types = small_wide_pd_df()
-        actual = {
-            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col])
-            for col in df
-        }
+        actual = {col: pandas_dtype_to_fieldtype(df[col].dtype, df[col]) for col in df}
         remove_common_key_vals(actual, expected_types)
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
@@ -1418,10 +1393,7 @@ class TestPandasToMetadata(ReferenceTestCase):
         # WITHOUT preferring nullable types:
 
         df, expected_types = small_wide_pd_df()
-        actual = {
-            col: pandas_dtype_to_fieldtype(df[col].dtype, df[col])
-            for col in df
-        }
+        actual = {col: pandas_dtype_to_fieldtype(df[col].dtype, df[col]) for col in df}
 
         # Similarly, with no values, the whole-number floats
         # remain as floats
@@ -1473,10 +1445,7 @@ def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
         d = json.load(f)
     rows = d['tables'][table_number]['row']
     df = pd.DataFrame(
-        {
-            field: [r['describes'][0].get(field, None) for r in rows]
-            for field in fields
-        }
+        {field: [r['describes'][0].get(field, None) for r in rows] for field in fields}
     )
     for k in to_ints or []:
         string_to_int(df, k)
@@ -1487,9 +1456,7 @@ def csvw_bare_json_to_df(path, fields, to_ints=None, to_dates=None):
     with open(path) as f:
         d = json.load(f)
     rows = d
-    df = pd.DataFrame(
-        {field: [r.get(field, None) for r in rows] for field in fields}
-    )
+    df = pd.DataFrame({field: [r.get(field, None) for r in rows] for field in fields})
     for k in to_ints or []:
         string_to_int(df, k)
     for k in to_dates or []:
@@ -1545,16 +1512,9 @@ def small_wide_pd_df(with_col=True):
             's': list('abc'),
             'sn': ['a', 'b', None],
             'd': [datetime.date(2025, 1, day) for day in range(1, 4)],
-            'dn': [datetime.date(2025, 1, day) for day in range(1, 3)]
-            + [None],
-            'dt': [
-                datetime.datetime(2025, 12, 31, 23, 59, s)
-                for s in range(57, 60)
-            ],
-            'dtn': [
-                datetime.datetime(2025, 12, 31, 23, 59, s)
-                for s in range(58, 60)
-            ]
+            'dn': [datetime.date(2025, 1, day) for day in range(1, 3)] + [None],
+            'dt': [datetime.datetime(2025, 12, 31, 23, 59, s) for s in range(57, 60)],
+            'dtn': [datetime.datetime(2025, 12, 31, 23, 59, s) for s in range(58, 60)]
             + [None],
             'dz': [
                 datetime.datetime(
@@ -1564,9 +1524,7 @@ def small_wide_pd_df(with_col=True):
                     23,
                     59,
                     59,
-                    tzinfo=datetime.timezone(
-                        datetime.timedelta(seconds=3600 * delta)
-                    ),
+                    tzinfo=datetime.timezone(datetime.timedelta(seconds=3600 * delta)),
                 )
                 for delta in (-1, 0, 1)
             ],
@@ -1647,9 +1605,7 @@ class TestSerialPandasKwargsNamedDateFormats(ReferenceTestCase):
 
     def test_serial_iso8601_date_kwargs_read(self):
         # ISO8601 named formats → 'ISO8601' on read
-        kw = serial_to_pandas_read_csv_args(
-            self._md('date', DateFormat.ISO8601_DATE)
-        )
+        kw = serial_to_pandas_read_csv_args(self._md('date', DateFormat.ISO8601_DATE))
         self.assertEqual(kw['date_format'], {'d': 'ISO8601'})
 
     def test_serial_iso8601_datetime_kwargs_read(self):
@@ -1661,9 +1617,7 @@ class TestSerialPandasKwargsNamedDateFormats(ReferenceTestCase):
     def test_serial_dataset_date_format_iso8601(self):
         # dataset-level iso8601 → 'ISO8601' on read
         field = FieldMetadata('d', fieldtype='date')
-        md = SerialMetadata(
-            fields=[field], date_format=DateFormat.ISO8601_UNSPECIFIED
-        )
+        md = SerialMetadata(fields=[field], date_format=DateFormat.ISO8601_UNSPECIFIED)
         kw = serial_to_pandas_read_csv_args(md)
         self.assertEqual(kw['date_format'], {'d': 'ISO8601'})
 
@@ -1720,9 +1674,7 @@ class TestSerialPandasNamedDateFormatsLoad(ReferenceTestCase):
         self.assertDataFrameCorrect(df, tdpath('dated.parquet'))
 
     def test_iso_datetime_serial(self):
-        df = csv_to_pandas(
-            tdpath('isodatetime.csv'), tdpath('isodatetime.serial')
-        )
+        df = csv_to_pandas(tdpath('isodatetime.csv'), tdpath('isodatetime.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
     def test_eu_datetime_serial(self):
@@ -1761,9 +1713,7 @@ class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
         df = pd.read_parquet(tdpath('datetimed.parquet'))
         csv_path = tmppath('eurodt-write-kw.csv')
         md_path = tmppath('eurodt-write-kw.serial')
-        pandas_to_csv(
-            df, csv_path, md_outpath=md_path, date_format='%d/%m/%Y %H:%M:%S'
-        )
+        pandas_to_csv(df, csv_path, md_outpath=md_path, date_format='%d/%m/%Y %H:%M:%S')
         self.assertFileCorrect(csv_path, tdpath('eurodt-write-kw.csv'))
         self.assertFileCorrect(
             md_path,
@@ -1832,9 +1782,7 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
 
     def test_all_date_formats_working(self):
         df = csv_to_pandas(tdpath('allformats.csv:'))
-        pcdf = csv_to_pandas(
-            tdpath('allformats.csv'), tdpath('allformats-pc.serial')
-        )
+        pcdf = csv_to_pandas(tdpath('allformats.csv'), tdpath('allformats-pc.serial'))
         ldf = csv_to_pandas(
             tdpath('allformats.csv'), tdpath('allformats-literal.serial')
         )

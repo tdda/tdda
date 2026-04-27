@@ -98,10 +98,18 @@ SEP_CHARS = (',', '|', '\t', ';')
 ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
 
 # Aliases that chardet returns for latin-1 / ISO-8859-1 across versions.
-_LATIN1_ALIASES = frozenset([
-    'latin-1', 'latin1', 'iso-8859-1', 'iso8859-1', 'iso_8859-1',
-    '8859-1', 'csisolatin1', 'l1',
-])
+_LATIN1_ALIASES = frozenset(
+    [
+        'latin-1',
+        'latin1',
+        'iso-8859-1',
+        'iso8859-1',
+        'iso_8859-1',
+        '8859-1',
+        'csisolatin1',
+        'l1',
+    ]
+)
 
 
 def normalize_encoding(enc):
@@ -111,6 +119,7 @@ def normalize_encoding(enc):
     if enc.lower().replace('_', '-') in _LATIN1_ALIASES:
         return 'latin-1'
     return enc
+
 
 # Values that are almost certainly data, not field names, even if they
 # look like identifiers (e.g. 'false' matches STRICT_NAME_RE).
@@ -154,9 +163,7 @@ def _has_cp1252_bytes(path):
     return any(0x80 <= b <= 0x9F for b in chunk)
 
 
-def read_file_lines(
-    path, initial_enc=None, lines_to_use=1000, raise_error=False
-):
+def read_file_lines(path, initial_enc=None, lines_to_use=1000, raise_error=False):
     """Read header and data lines from path with encoding fallback.
 
     Tries initial_enc first, then each encoding in ENCODING_FALLBACKS.
@@ -165,9 +172,7 @@ def read_file_lines(
     Returns (header, datalines, enc_used), or (None, [], None) if all
     encodings fail.
     """
-    candidates = [initial_enc] + [
-        e for e in ENCODING_FALLBACKS if e != initial_enc
-    ]
+    candidates = [initial_enc] + [e for e in ENCODING_FALLBACKS if e != initial_enc]
     for enc in candidates:
         datalines = []
         try:
@@ -279,9 +284,7 @@ class FirstLineStats:
             if not EXTENDED_NAME_RE.match(n) and HUMAN_NAME_RE.match(n)
         )
         self.n_name_like = self.n_strict + self.n_extended + self.n_human
-        self.n_other = (
-            self.n_fields - self.n_empty - self.n_numeric - self.n_name_like
-        )
+        self.n_other = self.n_fields - self.n_empty - self.n_numeric - self.n_name_like
         self.n_with_space = sum(1 for n in stripped if n and ' ' in n)
         self.n_boolean = sum(1 for n in stripped if n in KNOWN_DATA_VALUES)
         total = self.n_fields
@@ -436,8 +439,7 @@ class MetadataInferrer:
             if quoting not in QUOTING_CODES:
                 valid = ', '.join(sorted(QUOTING_CODES))
                 raise TDDAError(
-                    f'Invalid quoting style {quoting!r}.'
-                    f' Valid values: {valid}.'
+                    f'Invalid quoting style {quoting!r}. Valid values: {valid}.'
                 )
             self.quoting = quoting
 
@@ -488,9 +490,7 @@ class MetadataInferrer:
 
     def read(self):
         if self._given['encoding'] is None:
-            enc = normalize_encoding(
-                nvl(FileType(self.inpath).encoding, 'UTF-8')
-            )
+            enc = normalize_encoding(nvl(FileType(self.inpath).encoding, 'UTF-8'))
             self.encoding = None if enc == 'ascii' else enc
         self.datalines = datalines = []
         enc_used = self._open_with_fallback(datalines)
@@ -511,9 +511,7 @@ class MetadataInferrer:
         self.header = header
         datalines.extend(lines)
         if enc != self.encoding:
-            self.warn(
-                f'Encoding {self.encoding!r} failed; reading as {enc!r}.'
-            )
+            self.warn(f'Encoding {self.encoding!r} failed; reading as {enc!r}.')
         return enc
 
     def process(self):
@@ -607,8 +605,7 @@ class MetadataInferrer:
             if n > self.n_fieldnames:
                 loc = f' at line {lineno}'
                 error(
-                    f'Too many values for header ({n} vs'
-                    f' {self.n_fieldnames}){loc}.',
+                    f'Too many values for header ({n} vs {self.n_fieldnames}){loc}.',
                     raise_error=self.raise_error,
                 )
 
@@ -761,8 +758,7 @@ class MetadataInferrer:
             self.vprint('All rows complete', 2)
 
         self.vprint(
-            f'Fieldnames {nFields}. '
-            f'Min fields in row: {m}. Max fields in row: {M}\n',
+            f'Fieldnames {nFields}. Min fields in row: {m}. Max fields in row: {M}\n',
             2,
         )
         if M > nFields:
@@ -773,8 +769,7 @@ class MetadataInferrer:
 
         # Number quoted by column index
         n_quoted = {
-            i: sum((q[i] if i < len(q) else 0) for q in is_quoted)
-            for i in range(n)
+            i: sum((q[i] if i < len(q) else 0) for q in is_quoted) for i in range(n)
         }
         self.vprint(f'Number quoted by col index: {n_quoted}', 2)
         total_quoted = sum(n_quoted.values())
@@ -837,9 +832,7 @@ class MetadataInferrer:
         for name in self.fieldnames:
             t = type_info[name].most_likely_type
             if isinstance(t, str) and t in ('date', 'datetime'):
-                fmt = infer_date_format_from_strings(
-                    list(field_values_hashes[name])
-                )
+                fmt = infer_date_format_from_strings(list(field_values_hashes[name]))
                 if fmt is not None:
                     if t == 'date':
                         raw_date_fmts[name] = fmt
@@ -895,15 +888,11 @@ class MetadataInferrer:
         elif len(unique_date_fmts) > 1:
             named = {STRFTIME_TO_NAMED_FORMAT.get(f) for f in unique_date_fmts}
             if len(named) == 1 and None not in named:
-                self.date_format = _to_yyyy(
-                    NAMED_FORMAT_TO_STRFTIME[list(named)[0]]
-                )
+                self.date_format = _to_yyyy(NAMED_FORMAT_TO_STRFTIME[list(named)[0]])
                 field_date_fmts = {}
             else:
                 self.date_format = None
-                field_date_fmts = {
-                    k: _to_yyyy(v) for k, v in date_only_fmts.items()
-                }
+                field_date_fmts = {k: _to_yyyy(v) for k, v in date_only_fmts.items()}
         else:
             self.date_format = None
             field_date_fmts = {}
@@ -922,9 +911,7 @@ class MetadataInferrer:
                 field_dt_fmts = {}
             else:
                 self.datetime_format = None
-                field_dt_fmts = {
-                    k: _to_yyyy(v) for k, v in datetime_fmts.items()
-                }
+                field_dt_fmts = {k: _to_yyyy(v) for k, v in datetime_fmts.items()}
         else:
             self.datetime_format = None
             field_dt_fmts = {}
@@ -962,9 +949,7 @@ class MetadataInferrer:
             return False
 
         n = len(self.fieldnames)
-        string_idxs = {
-            i for i, f in enumerate(self.fields) if f.fieldtype == 'string'
-        }
+        string_idxs = {i for i, f in enumerate(self.fields) if f.fieldtype == 'string'}
 
         has_unquoted_empty_in_string = False
         has_quoted_nonempty_in_string = False
@@ -1001,9 +986,7 @@ class MetadataInferrer:
         # '' only seen as quoted "" in string cols: it's empty string, not null
         new_nulls = [v for v in null_list if v != '']
         self.null = (
-            new_nulls[0]
-            if len(new_nulls) == 1
-            else (new_nulls if new_nulls else None)
+            new_nulls[0] if len(new_nulls) == 1 else (new_nulls if new_nulls else None)
         )
         return True
 
@@ -1019,8 +1002,7 @@ class MetadataInferrer:
         if n > self.n_fieldnames:
             loc = f' at line {lineno}' if lineno is not None else ''
             error(
-                f'Too many values for header ({n} vs {self.n_fieldnames})'
-                f'{loc}.',
+                f'Too many values for header ({n} vs {self.n_fieldnames}){loc}.',
                 raise_error=self.raise_error,
             )
         if q:
@@ -1078,18 +1060,11 @@ class MetadataInferrer:
             return 'mixed'
 
         col_type = [f.fieldtype for f in self.fields]
-        states = [
-            quoting_state(nonnull_quoted[i], nonnull_total[i])
-            for i in range(n)
-        ]
+        states = [quoting_state(nonnull_quoted[i], nonnull_total[i]) for i in range(n)]
 
         string_idxs = [i for i, t in enumerate(col_type) if t == 'string']
-        numeric_idxs = [
-            i for i, t in enumerate(col_type) if t in ('int', 'float')
-        ]
-        date_idxs = [
-            i for i, t in enumerate(col_type) if t in ('date', 'datetime')
-        ]
+        numeric_idxs = [i for i, t in enumerate(col_type) if t in ('int', 'float')]
+        date_idxs = [i for i, t in enumerate(col_type) if t in ('date', 'datetime')]
         bool_idxs = [i for i, t in enumerate(col_type) if t == 'bool']
 
         # QUOTE_NONE: nothing quoted anywhere
@@ -1108,9 +1083,7 @@ class MetadataInferrer:
         # numeric/date/bool cols, any quoted col of those types was misclassified
         # and should be string.
         non_string_idxs = numeric_idxs + date_idxs + bool_idxs
-        unquoted_non_string = [
-            i for i in non_string_idxs if states[i] is False
-        ]
+        unquoted_non_string = [i for i in non_string_idxs if states[i] is False]
         quoted_non_string = [i for i in non_string_idxs if states[i] is True]
         any_mixed = any(s == 'mixed' for s in states)
 
@@ -1135,9 +1108,7 @@ class MetadataInferrer:
             unquoted_date_bool = [
                 i for i in date_idxs + bool_idxs if states[i] is False
             ]
-            quoted_date_bool = [
-                i for i in date_idxs + bool_idxs if states[i] is True
-            ]
+            quoted_date_bool = [i for i in date_idxs + bool_idxs if states[i] is True]
             if date_idxs or bool_idxs:
                 if unquoted_date_bool and not quoted_date_bool:
                     return 'QUOTE_STRINGS_ONLY'
@@ -1153,9 +1124,7 @@ class MetadataInferrer:
         ):
             return 'QUOTE_MINIMAL'
 
-        self.warn(
-            'Quoting appears inconsistent: no quoting style has been set.'
-        )
+        self.warn('Quoting appears inconsistent: no quoting style has been set.')
         return None
 
     def describe_null(self):
@@ -1179,9 +1148,7 @@ class MetadataInferrer:
         # saying whether each was quoted
         q = self.quote_char or '"'
         is_quoted = [s.startswith(q) and s.endswith(q) for s in row]
-        out = [
-            s[1:-1] if s.startswith(q) and s.endswith(q) else s for s in row
-        ]
+        out = [s[1:-1] if s.startswith(q) and s.endswith(q) else s for s in row]
         for k, v in self.restorations.items():
             out = [s.replace(k, v) for s in out]
         return out, is_quoted
@@ -1423,9 +1390,7 @@ class FieldTypeStats:
             self.most_likely_type = 'string'
             # self.poss_null = None
         else:
-            most_likelies = {
-                k: v for k, v in self.stats.items() if v.n_valid == m
-            }
+            most_likelies = {k: v for k, v in self.stats.items() if v.n_valid == m}
             if len(most_likelies) == 1:
                 t = self.most_likely_type = list(most_likelies)[0]
             elif set(most_likelies) == {'int', 'float'}:

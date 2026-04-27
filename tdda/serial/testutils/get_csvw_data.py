@@ -8,6 +8,7 @@ BASEURL = 'https://w3c.github.io/csvw/tests'
 CSVW_TEST_DIR = '../testdata/csvw'
 N_TESTS = 270
 
+
 def get_val(keyname, lines):
     key, val = lines.pop(), lines.pop()
     if not key == keyname:
@@ -23,7 +24,6 @@ def get_pair(lines):
 
 
 def parse(outpath):
-
     with open('csvw-tests-raw.txt') as f:
         lines = f.readlines()
     lines = [line.strip() for line in reversed(lines)]
@@ -67,6 +67,7 @@ def parse(outpath):
 
 def download(details):
     import requests
+
     if not os.path.exists(CSVW_TEST_DIR):
         os.makedirs(CSVW_TEST_DIR)
     dirs = Counter()
@@ -106,4 +107,3 @@ def download(details):
 if __name__ == '__main__':
     d = parse('csvwtests.json')
     download(d)
-

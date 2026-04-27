@@ -71,16 +71,15 @@ class TestInference(ReferenceTestCase):
         with open(outpath, 'w') as f:
             f.write(md.to_json())
         self.assertFileCorrect(
-            outpath, tdpath(outname),
+            outpath,
+            tdpath(outname),
             ignore_lines=self.IGL,
             ignore_patterns=ignore_patterns,
         )
         return buf, md
 
     def testInferMetadataTiny1cdq(self):
-        md, buf = self.infer(
-            tdpath('tiny1ndq.csv'), verbosity=0, add_defaults=True
-        )
+        md, buf = self.infer(tdpath('tiny1ndq.csv'), verbosity=0, add_defaults=True)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('tiny1ndq-with-defaults-inferred.serial'),
@@ -132,9 +131,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataSimple(self):
-        md, buf = self.infer(
-            tdpath('simple.csv'), verbosity=0, add_defaults=True
-        )
+        md, buf = self.infer(tdpath('simple.csv'), verbosity=0, add_defaults=True)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('simple-with-defaults-inferred.serial'),
@@ -149,9 +146,7 @@ class TestInference(ReferenceTestCase):
         )
 
     def testInferMetadataMinimal(self):
-        md, buf = self.infer(
-            tdpath('minimal.csv'), verbosity=0, add_defaults=True
-        )
+        md, buf = self.infer(tdpath('minimal.csv'), verbosity=0, add_defaults=True)
         self.assertStringCorrect(
             md.to_json(),
             tdpath('minimal-with-defaults-inferred.serial'),
@@ -204,9 +199,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
             FieldType.INT,
         )
         self.assertEqual(
-            analyse_values(
-                'f', ['1000', '-1', '0', '0.5', '2.1e3']
-            ).most_likely_type,
+            analyse_values('f', ['1000', '-1', '0', '0.5', '2.1e3']).most_likely_type,
             FieldType.FLOAT,
         )
         self.assertEqual(
@@ -265,9 +258,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
         )  # Note: as previous comment.
 
         self.assertEqual(
-            analyse_values(
-                'b', ['true', 'false', 'false', '']
-            ).most_likely_type,
+            analyse_values('b', ['true', 'false', 'false', '']).most_likely_type,
             FieldType.BOOL,
         )
 
@@ -282,19 +273,11 @@ class TestSerialUtilityFunction(ReferenceTestCase):
             m.delimiter = sep
             expected = f'a.{L}sv'
             self.assertEqual(m.choose_csv_from_csvw_name('a.json'), expected)
-            self.assertEqual(
-                m.choose_csv_from_csvw_name('/d/a.json'), expected
-            )
-            self.assertEqual(
-                m.choose_csv_from_csvw_name('~/d/a.json'), expected
-            )
+            self.assertEqual(m.choose_csv_from_csvw_name('/d/a.json'), expected)
+            self.assertEqual(m.choose_csv_from_csvw_name('~/d/a.json'), expected)
 
-            self.assertEqual(
-                m.choose_csv_from_csvw_name('b-metadata.json'), f'b.{L}sv'
-            )
-            self.assertEqual(
-                m.choose_csv_from_csvw_name('b.metadata.json'), f'b.{L}sv'
-            )
+            self.assertEqual(m.choose_csv_from_csvw_name('b-metadata.json'), f'b.{L}sv')
+            self.assertEqual(m.choose_csv_from_csvw_name('b.metadata.json'), f'b.{L}sv')
             self.assertEqual(
                 m.choose_csv_from_csvw_name('b-csvmetadata.json'), f'b.{L}sv'
             )
@@ -322,21 +305,15 @@ class TestSerialUtilityFunction(ReferenceTestCase):
         self.assertEqual(m.choose_csv_from_csvw_name('/d/a.json'), expected)
         self.assertEqual(m.choose_csv_from_csvw_name('~/d/a.json'), expected)
 
-        self.assertEqual(
-            m.choose_csv_from_csvw_name('b-metadata.json'), 'b.txt'
-        )
+        self.assertEqual(m.choose_csv_from_csvw_name('b-metadata.json'), 'b.txt')
 
     def testFrictionlessNameInference(self):
         for sep, L in ((',', 'c'), ('\t', 't'), ('|', 'p'), (';', 's')):
             m = FrictionlessMetadata()
             m.delimiter = sep
             expected = f'a.{L}sv'
-            self.assertEqual(
-                m.choose_csv_from_frictionless_name('a.json'), expected
-            )
-            self.assertEqual(
-                m.choose_csv_from_frictionless_name('/d/a.json'), expected
-            )
+            self.assertEqual(m.choose_csv_from_frictionless_name('a.json'), expected)
+            self.assertEqual(m.choose_csv_from_frictionless_name('/d/a.json'), expected)
             self.assertEqual(
                 m.choose_csv_from_frictionless_name('~/d/a.json'), expected
             )
@@ -360,15 +337,9 @@ class TestSerialUtilityFunction(ReferenceTestCase):
         m = FrictionlessMetadata()
         m.delimiter = '/'
         expected = 'a.txt'
-        self.assertEqual(
-            m.choose_csv_from_frictionless_name('a.json'), expected
-        )
-        self.assertEqual(
-            m.choose_csv_from_frictionless_name('/d/a.json'), expected
-        )
-        self.assertEqual(
-            m.choose_csv_from_frictionless_name('~/d/a.json'), expected
-        )
+        self.assertEqual(m.choose_csv_from_frictionless_name('a.json'), expected)
+        self.assertEqual(m.choose_csv_from_frictionless_name('/d/a.json'), expected)
+        self.assertEqual(m.choose_csv_from_frictionless_name('~/d/a.json'), expected)
 
         self.assertEqual(
             m.choose_csv_from_frictionless_name('b.resource.json'), 'b.txt'
@@ -390,9 +361,7 @@ class TestSerialUtilityFunction(ReferenceTestCase):
 
         for args, expected in expected.items():
             c = SerialConverter(cli_args=list(args))
-            actual = Spec(
-                c.generate, c.out_formats, c.broad_out, c.inpath, c.outpath
-            )
+            actual = Spec(c.generate, c.out_formats, c.broad_out, c.inpath, c.outpath)
             self.assertEqual((args, actual), (args, expected))
 
 
@@ -559,9 +528,7 @@ class TestInferAllFlatFiles(TestInference):
         self.assertDataFramesEqual(df_prov, df_plain, type_matching='loose')
 
     def testInferAllCsvwTypes(self):
-        buf, md = self.check_infer(
-            'all-csvw-types.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('all-csvw-types.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         df = csv_to_pandas(
             tdpath('all-csvw-types.csv'),
@@ -598,22 +565,16 @@ class TestInferAllFlatFiles(TestInference):
         self.assertTrue(all('parse post-read' in w for w in buf2))
 
     def testInferAllformats2unspec(self):
-        buf, md = self.check_infer(
-            'allformats2unspec.csv', prov=True, verbosity=0
-        )
+        buf, md = self.check_infer('allformats2unspec.csv', prov=True, verbosity=0)
 
     def testInferAmbigAll(self):
         buf, md = self.check_infer('ambig-all.csv', prov=True, verbosity=0)
 
     def testInferAmbigGuidedEu(self):
-        buf, md = self.check_infer(
-            'ambig-guided-eu.csv', prov=True, verbosity=0
-        )
+        buf, md = self.check_infer('ambig-guided-eu.csv', prov=True, verbosity=0)
 
     def testInferAmbigGuidedUs(self):
-        buf, md = self.check_infer(
-            'ambig-guided-us.csv', prov=True, verbosity=0
-        )
+        buf, md = self.check_infer('ambig-guided-us.csv', prov=True, verbosity=0)
 
     def testInferCodingUtf16(self):
         buf, md = self.check_infer('coding-utf16.csv', prov=True, verbosity=0)
@@ -626,11 +587,7 @@ class TestInferAllFlatFiles(TestInference):
         # Quoting style detection reclassifies evenstr, oddstr, elevens
         self.assertTrue(all('reclassified' in w for w in buf))
         self.assertEqual(
-            [
-                w
-                for w in buf
-                if 'evenstr' in w or 'oddstr' in w or 'elevens' in w
-            ],
+            [w for w in buf if 'evenstr' in w or 'oddstr' in w or 'elevens' in w],
             buf,
         )
         Warn, buf2 = testwarn()
@@ -656,15 +613,11 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf, [])
 
     def testInferAlphaLongDates(self):
-        buf, md = self.check_infer(
-            'alphalongdates.tsv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('alphalongdates.tsv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
 
     def testInferElements3Old(self):
-        buf, md = self.check_infer(
-            'elements3-old.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('elements3-old.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         Warn, buf2 = testwarn()
         df = csv_to_polars(
@@ -690,9 +643,7 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferEurodtWriteSerial(self):
         buf, md = self.check_infer('eurodt-write-serial.csv', verbosity=0)
-        self.validate_inferred_serial_wrt_handmade_serial(
-            'eurodt-write-serial'
-        )
+        self.validate_inferred_serial_wrt_handmade_serial('eurodt-write-serial')
 
     def testInferEurodt(self):
         buf, md = self.check_infer('eurodt.csv', verbosity=0)
@@ -731,36 +682,28 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferNullInference1(self):
         # Unquoted strings: no quoting evidence, '' not inferred as null
-        buf, md = self.check_infer(
-            'nullinference1.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('nullinference1.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         self.assertIsNone(md.null_indicator)
         self.assertEqual(md.quoting, 'QUOTE_NONE')
 
     def testInferNullInference2(self):
         # Quoted strings, only "" empty: '' dropped (empty string, not null)
-        buf, md = self.check_infer(
-            'nullinference2.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('nullinference2.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         self.assertIsNone(md.null_indicator)
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
     def testInferNullInference3(self):
         # Quoted strings, quoted "" and unquoted empty: '' is genuine null
-        buf, md = self.check_infer(
-            'nullinference3.psv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('nullinference3.psv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         self.assertEqual(md.null_indicator, '')
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
 
     def testInferNullInference4(self):
         # Quoted "" in string col, unquoted empty in non-string col: '' is null
-        buf, md = self.check_infer(
-            'nullinference4.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('nullinference4.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         self.assertEqual(md.null_indicator, '')
         self.assertEqual(md.quoting, 'QUOTE_STRINGS_ONLY')
@@ -797,9 +740,7 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf2, [])
 
     def testInferSigEquivUtf16(self):
-        buf, md = self.check_infer(
-            'sig-equiv-utf16.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('sig-equiv-utf16.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         Warn, buf2 = testwarn()
         df = csv_to_pandas(
@@ -812,9 +753,7 @@ class TestInferAllFlatFiles(TestInference):
         self.assertEqual(buf2, [])
 
     def testInferSigEquivUtf8(self):
-        buf, md = self.check_infer(
-            'sig-equiv-utf8.csv', prov=False, verbosity=0
-        )
+        buf, md = self.check_infer('sig-equiv-utf8.csv', prov=False, verbosity=0)
         self.assertEqual(buf, [])
         Warn, buf2 = testwarn()
         df = csv_to_polars(
@@ -870,7 +809,9 @@ class TestInferAllFlatFiles(TestInference):
         # latin-1, which the cp1252 byte check in read_file_lines promotes
         # to cp1252.
         buf, md = self.check_infer(
-            'small-cp1252.csv', prov=True, verbosity=0,
+            'small-cp1252.csv',
+            prov=True,
+            verbosity=0,
             ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
         )
 
@@ -878,7 +819,9 @@ class TestInferAllFlatFiles(TestInference):
         # chardet < 6 detects this file as windows-1255; chardet >= 6 as
         # latin-1.
         buf, md = self.check_infer(
-            'small-latin1.csv', prov=True, verbosity=0,
+            'small-latin1.csv',
+            prov=True,
+            verbosity=0,
             ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
         )
 
@@ -886,7 +829,9 @@ class TestInferAllFlatFiles(TestInference):
         # chardet < 6 detects this file as windows-1255; chardet >= 6 as
         # latin-1.
         buf, md = self.check_infer(
-            'small-latin9.csv', prov=True, verbosity=0,
+            'small-latin9.csv',
+            prov=True,
+            verbosity=0,
             ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
         )
 
@@ -926,9 +871,7 @@ class TestInferAllFlatFiles(TestInference):
         self.validate_inferred_serial_wrt_handmade_serial('tiny1cd3')
 
     def testInferTiny1cnPandas(self):
-        buf, md = self.check_infer(
-            'tiny1cn-pandas.csv', prov=True, verbosity=0
-        )
+        buf, md = self.check_infer('tiny1cn-pandas.csv', prov=True, verbosity=0)
 
     def testInferTiny1cn(self):
         buf, md = self.check_infer('tiny1cn.csv', prov=False, verbosity=0)

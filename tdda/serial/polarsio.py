@@ -76,8 +76,7 @@ FIELDTYPE_TO_POLARS_DTYPE = {
 }
 
 GEN_PY = (
-    'Generate Python with .py target and --to pl.r to '
-    'see required post-processing.'
+    'Generate Python with .py target and --to pl.r to see required post-processing.'
 )
 
 
@@ -220,9 +219,7 @@ def serial_to_polars_read_csv_args_and_postproc(
                 kw['schema_overrides'] = schema
             use_rename_postproc = True
             rename_map = {
-                fld.csvname: fld.name
-                for fld in md.fields
-                if fld.csvname != fld.name
+                fld.csvname: fld.name for fld in md.fields if fld.csvname != fld.name
             }
         else:
             schema = {k: f(v) for k, v in raw_dtypes.items()}
@@ -232,9 +229,7 @@ def serial_to_polars_read_csv_args_and_postproc(
 
     elif isinstance(md.fields, dict):  # partial schema
         schema = kw['schema_overrides'] = {
-            field.csvname: f(
-                FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None)
-            )
+            field.csvname: f(FIELDTYPE_TO_POLARS_DTYPE.get(field.fieldtype, None))
             for field in md.fields.values()
         }
         fields = md.fields
@@ -283,9 +278,7 @@ def serial_to_polars_read_csv_args_and_postproc(
                         f' {field} not understood; ignoring.\n'
                     )
             bads = ', '.join(
-                v
-                for v in (trues + falses)
-                if v.lower() not in ('true', 'false')
+                v for v in (trues + falses) if v.lower() not in ('true', 'false')
             )
             if bads:
                 schema[fmd.csvname] = f(pl.String)
@@ -443,13 +436,11 @@ def csv_to_polars(
     postproc = {}
     rename_map = {}
     if md:
-        md_kw, postproc, rename_map = (
-            serial_to_polars_read_csv_args_and_postproc(
-                md,
-                warner=Warn,
-                map_other_bools_to_string=map_other_bools_to_string,
-                no_postproc_warnings=True,
-            )
+        md_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
+            md,
+            warner=Warn,
+            map_other_bools_to_string=map_other_bools_to_string,
+            no_postproc_warnings=True,
         )
     if md and kw:
         md_kw.update(kw)
@@ -563,6 +554,4 @@ def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
         )
         postproc_lines.append(f'    df = df.with_columns([\n{exprs}\n    ])')
     postproc_block = '\n'.join(postproc_lines)
-    return (
-        PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)
-    ).lstrip()
+    return (PYTHON_TEMPLATES.POLARS_READ_POSTPROC % (args, postproc_block)).lstrip()

@@ -187,9 +187,7 @@ def format_template_args(kw, flavour=None, dtypes=None):
                 vals = list(dtypes.values())
                 if any(v in vals for v in x.values()):
                     prefix = 'pl.'
-            pairs = joint.join(
-                f'{repr(k)}: {prefix}{repr(v)}' for k, v in x.items()
-            )
+            pairs = joint.join(f'{repr(k)}: {prefix}{repr(v)}' for k, v in x.items())
             return '{\n%s%s\n%s}' % (s12, pairs, s8)
         elif isinstance(x, list) and len(x) > 1:
             L = joint.join(f'{repr(v)}' for v in x)
