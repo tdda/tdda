@@ -43,7 +43,7 @@ def data(path, pathitems, exclusions=None):
 
 
 setup(
-    name='tdda',
+    name='tddatddatdda',
     version=__version__,
     description='Test Driven Data Analysis',
     long_description=read('README.md'),

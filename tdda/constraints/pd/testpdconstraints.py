@@ -5,6 +5,7 @@ Test Suite
 """
 
 import datetime
+import getpass
 import json
 import math
 import os
@@ -1748,7 +1749,8 @@ class TestPandasMultipleConstraintGeneration(ReferenceTestCase):
 class CommandLineHelper:
     @classmethod
     def setUpHelper(cls):
-        cls.test_tmpdir = tempfile.gettempdir()
+        cls.test_tmpdir = os.path.join(tempfile.gettempdir(), getpass.getuser())
+        os.makedirs(cls.test_tmpdir, exist_ok=True)
         cls.test_dirs = [
             'referencetest_examples',
             'constraints_examples',
