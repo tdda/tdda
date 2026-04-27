@@ -32,9 +32,7 @@ from tdda.constraints.base import (
 
 isPython2 = sys.version_info[0] < 3
 
-TESTDATA_DIR = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), 'testdata'
-)
+TESTDATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'testdata')
 
 
 class TestConstraints(ReferenceTestCase):
@@ -50,9 +48,7 @@ class TestConstraints(ReferenceTestCase):
             repr(MinConstraint('a', precision='closed')),
             "MinConstraint(value='a', precision='closed')",
         )
-        self.assertEqual(
-            repr(MinLengthConstraint(3)), 'MinLengthConstraint(value=3)'
-        )
+        self.assertEqual(repr(MinLengthConstraint(3)), 'MinLengthConstraint(value=3)')
         self.assertEqual(
             repr(MaxConstraint(-3)), 'MaxConstraint(value=-3, precision=None)'
         )
@@ -64,23 +60,17 @@ class TestConstraints(ReferenceTestCase):
             repr(MaxConstraint(4.2, precision='closed')),
             "MaxConstraint(value=4.2, precision='closed')",
         )
-        self.assertEqual(
-            repr(MaxLengthConstraint(0)), 'MaxLengthConstraint(value=0)'
-        )
+        self.assertEqual(repr(MaxLengthConstraint(0)), 'MaxLengthConstraint(value=0)')
         self.assertEqual(
             repr(SignConstraint('positive')),
             "SignConstraint(value='positive')",
         )
-        self.assertEqual(
-            repr(MaxNullsConstraint(0)), 'MaxNullsConstraint(value=0)'
-        )
+        self.assertEqual(repr(MaxNullsConstraint(0)), 'MaxNullsConstraint(value=0)')
         self.assertEqual(
             repr(NoDuplicatesConstraint()),
             'NoDuplicatesConstraint(value=True)',
         )
-        self.assertEqual(
-            repr(TypeConstraint('int')), "TypeConstraint(value='int')"
-        )
+        self.assertEqual(repr(TypeConstraint('int')), "TypeConstraint(value='int')")
         self.assertEqual(
             repr(TypeConstraint(['int', 'real'])),
             "TypeConstraint(value=['int', 'real'])",
@@ -129,15 +119,11 @@ class TestConstraints(ReferenceTestCase):
         self.assertRaises(
             InvalidConstraintSpecification, SignConstraint, 'not too positive'
         )
-        self.assertRaises(
-            InvalidConstraintSpecification, TypeConstraint, 'float'
-        )
+        self.assertRaises(InvalidConstraintSpecification, TypeConstraint, 'float')
         self.assertRaises(
             InvalidConstraintSpecification, TypeConstraint, ['int', 'float']
         )
-        self.assertRaises(
-            InvalidConstraintSpecification, TypeConstraint, ['int', None]
-        )
+        self.assertRaises(InvalidConstraintSpecification, TypeConstraint, ['int', None])
 
     def testFieldConstraintsDict(self):
         c = FieldConstraints(

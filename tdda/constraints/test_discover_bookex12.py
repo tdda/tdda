@@ -19,9 +19,7 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
     refdir = os.path.join(cwd, 'ref', 'discover_bookex12')
     tmpdir = tempfile.mkdtemp()
     tdda_out = os.path.join(tmpdir, 'accountsex12.tdda')
-    command = (
-        'tdda discover -xG testdata/accounts1k.csv %s' % tdda_out
-    )
+    command = 'tdda discover -xG testdata/accounts1k.csv %s' % tdda_out
 
     generated_files = [tdda_out]
 
@@ -41,13 +39,12 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
         self.assertEqual(self.exit_code, 0)
 
     def test_stdout(self):
-        self.assertStringCorrect(
-            self.output, os.path.join(self.refdir, 'STDOUT')
-        )
+        self.assertStringCorrect(self.output, os.path.join(self.refdir, 'STDOUT'))
 
     def test_stderr(self):
         self.assertStringCorrect(
-            self.error, os.path.join(self.refdir, 'STDERR'),
+            self.error,
+            os.path.join(self.refdir, 'STDERR'),
             ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
 

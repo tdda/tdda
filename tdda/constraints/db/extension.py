@@ -27,12 +27,9 @@ class TDDADatabaseExtension(ExtensionBase):
             file=stream,
         )
         print('  - Tables from MySQL databases (mysql:tablename)', file=stream)
+        print('  - Tables from SQLite databases (sqlite:tablename)', file=stream)
         print(
-            '  - Tables from SQLite databases (sqlite:tablename)', file=stream
-        )
-        print(
-            '  - Collections from MongoDB NoSQL databases '
-            '(mongodb:collection)',
+            '  - Collections from MongoDB NoSQL databases (mongodb:collection)',
             file=stream,
         )
 

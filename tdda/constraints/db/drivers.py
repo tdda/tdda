@@ -180,17 +180,11 @@ def applicable(argv):
 
 def database_arg_parser(create_parser, usage):
     parser = create_parser(usage + DATABASE_USAGE)
-    parser.add_argument(
-        '-conn', '--conn', nargs=1, help='database connection file'
-    )
+    parser.add_argument('-conn', '--conn', nargs=1, help='database connection file')
     parser.add_argument('-dbtype', '--dbtype', nargs=1, help='database type')
     parser.add_argument('-db', '--db', nargs=1, help='database name')
-    parser.add_argument(
-        '-host', '--host', nargs=1, help='database server hostname'
-    )
-    parser.add_argument(
-        '-port', '--port', nargs=1, help='database server IP port'
-    )
+    parser.add_argument('-host', '--host', nargs=1, help='database server hostname')
+    parser.add_argument('-port', '--port', nargs=1, help='database server IP port')
     parser.add_argument('-user', '--user', nargs=1, help='username')
     parser.add_argument('-password', '--password', nargs=1, help='password')
     return parser
@@ -266,9 +260,7 @@ def database_connection(
         if dbtype:
             dbtypelower = dbtype.lower()
             dflt_conn_file = connection_file(dbtypelower)
-            if dbtypelower == 'postgres' and not os.path.exists(
-                dflt_conn_file
-            ):
+            if dbtypelower == 'postgres' and not os.path.exists(dflt_conn_file):
                 dflt_conn_file = connection_file('postgresql')
         else:
             dflt_conn_file = connection_file('')
@@ -342,9 +334,7 @@ def database_connection_postgres(host, port, database, user, password):
     if pgdb:
         if port is not None:
             host = host + ':' + str(port)
-        return pgdb.connect(
-            host=host, database=database, user=user, password=password
-        )
+        return pgdb.connect(host=host, database=database, user=user, password=password)
     else:
         print('PostgreSQL driver not available', file=sys.stderr)
         sys.exit(1)
@@ -378,9 +368,7 @@ def database_connection_mysql(host, port, database, user, password):
                     passwd=password,
                 )
         else:
-            return MySQLdb.connect(
-                host=host, port=port, db=database, user=user
-            )
+            return MySQLdb.connect(host=host, port=port, db=database, user=user)
     else:
         print('MySQL driver not available', file=sys.stderr)
 
@@ -464,9 +452,7 @@ class ConnectionSpec:
             # if a .conn file for a sqlite connection specifies a .sqlite3
             # file,
             # then resolve that relative to the location of the .conn file.
-            self.database = os.path.join(
-                os.path.dirname(filename), self.database
-            )
+            self.database = os.path.join(os.path.dirname(filename), self.database)
             self.db = self.database
 
     def __str__(self):
@@ -995,11 +981,7 @@ class MongoDBDatabaseHandler:
         try:
             keys = collection.aggregate(
                 [
-                    {
-                        '$project': {
-                            'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}
-                        }
-                    },
+                    {'$project': {'arrayofkeyvalue': {'$objectToArray': '$$ROOT'}}},
                     {'$unwind': '$arrayofkeyvalue'},
                     {
                         '$group': {

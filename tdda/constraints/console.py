@@ -95,8 +95,7 @@ def load_extension(ext):
         return getattr(mod, classname, None)
     except ImportError as e:
         print(
-            'Warning: no tdda constraint module %s (%s)'
-            % (modulename, str(e)),
+            'Warning: no tdda constraint module %s (%s)' % (modulename, str(e)),
             file=sys.stderr,
         )
         return None
@@ -120,9 +119,7 @@ def no_constraints(name, msg, argv, extensions):
     When no constraint discovery or verification could be done, show
     some help about it.
     """
-    inputs = [
-        a for a in argv if not a.startswith('-') and not a.endswith('.tdda')
-    ]
+    inputs = [a for a in argv if not a.startswith('-') and not a.endswith('.tdda')]
     if inputs:
         print('%s for %s' % (msg, ' '.join(inputs)), file=sys.stderr)
     help(extensions, name, stream=sys.stderr)

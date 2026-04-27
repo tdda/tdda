@@ -181,9 +181,7 @@ class DatabaseConstraintVerifier(
         )
 
 
-class DatabaseConstraintDetector(
-    DatabaseConstraintVerifier, BaseConstraintDetector
-):
+class DatabaseConstraintDetector(DatabaseConstraintVerifier, BaseConstraintDetector):
     """ """
 
     def __init__(
@@ -252,15 +250,10 @@ class DatabaseConstraintDetector(
 
         if dest_dbtype != self.dbtype:
             raise TDDAError(
-                'Detect from RDBMS currently only supports'
-                'writing to same RDBMS.'
+                'Detect from RDBMS currently only supportswriting to same RDBMS.'
             )
         self.drop_table_if_exists(raw_dest_name)
-        exprs = (
-            []
-            if self.interleave
-            else [self.quoted(field) for field in failure_map]
-        )
+        exprs = [] if self.interleave else [self.quoted(field) for field in failure_map]
         ver.detection_fields = detection_fields = []
         for fc in failure_field_constraints.values():
             if self.interleave:
@@ -300,14 +293,9 @@ SELECT * FROM DETECTED
 
     def detection_field_expressions(self, fc):
         detect_field = (
-            self.detect_ok_field
-            if self.detect_passes
-            else self.detect_bad_field
+            self.detect_ok_field if self.detect_passes else self.detect_bad_field
         )
-        return [
-            detect_field(fc.name, cname, c)
-            for cname, c in fc.constraints.items()
-        ]
+        return [detect_field(fc.name, cname, c) for cname, c in fc.constraints.items()]
 
     def detection_field_names(self, fc):
         return [self.out_field_name(fc.name, kind) for kind in fc.constraints]
@@ -357,9 +345,7 @@ SELECT * FROM DETECTED
         if kind == 'no_duplicates':
             return a(f'(((COUNT(*) OVER (PARTITION BY {field})) = 1) {ornull}')
         if kind == 'allowed_values':
-            return a(
-                f'({field} IN ({", ".join(squote(x) for x in val)}) {ornull}'
-            )
+            return a(f'({field} IN ({", ".join(squote(x) for x in val)}) {ornull}')
         if kind == 'rex':
             rex_sql = self.rex_match_sql(field, val)
             if rex_sql:
@@ -393,9 +379,7 @@ SELECT * FROM DETECTED
         if kind == 'no_duplicates':
             return a(f'(((COUNT(*) OVER (PARTITION BY {field})) > 1) {andnn}')
         if kind == 'allowed_values':
-            return a(
-                f'({field} NOT IN ({", ".join(squote(x) for x in val)}){andnn}'
-            )
+            return a(f'({field} NOT IN ({", ".join(squote(x) for x in val)}){andnn}')
         if kind == 'rex':
             rex_sql = rex_match_sql(field, v)
             if rex_sql:
@@ -433,9 +417,7 @@ class DatabaseVerification(Verification):
         exists = indicator_field in self.detection_fields
         bad_val = str(self.bad_val).upper()
         keys = (
-            (','.join(self.quoted(k) for k in key_fields) + ', ')
-            if key_fields
-            else ''
+            (','.join(self.quoted(k) for k in key_fields) + ', ') if key_fields else ''
         )
         dbh = self.dbh
         if exists:
@@ -489,11 +471,7 @@ class DatabaseVerification(Verification):
         if self.int_bools:
             f = dbh.sum_sql if self.detect_passes else dbh.count_zero_sql
         else:
-            f = (
-                dbh.count_false_sql
-                if self.detect_passes
-                else dbh.count_true_sql
-            )
+            f = dbh.count_false_sql if self.detect_passes else dbh.count_true_sql
         return f(indicator_field)
 
     def build_field_stats(self, fields):
@@ -510,8 +488,7 @@ class DatabaseVerification(Verification):
         sql = (
             'SELECT\n'
             + ',\n'.join(
-                self.count_failing_field_values(field, inds[field])
-                for field in fields
+                self.count_failing_field_values(field, inds[field]) for field in fields
             )
             + f'\nFROM {self.detection_table}'
         )
@@ -906,8 +883,7 @@ def discover_db_table(
         constraints.set_stats(n_records=nrows, n_selected=nrows)
         constraints.set_dates_user_host_creator()
         constraints.set_rdbms(
-            '%s:%s:%s:%s'
-            % (dbtype or '', dbc.host or '', dbc.user, dbc.database)
+            '%s:%s:%s:%s' % (dbtype or '', dbc.host or '', dbc.user, dbc.database)
         )
         constraints.set_source(tablename, tablename)
     return constraints

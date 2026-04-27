@@ -102,15 +102,11 @@ def get_detect_params(args):
     parser.add_argument(
         'constraints', nargs=1, help='constraints file to verify against'
     )
-    parser.add_argument(
-        'outpath', nargs='?', help='file to write detection results to'
-    )
+    parser.add_argument('outpath', nargs='?', help='file to write detection results to')
     params = {}
     flags = database_arg_flags(detect_flags, parser, args, params)
     params['table'] = flags.table[0] if flags.table else None
-    params['constraints_path'] = (
-        flags.constraints[0] if flags.constraints else None
-    )
+    params['constraints_path'] = flags.constraints[0] if flags.constraints else None
     params['destination'] = flags.outpath
     return params
 

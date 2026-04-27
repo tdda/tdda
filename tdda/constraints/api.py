@@ -184,9 +184,7 @@ def verify(
         sys.exit(1)
 
 
-def detect(
-    indata, constraints_path, outpath=None, engine=None, backend=None, **kwargs
-):
+def detect(indata, constraints_path, outpath=None, engine=None, backend=None, **kwargs):
     """
     Check the records from the Pandas DataFrame provided, to detect
     records that fail any of the constraints in the JSON ``.tdda`` file

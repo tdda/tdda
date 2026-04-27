@@ -260,9 +260,7 @@ class DatasetConstraints(object):
 
     def set_source(self, source, dataset=None):
         self.source = source
-        self.dataset = dataset or (
-            os.path.basename(source) if source else None
-        )
+        self.dataset = dataset or (os.path.basename(source) if source else None)
 
     def set_stats(self, n_records, n_selected=None):
         self.n_records = n_records
@@ -373,9 +371,7 @@ class DatasetConstraints(object):
         """
         Converts the constraints in this object to a dictionary.
         """
-        constraints = outdict(
-            ((f, v.to_dict_value()) for f, v in self.fields.items())
-        )
+        constraints = outdict(((f, v.to_dict_value()) for f, v in self.fields.items()))
         metadata = self.get_metadata(tddafile=tddafile)
         if self.no_md:
             metadata = None
@@ -437,19 +433,13 @@ class DatasetConstraints(object):
             elif fmt == 'html':
                 self.to_html_report(outpath)
             else:
-                print(
-                    f'Ignoring unknown output format "{fmt}".', file=sys.stderr
-                )
+                print(f'Ignoring unknown output format "{fmt}".', file=sys.stderr)
 
     def to_json_report(self, outpath=None):
-        return write_or_return(
-            self.to_json(), fwrite, json.dumps, path=outpath
-        )
+        return write_or_return(self.to_json(), fwrite, json.dumps, path=outpath)
 
     def to_yaml_report(self, outpath=None):
-        return write_or_return(
-            self.to_dict(), yaml.dump, yaml.dump, path=outpath
-        )
+        return write_or_return(self.to_dict(), yaml.dump, yaml.dump, path=outpath)
 
     def to_toml_report(self, outpath=None):
         return write_or_return(
@@ -461,9 +451,7 @@ class DatasetConstraints(object):
         )
 
     def to_text_report(self, outpath=None):
-        return write_or_return(
-            self.table.toString(), fwrite, passthrough, path=outpath
-        )
+        return write_or_return(self.table.toString(), fwrite, passthrough, path=outpath)
 
     def to_markdown_report(self, outpath=None, flavour='github'):
         return write_or_return(
@@ -568,9 +556,7 @@ class FieldConstraints(object):
         order, rather than being a jumbled mess.
         """
         d = outdict()
-        keys = to_preferred_order(
-            self.constraints.keys(), STANDARD_FIELD_CONSTRAINTS
-        )
+        keys = to_preferred_order(self.constraints.keys(), STANDARD_FIELD_CONSTRAINTS)
         for k in keys:
             d[k] = self.constraints[k].to_dict_value(raw=raw)
         return d
@@ -588,9 +574,7 @@ class FieldConstraints(object):
             'Field %s:\n  %s'
             % (
                 self.name,
-                '\n  '.join(
-                    '%13s: %s' % (k, self.constraints[k]) for k in keys
-                ),
+                '\n  '.join('%13s: %s' % (k, self.constraints[k]) for k in keys),
             )
         )
 
@@ -634,8 +618,7 @@ class MultiFieldConstraints(FieldConstraints):
             if k in self.constraints:
                 d[k] = self.constraints[k].to_dict_value()
         remainder = sorted(
-            set(self.constraints.keys())
-            - set(STANDARD_FIELD_GROUP_CONSTRAINTS)
+            set(self.constraints.keys()) - set(STANDARD_FIELD_GROUP_CONSTRAINTS)
         )
         for k in remainder:
             d[k] = self.constraints[k].to_dict_value()
@@ -651,19 +634,13 @@ class MultiFieldConstraints(FieldConstraints):
         return ','.join(self.names)
 
     def __str__(self):
-        keys = [
-            k
-            for k in STANDARD_FIELD_GROUP_CONSTRAINTS
-            if k in self.constraints
-        ]
+        keys = [k for k in STANDARD_FIELD_GROUP_CONSTRAINTS if k in self.constraints]
         keys += list(sorted(set(self.constraints.keys()) - set(keys)))
         return str(
             'Field %s:\n  %s'
             % (
                 self.name_key(),
-                '\n  '.join(
-                    '%13s: %s' % (k, self.constraints[k]) for k in keys
-                ),
+                '\n  '.join('%13s: %s' % (k, self.constraints[k]) for k in keys),
             )
         )
 
@@ -716,9 +693,7 @@ class Constraint(object):
             allowed.extend(vs)
             if value in vs:
                 return
-        errmsg = 'must be one of: %s' % (
-            ', '.join([json.dumps(v) for v in allowed])
-        )
+        errmsg = 'must be one of: %s' % (', '.join([json.dumps(v) for v in allowed]))
         raise InvalidConstraintSpecification(
             'Invalid %s constraint value %s (%s)' % (name, value, errmsg)
         )
@@ -726,8 +701,7 @@ class Constraint(object):
     def to_dict_value(self, raw=False):
         return (
             self.value
-            if raw
-            or type(self.value) not in (datetime.datetime, datetime.date)
+            if raw or type(self.value) not in (datetime.datetime, datetime.date)
             else str(self.value)
         )
 
@@ -750,9 +724,7 @@ class MinConstraint(Constraint):
         if self.precision is None:
             return Constraint.to_dict_value(self, raw=raw)
         else:
-            return OrderedDict(
-                (('value', self.value), ('precision', self.precision))
-            )
+            return OrderedDict((('value', self.value), ('precision', self.precision)))
 
 
 class MaxConstraint(Constraint):
@@ -768,9 +740,7 @@ class MaxConstraint(Constraint):
         if self.precision is None:
             return Constraint.to_dict_value(self, raw=raw)
         else:
-            return OrderedDict(
-                (('value', self.value), ('precision', self.precision))
-            )
+            return OrderedDict((('value', self.value), ('precision', self.precision)))
 
 
 class SignConstraint(Constraint):
@@ -1045,9 +1015,7 @@ class Verification(object):
     def create_summary_stats(self, field_stats=None):
         n_fields_with_failures = len(
             list(
-                (field, ver)
-                for (field, ver) in self.fields.items()
-                if ver.failures > 0
+                (field, ver) for (field, ver) in self.fields.items() if ver.failures > 0
             )
         )
 
@@ -1057,9 +1025,7 @@ class Verification(object):
                 len(self.fields) - n_fields_with_failures,
                 n_fields_with_failures,
             ),
-            'constraints': PassFailCount(
-                'constraints', self.passes, self.failures
-            ),
+            'constraints': PassFailCount('constraints', self.passes, self.failures),
         }
         if field_stats:
             r = nvl(self.detection, self)  # TODO: pd vs. db
@@ -1073,13 +1039,11 @@ class Verification(object):
             )
 
         if self.verify_allowed_fields or (
-            self.verify_allowed_fields is None
-            and self.allowed_fields is not None
+            self.verify_allowed_fields is None and self.allowed_fields is not None
         ):
             stats['extras'] = len(self.extra_fields)
         if self.verify_required_fields or (
-            self.verify_required_fields is None
-            and self.required_fields is not None
+            self.verify_required_fields is None and self.required_fields is not None
         ):
             stats['missing'] = len(self.missing_fields)
 
@@ -1130,9 +1094,7 @@ class Verification(object):
         colour = nvl(colour, self.colour)
         n_fields = len(self.fields)
         failing_field_items = list(
-            (field, ver)
-            for (field, ver) in self.fields.items()
-            if ver.failures > 0
+            (field, ver) for (field, ver) in self.fields.items() if ver.failures > 0
         )
 
         n_fields_with_failures = len(failing_field_items)
@@ -1145,15 +1107,10 @@ class Verification(object):
             '%s: %s  %s  %s'
             % (
                 field,
-                richbad(
-                    plural(ver.failures, 'failure'), colour, ver.failures > 0
-                ),
-                richgood(
-                    plural(ver.passes, 'pass', 'es'), colour, ver.failures == 0
-                ),
+                richbad(plural(ver.failures, 'failure'), colour, ver.failures > 0),
+                richgood(plural(ver.passes, 'pass', 'es'), colour, ver.failures == 0),
                 '  '.join(
-                    '%s %s' % (c, tcn(s, ascii, colour))
-                    for (c, s) in ver.items()
+                    '%s %s' % (c, tcn(s, ascii, colour)) for (c, s) in ver.items()
                 ),
             )
             for field, ver in field_items
@@ -1303,9 +1260,7 @@ class Verification(object):
                 tick_or_cross = Marks.cross if cfail else Marks.tick
                 if c is not None:
                     actual = (
-                        field_info[kind]
-                        if field_info and kind in field_info
-                        else None
+                        field_info[kind] if field_info and kind in field_info else None
                     )
                     row.extend(
                         [
@@ -1381,12 +1336,8 @@ class Verification(object):
                         c['n_failures'] = 0
                 else:
                     c.update(stats.to_dict())
-                    failures = self.get_failure_values(
-                        field, constraint, key_fields
-                    )
-                    c['failures'] = (
-                        json_sanitize(list(failures)) if failures else []
-                    )
+                    failures = self.get_failure_values(field, constraint, key_fields)
+                    c['failures'] = json_sanitize(list(failures)) if failures else []
             if constraints == {}:
                 del d['fields'][field]
         field_stats['_values'] = PassFailCount(
@@ -1416,21 +1367,15 @@ class Verification(object):
             elif fmt == 'html':
                 write_html_detect_report(d, outpath, self.config, self._table)
             else:
-                print(
-                    f'Ignoring unknown output format "{fmt}".', file=sys.stderr
-                )
+                print(f'Ignoring unknown output format "{fmt}".', file=sys.stderr)
 
     def fill_in_missing_db_rex_failures(self):
         for fieldname, info in self.field_info.items():
             if 'rex' in info:
                 if info['rex'] == []:  # DB does not return bad rex value
                     # And nor does pandas!
-                    failures = self.get_failure_values(
-                        fieldname, 'rex', [], max_vals=1
-                    )
-                    info['rex'] = (
-                        json.dumps(list(failures)[0][0]) if failures else ''
-                    )
+                    failures = self.get_failure_values(fieldname, 'rex', [], max_vals=1)
+                    info['rex'] = json.dumps(list(failures)[0][0]) if failures else ''
 
 
 class Detection(object):
@@ -1580,9 +1525,7 @@ def verify(
             verify = verifiers.get(c.kind)
             if verify:
                 satisfied = verify(name, c, detect)
-                if (satisfied == True) or (
-                    satisfied != False and satisfied.ok
-                ):
+                if (satisfied == True) or (satisfied != False and satisfied.ok):
                     passes += 1
                 else:
                     failures += 1
@@ -1664,9 +1607,7 @@ def tcn(sat, ascii=False, colour=False):
     marks = SafeMarks if ascii else Marks
     mark = marks.nothing if sat is None else marks.tick if sat else marks.cross
     if colour:
-        return (
-            mark if sat is None else richgood(mark) if sat else richbad(mark)
-        )
+        return mark if sat is None else richgood(mark) if sat else richbad(mark)
     else:
         return mark
 
@@ -1684,11 +1625,7 @@ FIELD_CONSTRAINTS_MAP = {
 
 
 def native_definite(o):
-    return (
-        UnicodeDefinite(o)
-        if sys.version_info[0] >= 3
-        else UTF8DefiniteObject(o)
-    )
+    return UnicodeDefinite(o) if sys.version_info[0] >= 3 else UTF8DefiniteObject(o)
 
 
 def UTF8Definite(s):
@@ -1720,14 +1657,10 @@ def UTF8DefiniteObject(s):
         return tuple([UTF8DefiniteObject(v) for v in s])
     elif isinstance(s, OrderedDict):
         return OrderedDict(
-            ((UTF8DefiniteObject(k), UTF8DefiniteObject(v)))
-            for (k, v) in s.items()
+            ((UTF8DefiniteObject(k), UTF8DefiniteObject(v))) for (k, v) in s.items()
         )
     elif isinstance(s, dict):
-        return {
-            UTF8DefiniteObject(k): UTF8DefiniteObject(v)
-            for (k, v) in s.items()
-        }
+        return {UTF8DefiniteObject(k): UTF8DefiniteObject(v) for (k, v) in s.items()}
     return s
 
 
@@ -1746,15 +1679,11 @@ def NativeDefiniteObject(s):
         return tuple([NativeDefiniteObject(v) for v in s])
     elif isinstance(s, OrderedDict):
         return OrderedDict(
-            (
-                (NativeDefiniteObject(k), NativeDefiniteObject(v))
-                for (k, v) in s.items()
-            )
+            ((NativeDefiniteObject(k), NativeDefiniteObject(v)) for (k, v) in s.items())
         )
     elif isinstance(s, dict):
         return {
-            NativeDefiniteObject(k): NativeDefiniteObject(v)
-            for (k, v) in s.items()
+            NativeDefiniteObject(k): NativeDefiniteObject(v) for (k, v) in s.items()
         }
     return s
 
@@ -1764,9 +1693,7 @@ def get_date(d):
         m = re.match(rex, d)
         if m:
             try:
-                return datetime.datetime(
-                    *(int(m.group(i)) for i in range(1, L + 1))
-                )
+                return datetime.datetime(*(int(m.group(i)) for i in range(1, L + 1)))
             except ValueError:
                 print('Failed to read "%s" as date' % d, file=sys.stderr)
                 return d
@@ -1888,9 +1815,7 @@ def write_text_detect_report(d, outpath, config):
                 label = f'{indent}Constraint: {constraint}: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = config.format_constraint_value(
-                    value, len(label), 4, rex=is_rex
-                )
+                fval = config.format_constraint_value(value, len(label), 4, rex=is_rex)
                 if fval.startswith('\n'):
                     label = label[:-1]
                 nl = '\n' if ic > 0 else ''
@@ -1917,9 +1842,7 @@ def write_markdown_detect_report(d, outpath, config):
                 label = f'**Constraint:** `{constraint}`: '
                 value = results['constraint_value']
                 is_rex = constraint == 'rex'
-                fval = config.format_constraint_value(
-                    value, len(label), 4, rex=is_rex
-                )
+                fval = config.format_constraint_value(value, len(label), 4, rex=is_rex)
                 if fval.startswith('\n'):
                     label = label[:-1]
                 nl = '\n' if ic > 0 else ''
@@ -1967,9 +1890,7 @@ def write_html_detect_report(d, outpath, config, table=None):
 
             is_rex = constraint == 'rex'
             label = f'Constraint: {constraint}: '
-            fval = config.format_constraint_value(
-                value, len(label), 4, rex=is_rex
-            )
+            fval = config.format_constraint_value(value, len(label), 4, rex=is_rex)
 
             nf = results['n_failures']
             n = nf + results['n_passes']
