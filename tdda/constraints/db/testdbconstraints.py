@@ -303,7 +303,7 @@ class TestSQLiteDB(
         self.assertTrue(dbh.table_exists(elements))
         self.assertFalse(dbh.table_exists('does_not_exist'))
 
-    def test_sqlite_connection_from_file(self):
+    def test_sqlite_connection_from_file2(self):
         connfile = os.path.join(TESTDATA_DIR, 'sqlite.conn')
         db = database_connection(conn=connfile)
         dbh = DatabaseHandler('sqlite', db)

@@ -83,25 +83,6 @@ class PolarsComparison(BaseComparison):
                     diffs.append(str(diffs.dfd.diff))
             return n_diffs
 
-    def load_serialized_dataframe(self, path, actual_df=None, loader=None, **kwargs):
-        """
-        Function for constructing a pandas dataframe from a serialized
-        dataframe in a file (parquet or CSV)
-        """
-        ext = os.path.splitext(path)[1].lower()
-        if ext == '.parquet':
-            try:
-                return polars_read_df(path)
-            except FileNotFoundError:
-                if actual_df is not None:
-                    tmp_path = self.tmp_path_for(path)
-                    self._write_reference_dataframe(actual_df, tmp_path)
-                    print(f'\n*** Expected parquet file {path} not found.\n')
-                    print(self.compare_with(tmp_path, path))
-                raise
-        else:
-            return self.load_csv(path, loader, **kwargs)
-
     def write_csv(self, df, csvfile, writer=None, **kwargs):
         """
         Function for saving a Pandas DataFrame to a CSV file.
