@@ -58,7 +58,7 @@ class TestInference(ReferenceTestCase):
         md = infer_format_from_flat_file(path, warner=Warn, **kw)
         return md, buf
 
-    def check_infer(self, name, prov=False, **kw):
+    def check_infer(self, name, prov=False, ignore_patterns=None, **kw):
         base, ext = os.path.splitext(name)
         stem = base if ext == '.csv' else base + '-' + ext[1:]
         suffix = '-prov-inferred.serial' if prov else '-inferred.serial'
@@ -70,7 +70,11 @@ class TestInference(ReferenceTestCase):
         outpath = tmppath(outname)
         with open(outpath, 'w') as f:
             f.write(md.to_json())
-        self.assertFileCorrect(outpath, tdpath(outname), ignore_lines=self.IGL)
+        self.assertFileCorrect(
+            outpath, tdpath(outname),
+            ignore_lines=self.IGL,
+            ignore_patterns=ignore_patterns,
+        )
         return buf, md
 
     def testInferMetadataTiny1cdq(self):
@@ -824,7 +828,8 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferSigLatin1(self):
         buf, md = self.check_infer('sig-latin1.csv', prov=False, verbosity=0)
-        self.assertEqual(buf, [])
+        # chardet >= 6 may detect as UTF-8 first, then fall back to latin-1
+        self.assertIn(len(buf), (0, 1))
         Warn, buf2 = testwarn()
         df = csv_to_pandas(
             tdpath('sig-latin1.csv'),
@@ -837,7 +842,8 @@ class TestInferAllFlatFiles(TestInference):
 
     def testInferSigLatin9(self):
         buf, md = self.check_infer('sig-latin9.csv', prov=False, verbosity=0)
-        self.assertEqual(buf, [])
+        # chardet >= 6 may detect as UTF-8 first, then fall back to latin-1
+        self.assertIn(len(buf), (0, 1))
         Warn, buf2 = testwarn()
         df = csv_to_polars(
             tdpath('sig-latin9.csv'),
@@ -860,13 +866,29 @@ class TestInferAllFlatFiles(TestInference):
         buf, md = self.check_infer('simple.csv', prov=True, verbosity=0)
 
     def testInferSmallCp1252(self):
-        buf, md = self.check_infer('small-cp1252.csv', prov=True, verbosity=0)
+        # chardet < 6 detects this file as windows-1255; chardet >= 6 as
+        # latin-1, which the cp1252 byte check in read_file_lines promotes
+        # to cp1252.
+        buf, md = self.check_infer(
+            'small-cp1252.csv', prov=True, verbosity=0,
+            ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
+        )
 
     def testInferSmallLatin1(self):
-        buf, md = self.check_infer('small-latin1.csv', prov=True, verbosity=0)
+        # chardet < 6 detects this file as windows-1255; chardet >= 6 as
+        # latin-1.
+        buf, md = self.check_infer(
+            'small-latin1.csv', prov=True, verbosity=0,
+            ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
+        )
 
     def testInferSmallLatin9(self):
-        buf, md = self.check_infer('small-latin9.csv', prov=True, verbosity=0)
+        # chardet < 6 detects this file as windows-1255; chardet >= 6 as
+        # latin-1.
+        buf, md = self.check_infer(
+            'small-latin9.csv', prov=True, verbosity=0,
+            ignore_patterns=[r'"encoding": "(latin-1|windows-1255)"'],
+        )
 
     def testInferSmallWriteKw(self):
         buf, md = self.check_infer('small-write-kw.csv', verbosity=0)

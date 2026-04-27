@@ -1,7 +1,7 @@
 TDDA_MAJOR_VERSION = 3
 TDDA_MINOR_VERSION = 0
 TDDA_EDIT = 0
-TDDA_VERSION_QUALIFIER = 'rc5'
+TDDA_VERSION_QUALIFIER = 'rc6'
 TDDA_ZERO_VERSION = '0.0.0'  # used for some reference test results.
 TDDA_VERSION = '%d.%d.%02d%s' % (
     TDDA_MAJOR_VERSION,

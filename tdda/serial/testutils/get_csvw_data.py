@@ -1,6 +1,5 @@
 import json
 import os
-import requests
 import sys
 
 from collections import Counter
@@ -67,6 +66,7 @@ def parse(outpath):
 
 
 def download(details):
+    import requests
     if not os.path.exists(CSVW_TEST_DIR):
         os.makedirs(CSVW_TEST_DIR)
     dirs = Counter()

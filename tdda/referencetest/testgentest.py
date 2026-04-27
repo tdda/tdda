@@ -295,7 +295,10 @@ class TestGenTest(ReferenceTestCase):
 
         r = ExecuteCommand(' '.join(cmd), cwd=TESTDIRA)
         self.assertEqual(r.exit_code, 1)
-        self.assertStringCorrect(r.err.strip(), ref_path('a-stderr1.txt'))
+        self.assertStringCorrect(
+            r.err.strip(), ref_path('a-stderr1.txt'),
+            ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
+        )
         self.assertStringCorrect(r.out.strip(), ref_path('a-stdout1.txt'))
 
         # Repeat with allow non-zero exist code
@@ -336,7 +339,10 @@ class TestGenTest(ReferenceTestCase):
                 r'/tdda/gentest/testa/test_python_2files_py.py$',
             ],
         )
-        self.assertStringCorrect(r.err.strip(), ref_path('a-stderr2.txt'))
+        self.assertStringCorrect(
+            r.err.strip(), ref_path('a-stderr2.txt'),
+            ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
+        )
         self.assertFileCorrect(
             out_path('testa/test_python_2files_py.py'),
             ref_path('a-test_python_2files_py.py'),

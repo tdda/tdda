@@ -20,7 +20,7 @@
                 "fieldtype": "string"
             }
         ],
-        "encoding": "ISO-8859-1",
+        "encoding": "latin-1",
         "delimiter": ",",
         "header_row_count": 1,
         "header_row": 0,

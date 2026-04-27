@@ -49,7 +49,8 @@ class TestX_DETECT_BOOKEX17(ReferenceTestCase):
 
     def test_stderr(self):
         self.assertStringCorrect(
-            self.error, os.path.join(self.refdir, 'STDERR')
+            self.error, os.path.join(self.refdir, 'STDERR'),
+            ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
 
     def test_a25k_bads_v2c_csv(self):

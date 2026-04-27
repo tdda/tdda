@@ -97,6 +97,21 @@ SEP_CHARS = (',', '|', '\t', ';')
 
 ENCODING_FALLBACKS = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
 
+# Aliases that chardet returns for latin-1 / ISO-8859-1 across versions.
+_LATIN1_ALIASES = frozenset([
+    'latin-1', 'latin1', 'iso-8859-1', 'iso8859-1', 'iso_8859-1',
+    '8859-1', 'csisolatin1', 'l1',
+])
+
+
+def normalize_encoding(enc):
+    """Map chardet encoding aliases to canonical Python codec names."""
+    if enc is None:
+        return None
+    if enc.lower().replace('_', '-') in _LATIN1_ALIASES:
+        return 'latin-1'
+    return enc
+
 # Values that are almost certainly data, not field names, even if they
 # look like identifiers (e.g. 'false' matches STRICT_NAME_RE).
 KNOWN_DATA_VALUES = {
@@ -473,7 +488,9 @@ class MetadataInferrer:
 
     def read(self):
         if self._given['encoding'] is None:
-            enc = nvl(FileType(self.inpath).encoding, 'UTF-8')
+            enc = normalize_encoding(
+                nvl(FileType(self.inpath).encoding, 'UTF-8')
+            )
             self.encoding = None if enc == 'ascii' else enc
         self.datalines = datalines = []
         enc_used = self._open_with_fallback(datalines)

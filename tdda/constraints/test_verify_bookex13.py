@@ -38,7 +38,8 @@ class TestX_VERIFY_BOOKEX13(ReferenceTestCase):
 
     def test_stderr(self):
         self.assertStringCorrect(
-            self.error, os.path.join(self.refdir, 'STDERR')
+            self.error, os.path.join(self.refdir, 'STDERR'),
+            ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
 
 

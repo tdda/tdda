@@ -47,7 +47,8 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
 
     def test_stderr(self):
         self.assertStringCorrect(
-            self.error, os.path.join(self.refdir, 'STDERR')
+            self.error, os.path.join(self.refdir, 'STDERR'),
+            ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
 
     def test_accountsex12_tdda(self):

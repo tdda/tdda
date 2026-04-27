@@ -11,7 +11,6 @@ Copyright (c) Stochastic Solutions Limited 2016-2022
 """
 
 import os
-import requests
 import shutil
 import sys
 import zipfile
@@ -40,6 +39,7 @@ def copy_examples(name, destination='.', verbose=True):
     outdir = os.path.join(destination, '%s_examples' % name)
     shutil.rmtree(outdir, ignore_errors=True)
     if name == 'book':
+        import requests
         if verbose:
             print('Fetching book examples...,')
         zip_path = os.path.join(destination, 'book_examples.zip')
