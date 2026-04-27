@@ -33,7 +33,9 @@ from tdda.referencetest.test_diff_book_sd1 import *
 
 REFTESTDIR = os.path.dirname(__file__)  # tdda.referencetest
 TDDADIR = os.path.dirname(REFTESTDIR)  # tdda
-EXDIR = os.path.join(REFTESTDIR, 'diffexamples')  # tdda/referencetest/diffexamples
+EXDIR = os.path.join(
+    REFTESTDIR, 'diffexamples'
+)  # tdda/referencetest/diffexamples
 REFDIR = os.path.join(
     REFTESTDIR, 'testdata', 'diff'
 )  # tdda/referencetest/testdata/diff
@@ -96,7 +98,9 @@ class TestTDDADiff(ReferenceTestCase):
         actual = self.diff(args, console=console)
         title = ' '.join(['tdda diff'] + targs)
         if GENSVG:
-            console.save_svg(svgpath(filename), title=title, theme=DIMMED_MONOKAI)
+            console.save_svg(
+                svgpath(filename), title=title, theme=DIMMED_MONOKAI
+            )
         self.assertStringCorrect(actual, expected, ignore_lines=RICH_TITLE_PAT)
         return actual
 
@@ -121,7 +125,9 @@ class TestTDDADiff(ReferenceTestCase):
     def test_a_csv_b_csv(self):
         """Most basic diff of two CSV files with two diffs"""
         actual = self.difftest('a.csv', 'b.csv')
-        self.assertIn('Total number of different values: 2 of 24 (8.33%).', actual)
+        self.assertIn(
+            'Total number of different values: 2 of 24 (8.33%).', actual
+        )
 
     def test_a_tsv_b_tsv(self):
         """Diff aginst self: should be empty"""
@@ -149,7 +155,9 @@ class TestTDDADiff(ReferenceTestCase):
     def test_s1_csv_s2_csv(self):
         """Single column string data with 2 diffs"""
         actual = self.difftest('s1.csv', 's2.csv')
-        self.assertIn('Total number of different values: 2 of 3 (66.67%).', actual)
+        self.assertIn(
+            'Total number of different values: 2 of 3 (66.67%).', actual
+        )
 
     # CROSS-TYPE
 
@@ -184,7 +192,9 @@ class TestTDDADiff(ReferenceTestCase):
     def test_a_csv_d_csv(self):
         """One different date value: fails"""
         actual = self.difftest('a.csv', 'd.csv')
-        self.assertIn('Total number of different values: 1 of 24 (4.17%).', actual)
+        self.assertIn(
+            'Total number of different values: 1 of 24 (4.17%).', actual
+        )
 
     # DIFFERENT NUMBER OF ROWS
 
@@ -218,7 +228,9 @@ class TestTDDADiff(ReferenceTestCase):
     @tag
     def test_a_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
-        self.difftest('a.csv', 'f5.tsv', ['--key', 'row', '--polars'], width=120)
+        self.difftest(
+            'a.csv', 'f5.tsv', ['--key', 'row', '--polars'], width=120
+        )
 
     @tag
     def test_f5_3d_tsv_a_tsv_join(self):
@@ -228,7 +240,9 @@ class TestTDDADiff(ReferenceTestCase):
     @tag
     def test_f5_3d_tsv_f5_tsv_join_polars(self):
         """One extra row, with join key"""
-        self.difftest('f5-3d.tsv', 'a.tsv', ['--key', 'row', '--polars'], width=130)
+        self.difftest(
+            'f5-3d.tsv', 'a.tsv', ['--key', 'row', '--polars'], width=130
+        )
 
 
 class TestKeyFunctions:
@@ -246,7 +260,9 @@ class TestKeyFunctions:
 
         # All except even, small are usable
         for key in ('row', 'sq', 'recip', 'date'):
-            self.assertEqual((key, check_is_usable_key(dfL, dfR, key)), (key, True))
+            self.assertEqual(
+                (key, check_is_usable_key(dfL, dfR, key)), (key, True)
+            )
         # even, small not usable
         self.assertEqual(check_is_usable_key(dfL, dfR, 'even'), False)
         self.assertEqual(check_is_usable_key(dfL, dfR, 'small'), False)
@@ -305,7 +321,9 @@ class TestKeyFunctions:
         dfL = self.read_parquet(inpath('a.parquet'))
         dfR2 = self.read_parquet(inpath('f5.parquet'))
         fields = ['row', 'sq', 'recip', 'name', 'even', 'date']
-        left, right, key = find_usable_key(self.is_pandas, dfL, dfR2, key='row')
+        left, right, key = find_usable_key(
+            self.is_pandas, dfL, dfR2, key='row'
+        )
         self.assertEqual(key, 'row')  # first usable key
         self.assertEqual(col_names(left), fields)
         self.assertEqual(col_names(right), fields)

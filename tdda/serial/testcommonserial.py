@@ -35,7 +35,9 @@ THISDIR = os.path.abspath(os.path.dirname(__file__))
 TESTDATADIR = os.path.join(THISDIR, 'testdata')
 EXAMPLESDIR = os.path.join(THISDIR, 'examples')
 GLOBDIR = os.path.join(TESTDATADIR, 'globfiles')
-REFTESTDATA = os.path.normpath(os.path.join(THISDIR, '..', 'constraints', 'testdata'))
+REFTESTDATA = os.path.normpath(
+    os.path.join(THISDIR, '..', 'constraints', 'testdata')
+)
 
 TMPDIR = tempfile.mkdtemp()
 
@@ -93,16 +95,22 @@ class TestDateSanityRE(ReferenceTestCase):
 
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-ddTHH:mm'), 'YYYY-MM-DDTHH:MM')
+        self.assertEqual(
+            map_date_format('yyyy-MM-ddTHH:mm'), 'YYYY-MM-DDTHH:MM'
+        )
 
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss.S'), 'iso8601')
         self.assertEqual(map_date_format('yyyy-MM-dd HH:mm:ss'), 'iso8601')
-        self.assertEqual(map_date_format('yyyy-MM-dd HH:mm'), 'YYYY-MM-DD HH:MM')
+        self.assertEqual(
+            map_date_format('yyyy-MM-dd HH:mm'), 'YYYY-MM-DD HH:MM'
+        )
 
         self.assertEqual(
             map_date_format('dd-MM-yyyy HH:mm:ss.S'), 'DD-MM-YYYY HH:MM:SS.SSS'
         )
-        self.assertEqual(map_date_format('MM-dd-yyyy HH:mm:ss'), 'MM-DD-YYYY HH:MM:SS')
+        self.assertEqual(
+            map_date_format('MM-dd-yyyy HH:mm:ss'), 'MM-DD-YYYY HH:MM:SS'
+        )
         self.assertEqual(map_date_format('dd-MM-yy HH:mm'), 'DD-MM-YY HH:MM')
         self.assertIsNone(map_date_format(''))
 
@@ -117,7 +125,9 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertIsNone(f('any', 'date'))
         self.assertIsNone(f('any', 'datetime'))
         self.assertEqual(f('%d/%m/%Y', 'date'), '%d/%m/%Y')
-        self.assertEqual(f('%d/%m/%Y %H:%M:%S', 'datetime'), '%d/%m/%Y %H:%M:%S')
+        self.assertEqual(
+            f('%d/%m/%Y %H:%M:%S', 'datetime'), '%d/%m/%Y %H:%M:%S'
+        )
         self.assertEqual(f('%Y-%m-%d', 'date'), '%Y-%m-%d')
 
     def testSingleDateFormat(self):
@@ -209,8 +219,12 @@ class TestDateSanityRE(ReferenceTestCase):
 
         # Boolean values, excluding names
         self.assertEqual(is_iso8601_format('iso8601', inc_names=False), False)
-        self.assertEqual(is_iso8601_format('iso8601-date', inc_names=False), False)
-        self.assertEqual(is_iso8601_format('iso8601-datetime', inc_names=False), False)
+        self.assertEqual(
+            is_iso8601_format('iso8601-date', inc_names=False), False
+        )
+        self.assertEqual(
+            is_iso8601_format('iso8601-datetime', inc_names=False), False
+        )
         self.assertEqual(
             is_iso8601_format('iso8601-datetime-tz', inc_names=False), False
         )
@@ -218,7 +232,9 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(is_iso8601_format('%Y-%m-%d', inc_names=False), True)
 
         # Specific values
-        self.assertEqual(is_iso8601_format('iso8601', return_specific=True), 'iso8601')
+        self.assertEqual(
+            is_iso8601_format('iso8601', return_specific=True), 'iso8601'
+        )
         self.assertEqual(
             is_iso8601_format('iso8601-date', return_specific=True),
             'iso8601-date',
@@ -262,7 +278,9 @@ class TestDateSanityRE(ReferenceTestCase):
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
 
         warner, buf = testwarn()
-        self.assertEqual(m.single_null_indicator(default='NULL', warner=warner), '.')
+        self.assertEqual(
+            m.single_null_indicator(default='NULL', warner=warner), '.'
+        )
         self.assertEqual(buf, ['Multiple null indicators: using first (".").'])
 
         f1 = FieldMetadata('f1', fieldtype='int', null_indicator='.')
@@ -397,7 +415,9 @@ class TestFindMetadata(ReferenceTestCase):
             ('frictionless', ('foo-bar.baz', 'resource', '.json')),
         )
 
-        self.assertEqual(find_metadata_type_from_path('foo.json'), (None, None))
+        self.assertEqual(
+            find_metadata_type_from_path('foo.json'), (None, None)
+        )
 
     def test_find_metadata_priority(self):
         d = {
@@ -609,7 +629,9 @@ class TestWildcardSerialLookup(ReferenceTestCase):
 
     def testAmbiguousWildcard(self):
         with self.assertRaisesRegex(TDDAError, 'Ambiguous wildcard'):
-            find_associated_metadata_file(self.gpath('foobaz.csv'), raise_error=True)
+            find_associated_metadata_file(
+                self.gpath('foobaz.csv'), raise_error=True
+            )
 
     def testNoMatch(self):
         result = find_associated_metadata_file(self.gpath('nomatch.csv'))

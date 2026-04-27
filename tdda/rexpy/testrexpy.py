@@ -243,7 +243,8 @@ class TestUtilityFunctions(ReferenceTestCase):
         self.assertEqual(signature([('c', 1)]), 'c')
 
         self.assertEqual(
-            signature([('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 2)]), 'C.C.C'
+            signature([('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 2)]),
+            'C.C.C',
         )
 
         self.assertEqual(
@@ -265,7 +266,15 @@ class TestUtilityFunctions(ReferenceTestCase):
 
         self.assertEqual(
             signature(
-                [('.', 1), ('C', 4), ('.', 1), (' ', 1), ('C', 3), (' ', 1), ('C', 4)]
+                [
+                    ('.', 1),
+                    ('C', 4),
+                    ('.', 1),
+                    (' ', 1),
+                    ('C', 3),
+                    (' ', 1),
+                    ('C', 4),
+                ]
             ),
             '.C. C C',
         )
@@ -323,10 +332,16 @@ class TestUtilityFunctions(ReferenceTestCase):
 
         self.assertEqual(
             get_omnipresent_at_pos(c, 7),
-            [(('a', 1, 1, 'fixed'), -1), (('a', 1, 1, 'fixed'), 1), (('c', 1, 1), 2)],
+            [
+                (('a', 1, 1, 'fixed'), -1),
+                (('a', 1, 1, 'fixed'), 1),
+                (('c', 1, 1), 2),
+            ],
         )
 
-        self.assertEqual(get_omnipresent_at_pos(c, 6), [(('b', 1, 1, 'fixed'), 2)])
+        self.assertEqual(
+            get_omnipresent_at_pos(c, 6), [(('b', 1, 1, 'fixed'), 2)]
+        )
 
         self.assertEqual(get_omnipresent_at_pos(c, 5), [])
 
@@ -527,7 +542,9 @@ class TestHelperMethods(ReferenceTestCase):
         guid = '1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c'
         sig = CtoUC('CCCCCCCC.CCCC.CCCC.CCCC.CCCCCCCCCCCC')
         self.assertEqual(x.coarse_classify(guid), sig)
-        self.assertEqual(x.coarse_classify('(0131) 123 4567'), CtoUC('.CCCC. CCC CCCC'))
+        self.assertEqual(
+            x.coarse_classify('(0131) 123 4567'), CtoUC('.CCCC. CCC CCCC')
+        )
         self.assertEqual(
             x.coarse_classify('2016-01-02T10:11:12 +0300z'),
             CtoUC('CCCC.CC.CCCCC.CC.CC .CCCCC'),
@@ -565,7 +582,15 @@ class TestHelperMethods(ReferenceTestCase):
 
         self.assertEqual(
             run_length_encode('.CCCC. CCC CCCC'),
-            (('.', 1), ('C', 4), ('.', 1), (' ', 1), ('C', 3), (' ', 1), ('C', 4)),
+            (
+                ('.', 1),
+                ('C', 4),
+                ('.', 1),
+                (' ', 1),
+                ('C', 3),
+                (' ', 1),
+                ('C', 4),
+            ),
         )
 
         self.assertEqual(
@@ -667,7 +692,9 @@ class TestHelperMethods(ReferenceTestCase):
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
         rex = self.x.rle2re(rle)
-        self.assertEqual(rex, '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an))
+        self.assertEqual(
+            rex, '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an)
+        )
         cre = re.compile(rex)
         for s in ['123-AB-321', '321-BA-123']:
             self.assertIsNotNone(re.match(cre, s))
@@ -679,14 +706,28 @@ class TestHelperMethods(ReferenceTestCase):
         range_rles, _, _ = to_vrles(keys)
         self.assertEqual(
             range_rles,
-            [(('C', 2, 3), ('.', 1, 1), ('C', 2, 2), ('.', 1, 1), ('C', 3, 4))],
+            [
+                (
+                    ('C', 2, 3),
+                    ('.', 1, 1),
+                    ('C', 2, 2),
+                    ('.', 1, 1),
+                    ('C', 3, 4),
+                )
+            ],
         )
 
     def test_vrle2re(self):
         key1 = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         key2 = (('C', 2), ('.', 1), ('C', 2), ('.', 1), ('C', 4))
         keys = [key1, key2]
-        rrle = [('C', 2, 3), ('.', 1, 1), ('C', 2, 2), ('.', 1, 1), ('C', 3, 4)]
+        rrle = [
+            ('C', 2, 3),
+            ('.', 1, 1),
+            ('C', 2, 2),
+            ('.', 1, 1),
+            ('C', 3, 4),
+        ]
         Cats = Extractor([]).Cats
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
@@ -784,7 +825,11 @@ class TestExtraction(ReferenceTestCase):
             if match:
                 compiled = [re_compile(r) for r in rexes]
                 self.assertTrue(
-                    all(any(match(rex, x) for rex in compiled) for x in examples if x)
+                    all(
+                        any(match(rex, x) for rex in compiled)
+                        for x in examples
+                        if x
+                    )
                 )
 
     def test_re_pqs_id_perl(self):
@@ -823,7 +868,9 @@ class TestExtraction(ReferenceTestCase):
         rexes = [r'^$', r'^[0-9]{2,3}[A-Z-][A-Z]{2}[A-Z-][0-9]{3,4}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
-        self.assertTrue(all(any(re.match(rex, x) for rex in rexes) for x in iids if x))
+        self.assertTrue(
+            all(any(re.match(rex, x) for rex in rexes) for x in iids if x)
+        )
         # Test result has changed with improved behaviour.
         # Now us spots that the base sequence is the same
         # Previously this found this:
@@ -834,7 +881,9 @@ class TestExtraction(ReferenceTestCase):
         rexes = [r'^[A-Z0-9-]{10,11}$']
         x = extract(iids, extra_letters='-')
         self.check_result(x, rexes, iids)
-        self.assertTrue(all(any(re.match(rex, x) for rex in rexes) for x in iids if x))
+        self.assertTrue(
+            all(any(re.match(rex, x) for rex in rexes) for x in iids if x)
+        )
 
     def test_re_pqs_id_with_underscore(self):
         iids = ['123_AB_321', 'AB_1B_4A21', None, '321_BA_1A23ab2rj']
@@ -853,7 +902,9 @@ class TestExtraction(ReferenceTestCase):
         rexes = [r'^[A-Za-z0-9_-]+$']
         x = extract(iids, extra_letters='_-.')
         self.check_result(x, rexes, iids)
-        self.assertTrue(all(any(re.match(rex, x) for rex in rexes) for x in iids if x))
+        self.assertTrue(
+            all(any(re.match(rex, x) for rex in rexes) for x in iids if x)
+        )
 
     uuids = [
         '1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c',
@@ -980,7 +1031,9 @@ class TestExtraction(ReferenceTestCase):
 
     def test_tels1(self):
         x = extract(self.tels1)
-        self.check_result(x, [r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'], self.tels1)
+        self.check_result(
+            x, [r'^\([0-9]{3,4}\) [0-9]{3,4} [0-9]{4}$'], self.tels1
+        )
 
     tels2 = [
         '+44 131 496 0091',
@@ -1166,7 +1219,9 @@ class TestExtraction(ReferenceTestCase):
             r'^\+[0-9]{1,2} [0-9]{2,3} [0-9]{3,4} [0-9]{4}$',
         ]
         self.check_result(x, rexes, tels)
-        self.assertTrue(all(any(re.match(rex, x) for rex in rexes) for x in tels))
+        self.assertTrue(
+            all(any(re.match(rex, x) for rex in rexes) for x in tels)
+        )
         R = rexes[1]
         self.assertFalse(re.match(R, '123y321y4444'))
 
@@ -1191,7 +1246,9 @@ class TestExtraction(ReferenceTestCase):
     ]
 
     def test_POSTCODES(self):
-        self.assertEqual(extract(self.POSTCODES), [r'^[A-Z]{1,2}[0-9] [0-9][A-Z]{2}$'])
+        self.assertEqual(
+            extract(self.POSTCODES), [r'^[A-Z]{1,2}[0-9] [0-9][A-Z]{2}$']
+        )
         # Improved answer
         # Previously
         #    [r'^[A-Z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -1212,7 +1269,9 @@ class TestExtraction(ReferenceTestCase):
     ]
 
     def test_Postcodes2(self):
-        self.assertEqual(extract(self.postcodes), [r'^[a-z]{1,2}[0-9] [0-9][a-z]{2}$'])
+        self.assertEqual(
+            extract(self.postcodes), [r'^[a-z]{1,2}[0-9] [0-9][a-z]{2}$']
+        )
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [a-z0-9]{3}$'])
@@ -1223,7 +1282,9 @@ class TestExtraction(ReferenceTestCase):
     ]
 
     def test_postCODES(self):
-        self.assertEqual(extract(self.postCODES), [r'^[a-z]{1,2}[0-9] [0-9][A-Z]{2}$'])
+        self.assertEqual(
+            extract(self.postCODES), [r'^[a-z]{1,2}[0-9] [0-9][A-Z]{2}$']
+        )
         # Improved answer.
         # Previously:
         #     [r'^[a-z0-9]{2,3} [A-Z0-9]{3}$'])
@@ -1234,7 +1295,9 @@ class TestExtraction(ReferenceTestCase):
     ]
 
     def test_POSTcodes(self):
-        self.assertEqual(extract(self.POSTcodes), [r'^[A-Z]{1,2}[0-9] [0-9][a-z]{2}$'])
+        self.assertEqual(
+            extract(self.POSTcodes), [r'^[A-Z]{1,2}[0-9] [0-9][a-z]{2}$']
+        )
 
     #                         [r'^[A-Z0-9]{2,3} [a-z0-9]{3}$'])
 
@@ -1275,11 +1338,14 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(extract(self.names1L), [r'^[A-Z][a-z]+$'])
 
     def test_names2(self):
-        self.assertEqual(extract(self.names2), [r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$'])
+        self.assertEqual(
+            extract(self.names2), [r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$']
+        )
 
     def test_names3(self):
         self.assertEqual(
-            extract(self.names3), [r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$']
+            extract(self.names3),
+            [r'^[A-Z][a-z]{3,4} [A-Z][a-z]+ [A-Z][a-z]{4,6}$'],
         )
 
     @unittest.skipIf(not UNICHRS, 'Unicode handling off')
@@ -1312,7 +1378,8 @@ class TestExtraction(ReferenceTestCase):
 
     def test_names_dot_initial(self):
         self.assertEqual(
-            extract(self.names_dot_initial), [r'^[A-Z][a-z]{3,5} [A-Z]\. [A-Z][a-z]+$']
+            extract(self.names_dot_initial),
+            [r'^[A-Z][a-z]{3,5} [A-Z]\. [A-Z][a-z]+$'],
         )
 
     def test_names1L23(self):
@@ -1327,7 +1394,12 @@ class TestExtraction(ReferenceTestCase):
 
     def test_names1L23_dot_initial(self):
         self.assertEqual(
-            extract(self.names1L + self.names2 + self.names3 + self.names_dot_initial),
+            extract(
+                self.names1L
+                + self.names2
+                + self.names3
+                + self.names_dot_initial
+            ),
             [
                 r'^[A-Z][a-z]+$',
                 r'^[A-Z][a-z]{4,6} [A-Z][a-z]+$',
@@ -1380,7 +1452,9 @@ class TestExtraction(ReferenceTestCase):
                 r'^http://www\.[a-z]+\.co\.uk/$',
             ]
         )
-        self.assertEqual(set(extract(self.urls1, variableLengthFrags=False)), expected)
+        self.assertEqual(
+            set(extract(self.urls1, variableLengthFrags=False)), expected
+        )
 
         expected = set(
             [
@@ -1391,7 +1465,9 @@ class TestExtraction(ReferenceTestCase):
                 r'^https?://w{1,3}e?b?\.[a-z]+\.com$',
             ]
         )
-        self.assertEqual(set(extract(self.urls1, variableLengthFrags=True)), expected)
+        self.assertEqual(
+            set(extract(self.urls1, variableLengthFrags=True)), expected
+        )
 
         # Sorted by length, these forms are:These are All:
         #
@@ -1445,7 +1521,9 @@ class TestExtraction(ReferenceTestCase):
             r'^http://www\.[a-z]{6,8}\.com/$',
             r'^http://www\.[a-z]+\.co\.uk/$',
         }
-        self.assertEqual(set(extract(self.urls2, variableLengthFrags=False)), expected)
+        self.assertEqual(
+            set(extract(self.urls2, variableLengthFrags=False)), expected
+        )
 
         for url in self.urls2:
             self.assertTrue(any(re.match(R, url) for R in expected))
@@ -1458,7 +1536,9 @@ class TestExtraction(ReferenceTestCase):
             r'^http://www\.[a-z]+\.co\.uk/$',
             r'^https?://www\.[a-z]+\.com$',
         }
-        self.assertEqual(set(extract(self.urls2, variableLengthFrags=True)), expected)
+        self.assertEqual(
+            set(extract(self.urls2, variableLengthFrags=True)), expected
+        )
         for url in self.urls2:
             self.assertTrue(any(re.match(R, url) for R in expected))
 
@@ -1840,7 +1920,12 @@ class TestExtraction(ReferenceTestCase):
 
         # Second component of rex_full-incremental_coverage:
         cov = matrices2incremental_coverage(
-            patterns, matrix, deduped, indexes, x.examples, sort_on_deduped=False
+            patterns,
+            matrix,
+            deduped,
+            indexes,
+            x.examples,
+            sort_on_deduped=False,
         )
         EXPECTED_COVERAGE = OrderedDict(
             [
@@ -1864,7 +1949,8 @@ class TestExtraction(ReferenceTestCase):
             r'^http://www\.([a-z]+)\.co\.uk/$',
         }
         self.assertEqual(
-            set(extract(self.urls2, tag=True, variableLengthFrags=False)), expected
+            set(extract(self.urls2, tag=True, variableLengthFrags=False)),
+            expected,
         )
 
         for url in self.urls2:
@@ -1882,7 +1968,8 @@ class TestExtraction(ReferenceTestCase):
             r'^http://www\.([a-z]+)\.co\.uk/$',
         }
         self.assertEqual(
-            set(extract(self.urls2, tag=True, variableLengthFrags=True)), expected
+            set(extract(self.urls2, tag=True, variableLengthFrags=True)),
+            expected,
         )
         for url in self.urls2:
             self.assertTrue(any(re.match(R, url) for R in expected))
@@ -1903,7 +1990,8 @@ class TestExtraction(ReferenceTestCase):
             r'^http://www\.[a-z]+\.co\.uk/$',
         }
         self.assertEqual(
-            set(extract(self.urls1 + self.urls2, variableLengthFrags=False)), expected
+            set(extract(self.urls1 + self.urls2, variableLengthFrags=False)),
+            expected,
         )
         for url in self.urls1 + self.urls2:
             self.assertTrue(any(re.match(R, url) for R in expected))
@@ -1918,7 +2006,8 @@ class TestExtraction(ReferenceTestCase):
             r'^https?://w{1,3}e?b?\.[a-z]+\.com$',
         }
         self.assertEqual(
-            set(extract(self.urls1 + self.urls2, variableLengthFrags=True)), expected
+            set(extract(self.urls1 + self.urls2, variableLengthFrags=True)),
+            expected,
         )
         for url in self.urls1 + self.urls2:
             self.assertTrue(any(re.match(R, url) for R in expected))
@@ -1962,7 +2051,8 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(set(r.results.rex), expected)
         self.assertEqual(r.n_too_many_groups, 1)
         self.assertEqual(
-            r.warnings[0], '1 string assigned to .{m,n} for needing "too many" groups.'
+            r.warnings[0],
+            '1 string assigned to .{m,n} for needing "too many" groups.',
         )
 
     def testmflag(self):
@@ -2082,7 +2172,9 @@ class TestExtraction(ReferenceTestCase):
     @unittest.skipIf(pandas is None, 'No pandas here')
     def testpdextract2(self):
         df = pd.DataFrame({'ab': ['one', True, np.nan]})
-        self.assertRaisesRegex(ValueError, 'Non-null, non-string', pdextract, df['ab'])
+        self.assertRaisesRegex(
+            ValueError, 'Non-null, non-string', pdextract, df['ab']
+        )
 
     def testRexpyCommandLineAPIQuoting(self):
         inputs = ['EH12 3LH', 'AL64 1BB']
@@ -2149,7 +2241,13 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(random.getstate(), state)
 
         expected_with_seed = choose23(
-            ['^a$', '^a\\.a$', '^a\\.a\\.a$', '^a\\.a\\.a\\.a$', '^a\\.a\\.a\\.a\\.a$'],
+            [
+                '^a$',
+                '^a\\.a$',
+                '^a\\.a\\.a$',
+                '^a\\.a\\.a\\.a$',
+                '^a\\.a\\.a\\.a\\.a$',
+            ],
             ['^a$', '^a\\.a$'],
         )
 

@@ -176,7 +176,9 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
     def calc_non_integer_values_count(self, colname):
         values = self.df[colname].dropna()
         non_nulls = self.df[colname].count()
-        return int(non_nulls - (values.astype(int) == values).astype(int).sum())
+        return int(
+            non_nulls - (values.astype(int) == values).astype(int).sum()
+        )
 
     def calc_all_non_nulls_boolean(self, colname):
         nn = self.df[colname].dropna()
@@ -203,7 +205,9 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             return None  # to be an active constraint,
             # so is always satisfied
         rexes = [re.compile(r, RE_FLAGS) for r in rexes]
-        strings = [unicode_definite(s) for s in self.df[colname].dropna().unique()]
+        strings = [
+            unicode_definite(s) for s in self.df[colname].dropna().unique()
+        ]
 
         failures = set()
         for s in strings:
@@ -256,7 +260,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c > value)
         else:
-            self.out_df[name] = detection_field(c, df_fuzzy_gt(c, value, epsilon))
+            self.out_df[name] = detection_field(
+                c, df_fuzzy_gt(c, value, epsilon)
+            )
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'max')
@@ -268,7 +274,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif precision == 'open':
             self.out_df[name] = detection_field(c, c < value)
         else:
-            self.out_df[name] = detection_field(c, df_fuzzy_lt(c, value, epsilon))
+            self.out_df[name] = detection_field(
+                c, df_fuzzy_lt(c, value, epsilon)
+            )
 
     def detect_min_length_constraint(self, colname, value):
         name = verification_field(colname, 'min_length')
@@ -322,7 +330,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         unique = ~self.df.duplicated(colname, keep=False)
         self.out_df[name] = detection_field(c, unique, default=True)
 
-    def detect_allowed_values_constraint(self, colname, allowed_values, violations):
+    def detect_allowed_values_constraint(
+        self, colname, allowed_values, violations
+    ):
         name = verification_field(colname, 'allowed_values')
         c = self.df[colname]
         self.out_df[name] = detection_field(c, ~c.isin(violations))
@@ -360,7 +370,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         elif len(output_fields) == 0:
             output_fields = list(self.df)
 
-        nfailname = 'n_failures' if 'n_failures' not in self.df else 'n_tdda_failures'
+        nfailname = (
+            'n_failures' if 'n_failures' not in self.df else 'n_tdda_failures'
+        )
         nf = len(list(out_df))  # ok fields
         fails = (
             nf
@@ -457,7 +469,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         new_fields = []
         for f in orig_fields:
             new_fields.append(f)
-            new_fields.extend(sorted([v for v in all_vfields if is_ver_field(v, f)]))
+            new_fields.extend(
+                sorted([v for v in all_vfields if is_ver_field(v, f)])
+            )
         new_fields.append(nfailname)
         if DEBUG and set(list(df)) != set(new_fields):
             print('list(df))', list(df), len(list(df)))
@@ -511,9 +525,13 @@ class PandasConstraintVerifier(
                     if is_numeric:
                         if is_real:
                             is_real = self.calc_non_integer_values_count(c) > 0
-                        self.df[c] = np.where(ser.notnull(), ser.astype(str), np.nan)
+                        self.df[c] = np.where(
+                            ser.notnull(), ser.astype(str), np.nan
+                        )
                         if not is_real:
-                            self.df[c] = self.df[c].str.replace('.0', '', regex=False)
+                            self.df[c] = self.df[c].str.replace(
+                                '.0', '', regex=False
+                            )
                 elif ctype == 'bool' and str(dtype).lower().startswith('int'):
                     self.df[c] = ser.astype(bool)
             except Exception as e:
@@ -575,13 +593,18 @@ class PandasVerification(Verification):
 
     def get_failure_values(self, field, constraint, key_fields, max_vals=None):
         indicator_field = self.indicator_field_name(field, constraint)
-        exists = indicator_field in self.detection.obj and field in self.detection.obj
+        exists = (
+            indicator_field in self.detection.obj
+            and field in self.detection.obj
+        )
         bad_val = 0  # 1 for bad field#
         if exists:
             df = self.detection.obj.query(f'{indicator_field} == {bad_val}')
             if max_vals and df.shape[0] > max_vals:
                 df = df.head(max_vals)
-            return zip(*(df[k].to_list() for k in key_fields), df[field].to_list())
+            return zip(
+                *(df[k].to_list() for k in key_fields), df[field].to_list()
+            )
         else:
             return None
 
@@ -617,7 +640,10 @@ class PandasVerification(Verification):
             nf = 0
         else:
             nf = df.query(
-                ' | '.join(f'{indicator} == {self.bad_val}' for indicator in indicators)
+                ' | '.join(
+                    f'{indicator} == {self.bad_val}'
+                    for indicator in indicators
+                )
             ).shape[0]
         return PassFailCount(field, self.detection.n_source_records - nf, nf)
 
@@ -648,7 +674,9 @@ class PandasDetection(PandasVerification):
         return self.detection.obj if self.detection else None
 
 
-class PandasConstraintDiscoverer(PandasConstraintCalculator, BaseConstraintDiscoverer):
+class PandasConstraintDiscoverer(
+    PandasConstraintCalculator, BaseConstraintDiscoverer
+):
     """
     A :py:class:`PandasConstraintDiscoverer` object is used to discover
     constraints on a Pandas DataFrame.
@@ -896,7 +924,9 @@ def verify_df(
 
     """
     backend = get_backend(backend, config)
-    pdv = PandasConstraintVerifier(df, epsilon=epsilon, type_checking=type_checking)
+    pdv = PandasConstraintVerifier(
+        df, epsilon=epsilon, type_checking=type_checking
+    )
     if isinstance(constraints_path, dict):
         constraints = DatasetConstraints()
         constraints.initialize_from_dict(unicode_definite(constraints_path))
@@ -1094,7 +1124,9 @@ def detect_df(
         print(detection_df.to_string())
 
     """
-    pdv = PandasConstraintVerifier(df, epsilon=epsilon, type_checking=type_checking)
+    pdv = PandasConstraintVerifier(
+        df, epsilon=epsilon, type_checking=type_checking
+    )
     constraints = constraints_from_path_or_dict(constraints_path)
     if repair:
         pdv.repair_field_types(constraints)

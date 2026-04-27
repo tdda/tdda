@@ -67,7 +67,9 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
     del kw['index']  # don't want in the read args
 
     # parse these dates
-    dates = [col for col in df if 'date' in loosen_pandas_type(df[col].dtype.name)]
+    dates = [
+        col for col in df if 'date' in loosen_pandas_type(df[col].dtype.name)
+    ]
 
     # Don't specify these types (typically strings, bools, and dates)
     string_dtypes = {'object', 'str', 'string'}
@@ -84,7 +86,9 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
     # Specify types for non-object columns
 
     kw['dtype'] = {
-        col: df[col].dtype.name for col in df if col not in objects and col not in dates
+        col: df[col].dtype.name
+        for col in df
+        if col not in objects and col not in dates
     }
 
     # Stop it picking up non-blank alternative null representations as N/As

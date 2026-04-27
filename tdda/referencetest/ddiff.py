@@ -95,8 +95,12 @@ class TDDADiff:
         Comp = PandasComparison if self.is_pandas() else PolarsComparison
         c = Comp(config=self.config)
         kw = {'infer_datetime_formats': True}
-        dfL = c.load_serialized_dataframe(self.left, find_md=self.find_md, **kw)
-        dfR = c.load_serialized_dataframe(self.right, find_md=self.find_md, **kw)
+        dfL = c.load_serialized_dataframe(
+            self.left, find_md=self.find_md, **kw
+        )
+        dfR = c.load_serialized_dataframe(
+            self.right, find_md=self.find_md, **kw
+        )
         dfL = filter_fields(dfL, self.fields, self.xfields)
         dfR = filter_fields(dfR, self.fields, self.xfields)
         dfL, dfR, key = find_usable_key(self.is_pandas(), dfL, dfR, self.key)
@@ -230,7 +234,9 @@ class TDDADiff:
             'outpath', nargs='?', help='file to which to write differences'
         )
 
-        parser.add_argument('-?', '--?', action='help', help='same as -h or --help')
+        parser.add_argument(
+            '-?', '--?', action='help', help='same as -h or --help'
+        )
 
         parser.add_argument(
             '--dps',

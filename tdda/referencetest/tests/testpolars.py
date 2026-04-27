@@ -40,7 +40,9 @@ class TestPolarsDataFrames(ReferenceTestCase):
         self.assertFalse(compare.check_dataframe(df1, df1))
         self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
         self.assertFalse(
-            compare.check_dataframe(df1, df3, check_types=['a'], check_data=['a'])
+            compare.check_dataframe(
+                df1, df3, check_types=['a'], check_data=['a']
+            )
         )
 
     def test_frames_fail(self):
@@ -60,7 +62,9 @@ class TestPolarsDataFrames(ReferenceTestCase):
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
         self.assertStringCorrect(
-            '\n'.join(s3), refloc('pl_frames_fail3.txt'), ignore_lines=['diff ']
+            '\n'.join(s3),
+            refloc('pl_frames_fail3.txt'),
+            ignore_lines=['diff '],
         )
 
         n3m, s3m = compare.check_dataframe(
@@ -68,19 +72,27 @@ class TestPolarsDataFrames(ReferenceTestCase):
         )
         self.assertEqual(n3m, 1)
         self.assertStringCorrect(
-            '\n'.join(s3m), refloc('pl_frames_fail3m.txt'), ignore_lines=['diff ']
+            '\n'.join(s3m),
+            refloc('pl_frames_fail3m.txt'),
+            ignore_lines=['diff '],
         )
 
         self.assertFalse(
-            compare.check_dataframe(df1, df3, precision=3, type_matching='loose')
+            compare.check_dataframe(
+                df1, df3, precision=3, type_matching='loose'
+            )
         )
         self.assertFalse(
-            compare.check_dataframe(df1, df3, precision=3, type_matching='permissive')
+            compare.check_dataframe(
+                df1, df3, precision=3, type_matching='permissive'
+            )
         )
 
     def test_polars_csv_ok(self):
         compare = PolarsComparison(verbose=False)
-        r = compare.check_csv_file(refloc('colours.txt'), refloc('colours.txt'))
+        r = compare.check_csv_file(
+            refloc('colours.txt'), refloc('colours.txt')
+        )
         self.assertFalse(r)
 
     def test_polars_csv_fail(self):
@@ -101,7 +113,10 @@ class TestPolarsDataFrames(ReferenceTestCase):
                 'Data frames have different column structure.',
                 'Missing columns: [%s]'
                 % ', '.join(
-                    ["'%s'" % s for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']]
+                    [
+                        "'%s'" % s
+                        for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']
+                    ]
                 ),
                 "Extra columns: ['a single line']",
                 'Data frames have different numbers of rows.',
@@ -264,7 +279,9 @@ class TestPolarsHelperFunctions(ReferenceTestCase):
         rdf3 = round_df(df, 3)
         self.assertEqual(rdf3['f'].to_list(), [1.125, 1.25])
         rdf2 = round_df(df, 2)
-        self.assertEqual(rdf2['f'].to_list(), [1.12, 1.25])  # Banker's rounding
+        self.assertEqual(
+            rdf2['f'].to_list(), [1.12, 1.25]
+        )  # Banker's rounding
         rdf1 = round_df(df, 1)
         self.assertEqual(rdf1['f'].to_list(), [1.1, 1.2])  # Banker's rounding
         rdf0 = round_df(df, 0)

@@ -85,12 +85,16 @@ class SameStructureDDiff:
         if self.n_diff_rows > 0:  # <= n:
             # Extract small dataframes with diffs  n x m
             if self.key:
-                L = get_diffs_df_with_cols(df, cols, self.row_diff_counts.rowdiffs, n)
+                L = get_diffs_df_with_cols(
+                    df, cols, self.row_diff_counts.rowdiffs, n
+                )
             else:
                 L, indexes = get_diffs_df_with_cols_and_index(
                     df, cols, self.row_diff_counts.rowdiffs, n
                 )
-            R = get_diffs_df_with_cols(ref_df, cols, self.row_diff_counts.rowdiffs, n)
+            R = get_diffs_df_with_cols(
+                ref_df, cols, self.row_diff_counts.rowdiffs, n
+            )
             plain_rows = []
             L_table, R_table = df_to_lists(L), df_to_lists(R)
             for r in range(n):
@@ -107,12 +111,20 @@ class SameStructureDDiff:
                     if self.key:
                         plain_rows.append(
                             [indexes[r]]
-                            + list(chain(*([L, R] for L, R in zip(l_vals, r_vals))))
+                            + list(
+                                chain(
+                                    *([L, R] for L, R in zip(l_vals, r_vals))
+                                )
+                            )
                         )
                     else:
                         plain_rows.append(
                             [indexes[r]]
-                            + list(chain(*([L, R] for L, R in zip(l_vals, r_vals))))
+                            + list(
+                                chain(
+                                    *([L, R] for L, R in zip(l_vals, r_vals))
+                                )
+                            )
                         )
 
             index_header = [] if self.key else [ROW_NUM_HEADER]
@@ -124,7 +136,9 @@ class SameStructureDDiff:
                 else f'First {n:,} row{s} with differences'
             )
             title = f'Value Differences ({rows_desc})'
-            return Dummy(title=title, cols=index_header + cols, rows=plain_rows)
+            return Dummy(
+                title=title, cols=index_header + cols, rows=plain_rows
+            )
         else:
             return None
 
@@ -149,7 +163,9 @@ class SameStructureDDiff:
         key_vals = None
         # Extract small dataframes with diffs  n x m
         if self.key or delta < 0:
-            L = get_diffs_df_with_cols(df, cols, self.row_diff_counts.rowdiffs, n)
+            L = get_diffs_df_with_cols(
+                df, cols, self.row_diff_counts.rowdiffs, n
+            )
         else:
             L, row_indexes = get_diffs_df_with_cols_and_index(
                 df, cols, self.row_diff_counts.rowdiffs, n
@@ -164,7 +180,9 @@ class SameStructureDDiff:
                 ref_df, cols, self.row_diff_counts.rowdiffs, n
             )
         else:
-            R = get_diffs_df_with_cols(ref_df, cols, self.row_diff_counts.rowdiffs, n)
+            R = get_diffs_df_with_cols(
+                ref_df, cols, self.row_diff_counts.rowdiffs, n
+            )
         LI = RI = None
         if self.idx:
             LI = df_to_lists(
@@ -231,17 +249,21 @@ class SameStructureDDiff:
                 plain_rows.append([f'{pl_indexes[r][0]}{pR}'] + prstr)
             else:
                 rows.append(
-                    pl_indexes[r] + list(chain(*([L, R] for L, R in zip(lstr, rstr))))
+                    pl_indexes[r]
+                    + list(chain(*([L, R] for L, R in zip(lstr, rstr))))
                 )
                 plain_rows.append(
-                    pl_indexes[r] + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
+                    pl_indexes[r]
+                    + list(chain(*([L, R] for L, R in zip(plstr, prstr))))
                 )
 
         type_headers = []
         index_headers = self.key or [ROW_NUM_HEADER]
 
         n_table_cols = len(plain_rows[0])
-        widths = [max(len(row[i]) for row in plain_rows) for i in range(n_table_cols)]
+        widths = [
+            max(len(row[i]) for row in plain_rows) for i in range(n_table_cols)
+        ]
 
         nih = len(index_headers)
         for i in range(len(index_headers)):
@@ -250,7 +272,9 @@ class SameStructureDDiff:
             tL, tR = type_header(L[col]), type_header(R[col])
             if vertical:
                 type_headers.append(f'{tL}\n{tR}')
-                widths[nih + i] = max(widths[nih + i], len(cols[i]), len(tL), len(tR))
+                widths[nih + i] = max(
+                    widths[nih + i], len(cols[i]), len(tL), len(tR)
+                )
             else:
                 type_headers.extend([tL, tR])
                 widths[nih + i * 2] = max(

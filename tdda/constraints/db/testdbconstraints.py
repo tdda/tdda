@@ -73,7 +73,9 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TESTDATA_DIR = os.path.join(os.path.dirname(THIS_DIR), 'testdata')
 INIT_DIR = os.path.join(THIS_DIR, 'init')
 
-POSTGRES_CONN_FILE = os.path.join(os.path.expanduser('~'), '.tdda_db_conn_postgres')
+POSTGRES_CONN_FILE = os.path.join(
+    os.path.expanduser('~'), '.tdda_db_conn_postgres'
+)
 MYSQL_CONN_FILE = os.path.join(os.path.expanduser('~'), '.tdda_db_conn_mysql')
 
 
@@ -84,7 +86,11 @@ if pgdb and not os.path.exists(POSTGRES_CONN_FILE):
     )
 
 if MySQLdb and not os.path.exists(MYSQL_CONN_FILE):
-    print('Skipping MySQL because no connection file exists at %s.' % MYSQL_CONN_FILE)
+    print(
+        'Skipping MySQL because no connection file exists at %s.'
+        % MYSQL_CONN_FILE
+    )
+
 
 class TestDatabaseHandlers:
     """
@@ -122,12 +128,20 @@ class TestDatabaseHandlers:
                 'Colour',
             ],
         )
-        self.assertEqual(self.dbh.get_database_column_type(elements, 'Z'), 'int')
-        self.assertEqual(self.dbh.get_database_column_type(elements, 'Name'), 'string')
-        self.assertEqual(self.dbh.get_database_column_type(elements, 'Density'), 'real')
+        self.assertEqual(
+            self.dbh.get_database_column_type(elements, 'Z'), 'int'
+        )
+        self.assertEqual(
+            self.dbh.get_database_column_type(elements, 'Name'), 'string'
+        )
+        self.assertEqual(
+            self.dbh.get_database_column_type(elements, 'Density'), 'real'
+        )
         self.assertEqual(self.dbh.get_database_nrows(elements), 118)
         self.assertEqual(self.dbh.get_database_nnull(elements, 'Colour'), 85)
-        self.assertEqual(self.dbh.get_database_nnonnull(elements, 'Colour'), 33)
+        self.assertEqual(
+            self.dbh.get_database_nnonnull(elements, 'Colour'), 33
+        )
 
     def test_handler_unique_values(self):
         elements = self.dbh.resolve_table('elements')
@@ -189,7 +203,9 @@ class TestDatabaseConstraintDiscoverers:
         # compare against the right expected file, depending on whether the
         # version of python we're running under has escaped commas or not.
         expected_file = (
-            'elements118oldrex-3.tdda' if '\\,' in j else 'elements118rex-3.tdda'
+            'elements118oldrex-3.tdda'
+            if '\\,' in j
+            else 'elements118rex-3.tdda'
         )
         self.assertStringCorrect(
             j,
@@ -260,7 +276,9 @@ class TestDatabaseDetect:
         )
         self.assertEqual(result.passes, 57)
         self.assertEqual(result.failures, 15)
-        expected_path = os.path.join(TESTDATA_DIR, 'elements118_detect_92_out.txt')
+        expected_path = os.path.join(
+            TESTDATA_DIR, 'elements118_detect_92_out.txt'
+        )
         # Same as Pandas
         self.assertStringCorrect(str(result), expected_path)
         del result.sql

@@ -236,7 +236,9 @@ VERBOSITY = 2  # show errors and warnings. 1 for errors only. 0 for none
 
 FIELDTYPES = tuple(FieldType.__dict__.values())
 
-QUOTING_CODES = {k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')}
+QUOTING_CODES = {
+    k: v for k, v in csv.__dict__.items() if k.startswith('QUOTE_')
+}
 QUOTING_CODES['QUOTE_STRINGS_ONLY'] = -1
 QUOTING_NAMES = {v: k for k, v in QUOTING_CODES.items()}
 
@@ -534,7 +536,9 @@ class SerialMetadata:
         self.null_indicator = null_indicator
 
         self.accept_percentages_as_floats = accept_percentages_as_floats
-        self.map_missing_trailing_cols_to_null = map_missing_trailing_cols_to_null
+        self.map_missing_trailing_cols_to_null = (
+            map_missing_trailing_cols_to_null
+        )
         self.true_values = None
         self.false_values = None
         self.header_row_count = header_row_count
@@ -573,7 +577,8 @@ class SerialMetadata:
 
         if isinstance(self.fields, list):
             self.fields = [
-                (FieldMetadata(**f) if isinstance(f, dict) else f) for f in self.fields
+                (FieldMetadata(**f) if isinstance(f, dict) else f)
+                for f in self.fields
             ]
 
         self._source = source
@@ -592,7 +597,9 @@ class SerialMetadata:
             elif missing == MISSING.WARNING:
                 self.warn(msg)
             elif missing != MISSING.ALLOWED:
-                raise TDDASerialError(f'Unknown value "{missing}" for missing.')
+                raise TDDASerialError(
+                    f'Unknown value "{missing}" for missing.'
+                )
         return d.get(k, None)
 
     def validate(self):
@@ -641,7 +648,9 @@ class SerialMetadata:
             for field_d in m.get('fields', []):
                 if 'format' in field_d:
                     old = field_d['format']
-                    field_d['format'] = restyle_format(field_d['format'], date_style)
+                    field_d['format'] = restyle_format(
+                        field_d['format'], date_style
+                    )
         if m:
             d[TDDASERIAL.key] = m
 
@@ -651,9 +660,13 @@ class SerialMetadata:
         return d
 
     def to_json(self, indent=4, date_style=None):
-        return json.dumps(self.unobjectify(date_style=date_style), indent=indent)
+        return json.dumps(
+            self.unobjectify(date_style=date_style), indent=indent
+        )
 
-    def write(self, path, use_serial_ext=True, indent=4, verbose=0, date_style=None):
+    def write(
+        self, path, use_serial_ext=True, indent=4, verbose=0, date_style=None
+    ):
         """
         Writes metadata to file.
 
@@ -781,7 +794,9 @@ def unobjectify(o):
         return o.unobjectify()
     if o.__class__.__name__.endswith('DataTypeClass'):  # Polars Datatype
         return str(o)
-    error(f'Attempt to unobjectify unexpected type.\nType: {type(o)}: Value: {repr(o)}')
+    error(
+        f'Attempt to unobjectify unexpected type.\nType: {type(o)}: Value: {repr(o)}'
+    )
 
 
 def nonnull(v):
@@ -842,4 +857,6 @@ def get_metadata_flavour(flavour):
 
 
 def get_metadata_flavours(flavours):
-    return [get_metadata_flavour(f) for f in (flavours or '.').strip().split(',')]
+    return [
+        get_metadata_flavour(f) for f in (flavours or '.').strip().split(',')
+    ]

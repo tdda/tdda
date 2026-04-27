@@ -14,7 +14,9 @@ from tdda.utils import error
 from tdda.commonflags import add_pandas_flags, process_pandas_flags
 
 
-def help_defaults(help=True, seven=True, colour=True, config=True, epsilon=False):
+def help_defaults(
+    help=True, seven=True, colour=True, config=True, epsilon=False
+):
     out = []
     if epsilon:
         out.append("""
@@ -80,9 +82,15 @@ def discover_parser(usage=''):
         action='store_true',
         help='do not group regular expression generation',
     )
-    parser.add_argument('-r', '--report', nargs='*', help='Report formats to write.')
-    parser.add_argument('-o', '--report-path', action='store', help='Path for reports')
-    parser.add_argument('--no-md', action='store_true', help='Do not create metadata')
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
+    parser.add_argument(
+        '-o', '--report-path', action='store', help='Path for reports'
+    )
+    parser.add_argument(
+        '--no-md', action='store_true', help='Do not create metadata'
+    )
     parser.add_argument(
         '--no-allowed-required--no-ar',
         action='store_true',
@@ -166,7 +174,9 @@ def verify_parser(usage=''):
         action='store_true',
         help='report only fields with failures',
     )
-    parser.add_argument('-r', '--report', nargs='*', help='Report formats to write.')
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
     parser.add_argument(
         '-t',
         '--type_checking',
@@ -185,7 +195,9 @@ def detect_parser(usage=''):
         formatter_class=formatter,
     )
     add_defaults(parser, epsilon=True)
-    parser.add_argument('-o', '--report-path', action='store', help='Path for reports')
+    parser.add_argument(
+        '-o', '--report-path', action='store', help='Path for reports'
+    )
     parser.add_argument(
         '-a',
         '--all',
@@ -242,7 +254,9 @@ def detect_parser(usage=''):
         nargs='*',
         help='Specify original columns to write out.',
     )
-    parser.add_argument('-r', '--report', nargs='*', help='Report formats to write.')
+    parser.add_argument(
+        '-r', '--report', nargs='*', help='Report formats to write.'
+    )
     parser.add_argument(
         '--interleave',
         action='store_true',
@@ -390,7 +404,9 @@ def add_defaults(
     parser, help=True, seven=True, colour=True, config=True, epsilon=False
 ):
     if help:
-        parser.add_argument('-?', '--?', action='help', help='same as -h or --help')
+        parser.add_argument(
+            '-?', '--?', action='help', help='same as -h or --help'
+        )
     if seven:
         parser.add_argument(
             '-7',

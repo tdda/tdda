@@ -131,21 +131,29 @@ class FrictionlessMetadata(SerialMetadata):
         self._scheme = r.get('scheme')  # file
         self._format = r.get('format')  # csv
         if self._format and self._format != 'csv':
-            warn(f'The format is "{self._format}"; expected "csv". Continuing.')
+            warn(
+                f'The format is "{self._format}"; expected "csv". Continuing.'
+            )
         self._mediatype = r.get('mediaType')  # text/csv
         if self._mediatype and self._mediatype != 'text/csv':
-            warn(f'The format is "{self._format}"; expected "text/csv". Continuing.')
+            warn(
+                f'The format is "{self._format}"; expected "text/csv". Continuing.'
+            )
         self.encoding = r.get('encoding')
 
     def field_to_frictionless_dict(self, field):
         d = {}
         self.set_if_non_null(d, 'name', nvl(field.csvname, field.name))
-        self.set_if_non_null(d, 'type', FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype))
+        self.set_if_non_null(
+            d, 'type', FIELDTYPE_TO_FRICTIONLESS.get(field.fieldtype)
+        )
         self.set_if_attr_non_null(d, 'titles', 'name')
         fmt = field.format
         if fmt is None and field.fieldtype.startswith('date'):
             fmt = self.date_format
-            d['format'] = serial_date_format_to_frictionless(fmt, field.fieldtype)
+            d['format'] = serial_date_format_to_frictionless(
+                fmt, field.fieldtype
+            )
         elif field.true_values and field.false_values:
             d['trueValues'] = listify(field.true_values)
             d['falseValues'] = listify(field.false_values)
@@ -156,7 +164,9 @@ class FrictionlessMetadata(SerialMetadata):
         self.set_if_attr_non_null(d, 'description', 'description')
         return d
 
-    def to_frictionless_dict(self, csvfile=None, lang=None, resource_type=None):
+    def to_frictionless_dict(
+        self, csvfile=None, lang=None, resource_type=None
+    ):
         dialect = {}
         self.set_if_attr_non_null(dialect, 'header', 'header_row')
         if self.header_row_count > 0:
@@ -181,7 +191,9 @@ class FrictionlessMetadata(SerialMetadata):
             self.set_if_non_null(d, 'dialect', dialect)
 
         schema = {}
-        fields = [self.field_to_frictionless_dict(field) for field in self.fields]
+        fields = [
+            self.field_to_frictionless_dict(field) for field in self.fields
+        ]
         if fields:
             schema['fields'] = fields
         if listify(self.null_indicator) != []:
@@ -255,7 +267,11 @@ class FrictionlessMetadata(SerialMetadata):
             self._resources = resources = self._frictionless.get('resources')
             if self._resources:
                 N = self.n_resources = len(resources)
-                if N > 1 and self.table_number is None and not self.for_table_name:
+                if (
+                    N > 1
+                    and self.table_number is None
+                    and not self.for_table_name
+                ):
                     self.warn(f'Only processing first resource of {N}.')
                 name = self.for_table_name
                 if name:
@@ -286,7 +302,9 @@ class FrictionlessMetadata(SerialMetadata):
             error('Could not find schema.')
 
         if type(self._schema) is str:  # TODO
-            path = os.path.join(nvl(self._metadata_source_dir, ''), self._schema)
+            path = os.path.join(
+                nvl(self._metadata_source_dir, ''), self._schema
+            )
             self._schema = load_json_or_yaml(path)
 
         self._fields = self._schema.get('fields')
@@ -296,7 +314,9 @@ class FrictionlessMetadata(SerialMetadata):
             self._table.get('url') if self._table else None
         )
         if not self._url:
-            self.warn('Mandatory property "url" not found in Frictionless file.')
+            self.warn(
+                'Mandatory property "url" not found in Frictionless file.'
+            )
         if (
             getattr(self, '_metadata_source_dir', None)
             and self._url
@@ -322,7 +342,9 @@ class FrictionlessMetadata(SerialMetadata):
         csv = dialect.get('csv') or dialect
 
         self.header = dialect.get('header')
-        self._header_rows = dialect.get('headerRows') or dialect.get('header_rows')
+        self._header_rows = dialect.get('headerRows') or dialect.get(
+            'header_rows'
+        )
         if self._header_rows is not None:
             self.num_header_rows = len(self._header_rows)
         self._header_join = dialect.get('headerJoin')

@@ -166,7 +166,9 @@ def polars_get_diffs_df_with_cols(df, cols, rowdiffs, n):
     nc = '_tdda_nc_'
     delta = len(df) - len(rowdiffs)
     if delta > len(rowdiffs):
-        rowdiffs = concat_series([rowdiffs, pl.Series(np.ones(delta, dtype=bool))])
+        rowdiffs = concat_series(
+            [rowdiffs, pl.Series(np.ones(delta, dtype=bool))]
+        )
     return (
         df.with_columns(rowdiffs.alias(nc))
         .filter(pl.col('_tdda_nc_') > 0)
@@ -341,7 +343,9 @@ def find_non_fields(df, fields):
     """
     Return any fields in the list/collection fields that are not in df
     """
-    return [f for f in list(df) if f not in set(self.fields).intersection(set(df))]
+    return [
+        f for f in list(df) if f not in set(self.fields).intersection(set(df))
+    ]
 
 
 def df_add_named_col_with_values(df, name, values):

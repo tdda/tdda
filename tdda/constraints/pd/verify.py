@@ -89,7 +89,9 @@ def verify_df_from_file(
         constraints_path = stem + '.tdda'
 
     df = load_df(df_path, md_path=md_path, backend=backend)
-    v = verify_df(df, constraints_path, md_path=md_path, backend=backend, **kwargs)
+    v = verify_df(
+        df, constraints_path, md_path=md_path, backend=backend, **kwargs
+    )
     if verbose:
         cprint(v)
     return v

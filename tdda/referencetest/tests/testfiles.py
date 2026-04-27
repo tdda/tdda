@@ -41,7 +41,9 @@ class TestFiles(ReferenceTestCase):
         r1 = compare.check_string_against_file([], refloc('empty.txt'))
         r2 = compare.check_string_against_file('', refloc('empty.txt'))
         r3 = compare.check_string_against_file([''], refloc('empty.txt'))
-        r4 = compare.check_string_against_file(['a single line'], refloc('single.txt'))
+        r4 = compare.check_string_against_file(
+            ['a single line'], refloc('single.txt')
+        )
         self.assertEqual(r1, (0, []))
         self.assertEqual(r2, (0, []))
         self.assertEqual(r3, (0, []))
@@ -78,7 +80,11 @@ class TestFiles(ReferenceTestCase):
                 ],
             ),
         )
-        diff = '%s %s %s' % (diffcmd(), normabspath('wrong.txt'), refloc('single.txt'))
+        diff = '%s %s %s' % (
+            diffcmd(),
+            normabspath('wrong.txt'),
+            refloc('single.txt'),
+        )
         self.assertEqual(
             r5,
             (
@@ -189,15 +195,35 @@ class TestFiles(ReferenceTestCase):
 
     def test_binary_files(self):
         compare = FilesComparison()
-        r1 = compare.check_binary_file(refloc('single.txt'), refloc('single.txt'))
-        r2 = compare.check_binary_file(refloc('single.txt'), refloc('double.txt'))
-        r3 = compare.check_binary_file(refloc('double.txt'), refloc('single.txt'))
-        r4 = compare.check_binary_file(refloc('single.txt'), refloc('single2.txt'))
+        r1 = compare.check_binary_file(
+            refloc('single.txt'), refloc('single.txt')
+        )
+        r2 = compare.check_binary_file(
+            refloc('single.txt'), refloc('double.txt')
+        )
+        r3 = compare.check_binary_file(
+            refloc('double.txt'), refloc('single.txt')
+        )
+        r4 = compare.check_binary_file(
+            refloc('single.txt'), refloc('single2.txt')
+        )
         # single2.txt is deliberately not readable in text mode in python3
         self.assertEqual(r1, (0, []))
-        diff2 = '%s %s %s' % (diffcmd(), refloc('single.txt'), refloc('double.txt'))
-        diff3 = '%s %s %s' % (diffcmd(), refloc('double.txt'), refloc('single.txt'))
-        diff4 = '%s %s %s' % (diffcmd(), refloc('single.txt'), refloc('single2.txt'))
+        diff2 = '%s %s %s' % (
+            diffcmd(),
+            refloc('single.txt'),
+            refloc('double.txt'),
+        )
+        diff3 = '%s %s %s' % (
+            diffcmd(),
+            refloc('double.txt'),
+            refloc('single.txt'),
+        )
+        diff4 = '%s %s %s' % (
+            diffcmd(),
+            refloc('single.txt'),
+            refloc('single2.txt'),
+        )
 
         if os.name != 'nt':
             # on Windows, the results will depend on hard-to-predict
@@ -291,7 +317,9 @@ class TestFiles(ReferenceTestCase):
             'Files have different numbers of lines, differences start at line 2',
         )
         self.assertTrue(msgs.lines[1].startswith('Compare raw with:\n'))
-        self.assertTrue(msgs.lines[2].startswith('Compare post-processed with:\n'))
+        self.assertTrue(
+            msgs.lines[2].startswith('Compare post-processed with:\n')
+        )
         self.assertEqual(
             msgs.reconstructions[0].diff_actual,
             [
@@ -397,14 +425,18 @@ class TestFiles(ReferenceTestCase):
 
         self.assertEqual(code, 1)
         self.assertEqual(len(msgs.lines), 6)
-        self.assertEqual(msgs.lines[0], '1 line is different, starting at line 3')
+        self.assertEqual(
+            msgs.lines[0], '1 line is different, starting at line 3'
+        )
         self.assertEqual(msgs.lines[1][:8], 'Compare ')
         self.assertEqual(msgs.lines[2][:8], 'Compare ')
         self.assertEqual(msgs.lines[3], 'Note exclusions:')
         self.assertEqual(msgs.lines[4], '    ignore_patterns:')
         self.assertEqual(msgs.lines[5], '        ^.*opt...al.*$')
 
-        difflines[2] = 'And: this line is different, unless you ignore the first word'
+        difflines[2] = (
+            'And: this line is different, unless you ignore the first word'
+        )
         self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
         difflines[2] = 'And:'
         self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)

@@ -75,20 +75,26 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
         df = csv_to_pandas(tdpath('tiny1nd-weird.ssv:'))
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True, longNames=True)
+        ref_df = tiny_pandas_df(
+            nulls=True, nullable_types=True, longNames=True
+        )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPandasWeirdOriginal(self):
         name = 'tiny1nd-weird-original-pd.serial'
         outpath = tmppath(name)
         refpath = tdpath(name)
-        c = SerialConverter(self.weird_serial, outpath, out_format='pd.r', backend='o')
+        c = SerialConverter(
+            self.weird_serial, outpath, out_format='pd.r', backend='o'
+        )
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
         refpath2 = tdpath('tiny1nd-weird-pd-original-no-bool-type.serial')
         df = csv_to_pandas(tdpath('tiny1nd-weird.ssv'), refpath2)
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True, longNames=True)
+        ref_df = tiny_pandas_df(
+            nulls=True, nullable_types=True, longNames=True
+        )
 
         self.assertDataFramesEqual(df, ref_df, type_matching='loose')
 
@@ -134,7 +140,9 @@ class TestSerialConversions(ReferenceTestCase):
             dtype='boolean[pyarrow]',
         )
 
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True, longNames=True)
+        ref_df = tiny_pandas_df(
+            nulls=True, nullable_types=True, longNames=True
+        )
         for col, typ in [
             ('IAmBoolean', 'bool[pyarrow]'),
             ('IAmInt', 'int64[pyarrow]'),
@@ -165,7 +173,9 @@ class TestSerialConversions(ReferenceTestCase):
         name = 'tiny1nd_weird_pd_original.py'
         outpath = tmppath(name)
         refpath = tdpath(name)
-        c = SerialConverter(self.weird_serial, outpath, out_format='pd.r', backend='o')
+        c = SerialConverter(
+            self.weird_serial, outpath, out_format='pd.r', backend='o'
+        )
         c.convert()
         self.assertFileCorrect(outpath, refpath)
 
@@ -186,7 +196,9 @@ class TestSerialConversions(ReferenceTestCase):
         name = 'tiny1nd-weird-pd.serial'
         outpath = tmppath(name)
         refpath = tdpath(name)
-        c = SerialConverter(cli_args=[self.weird_serial, outpath, '--to', 'pd.r'])
+        c = SerialConverter(
+            cli_args=[self.weird_serial, outpath, '--to', 'pd.r']
+        )
         c.convert()
         self.assertFileCorrect(outpath, refpath, ignore_lines=self.IGL)
 
@@ -194,7 +206,9 @@ class TestSerialConversions(ReferenceTestCase):
         name = 'tiny1nd_weird_pd.py'
         outpath = tmppath(name)
         refpath = tdpath(name)
-        c = SerialConverter(cli_args=[self.weird_serial, outpath, '--to', 'pd.r'])
+        c = SerialConverter(
+            cli_args=[self.weird_serial, outpath, '--to', 'pd.r']
+        )
         c.convert()
         self.assertFileCorrect(outpath, refpath)
 
@@ -202,7 +216,9 @@ class TestSerialConversions(ReferenceTestCase):
         from tdda.serial.testdata.tiny1nd_weird_pd import read_data
 
         df = read_data(tdpath('tiny1nd-weird.ssv'))
-        ref_df = tiny_pandas_df(nulls=True, nullable_types=True, longNames=True)
+        ref_df = tiny_pandas_df(
+            nulls=True, nullable_types=True, longNames=True
+        )
         self.assertDataFramesEqual(df, ref_df, type_matching='strict')
 
     def testSerialToPolarsWeird(self):
@@ -336,7 +352,9 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
 
         Warn, buf = testwarn()
-        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn)
+        df = csv_to_polars(
+            tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn
+        )
         ref_df = tiny_polars_df(
             nulls=True, sNullNull=True, euroStrDates=True, sBools=True
         )
@@ -397,7 +415,9 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
 
         Warn, buf = testwarn()
-        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn)
+        df = csv_to_polars(
+            tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn
+        )
         ref_df = tiny_polars_df(
             nulls=True,
             sNullNull=True,
@@ -411,7 +431,9 @@ class TestSerialConversions(ReferenceTestCase):
         md = load_metadata(self.tiny1nd_serial)
         csvw = serial_to_csvw(md, 'tiny1nd.csv')
         csvw_ref = tdpath('tiny1nd-metadata.json')
-        self.assertStringCorrect(csvw.to_json(), csvw_ref, ignore_lines=self.IGL)
+        self.assertStringCorrect(
+            csvw.to_json(), csvw_ref, ignore_lines=self.IGL
+        )
 
     def testConversionToCSVW_t1nds(self):
         md = load_metadata(self.tiny1nd_serial)
@@ -582,7 +604,9 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
 
         Warn, buf = testwarn()
-        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn)
+        df = csv_to_polars(
+            tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn
+        )
         ref_df = tiny_polars_df(
             nulls=True, sNullNull=True, euroStrDates=True, sBools=True
         )
@@ -643,7 +667,9 @@ class TestSerialConversions(ReferenceTestCase):
         self.assertFileCorrect(outpath_pl2, refpath_pl2, ignore_lines=self.IGL)
 
         Warn, buf = testwarn()
-        df = csv_to_polars(tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn)
+        df = csv_to_polars(
+            tdpath('tiny1nd-weird.ssv'), refpath_pl2, warner=Warn
+        )
         ref_df = tiny_polars_df(
             nulls=True,
             sNullNull=True,
@@ -697,7 +723,9 @@ class TestSerialConversions(ReferenceTestCase):
     def testSerialToFrictionlessFrictionlessJSONExtra(self):
         outpath = tmppath('tiny1nd-ref.package.json')
         refpath = tdpath('tiny1nd-ref.package.json')
-        c = SerialConverter(self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv')
+        c = SerialConverter(
+            self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv'
+        )
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath)
@@ -706,7 +734,9 @@ class TestSerialConversions(ReferenceTestCase):
     def testSerialToFrictionlessFrictionlessYAMLExtra(self):
         outpath = tmppath('tiny1nd-ref.resource.yaml')
         refpath = tdpath('tiny1nd-ref.resource.yaml')
-        c = SerialConverter(self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv')
+        c = SerialConverter(
+            self.tiny1nd_serial, outpath, for_csv='tiny1nd.csv'
+        )
         Warn, buf = testwarn()
         c.convert(warner=Warn)
         self.assertFileCorrect(outpath, refpath)

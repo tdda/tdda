@@ -168,10 +168,13 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
         return md.libs[PANDAS.read_key]
     kw = to_common_pandas_rw_args(md)
     date_fields = {
-        f.name: f for f in md.fields if f.fieldtype and f.fieldtype.startswith('date')
+        f.name: f
+        for f in md.fields
+        if f.fieldtype and f.fieldtype.startswith('date')
     }
     dtypes = {
-        f.name: serial_type_to_pandas_dtype(f.fieldtype, backend) for f in md.fields
+        f.name: serial_type_to_pandas_dtype(f.fieldtype, backend)
+        for f in md.fields
     }
     kw['dtype'] = {
         name: dtype
@@ -258,13 +261,17 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     return kw
 
 
-def serial_to_pandas_write_csv_args(md, backend=None, config=None, warner=None):
+def serial_to_pandas_write_csv_args(
+    md, backend=None, config=None, warner=None
+):
     backend = get_backend(backend, config)
     if PANDAS.write_key in md.libs:
         return md.libs[PANDAS.write_key]
 
     kw = to_common_pandas_rw_args(md)
-    kw['date_format'] = to_pandas_date_format(md.single_date_format(), for_write=True)
+    kw['date_format'] = to_pandas_date_format(
+        md.single_date_format(), for_write=True
+    )
 
     null = md.single_null_indicator()
     if null is not None:
@@ -530,7 +537,9 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
             delimiter=kw.get('sep', Defaults.DELIMITER),
             quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
             escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
-            null_indicator=kw.get('na_rep', delistify(Defaults.NULL_INDICATOR)),
+            null_indicator=kw.get(
+                'na_rep', delistify(Defaults.NULL_INDICATOR)
+            ),
             header_row_count=header_row_count,
             date_format=kw.get(
                 'date_format',
@@ -758,7 +767,9 @@ def csv_to_pandas(
     )
     backend = get_backend(backend, config)
     if md:
-        md_kw = serial_to_pandas_read_csv_args(md, backend=backend, warner=warner)
+        md_kw = serial_to_pandas_read_csv_args(
+            md, backend=backend, warner=warner
+        )
     if md and kw:
         md_kw.update(kw)
         kw = md_kw
@@ -807,7 +818,9 @@ def csv_to_pandas(
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
-def serial_to_pandas_read_csv_python(md, backend=None, warner=None, config=None):
+def serial_to_pandas_read_csv_python(
+    md, backend=None, warner=None, config=None
+):
     backend = get_backend(backend, config)
     kw = serial_to_pandas_read_csv_args(md, backend=backend, warner=warner)
     # if 'dtype_backend' not in kw:
@@ -934,7 +947,9 @@ def pandas_to_csv(
     if auto_md_outpath and not md_outpath:
         md_outpath = choose_md_path(path, flavour)
     if md_outpath:
-        md_out = pandas_df_to_metadata(df, outpath=md_outpath, flavour=flavour, **kw)
+        md_out = pandas_df_to_metadata(
+            df, outpath=md_outpath, flavour=flavour, **kw
+        )
 
     return WriteInfo(path, md_outpath, md_inpath, kw)
 

@@ -112,7 +112,9 @@ def pd_detect_parser():
     parser.add_argument(
         'constraints', nargs='?', help='constraints file to verify against'
     )
-    parser.add_argument('outpath', nargs='?', help='file to write detection results to')
+    parser.add_argument(
+        'outpath', nargs='?', help='file to write detection results to'
+    )
     return parser
 
 

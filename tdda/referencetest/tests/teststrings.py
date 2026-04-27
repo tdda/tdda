@@ -17,7 +17,9 @@ class TestInternals(ReferenceTestCase):
     def test_diff_marker(self):
         compare = FilesComparison()
         self.assertEqual(compare.diff_marker('ABC', 'XYZ'), '(ABC|XYZ)')
-        self.assertEqual(compare.diff_marker('ABC:', 'ABC: yes'), 'ABC:(| yes)')
+        self.assertEqual(
+            compare.diff_marker('ABC:', 'ABC: yes'), 'ABC:(| yes)'
+        )
         self.assertEqual(compare.diff_marker('', 'AAA'), '(|AAA)')
         self.assertEqual(compare.diff_marker('AAA', ''), '(AAA|)')
         self.assertEqual(compare.diff_marker('ABC', 'AXC'), 'A(B|X)C')
@@ -25,7 +27,9 @@ class TestInternals(ReferenceTestCase):
     def test_single_pattern(self):
         compare = FilesComparison()
         cpatterns = compare.compile_patterns(['gr.*t'])
-        self.assertTrue(compare.check_patterns(cpatterns, 'great', 'grapefruit'))
+        self.assertTrue(
+            compare.check_patterns(cpatterns, 'great', 'grapefruit')
+        )
 
     def test_unanchored_patterns(self):
         compare = FilesComparison()
@@ -79,9 +83,13 @@ class TestInternals(ReferenceTestCase):
     def test_grouped_pattern(self):
         compare = FilesComparison()
         cpatterns = compare.compile_patterns(['(a|an) (grapefruit|apple)'])
-        self.assertTrue(compare.check_patterns(cpatterns, 'a grapefruit', 'an apple'))
         self.assertTrue(
-            compare.check_patterns(cpatterns, 'I have a grapefruit', 'I have an apple')
+            compare.check_patterns(cpatterns, 'a grapefruit', 'an apple')
+        )
+        self.assertTrue(
+            compare.check_patterns(
+                cpatterns, 'I have a grapefruit', 'I have an apple'
+            )
         )
         self.assertTrue(
             compare.check_patterns(
@@ -145,7 +153,9 @@ class TestStrings(ReferenceTestCase):
     def test_strip(self):
         compare = FilesComparison()
         self.assertEqual(
-            compare.check_strings(['   abc'], ['abc'], create_temporaries=False).pair,
+            compare.check_strings(
+                ['   abc'], ['abc'], create_temporaries=False
+            ).pair,
             (
                 1,
                 [
@@ -154,10 +164,16 @@ class TestStrings(ReferenceTestCase):
                 ],
             ),
         )
-        self.assertFalse(compare.check_strings(['   abc'], ['abc'], lstrip=True))
-        self.assertFalse(compare.check_strings(['abc   '], ['abc'], rstrip=True))
         self.assertFalse(
-            compare.check_strings(['   abc   '], ['abc'], lstrip=True, rstrip=True)
+            compare.check_strings(['   abc'], ['abc'], lstrip=True)
+        )
+        self.assertFalse(
+            compare.check_strings(['abc   '], ['abc'], rstrip=True)
+        )
+        self.assertFalse(
+            compare.check_strings(
+                ['   abc   '], ['abc'], lstrip=True, rstrip=True
+            )
         )
 
     def test_ignore_substrings(self):

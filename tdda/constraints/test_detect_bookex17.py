@@ -43,7 +43,9 @@ class TestX_DETECT_BOOKEX17(ReferenceTestCase):
         self.assertEqual(self.exit_code, 0)
 
     def test_stdout(self):
-        self.assertStringCorrect(self.output, os.path.join(self.refdir, 'STDOUT'))
+        self.assertStringCorrect(
+            self.output, os.path.join(self.refdir, 'STDOUT')
+        )
 
     def test_stderr(self):
         self.assertStringCorrect(

@@ -34,8 +34,12 @@ def tmppath(path):
 class TestCommonConstraints(ReferenceTestCase):
     def testSimpleAllCorrectVerificationFromParquetFile(self):
         # Parquet file, right types all good
-        report = verify(tdpath('ddd.parquet'), tdpath('ddd.tdda'), verbose=False)
-        self.assertStringCorrect(str(report), reportpath('ddd10-all-correct.txt'))
+        report = verify(
+            tdpath('ddd.parquet'), tdpath('ddd.tdda'), verbose=False
+        )
+        self.assertStringCorrect(
+            str(report), reportpath('ddd10-all-correct.txt')
+        )
 
         # Also test ascii vesion
         self.assertStringCorrect(
@@ -46,8 +50,12 @@ class TestCommonConstraints(ReferenceTestCase):
     def testSimpleNotCorrectVerificationFromFile(self):
         # Also parquet; here the constraints are too tight
         # from 4-row dataset
-        report = verify(tdpath('ddd.parquet'), tdpath('ddd4.tdda'), verbose=False)
-        self.assertStringCorrect(str(report), reportpath('ddd10-not-all-correct.txt'))
+        report = verify(
+            tdpath('ddd.parquet'), tdpath('ddd4.tdda'), verbose=False
+        )
+        self.assertStringCorrect(
+            str(report), reportpath('ddd10-not-all-correct.txt')
+        )
         self.assertStringCorrect(
             report.to_string(ascii=True),
             reportpath('ddd10-not-all-correct-ascii.txt'),
@@ -71,7 +79,9 @@ class TestCommonConstraints(ReferenceTestCase):
             backend='o',
             verbose=False,
         )
-        self.assertStringCorrect(str(report), reportpath('ddd10-all-correct.txt'))
+        self.assertStringCorrect(
+            str(report), reportpath('ddd10-all-correct.txt')
+        )
 
         # CSV file with only the elevens field dtype.
         # So dates fail
@@ -82,7 +92,9 @@ class TestCommonConstraints(ReferenceTestCase):
             backend='o',
             verbose=False,
         )
-        self.assertStringCorrect(str(report), reportpath('ddd10-all-correct.txt'))
+        self.assertStringCorrect(
+            str(report), reportpath('ddd10-all-correct.txt')
+        )
 
         report = verify(
             tdpath('ddd.csv'),
@@ -90,7 +102,9 @@ class TestCommonConstraints(ReferenceTestCase):
             md_path=tdpath('ddd.serial'),
             verbose=False,
         )
-        self.assertStringCorrect(str(report), reportpath('ddd10-all-correct.txt'))
+        self.assertStringCorrect(
+            str(report), reportpath('ddd10-all-correct.txt')
+        )
 
         # CSV file with only the elevens field dtype.
         # and no format or writer
@@ -113,7 +127,9 @@ class TestDiscoverReports(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):
         small7x5path = testdata('small7x5.parquet')
-        cls.constraints = c = discover(small7x5path, inc_rex=True, verbose=False)
+        cls.constraints = c = discover(
+            small7x5path, inc_rex=True, verbose=False
+        )
         cls.constraints_json = c.to_json()
 
     def testDiscoverJSON(self):
@@ -127,13 +143,17 @@ class TestDiscoverReports(ReferenceTestCase):
         name = 'small7x5-constraints.yaml'
         path = tmppath(name)
         self.constraints.to_yaml_report(path)
-        self.assertFileCorrect(path, reportpath(name), ignore_patterns=TDDA_MD_IGNORES)
+        self.assertFileCorrect(
+            path, reportpath(name), ignore_patterns=TDDA_MD_IGNORES
+        )
 
     def testDiscoverTOML(self):
         name = 'small7x5-constraints.toml'
         path = tmppath(name)
         self.constraints.to_yaml_report(path)
-        self.assertFileCorrect(path, reportpath(name), ignore_patterns=TDDA_MD_IGNORES)
+        self.assertFileCorrect(
+            path, reportpath(name), ignore_patterns=TDDA_MD_IGNORES
+        )
 
     def testDiscoverTextTable(self):
         name = 'small7x5-constraints.txt'
@@ -166,18 +186,26 @@ class TestVerificationReports(ReferenceTestCase):
         small7x5path = testdata('small7x5.parquet')
         bads_path = testdata('small7x5bad.parquet')
         constraints_path = testdata('small7x5.tdda')
-        cls.verification = verify(small7x5path, constraints_path, verbose=False)
-        cls.bad_verification = verify(bads_path, constraints_path, verbose=False)
+        cls.verification = verify(
+            small7x5path, constraints_path, verbose=False
+        )
+        cls.bad_verification = verify(
+            bads_path, constraints_path, verbose=False
+        )
 
     def testVerifyGood(self):
         name = 'small7x5-verification_good.txt'
         path = tmppath(name)
-        self.assertStringCorrect(self.verification.to_string(), reportpath(name))
+        self.assertStringCorrect(
+            self.verification.to_string(), reportpath(name)
+        )
 
     def testVerifyBads(self):
         name = 'small7x5-verification_bad.txt'
         path = tmppath(name)
-        self.assertStringCorrect(self.bad_verification.to_string(), reportpath(name))
+        self.assertStringCorrect(
+            self.bad_verification.to_string(), reportpath(name)
+        )
 
 
 class TestDetectionReports(ReferenceTestCase):
@@ -246,7 +274,8 @@ class TestDetectionReports(ReferenceTestCase):
 
     def testDetectionTrainBads(self):
         paths = [
-            swap_ext(self.actual_train_detect_bads_path, fmt) for fmt in self.formats
+            swap_ext(self.actual_train_detect_bads_path, fmt)
+            for fmt in self.formats
         ]
         for path in paths:
             if os.path.exists(path):
@@ -264,7 +293,8 @@ class TestDetectionReports(ReferenceTestCase):
 
     def testDetectionTrainFull(self):
         paths = [
-            swap_ext(self.actual_train_detect_full_path, fmt) for fmt in self.formats
+            swap_ext(self.actual_train_detect_full_path, fmt)
+            for fmt in self.formats
         ]
         for path in paths:
             if os.path.exists(path):
@@ -284,7 +314,9 @@ class TestDetectionReports(ReferenceTestCase):
         self.assertEqual(self.validation_bads_detection.failures, 4)
 
         # So no detection table
-        self.assertTrue(os.path.exists(self.actual_validation_detect_bads_path))
+        self.assertTrue(
+            os.path.exists(self.actual_validation_detect_bads_path)
+        )
 
         # And no reports
         for fmt in self.formats:
@@ -296,7 +328,9 @@ class TestDetectionReports(ReferenceTestCase):
         self.assertEqual(self.validation_full_detection.failures, 4)
 
         # So no detection table
-        self.assertTrue(os.path.exists(self.actual_validation_detect_full_path))
+        self.assertTrue(
+            os.path.exists(self.actual_validation_detect_full_path)
+        )
 
         # And no reports
         for fmt in self.formats:

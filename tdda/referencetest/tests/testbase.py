@@ -47,10 +47,18 @@ class TestReferenceTest(ReferenceTestCase):
         c1 = ClassC1(None)
         c2 = ClassC2(None)
 
-        self.assertEqual(a._resolve_reference_path('x'), os.path.join('t1', 'x'))
-        self.assertEqual(b._resolve_reference_path('x'), os.path.join('t2', 'x'))
-        self.assertEqual(c1._resolve_reference_path('x'), os.path.join('t3', 'x'))
-        self.assertEqual(c2._resolve_reference_path('x'), os.path.join('t2', 'x'))
+        self.assertEqual(
+            a._resolve_reference_path('x'), os.path.join('t1', 'x')
+        )
+        self.assertEqual(
+            b._resolve_reference_path('x'), os.path.join('t2', 'x')
+        )
+        self.assertEqual(
+            c1._resolve_reference_path('x'), os.path.join('t3', 'x')
+        )
+        self.assertEqual(
+            c2._resolve_reference_path('x'), os.path.join('t2', 'x')
+        )
 
     def test_choose_common_df_lib(self):
         c = ReferenceTest(None)  # None for assertTrue method; not used here

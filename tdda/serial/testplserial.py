@@ -349,7 +349,9 @@ class TestPolarsLoad(ReferenceTestCase):
         self.assertEqual(df['sig'][0], '¤¦¨¼½¾')
 
         warn, buf = testwarn()
-        df = csv_to_polars(md_path=md_path, encoding='iso-8859-15', warner=warn)
+        df = csv_to_polars(
+            md_path=md_path, encoding='iso-8859-15', warner=warn
+        )
         self.assertEqual(buf, [])
         # Check read *incorrectly* when latin9 specified
         self.assertNotEqual(df['sig'][0], '¤¦¨¼½¾')
@@ -517,7 +519,9 @@ class TestPolarsLoad(ReferenceTestCase):
 class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
     # class TestCSVWTests:
     csvw_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw')
-    parquet_d = os.path.join(os.path.dirname(__file__), 'testdata/csvw-parquet')
+    parquet_d = os.path.join(
+        os.path.dirname(__file__), 'testdata/csvw-parquet'
+    )
 
     def fullpath(self, path):
         return os.path.normpath(os.path.join(self.csvw_d, path))
@@ -791,7 +795,9 @@ class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
         df2 = csv_to_polars(slice_csvpath, md_path, table_number=1)
         slice_fields = fields_from(slice_csvpath)
         ref_df2 = csvw_json_to_df(resultspath, slice_fields, table_number=1)
-        ref_df2 = ref_df2.with_columns(pl.col('countryRef').str.split('#').list.last())
+        ref_df2 = ref_df2.with_columns(
+            pl.col('countryRef').str.split('#').list.last()
+        )
         self.assertDataFramesEqual(df2, ref_df2, type_matching='medium')
 
     # def test031(self): pass  # single json output; not appropriate here
@@ -868,7 +874,9 @@ class TestPolarsCSVWTests(ReferenceTestCase):  ## Disable as tests
 
     def _test_csv_json(self, stem, upgrade_possible_ints=False, to_ints=None):
         csvpath, resultspath = self.csv_json_paths(stem)
-        df = csv_to_polars(csvpath, upgrade_possible_ints=upgrade_possible_ints)
+        df = csv_to_polars(
+            csvpath, upgrade_possible_ints=upgrade_possible_ints
+        )
         fields = fields_from(csvpath)
         ref_df = csvw_json_to_df(resultspath, fields, to_ints=to_ints)
         self.assertDataFramesEqual(df, ref_df)
@@ -1225,7 +1233,10 @@ def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
         d = json.load(f)
     rows = d['tables'][table_number]['row']
     df = pl.DataFrame(
-        {field: [r['describes'][0].get(field, None) for r in rows] for field in fields}
+        {
+            field: [r['describes'][0].get(field, None) for r in rows]
+            for field in fields
+        }
     )
     for k in to_ints or []:
         df = string_to_int(df, k)
@@ -1236,7 +1247,9 @@ def csvw_bare_json_to_df(path, fields, to_ints=None, to_dates=None):
     with open(path) as f:
         d = json.load(f)
     rows = d
-    df = pl.DataFrame({field: [r.get(field, None) for r in rows] for field in fields})
+    df = pl.DataFrame(
+        {field: [r.get(field, None) for r in rows] for field in fields}
+    )
     for k in to_ints or []:
         df = string_to_int(df, k)
     return df

@@ -12,7 +12,10 @@ from tdda.referencetest.checkpandas import (
     PandasComparison,
     same_structure_dataframe_diffs,
 )
-from tdda.referencetest.basecomparison import DataFrameDiffs, create_row_diffs_mask
+from tdda.referencetest.basecomparison import (
+    DataFrameDiffs,
+    create_row_diffs_mask,
+)
 from tdda.referencetest.diffutils import (
     check_is_usable_key,
     create_row_diff_counts,
@@ -73,20 +76,30 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertDataFrameCorrect(four_squares(), CSV_REF4_PATH, backend='o')
 
     def testNoDiffsParquetParquet(self):
-        self.assertOnDiskDataFrameCorrect(PQ_REF4_PATH, PQ_REF4_PATH, engine='pandas')
+        self.assertOnDiskDataFrameCorrect(
+            PQ_REF4_PATH, PQ_REF4_PATH, engine='pandas'
+        )
 
     def testNoDiffsParquetCSV(self):
         self.assertOnDiskDataFrameCorrect(
-            PQ_REF4_PATH, CSV_REF4_PATH, engine='pandas', type_matching='medium'
+            PQ_REF4_PATH,
+            CSV_REF4_PATH,
+            engine='pandas',
+            type_matching='medium',
         )
 
     def testNoDiffsCSVParquet(self):
         self.assertOnDiskDataFrameCorrect(
-            CSV_REF4_PATH, PQ_REF4_PATH, engine='pandas', type_matching='medium'
+            CSV_REF4_PATH,
+            PQ_REF4_PATH,
+            engine='pandas',
+            type_matching='medium',
         )
 
     def testNoDiffsCSVCSV(self):
-        self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, CSV_REF4_PATH, engine='pandas')
+        self.assertOnDiskDataFrameCorrect(
+            CSV_REF4_PATH, CSV_REF4_PATH, engine='pandas'
+        )
 
     def testOneDiffInMem(self):
         c = PandasComparison(verbose=False)
@@ -138,7 +151,9 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
                 r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
             ],
         )
-        self.assertStringCorrect(str(r.diffs.dfd), fp('ddiff-col-types-int-float.txt'))
+        self.assertStringCorrect(
+            str(r.diffs.dfd), fp('ddiff-col-types-int-float.txt')
+        )
 
     def testDiffColOrderInMem(self):
         c = PandasComparison(verbose=False)
@@ -261,7 +276,10 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
     def testSameStructureDataFrameDiffs1(self):
         ref_df = pd.DataFrame(
-            {f'c{i}': [1 << n if n != i else 0 for n in range(8)] for i in range(8)}
+            {
+                f'c{i}': [1 << n if n != i else 0 for n in range(8)]
+                for i in range(8)
+            }
         )
         # ref_df
         # c0   c1   c2   c3   c4   c5   c6  c7
@@ -276,7 +294,9 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
         dfa = pd.DataFrame(
             {
-                f'c{i}': [1 << n if n != i and 7 - n != i else 0 for n in range(8)]
+                f'c{i}': [
+                    1 << n if n != i and 7 - n != i else 0 for n in range(8)
+                ]
                 for i in range(8)
             }
         )
@@ -293,7 +313,10 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         # 7   0  128  128  128  128  128  128   0
 
         dfb = pd.DataFrame(
-            {f'c{i}': [1 << n if n <= i else 0 for n in range(8)] for i in range(8)}
+            {
+                f'c{i}': [1 << n if n <= i else 0 for n in range(8)]
+                for i in range(8)
+            }
         )
         # dfb
         #    c0  c1  c2  c3  c4  c5  c6   c7
@@ -382,7 +405,9 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertEqual(ddiff.n_diff_cols, 3)
         self.assertEqual(ddiff.n_diff_rows, 3)
         rdc = ddiff.row_diff_counts
-        self.assertEqual((rdc.rowdiffs == pd.Series([2, 1, 1])).sum().item(), 3)
+        self.assertEqual(
+            (rdc.rowdiffs == pd.Series([2, 1, 1])).sum().item(), 3
+        )
         expected = pd.DataFrame(
             {
                 'a': pd.Series([True, False, True]),
@@ -489,9 +514,13 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
 
         del e92['index']
         del e118['index']
-        self.assertEqual(find_common_key(e92, e118), ['Density', 'AtomicWeight'])
+        self.assertEqual(
+            find_common_key(e92, e118), ['Density', 'AtomicWeight']
+        )
         del e118['AtomicWeight']
-        self.assertEqual(find_common_key(e92, e118), ['Density', 'RelativeAtomicMass'])
+        self.assertEqual(
+            find_common_key(e92, e118), ['Density', 'RelativeAtomicMass']
+        )
 
         del e92['Density']
         self.assertEqual(

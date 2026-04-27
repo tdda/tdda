@@ -68,16 +68,24 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         self.assertDataFrameCorrect(four_squares(), CSV_REF4_PATH)
 
     def testNoDiffsParquetParquet(self):
-        self.assertOnDiskDataFrameCorrect(PQ_REF4_PATH, PQ_REF4_PATH, engine='polars')
+        self.assertOnDiskDataFrameCorrect(
+            PQ_REF4_PATH, PQ_REF4_PATH, engine='polars'
+        )
 
     def testNoDiffsParquetCSV(self):
-        self.assertOnDiskDataFrameCorrect(PQ_REF4_PATH, CSV_REF4_PATH, engine='polars')
+        self.assertOnDiskDataFrameCorrect(
+            PQ_REF4_PATH, CSV_REF4_PATH, engine='polars'
+        )
 
     def testNoDiffsCSVParquet(self):
-        self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, PQ_REF4_PATH, engine='polars')
+        self.assertOnDiskDataFrameCorrect(
+            CSV_REF4_PATH, PQ_REF4_PATH, engine='polars'
+        )
 
     def testNoDiffsCSVCSV(self):
-        self.assertOnDiskDataFrameCorrect(CSV_REF4_PATH, CSV_REF4_PATH, engine='polars')
+        self.assertOnDiskDataFrameCorrect(
+            CSV_REF4_PATH, CSV_REF4_PATH, engine='polars'
+        )
 
     def testOneDiffInMem(self):
         c = PolarsComparison(verbose=False)
@@ -164,7 +172,9 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         self.assertStringCorrect(
             str(r.diffs),
             fp('diff-col-order.txt'),
-            ignore_patterns=['diff .*/actual-df001.parquet .*/expected-df001.parquet'],
+            ignore_patterns=[
+                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+            ],
         )
 
         self.assertStringCorrect(str(r.diffs.dfd), fp('ddiff-col-order.txt'))
@@ -268,7 +278,10 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
 
     def testSameStructureDataFrameDiffs1(self):
         ref_df = pl.DataFrame(
-            {f'c{i}': [1 << n if n != i else 0 for n in range(8)] for i in range(8)}
+            {
+                f'c{i}': [1 << n if n != i else 0 for n in range(8)]
+                for i in range(8)
+            }
         )
         # ref_df
         # c0   c1   c2   c3   c4   c5   c6  c7
@@ -283,7 +296,9 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
 
         dfa = pl.DataFrame(
             {
-                f'c{i}': [1 << n if n != i and 7 - n != i else 0 for n in range(8)]
+                f'c{i}': [
+                    1 << n if n != i and 7 - n != i else 0 for n in range(8)
+                ]
                 for i in range(8)
             }
         )
@@ -300,7 +315,10 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
         # 7   0  128  128  128  128  128  128   0
 
         dfb = pl.DataFrame(
-            {f'c{i}': [1 << n if n <= i else 0 for n in range(8)] for i in range(8)}
+            {
+                f'c{i}': [1 << n if n <= i else 0 for n in range(8)]
+                for i in range(8)
+            }
         )
         # dfb
         #    c0  c1  c2  c3  c4  c5  c6   c7

@@ -229,7 +229,9 @@ class SerialConverter:
             'outpath', nargs='?', help='output metadata file or python script'
         )
 
-        parser.add_argument('-?', '--?', action='help', help='same as -h or --help')
+        parser.add_argument(
+            '-?', '--?', action='help', help='same as -h or --help'
+        )
 
         parser.add_argument(
             '--to',
@@ -357,9 +359,13 @@ class SerialConverter:
             dest='date_style',
             help='Write date formats in %%-style (e.g. %%d/%%m/%%Y).',
         )
-        parser.add_argument('--quiet', '-q', action='store_true', help='Be quiet')
+        parser.add_argument(
+            '--quiet', '-q', action='store_true', help='Be quiet'
+        )
 
-        parser.add_argument('--verbose', '-v', action='store_true', help='Be verbose')
+        parser.add_argument(
+            '--verbose', '-v', action='store_true', help='Be verbose'
+        )
 
         parser.add_argument(
             '--Verbose', '-V', action='store_true', help='Be more verbose'
@@ -463,7 +469,11 @@ class SerialConverter:
                         ' (polars.read_csv) are supported\n'
                         'for Python generation at this time.'
                     )
-                f.write(python_writer(md_in, backend=self.backend, warner=Warn, **kw))
+                f.write(
+                    python_writer(
+                        md_in, backend=self.backend, warner=Warn, **kw
+                    )
+                )
                 if self.for_csv:
                     f.write(f'\ndf = read_data({self.for_csv!r})\n')
         else:

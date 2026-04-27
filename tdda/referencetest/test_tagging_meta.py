@@ -19,7 +19,9 @@ class Test_TAGGING_META(ReferenceTestCase):
     command = 'python testdata/test_tagging.py -F'
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'tagging_meta')
-    orig_tmpdir = '/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/tmph73lgqj_'
+    orig_tmpdir = (
+        '/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/tmph73lgqj_'
+    )
     if not os.environ.get('TMPDIR_SET_BY_GENTEST'):
         tmpdir = tempfile.mkdtemp()
         os.environ['TMPDIR'] = tmpdir
@@ -27,7 +29,9 @@ class Test_TAGGING_META(ReferenceTestCase):
     else:
         tmpdir = os.environ['TMPDIR']
 
-    generated_files = [os.path.join(tmpdir, '2026-04-11T163000-failing-tests.txt')]
+    generated_files = [
+        os.path.join(tmpdir, '2026-04-11T163000-failing-tests.txt')
+    ]
 
     @classmethod
     def setUpClass(cls):

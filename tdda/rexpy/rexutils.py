@@ -2,7 +2,15 @@ from html import escape as htmlescape
 
 from tdda.utils import Dummy, DQuote
 
-COLOURS7 = ['#BF0F00', '#E57200', '#D8A200', '#007F15', '#008AA5', '#6C00D8', '#9700A5']
+COLOURS7 = [
+    '#BF0F00',
+    '#E57200',
+    '#D8A200',
+    '#007F15',
+    '#008AA5',
+    '#6C00D8',
+    '#9700A5',
+]
 COLOURS = ['#303030'] + [COLOURS7[i] for i in (0, 4, 1, 3, 5)]
 N_COLOURS = len(COLOURS)
 
@@ -113,7 +121,9 @@ class Regex2Rex:
 
     def add_unfinished_frag(self, i, group=False):
         if i > self.start_of_frag:
-            self.frags.append(Frag(re=self.regex[self.start_of_frag : i], group=group))
+            self.frags.append(
+                Frag(re=self.regex[self.start_of_frag : i], group=group)
+            )
         self.start_of_frag = i
 
     def skip_any_quantifier(self, i):

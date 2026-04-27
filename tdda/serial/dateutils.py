@@ -92,7 +92,9 @@ class DateRE:
     ISO_DATEISH = re.compile(r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}$')
 
     # ISO datetime: YYYY-MM-DD optionally followed by T or space + time
-    ISO_DATETIMEISH = re.compile(r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$$')
+    ISO_DATETIMEISH = re.compile(
+        r'^[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$$'
+    )
 
     # ISO separator extraction: captures the date separator
     SEP_ISO = re.compile(r'^[0-9]{4}([-/])[0-9]{1,2}[-/][0-9]{1,2}([ T].*)?$')
@@ -410,7 +412,11 @@ def infer_date_format_from_strings(strings):
         assert m
         sep = m.group(1)
         dtsep = 'T' if 'T' in strings[0] else ' '
-        frac = '.%f' if any(re.search(DateRE.HAS_FRAC, s) for s in strings) else ''
+        frac = (
+            '.%f'
+            if any(re.search(DateRE.HAS_FRAC, s) for s in strings)
+            else ''
+        )
         return '%%Y%s%%m%s%%d%s%%H:%%M:%%S%s' % (sep, sep, dtsep, frac)
 
     # ── 4-digit year at end (EU or US) ────────────────────────────────────────
@@ -549,7 +555,9 @@ def literaldate_to_strftime(s):
     if fmt is None:
         raise ValueError('Unrecognized date format: %r' % s)
     if fmt in AMBIGUOUS_DATE_FORMATS:
-        raise ValueError('Ambiguous date example (day/month order unclear): %r' % s)
+        raise ValueError(
+            'Ambiguous date example (day/month order unclear): %r' % s
+        )
 
     if has_tz:
         fmt += '%z'
@@ -777,5 +785,6 @@ def _check_two_digit_year(s, fmt):
     yr2 = dt.year % 100
     if yr2 != 0 and yr2 < 60:
         raise ValueError(
-            'Ambiguous 2-digit year %02d in %r (must be 00 or >= 60)' % (yr2, s)
+            'Ambiguous 2-digit year %02d in %r (must be 00 or >= 60)'
+            % (yr2, s)
         )

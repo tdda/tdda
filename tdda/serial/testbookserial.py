@@ -33,7 +33,6 @@ class TestBookSerial(ReferenceTestCase):
         Produces warning.
         """
 
-
         Warn, buf = testwarn()
         df = csv_to_polars(
             tdpath('elements3-old.csv'),
@@ -62,7 +61,9 @@ class TestBookSerial(ReferenceTestCase):
         """
         from tdda.serial import csv_to_pandas
 
-        df = csv_to_pandas(tdpath('elements3-old.csv'), tdpath('elements3-old.serial'))
+        df = csv_to_pandas(
+            tdpath('elements3-old.csv'), tdpath('elements3-old.serial')
+        )
         ref_df = pandas.read_parquet(tdpath('elements3-old.parquet'))
 
         # matches loosely
@@ -70,7 +71,9 @@ class TestBookSerial(ReferenceTestCase):
 
         # Should *not* match exactly (types!)
         C = PandasComparison(verbose=False)
-        (failures, msgs) = C.check_dataframe(df, ref_df, type_matching='medium')
+        (failures, msgs) = C.check_dataframe(
+            df, ref_df, type_matching='medium'
+        )
         self.assertEqual(failures, 1)  # types
         # Could check exactly the expected messages
         self.assertIn('Wrong column type', ''.join(msgs))
@@ -108,7 +111,9 @@ class TestBookSerial(ReferenceTestCase):
 
         df = csv_to_pandas(tdpath('elements3-old.csv'))
         C = PandasComparison(verbose=False)
-        (failures, msgs) = C.check_dataframe(df, ref_df, type_matching='medium')
+        (failures, msgs) = C.check_dataframe(
+            df, ref_df, type_matching='medium'
+        )
         self.assertTrue(failures > 0)
 
 

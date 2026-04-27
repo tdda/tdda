@@ -531,7 +531,9 @@ class ReferenceTest(object):
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         lib = self.get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
-            lib._write_reference_dataframe_from_file(actual_path, expected_path)
+            lib._write_reference_dataframe_from_file(
+                actual_path, expected_path
+            )
         else:
             r = lib.check_serialized_dataframe(
                 actual_path,
@@ -656,7 +658,9 @@ class ReferenceTest(object):
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         lib = get_comparison_lib(engine=engine)
         if self._should_regenerate(kind):
-            lib._write_reference_dataframes_from_files(actual_paths, expected_paths)
+            lib._write_reference_dataframes_from_files(
+                actual_paths, expected_paths
+            )
         else:
             r = lib.check_serialized_dataframes(
                 actual_paths,

@@ -47,7 +47,9 @@ class TestDetectFormatStyle(ReferenceTestCase):
         self.assertEqual(detect_format_style('yyyy-mm-dd'), 'yyyydate')
 
     def test_yyyydate_with_time(self):
-        self.assertEqual(detect_format_style('YYYY-MM-DD HH:MM:SS'), 'yyyydate')
+        self.assertEqual(
+            detect_format_style('YYYY-MM-DD HH:MM:SS'), 'yyyydate'
+        )
 
     def test_yyyydate_dd_mm(self):
         self.assertEqual(detect_format_style('DD/MM/YYYY'), 'yyyydate')
@@ -62,7 +64,9 @@ class TestDetectFormatStyle(ReferenceTestCase):
         self.assertEqual(detect_format_style('12/31/2000'), 'literaldate')
 
     def test_literaldate_datetime(self):
-        self.assertEqual(detect_format_style('2000-12-31T12:34:56'), 'literaldate')
+        self.assertEqual(
+            detect_format_style('2000-12-31T12:34:56'), 'literaldate'
+        )
 
     def test_empty_raises(self):
         with self.assertRaises(ValueError):
@@ -148,7 +152,9 @@ class TestYyyydateToStrftime(ReferenceTestCase):
         )
 
     def test_hhmm_only(self):
-        self.assertEqual(yyyydate_to_strftime('YYYY-MM-DD HH:MM'), '%Y-%m-%d %H:%M')
+        self.assertEqual(
+            yyyydate_to_strftime('YYYY-MM-DD HH:MM'), '%Y-%m-%d %H:%M'
+        )
 
     def test_mon_abbrev(self):
         self.assertEqual(yyyydate_to_strftime('DD-MON-YYYY'), '%d-%b-%Y')
@@ -233,7 +239,9 @@ class TestLiteraldateToStrftime(ReferenceTestCase):
         self.assertEqual(literaldate_to_strftime('12:34:56'), '%H:%M:%S')
 
     def test_time_only_frac(self):
-        self.assertEqual(literaldate_to_strftime('12:34:56.789'), '%H:%M:%S.%f')
+        self.assertEqual(
+            literaldate_to_strftime('12:34:56.789'), '%H:%M:%S.%f'
+        )
 
     def test_time_only_pm(self):
         self.assertEqual(literaldate_to_strftime('12:34:56PM'), '%I:%M:%S%p')
@@ -245,7 +253,9 @@ class TestLiteraldateToStrftime(ReferenceTestCase):
         self.assertEqual(literaldate_to_strftime('31 Dec 2000'), '%d %b %Y')
 
     def test_alpha_month_full(self):
-        self.assertEqual(literaldate_to_strftime('31 December 2000'), '%d %B %Y')
+        self.assertEqual(
+            literaldate_to_strftime('31 December 2000'), '%d %B %Y'
+        )
 
     def test_alpha_month_us(self):
         self.assertEqual(literaldate_to_strftime('Dec 31 00'), '%b %d %y')
@@ -394,7 +404,9 @@ class TestCanonicalize(ReferenceTestCase):
         self.assertEqual(canonicalize_date_format('%Y-%m-%d'), '%Y-%m-%d')
 
     def test_isodate_unchanged(self):
-        self.assertEqual(canonicalize_date_format('iso8601-date'), 'iso8601-date')
+        self.assertEqual(
+            canonicalize_date_format('iso8601-date'), 'iso8601-date'
+        )
 
     def test_none(self):
         self.assertIsNone(canonicalize_date_format(None))

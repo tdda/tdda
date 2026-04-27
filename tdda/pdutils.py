@@ -5,7 +5,12 @@ def pandas_string_type(t):
     if type(t):
         s = str(t)
         if s.startswith('<'):
-            s = s.split('.')[-1].replace('Dtype', '').replace('_', '').replace("'>", '')
+            s = (
+                s.split('.')[-1]
+                .replace('Dtype', '')
+                .replace('_', '')
+                .replace("'>", '')
+            )
     else:
         s = t
     return s
@@ -48,6 +53,10 @@ def pandas_types_match(t1, t2, level=None):
         return True
 
     numeric_types = {'bool', 'boolean', 'int', 'float'}
-    if level == 'loose' and t1loose in numeric_types and t2loose in numeric_types:
+    if (
+        level == 'loose'
+        and t1loose in numeric_types
+        and t2loose in numeric_types
+    ):
         return True
     return False

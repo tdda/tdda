@@ -15,7 +15,9 @@ def process_pandas_flags(config, o):
     engine = 'polars' if o.polars else 'pandas' if o.pandas else None
     engine = ENGINES.get(engine, config.engine)
     if engine is None:
-        error(f'Engine "{o.engine}" unknown. Should be pandas (pd) or polars (pl).')
+        error(
+            f'Engine "{o.engine}" unknown. Should be pandas (pd) or polars (pl).'
+        )
     else:
         config.engine = engine
 

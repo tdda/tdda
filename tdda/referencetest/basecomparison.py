@@ -217,7 +217,9 @@ class BaseComparison:
         for c in check_types:
             if c not in col_names(df):
                 missing_cols.add(c)
-            elif not (self._types_match(df[c].dtype, ref_df[c].dtype, type_matching)):
+            elif not (
+                self._types_match(df[c].dtype, ref_df[c].dtype, type_matching)
+            ):
                 state.wrong_types.append((c, df[c].dtype, ref_df[c].dtype))
 
         # 4. Sort the missing columns
@@ -231,7 +233,9 @@ class BaseComparison:
         if check_order != False and not missing_cols:
             check_order = self.resolve_option_flag(check_order, ref_df)
             order1 = [c for c in df_names if c in check_order]
-            order2 = [c for c in ref_names if c in check_order and c in df_names]
+            order2 = [
+                c for c in ref_names if c in check_order and c in df_names
+            ]
             state.out_of_order = order1 != order2
 
         if not state.same:
@@ -270,7 +274,9 @@ class BaseComparison:
 
         if state.diff_nrows:
             # Log if not
-            self.different_numbers_of_rows(diffs, state.actual_nrows, state.ref_nrows)
+            self.different_numbers_of_rows(
+                diffs, state.actual_nrows, state.ref_nrows
+            )
 
         cols = state.common_cols
         if not quick or state.same_ignoring_types:
@@ -358,7 +364,10 @@ class BaseComparison:
         """
         if extra_cols:
             ordered = [
-                c for (i, c) in sorted((df_col_pos(c, df), c) for c in extra_cols)
+                c
+                for (i, c) in sorted(
+                    (df_col_pos(c, df), c) for c in extra_cols
+                )
             ]
             self.info(diffs, 'Extra columns: %s' % list(ordered))
             for c in ordered:
@@ -371,7 +380,10 @@ class BaseComparison:
         """
         if missing_cols:
             ordered = [
-                c for (i, c) in sorted((df_col_pos(c, ref_df), c) for c in missing_cols)
+                c
+                for (i, c) in sorted(
+                    (df_col_pos(c, ref_df), c) for c in missing_cols
+                )
             ]
             self.info(diffs, 'Missing columns: %s' % list(ordered))
             for c in ordered:
@@ -458,7 +470,9 @@ class BaseComparison:
                 commonname = self.get_temp_filename()
             if expected is not None and not expected_path:
                 # no expected file, so write it
-                tmpExpectedPath = os.path.join(self.tmp_dir, 'expected-' + commonname)
+                tmpExpectedPath = os.path.join(
+                    self.tmp_dir, 'expected-' + commonname
+                )
                 expected_path = tmpExpectedPath
                 self._write_reference_dataframe(expected, tmpExpectedPath)
                 if actual_path:
@@ -471,7 +485,9 @@ class BaseComparison:
                     )
             if actual is not None and not actual_path:
                 # no actual file, so write it
-                tmpActualPath = os.path.join(self.tmp_dir, 'actual-' + commonname)
+                tmpActualPath = os.path.join(
+                    self.tmp_dir, 'actual-' + commonname
+                )
                 self._write_reference_dataframe(actual, tmpActualPath)
                 if expected_path:
                     differ = self.compare_with(tmpActualPath, expected_path)
@@ -503,7 +519,9 @@ class BaseComparison:
         elif self.expected_path:
             self.info(msgs, 'Expected file %s' % self.expected_path)
         elif self.actual_path:
-            self.info(msgs, 'Actual file %s' % os.path.normpath(self.actual_path))
+            self.info(
+                msgs, 'Actual file %s' % os.path.normpath(self.actual_path)
+            )
         self.info(msgs, s)
 
     def check_serialized_dataframe(
@@ -570,8 +588,12 @@ class BaseComparison:
         Returns a tuple (failures, msgs), containing the number of failures,
         and a Diffs object containing error messages.
         """
-        ref_df = self.load_serialized_dataframe(expected_path, loader=loader, **kwargs)
-        df = self.load_serialized_dataframe(actual_path, loader=loader, **kwargs)
+        ref_df = self.load_serialized_dataframe(
+            expected_path, loader=loader, **kwargs
+        )
+        df = self.load_serialized_dataframe(
+            actual_path, loader=loader, **kwargs
+        )
         return self.check_dataframe(
             df,
             ref_df,
@@ -944,7 +966,9 @@ class DataFrameDiffs:
                 msgs.append(f'  {c}: {lname} {v.actual}; {rname} {v.expected}')
             msgs.append('')
         elif self.verbose:
-            msgs.append(f'All Field types: match at level {self.typematching}.')
+            msgs.append(
+                f'All Field types: match at level {self.typematching}.'
+            )
 
         if self.extra or self.missing:
             if self.extra:

@@ -64,10 +64,18 @@ class TestCommonSequences(unittest.TestCase):
         z = 8
         self.assertEqual(common_list_sequence([], []), [])
         self.assertEqual(common_list_sequence([a, b, c], [a, b, c]), [a, b, c])
-        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e]), [a, c, e])
-        self.assertEqual(common_list_sequence([a, c, e], [a, b, c, d, e]), [a, c, e])
-        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e, d]), [a, c, d])
-        self.assertEqual(common_list_sequence([a, c, e, d], [a, b, c, d, e]), [a, c, e])
+        self.assertEqual(
+            common_list_sequence([a, b, c, d, e], [a, c, e]), [a, c, e]
+        )
+        self.assertEqual(
+            common_list_sequence([a, c, e], [a, b, c, d, e]), [a, c, e]
+        )
+        self.assertEqual(
+            common_list_sequence([a, b, c, d, e], [a, c, e, d]), [a, c, d]
+        )
+        self.assertEqual(
+            common_list_sequence([a, c, e, d], [a, b, c, d, e]), [a, c, e]
+        )
         self.assertEqual(common_list_sequence([a, c, e, d], [x, y, z]), [])
         self.assertEqual(common_list_sequence([a, a, a, a], [a]), [a])
         self.assertEqual(common_list_sequence([a], [a, a, a, a]), [a])

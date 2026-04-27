@@ -277,7 +277,9 @@ class SerialConfig(BaseConfig):
         if csvpath:
             dir_ = os.path.dirname(os.path.abspath(csvpath))
             paths = [
-                p if os.path.isabs(p) else os.path.join(dir_, os.path.basename(p))
+                p
+                if os.path.isabs(p)
+                else os.path.join(dir_, os.path.basename(p))
                 for p in paths
             ]
         return paths
