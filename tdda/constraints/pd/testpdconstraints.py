@@ -60,7 +60,6 @@ from tdda.examples import copy_accounts_data_unzipped
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.pddates import infer_date_format
 from tdda.serial import csv_to_pandas
-from tdda.utils import CONSTRAINTSTESTDATADIR as TESTDATADIR
 
 TDDA_MD_IGNORES = [
     r"""^\s*"?local_time"?[ =:]+["'].*['"],?$""",

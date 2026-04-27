@@ -33,7 +33,6 @@ class TestBookSerial(ReferenceTestCase):
         Produces warning.
         """
 
-        from tdda.serial import csv_to_polars
 
         Warn, buf = testwarn()
         df = csv_to_polars(

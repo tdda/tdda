@@ -969,7 +969,7 @@ def infer_dates(df, specified_types=None):
                     datecol = pd.to_datetime(df[c], format=fmt)
                     if str(datecol.dtype).startswith('datetime64'):
                         df[c] = datecol
-                except Exception as e:
+                except Exception:
                     pass
     # ndf = pd.DataFrame()
     # for c in colnames:
