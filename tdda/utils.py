@@ -465,7 +465,7 @@ def xml_entitize(s, entitize=1, altnbsp=None):
     s = re.sub("'", '&apos;', s)
     s = re.sub('"', '&quot;', s)
     if altnbsp:
-        s = re.sub(self.nbsp, '&nbsp;', s)
+        s = re.sub(altnbsp, '&nbsp;', s)
     return s
 
 

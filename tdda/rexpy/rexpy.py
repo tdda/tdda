@@ -2784,9 +2784,7 @@ def ilist(L=None):
 
 
 def dquote(s):
-    parts = [
-        p.replace('\\', r'\\').replace('\n', r'\n') for p in s.split('"')
-    ]
+    parts = [p.replace('\\', r'\\').replace('\n', r'\n') for p in s.split('"')]
     quoted = ('\\"').join(parts)
     return '"%s"' % quoted
 

@@ -344,7 +344,7 @@ def find_non_fields(df, fields):
     Return any fields in the list/collection fields that are not in df
     """
     return [
-        f for f in list(df) if f not in set(self.fields).intersection(set(df))
+        f for f in list(df) if f not in set(fields).intersection(set(df))
     ]
 
 

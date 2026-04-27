@@ -6,6 +6,7 @@ import polars as pl
 from tdda.serial.metadata import (
     VERBOSITY,
     SerialMetadata,
+    TDDASerialError,
     serial_format_to_strftime,
 )
 from tdda.serial.reader import get_metadata_for_reader, set_delimiter_from_path
