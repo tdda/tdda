@@ -111,6 +111,19 @@ Options used primarily or exclusibely with [1m‐‐generate[22m/[1m‐‐gen
                             * ‘QUOTE_STRINGS‘
                             * ‘QUOTE_STRINGS_ONLY‘
 
+  [1m‐‐use‐literal‐dates         [22mSpecifies that date formats should be written
+                                to [1m.serial [22mfiles with unambiguous
+                                literal examples such as [1m2000‐12‐31T12:34:56[22m.
+
+  [1m‐‐use‐yyyy‐dates            [22mSpecifies that date formats should be written
+                                to [1m.serial [22mfiles in the form examplified
+                                by [1mYYYY‐MM‐DD HH:MM:SS[22m.
+
+  [1m‐‐use‐pc‐dates              [22mSpecifies that date formats should be written
+                                to [1m.serial [22mfiles in Python
+                                [1mstrftime[22m‐compatible % formats, exemplified by
+                                [1m%Y‐%m‐%dT%H:%M:%S[22m.
+
 EXAMPLES
 
   [1mtdda serial a.csv a.serial[0m
@@ -137,19 +150,6 @@ BUGS
 
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
   still many bugs an undesirable features in the implementation.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

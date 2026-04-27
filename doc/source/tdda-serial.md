@@ -1,12 +1,12 @@
-### Command: `tdda serial`
+# Command: `tdda serial`
 
 
-#### NAME
+## NAME
 
 `tdda serial`  - Converts, interrogates and creates serial metadata files.
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda serial [FLAGS] inmetadata outmetadata  
 tdda serial --to FMT [FLAGS] inmetadata outmetadata  
 
@@ -48,7 +48,7 @@ Multiple formats can be separated by commas.
 Format is usually inferred from filename if following common conventions
 for tdda.serial, CSVW, and frictionless.
 ```
-#### OPTIONS
+## OPTIONS
 
 `--to FMT`             Specify output metadata format (see list of formats above)
 
@@ -66,7 +66,7 @@ for tdda.serial, CSVW, and frictionless.
 `-v, --verbose`          Verose output
 `-V, --Verbose`          More verose output
 
-#### Options used primarily or exclusibely with `--generate`/`--gen`/`-g`
+## Options used primarily or exclusibely with `--generate`/`--gen`/`-g`
 
 `--sep D, --delimiter D`     Specify `D` as the field separator.
 
@@ -116,8 +116,20 @@ for tdda.serial, CSVW, and frictionless.
                               * `QUOTE_STRINGS`
                               * `QUOTE_STRINGS_ONLY`
 
+`--use-literal-dates`         Specifies that date formats should be written
+                              to `.serial` files with unambiguous
+                              literal examples such as `2000-12-31T12:34:56`.
 
-#### EXAMPLES
+`--use-yyyy-dates`            Specifies that date formats should be written
+                              to `.serial` files in the form examplified
+                              by `YYYY-MM-DD HH:MM:SS`.
+
+`--use-pc-dates`              Specifies that date formats should be written
+                              to `.serial` files in Python
+                              `strftime`-compatible % formats, exemplified by
+                              `%Y-%m-%dT%H:%M:%S`.
+
+## EXAMPLES
 
 `tdda serial a.csv a.serial`
    Generate tdda.serial metadata describing format of `a.csv` in `a.serial`.
@@ -141,7 +153,7 @@ for tdda.serial, CSVW, and frictionless.
 
 
 
-#### BUGS
+## BUGS
 
 The `tdda serial` functionality is fairly new, and there are probably
 still many bugs an undesirable features in the implementation.

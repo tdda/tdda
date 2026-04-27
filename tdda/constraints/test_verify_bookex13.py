@@ -3,7 +3,7 @@ test_verify_bookex13.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-tdda gentest 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda' 'test_verify_bookex13.py' '.'
+tdda gentest 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda --no-config' 'test_verify_bookex13.py' '.'
 """
 
 import os
@@ -15,7 +15,7 @@ from tdda.referencetest.gentest import exec_command
 
 
 class TestX_VERIFY_BOOKEX13(ReferenceTestCase):
-    command = 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda'
+    command = 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda --no-config'
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'verify_bookex13')
 

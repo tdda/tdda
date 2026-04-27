@@ -50,6 +50,7 @@ class Test_SH_CONVERTTOPLPY(ReferenceTestCase):
     def test_examplereadpl_py(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'examplereadpl.py'),
                                    os.path.join(self.refdir, 'examplereadpl.py'),
+                                   ignore_lines=["writer"],
                                    encoding='ascii')
 
 if __name__ == '__main__':

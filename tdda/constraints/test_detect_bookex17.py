@@ -3,7 +3,7 @@ test_detect_bookex17.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-tdda gentest 'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda scratch/a25k-bads-v2c.csv --report txt --key account_number' 'test_detect_bookex17.py' '.'
+tdda gentest 'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda scratch/a25k-bads-v2c.csv --report txt --key account_number  --no-config' 'test_detect_bookex17.py' '.'
 """
 
 import os
@@ -22,7 +22,7 @@ class TestX_DETECT_BOOKEX17(ReferenceTestCase):
     txt_out = os.path.join(tmpdir, 'a25k-bads-v2c.txt')
     command = (
         'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda'
-        ' %s --report txt --key account_number' % csv_out
+        ' %s --report txt --key account_number  --no-config' % csv_out
     )
 
     generated_files = [csv_out, txt_out]

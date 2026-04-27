@@ -5,7 +5,7 @@ Run all TDDA tests
 import os
 import sys
 
-from tdda.state import set_testing
+from tdda.state import set_testing, reset_config
 from tdda.referencetest import ReferenceTestCase
 
 from tdda.constraints.testconstraints import *
@@ -23,7 +23,6 @@ from tdda.pd.testpdutils import *
 # Set the enviroment variable TDDA_CONFIG_TESTS to something (e.g. 1)
 # to report on environment from within which tests are run
 TDDA_CONFIG_TESTS = 'TDDA_CONFIG_TESTS' in os.environ
-set_testing(True)
 
 
 if TDDA_CONFIG_TESTS:
@@ -34,8 +33,11 @@ else:
 
 
 def run_all_tests(module=None, argv=None):
+    set_testing(True)
     ReferenceTestCase.main(module=module, argv=argv, testtdda=1)
 
 
 if __name__ == '__main__':
+    set_testing(True)
+    reset_config()
     run_all_tests(argv=sys.argv)

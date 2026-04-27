@@ -1,16 +1,16 @@
-### Command: `tdda help`
+# Command: `tdda help`
 
 
-#### NAME
+## NAME
 
 `tdda help` - Provides help on `tdda` and its sub-commands.
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda help
 tdda help COMMAND
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *COMMAND* can be any of:
 
@@ -25,7 +25,7 @@ tdda help COMMAND
  - `help`
  - `version`
 
-#### DESCRIPTION
+## DESCRIPTION
 
 Shows help on a tdda subcommand or topic.
 
@@ -42,7 +42,7 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 
    `tdda discover --help`
 
-####  EXAMPLES
+##  EXAMPLES
 
 `tdda help`               Shows this help
 

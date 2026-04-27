@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda config [22m− Shows config settings
+
+SYNOPSIS
+
+  [1mtdda config [22m‐ Shows current config settings
+  [1mtdda config ‐‐current [22m‐ Shows current config settings
+  [1mtdda config ‐‐default [22m‐ Shows default config settings
+  [1mtdda config ‐‐file [22m‐ Shows config file location and contents.
+
+DESCRIPTION
+
+  Shows configuration information. Use
+
+  [1m‐c[22m, [1m‐‐current [22mor [1mcurrent [22mfor the default configuration
+  [1m‐d[22m, [1m‐‐default [22mor [1mdefault [22mfor the default configuration
+  [1m‐f[22m, [1m‐‐file [22mor [1mfile [22mfor the configuration file location and contents.
+
+  With no argument, it shows the current configuration.
+
+EXAMPLES
+
+  [1mtdda config[0m
+  [1mtdda config ‐c[0m
+  [1mtdda config ‐d[0m
+  [1mtdda config ‐f[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

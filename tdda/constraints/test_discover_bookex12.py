@@ -3,7 +3,7 @@ test_discover_bookex12.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-tdda gentest 'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdda' 'test_discover_bookex12.py' '.'
+tdda gentest 'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdda --no-config' 'test_discover_bookex12.py' '.'
 """
 
 import os
@@ -19,7 +19,7 @@ class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
     refdir = os.path.join(cwd, 'ref', 'discover_bookex12')
     tmpdir = tempfile.mkdtemp()
     tdda_out = os.path.join(tmpdir, 'accountsex12.tdda')
-    command = 'tdda discover -xG testdata/accounts1k.csv %s' % tdda_out
+    command = 'tdda discover -xG testdata/accounts1k.csv %s --no-config' % tdda_out
 
     generated_files = [tdda_out]
 

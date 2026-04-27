@@ -1,12 +1,12 @@
-### Command: `tdda discover`
+# Command: `tdda discover`
 
 
-#### NAME
+## NAME
 
 `tdda discover` - automatically generate constraints for data
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda discover [-h] [-?] [-7] [--no-config] [--colour]
               [--no-colour] [-x] [-X] [-g] [-G]
               [-r REPORT ...] [-o REPORT_PATH]
@@ -15,7 +15,7 @@ tdda discover [-h] [-?] [-7] [--no-config] [--colour]
               [--pandas] [--polars] [--backend BACKEND]
               INPUT [CONSTRAINTS]
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
   - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`)
@@ -34,12 +34,12 @@ for more information.)
   - Will use `.tdda` extension if no extention is specified.
   - Can be missing or `-` to write to standard output.
 
-#### DESCRIPTION
+## DESCRIPTION
 
 The `tdda discover` command is used to find constraints that are satisfied
 (in most cases) by the input ("training") data provided.
 
-#### OPTIONS
+## OPTIONS
 
 The following options are available.
 
@@ -74,7 +74,7 @@ The following options are available.
                             `a` for pyarrow  
                             `o` for original.  
 
-#### EXAMPLES
+## EXAMPLES
 
 (The example data be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
@@ -138,7 +138,7 @@ though that is a common convention. Use one of
 
 to get help with the database connection file format.
 
-#### SEE ALSO
+## SEE ALSO
 
 tdda-verify(1),
 tdda-detect(1),

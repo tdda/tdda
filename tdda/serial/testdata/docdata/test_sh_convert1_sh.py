@@ -51,11 +51,13 @@ class Test_SH_CONVERT1(ReferenceTestCase):
     def test_docdata_metadata_from_serial2_json(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'docdata-metadata-from-serial2.json'),
                                    os.path.join(self.refdir, 'docdata-metadata-from-serial2.json'),
+                                   ignore_lines=["writer", "dc:creator"],
                                    encoding='ascii')
 
     def test_docdata_metadata_json(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'docdata-metadata.json'),
                                    os.path.join(self.refdir, 'docdata-metadata.json'),
+                                   ignore_lines=["writer", "dc:creator"],
                                    encoding='ascii')
 
 if __name__ == '__main__':

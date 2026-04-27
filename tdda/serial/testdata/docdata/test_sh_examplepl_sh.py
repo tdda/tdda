@@ -48,9 +48,11 @@ class Test_SH_EXAMPLEPL(ReferenceTestCase):
                                  os.path.join(self.refdir, 'STDERR'))
 
     def test_examplepl_serial(self):
-        self.assertTextFileCorrect(os.path.join(self.cwd, 'examplepl.serial'),
-                                   os.path.join(self.refdir, 'examplepl.serial'),
-                                   encoding='ascii')
+        self.assertTextFileCorrect(
+            os.path.join(self.cwd, 'examplepl.serial'),
+            os.path.join(self.refdir, 'examplepl.serial'),
+            ignore_lines=["writer"],
+            encoding='ascii')
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

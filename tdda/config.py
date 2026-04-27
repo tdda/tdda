@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import re
 import sys
@@ -36,14 +37,14 @@ class BaseConfig:
             if isinstance(v, BaseConfig):
                 out.append(v._section_str())
             elif not k.startswith('_'):
-                out.append(f'{k} = {repr(v)}')
+                out.append(fmt_kv(k, v))
         return '\n'.join(out)
 
     def _section_str(self):
         out = [f'\n\n[{self._part}]\n']
         for k, v in self.__dict__.items():
             if not k.startswith('_'):
-                out.append(f'{k} = {repr(v)}')
+                out.append(fmt_kv(k, v))
         return '\n'.join(out)
 
     def get(self, key, preferred=None, raiseOnFailure=True):
@@ -104,7 +105,7 @@ class Config(BaseConfig):
                     self.constraints.override(cc, complain)
                 if 'referencetest' in d:
                     del d['referencetest']
-                if 'constriants' in d:
+                if 'constraints' in d:
                     del d['constraints']
                 self.override(d, complain)
 
@@ -301,3 +302,61 @@ def cross_platform_dot_file(unix_dot_path):
         if os.path.exists(alt_path):
             return alt_path
     return path
+
+
+def fmt_kv(key, value):
+    if value is None:
+        return f'# {key}'
+    else:
+        return f'{key} = {fmt_value(value)}'
+
+
+def fmt_value(value):
+    if type(value) in (int, float):
+        v = repr(value)
+    elif type(value) is str:
+        v = json.dumps(value, ensure_ascii = False)
+    elif type(value) in (list, tuple):
+        v = ', '.join(fmt_value(v) for v in value)
+    elif str(type(value)).startswith('date'):
+        v = value.isoformat()
+    elif type(value) is bool:
+        v = str(value).lower()
+    elif value is None:
+        # problem in TOML
+        v =  'null'
+    elif isinstance(value, dict):
+        v = '{\n%s\n}' % (',\n'.join(fmt_kv(k, v) for k, v in value.items()))
+    else:
+        raise Exception(f'{repr(value)}: (type: {type(value)})')
+    return v
+
+
+def show_config(*args):
+    from tdda.config import Config
+    kind = args[0] if args else 'current'
+    if kind in ('current', '-c', '--current'):
+        c = Config(load=True)
+        print(str(c))
+        return
+    elif kind in ('default', '--default', '-d'):
+        c = Config(load=False)
+        print(str(c))
+        return
+    elif kind in ('file', '--file', '-f'):
+        config_path = cross_platform_dot_file('~/.tdda.toml')
+        if os.path.exists(config_path):
+            print(f'\nConfig file is {config_path}:\n')
+            with open(config_path) as f:
+                print(f.read())
+                print()
+    else:
+        print('''
+USAGE:
+    config                              Show current (loaded) config
+
+    config [-c] [--current] [current]   Show current (loaded) config
+    config [-d] [--default] [default]   Show default config
+    config [-f] [--file] [file]         Show config file location and contents
+''')
+        sys.exit(1)

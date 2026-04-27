@@ -1,22 +1,22 @@
-### Command: `tdda gentest`
+# Command: `tdda gentest`
 
 
-#### NAME
+## NAME
 
 `tdda gentest` - Gentest writes tests, so you don't have to.™
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda gentest   Runs Wizard
 
 tdda gentest   'SHELL COMMAND' [OPTIONS]
                  [test_output.py [reference files]]
 
 ```
-#### DESCRIPTION
+## DESCRIPTION
 
 
-#### OPTIONS
+## OPTIONS
 
   -h, --help            show this help message and exit
   -?, --?               Same as -h or --help
@@ -31,5 +31,5 @@ tdda gentest   'SHELL COMMAND' [OPTIONS]
   -C, --no-clobber      Do not overwrite existing test script or reference directory
 
 
-#### EXAMPLES
+## EXAMPLES
 

@@ -27,6 +27,11 @@ html:   clean
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+quick:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html       to make standalone HTML files"

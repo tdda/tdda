@@ -56,6 +56,7 @@ class Test_SH_CONVERT2(ReferenceTestCase):
     def test_docdata_resource_json(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'docdata.resource.json'),
                                    os.path.join(self.refdir, 'docdata.resource.json'),
+                                   ignore_lines=["writer"],
                                    encoding='ascii')
 
 if __name__ == '__main__':

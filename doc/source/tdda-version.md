@@ -1,18 +1,18 @@
-### Command: `tdda version`
+# Command: `tdda version`
 
-#### NAME
+## NAME
 
 `tdda version` - Reports the installed version of tdda
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda version
 ```
-#### DESCRIPTION
+## DESCRIPTION
 
 Reports the version number of the installed TDDA tools.
 
-#### EXAMPLES
+## EXAMPLES
 
 `tdda version`
 

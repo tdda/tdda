@@ -471,7 +471,7 @@ You can specify a preferred form at the command line with
 --use-literal-dates, --use-yyyy-dates, --use-pc-dates.
 
 
-##### ISO 8601 Formats
+#### ISO 8601 Formats
 
 | Named Format          | `strftime` equivalent         | Example                   |
 |:----------------------|:------------------------------|:--------------------------|

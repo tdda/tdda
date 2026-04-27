@@ -124,6 +124,7 @@ Contents
    tdda-gentest.md
    tdda-examples.md
    tdda-version.md
+   tdda-config.md
    tdda-help.md
 
 

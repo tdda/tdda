@@ -1,12 +1,12 @@
-### Command: `tdda detect`
+# Command: `tdda detect`
 
 
-#### NAME
+## NAME
 
 `tdda detect` - Detect data that does not obey supplied constraints
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
             [-t {strict,sloppy}] [--write-all-records]
@@ -21,7 +21,7 @@ tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [--backend BACKEND]
             INPUT [CONSTRAINTS [OUTPUT]]
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
   - a csv file or other flat file (e.g. .csv, .txt, .psv)
@@ -49,13 +49,13 @@ file or a `parquet` file), but does not have to be the same type.
 If the input is a database table, the output is always a database
 table in the same database.
 
-#### DESCRIPTION
+## DESCRIPTION
 
 The `tdda discover` command finds and reports data that fails to satisfy
 the constraints in the *CONSTAINTS* file specified. It also performs all
 the same functions as `tdda verify`.
 
-#### OPTIONS
+## OPTIONS
 
 `-h`, `--help`              Show this help message and exit  
 `-?`, `--?`                 Same as `-h` or `--help`  
@@ -123,7 +123,7 @@ the same functions as `tdda verify`.
                           `a` for pyarrow  
                           `o` for original.  
 
-#### SEE ALSO
+## SEE ALSO
 
 tdda-verify(1),
 tdda-discover(1),

@@ -139,6 +139,22 @@ for tdda.serial, CSVW, and frictionless.
                           * `QUOTE_STRINGS_ONLY`
 .EE
 
+.PP
+\fB--use-literal-dates\fR         Specifies that date formats should be written
+                              to \fB\&.serial\fR files with unambiguous
+                              literal examples such as \fB2000-12-31T12:34:56\fR\&.
+
+.PP
+\fB--use-yyyy-dates\fR            Specifies that date formats should be written
+                              to \fB\&.serial\fR files in the form examplified
+                              by \fBYYYY-MM-DD HH:MM:SS\fR\&.
+
+.PP
+\fB--use-pc-dates\fR              Specifies that date formats should be written
+                              to \fB\&.serial\fR files in Python
+                              \fBstrftime\fR-compatible % formats, exemplified by
+                              \fB%Y-%m-%dT%H:%M:%S\fR\&.
+
 .SH EXAMPLES
 \fBtdda serial a.csv a.serial\fR
    Generate tdda.serial metadata describing format of \fBa.csv\fR in \fBa.serial\fR\&.

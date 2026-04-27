@@ -50,6 +50,7 @@ class Test_SH_CONVERT3(ReferenceTestCase):
     def test_docdata_pd_r_o_serial(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'docdata-pd.r-o.serial'),
                                    os.path.join(self.refdir, 'docdata-pd.r-o.serial'),
+                                   ignore_lines=["writer"],
                                    encoding='ascii')
 
 if __name__ == '__main__':

@@ -48,6 +48,7 @@ def help(extensions, cmd=None, stream=sys.stdout):
             'version',
             'examples',
             'help',
+            'config'
         ):
             print_help(cmd, stream)
         else:
@@ -56,7 +57,11 @@ def help(extensions, cmd=None, stream=sys.stdout):
                 '    tdda help discover\n'
                 '    tdda help verify\n'
                 '    tdda help detect\n'
-                '    tdda help examples\n' % cmd
+                '    tdda help examples\n'
+                '    tdda help tag\n'
+                '    tdda help diff\n'
+                '    tdda help gentest\n'
+                '    tdda help config\n' % cmd
             )
         # if cmd in CONSTRAINTS_COMMANDS:
         #     print('\n%s is available for the following:'
@@ -196,6 +201,10 @@ def main_with_argv(argv, verbose=True):
     elif name in ('help', '-h', '-?', '--help'):
         cmd = sys.argv[2] if len(sys.argv) > 2 else None
         help(extensions, cmd, stream=sys.stdout)
+    elif name == 'config':
+        from tdda.config import show_config
+
+        show_config(*argv[2:])
     else:
         help(extensions, stream=sys.stderr)
         sys.exit(1)

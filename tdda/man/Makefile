@@ -7,7 +7,9 @@ TARGETS = tdda.txt \
           tdda-help.txt \
           tdda-serial.txt \
           tdda-verify.txt \
-          tdda-version.txt
+          tdda-version.txt \
+          tdda-config.txt
+
 
 all: clean $(TARGETS)
 

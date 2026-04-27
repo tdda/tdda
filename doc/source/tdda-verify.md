@@ -1,12 +1,12 @@
-### Command: `tdda verify`
+# Command: `tdda verify`
 
 
-#### NAME
+## NAME
 
 `tdda verify` - Veriify that constraints are satisfied by data
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda verify [-h] [-?] [-7] [--no-config]
             [--colour] [--no-colour]
             [-epsilon EPSILON] [-a] [-f] [-r [REPORT ...]]
@@ -16,7 +16,7 @@ tdda verify [-h] [-?] [-7] [--no-config]
             [--pandas] [--polars] [--backend BACKEND]
             INPUT [CONSTRAINTS]
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
   - a csv file or other flat file (e.g. .csv, .txt, .psv)
@@ -37,7 +37,7 @@ constraints.
 If no constraints file is provided, a file with the same path as
 the input file, with a .tdda extension will be tried.
 
-#### DESCRIPTION
+## DESCRIPTION
 
 The `tdda verify` command is used to check that data conforms
 the the constraints specified. Any constraints not satisfied
@@ -47,7 +47,7 @@ The `tdda verify` command does *not* report which records and
 values cause constraints to be violated: the companion command
 `tdda detect` performs this function.
 
-#### OPTIONS
+## OPTIONS
 
 `-h`, `--help`              Show this help message and exit  
 `-?`, `--?`                 Same as `-h` or `--help`  
@@ -90,7 +90,7 @@ values cause constraints to be violated: the companion command
                           `a` for pyarrow  
                           `o` for original.  
 
-#### SEE ALSO
+## SEE ALSO
 
 tdda-detect(1),
 tdda-discover(1),

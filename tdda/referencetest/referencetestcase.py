@@ -461,7 +461,7 @@ def tag_failing_tests(args=None):
 
     args: list of command-line arguments; if non-empty, args[0] is the
           path to the failing-tests file.  If empty/None, finds the most
-          recent *-failing-tests.txt file in $TDDA_FAIL_DIR.
+          recent `*-failing-tests.txt` file in $TDDA_FAIL_DIR.
     """
     if args:
         filepath = args[0]

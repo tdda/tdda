@@ -1,17 +1,17 @@
-### Command: `tdda examples`
+# Command: `tdda examples`
 
 
-#### NAME
+## NAME
 
 `tdda` examples - Creates example data for TDDA
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda examples [OUTDIR]
 tdda examples [MODULE...] [OUTDIR]
 tdda examples all [OUTDIR]
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *MODULE* can be any of:
   - referencetest
@@ -30,7 +30,7 @@ the `tdda-book-examples` will be downloaded from GitHub, which
 does require internet access.
 
 
-#### DESCRIPTION
+## DESCRIPTION
 
 Write out example code and data for all examples, by default,
 or for a particular module if specified.
@@ -39,7 +39,7 @@ If no module is specified, examples for all three are written out.
 
 Examples are always created in subdirectories of the current directory `.`
 
-#### EXAMPLES
+## EXAMPLES
 
 a. `tdda examples`
    Creates the referencetest, constraints, rexpy, and gentest

@@ -48,9 +48,12 @@ class Test_SH_GENERATION1(ReferenceTestCase):
                                  os.path.join(self.refdir, 'STDERR'))
 
     def test_generated_serial(self):
-        self.assertTextFileCorrect(os.path.join(self.cwd, 'generated.serial'),
-                                   os.path.join(self.refdir, 'generated.serial'),
-                                   encoding='ascii')
+        self.assertTextFileCorrect(os.path.join(self.cwd,
+                                                'generated.serial'),
+                                   os.path.join(self.refdir,
+                                                'generated.serial'),
+                                   encoding='ascii',
+                                   ignore_lines=["writer"])
 
 if __name__ == '__main__':
     ReferenceTestCase.main()

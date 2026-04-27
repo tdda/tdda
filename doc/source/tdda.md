@@ -1,12 +1,12 @@
-### Command: `tdda`
+# Command: `tdda`
 
 
-#### NAME
+## NAME
 
 `tdda` - test-diven data analysis
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda discover      Perform constraint discovery  
 tdda verify        Verify data against constraints  
 tdda detect        Detect failed constraints on data  
@@ -24,12 +24,12 @@ tdda help COMMAND  Print help on COMMAND (e.g. discover, verify)
 
 tdda test          Run the tdda library's tests.  
 ```
-#### OPTIONS
+## OPTIONS
 
 `-`v, `--version`       Print version number (same as tdda version)  
 `-h`, `-?`, `--help`      Print this help  
 
-#### SEE ALSO
+## SEE ALSO
 
 rexpy(1),
 tdda(3)

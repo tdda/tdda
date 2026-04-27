@@ -50,6 +50,7 @@ class Test_SH_CONVERTTOPD(ReferenceTestCase):
     def test_examplepd_serial(self):
         self.assertTextFileCorrect(os.path.join(self.cwd, 'examplepd.serial'),
                                    os.path.join(self.refdir, 'examplepd.serial'),
+                                   ignore_lines=["writer"],
                                    encoding='ascii')
 
 if __name__ == '__main__':

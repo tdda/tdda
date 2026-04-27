@@ -1,12 +1,12 @@
-### Command: `tdda diff`
+# Command: `tdda diff`
 
 
-#### NAME
+## NAME
 
 `tdda diff`  -- compare csv or parquet files
 
-#### SYNOPSIS
-```x
+## SYNOPSIS
+```
 tdda diff [--fields FIELD1,FIELD2,...]
             [--xfields FIELD1,FIELD2,...  ]
             [--horizontal] [-H] [--vertical] [-V]
@@ -19,7 +19,7 @@ tdda diff [--fields FIELD1,FIELD2,...]
             [--strict] [--medium] [--loose] [--permissive]
             LEFT RIGHT [OUTPATH]
 ```
-#### POSITIONAL ARGUMENTS
+## POSITIONAL ARGUMENTS
 
 *LEFT*
 
@@ -27,7 +27,7 @@ tdda diff [--fields FIELD1,FIELD2,...]
 
 *OUTPATH*
 
-#### DESCRIPTION
+## DESCRIPTION
 
 The `tdda diff` command compares two tabular datasets in CSV or Parquet
 files and shows some or all differences. It uses the same underlying
@@ -40,7 +40,7 @@ the display of differences.
 By default, comparisons are row-based and consider all fields (columns),
 as typed values after reading. Ke
 
-#### OPTIONS
+## OPTIONS
 
 `--fields` *FIELD1,FIELD2*,...  
   Check only these fields (comma-separated list)
@@ -124,7 +124,7 @@ as typed values after reading. Ke
   Show help on `tdda diff`.
 
 
-#### EXAMPLES
+## EXAMPLES
 
 Data suitable for all examples can be obtained with
 

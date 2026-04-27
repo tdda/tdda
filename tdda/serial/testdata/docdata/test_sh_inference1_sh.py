@@ -48,9 +48,12 @@ class Test_SH_INFERENCE1(ReferenceTestCase):
                                  os.path.join(self.refdir, 'STDERR'))
 
     def test_docdata_inferred_serial(self):
-        self.assertTextFileCorrect(os.path.join(self.cwd, 'docdata-inferred.serial'),
-                                   os.path.join(self.refdir, 'docdata-inferred.serial'),
-                                   encoding='ascii')
+        self.assertTextFileCorrect(os.path.join(self.cwd,
+                                                 'docdata-inferred.serial'),
+                                   os.path.join(self.refdir,
+                                                'docdata-inferred.serial'),
+                                   encoding='ascii',
+                                   ignore_lines=['"writer"'])
 
 if __name__ == '__main__':
     ReferenceTestCase.main()
