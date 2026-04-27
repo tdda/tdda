@@ -149,6 +149,8 @@ class Specifics:
 
 
 class TestGenerator:
+    __test__ = False
+
     def __init__(
         self,
         cwd,
@@ -1416,6 +1418,9 @@ def test_def(
         lines.append(joint.join(extras) + ')')
 
     return '\n    '.join(lines) + '\n'
+
+
+test_def.__test__ = False
 
 
 def quote_raw(s):

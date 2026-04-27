@@ -173,7 +173,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-order.txt'),
             ignore_patterns=[
-                'diff .*/actual-df001.parquet .*/expected-df001.parquet'
+                'diff .*/actual-df[0-9]+\\.parquet .*/expected-df[0-9]+\\.parquet'
             ],
         )
 

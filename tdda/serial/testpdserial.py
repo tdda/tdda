@@ -1470,6 +1470,9 @@ def testDataset4():
     )
 
 
+testDataset4.__test__ = False
+
+
 def csvw_json_to_df(path, fields, table_number=0, to_ints=None):
     with open(path) as f:
         d = json.load(f)

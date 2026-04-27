@@ -246,6 +246,7 @@ class TestTDDADiff(ReferenceTestCase):
 
 
 class TestKeyFunctions:
+    __test__ = False
     def testIsUsableKey(self):
         dfL = df_add_named_col_with_values(
             self.read_parquet(inpath('a.parquet')),
@@ -330,6 +331,7 @@ class TestKeyFunctions:
 
 
 class TestKeyFunctionsPandas(TestKeyFunctions, ReferenceTestCase):
+    __test__ = True
     is_pandas = True
 
     def read_parquet(self, *args, **kw):
@@ -337,6 +339,7 @@ class TestKeyFunctionsPandas(TestKeyFunctions, ReferenceTestCase):
 
 
 class TestKeyFunctionsPolars(TestKeyFunctions, ReferenceTestCase):
+    __test__ = True
     is_pandas = False
 
     def read_parquet(self, *args, **kw):

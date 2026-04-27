@@ -1074,6 +1074,9 @@ def testwarn():
     return f, buf
 
 
+testwarn.__test__ = False
+
+
 def find_free_name(names, candidates=None):
     candidates = candidates or ['f']
     for c in candidates:

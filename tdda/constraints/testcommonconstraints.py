@@ -23,6 +23,9 @@ def testdata(filename):
     return os.path.join(TESTDATA_DIR, filename)
 
 
+testdata.__test__ = False
+
+
 def reportpath(path):
     return tdpath(os.path.join('reports', path))
 
