@@ -1735,11 +1735,11 @@ class TestSerialPandasNamedDateFormatsLoad(ReferenceTestCase):
         df = csv_to_pandas(tdpath('usdt.csv'), tdpath('usdt.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
-    def test_eu_date2y_serial(self):
+    def test_eu_datetime2y_serial(self):
         df = csv_to_pandas(tdpath('eurodt2y.csv'), tdpath('eurodt2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 
-    def test_us_date2y_serial(self):
+    def test_us_datetime2y_serial(self):
         df = csv_to_pandas(tdpath('usdt2y.csv'), tdpath('usdt2y.serial'))
         self.assertDataFrameCorrect(df, tdpath('datetimed.parquet'))
 

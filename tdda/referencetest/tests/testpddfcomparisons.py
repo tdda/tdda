@@ -476,7 +476,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         self.assertEqual(find_common_key(n3k, n4k), 'k')
         self.assertEqual(find_common_key(n4k, n3k), 'k')
 
-    def test_find_common_single_key4_str(self):
+    def test_find_common_single_key4_str_dups(self):
         # n has dups; fall back to nsq
         n4 = n_squares(4)
         n4dup = n_squares(4)

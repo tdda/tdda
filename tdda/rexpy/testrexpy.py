@@ -1370,7 +1370,7 @@ class TestExtraction(ReferenceTestCase):
         )
 
     @unittest.skipIf(not UNICHRS, 'Unicode handling off')
-    def test_namesUAUjava(self):
+    def test_namesUAUposix(self):
         self.assertEqual(
             extract(self.namesUAU, dialect='posix'),
             [r'^[[:alpha:]]{4,6} [[:alpha:]]+ [[:alpha:]]+$'],
