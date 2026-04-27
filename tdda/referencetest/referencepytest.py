@@ -171,11 +171,19 @@ configuration into your ``conftest.py`` file::
 
 """
 
+import datetime
+import os
 import sys
+import tempfile
 
 import pytest
 
 from tdda.referencetest.referencetest import ReferenceTest, tag
+from tdda.referencetest.referencetestcase import _remove_tag_lines
+
+DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
+
+_failing_tests = []  # accumulated during run, written at session end
 
 
 def pytest_assert(x, msg):
@@ -279,6 +287,21 @@ def addoption(parser):
             action='store_true',
             help='--istagged: report tagged tests, without running',
         )
+        parser.addoption(
+            '--is-tagged',
+            action='store_true',
+            help='--is-tagged: report tagged tests, without running',
+        )
+        parser.addoption(
+            '--untag',
+            action='store_true',
+            help='--untag: remove all @tag decorators from test source files',
+        )
+        parser.addoption(
+            '--log-failures',
+            action='store_true',
+            help='--log-failures: write failing test IDs to a file for tdda tag',
+        )
     except ValueError:
         # ignore attempts to add parser options multiple times
         pass
@@ -289,11 +312,20 @@ def tagged(config, items):
     Support for ``@tag`` to mark tests to be run with ``--tagged`` or reported
     with ``--istagged``.
 
-    It extends pytest to recognize the ``--tagged`` and ``--istagged``
-    command-line flags, to restrict testing to tagged tests only.
+    It extends pytest to recognize the ``--tagged``, ``--istagged`` and
+    ``--untag`` command-line flags, to restrict testing to tagged tests only.
     """
+    dountag = config.getoption('--untag', None)
+    if dountag:
+        source_files = set(str(f.fspath) for f in items)
+        for filepath in sorted(source_files):
+            _remove_tag_lines(filepath)
+        items.clear()
+        pytest.exit('--untag complete', returncode=0)
+
     runtagged = config.getoption('--tagged', None)
-    showtagged = config.getoption('--istagged', None)
+    showtagged = (config.getoption('--istagged', None)
+                  or config.getoption('--is-tagged', None))
     shownclasses = set()
     if runtagged or showtagged:
         if showtagged:
@@ -315,3 +347,34 @@ def tagged(config, items):
                     shownclasses.add(cls)
                 else:
                     print('%s.%s' % (f.obj.__module__, f.name))
+    if showtagged:
+        pytest.exit('--istagged complete', returncode=0)
+
+
+def log_failures_report(report):
+    """
+    Accumulate failing test IDs during a run.
+    Call from pytest_runtest_logreport in conftest.py.
+    """
+    if report.when == 'call' and report.failed:
+        parts = report.nodeid.split('::')
+        filepath = os.path.abspath(str(report.fspath))
+        rest = '::'.join(parts[1:])
+        _failing_tests.append('%s::%s' % (filepath, rest))
+
+
+def log_failures_finish(config):
+    """
+    Write accumulated failing test IDs to a timestamped file.
+    Call from pytest_sessionfinish in conftest.py.
+    """
+    if not config.getoption('--log-failures', False):
+        return
+    if not _failing_tests:
+        return
+    stamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+    filename = '%s-failing-tests.txt' % stamp
+    outpath = os.path.join(DEFAULT_FAIL_DIR, filename)
+    with open(outpath, 'w') as f:
+        f.write('\n'.join(_failing_tests) + '\n')
+    print('\nFailing tests written to %s' % outpath)

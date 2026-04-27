@@ -32,6 +32,20 @@ def pytest_collection_modifyitems(session, config, items):
     referencepytest.tagged(config, items)
 
 
+def pytest_runtest_logreport(report):
+    """
+    Accumulate failing test IDs when --log-failures is set.
+    """
+    referencepytest.log_failures_report(report)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Write failing test IDs to file when --log-failures is set.
+    """
+    referencepytest.log_failures_finish(session.config)
+
+
 @pytest.fixture(scope='module')
 def ref(request):
     """
