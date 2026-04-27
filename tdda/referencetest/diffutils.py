@@ -189,9 +189,7 @@ def check_is_usable_key(left, right, key, raise_if_not=False):
     return False
 
 
-def same_structure_dataframe_diffs(
-    df, ref_df, key=None, idx=None, config=None
-):
+def same_structure_dataframe_diffs(df, ref_df, key=None, idx=None, config=None):
     """
     Compute differences between each pair of columns in two data frames.
 
@@ -279,9 +277,12 @@ def single_col_diffs(left, right, missings=None):
     elif nR > nL:
         R = right[:nL]
     if col_types_match(L, R, level='loose'):
-        if (ispd and str(L.dtype).startswith('datetime')
-                and str(R.dtype).startswith('datetime')
-                and L.dtype != R.dtype):
+        if (
+            ispd
+            and str(L.dtype).startswith('datetime')
+            and str(R.dtype).startswith('datetime')
+            and L.dtype != R.dtype
+        ):
             L = L.astype(R.dtype)
         different = ~(L.eq(R) | (isnull_col(L) & isnull_col(R)))
     else:
@@ -307,7 +308,6 @@ def create_row_diff_counts(masks):
     while len(counts) > 1:
         last = [cast_col_to_int(counts[-1])] if len(counts) % 2 == 1 else []
         counts = [
-            (counts[2 * i] + counts[2 * i + 1])
-            for i in range(len(counts) // 2)
+            (counts[2 * i] + counts[2 * i + 1]) for i in range(len(counts) // 2)
         ] + last
     return counts[0]

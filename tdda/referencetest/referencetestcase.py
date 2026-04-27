@@ -162,9 +162,7 @@ class ReferenceTestCase(unittest.TestCase, ReferenceTest):
         tests using the ``ReferenceTestCase`` class only need to import
         that single class on its own.
         """
-        argv, tagged, check, r, untag, log_failures = _set_flags_from_argv(
-            argv
-        )
+        argv, tagged, check, r, untag, log_failures = _set_flags_from_argv(argv)
         report = nvl(r, report)
         if 'TDDAREPORT' in os.environ:
             report = True
@@ -205,11 +203,7 @@ def _run_tests(
         return
     if argv is None:
         argv = sys.argv
-    loader = (
-        TaggedTestLoader(check)
-        if tagged or check
-        else unittest.defaultTestLoader
-    )
+    loader = TaggedTestLoader(check) if tagged or check else unittest.defaultTestLoader
     if module is None:
         t = unittest.main(argv=argv, testLoader=loader, exit=False, **kw)
         result = t.__dict__['result']
@@ -219,9 +213,7 @@ def _run_tests(
             outpath = os.path.splitext(path)[0] + '-results.json'
             ok = result.failures == result.errors == []
             d = {
-                'date': datetime.datetime.now().isoformat(
-                    sep='t', timespec='seconds'
-                ),
+                'date': datetime.datetime.now().isoformat(sep='t', timespec='seconds'),
                 'run': result.testsRun,
                 'failures': len(result.failures),
                 'errors': len(result.errors),
@@ -406,10 +398,7 @@ def _remove_tag_lines(filepath):
     if n_removed:
         with open(filepath, 'w') as f:
             f.write(''.join(new_lines))
-        print(
-            'Removed %s from %s'
-            % (plural(n_removed, '@tag decorator'), filepath)
-        )
+        print('Removed %s from %s' % (plural(n_removed, '@tag decorator'), filepath))
     else:
         print('No @tag decorators found in %s' % filepath)
 
@@ -439,9 +428,7 @@ def _record_failing_tests(result):
         if mod and getattr(mod, '__file__', None):
             filepath = os.path.abspath(mod.__file__)
             if class_name:
-                lines.append(
-                    '%s::%s::%s' % (filepath, class_name, method_name)
-                )
+                lines.append('%s::%s::%s' % (filepath, class_name, method_name))
             else:
                 lines.append('%s::%s' % (filepath, method_name))
     if lines:
@@ -466,9 +453,7 @@ def tag_failing_tests(args=None):
     if args:
         filepath = args[0]
     else:
-        pattern = os.path.join(
-            DEFAULT_FAIL_DIR, '????-??-??T??????-failing-tests.txt'
-        )
+        pattern = os.path.join(DEFAULT_FAIL_DIR, '????-??-??T??????-failing-tests.txt')
         candidates = sorted(glob.glob(pattern))
         if not candidates:
             print('No failing tests file found in %s' % DEFAULT_FAIL_DIR)
@@ -515,9 +500,7 @@ def _add_tag_lines(filepath, items):
             for i, line in enumerate(lines):
                 if re.match(r'\s*(import |from \S+ import )', line):
                     last_import = i
-            lines.insert(
-                last_import + 1, 'from tdda.referencetest import tag\n'
-            )
+            lines.insert(last_import + 1, 'from tdda.referencetest import tag\n')
 
     # Build lookup: method/function name -> expected class name (or None)
     targets = {}
@@ -544,10 +527,7 @@ def _add_tag_lines(filepath, items):
                 name = m.group(1)
                 if name in targets:
                     expected_class = targets[name]
-                    if (
-                        expected_class is None
-                        or expected_class == current_class
-                    ):
+                    if expected_class is None or expected_class == current_class:
                         prev = lines[i - 1].strip() if i > 0 else ''
                         if prev != '@tag':
                             insertions.append((i, indent))
@@ -575,9 +555,7 @@ class TaggedTestLoader(unittest.TestLoader):
         self.print = printer or print
 
     def loadTestsFromTestCase(self, *args, **kwargs):
-        suite = unittest.TestLoader.loadTestsFromTestCase(
-            self, *args, **kwargs
-        )
+        suite = unittest.TestLoader.loadTestsFromTestCase(self, *args, **kwargs)
         return self._tagged_tests_only(suite)
 
     def loadTestsFromModule(self, *args, **kwargs):
@@ -600,8 +578,7 @@ class TaggedTestLoader(unittest.TestLoader):
                 test = self._tagged_tests_only(test)
             if self.check and not isinstance(test, unittest.suite.TestSuite):
                 cases.add(
-                    '%s.%s'
-                    % (test.__class__.__module__, test.__class__.__name__)
+                    '%s.%s' % (test.__class__.__module__, test.__class__.__name__)
                 )
             else:
                 newsuite.addTest(test)

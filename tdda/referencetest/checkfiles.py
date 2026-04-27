@@ -25,9 +25,7 @@ from tdda.referencetest.basecomparison import (
 from tdda.referencetest.utils import get_encoding, FileType
 
 
-BinaryInfo = namedtuple(
-    'BinaryInfo', ('byteoffset', 'actualLen', 'expectedLen')
-)
+BinaryInfo = namedtuple('BinaryInfo', ('byteoffset', 'actualLen', 'expectedLen'))
 
 
 def perms_ok(n_permutations, max_permutations):
@@ -174,14 +172,10 @@ class FilesComparison(BaseComparison):
                 ]
             )
             actual = [
-                a
-                for i, a in enumerate(original_actual)
-                if i not in actual_removals
+                a for i, a in enumerate(original_actual) if i not in actual_removals
             ]
             expected = [
-                a
-                for i, a in enumerate(original_expected)
-                if i not in expected_removals
+                a for i, a in enumerate(original_expected) if i not in expected_removals
             ]
 
             # now build mappings from the after-removal line-numbers back to
@@ -267,11 +261,7 @@ class FilesComparison(BaseComparison):
             )
             msgs.add_reconstruction(reconstruction)
 
-        if (
-            permutable
-            and ndiffs > 0
-            and perms_ok(ndiffs, max_permutation_cases)
-        ):
+        if permutable and ndiffs > 0 and perms_ok(ndiffs, max_permutation_cases):
             ndiffs = self.check_for_permutation_failures(failure_cases)
 
         if ndiffs > 0:
@@ -409,9 +399,9 @@ class FilesComparison(BaseComparison):
             else:
                 first_error_line = 'end of actual %s' % desc
 
-        first_error = (
-            '%ss have different numbers of lines, '
-            'differences start at %s' % (desc.title(), first_error_line)
+        first_error = '%ss have different numbers of lines, differences start at %s' % (
+            desc.title(),
+            first_error_line,
         )
         ndiffs = max(len(original_actual), len(original_expected))
         return (first_error, ndiffs)
@@ -447,9 +437,7 @@ class FilesComparison(BaseComparison):
                 # pattern.
                 return True
         # not an ignorable substring line, so try patterns
-        return self.check_patterns(
-            compiled_patterns, actual_line, expected_line
-        )
+        return self.check_patterns(compiled_patterns, actual_line, expected_line)
 
     def check_patterns(self, compiled_patterns, actual_line, expected_line):
         """
@@ -523,9 +511,7 @@ class FilesComparison(BaseComparison):
         rebuilt_actual = []
         rebuilt_expected = []
         iactual = iexpected = 0
-        while iactual < len(original_actual) or iexpected < len(
-            original_expected
-        ):
+        while iactual < len(original_actual) or iexpected < len(original_expected):
             if iactual in actual_removals and iexpected in expected_removals:
                 # lines which were removed from both sides
                 marker = self.diff_marker(
@@ -988,9 +974,7 @@ class FilesComparison(BaseComparison):
             if expected_path:
                 self.info(msgs, 'Expected file %s' % expected_path)
             elif actual_path:
-                self.info(
-                    msgs, 'Actual file %s' % os.path.normpath(actual_path)
-                )
+                self.info(msgs, 'Actual file %s' % os.path.normpath(actual_path))
             elif not create_temporaries:
                 self.info(msgs, 'No files available for comparison')
 
@@ -1013,12 +997,10 @@ class FilesComparison(BaseComparison):
                 guide=guide,
             )
             actualsSame = (
-                '\n'.join(actual).strip()
-                == reconstruction.actual_lines().strip()
+                '\n'.join(actual).strip() == reconstruction.actual_lines().strip()
             )
             expectedsSame = (
-                '\n'.join(expected).strip()
-                == reconstruction.expected_lines().strip()
+                '\n'.join(expected).strip() == reconstruction.expected_lines().strip()
             )
             bothSame = actualsSame and expectedsSame
             if bothSame:

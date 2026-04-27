@@ -10,8 +10,11 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.checkfiles import FilesComparison
 from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest.utils import (
-    normabspath, normalize_json, normalize_yaml,
-    json_normalizer, yaml_normalizer
+    normabspath,
+    normalize_json,
+    normalize_yaml,
+    json_normalizer,
+    yaml_normalizer,
 )
 
 
@@ -38,9 +41,7 @@ class TestFiles(ReferenceTestCase):
         r1 = compare.check_string_against_file([], refloc('empty.txt'))
         r2 = compare.check_string_against_file('', refloc('empty.txt'))
         r3 = compare.check_string_against_file([''], refloc('empty.txt'))
-        r4 = compare.check_string_against_file(
-            ['a single line'], refloc('single.txt')
-        )
+        r4 = compare.check_string_against_file(['a single line'], refloc('single.txt'))
         self.assertEqual(r1, (0, []))
         self.assertEqual(r2, (0, []))
         self.assertEqual(r3, (0, []))
@@ -77,8 +78,7 @@ class TestFiles(ReferenceTestCase):
                 ],
             ),
         )
-        diff = '%s %s %s' % (diffcmd(), normabspath('wrong.txt'),
-                             refloc('single.txt'))
+        diff = '%s %s %s' % (diffcmd(), normabspath('wrong.txt'), refloc('single.txt'))
         self.assertEqual(
             r5,
             (
@@ -127,10 +127,7 @@ class TestFiles(ReferenceTestCase):
             'Files have different numbers of lines, '
             'differences start at end of reference file'
         )
-        err3 = (
-            'Files have different numbers of lines, '
-            'differences start at line 1'
-        )
+        err3 = 'Files have different numbers of lines, differences start at line 1'
         self.assertEqual(r1, (1, [err1, 'Compare with:\n    %s\n' % diff1]))
         self.assertEqual(r2, (1, [err2, 'Compare with:\n    %s\n' % diff2]))
         self.assertEqual(r3, (1, [err3, 'Compare with:\n    %s\n' % diff3]))
@@ -176,10 +173,7 @@ class TestFiles(ReferenceTestCase):
             'Files have different numbers of lines, '
             'differences start at end of actual file'
         )
-        err2 = (
-            'Files have different numbers of lines, '
-            'differences start at line 1'
-        )
+        err2 = 'Files have different numbers of lines, differences start at line 1'
         self.assertEqual(
             r,
             (
@@ -195,18 +189,10 @@ class TestFiles(ReferenceTestCase):
 
     def test_binary_files(self):
         compare = FilesComparison()
-        r1 = compare.check_binary_file(
-            refloc('single.txt'), refloc('single.txt')
-        )
-        r2 = compare.check_binary_file(
-            refloc('single.txt'), refloc('double.txt')
-        )
-        r3 = compare.check_binary_file(
-            refloc('double.txt'), refloc('single.txt')
-        )
-        r4 = compare.check_binary_file(
-            refloc('single.txt'), refloc('single2.txt')
-        )
+        r1 = compare.check_binary_file(refloc('single.txt'), refloc('single.txt'))
+        r2 = compare.check_binary_file(refloc('single.txt'), refloc('double.txt'))
+        r3 = compare.check_binary_file(refloc('double.txt'), refloc('single.txt'))
+        r4 = compare.check_binary_file(refloc('single.txt'), refloc('single2.txt'))
         # single2.txt is deliberately not readable in text mode in python3
         self.assertEqual(r1, (0, []))
         diff2 = '%s %s %s' % (diffcmd(), refloc('single.txt'), refloc('double.txt'))
@@ -246,8 +232,7 @@ class TestFiles(ReferenceTestCase):
                     1,
                     [
                         'Compare with:\n    %s\n' % diff4,
-                        'First difference at byte offset 2, '
-                        'both files have length 14.',
+                        'First difference at byte offset 2, both files have length 14.',
                     ],
                 ),
             )
@@ -267,10 +252,10 @@ class TestFiles(ReferenceTestCase):
                 'This is a file containing some optional lines.',
                 "*** Here's one: I am optional"
                 "(|; but it's the only one; "
-                "the rest have been removed.)",
+                'the rest have been removed.)',
                 'And:',
                 "*** (Here's another one: "
-                "I am optional and I have some trailing stuff|)",
+                'I am optional and I have some trailing stuff|)',
                 "And here's a line on its own:",
                 '*** (I am optional|)',
                 "That's all",
@@ -282,10 +267,10 @@ class TestFiles(ReferenceTestCase):
                 'This is a file containing some optional lines.',
                 "*** Here's one: I am optional"
                 "(|; but it's the only one; "
-                "the rest have been removed.)",
+                'the rest have been removed.)',
                 'And:',
                 "*** (Here's another one: "
-                "I am optional and I have some trailing stuff|)",
+                'I am optional and I have some trailing stuff|)',
                 "And here's a line on its own:",
                 '*** (I am optional|)',
                 "That's all",
@@ -303,13 +288,10 @@ class TestFiles(ReferenceTestCase):
         self.assertEqual(len(msgs.lines), 7)
         self.assertEqual(
             msgs.lines[0],
-            'Files have different numbers of lines, '
-            'differences start at line 2',
+            'Files have different numbers of lines, differences start at line 2',
         )
         self.assertTrue(msgs.lines[1].startswith('Compare raw with:\n'))
-        self.assertTrue(
-            msgs.lines[2].startswith('Compare post-processed with:\n')
-        )
+        self.assertTrue(msgs.lines[2].startswith('Compare post-processed with:\n'))
         self.assertEqual(
             msgs.reconstructions[0].diff_actual,
             [
@@ -319,8 +301,7 @@ class TestFiles(ReferenceTestCase):
                 '*** And:',  # THIS IS REMOVED ON BOTH SIDES
                 "*** (|And here's a line on its own:)",
                 # NEXT LINE IS A REAL DIFFERENCE
-                "Here's another one: "
-                "I am optional and I have some trailing stuff",
+                "Here's another one: I am optional and I have some trailing stuff",
                 "*** (And here's a line on its own:|)",
                 # NEXT TWO LINES ARE REAL DIFFERENCES
                 'I am optional',
@@ -333,7 +314,7 @@ class TestFiles(ReferenceTestCase):
                 '*** This is a file containing some optional lines.',
                 # NEXT LINE IS A REAL DIFFERENCE
                 "Here's one: I am optional; but it's the only one; "
-                "the rest have been removed.",
+                'the rest have been removed.',
                 '*** And:',  # THIS IS REMOVED ON BOTH SIDES
                 "*** (|And here's a line on its own:)",
                 # NEXT LINE IS A REAL DIFFERENCE
@@ -347,7 +328,7 @@ class TestFiles(ReferenceTestCase):
         (code, msgs) = compare.check_file(
             refloc('left.txt'),
             refloc('ref.txt'),
-            ignore_substrings=['Here\'s one', 'And'],
+            ignore_substrings=["Here's one", 'And'],
         )
         difflines = [
             'This is a file containing some optional lines.',
@@ -355,16 +336,11 @@ class TestFiles(ReferenceTestCase):
             '('
             'And it will get ignored even if not optionally'
             '|'
-            'I am optional; but it\'s the only one; '
+            "I am optional; but it's the only one; "
             'the rest have been'
             ')'
             ' removed.',
-            '*** And:'
-            '('
-            ' this line is different, unless you ignore '
-            'the first word'
-            '|'
-            ')',
+            '*** And:( this line is different, unless you ignore the first word|)',
             "And here's a line on its own:",
             "That's all",
         ]
@@ -389,11 +365,7 @@ class TestFiles(ReferenceTestCase):
             "I am optional; but it's the only one; the rest have been"
             ')'
             ' removed.',
-            '*** And:'
-            '('
-            ' this line is different, unless you ignore the first word'
-            '|'
-            ')',
+            '*** And:( this line is different, unless you ignore the first word|)',
             "And here's a line on its own:",
             "That's all",
         ]
@@ -425,18 +397,14 @@ class TestFiles(ReferenceTestCase):
 
         self.assertEqual(code, 1)
         self.assertEqual(len(msgs.lines), 6)
-        self.assertEqual(
-            msgs.lines[0], '1 line is different, starting at line 3'
-        )
+        self.assertEqual(msgs.lines[0], '1 line is different, starting at line 3')
         self.assertEqual(msgs.lines[1][:8], 'Compare ')
         self.assertEqual(msgs.lines[2][:8], 'Compare ')
         self.assertEqual(msgs.lines[3], 'Note exclusions:')
         self.assertEqual(msgs.lines[4], '    ignore_patterns:')
         self.assertEqual(msgs.lines[5], '        ^.*opt...al.*$')
 
-        difflines[2] = (
-            'And: this line is different, ' 'unless you ignore the first word'
-        )
+        difflines[2] = 'And: this line is different, unless you ignore the first word'
         self.assertEqual(msgs.reconstructions[0].diff_actual, difflines)
         difflines[2] = 'And:'
         self.assertEqual(msgs.reconstructions[0].diff_expected, difflines)

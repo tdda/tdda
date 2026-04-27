@@ -11,14 +11,14 @@ from tdda.referencetest.utils import (
     normalize_json,
     normalize_yaml,
     remove_dict_keys,
-    remove_dict_keys_and_sort
+    remove_dict_keys_and_sort,
 )
 
 
 class TestUtils(ReferenceTestCase):
     def testRemoveDictKeys(self):
         d = {'one': 1, 'two': {'one': 1}, 'three': [{'one': 1, 'two': 2}, 3]}
-        expected = { 'two': {}, 'three': [{'two': 2}, 3]}
+        expected = {'two': {}, 'three': [{'two': 2}, 3]}
         self.assertEqual(remove_dict_keys(d, keys=['one']), expected)
 
     def testRemoveDictKeysAndSort(self):
@@ -27,7 +27,7 @@ class TestUtils(ReferenceTestCase):
         self.assertEqual(remove_dict_keys_and_sort(d, keys=['one']), expected)
 
     def testNormalizeJson(self):
-        j = '''
+        j = """
 {
     "one": 1,
     "two": {"one": 1},
@@ -36,9 +36,9 @@ class TestUtils(ReferenceTestCase):
         3
     ]
 }
-'''
+"""
 
-        expected = '''{
+        expected = """{
   "one": 1,
   "three": [
     {
@@ -50,11 +50,11 @@ class TestUtils(ReferenceTestCase):
   "two": {
     "one": 1
   }
-}'''
+}"""
         self.assertEqual(normalize_json(j), expected)
 
     def testNormalizeYAML(self):
-        y = '''
+        y = """
 one: 1
 two:
     one: 1
@@ -62,17 +62,18 @@ three:
 -   one: 1
     two: 2
 - 3
-'''
-        self.assertEqual(normalize_yaml(y), '''one: 1
+"""
+        self.assertEqual(
+            normalize_yaml(y),
+            """one: 1
 three:
 - one: 1
   two: 2
 - 3
 two:
   one: 1
-''')
-
-
+""",
+        )
 
 
 if __name__ == '__main__':

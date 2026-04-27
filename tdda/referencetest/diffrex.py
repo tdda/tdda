@@ -12,9 +12,7 @@ LINE_NUMBER_RE = re.compile(r'^@@\s+\-(\d+)(,\d+)?\s+\+(\d+)(,\d+)?\s+@@$')
 TOGETHER = True
 GROUP_RE = False
 
-Pair = namedtuple(
-    'Pair', 'left_content right_content left_line_num right_line_num'
-)
+Pair = namedtuple('Pair', 'left_content right_content left_line_num right_line_num')
 
 
 def diffs(left_path, right_path, filetype):
@@ -22,9 +20,7 @@ def diffs(left_path, right_path, filetype):
     if left_lines is not None:
         right_lines = protected_readlines(right_path, filetype)
         if right_lines is not None:
-            return difflib.unified_diff(
-                left_lines, right_lines, left_path, right_path
-            )
+            return difflib.unified_diff(left_lines, right_lines, left_path, right_path)
     return None
 
 
@@ -79,9 +75,7 @@ def show_diff_rexes(left_path, right_path, together=TOGETHER, group=GROUP_RE):
             for p in pairs:
                 print(p.left_content, end='')
                 print(p.right_content, end='')
-                patterns = extract(
-                    [p.left_content, p.right_content], tag=group
-                )
+                patterns = extract([p.left_content, p.right_content], tag=group)
                 if len(patterns) == 1:
                     rex = patterns.pop()
                     print('/%s' % rex)

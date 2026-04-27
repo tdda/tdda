@@ -20,7 +20,7 @@ THISDIR = os.path.dirname(__file__)
 REFDIR = os.path.join(THISDIR, 'testdata')
 
 
-@unittest.skipIf(IS_NOT_PY_312_PLUS, "requires Python 3.12+")
+@unittest.skipIf(IS_NOT_PY_312_PLUS, 'requires Python 3.12+')
 class TestTagFailures(ReferenceTestCase):
     def testTagFailures(self):
         # Copy the files into place

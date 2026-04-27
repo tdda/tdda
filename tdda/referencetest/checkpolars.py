@@ -83,9 +83,7 @@ class PolarsComparison(BaseComparison):
                     diffs.append(str(diffs.dfd.diff))
             return n_diffs
 
-    def load_serialized_dataframe(
-        self, path, actual_df=None, loader=None, **kwargs
-    ):
+    def load_serialized_dataframe(self, path, actual_df=None, loader=None, **kwargs):
         """
         Function for constructing a pandas dataframe from a serialized
         dataframe in a file (parquet or CSV)

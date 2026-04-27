@@ -296,7 +296,8 @@ class TestGenTest(ReferenceTestCase):
         r = ExecuteCommand(' '.join(cmd), cwd=TESTDIRA)
         self.assertEqual(r.exit_code, 1)
         self.assertStringCorrect(
-            r.err.strip(), ref_path('a-stderr1.txt'),
+            r.err.strip(),
+            ref_path('a-stderr1.txt'),
             ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
         self.assertStringCorrect(r.out.strip(), ref_path('a-stdout1.txt'))
@@ -340,7 +341,8 @@ class TestGenTest(ReferenceTestCase):
             ],
         )
         self.assertStringCorrect(
-            r.err.strip(), ref_path('a-stderr2.txt'),
+            r.err.strip(),
+            ref_path('a-stderr2.txt'),
             ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
         self.assertFileCorrect(

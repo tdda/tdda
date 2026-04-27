@@ -84,10 +84,7 @@ class PandasComparison(BaseComparison):
                 if ltype in dtypes and rtype in dtypes:
                     if ltype == 'string' or type(first_non_null(df[c])) == str:
                         df[c] = df[c].fillna('')
-                    if (
-                        rtype == 'string'
-                        or type(first_non_null(ref_df[c])) == str
-                    ):
+                    if rtype == 'string' or type(first_non_null(ref_df[c])) == str:
                         ref_df[c] = ref_df[c].fillna('')
 
         if df.equals(ref_df):  # the check
@@ -124,9 +121,7 @@ class PandasComparison(BaseComparison):
         failures = []
         for c in list(df):
             if not df[c].equals(ref_df[c]):
-                pdiffs = self.single_col_difference_summary(
-                    c, df[c], ref_df[c]
-                )
+                pdiffs = self.single_col_difference_summary(c, df[c], ref_df[c])
                 if pdiffs:
                     failures.append('Column values differ: %s' % c)
                     failures.append(pdiffs)
@@ -166,10 +161,7 @@ class PandasComparison(BaseComparison):
         return f'{s}{col_comparison(l_vals, r_vals, n)}\n'
 
     def sample(self, values, start, stop):
-        return [
-            None if pd.isnull(values[i]) else values[i]
-            for i in range(start, stop)
-        ]
+        return [None if pd.isnull(values[i]) else values[i] for i in range(start, stop)]
 
     def sample_format(self, values, start, stop, precision):
         s = self.sample(values, start, stop)

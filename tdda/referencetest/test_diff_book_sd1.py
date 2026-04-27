@@ -34,13 +34,15 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
     @tag
     def test_stdout(self):
         self.assertStringCorrect(
-            self.output, os.path.join(self.refdir, 'STDOUT'),
+            self.output,
+            os.path.join(self.refdir, 'STDOUT'),
             ignore_lines=[r'Value Differences (all rows with differences)'],
         )
 
     def test_stderr(self):
         self.assertStringCorrect(
-            self.error, os.path.join(self.refdir, 'STDERR'),
+            self.error,
+            os.path.join(self.refdir, 'STDERR'),
             ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
 

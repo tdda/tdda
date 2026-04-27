@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import yaml
+
 try:
     from yaml import CLoader as YAMLLoader, CDumper as YAMLDumper
 except ImportError:
@@ -128,8 +129,7 @@ def protected_readlines(path, filetype):
                 filetype.text = False
                 filetype.encoding = None
                 print(
-                    'Could not read %s as text file; treating as binary'
-                    % path,
+                    'Could not read %s as text file; treating as binary' % path,
                     file=sys.stderr,
                 )
 
@@ -180,16 +180,9 @@ def remove_dict_keys(o, keys):
     Remove any keys from o if o is a dictionary and recurse.
     """
     if isinstance(o, dict):
-        return {
-            k: remove_dict_keys(v, keys)
-            for k, v in o.items()
-            if k not in keys
-        }
+        return {k: remove_dict_keys(v, keys) for k, v in o.items() if k not in keys}
     elif isinstance(o, list) or isinstance(o, tuple):
-        return [
-            remove_dict_keys(v, keys)
-            for v in o
-        ]
+        return [remove_dict_keys(v, keys) for v in o]
     else:
         return o
 
@@ -205,10 +198,7 @@ def remove_dict_keys_and_sort(o, keys):
             if k not in keys
         }
     elif isinstance(o, list) or isinstance(o, tuple):
-        return [
-            remove_dict_keys_and_sort(v, keys)
-            for v in o
-        ]
+        return [remove_dict_keys_and_sort(v, keys) for v in o]
     else:
         return o
 

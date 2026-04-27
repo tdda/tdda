@@ -36,9 +36,7 @@ class TestPandasDataFrames(ReferenceTestCase):
         self.assertFalse(compare.check_dataframe(df1, df1))
         self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
         self.assertFalse(
-            compare.check_dataframe(
-                df1, df3, check_types=['a'], check_data=['a']
-            )
+            compare.check_dataframe(df1, df3, check_types=['a'], check_data=['a'])
         )
 
     def test_frames_fail(self):
@@ -47,38 +45,38 @@ class TestPandasDataFrames(ReferenceTestCase):
         df2 = PandasDataFrame(2)
         df3 = PandasDataFrame(3)
 
-        self.assertFalse(
-            compare.check_dataframe(df1, df2, precision=3)
-        )
+        self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
 
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
         self.assertEqual(n1, 1)
-        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s1), refloc('frames_fail1.txt'), ignore_lines=['diff ']
+        )
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
-        self.assertStringCorrect('\n'.join(s3), refloc('pd_frames_fail3.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s3), refloc('pd_frames_fail3.txt'), ignore_lines=['diff ']
+        )
 
-        n3m, s3m = compare.check_dataframe(df1, df3, precision=3,
-                                           type_matching='medium')
+        n3m, s3m = compare.check_dataframe(
+            df1, df3, precision=3, type_matching='medium'
+        )
         self.assertEqual(n3m, 1)
-        self.assertStringCorrect('\n'.join(s3m),
-                                 refloc('pd_frames_fail3m.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s3m), refloc('pd_frames_fail3m.txt'), ignore_lines=['diff ']
+        )
 
-        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
-                                                 type_matching='loose'))
-        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
-                                                 type_matching='permissive'))
-
+        self.assertFalse(
+            compare.check_dataframe(df1, df3, precision=3, type_matching='loose')
+        )
+        self.assertFalse(
+            compare.check_dataframe(df1, df3, precision=3, type_matching='permissive')
+        )
 
     def test_pandas_csv_ok(self):
         compare = PandasComparison(verbose=False)
-        r = compare.check_csv_file(
-            refloc('colours.txt'), refloc('colours.txt')
-        )
+        r = compare.check_csv_file(refloc('colours.txt'), refloc('colours.txt'))
         self.assertFalse(r)
 
     def test_pandas_csv_fail(self):
@@ -99,12 +97,9 @@ class TestPandasDataFrames(ReferenceTestCase):
                 'Data frames have different column structure.',
                 'Missing columns: [%s]'
                 % ', '.join(
-                    [
-                        "'%s'" % s
-                        for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']
-                    ]
+                    ["'%s'" % s for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']]
                 ),
-                'Extra columns: [\'a single line\']',
+                "Extra columns: ['a single line']",
                 'Data frames have different numbers of rows.',
                 'Actual records: 0; Expected records: 147',
             ],

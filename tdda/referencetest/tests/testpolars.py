@@ -40,9 +40,7 @@ class TestPolarsDataFrames(ReferenceTestCase):
         self.assertFalse(compare.check_dataframe(df1, df1))
         self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
         self.assertFalse(
-            compare.check_dataframe(
-                df1, df3, check_types=['a'], check_data=['a']
-            )
+            compare.check_dataframe(df1, df3, check_types=['a'], check_data=['a'])
         )
 
     def test_frames_fail(self):
@@ -51,37 +49,38 @@ class TestPolarsDataFrames(ReferenceTestCase):
         df2 = PolarsDataFrame(2)
         df3 = PolarsDataFrame(3)
 
-        self.assertFalse(
-            compare.check_dataframe(df1, df2, precision=3)
-        )
+        self.assertFalse(compare.check_dataframe(df1, df2, precision=3))
 
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
         self.assertEqual(n1, 1)
-        self.assertStringCorrect('\n'.join(s1), refloc('frames_fail1.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s1), refloc('frames_fail1.txt'), ignore_lines=['diff ']
+        )
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
         self.assertEqual(n3, 1)
-        self.assertStringCorrect('\n'.join(s3), refloc('pl_frames_fail3.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s3), refloc('pl_frames_fail3.txt'), ignore_lines=['diff ']
+        )
 
-        n3m, s3m = compare.check_dataframe(df1, df3, precision=3,
-                                           type_matching='medium')
+        n3m, s3m = compare.check_dataframe(
+            df1, df3, precision=3, type_matching='medium'
+        )
         self.assertEqual(n3m, 1)
-        self.assertStringCorrect('\n'.join(s3m),
-                                 refloc('pl_frames_fail3m.txt'),
-                                 ignore_lines=['diff '])
+        self.assertStringCorrect(
+            '\n'.join(s3m), refloc('pl_frames_fail3m.txt'), ignore_lines=['diff ']
+        )
 
-        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
-                                                 type_matching='loose'))
-        self.assertFalse(compare.check_dataframe(df1, df3, precision=3,
-                                                 type_matching='permissive'))
+        self.assertFalse(
+            compare.check_dataframe(df1, df3, precision=3, type_matching='loose')
+        )
+        self.assertFalse(
+            compare.check_dataframe(df1, df3, precision=3, type_matching='permissive')
+        )
 
     def test_polars_csv_ok(self):
         compare = PolarsComparison(verbose=False)
-        r = compare.check_csv_file(
-            refloc('colours.txt'), refloc('colours.txt')
-        )
+        r = compare.check_csv_file(refloc('colours.txt'), refloc('colours.txt'))
         self.assertFalse(r)
 
     def test_polars_csv_fail(self):
@@ -102,12 +101,9 @@ class TestPolarsDataFrames(ReferenceTestCase):
                 'Data frames have different column structure.',
                 'Missing columns: [%s]'
                 % ', '.join(
-                    [
-                        "'%s'" % s
-                        for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']
-                    ]
+                    ["'%s'" % s for s in ['Name', 'RGB', 'Hue', 'Saturation', 'Value']]
                 ),
-                'Extra columns: [\'a single line\']',
+                "Extra columns: ['a single line']",
                 'Data frames have different numbers of rows.',
                 'Actual records: 0; Expected records: 147',
             ],
@@ -138,10 +134,28 @@ class TestPolarsDataFrames(ReferenceTestCase):
         Se = pl.Enum
         Su = pl.Utf8
 
-        ints = (i128, i64, i32, i16, i8,
-                u64, u32, u16, u8,)
-        floats = (f64, f32, f128,)
-        strings = (S, Sc, Se, Su,)
+        ints = (
+            i128,
+            i64,
+            i32,
+            i16,
+            i8,
+            u64,
+            u32,
+            u16,
+            u8,
+        )
+        floats = (
+            f64,
+            f32,
+            f128,
+        )
+        strings = (
+            S,
+            Sc,
+            Se,
+            Su,
+        )
         dtypes = (
             b,
             *ints,
@@ -151,24 +165,19 @@ class TestPolarsDataFrames(ReferenceTestCase):
         )
         ltypes = (
             'Boolean',
-
             'Int',
             'Int',
             'Int',
             'Int',
             'Int',
-
             'Int',
             'Int',
             'Int',
             'Int',
-
             'Float',
             'Float',
             'Float',
-
             'Date',
-
             'String',
             'String',
             'String',
@@ -185,9 +194,10 @@ class TestPolarsDataFrames(ReferenceTestCase):
         for t1 in dtypes:
             for t2 in dtypes:
                 if t1 != t2:
-                    self.assertEqual(polars_types_match(t1, t2),
-                                     t1 in {'String', 'Utf8'}
-                                     and t1 in {'String', 'Utf8'})
+                    self.assertEqual(
+                        polars_types_match(t1, t2),
+                        t1 in {'String', 'Utf8'} and t1 in {'String', 'Utf8'},
+                    )
 
         for t1 in ints:
             for t2 in ints:
@@ -215,8 +225,6 @@ class TestPolarsDataFrames(ReferenceTestCase):
 
             self.assertTrue(polars_types_match(i64, i32, level))
             self.assertTrue(polars_types_match(f32, f64, level))
-
-
 
         # medium
         for t1 in ints:
@@ -250,17 +258,13 @@ class TestPolarsDataFrames(ReferenceTestCase):
                 self.assertFalse(polars_types_match(t2, t1, 'loose'))
 
 
-
-
 class TestPolarsHelperFunctions(ReferenceTestCase):
     def testRound(self):
-        df = pl.DataFrame({'f': [1.125, 1.25], 's': ['a', 'b'],
-                           'i': [1, 2]})
+        df = pl.DataFrame({'f': [1.125, 1.25], 's': ['a', 'b'], 'i': [1, 2]})
         rdf3 = round_df(df, 3)
         self.assertEqual(rdf3['f'].to_list(), [1.125, 1.25])
         rdf2 = round_df(df, 2)
-        self.assertEqual(rdf2['f'].to_list(),
-                         [1.12, 1.25])  # Banker's rounding
+        self.assertEqual(rdf2['f'].to_list(), [1.12, 1.25])  # Banker's rounding
         rdf1 = round_df(df, 1)
         self.assertEqual(rdf1['f'].to_list(), [1.1, 1.2])  # Banker's rounding
         rdf0 = round_df(df, 0)

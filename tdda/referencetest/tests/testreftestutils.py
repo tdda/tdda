@@ -14,7 +14,13 @@ from tdda.utils import TDDAError
 class TestReferenceTest(ReferenceTestCase):
     pldf = pl.DataFrame({'a': [0]})
     pddf = pd.DataFrame({'a': [0]})
-    pldf3 = pl.DataFrame({'a': [0], 'c': ['a'], 'b': [True], })
+    pldf3 = pl.DataFrame(
+        {
+            'a': [0],
+            'c': ['a'],
+            'b': [True],
+        }
+    )
     pddf3 = pldf3.to_pandas()
 
     def testIsPolars(self):
