@@ -2,9 +2,7 @@ from html import escape as htmlescape
 
 from tdda.utils import Dummy, DQuote
 
-COLOURS7 = [
-    '#BF0F00', '#E57200', '#D8A200', '#007F15', '#008AA5', '#6C00D8', '#9700A5'
-]
+COLOURS7 = ['#BF0F00', '#E57200', '#D8A200', '#007F15', '#008AA5', '#6C00D8', '#9700A5']
 COLOURS = ['#303030'] + [COLOURS7[i] for i in (0, 4, 1, 3, 5)]
 N_COLOURS = len(COLOURS)
 
@@ -18,9 +16,10 @@ def Rex2String(rexes, group=True, anchor=True, asList=False):
         end = '$'
     else:
         start = end = ''
-    results = [(start + ''.join(add_group(frag, group)
-                                for frag in result) + end)
-               for result in rexes]
+    results = [
+        (start + ''.join(add_group(frag, group) for frag in result) + end)
+        for result in rexes
+    ]
     return results if asList else '\n'.join(results)
 
 
@@ -41,21 +40,29 @@ def Rex2HTML(rexes, group=True, anchor=True, asList=False):
         end = '<span class="anchor">$</span>'
     else:
         start = end = ''
-    results = [(start
-                + ''.join('<span style="color: %s;">%s</span>'
-                          % (colour(i),
-                             htmlescape(add_group(frag, group), quote=True))
-                          for i, frag in enumerate(result))
-                + end)
-               for result in rexes]
-    return results if asList else ('<pre class="emptycommand">%s</pre>'
-                                   % '\n'.join(results))
+    results = [
+        (
+            start
+            + ''.join(
+                '<span style="color: %s;">%s</span>'
+                % (colour(i), htmlescape(add_group(frag, group), quote=True))
+                for i, frag in enumerate(result)
+            )
+            + end
+        )
+        for result in rexes
+    ]
+    return (
+        results
+        if asList
+        else ('<pre class="emptycommand">%s</pre>' % '\n'.join(results))
+    )
 
 
 def OnePerLineHTML(strings):
-    return ('<pre class="emptycommand">%s</pre>'
-            % '\n'.join(htmlescape(DQuote(s), quote=True)
-                        for s in strings))
+    return '<pre class="emptycommand">%s</pre>' % '\n'.join(
+        htmlescape(DQuote(s), quote=True) for s in strings
+    )
 
 
 def colour(n):
@@ -66,6 +73,7 @@ class Regex2Rex:
     """
     Convert any-old regular expression into a (colourable) list of Frags.
     """
+
     def __init__(self, regex):
         if regex.startswith('^'):
             regex = regex[1:]
@@ -87,8 +95,8 @@ class Regex2Rex:
                 self.add_unfinished_frag(i - len(c))
                 i = self.skip_any_quantifier(i)
                 self.add_unfinished_frag(i, True)
-            else:      # ordinary
-                pass   # just move on
+            else:  # ordinary
+                pass  # just move on
         self.add_unfinished_frag(len(self.regex))
 
     def next_char(self, i):
@@ -105,10 +113,8 @@ class Regex2Rex:
 
     def add_unfinished_frag(self, i, group=False):
         if i > self.start_of_frag:
-            self.frags.append(Frag(re=self.regex[self.start_of_frag:i],
-                                   group=group))
+            self.frags.append(Frag(re=self.regex[self.start_of_frag : i], group=group))
         self.start_of_frag = i
-
 
     def skip_any_quantifier(self, i):
         if i < len(self.regex):

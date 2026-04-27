@@ -21,4 +21,3 @@ for j, (pattern, examples) in enumerate(patternToExamples.items()):
 
             sequences.append(s)
 print(sequences)
-

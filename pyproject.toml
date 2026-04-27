@@ -49,3 +49,20 @@ norecursedirs = [
 line-length = 79
 skip-string-normalization = true
 include = '\.pyi?$'
+
+[tool.ruff]
+exclude = [
+    "tdda/serial/testdata",
+    "tdda/serial/examples",
+    "tdda/serial/examples2",
+    "tdda/referencetest/testdata",
+    "tdda/referencetest/examples",
+    "tdda/referencetest/diffexamples",
+    "tdda/constraints/testexamples",
+    "tdda/constraints/examples",
+    "tdda/rexpy/examples",
+]
+
+[tool.ruff.format]
+line-ending = "auto"
+quote-style = "single"

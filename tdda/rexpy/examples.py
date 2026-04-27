@@ -14,8 +14,8 @@ Alternatively, you can copy all examples using the following command::
 
 which will create a number of separate subdirectories.
 """
+
 from tdda import examples
 
 if __name__ == '__main__':
     examples.copy_main('rexpy')
-

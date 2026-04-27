@@ -14,13 +14,11 @@
 
 try:
     import regex as re
+
     relib = 'regex'
     reIsRegex = True
 except ImportError:
     import re
+
     relib = 're'
     reIsRegex = False
-
-
-
-

@@ -1,5 +1,6 @@
 import unittest
 
+
 def common_string_sequence(s, t):
     """
     Find a sequence of characters that occurs, in order, in both s and t.
@@ -8,7 +9,7 @@ def common_string_sequence(s, t):
     Doesn't necessarily return the "best" (or longest) such sequence.
     """
     common = []
-    p = 0         # position in string t
+    p = 0  # position in string t
     for c in s:
         pos = t[p:].find(c)
         if pos > -1:
@@ -23,7 +24,7 @@ def common_list_sequence(s, t):
     The sequence need not be contiguous in either.
     """
     common = []
-    p = 0         # position in list t
+    p = 0  # position in list t
     for c in s:
         pos = find(t[p:], c)
         if pos > -1:
@@ -63,14 +64,10 @@ class TestCommonSequences(unittest.TestCase):
         z = 8
         self.assertEqual(common_list_sequence([], []), [])
         self.assertEqual(common_list_sequence([a, b, c], [a, b, c]), [a, b, c])
-        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e]),
-                                              [a, c, e])
-        self.assertEqual(common_list_sequence([a, c, e], [a, b, c, d, e]),
-                                              [a, c, e])
-        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e, d]),
-                                              [a, c, d])
-        self.assertEqual(common_list_sequence([a, c, e, d], [a, b, c, d, e]),
-                                              [a, c, e])
+        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e]), [a, c, e])
+        self.assertEqual(common_list_sequence([a, c, e], [a, b, c, d, e]), [a, c, e])
+        self.assertEqual(common_list_sequence([a, b, c, d, e], [a, c, e, d]), [a, c, d])
+        self.assertEqual(common_list_sequence([a, c, e, d], [a, b, c, d, e]), [a, c, e])
         self.assertEqual(common_list_sequence([a, c, e, d], [x, y, z]), [])
         self.assertEqual(common_list_sequence([a, a, a, a], [a]), [a])
         self.assertEqual(common_list_sequence([a], [a, a, a, a]), [a])
@@ -79,5 +76,6 @@ class TestCommonSequences(unittest.TestCase):
         self.assertEqual(common_list_sequence([a, b, c], []), [])
         self.assertEqual(common_list_sequence([], [a, b, c]), [])
 
+
 if __name__ == '__main__':
-     unittest.main()
+    unittest.main()

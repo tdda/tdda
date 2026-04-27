@@ -17,8 +17,10 @@ try:
 
     @composite
     def list_of_strings(draw):
-        return [draw(text(min_size=1, average_size=70))
-                for i in range(draw(integers(min_value=0, max_value=100)))]
+        return [
+            draw(text(min_size=1, average_size=70))
+            for i in range(draw(integers(min_value=0, max_value=100)))
+        ]
 
     class TestRexpyHypothetically(unittest.TestCase):
         @given(list_of_strings())
@@ -26,7 +28,7 @@ try:
         def test_matches(self, strings):
             x = Extractor(strings)
             for rex in x.results.rex:
-                r = re.compile(rex, flags=re.DOTALL|re.UNICODE)
+                r = re.compile(rex, flags=re.DOTALL | re.UNICODE)
                 matches = [r.match(e) for e in strings]
                 self.assertTrue(any(matches))
 
@@ -36,4 +38,3 @@ except ImportError:
 
 if __name__ == '__main__':
     unittest.main()
-
