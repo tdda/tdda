@@ -26,7 +26,7 @@ class TestTagFailures(ReferenceTestCase):
         # Copy the files into place
         copy_files(dest=TMP)
 
-        command = 'python test_tagging.py -F'
+        command = f'{sys.executable} test_tagging.py -F'
         (output, error, exception, exit_code, duration) = exec_command(
             command, TMP
         )  # Write the failing tests
@@ -44,7 +44,7 @@ class TestTagFailures(ReferenceTestCase):
         self.assertFilesCorrect(actuals, refs)
 
         # Report the tagged tests
-        command = 'python test_tagging.py -0'
+        command = f'{sys.executable} test_tagging.py -0'
         (output, error, exception, exit_code, duration) = exec_command(
             command, TMP
         )  # Tag the failing tests
@@ -52,7 +52,7 @@ class TestTagFailures(ReferenceTestCase):
         self.assertEqual(tagged, ['test_tagsa.TestA', 'test_tagsc.TestC'])
 
         # Untag everything
-        command = 'python test_tagging.py -9'
+        command = f'{sys.executable} test_tagging.py -9'
         (output, error, exception, exit_code, duration) = exec_command(
             command, TMP
         )  # Tag the failing tests

@@ -16,7 +16,7 @@ from tdda.referencetest.gentest import exec_command
 
 
 class Test_TAGGING_META(ReferenceTestCase):
-    command = 'python testdata/test_tagging.py -F'
+    command = f'{sys.executable} testdata/test_tagging.py -F'
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'tagging_meta')
     orig_tmpdir = (
