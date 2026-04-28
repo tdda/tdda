@@ -20,25 +20,25 @@ WORKFLOW
 
   A typical workflow with [1munittest[22m‐style tests ([1mReferenceTestCase[22m) is:
 
-  [1mpython tests.py ‐9      [22m# Remove any existing @tag decorators
-  [1mpython tests.py ‐F      [22m# Run tests, logging failures
-  [1mtdda tag                [22m# Add @tag to failing tests
-  [1mpython tests.py ‐1      [22m# Run only tagged (failing) tests
+  [1mpython tests.py ‐9      # Remove any existing @tag decorators[0m
+  [1mpython tests.py ‐F      # Run tests, logging failures[0m
+  [1mtdda tag                # Add @tag to failing tests[0m
+  [1mpython tests.py ‐1      # Run only tagged (failing) tests[0m
 
   When all tests are passing:
 
-  [1mpython tests.py ‐9      [22m# Remove @tag decorators
+  [1mpython tests.py ‐9      # Remove @tag decorators[0m
 
   The equivalent workflow with [1mpytest [22mis:
 
-  [1mpytest ‐‐untag          [22m# Remove any existing @tag decorators
-  [1mpytest ‐‐log‐failures   [22m# Run tests, logging failures
-  [1mtdda tag                [22m# Add @tag to failing tests
-  [1mpytest ‐‐tagged         [22m# Run only tagged (failing) tests
+  [1mpytest ‐‐untag          # Remove any existing[22m@tag[1mdecorators[0m
+  [1mpytest ‐‐log‐failures   # Run tests, logging failures[0m
+  [1mtdda tag                # Add @tag to failing tests[0m
+  [1mpytest ‐‐tagged         # Run only tagged (failing) tests[0m
 
   When all tests are passing:
 
-  [1mpytest ‐‐untag          [22m# Remove @tag decorators
+  [1mpytest ‐‐untag          # Remove @tag decorators[0m
 
 SEE ALSO
 

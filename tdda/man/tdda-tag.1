@@ -20,37 +20,37 @@ enabled, which writes the IDs of failing tests to a log file.
 A typical workflow with \fBunittest\fR-style tests (\fBReferenceTestCase\fR) is:
 
 .PP
-\fBpython tests.py -9\fR      # Remove any existing @tag decorators
+\fBpython tests.py -9      # Remove any existing @tag decorators\fR
 .br
-\fBpython tests.py -F\fR      # Run tests, logging failures
+\fBpython tests.py -F      # Run tests, logging failures\fR
 .br
-\fBtdda tag\fR                # Add @tag to failing tests
+\fBtdda tag                # Add @tag to failing tests\fR
 .br
-\fBpython tests.py -1\fR      # Run only tagged (failing) tests
+\fBpython tests.py -1      # Run only tagged (failing) tests\fR
 
 .PP
 When all tests are passing:
 
 .PP
-\fBpython tests.py -9\fR      # Remove @tag decorators
+\fBpython tests.py -9      # Remove @tag decorators\fR
 
 .PP
 The equivalent workflow with \fBpytest\fR is:
 
 .PP
-\fBpytest --untag\fR          # Remove any existing @tag decorators
+\fBpytest --untag          # Remove any existing\fR@tag\fBdecorators\fR
 .br
-\fBpytest --log-failures\fR   # Run tests, logging failures
+\fBpytest --log-failures   # Run tests, logging failures\fR
 .br
-\fBtdda tag\fR                # Add @tag to failing tests
+\fBtdda tag                # Add @tag to failing tests\fR
 .br
-\fBpytest --tagged\fR         # Run only tagged (failing) tests
+\fBpytest --tagged         # Run only tagged (failing) tests\fR
 
 .PP
 When all tests are passing:
 
 .PP
-\fBpytest --untag\fR          # Remove @tag decorators
+\fBpytest --untag          # Remove @tag decorators\fR
 
 .SH SEE ALSO
 tdda(1),

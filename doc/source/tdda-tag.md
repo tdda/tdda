@@ -23,25 +23,27 @@ enabled, which writes the IDs of failing tests to a log file.
 
 A typical workflow with `unittest`-style tests (`ReferenceTestCase`) is:
 
-`python tests.py -9`      # Remove any existing @tag decorators  
-`python tests.py -F`      # Run tests, logging failures  
-`tdda tag`                # Add @tag to failing tests  
-`python tests.py -1`      # Run only tagged (failing) tests  
+
+`python tests.py -9      # Remove any existing @tag decorators`  
+`python tests.py -F      # Run tests, logging failures`  
+`tdda tag                # Add @tag to failing tests`  
+`python tests.py -1      # Run only tagged (failing) tests`  
+
 
 When all tests are passing:
 
-`python tests.py -9`      # Remove @tag decorators  
+`python tests.py -9      # Remove @tag decorators`  
 
 The equivalent workflow with `pytest` is:
 
-`pytest --untag`          # Remove any existing @tag decorators  
-`pytest --log-failures`   # Run tests, logging failures  
-`tdda tag`                # Add @tag to failing tests  
-`pytest --tagged`         # Run only tagged (failing) tests  
+`pytest --untag          # Remove any existing `@tag` decorators`  
+`pytest --log-failures   # Run tests, logging failures`  
+`tdda tag                # Add @tag to failing tests`  
+`pytest --tagged         # Run only tagged (failing) tests`  
 
 When all tests are passing:
 
-`pytest --untag`          # Remove @tag decorators
+`pytest --untag          # Remove @tag decorators`
 
 ## SEE ALSO
 
