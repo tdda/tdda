@@ -44,6 +44,7 @@ def help(extensions, cmd=None, stream=sys.stdout):
         if cmd in CONSTRAINTS_COMMANDS + (
             'gentest',
             'diff',
+            'tag',
             'serial',
             'version',
             'examples',

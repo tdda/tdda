@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda tag  [22m‐‐ tag tests that failed in the last reference test run
+
+SYNOPSIS
+
+  [1mtdda tag[0m
+
+DESCRIPTION
+
+  The [1mtdda tag [22mcommand reads the log of failing tests written by the most
+  recent reference test run and adds [1m@tag [22mdecorators to those tests in
+  their source files. Tagged tests can then be run in isolation, allowing
+  a rapid edit‐test cycle focused on failing tests.
+
+  Before [1mtdda tag [22mcan be used, tests must be run with failure logging
+  enabled, which writes the IDs of failing tests to a log file.
+
+WORKFLOW
+
+  A typical workflow with [1munittest[22m‐style tests ([1mReferenceTestCase[22m) is:
+
+  [1mpython tests.py ‐9      [22m# Remove any existing @tag decorators
+  [1mpython tests.py ‐F      [22m# Run tests, logging failures
+  [1mtdda tag                [22m# Add @tag to failing tests
+  [1mpython tests.py ‐1      [22m# Run only tagged (failing) tests
+
+  When all tests are passing:
+
+  [1mpython tests.py ‐9      [22m# Remove @tag decorators
+
+  The equivalent workflow with [1mpytest [22mis:
+
+  [1mpytest ‐‐untag          [22m# Remove any existing @tag decorators
+  [1mpytest ‐‐log‐failures   [22m# Run tests, logging failures
+  [1mtdda tag                [22m# Add @tag to failing tests
+  [1mpytest ‐‐tagged         [22m# Run only tagged (failing) tests
+
+  When all tests are passing:
+
+  [1mpytest ‐‐untag          [22m# Remove @tag decorators
+
+SEE ALSO
+
+  tdda
+  tdda reftest
+  tdda reftest unittest
+  tdda reftest pytest
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

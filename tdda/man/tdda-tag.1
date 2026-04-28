@@ -1,0 +1,59 @@
+.nh
+.TH "TDDA TAG" 1 "April 2026" "3.0" "tdda tag manual"
+.SH NAME
+\fBtdda tag\fR  -- tag tests that failed in the last reference test run
+
+.SH SYNOPSIS
+\fBtdda tag\fR
+
+.SH DESCRIPTION
+The \fBtdda tag\fR command reads the log of failing tests written by the most
+recent reference test run and adds \fB@tag\fR decorators to those tests in
+their source files. Tagged tests can then be run in isolation, allowing
+a rapid edit-test cycle focused on failing tests.
+
+.PP
+Before \fBtdda tag\fR can be used, tests must be run with failure logging
+enabled, which writes the IDs of failing tests to a log file.
+
+.SH WORKFLOW
+A typical workflow with \fBunittest\fR-style tests (\fBReferenceTestCase\fR) is:
+
+.PP
+\fBpython tests.py -9\fR      # Remove any existing @tag decorators
+.br
+\fBpython tests.py -F\fR      # Run tests, logging failures
+.br
+\fBtdda tag\fR                # Add @tag to failing tests
+.br
+\fBpython tests.py -1\fR      # Run only tagged (failing) tests
+
+.PP
+When all tests are passing:
+
+.PP
+\fBpython tests.py -9\fR      # Remove @tag decorators
+
+.PP
+The equivalent workflow with \fBpytest\fR is:
+
+.PP
+\fBpytest --untag\fR          # Remove any existing @tag decorators
+.br
+\fBpytest --log-failures\fR   # Run tests, logging failures
+.br
+\fBtdda tag\fR                # Add @tag to failing tests
+.br
+\fBpytest --tagged\fR         # Run only tagged (failing) tests
+
+.PP
+When all tests are passing:
+
+.PP
+\fBpytest --untag\fR          # Remove @tag decorators
+
+.SH SEE ALSO
+tdda(1),
+tdda-reftest(1),
+tdda-reftest-unittest(1),
+tdda-reftest-pytest(1)

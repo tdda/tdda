@@ -107,7 +107,7 @@ Contents
    referencetest.txt
    constraints-api.txt
    rexpy-api.txt
-   tdda-diff.md
+   tddadiff.md
    serialformat.md
    configuration.md
    windows.txt
@@ -122,9 +122,11 @@ Contents
    tdda-diff.md
    tdda-serial.md
    tdda-gentest.md
+   tdda-tag.md
    tdda-examples.md
    tdda-version.md
    tdda-config.md
+   tdda-test.md
    tdda-help.md
 
 

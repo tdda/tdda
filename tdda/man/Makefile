@@ -6,9 +6,11 @@ TARGETS = tdda.txt \
           tdda-gentest.txt \
           tdda-help.txt \
           tdda-serial.txt \
+          tdda-tag.txt \
           tdda-verify.txt \
           tdda-version.txt \
-          tdda-config.txt
+          tdda-config.txt \
+          tdda-test.txt
 
 
 all: clean $(TARGETS)
