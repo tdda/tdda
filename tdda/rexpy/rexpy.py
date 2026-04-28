@@ -2,7 +2,7 @@
 Python API
 ----------
 
-The :py:mod:`tdda.rexpy.rexpy` module provides a Python API, to allow
+The ``tdda.rexpy.rexpy`` module provides a Python API, to allow
 discovery of regular expressions to be incorporated into other Python
 programs.
 
@@ -430,9 +430,8 @@ class Fragment(namedtuple('Fragment', 're group')):
     Container for a fragment.
 
     Attributes:
-
-      * ``re``: the regular expression for the fragment
-      * ``group``: True if it forms a capture group (i.e. is not constant)
+        re: The regular expression for the fragment.
+        group: True if it forms a capture group (i.e. is not constant).
     """
 
 
@@ -441,13 +440,11 @@ class Coverage(namedtuple('Coverage', 'n n_uniq incr incr_uniq index')):
     Container for coverage information.
 
     Attributes:
-
-     * ``n:`` number of matches
-     * ``n_unique:`` number matches, deduplicating strings
-     * ``incr:`` number of new (unique) matches for this regex
-     * ``incr_uniq:`` number of new (unique) deduplicated matches
-       for this regex
-     * ``index:`` index of this regex in original list returned.
+        n: Number of matches.
+        n_uniq: Number of matches, deduplicating strings.
+        incr: Number of new (unique) matches for this regex.
+        incr_uniq: Number of new (unique) deduplicated matches for this regex.
+        index: Index of this regex in the original list returned.
     """
 
 

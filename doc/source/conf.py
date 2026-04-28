@@ -35,6 +35,7 @@ from tdda import __version__ as version
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'myst_parser'
 ]
 

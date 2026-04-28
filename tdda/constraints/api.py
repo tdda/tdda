@@ -89,7 +89,7 @@ def discover(
             Passed to discover_df
 
     Returns:
-        :py:class:`~tdda.constraints.pd.constraints.PandasVerification` object.
+        ``tdda.constraints.pd.constraints.PandasVerification`` object.
     """
     kind = source_kind(indata)
 
@@ -142,7 +142,7 @@ def verify(
         *constraints_path*:
              The path to a JSON ``.tdda`` file.
              Alternatively, can be an in-memory
-             :py:class:`~tdda.constraints.base.DatasetConstraints` object.
+             ``tdda.constraints.base.DatasetConstraints`` object.
 
         *verbose*:
             Controls level of output reporting
@@ -200,7 +200,7 @@ def detect(
         *constraints_path*:
              The path to a JSON ``.tdda`` file.
              Alternatively, can be an in-memory
-             :py:class:`~tdda.constraints.base.DatasetConstraints` object.
+             ``tdda.constraints.base.DatasetConstraints`` object.
 
         *outpath*:
             Optional destination to write output records.
@@ -217,7 +217,7 @@ def detect(
             Passed to discover_df
 
     Returns:
-        :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
+        ``tdda.constraints.pd.constraints.PandasDetection`` object.
     """
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)

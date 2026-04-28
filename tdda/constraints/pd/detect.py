@@ -54,34 +54,22 @@ def detect_df_from_file(
     **kwargs,
 ):
     """
-    Check the records from the Pandas DataFrame provided, to detect
-    records that fail any of the constraints in the JSON ``.tdda`` file
-    provided. This is anomaly detection.
+    Detect records in the file provided that fail any constraints in the
+    JSON ``.tdda`` file provided. This is anomaly detection.
 
-    Inputs:
-
-        *df_path*:
-             Path to a file containing data to be verified.
-             Normally a parquet of CSV file.
-
-        *constraints_path*:
-             The path to a JSON ``.tdda`` file.
-             Alternatively, can be an in-memory
-             :py:class:`~tdda.constraints.base.DatasetConstraints` object.
-
-        *outpath*:
-            Optional destination to write output records.
-            Normally path for a CSV or parquet file.
-            None for no output.
-
-        *verbose*:
-            Controls level of output reporting
-
-        *kwargs*:
-            Passed to discover_df
+    Args:
+        df_path: Path to a file to detect against (CSV or parquet).
+            Use ``None`` or ``'-'`` to read from stdin.
+        constraints_path: Path to a JSON ``.tdda`` file, or an
+            in-memory ``tdda.constraints.base.DatasetConstraints``
+            object.
+        outpath: Optional path (CSV or parquet) to write failing records
+            to. ``None`` for no output.
+        verbose: Controls level of output reporting.
+        **kwargs: Passed to ``detect_df``.
 
     Returns:
-        :py:class:`~tdda.constraints.pd.constraints.PandasDetection` object.
+        ``tdda.constraints.pd.constraints.PandasDetection`` object.
     """
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())

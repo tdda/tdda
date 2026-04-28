@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :py:mod:`tdda.constraints` module includes a set of examples.
+The ``tdda.constraints`` module includes a set of examples.
 
 To copy these constraints examples, run the command::
 

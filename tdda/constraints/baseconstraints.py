@@ -52,13 +52,13 @@ MAX_CATEGORIES = 20  # String fields with up to 20 categories will
 
 class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
     """
-    The :py:mod:`BaseConstraintVerifier` class provides a generic
+    The ``BaseConstraintVerifier`` class provides a generic
     framework for verifying constraints.
 
     A concrete implementation of this class is constructed by creating
-    a mix-in subclass which inherits both from :py:mod:`BaseConstraintVerifier`
-    and from specific implementations of :py:mod:`BaseConstraintCalculator`
-    and :py:mod:`BaseConstraintDetector`.
+    a mix-in subclass which inherits both from ``BaseConstraintVerifier``
+    and from specific implementations of ``BaseConstraintCalculator``
+    and ``BaseConstraintDetector``.
     """
 
     def __init__(self, epsilon=None, type_checking=None, **kwargs):
@@ -598,12 +598,12 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
 
 class BaseConstraintDiscoverer(BaseConstraintCalculator):
     """
-    The :py:mod:`BaseConstraintDiscoverer` class provides a generic
+    The ``BaseConstraintDiscoverer`` class provides a generic
     framework for discovering constraints.
 
     A concrete implementation of this class is constructed by creating
-    a mix-in subclass which inherits both from :py:mod:`BaseConstraintDiscover`
-    and from a specific implementation of :py:mod:`BaseConstraintCalculator`.
+    a mix-in subclass which inherits both from ``BaseConstraintDiscoverer``
+    and from a specific implementation of ``BaseConstraintCalculator``.
     """
 
     def __init__(

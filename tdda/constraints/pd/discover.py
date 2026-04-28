@@ -55,34 +55,21 @@ def discover_df_from_file(
     Automatically discover potentially useful constraints that characterize
     the data provided in the file.
 
-    Input:
-
-        *df_path*:
-            any file in a format understood, usually a CSV file,
-            a parquet file.
-
-        *constraints_path*:
-            The path to which to write the constraints.
-            If None, constraints are not written.
-            If '-', constraints are sent to stdout.
-
-        *report_path*:
-            Path for reports. Extension is ignored.
-            Will write reports to variations of this path if set;
-            otherwuse uses constraints_path
-
-        * *report_formats*:
-            List of report formats to write from:
-               html, markdown (or md), text (or txt), yaml, json, toml
-
-        *verbose*:
-            Controls level of output reporting
-
-        *kwargs*:
-            Passed to discover_df
+    Args:
+        df_path: Path to a file to discover from (CSV or parquet).
+            Use ``'-'`` to read from stdin.
+        constraints_path: Path to write the constraints to. ``None``
+            means do not write; ``'-'`` sends to stdout.
+        report_path: Path for reports (extension ignored). Writes report
+            variants of this path; falls back to ``constraints_path``.
+        report_formats: List of report formats to write. Options:
+            ``'html'``, ``'md'``, ``'txt'``, ``'yaml'``, ``'json'``,
+            ``'toml'``.
+        verbose: Controls level of output reporting.
+        **kwargs: Passed to ``discover_df``.
 
     Returns:
-        :py:class:`~tdda.constraints.base.DatasetConstraints` object.
+        ``tdda.constraints.base.DatasetConstraints`` object.
     """
     md_df_path = df_path
     if df_path == '-':

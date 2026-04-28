@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :py:mod:`tdda.constraints.pd.constraints` module provides an
+The ``tdda.constraints.pd.constraints`` module provides an
 implementation of TDDA constraint discovery and verification
 for Pandas DataFrames.
 
@@ -9,14 +9,14 @@ DataFrames saved as Feather files.
 
 The top-level functions are:
 
-    :py:func:`tdda.constraints.discover_df`:
+    ``tdda.constraints.discover_df``:
         Discover constraints from a Pandas DataFrame.
 
-    :py:func:`tdda.constraints.verify_df`:
+    ``tdda.constraints.verify_df``:
         Verify (check) a Pandas DataFrame, against a set of previously
         discovered constraints.
 
-    :py:func:`tdda.constraints.detect_df`:
+    ``tdda.constraints.detect_df``:
         For detection of failing rows in a Pandas DataFrame,
         verified against a set of previously discovered constraints,
         and generate an output dataset containing
@@ -486,8 +486,8 @@ class PandasConstraintVerifier(
     BaseConstraintVerifier,
 ):
     """
-    A :py:class:`PandasConstraintVerifier` object provides methods
-    for verifying every type of constraint against a Pandas DataFrame.
+    Provides methods for verifying every type of constraint against
+    a Pandas DataFrame.
     """
 
     def __init__(self, df, epsilon=None, type_checking=None):
@@ -540,23 +540,19 @@ class PandasConstraintVerifier(
 
 class PandasVerification(Verification):
     """
-    A :py:class:`PandasVerification` object adds a :py:meth:`to_frame()`
-    method to a :py:class:`tdda.constraints.base.Verification` object.
+    Extends ``tdda.constraints.base.Verification`` with a ``to_frame()``
+    method, allowing the result of constraint verification to be converted
+    to a Pandas DataFrame with columns for the field (column) name,
+    the numbers of passes and failures, and boolean columns for each
+    constraint type, with values:
 
-    This allows the result of constraint verification to be converted to a
-    Pandas DataFrame, including columns for the field (column) name,
-    the numbers of passes and failures and boolean columns for each
-    constraint, with values:
+    - ``True``    --- the constraint was satisfied for the column
+    - ``False``   --- the column failed to satisfy the constraint
+    - ``np.nan``  --- there was no constraint of this kind
 
-    - ``True``       --- if the constraint was satified for the column
-    - ``False``      --- if column failed to satisfy the constraint
-    - ``np.nan``  --- if there was no constraint of this kind
-
-    This Pandas-specific implementation of constraint verification also
-    provides methods :py:meth:`to_frame` to get the overall verification
-    result as as a Pandas DataFrame, and :py:meth:`detected` to get any
-    detection results as a a Pandas DataFrame (if the verification has been
-    run with in ``detect`` mode).
+    Also provides ``to_frame()`` to get the overall verification result
+    as a Pandas DataFrame, and ``detected()`` to get any detection results
+    as a Pandas DataFrame (if run in detect mode).
     """
 
     def __init__(self, *args, **kwargs):
@@ -650,14 +646,11 @@ class PandasVerification(Verification):
 
 class PandasDetection(PandasVerification):
     """
-    A :py:class:`PandasDetection` object adds a :py:meth:`detected()`
-    method to a :py:class:`PandasVerification` object.
+    Extends ``PandasVerification`` with a ``detected()`` method, giving
+    access to the Pandas DataFrame of detection results.
 
-    This allows the Pandas DataFrame resulting from constraint detection
-    to be made available.
-
-    The object also provides properties `n_passing_records` and
-    `n_failing_records`, recording how many records passed and failed
+    Also provides properties ``n_passing_records`` and
+    ``n_failing_records``, recording how many records passed and failed
     the detection process.
     """
 
@@ -678,8 +671,7 @@ class PandasConstraintDiscoverer(
     PandasConstraintCalculator, BaseConstraintDiscoverer
 ):
     """
-    A :py:class:`PandasConstraintDiscoverer` object is used to discover
-    constraints on a Pandas DataFrame.
+    Used to discover constraints on a Pandas DataFrame.
     """
 
     def __init__(

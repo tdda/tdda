@@ -1122,10 +1122,10 @@ class Verification(object):
 
     def to_string(self, colour=None, ascii=None):
         """
-        Returns string representation of the :py:class:`Verification` object.
+        Returns string representation of the ``Verification`` object.
 
         The format of the string is controlled by the value of the
-        object's :py:attr:`report` property. If this is set to 'fields',
+        object's ``report`` property. If this is set to 'fields',
         then it reports only those fields that have failures.
         """
         ascii = nvl(ascii, self.ascii)
