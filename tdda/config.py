@@ -61,6 +61,24 @@ class BaseConfig:
                 out.append(fmt_kv(k, v))
         return '\n'.join(out)
 
+    def annotated_str(self):
+        out = ['# TDDA Configuration\n']
+        for k, v in self.__dict__.items():
+            if isinstance(v, BaseConfig):
+                out.append(v._annotated_section_str())
+            elif not k.startswith('_'):
+                doc = self.__dict__.get(f'_doc_{k}')
+                out.append(fmt_annotated_kv(k, v, doc))
+        return '\n'.join(out)
+
+    def _annotated_section_str(self):
+        out = [f'\n\n[{self._part}]\n']
+        for k, v in self.__dict__.items():
+            if not k.startswith('_'):
+                doc = self.__dict__.get(f'_doc_{k}')
+                out.append(fmt_annotated_kv(k, v, doc))
+        return '\n'.join(out)
+
     def get(self, key, preferred=None, raiseOnFailure=True):
         """
         Get the appropriate value for key as follows:
@@ -429,6 +447,110 @@ class SerialConfig(BaseConfig):
         return None
 
 
+def _invert_alias_dict(d):
+    result = {}
+    for alias, canonical in d.items():
+        result.setdefault(canonical, []).append(alias)
+    return result
+
+
+def fmt_allowed(value, doc):
+    """Return the allowed-values comment string, or None if no comment."""
+    if doc is None:
+        return None
+    if doc.allowed_doc:
+        return doc.allowed_doc
+    if doc.regex:
+        return None
+    if doc.values is None:
+        return None
+    if isinstance(doc.values, dict):
+        inverted = _invert_alias_dict(doc.values)
+        groups = []
+        for canonical, aliases in inverted.items():
+            parts = (
+                [json.dumps(canonical, ensure_ascii=False)]
+                + [json.dumps(a, ensure_ascii=False) for a in aliases]
+            )
+            groups.append(' / '.join(parts))
+        return '; '.join(groups)
+    elif isinstance(value, list):
+        items = ', '.join(
+            json.dumps(v, ensure_ascii=False) for v in doc.values
+        )
+        return f'any subset of: {items}'
+    else:
+        parts = []
+        for v in doc.values:
+            if isinstance(v, bool):
+                parts.append(str(v).lower())
+            else:
+                parts.append(json.dumps(v, ensure_ascii=False))
+        return '; '.join(parts)
+
+
+MIN_COMMENT_COL = 36
+
+
+def _wrap_comment(base, allowed, sep, max_width=79):
+    """Wrap 'base  # allowed' to max_width, returning multi-line string."""
+    hash_col = max(MIN_COMMENT_COL, len(base) + 2)
+    padding = ' ' * (hash_col - len(base))
+    first_prefix = base + padding + '# '
+    cont_prefix = ' ' * hash_col + '# '
+
+    if len(first_prefix + allowed) <= max_width:
+        return first_prefix + allowed
+
+    chunks = allowed.split(sep)
+    trail = sep.rstrip()  # appended to non-final lines to preserve separator
+
+    result_lines = []
+    current = []
+    for chunk in chunks:
+        candidate = sep.join(current + [chunk])
+        prefix = first_prefix if not result_lines else cont_prefix
+        if len(prefix + candidate) <= max_width or not current:
+            current.append(chunk)
+        else:
+            result_lines.append(sep.join(current) + trail)
+            current = [chunk]
+    if current:
+        result_lines.append(sep.join(current))
+
+    out = []
+    for i, ln in enumerate(result_lines):
+        prefix = first_prefix if i == 0 else cont_prefix
+        out.append(prefix + ln)
+    return '\n'.join(out)
+
+
+def fmt_annotated_kv(key, value, doc):
+    """Return annotated TOML line(s) for key with allowed-values comment."""
+    is_multiselect = (doc and isinstance(doc.values, list)
+                      and isinstance(value, list))
+    if isinstance(value, list) and len(value) == 1 and not is_multiselect:
+        display = fmt_value(value[0])
+    else:
+        display = fmt_value(value) if value is not None else None
+    allowed = fmt_allowed(value, doc)
+    if value is None:
+        base = f'# {key}'
+    else:
+        base = f'{key} = {display}'
+    if allowed is None:
+        return base
+    if doc and doc.allowed_doc:
+        sep = ' '       # prose: word-wrap
+    elif doc and isinstance(doc.values, dict):
+        sep = '; '      # alias groups
+    elif doc and isinstance(value, list):
+        sep = ', '      # multi-select items
+    else:
+        sep = '; '      # enum options
+    return _wrap_comment(base, allowed, sep)
+
+
 def cross_platform_dot_file(unix_dot_path):
     path = os.path.expanduser(unix_dot_path)
     if not os.path.exists(path):
@@ -471,31 +593,34 @@ def fmt_value(value):
 def show_config(*args):
     from tdda.config import Config
     from tdda.man.utils import print_help
-    kind = args[0] if args else 'current'
-    if kind in ('current', '-c', '--current'):
-        c = Config(load=True)
-        print(str(c))
-        return
-    elif kind in ('default', '--default', '-d'):
-        c = Config(load=False)
-        print(str(c))
-        return
-    elif kind in ('file', '--file', '-f'):
+    annotated = False
+    mode = 'current'
+    for arg in args:
+        if arg in ('-a', '--annotated', 'annotated'):
+            annotated = True
+        elif arg in ('current', '-c', '--current'):
+            mode = 'current'
+        elif arg in ('default', '--default', '-d'):
+            mode = 'default'
+        elif arg in ('file', '--file', '-f'):
+            mode = 'file'
+        elif arg in ('-h', '--help', 'help'):
+            mode = 'help'
+        else:
+            print(f'Unknown config option: {arg}', file=sys.stderr)
+            sys.exit(1)
+    if mode == 'help':
+        print_help('config', sys.stdout)
+    elif mode == 'file':
         config_path = cross_platform_dot_file('~/.tdda.toml')
         if os.path.exists(config_path):
             print(f'\nConfig file is {config_path}:\n')
             with open(config_path) as f:
                 print(f.read())
                 print()
-    elif kind in ('-h', '--help', 'help'):
-        print_help('config', sys.stdout)
-    else:
-        print('''
-USAGE:
-    config                              Show current (loaded) config
-
-    config [-c] [--current] [current]   Show current (loaded) config
-    config [-d] [--default] [default]   Show default config
-    config [-f] [--file] [file]         Show config file location and contents
-''')
-        sys.exit(1)
+    elif mode == 'current':
+        c = Config(load=True)
+        print(c.annotated_str() if annotated else str(c))
+    elif mode == 'default':
+        c = Config(load=False)
+        print(c.annotated_str() if annotated else str(c))
