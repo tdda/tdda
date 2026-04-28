@@ -4,20 +4,21 @@ NAME
 
 SYNOPSIS
 
-  [1mtdda config [22m‐ Shows current config settings
-  [1mtdda config ‐‐current [22m‐ Shows current config settings
-  [1mtdda config ‐‐default [22m‐ Shows default config settings
-  [1mtdda config ‐‐file [22m‐ Shows config file location and contents.
+  [1mtdda config [‐‐annotated|‐a] [‐‐current|‐c] [‐‐default|‐d] [‐‐file|‐f][0m
+  [1mtdda config [‐‐annotated|‐a] current|default|file[0m
 
 DESCRIPTION
 
-  Shows configuration information. Use
+  Shows configuration information. Use:
 
-  [1m‐c[22m, [1m‐‐current [22mor [1mcurrent [22mfor the default configuration
-  [1m‐d[22m, [1m‐‐default [22mor [1mdefault [22mfor the default configuration
-  [1m‐f[22m, [1m‐‐file [22mor [1mfile [22mfor the configuration file location and contents.
+  [1m‐c[22m, [1m‐‐current[22m, or [1mcurrent [22mfor the current configuration
+  [1m‐d[22m, [1m‐‐default[22m, or [1mdefault [22mfor the default configuration
+  [1m‐f[22m, [1m‐‐file[22m, or [1mfile [22mfor the configuration file location and contents.
 
   With no argument, it shows the current configuration.
+
+  Use [1m‐a [22mor [1m‐‐annotated [22mwith any of the above to show allowed values
+  alongside each parameter.
 
 EXAMPLES
 
@@ -25,6 +26,137 @@ EXAMPLES
   [1mtdda config ‐c[0m
   [1mtdda config ‐d[0m
   [1mtdda config ‐f[0m
+
+PARAMETERS
+
+  Used to show nulls in some contexts.
+  [1mDefault: "â"[0m
+  [1mAllowed: [22mAny string
+
+  Controls whether output is colourized.
+  [1mDefault: true[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Controls whether pandas or polars is used for CSV files by default.
+  [1mDefault: "pandas"[0m
+  [1mAllowed: "pandas"[22m, [1m"polars"[0m
+
+  Controls default backend for CSV loading etc.
+  [1mDefault: "numpy_nullable"[0m
+  [1mAllowed: "numpy_nullable" [22m(or [1m"n"[22m), [1m"pyarrow" [22m(or [1m"a"[22m), [1m"original" [22m(or [1m"o"[22m)
+
+PARAMETERS (referencetest)
+
+  Colour for left (actual) side of diffs.
+  [1mDefault: "red"[0m
+  [1mAllowed: [22mA named ANSI colour (red, bright_red etc.) or an RGB hex colour with
+leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+  Colour for right (expected) side of diffs.
+  [1mDefault: "green"[0m
+  [1mAllowed: [22mA named ANSI colour (red, bright_red etc.) or an RGB hex colour with
+leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+  Colour used to highlight failures.
+  [1mDefault: "red"[0m
+  [1mAllowed: [22mA named ANSI colour (red, bright_red etc.) or an RGB hex colour with
+leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+  Use bold instead of colour for diffs.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Black and white mode: no colour or bold.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Prefix string for left (actual) diff lines.
+  [1mDefault: "< "[0m
+  [1mAllowed: [22mAny string
+
+  Prefix string for right (expected) diff lines.
+  [1mDefault: "> "[0m
+  [1mAllowed: [22mAny string
+
+  Show diffs vertically rather than side by side.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Always show left/right prefixes on diff lines.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  How strictly to check types in reference test comparisons.
+  [1mDefault: "strict"[0m
+  [1mAllowed: "strict"[22m, [1m"medium"[22m, [1m"loose"[0m
+
+  Log failing test IDs to file for use with tdda tag.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+PARAMETERS (constraints)
+
+  Interleave pass and fail results in verify output.
+  [1mDefault: true[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Report results per constraint rather than per field.
+  [1mDefault: true[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Include passing fields in detect output.
+  [1mDefault: true[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  List of additional report formats to generate.
+  [1mDefault: [][0m
+  [1mAllowed: [22mAny subset of [1m"html"[22m, [1m"md"[22m, [1m"txt"[22m, [1m"json"[22m, [1m"yaml"[22m, [1m"toml"[0m
+
+  Write all records to detect output, not just failures.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Use integers (0/1) rather than booleans in detect output.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Verify that all required fields are present.
+  [1mDefault: [22munset
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Verify that no fields are present outside the allowed set.
+  [1mDefault: [22munset
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Discover should include the required‐fields constraint.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+  Discover should include an allowed‐fields constraint.
+  [1mDefault: false[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+PARAMETERS (tddadiff)
+
+  How strictly to check types when comparing dataframes.
+  [1mDefault: "medium"[0m
+  [1mAllowed: "strict"[22m, [1m"medium"[22m, [1m"loose"[0m
+
+  Infer metadata when comparing dataframes with tdda diff.
+  [1mDefault: true[0m
+  [1mAllowed: true[22m, [1mfalse[0m
+
+PARAMETERS (serial)
+
+  Path(s) to search for serial metadata files; relative paths are resolved
+relative to the CSV file.
+  [1mDefault: "./_write.serial"[0m
+
+
+
+
+
+
 
 
 

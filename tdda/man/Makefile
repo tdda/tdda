@@ -16,6 +16,9 @@ all: clean $(TARGETS)
 clean:
 	rm -f *.1 *.txt
 
+tdda-config.md: tdda-config.md.in gen_config_params.py
+	python preprocess.py tdda-config.md.in tdda-config.md
+
 $(TARGETS): %.txt: %.md
 	go-md2man -in $< -out $*.1
 	cat $*.1 | python sideheads.py | groff -Tutf8 > $@

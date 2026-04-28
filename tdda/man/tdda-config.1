@@ -4,24 +4,231 @@
 \fBtdda config\fR \- Shows config settings
 
 .SH SYNOPSIS
-\fBtdda config\fR - Shows current config settings
-\fBtdda config --current\fR - Shows current config settings
-\fBtdda config --default\fR - Shows default config settings
-\fBtdda config --file\fR - Shows config file location and contents.
+\fBtdda config [--annotated|-a] [--current|-c] [--default|-d] [--file|-f]\fR
+.br
+\fBtdda config [--annotated|-a] current|default|file\fR
 
 .SH DESCRIPTION
-Shows configuration information. Use
+Shows configuration information. Use:
 
 .PP
-\fB-c\fR, \fB--current\fR or \fBcurrent\fR for the default configuration
-\fB-d\fR, \fB--default\fR or \fBdefault\fR for the default configuration
-\fB-f\fR, \fB--file\fR or \fBfile\fR for the configuration file location and contents.
+\fB-c\fR, \fB--current\fR, or \fBcurrent\fR for the current configuration
+.br
+\fB-d\fR, \fB--default\fR, or \fBdefault\fR for the default configuration
+.br
+\fB-f\fR, \fB--file\fR, or \fBfile\fR for the configuration file location and contents.
 
 .PP
 With no argument, it shows the current configuration.
 
+.PP
+Use \fB-a\fR or \fB--annotated\fR with any of the above to show allowed values
+alongside each parameter.
+
 .SH EXAMPLES
 \fBtdda config\fR
+.br
 \fBtdda config -c\fR
+.br
 \fBtdda config -d\fR
+.br
 \fBtdda config -f\fR
+
+.SH PARAMETERS
+.SS \fBnull_rep\fR
+Used to show nulls in some contexts.
+.br
+\fBDefault:\fP \fB"∅"\fR
+.br
+\fBAllowed:\fP Any string
+
+.SS \fBcolour\fR
+Controls whether output is colourized.
+.br
+\fBDefault:\fP \fBtrue\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBengine\fR
+Controls whether pandas or polars is used for CSV files by default.
+.br
+\fBDefault:\fP \fB"pandas"\fR
+.br
+\fBAllowed:\fP \fB"pandas"\fR, \fB"polars"\fR
+
+.SS \fBpandas_backend\fR
+Controls default backend for CSV loading etc.
+.br
+\fBDefault:\fP \fB"numpy_nullable"\fR
+.br
+\fBAllowed:\fP \fB"numpy_nullable"\fR (or \fB"n"\fR), \fB"pyarrow"\fR (or \fB"a"\fR), \fB"original"\fR (or \fB"o"\fR)
+
+.SH PARAMETERS (referencetest)
+.SS \fBleft_colour\fR
+Colour for left (actual) side of diffs.
+.br
+\fBDefault:\fP \fB"red"\fR
+.br
+\fBAllowed:\fP A named ANSI colour (red, bright_red etc.) or an RGB hex colour with leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+.SS \fBright_colour\fR
+Colour for right (expected) side of diffs.
+.br
+\fBDefault:\fP \fB"green"\fR
+.br
+\fBAllowed:\fP A named ANSI colour (red, bright_red etc.) or an RGB hex colour with leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+.SS \fBfailure_colour\fR
+Colour used to highlight failures.
+.br
+\fBDefault:\fP \fB"red"\fR
+.br
+\fBAllowed:\fP A named ANSI colour (red, bright_red etc.) or an RGB hex colour with leading # such as #FF0000 for pure red. Interpreted by the rich library.
+
+.SS \fBmono\fR
+Use bold instead of colour for diffs.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBbw\fR
+Black and white mode: no colour or bold.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBleft_prefix\fR
+Prefix string for left (actual) diff lines.
+.br
+\fBDefault:\fP \fB"< "\fR
+.br
+\fBAllowed:\fP Any string
+
+.SS \fBright_prefix\fR
+Prefix string for right (expected) diff lines.
+.br
+\fBDefault:\fP \fB"> "\fR
+.br
+\fBAllowed:\fP Any string
+
+.SS \fBvertical\fR
+Show diffs vertically rather than side by side.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBforce_val_prefixes\fR
+Always show left/right prefixes on diff lines.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBtype_checking\fR
+How strictly to check types in reference test comparisons.
+.br
+\fBDefault:\fP \fB"strict"\fR
+.br
+\fBAllowed:\fP \fB"strict"\fR, \fB"medium"\fR, \fB"loose"\fR
+
+.SS \fBlog_failures\fR
+Log failing test IDs to file for use with tdda tag.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SH PARAMETERS (constraints)
+.SS \fBinterleave\fR
+Interleave pass and fail results in verify output.
+.br
+\fBDefault:\fP \fBtrue\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBper_constraint\fR
+Report results per constraint rather than per field.
+.br
+\fBDefault:\fP \fBtrue\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBdetect_passes\fR
+Include passing fields in detect output.
+.br
+\fBDefault:\fP \fBtrue\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBreport_formats\fR
+List of additional report formats to generate.
+.br
+\fBDefault:\fP \fB[]\fR
+.br
+\fBAllowed:\fP Any subset of \fB"html"\fR, \fB"md"\fR, \fB"txt"\fR, \fB"json"\fR, \fB"yaml"\fR, \fB"toml"\fR
+
+.SS \fBwrite_all_records\fR
+Write all records to detect output, not just failures.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBint_bools\fR
+Use integers (0/1) rather than booleans in detect output.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBverify_required_fields\fR
+Verify that all required fields are present.
+.br
+\fBDefault:\fP unset
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBverify_allowed_fields\fR
+Verify that no fields are present outside the allowed set.
+.br
+\fBDefault:\fP unset
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBwrite_required_fields\fR
+Discover should include the required-fields constraint.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SS \fBwrite_allowed_fields\fR
+Discover should include an allowed-fields constraint.
+.br
+\fBDefault:\fP \fBfalse\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SH PARAMETERS (tddadiff)
+.SS \fBtype_checking\fR
+How strictly to check types when comparing dataframes.
+.br
+\fBDefault:\fP \fB"medium"\fR
+.br
+\fBAllowed:\fP \fB"strict"\fR, \fB"medium"\fR, \fB"loose"\fR
+
+.SS \fBinfer_md\fR
+Infer metadata when comparing dataframes with tdda diff.
+.br
+\fBDefault:\fP \fBtrue\fR
+.br
+\fBAllowed:\fP \fBtrue\fR, \fBfalse\fR
+
+.SH PARAMETERS (serial)
+.SS \fBmd_inpath\fR
+Path(s) to search for serial metadata files; relative paths are resolved relative to the CSV file.
+.br
+\fBDefault:\fP \fB"./_write.serial"\fR

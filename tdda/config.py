@@ -17,6 +17,20 @@ DATETIME_RE = '^[0-9]{4}-[0-9]{2}-[0-9]{2}([T ][0-9]{2}:[0-9]{2}:[0-9]{2})?$'
 
 DEFAULT_IN_METADATA = './_write.serial'
 
+COLOUR_DOC = (
+    'A named ANSI colour (red, bright_red etc.) or an RGB '
+    'hex colour with leading # such as #FF0000 for pure red. '
+    'Interpreted by the rich library.'
+)
+
+
+class ParamDoc:
+    def __init__(self, doc, values=None, regex=None, allowed_doc=None):
+        self.doc = doc
+        self.values = values
+        self.regex = regex
+        self.allowed_doc = allowed_doc
+
 
 class BaseConfig:
     def override(self, d, complain):
@@ -32,7 +46,7 @@ class BaseConfig:
                 )
 
     def __str__(self):
-        out = ['# TDDA Serial Configuration\n']
+        out = ['# TDDA Configuration\n']
         for k, v in self.__dict__.items():
             if isinstance(v, BaseConfig):
                 out.append(v._section_str())
@@ -82,9 +96,33 @@ class Config(BaseConfig):
         self._part = ''
         self._config_name = 'config'
         self.null_rep = '∅'
-        self.colour = load and not testing
+        self._doc_null_rep = ParamDoc(
+            doc='Used to show nulls in some contexts.',
+            regex=r'.*',
+        )
+        self.colour = not testing
+        self._doc_colour = ParamDoc(
+            doc='Controls whether output is colourized.',
+            values=[True, False],
+        )
         self.engine = 'pandas'
+        self._doc_engine = ParamDoc(
+            doc=(
+                'Controls whether pandas or polars is used for CSV '
+                'files by default.'
+            ),
+            values=['pandas', 'polars'],
+        )
         self.pandas_backend = 'numpy_nullable'
+        self._doc_pandas_backend = ParamDoc(
+            doc='Controls default backend for CSV loading etc.',
+            values={
+                'n': 'numpy_nullable',
+                'a': 'pyarrow',
+                'o': 'original',
+            },
+        )
+
         self.referencetest = ReferenceTestConfig()
         self.constraints = ConstraintsConfig()
         self.tddadiff = TDDADiffConfig()
@@ -175,16 +213,60 @@ class ReferenceTestConfig(BaseConfig):
         self._part = 'referencetest'
         self._config_name = 'config.referencetest'
         self.left_colour = 'red'
+        self._doc_left_colour = ParamDoc(
+            doc='Colour for left (actual) side of diffs.',
+            allowed_doc=COLOUR_DOC,
+        )
         self.right_colour = 'green'
+        self._doc_right_colour = ParamDoc(
+            doc='Colour for right (expected) side of diffs.',
+            allowed_doc=COLOUR_DOC,
+        )
         self.failure_colour = 'red'
+        self._doc_failure_colour = ParamDoc(
+            doc='Colour used to highlight failures.',
+            allowed_doc=COLOUR_DOC,
+        )
         self.mono = False
+        self._doc_mono = ParamDoc(
+            doc='Use bold instead of colour for diffs.',
+            values=[True, False],
+        )
         self.bw = False
+        self._doc_bw = ParamDoc(
+            doc='Black and white mode: no colour or bold.',
+            values=[True, False],
+        )
         self.left_prefix = '< '
+        self._doc_left_prefix = ParamDoc(
+            doc='Prefix string for left (actual) diff lines.',
+            regex=r'.*',
+        )
         self.right_prefix = '> '
+        self._doc_right_prefix = ParamDoc(
+            doc='Prefix string for right (expected) diff lines.',
+            regex=r'.*',
+        )
         self.vertical = False
+        self._doc_vertical = ParamDoc(
+            doc='Show diffs vertically rather than side by side.',
+            values=[True, False],
+        )
         self.force_val_prefixes = False
+        self._doc_force_val_prefixes = ParamDoc(
+            doc='Always show left/right prefixes on diff lines.',
+            values=[True, False],
+        )
         self.type_checking = 'strict'
+        self._doc_type_checking = ParamDoc(
+            doc='How strictly to check types in reference test comparisons.',
+            values=['strict', 'medium', 'loose'],
+        )
         self.log_failures = False
+        self._doc_log_failures = ParamDoc(
+            doc='Log failing test IDs to file for use with tdda tag.',
+            values=[True, False],
+        )
 
     def left_diff(self, value, force_prefix=None):
         annotated = self.left_annotated(value, force_prefix)
@@ -244,15 +326,55 @@ class ConstraintsConfig(BaseConfig):
         self._config_name = 'config.constraints'
 
         self.interleave = True
+        self._doc_interleave = ParamDoc(
+            doc='Interleave pass and fail results in verify output.',
+            values=[True, False],
+        )
         self.per_constraint = True
+        self._doc_per_constraint = ParamDoc(
+            doc='Report results per constraint rather than per field.',
+            values=[True, False],
+        )
         self.detect_passes = True  # ok fields. False for _bad fields
+        self._doc_detect_passes = ParamDoc(
+            doc='Include passing fields in detect output.',
+            values=[True, False],
+        )
         self.report_formats = []
+        self._doc_report_formats = ParamDoc(
+            doc='List of additional report formats to generate.',
+            values=['html', 'md', 'txt', 'json', 'yaml', 'toml'],
+        )
         self.write_all_records = False
+        self._doc_write_all_records = ParamDoc(
+            doc='Write all records to detect output, not just failures.',
+            values=[True, False],
+        )
         self.int_bools = False
+        self._doc_int_bools = ParamDoc(
+            doc='Use integers (0/1) rather than booleans in detect output.',
+            values=[True, False],
+        )
         self.verify_required_fields = None
+        self._doc_verify_required_fields = ParamDoc(
+            doc='Verify that all required fields are present.',
+            values=[True, False],
+        )
         self.verify_allowed_fields = None
+        self._doc_verify_allowed_fields = ParamDoc(
+            doc='Verify that no fields are present outside the allowed set.',
+            values=[True, False],
+        )
         self.write_required_fields = False
+        self._doc_write_required_fields = ParamDoc(
+            doc='Discover should include the required-fields constraint.',
+            values=[True, False],
+        )
         self.write_allowed_fields = False
+        self._doc_write_allowed_fields = ParamDoc(
+            doc='Discover should include an allowed-fields constraint.',
+            values=[True, False],
+        )
 
 
 class TDDADiffConfig(BaseConfig):
@@ -261,7 +383,15 @@ class TDDADiffConfig(BaseConfig):
         self._config_name = 'config.tddadiff'
 
         self.type_checking = 'medium'
+        self._doc_type_checking = ParamDoc(
+            doc='How strictly to check types when comparing dataframes.',
+            values=['strict', 'medium', 'loose'],
+        )
         self.infer_md = True
+        self._doc_infer_md = ParamDoc(
+            doc='Infer metadata when comparing dataframes with tdda diff.',
+            values=[True, False],
+        )
 
 
 class SerialConfig(BaseConfig):
@@ -270,6 +400,12 @@ class SerialConfig(BaseConfig):
         self._config_name = 'config.serial'
 
         self.md_inpath = [DEFAULT_IN_METADATA]  # list/single dir/None
+        self._doc_md_inpath = ParamDoc(
+            doc=(
+                'Path(s) to search for serial metadata files; '
+                'relative paths are resolved relative to the CSV file.'
+            ),
+        )
 
     def _get_inpath_list(self, csvpath=None):
         path = self.md_inpath
@@ -317,7 +453,7 @@ def fmt_value(value):
     elif type(value) is str:
         v = json.dumps(value, ensure_ascii = False)
     elif type(value) in (list, tuple):
-        v = ', '.join(fmt_value(v) for v in value)
+        v = '[%s]' % ', '.join(fmt_value(v) for v in value)
     elif str(type(value)).startswith('date'):
         v = value.isoformat()
     elif type(value) is bool:
@@ -334,6 +470,7 @@ def fmt_value(value):
 
 def show_config(*args):
     from tdda.config import Config
+    from tdda.man.utils import print_help
     kind = args[0] if args else 'current'
     if kind in ('current', '-c', '--current'):
         c = Config(load=True)
@@ -350,6 +487,8 @@ def show_config(*args):
             with open(config_path) as f:
                 print(f.read())
                 print()
+    elif kind in ('-h', '--help', 'help'):
+        print_help('config', sys.stdout)
     else:
         print('''
 USAGE:

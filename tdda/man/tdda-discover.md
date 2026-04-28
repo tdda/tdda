@@ -48,8 +48,8 @@ The following options are available.
 `-?`, `--?`               Same as `-h` or `--help`  
 `-7`, `--ascii`           Report without using special characters  
 `-N`, `--noconfig`        Skip loading ~/.tdda.toml  
-`--colour`              Use colour in terminal output *  
-`--no-colour`           Do not not use colour in terminal output  
+`--colour`                Use colour in terminal output *  
+`--no-colour`             Do not not use colour in terminal output  
 `-x`, `--rex`             Include regular expression generation  
 `-X`, `--no-rex`          Exclude regular expression generation *  
 `-g`, `--group-rex`       Group regular expression generation  
