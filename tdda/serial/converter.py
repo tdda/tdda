@@ -396,6 +396,12 @@ class SerialConverter:
             help='Exclude path to data file from .serial output.',
         )
 
+        parser.add_argument(
+            '-N', '--no-config',
+            action='store_true',
+            help='Use default configuration (ignore ~/.tdda.toml)',
+        )
+
         return parser
 
     def warn(self, *args, **kw):

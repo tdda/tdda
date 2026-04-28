@@ -20,10 +20,14 @@ tdda help COMMAND
 
  - `gentest`
  - `diff`
+ - `tag`
+ - `serial`
  - `examples`
 
+ - `config`
  - `help`
  - `version`
+ - `test`
 
 ## DESCRIPTION
 

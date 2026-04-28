@@ -61,17 +61,23 @@ for tdda.serial, CSVW, and frictionless.
                         or Frictionless data.
                         (Can also be used for `tdda.serial` and `.py` output)
 
+`-N, --no-config`        Use default configuration (ignore ~/.tdda.toml)
+
 `-g, --gen, --generate`  Generate (infer) metadata for flat file
 
-`-v, --verbose`          Verose output
-`-V, --Verbose`          More verose output
+`-q, --quiet`            Quiet output
+`-v, --verbose`          Verbose output
+`-V, --Verbose`          More verbose output
 
-## Options used primarily or exclusibely with `--generate`/`--gen`/`-g`
+## Options used primarily or exclusively with `--generate`/`--gen`/`-g`
 
 `--sep D, --delimiter D`     Specify `D` as the field separator.
 
-`--quote_char Q, --quote Q`  Specify `Q` as the quote character.
+`--quote-char Q, --quote Q`  Specify `Q` as the quote character.
                              (Q is always `"` or `'` in practice.)
+
+`--nulls S`                  Specify null indicator, or comma-separated
+                             list of null indicators.
 
 `--escape`                   Use backslash as escape character.
                              **NOTE:** Always backslash: does not take argument.
@@ -91,9 +97,9 @@ for tdda.serial, CSVW, and frictionless.
 
 `--encoding ENC, -e ENC`     Specify `ENC` as encoding.
 
-`--data-format D`            Specify `D` as the (file-wide default) date format.
+`--date-format D`            Specify `D` as the (file-wide default) date format.
 
-`--datatime-format D`        Specify `D` as the (file-wide default) format
+`--datetime-format D`        Specify `D` as the (file-wide default) format
                              for `datetime` fields.
 
 `--sample-lines N, -n N`     Use (up to) `N` sample lines when inferring

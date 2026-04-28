@@ -7,12 +7,13 @@
 \fBtdda diff\fR [\fB--fields\fR \fIFIELD1,FIELD2\fP,...]
             [\fB--xfields\fR \fIFIELD1,FIELD2\fP,...  ]
             [\fB--horizontal\fR] [\fB-H\fR] [\fB--vertical\fR] [\fB-V\fR]
-            [\fB--maxdiffs\fR \fIN\fP]
+            [\fB--infer-md\fR] [\fB--no-md\fR]
+            [\fB--maxdiffs\fR \fIN\fP] [\fB--key\fR \fIFIELD\fP]
             [\fB--mono\fR] [\fB--bw\fR] [\fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP]
             [\fB--dps\fR \fIN\fP]  [\fB--precision\fR \fIN\fP]
             [\fB--AE\fR] [\fB--LR\fR] [\fB--angles\fR] [\fB--pm\fR]
             [\fB--prefixes\fR \fIPREFIXES\fP]
-            [\fB--no-config\fR]
+            [\fB-N\fR] [\fB--no-config\fR]
             [\fB--strict\fR] [\fB--medium\fR] [\fB--loose\fR] [\fB--permissive\fR]
             \fILEFT\fP \fIRIGHT\fP [\fIOUTPATH\fP]
 
@@ -57,6 +58,21 @@ as typed values after reading. Ke
 \fB--vertical\fR, \fB-V\fR,
 .br
   Vertical dispay (left above right)
+
+.PP
+\fB--infer-md\fR
+.br
+  Attempt to find associated metadata for flat files.
+
+.PP
+\fB--no-md\fR, \fB--no-infer-md\fR
+.br
+  Do not attempt to find associated metadata for flat files.
+
+.PP
+\fB--key\fR \fIFIELD\fP
+.br
+  Use this field as a join key when reporting differences.
 
 .PP
 \fB--maxdiffs\fR \fIN\fP
@@ -117,7 +133,7 @@ as typed values after reading. Ke
   e.g. --prefixes "actual: -ref: "
 
 .PP
-\fB--no-config\fR
+\fB-N\fR, \fB--no-config\fR
 .br
   Use default configuration (ignore ~/.tdda.toml)
 

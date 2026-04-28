@@ -45,7 +45,7 @@ OPTIONS
   [1m‐h[22m, [1m‐‐help            [22mShow this help message and exit
   [1m‐?[22m, [1m‐‐?               [22mSame as [1m‐h [22mor [1m‐‐help[0m
   [1m‐7[22m, [1m‐‐ascii           [22mReport without using special characters
-  [1m‐N[22m, [1m‐‐noconfig        [22mSkip loading ˜/.tdda.toml
+  [1m‐N[22m, [1m‐‐no‐config       [22mSkip loading ˜/.tdda.toml
   [1m‐‐colour                [22mUse colour in terminal output *
   [1m‐‐no‐colour             [22mDo not not use colour in terminal output
   [1m‐x[22m, [1m‐‐rex             [22mInclude regular expression generation

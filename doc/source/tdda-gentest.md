@@ -29,6 +29,7 @@ tdda gentest   'SHELL COMMAND' [OPTIONS]
   -E, --no-stderr       Do not generate a test checking output to STDERR
   -Z, --non-zero-exit   Do not require exit status to be 0
   -C, --no-clobber      Do not overwrite existing test script or reference directory
+  -N, --no-config       Use default configuration (ignore ~/.tdda.toml)
 
 
 ## EXAMPLES

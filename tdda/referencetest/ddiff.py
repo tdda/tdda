@@ -365,7 +365,7 @@ class TDDADiff:
         )
 
         parser.add_argument(
-            '--no-config',
+            '-N', '--no-config',
             action='store_true',
             help='Use default configuration (ignore ~/.tdda.toml)',
         )

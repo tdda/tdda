@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda [22m− test‐diven data analysis
+  [1mtdda [22m− test‐driven data analysis
 
 SYNOPSIS
 
@@ -11,9 +11,11 @@ SYNOPSIS
   [1mtdda examples      [22mCopy the example data and code
   [1mtdda gentest       [22mGenerate a reference test "automagically"
 
-  [1mtdda diff          [22mCompare two parquet or CSV files (EXPERIMENTAL)
+  [1mtdda diff          [22mCompare two parquet or CSV files
   [1mtdda serial        [22mConvert or view .serial, CSVW,
-                     and Frictionless  metadata
+                     and Frictionless metadata
+  [1mtdda tag           [22mTag tests that failed in the last reference test run
+  [1mtdda config        [22mShow or edit TDDA configuration
 
   [1mtdda version       [22mPrint the TDDA version number
   [1mtdda help          [22mPrint this help
@@ -33,8 +35,6 @@ SEE ALSO
 
   TDDA Book
   ⟨https://book.tdda.info⟩
-
-
 
 
 

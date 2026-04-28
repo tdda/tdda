@@ -31,7 +31,7 @@ WORKFLOW
 
   The equivalent workflow with [1mpytest [22mis:
 
-  [1mpytest ‐‐untag          # Remove any existing[22m@tag[1mdecorators[0m
+  [1mpytest ‐‐untag          # Remove any existing @tag decorators[0m
   [1mpytest ‐‐log‐failures   # Run tests, logging failures[0m
   [1mtdda tag                # Add @tag to failing tests[0m
   [1mpytest ‐‐tagged         # Run only tagged (failing) tests[0m

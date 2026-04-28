@@ -48,7 +48,7 @@ The following options are available.
 `-h`, `--help`            Show this help message and exit  
 `-?`, `--?`               Same as `-h` or `--help`  
 `-7`, `--ascii`           Report without using special characters  
-`-N`, `--noconfig`        Skip loading ~/.tdda.toml  
+`-N`, `--no-config`       Skip loading ~/.tdda.toml  
 `--colour`                Use colour in terminal output *  
 `--no-colour`             Do not not use colour in terminal output  
 `-x`, `--rex`             Include regular expression generation  

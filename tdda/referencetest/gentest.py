@@ -1652,6 +1652,11 @@ def gentest_parser(usage=''):
         action='store_true',
         help='Do not overwrite existing test script or reference directory',
     )
+    parser.add_argument(
+        '-N', '--no-config',
+        action='store_true',
+        help='Use default configuration (ignore ~/.tdda.toml)',
+    )
     return parser
 
 

@@ -15,9 +15,13 @@ POSITIONAL ARGUMENTS
   [1mdetect[0m
   [1mgentest[0m
   [1mdiff[0m
+  [1mtag[0m
+  [1mserial[0m
   [1mexamples[0m
+  [1mconfig[0m
   [1mhelp[0m
   [1mversion[0m
+  [1mtest[0m
 
 DESCRIPTION
 
@@ -41,10 +45,6 @@ EXAMPLES
   [1mtdda help               [22mShows this help
 
   [1mtdda help gentest       [22mShows help on gentest
-
-
-
-
 
 
 

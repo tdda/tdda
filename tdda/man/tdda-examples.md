@@ -34,7 +34,7 @@ does require internet access.
 Write out example code and data for all examples, by default,
 or for a particular module if specified.
 
-If no module is specified, examples for all three are written out.
+If no module is specified, examples for all four are written out.
 
 Examples are always created in subdirectories of the current directory `.`
 

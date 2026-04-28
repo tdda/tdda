@@ -1,7 +1,7 @@
 .nh
 .TH TDDA 1 "January 2026" "3.0" "tdda manual"
 .SH NAME
-\fBtdda\fR \- test-diven data analysis
+\fBtdda\fR \- test-driven data analysis
 
 .SH SYNOPSIS
 \fBtdda discover\fR      Perform constraint discovery
@@ -16,10 +16,14 @@
 \fBtdda gentest\fR       Generate a reference test "automagically"
 
 .PP
-\fBtdda diff\fR          Compare two parquet or CSV files (EXPERIMENTAL)
+\fBtdda diff\fR          Compare two parquet or CSV files
 .br
 \fBtdda serial\fR        Convert or view .serial, CSVW,
-                   and Frictionless  metadata
+                   and Frictionless metadata
+.br
+\fBtdda tag\fR           Tag tests that failed in the last reference test run
+.br
+\fBtdda config\fR        Show or edit TDDA configuration
 
 .PP
 \fBtdda version\fR       Print the TDDA version number

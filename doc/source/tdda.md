@@ -3,7 +3,7 @@
 
 ## NAME
 
-`tdda` - test-diven data analysis
+`tdda` - test-driven data analysis
 
 ## SYNOPSIS
 ```
@@ -14,9 +14,11 @@ tdda detect        Detect failed constraints on data
 tdda examples      Copy the example data and code  
 tdda gentest       Generate a reference test "automagically"  
 
-tdda diff          Compare two parquet or CSV files (EXPERIMENTAL)  
+tdda diff          Compare two parquet or CSV files  
 tdda serial        Convert or view .serial, CSVW,
-                   and Frictionless  metadata  
+                   and Frictionless metadata  
+tdda tag           Tag tests that failed in the last reference test run  
+tdda config        Show or edit TDDA configuration  
 
 tdda version       Print the TDDA version number  
 tdda help          Print this help  

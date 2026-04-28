@@ -58,17 +58,23 @@ above)
                           or Frictionless data.
                           (Can also be used for [1mtdda.serial [22mand [1m.py [22moutput)
 
+  [1m‐N, ‐‐no‐config        [22mUse default configuration (ignore ˜/.tdda.toml)
+
   [1m‐g, ‐‐gen, ‐‐generate  [22mGenerate (infer) metadata for flat file
 
-  [1m‐v, ‐‐verbose          [22mVerose output
-  [1m‐V, ‐‐Verbose          [22mMore verose output
+  [1m‐q, ‐‐quiet            [22mQuiet output
+  [1m‐v, ‐‐verbose          [22mVerbose output
+  [1m‐V, ‐‐Verbose          [22mMore verbose output
 
-Options used primarily or exclusibely with [1m‐‐generate[22m/[1m‐‐gen[22m/[1m‐g[0m
+Options used primarily or exclusively with [1m‐‐generate[22m/[1m‐‐gen[22m/[1m‐g[0m
 
   [1m‐‐sep D, ‐‐delimiter D     [22mSpecify [1mD [22mas the field separator.
 
-  [1m‐‐quote_char Q, ‐‐quote Q  [22mSpecify [1mQ [22mas the quote character.
+  [1m‐‐quote‐char Q, ‐‐quote Q  [22mSpecify [1mQ [22mas the quote character.
                                (Q is always [1m" [22mor [1m’ [22min practice.)
+
+  [1m‐‐nulls S                  [22mSpecify null indicator, or comma‐separated
+                               list of null indicators.
 
   [1m‐‐escape                   [22mUse backslash as escape character.
                                [1mNOTE: [22mAlways backslash: does not take argument.
@@ -86,9 +92,9 @@ Options used primarily or exclusibely with [1m‐‐generate[22m/[1m‐‐gen
 
   [1m‐‐encoding ENC, ‐e ENC     [22mSpecify [1mENC [22mas encoding.
 
-  [1m‐‐data‐format D            [22mSpecify [1mD [22mas the (file‐wide default) date format.
+  [1m‐‐date‐format D            [22mSpecify [1mD [22mas the (file‐wide default) date format.
 
-  [1m‐‐datatime‐format D        [22mSpecify [1mD [22mas the (file‐wide default) format
+  [1m‐‐datetime‐format D        [22mSpecify [1mD [22mas the (file‐wide default) format
                                for [1mdatetime [22mfields.
 
   [1m‐‐sample‐lines N, ‐n N     [22mUse (up to) [1mN [22msample lines when inferring
@@ -150,12 +156,6 @@ BUGS
 
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
   still many bugs an undesirable features in the implementation.
-
-
-
-
-
-
 
 
 

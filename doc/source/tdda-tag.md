@@ -36,7 +36,7 @@ When all tests are passing:
 
 The equivalent workflow with `pytest` is:
 
-`pytest --untag          # Remove any existing `@tag` decorators`  
+`pytest --untag          # Remove any existing @tag decorators`  
 `pytest --log-failures   # Run tests, logging failures`  
 `tdda tag                # Add @tag to failing tests`  
 `pytest --tagged         # Run only tagged (failing) tests`  

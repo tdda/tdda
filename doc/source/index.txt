@@ -102,7 +102,7 @@ Contents
    overview.md
    installation.txt
    constraints.txt
-   rexpy.txt
+   rexpy-regex.txt
    gentest.txt
    referencetest.txt
    constraints-api.txt
@@ -128,6 +128,8 @@ Contents
    tdda-config.md
    tdda-test.md
    tdda-help.md
+   rexpy.md
+
 
 
 Resources

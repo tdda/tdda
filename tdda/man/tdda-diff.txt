@@ -7,12 +7,13 @@ SYNOPSIS
   [1mtdda diff [22m[[1m‐‐fields [4m[22mFIELD1,FIELD2[24m,...]
               [[1m‐‐xfields [4m[22mFIELD1,FIELD2[24m,...  ]
               [[1m‐‐horizontal[22m] [[1m‐H[22m] [[1m‐‐vertical[22m] [[1m‐V[22m]
-              [[1m‐‐maxdiffs [4m[22mN[24m]
+              [[1m‐‐infer‐md[22m] [[1m‐‐no‐md[22m]
+              [[1m‐‐maxdiffs [4m[22mN[24m] [[1m‐‐key [4m[22mFIELD[24m]
               [[1m‐‐mono[22m] [[1m‐‐bw[22m] [[1m‐‐colours[22m, [1m‐c[22m, [1m‐‐colours [4m[22mCOLOURS[24m]
               [[1m‐‐dps [4m[22mN[24m]  [[1m‐‐precision [4m[22mN[24m]
               [[1m‐‐AE[22m] [[1m‐‐LR[22m] [[1m‐‐angles[22m] [[1m‐‐pm[22m]
               [[1m‐‐prefixes [4m[22mPREFIXES[24m]
-              [[1m‐‐no‐config[22m]
+              [[1m‐N[22m] [[1m‐‐no‐config[22m]
               [[1m‐‐strict[22m] [[1m‐‐medium[22m] [[1m‐‐loose[22m] [[1m‐‐permissive[22m]
               [4mLEFT[24m [4mRIGHT[24m [[4mOUTPATH[24m]
 
@@ -51,6 +52,15 @@ OPTIONS
   [1m‐‐vertical[22m, [1m‐V[22m,
     Vertical dispay (left above right)
 
+  [1m‐‐infer‐md[0m
+    Attempt to find associated metadata for flat files.
+
+  [1m‐‐no‐md[22m, [1m‐‐no‐infer‐md[0m
+    Do not attempt to find associated metadata for flat files.
+
+  [1m‐‐key [4m[22mFIELD[0m
+    Use this field as a join key when reporting differences.
+
   [1m‐‐maxdiffs [4m[22mN[0m
     Maximum number of differences to show.
 
@@ -87,7 +97,7 @@ OPTIONS
     Use prefixes specified as labels for the two datasets
     e.g. ‐‐prefixes "actual: ‐ref: "
 
-  [1m‐‐no‐config[0m
+  [1m‐N[22m, [1m‐‐no‐config[0m
     Use default configuration (ignore ˜/.tdda.toml)
 
   [1m‐‐strict[0m
@@ -122,6 +132,62 @@ EXAMPLES
 
   This is the simplest form of the command. It will read a.csv and
   convert it to a data frame, using the default back end (Pandas).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

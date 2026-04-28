@@ -1,0 +1,120 @@
+.nh
+.TH "REXPY" 1 "April 2026" "3.0" "rexpy manual"
+.SH NAME
+\fBrexpy\fR -- infer regular expressions from example strings
+
+.SH SYNOPSIS
+\fBrexpy\fR [\fIFLAGS\fP] [\fIINPUTFILE\fP [\fIOUTPUTFILE\fP]]
+
+.SH DESCRIPTION
+\fBrexpy\fR reads a list of strings (one per line) and infers one or more
+regular expressions that characterize them.
+
+.PP
+If \fIINPUTFILE\fP is provided it should contain one string per line;
+otherwise lines are read from standard input.
+
+.PP
+If \fIOUTPUTFILE\fP is provided, the regular expressions found will be
+written there (one per line); otherwise they will be printed to
+standard output.
+
+.SH OPTIONS
+\fB-h\fR, \fB--header\fR
+.br
+  Discard the first line as a header.
+
+.PP
+\fB-?\fR, \fB--help\fR
+.br
+  Print usage information and exit.
+
+.PP
+\fB-g\fR, \fB--group\fR
+.br
+  Generate capture groups for each variable fragment of each regular
+  expression, i.e. surround variable components with parentheses.
+.br
+  e.g.    \fB^[A-Z]+\\-[0-9]+$\fR
+.br
+  becomes \fB^([A-Z]+)\\-([0-9]+)$\fR
+
+.PP
+\fB-q\fR, \fB--quote\fR
+.br
+  Display regular expressions as double-quoted, escaped strings,
+  suitable for use in Unix shells, JSON, and string literals in many
+  programming languages.
+.br
+  e.g.    \fB^[A-Z]+\\-[0-9]+$\fR
+.br
+  becomes \fB"^[A-Z]+\\-[0-9]+$"\fR
+
+.PP
+\fB--portable\fR, \fB--grep\fR
+.br
+  Produce maximally portable regular expressions
+  (e.g. \fB[0-9]\fR rather than \fB\\d\fR). This is the default.
+
+.PP
+\fB--java\fR
+.br
+  Produce Java-style regular expressions (e.g. \fB\\p{Digit}\fR).
+
+.PP
+\fB--posix\fR
+.br
+  Produce POSIX-compliant regular expressions
+  (e.g. \fB[[:digit:]]\fR rather than \fB\\d\fR).
+
+.PP
+\fB--perl\fR
+.br
+  Produce Perl-style regular expressions (e.g. \fB\\d\fR).
+
+.PP
+\fB-u\fR, \fB--underscore\fR
+.br
+  Allow underscore to be treated as a letter.
+  Mostly useful for matching identifiers. Also \fB-_\fR\&.
+
+.PP
+\fB-d\fR, \fB--dot\fR, \fB--period\fR
+.br
+  Allow dot to be treated as a letter.
+  Mostly useful for matching identifiers. Also \fB-.\fR\&.
+
+.PP
+\fB-m\fR, \fB--minus\fR, \fB--hyphen\fR, \fB--dash\fR
+.br
+  Allow minus to be treated as a letter.
+  Mostly useful for matching identifiers.
+
+.PP
+\fB-vlf\fR, \fB--variable\fR
+.br
+  Use variable-length fragments.
+
+.PP
+\fB-flf\fR, \fB--fixed\fR
+.br
+  Use fixed-length fragments.
+
+.PP
+\fB-v\fR, \fB--version\fR
+.br
+  Print the version number.
+
+.PP
+\fB-V\fR, \fB--verbose\fR
+.br
+  Set verbosity level to 1.
+
+.PP
+\fB-VV\fR, \fB--Verbose\fR
+.br
+  Set verbosity level to 2.
+
+.SH SEE ALSO
+tdda(1),
+tdda-discover(1)

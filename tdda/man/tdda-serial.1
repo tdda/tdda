@@ -71,18 +71,26 @@ for tdda.serial, CSVW, and frictionless.
                         (Can also be used for \fBtdda.serial\fR and \fB\&.py\fR output)
 
 .PP
+\fB-N, --no-config\fR        Use default configuration (ignore ~/.tdda.toml)
+
+.PP
 \fB-g, --gen, --generate\fR  Generate (infer) metadata for flat file
 
 .PP
-\fB-v, --verbose\fR          Verose output
-\fB-V, --Verbose\fR          More verose output
+\fB-q, --quiet\fR            Quiet output
+\fB-v, --verbose\fR          Verbose output
+\fB-V, --Verbose\fR          More verbose output
 
-.SH Options used primarily or exclusibely with \fB--generate\fR/\fB--gen\fR/\fB-g\fR
+.SH Options used primarily or exclusively with \fB--generate\fR/\fB--gen\fR/\fB-g\fR
 \fB--sep D, --delimiter D\fR     Specify \fBD\fR as the field separator.
 
 .PP
-\fB--quote_char Q, --quote Q\fR  Specify \fBQ\fR as the quote character.
+\fB--quote-char Q, --quote Q\fR  Specify \fBQ\fR as the quote character.
                              (Q is always \fB"\fR or \fB\&'\fR in practice.)
+
+.PP
+\fB--nulls S\fR                  Specify null indicator, or comma-separated
+                             list of null indicators.
 
 .PP
 \fB--escape\fR                   Use backslash as escape character.
@@ -106,10 +114,10 @@ for tdda.serial, CSVW, and frictionless.
 \fB--encoding ENC, -e ENC\fR     Specify \fBENC\fR as encoding.
 
 .PP
-\fB--data-format D\fR            Specify \fBD\fR as the (file-wide default) date format.
+\fB--date-format D\fR            Specify \fBD\fR as the (file-wide default) date format.
 
 .PP
-\fB--datatime-format D\fR        Specify \fBD\fR as the (file-wide default) format
+\fB--datetime-format D\fR        Specify \fBD\fR as the (file-wide default) format
                              for \fBdatetime\fR fields.
 
 .PP

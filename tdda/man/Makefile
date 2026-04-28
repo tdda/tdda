@@ -10,7 +10,8 @@ TARGETS = tdda.txt \
           tdda-verify.txt \
           tdda-version.txt \
           tdda-config.txt \
-          tdda-test.txt
+          tdda-test.txt \
+          rexpy.txt
 
 
 all: clean $(TARGETS)

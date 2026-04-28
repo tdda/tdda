@@ -10,12 +10,13 @@
 tdda diff [--fields FIELD1,FIELD2,...]
             [--xfields FIELD1,FIELD2,...  ]
             [--horizontal] [-H] [--vertical] [-V]
-            [--maxdiffs N]
+            [--infer-md] [--no-md]
+            [--maxdiffs N] [--key FIELD]
             [--mono] [--bw] [--colours, -c, --colours COLOURS]
             [--dps N]  [--precision N]
             [--AE] [--LR] [--angles] [--pm]
             [--prefixes PREFIXES]
-            [--no-config]
+            [-N] [--no-config]
             [--strict] [--medium] [--loose] [--permissive]
             LEFT RIGHT [OUTPATH]
 ```
@@ -54,6 +55,15 @@ as typed values after reading. Ke
 `--vertical`, `-V`,  
   Vertical dispay (left above right)
 
+
+`--infer-md`  
+  Attempt to find associated metadata for flat files.
+
+`--no-md`, `--no-infer-md`  
+  Do not attempt to find associated metadata for flat files.
+
+`--key` *FIELD*  
+  Use this field as a join key when reporting differences.
 
 `--maxdiffs` *N*  
   Maximum number of differences to show.
@@ -95,7 +105,7 @@ as typed values after reading. Ke
   e.g. --prefixes "actual: -ref: "
 
 
-`--no-config`  
+`-N`, `--no-config`  
   Use default configuration (ignore ~/.tdda.toml)
 
 `--strict`  

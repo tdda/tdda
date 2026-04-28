@@ -8,10 +8,25 @@ import argparse
 import os
 import sys
 
-from tdda.man.utils import get_help
+from tdda.man.utils import get_help, print_help
 from tdda.state import set_load
 from tdda.utils import error
 from tdda.commonflags import add_pandas_flags, process_pandas_flags
+
+
+class ManPageParser(argparse.ArgumentParser):
+    """ArgumentParser that shows the man page for --help instead of argparse output."""
+    def __init__(self, cmd, *args, **kwargs):
+        self._man_cmd = cmd
+        super().__init__(*args, **kwargs)
+
+    def print_help(self, file=None):
+        print_help(self._man_cmd, file or sys.stdout)
+
+    def print_usage(self, file=None):
+        f = file or sys.stderr
+        print(f'usage: {self.prog} [options] ...', file=f)
+        print(f'Try "{self.prog} --help" for more information.', file=f)
 
 
 def help_defaults(
@@ -51,11 +66,9 @@ def help_defaults(
 
 
 def discover_parser(usage=''):
-    formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(
+    parser = ManPageParser(
+        'discover',
         prog='tdda discover',
-        epilog=usage + get_help('discover'),
-        formatter_class=formatter,
     )
     add_defaults(parser)
     parser.add_argument(
@@ -133,7 +146,7 @@ def discover_parser(usage=''):
 def discover_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
-        print(parser.epilog, file=sys.stderr)
+        parser.print_help(sys.stderr)
         sys.exit(1)
     params['inc_rex'] = flags.rex or flags.group_rex or flags.no_group_rex
     params['group_rexes'] = not flags.no_group_rex
@@ -155,11 +168,9 @@ def discover_flags(parser, args, params):
 
 
 def verify_parser(usage=''):
-    formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(
+    parser = ManPageParser(
+        'verify',
         prog='tdda verify',
-        epilog=usage + get_help('verify'),
-        formatter_class=formatter,
     )
     add_defaults(parser, epsilon=True)
     parser.add_argument(
@@ -188,11 +199,9 @@ def verify_parser(usage=''):
 
 
 def detect_parser(usage=''):
-    formatter = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(
+    parser = ManPageParser(
+        'detect',
         prog='tdda detect',
-        epilog=usage + get_help('detect'),
-        formatter_class=formatter,
     )
     add_defaults(parser, epsilon=True)
     parser.add_argument(
@@ -293,11 +302,8 @@ def detect_parser(usage=''):
 def verify_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
-        print(
-            'Unexpected arguments %s\n' % ' '.join(more),
-            parser.epilog,
-            file=sys.stderr,
-        )
+        print('Unexpected arguments %s\n' % ' '.join(more), file=sys.stderr)
+        parser.print_help(sys.stderr)
         sys.exit(1)
     params.update(
         {
@@ -339,7 +345,7 @@ def verify_flags(parser, args, params):
 def detect_flags(parser, args, params):
     flags, more = parser.parse_known_args(args)
     if len(more) > 0:
-        print(parser.epilog, file=sys.stderr)
+        parser.print_help(sys.stderr)
         sys.exit(1)
     params.update(
         {
@@ -416,7 +422,7 @@ def add_defaults(
         )
     if config:
         parser.add_argument(
-            '--no-config',
+            '-N', '--no-config',
             action='store_true',
             help='Skip loading ~/.tdda.toml',
         )

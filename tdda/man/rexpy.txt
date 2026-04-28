@@ -1,0 +1,132 @@
+NAME
+
+  [1mrexpy [22m‐‐ infer regular expressions from example strings
+
+SYNOPSIS
+
+  [1mrexpy [22m[[4mFLAGS[24m] [[4mINPUTFILE[24m [[4mOUTPUTFILE[24m]]
+
+DESCRIPTION
+
+  [1mrexpy [22mreads a list of strings (one per line) and infers one or more
+  regular expressions that characterize them.
+
+  If [4mINPUTFILE[24m is provided it should contain one string per line;
+  otherwise lines are read from standard input.
+
+  If [4mOUTPUTFILE[24m is provided, the regular expressions found will be
+  written there (one per line); otherwise they will be printed to
+  standard output.
+
+OPTIONS
+
+  [1m‐h[22m, [1m‐‐header[0m
+    Discard the first line as a header.
+
+  [1m‐?[22m, [1m‐‐help[0m
+    Print usage information and exit.
+
+  [1m‐g[22m, [1m‐‐group[0m
+    Generate capture groups for each variable fragment of each regular
+    expression, i.e. surround variable components with parentheses.
+    e.g.    [1mˆ[A‐Z]+\‐[0‐9]+$[0m
+    becomes [1mˆ([A‐Z]+)\‐([0‐9]+)$[0m
+
+  [1m‐q[22m, [1m‐‐quote[0m
+    Display regular expressions as double‐quoted, escaped strings,
+    suitable for use in Unix shells, JSON, and string literals in many
+    programming languages.
+    e.g.    [1mˆ[A‐Z]+\‐[0‐9]+$[0m
+    becomes [1m"ˆ[A‐Z]+\‐[0‐9]+$"[0m
+
+  [1m‐‐portable[22m, [1m‐‐grep[0m
+    Produce maximally portable regular expressions
+    (e.g. [1m[0‐9] [22mrather than [1m\d[22m). This is the default.
+
+  [1m‐‐java[0m
+    Produce Java‐style regular expressions (e.g. [1m\p{Digit}[22m).
+
+  [1m‐‐posix[0m
+    Produce POSIX‐compliant regular expressions
+    (e.g. [1m[[:digit:]] [22mrather than [1m\d[22m).
+
+  [1m‐‐perl[0m
+    Produce Perl‐style regular expressions (e.g. [1m\d[22m).
+
+  [1m‐u[22m, [1m‐‐underscore[0m
+    Allow underscore to be treated as a letter.
+    Mostly useful for matching identifiers. Also [1m‐_[22m.
+
+  [1m‐d[22m, [1m‐‐dot[22m, [1m‐‐period[0m
+    Allow dot to be treated as a letter.
+    Mostly useful for matching identifiers. Also [1m‐.[22m.
+
+  [1m‐m[22m, [1m‐‐minus[22m, [1m‐‐hyphen[22m, [1m‐‐dash[0m
+    Allow minus to be treated as a letter.
+    Mostly useful for matching identifiers.
+
+  [1m‐vlf[22m, [1m‐‐variable[0m
+    Use variable‐length fragments.
+
+  [1m‐flf[22m, [1m‐‐fixed[0m
+    Use fixed‐length fragments.
+
+  [1m‐v[22m, [1m‐‐version[0m
+    Print the version number.
+
+  [1m‐V[22m, [1m‐‐verbose[0m
+    Set verbosity level to 1.
+
+  [1m‐VV[22m, [1m‐‐Verbose[0m
+    Set verbosity level to 2.
+
+SEE ALSO
+
+  tdda
+  tdda discover
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
