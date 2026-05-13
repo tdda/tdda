@@ -54,7 +54,7 @@ the other sections are intended primarily for cases in which:
 
 A `.serial` file is a JSON object with the following top-level keys:
 
-```json
+```
 {
     "format": "http://tdda.info/ns/tdda.serial",
     "writer": "tdda.serial-3.0.0",
@@ -162,7 +162,7 @@ All dataset-level keys are optional.
 : The default format for `date` fields that have no per-field
   `format`. Also used as the fallback for `datetime` fields if
   `datetime_format` is not set. Accepts named formats (see
-  [Date and Datetime Formats](#date-and-datetime-formats)) and Python
+  [Date and Datetime Formats](#tdda-serial-date-and-datetime-formats)) and Python
   `strftime` strings. (Suggested default: `"iso8601-date"`.)
 
 **`datetime_format`** *(string)*
@@ -249,6 +249,7 @@ Optional. No default.
   [The `fields` Entry](#the-fields-entry).
 
 
+(the-fields-entry)=
 #### The `fields` Entry
 
 Fields can be specified as either an **array** or an **object
@@ -332,7 +333,7 @@ the `.serial` has the field entries in the same order as the data file.
 : For `date` and `datetime` fields: the format of the date or datetime
   values in this field. Overrides `date_format` / `datetime_format`.
   Accepts named formats or Python `strftime` strings (see
-  [Date and Datetime Formats](#date-and-datetime-formats)).
+  [Date and Datetime Formats](#tdda-serial-date-and-datetime-formats)).
 
   For `bool` fields: a boolean format specification (e.g. `"yes|no"`).
 
@@ -1067,7 +1068,7 @@ Where library parameters are expressible as JSON (i.e. nulls, numbers,
 strings, booleans, arrays, and dictionaries), they can simply be written
 into a relevant section of a `tdda.serial` file.
 
-For example, we can convert the [Example](#Example) `tdda.serial` file
+For example, we can convert the [Example](#example) `tdda.serial` file
 to ond that contains custom sections for Pandas `read_csv` function
 and `DataFrame.to_csv` methods as follows:
 

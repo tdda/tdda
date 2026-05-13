@@ -82,7 +82,8 @@ release = version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+
+exclude_patterns = ['_build', 'tdda.serial.md', 'docdata']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -272,6 +273,9 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+myst_heading_anchors = 6
 
 
 def setup(app):
