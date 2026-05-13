@@ -1,11 +1,61 @@
 """
+Rexpy: Automatic Regular Expression Extraction
+-----------------------------------------------
+
+Given a set of example strings, rexpy infers one or more regular
+expressions that collectively match them all. When a single pattern
+would require a large alternation to cover structurally different
+inputs, rexpy produces multiple patterns instead — one per distinct
+structure — so each remains readable and precise.
+
+Algorithm
+~~~~~~~~~
+
+Extraction proceeds in the following stages:
+
+1. **Coarse classification.** Each character is assigned to a broad
+   category: lowercase letter, uppercase letter, digit, punctuation,
+   whitespace, or a catch-all. The result is a sequence of category
+   codes for each string.
+
+2. **Run-length encoding (RLE).** Consecutive characters in the same
+   category are collapsed into ``(category, count)`` pairs. For
+   example, ``"hello123"`` becomes ``[(letter, 5), (digit, 3)]``.
+
+3. **Variable run-length encoding (VRLE).** RLEs that share the same
+   sequence of categories but differ only in their counts are merged
+   into a single variable pattern. For example, ``[(letter, 3)]``
+   and ``[(letter, 5)]`` both have the shape ``[letter]`` and merge
+   into ``[(letter, 3, 5)]``.
+
+4. **Fragment refinement.** Within each fragment position of a VRLE,
+   the actual characters seen across all matching examples are
+   examined to find the narrowest character class that fits — for
+   instance, hex digits rather than all alphanumeric characters.
+
+5. **Pattern merging.** The refined VRLEs are aligned and merged.
+   Fixed literal sub-sequences that appear at a consistent position
+   (relative to the start or end) across all patterns in a group are
+   used as anchors: patterns are split at those anchors and the
+   pieces are recursively merged. Patterns too different to reconcile
+   remain as separate entries in the output.
+
+6. **Regex generation.** Each merged pattern is converted to a
+   regular expression string in the requested output dialect
+   (``'portable'``, ``'grep'``, ``'java'``, ``'perl'``, or
+   ``'posix'``).
+
+For large inputs, rexpy works on a sample first and then checks
+which examples the resulting patterns fail to match. Any failures
+are folded back into the working set and extraction is repeated,
+ensuring that even sampled runs achieve complete coverage.
+
 Python API
-----------
+~~~~~~~~~~
 
-The ``tdda.rexpy.rexpy`` module provides a Python API, to allow
-discovery of regular expressions to be incorporated into other Python
-programs.
-
+The simplest entry point is the :func:`extract` function; the
+:class:`Extractor` class gives full control over the process and
+provides access to coverage statistics.
 """
 
 import random
@@ -466,33 +516,66 @@ class Examples(object):
 
 class Extractor(object):
     """
-    Regular expression 'extractor'.
+    Regular expression extractor.
 
-    Given a set of examples, this tries to construct a useful
-    regular expression that characterizes them; failing which,
-    a list of regular expressions that collectively cover the cases.
+    Given a set of examples, constructs a regular expression that
+    characterizes them; or, if no single pattern suffices, a list of
+    regular expressions that collectively cover the cases.
 
     Results are stored in ``self.results`` once extraction has occurred,
-    which happens by default on initialization, but can be invoked
-    manually.
+    which happens by default on initialization but can be triggered
+    manually by calling ``extract()``.
 
-    The examples may be given as a list of strings, a integer-valued,
-    string-keyed dictionary or a function.
+    Args:
+        examples: The input strings to analyse. May be:
 
-      - If it's a list, each string in the list is an example string
-      - It it's a dictionary (or counter), each string is to be
-        used, and the values are taken as frequencies (should be non-negative)
-      - If it's a function, it should be as specified below
-        (see the definition of example_check_function)
+            - a list of strings, one per example
+            - an integer-valued, string-keyed dictionary (or
+              ``Counter``), where the values are taken as string
+              frequencies (must be non-negative)
+            - a callable conforming to the
+              ``example_check_function`` protocol
 
-    size can be provided as:
-        - a Size() instance, to control various sizes within rexpy
-        - None (the default), in which case rexpy's defaults are used
-        - False or 0, which means don't use sampling
-
-    Verbose is usually 0 or ``False``. It can be to ``True`` or 1 for various
-    extra output, and to higher numbers for even more verbose output.
-    The highest level currently used is 2.
+        extract (bool): If ``True`` (the default), run extraction
+            immediately on initialization. Set to ``False`` to
+            defer extraction and call ``extract()`` manually.
+        tag (bool): If ``True``, return tagged (capturing-group)
+            regular expressions instead of plain ones.
+        extra_letters (str): Additional characters to treat as
+            word letters when building character classes. By
+            default only standard alphanumeric characters qualify.
+        full_escape (bool): If ``True``, escape all special regex
+            characters, not just those strictly necessary.
+        remove_empties (bool): If ``True``, discard empty strings
+            from the examples before extraction.
+        strip (bool): If ``True``, strip leading and trailing
+            whitespace from each example before extraction.
+        variableLengthFrags (bool): If ``True``, allow fragments
+            of variable length within patterns. Off by default,
+            which produces simpler patterns.
+        specialize (bool): If ``True``, produce more specialized
+            (narrower) patterns that match fewer strings outside
+            the examples.
+        max_patterns (int): Maximum number of patterns to produce.
+            ``None`` (the default) means no limit.
+        min_diff_strings_per_pattern (int): Minimum number of
+            distinct strings a pattern must account for. Currently
+            ignored.
+        min_strings_per_pattern (int): Minimum total number of
+            strings (counting duplicates) a pattern must account
+            for to be retained. Default is ``1``.
+        size: Controls sampling behaviour. Pass a ``Size``
+            instance to tune the sampling parameters, ``None``
+            (the default) to use rexpy's built-in defaults, or
+            ``False``/``0`` to disable sampling entirely.
+        seed (int): Random seed for reproducibility when sampling.
+            ``None`` (the default) means non-deterministic.
+        dialect (str): The kind of regular expression to emit.
+            One of ``'portable'`` (the default), ``'grep'``,
+            ``'java'``, ``'perl'``, or ``'posix'``.
+        verbose (int): Verbosity level. ``0`` (the default) is
+            silent. ``1`` prints some progress information.
+            ``2`` prints maximum detail.
     """
 
     def __init__(
@@ -514,10 +597,7 @@ class Extractor(object):
         dialect=DEFAULT_DIALECT,
         verbose=DEFAULT_VERBOSITY,
     ):
-        """
-        Set class attributes and clean input strings.
-        Also performs exraction unless extract=False.
-        """
+        """Initialize and, unless extract=False, run extraction."""
         self.verbose = self.set_verbosity(verbose)
         self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
@@ -573,7 +653,14 @@ class Extractor(object):
 
     def extract(self):
         """
-        Actually perform the regular expression 'extraction'.
+        Run the regular expression extraction.
+
+        Analyses the examples supplied at initialization and populates
+        ``self.results`` with the extracted patterns. The regular
+        expressions are then available as ``self.results.rex``.
+
+        Called automatically on initialization unless ``extract=False``
+        was passed.
         """
         self.prng_state = PRNGState(self.seed)
         try:
@@ -715,8 +802,10 @@ class Extractor(object):
 
     def clean(self, examples):
         """
-        Compute length of each string and count number of examples
-        of each length.
+        Normalize examples into an ``Examples`` object.
+
+        Handles null removal, stripping, empty removal, and
+        deduplication with frequency counting.
         """
         isdict = isinstance(examples, dict)
         isExamples = isinstance(examples, Examples)
@@ -753,7 +842,21 @@ class Extractor(object):
 
     def batch_extract(self):
         """
-        Find regular expressions for a batch of examples (as given).
+        Run a single extraction pass over the current working examples.
+
+        This is the non-iterative core called by ``extract()``, which
+        may invoke it several times, each time folding unmatched
+        examples back in before retrying.
+
+        The pipeline: coarse-classify and run-length encode each
+        string; group by category sequence into variable run-length
+        encodings (VRLEs); refine each fragment to the narrowest
+        character class that fits; merge and align patterns on shared
+        fixed anchors; convert to regex strings.
+
+        Returns a ``ResultsSummary`` containing the intermediate
+        structures (RLEs, VRLEs, refined patterns) as well as the
+        final regular expressions.
         """
         examples = self.examples.strings
         freqs = self.examples.freqs
@@ -859,7 +962,11 @@ class Extractor(object):
 
     def run_length_encode_coarse_classes(self, s):
         """
-        Returns run-length encoded coarse classification
+        Return the run-length encoding of the coarse classification of s.
+
+        If the result would exceed ``MAX_GROUPS`` fragments — which
+        would produce an unwieldy regex — the whole string is treated
+        as a single catch-all fragment instead.
         """
         rle = run_length_encode(self.coarse_classify(s))
         if len(rle) <= MAX_GROUPS:
@@ -869,6 +976,12 @@ class Extractor(object):
             return run_length_encode(CODE.ANY * len(s))
 
     def merge_patterns(self, patterns):
+        """
+        Merge refined VRLE patterns by aligning on shared fixed anchors.
+
+        Applies alignment passes until no further merging is possible,
+        then reassembles the pieces into a flat list of patterns.
+        """
         if len(patterns) == 1:
             return patterns
         patterns = self.sort_by_length(patterns)
@@ -903,8 +1016,14 @@ class Extractor(object):
 
     def merge_fixed_omnipresent_at_pos(self, patterns):
         """
-        Find unusual columns in fixed positions relative to ends.
-        Align those, split and recurse
+        Split patterns at fixed fragments that appear at the same
+        position in every pattern.
+
+        Checks positions relative to both the left and right ends.
+        When a shared anchor is found the patterns are split there
+        and returned as separate groups for recursive merging. If no
+        such anchor exists, the patterns are returned as a single
+        unmodified group.
         """
         lstats = length_stats(patterns)
         if lstats.max_length <= 1:
@@ -953,9 +1072,13 @@ class Extractor(object):
 
     def merge_fixed_only_present_at_pos(self, patterns):
         """
-        Find unusual columns in fixed positions relative to ends.
-        Align those
-        Split and recurse
+        Split patterns at fixed fragments that always appear at the
+        same position when present, but need not appear in every pattern.
+
+        Like ``merge_fixed_omnipresent_at_pos``, but the anchor need
+        not be universal — it just must never appear at more than one
+        position across the patterns. Checks both left and
+        right-relative positions.
         """
         lstats = length_stats(patterns)
         if lstats.max_length <= 1:
@@ -1050,6 +1173,10 @@ class Extractor(object):
         )
 
     def sample_non_matches(self, rexes, maxN=None):
+        """
+        Like ``find_non_matches``, but caps the failures returned at
+        ``maxN``, sampling randomly if there are more.
+        """
         failures, freqs, re_freqs = self.find_non_matches(rexes)
         if maxN is not None:
             if len(failures) > maxN:
@@ -1065,8 +1192,12 @@ class Extractor(object):
 
     def find_non_matches(self, rexes):
         """
-        Returns all example strings that do not match any of the regular
-        expressions in results, together with their frequencies.
+        Return all examples not matched by any regex in rexes.
+
+        Returns a tuple ``(strings, freqs, re_freqs)`` where
+        ``strings`` is the list of unmatched examples, ``freqs`` their
+        frequencies, and ``re_freqs`` the total frequency matched by
+        each regex.
         """
         examples = self.all_examples
         if not rexes:
@@ -1113,18 +1244,18 @@ class Extractor(object):
 
     def analyse_fragments(self, vrle, v_id):
         """
-        Analyse the contents of each fragment in vrle across the
-        examples it matches.
+        Collect per-fragment character data across all examples matching vrle.
 
-        Return zip of
+        Returns a zip of five parallel sequences, one entry per
+        fragment position:
 
-          - the characters in each fragment
-          - the strings in each fragment
-          - the run-length encoded fine classes in each fragment
-          - the run-length encoded characters in each fragment
-          - the fragment itself
-
-        all indexed on the (zero-based) group number.
+        - the set of characters seen in that fragment
+        - the set of substrings seen in that fragment
+        - the run-length encoding of fine classes, or ``False``
+          if inconsistent across examples
+        - the run-length encoding of literal characters, or ``False``
+          if inconsistent
+        - the fragment descriptor from the VRLE
         """
         examples = self.examples
         regex = cre(self.vrle2re(vrle, tagged=True))
@@ -1166,8 +1297,13 @@ class Extractor(object):
 
     def refine_fragments(self, vrle, v_id):
         """
-        Refine the categories for variable-run-length-encoded pattern (vrle)
-        provided by narrowing the characters in each fragment.
+        Narrow the character class for each fragment in a VRLE.
+
+        For each fragment position, examines all matching examples to
+        find the most specific category that still covers every
+        character seen: a fixed literal, a single repeated character,
+        a fine alphanumeric subclass (e.g. hex digits), a specific
+        punctuation set, or the original coarse class as a fallback.
         """
         examples = self.examples
         ga = self.analyse_fragments(vrle, v_id)
@@ -1226,28 +1362,26 @@ class Extractor(object):
 
     def rle_fc_c(self, s, pattern, rlefc_in, rlec_in):
         """
-        Convert a string, matching a 'C'-(fragment) pattern, to
-            - a run-length encoded sequence of fine classes
-            - a run-length encoded sequence of characters
+        Update the accumulated run-length encodings of fine classes and
+        literal characters for the substring s matching a coarse fragment.
 
-        Given inputs:
-            ``s`` --- a string representing the actual substring of an
-                      example that matches a pattern fragment described
-                      by pattern
+        Only applies to alphanumeric (``'C'``) fragments; returns
+        ``(False, False)`` for any other coarse class, or when a
+        previous call has already found inconsistency.
 
-            ``pattern`` --- a VRLE of coarse classes
+        Args:
+            s: The substring of an example that matched this fragment.
+            pattern: The VRLE fragment descriptor (coarse class, min, max).
+            rlefc_in: Accumulated fine-class VRLE so far, ``None`` if
+                this is the first example, or ``False`` if already
+                inconsistent.
+            rlec_in: Accumulated character VRLE, with the same
+                sentinel values as ``rlefc_in``.
 
-            ``rlefc_in`` --- a VRLE of fine classes, or None, or False
-
-            ``rlec_in`` --- a VRLE of characters, or None, or False
-
-        Returns new rlefc and rlec, each of which is:
-
-            ``False``, if the string doesn't match the corresponding
-            input VRLE
-
-            a possibly expanded VRLE, if it does match, or would match
-            if expanded (by allowing more of fewer repetitions).
+        Returns:
+            A pair ``(rlefc, rlec)``, each a (possibly widened) VRLE
+            if s is consistent with prior examples, or ``False`` if s
+            breaks consistency.
         """
         if pattern[0] != COARSEST_ALPHANUMERIC_CODE or (
             rlefc_in == False and rlec_in == False
@@ -1309,10 +1443,17 @@ class Extractor(object):
 
     def fragment2re(self, fragment, tagged=False, as_re=True, output=False):
         """
-        Convert fragment to RE.
+        Convert a single VRLE fragment to a regex string.
 
-        If output is set, this is for final output, and should be in the
-        specified dialect (if any).
+        Args:
+            fragment: A tuple ``(code, min, max)`` or
+                ``(code, min, max, 'fixed')`` for a fixed literal.
+            tagged (bool): If ``True``, wrap variable fragments in
+                a capturing group.
+            as_re (bool): If ``False``, return the raw category code
+                rather than its regex equivalent.
+            output (bool): If ``True``, use the output-dialect
+                character classes rather than the internal ones.
         """
         (c, m, M) = fragment[:3]
         fixed = len(fragment) > 3
@@ -1334,10 +1475,20 @@ class Extractor(object):
 
     def vrle2re(self, vrles, tagged=False, as_re=True, output=False):
         """
-        Convert variable run-length-encoded code string to regular expression
+        Convert a VRLE pattern to a regular expression string.
 
-        If output is set, this is for final output, and should be in the
-        specified dialect (if any).
+        Concatenates the regex for each fragment, adds start/end
+        anchors, and if any examples were stripped, wraps the result
+        in optional-whitespace anchors.
+
+        Args:
+            vrles: A sequence of VRLE fragment tuples.
+            tagged (bool): If ``True``, wrap variable fragments in
+                capturing groups.
+            as_re (bool): If ``False``, return raw category codes
+                rather than their regex equivalents.
+            output (bool): If ``True``, use the output-dialect
+                character classes rather than the internal ones.
         """
         parts = [
             self.fragment2re(frag, tagged=tagged, as_re=as_re, output=output)
@@ -1434,25 +1585,41 @@ class Extractor(object):
 
     def coverage(self, dedup=False):
         """
-        Get a list of frequencies for each regular expression,
-        i.e the number of the (stripped) input strings it matches.
-        The list is in the same order as the regular expressions
-        in ``self.results.rex``.
+        Return match counts for each extracted regular expression.
 
-        If ``dedup`` is set to ``True``, shows only the number of distinct
-        (stripped) input examples matches
+        Returns a list of counts in the same order as
+        ``self.results.rex``. Each count is the number of input
+        strings matched by that pattern.
+
+        Args:
+            dedup (bool): If ``True``, count only distinct strings,
+                ignoring duplicate frequencies.
+
+        Returns:
+            A list of match counts, one per regular expression in
+            ``self.results.rex``, in the same order.
         """
         return rex_coverage(self.results.rex, self.examples, dedup)
 
     def incremental_coverage(self, dedup=False, debug=False):
         """
-        Returns an ordered dictionary of regular expressions,
-        sorted by the number of new examples they match/explain,
-        from most to fewest, with ties broken by pattern sort order.
-        The values in the results dictionary are the numbers of (new)
-        examples matched.
+        Return regular expressions sorted by incremental coverage.
 
-        If ``dedup`` is set to ``True``, frequencies are ignored.
+        Returns an ordered dictionary mapping each regular expression
+        to the number of new (previously unmatched) examples it
+        accounts for, sorted from most to fewest, with ties broken by
+        pattern sort order.
+
+        Args:
+            dedup (bool): If ``True``, ignore string frequencies when
+                counting and sorting.
+            debug (bool): If ``True``, print debugging information
+                during computation.
+
+        Returns:
+            An ``OrderedDict`` mapping each regular expression to its
+            new-match count, in decreasing order of incremental
+            coverage.
         """
         return rex_incremental_coverage(
             self.results.rex, self.examples, dedup, debug=debug
@@ -1460,31 +1627,23 @@ class Extractor(object):
 
     def full_incremental_coverage(self, dedup=False, debug=False):
         """
-        Returns an ordered dictionary of regular expressions,
-        sorted by the number of new examples they match/explain,
-        from most to fewest, with ties broken by pattern sort order.
-        The values in the results dictionary are the numbers of (new)
-        examples matched.
+        Return regular expressions sorted by incremental coverage,
+        with full per-pattern statistics.
 
-        If ``dedup`` is set to ``True``, frequencies are ignored in
-        the sort order.
+        Like ``incremental_coverage()``, but the dictionary values are
+        ``Coverage`` objects rather than plain counts, giving both
+        cumulative and incremental match statistics for each pattern.
 
-        Each result is a ``Coverage`` object with the following attributes:
+        Args:
+            dedup (bool): If ``True``, use deduplicated incremental
+                coverage as the sort key rather than raw coverage.
+            debug (bool): If ``True``, print debugging information
+                during computation.
 
-            ``n``:
-                number of examples matched including duplicates
-
-            ``n_uniq``:
-                number of examples matched, excluding duplicates
-
-            ``incr``:
-                number of previously unmatched examples matched,
-                including duplicates
-
-            ``incr_uniq``:
-                number of previously unmatched examples matched,
-                excluding duplicates
-
+        Returns:
+            An ``OrderedDict`` mapping each regular expression to a
+            ``Coverage`` object, in decreasing order of incremental
+            coverage. See ``Coverage`` for the available attributes.
         """
         return rex_full_incremental_coverage(
             self.results.rex, self.examples, sort_on_deduped=dedup, debug=debug
@@ -1492,10 +1651,15 @@ class Extractor(object):
 
     def n_examples(self, dedup=False):
         """
-        Returns the total number of examples used by rexpy.
-        If ``dedup`` is set to ``True``, this the number of different examples,
-        otherwise it is the "raw" number of examples.
-        In all cases, examples have been stripped.
+        Return the total number of examples used for extraction.
+
+        Args:
+            dedup (bool): If ``True``, return the number of distinct
+                examples; otherwise return the total count including
+                duplicates. In both cases examples are post-strip.
+
+        Returns:
+            The number of examples as an integer.
         """
         if dedup:
             return self.examples.n_uniqs
@@ -2269,15 +2433,55 @@ def extract(
     """
     Extract regular expression(s) from examples and return them.
 
-    Normally, examples should be unicode (i.e. ``str`` in Python3,
-    and ``unicode`` in Python2). However, encoded strings can be
-    passed in provided the encoding is specified.
+    Normally examples should be unicode (i.e. ``str`` in Python 3).
+    Byte strings can be passed provided ``encoding`` is specified;
+    results are always unicode strings.
 
-    Results will always be unicode.
+    Args:
+        examples: The input strings to analyse. May be a list of
+            strings, an integer-valued string-keyed dictionary (or
+            ``Counter``) where values are string frequencies, or a
+            callable conforming to the ``example_check_function``
+            protocol.
+        tag (bool): If ``True``, return tagged (capturing-group)
+            regular expressions.
+        encoding (str): Encoding to use when decoding byte-string
+            examples. ``None`` (the default) means examples are
+            already unicode.
+        as_object (bool): If ``True``, return the ``Extractor``
+            object rather than the list of regular expressions.
+            The expressions are then available as
+            ``result.results.rex``.
+        extra_letters (str): Additional characters to treat as word
+            letters when building character classes.
+        full_escape (bool): If ``True``, escape all special regex
+            characters, not just those strictly necessary.
+        remove_empties (bool): If ``True``, discard empty strings
+            from the examples before extraction.
+        strip (bool): If ``True``, strip leading and trailing
+            whitespace from each example before extraction.
+        variableLengthFrags (bool): If ``True``, allow fragments of
+            variable length within patterns.
+        max_patterns (int): Maximum number of patterns to produce.
+            ``None`` means no limit.
+        min_diff_strings_per_pattern (int): Minimum distinct strings
+            per pattern. Currently ignored.
+        min_strings_per_pattern (int): Minimum total strings
+            (counting duplicates) for a pattern to be retained.
+        size: Controls sampling. Pass a ``Size`` instance, ``None``
+            (the default) to use built-in defaults, or ``False``/``0``
+            to disable sampling.
+        seed (int): Random seed for reproducibility. ``None`` means
+            non-deterministic.
+        dialect (str): The kind of regular expression to emit.
+            One of ``'portable'`` (the default), ``'grep'``,
+            ``'java'``, ``'perl'``, or ``'posix'``.
+        verbose (int): Verbosity level. ``0`` is silent, ``1`` prints
+            progress information, ``2`` prints maximum detail.
 
-    If as_object is set, the extractor object is returned,
-    with results in .results.rex; otherwise, a list of regular
-    expressions, as unicode strings is returned.
+    Returns:
+        A list of regular expressions as unicode strings, or the
+        ``Extractor`` object if ``as_object=True``.
     """
     if encoding and not callable(examples):
         if isinstance(examples, dict):
@@ -2305,13 +2509,13 @@ def extract(
 
 def pdextract(cols, seed=None):
     """
-    Extract regular expression(s) from the Pandas column (``Series``) object
-    or list of Pandas columns given.
+    Extract regular expression(s) from one or more Pandas columns.
 
-    All columns provided should be string columns (i.e. of type object
-    or categorical) possibly including null values, which will be ignored.
+    All columns provided should be string columns (i.e. of type
+    ``object`` or ``categorical``), possibly containing null values,
+    which are ignored.
 
-    Example use::
+    Example::
 
         import numpy as np
         import pandas as pd
@@ -2326,10 +2530,17 @@ def pdextract(cols, seed=None):
 
     This should result in::
 
-        re3   = '^[a-z]{3}$'
-        re5   = '^[a-z]{3}$'
-        re345 = '^[a-z]{3}$'
+        re3   = ['^[a-z]{3}$']
+        re45  = ['^[a-z]{4,5}$']
+        re345 = ['^[a-z]{3,5}$']
 
+    Args:
+        cols: A Pandas ``Series`` or list of ``Series`` objects.
+        seed (int): Random seed for reproducibility. ``None`` (the
+            default) means non-deterministic.
+
+    Returns:
+        A list of regular expressions as unicode strings.
     """
     if type(cols) not in (list, tuple):
         cols = [cols]
@@ -2412,7 +2623,6 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
     (sorted on ``pos``; each ``pos`` really should occur at most once.)
     """
     out = []
-    print(fragFreqCounters)
     for frag, fragFreqs in fragFreqCounters.items():
         if len(fragFreqs) == 1:
             pos = fragFreqs.keys()[0]  # the only position
@@ -2480,12 +2690,12 @@ def right_parts(patterns, fixed):
 
 def length_stats(patterns):
     """
-    Given a list of patterns, returns named tuple containing
+    Return length statistics for a list of patterns.
 
-        ``all_same_length``:
-            boolean, True if all patterns are the same length
-        ``max_length``:
-            length of the longest pattern in patterns
+    Returns a named tuple with fields ``all_same_length`` (bool:
+    whether all patterns have the same number of fragments) and
+    ``max_length`` (int: the number of fragments in the longest
+    pattern).
     """
     lengths = [len(p) for p in patterns]
     L0 = lengths[0] if lengths else 0
@@ -2502,15 +2712,22 @@ def rexpy_streams(
     in_path=None, out_path=None, skip_header=False, quote=False, **kwargs
 ):
     """
-    in_path is
-        None:             to read inputs from stdin
-        path to file:     to read inputs from file at in_path
-        list of strings:  to use those strings as the inputs
+    Run extraction from a stream or file and write results to a stream or file.
 
-    out_path is:
-        None:             to write outputs to stdout
-        path to file:     to write outputs from file at out_path
-        False:            to return the strings as a list
+    Args:
+        in_path: Source of input strings. ``None`` reads from stdin;
+            a file path reads from that file; a list of strings uses
+            them directly.
+        out_path: Destination for results. ``None`` writes to stdout;
+            a file path writes to that file; ``False`` returns the
+            patterns as a list.
+        skip_header (bool): If ``True``, skip the first line of input.
+        quote (bool): If ``True``, wrap each pattern in double quotes.
+        **kwargs: Additional keyword arguments passed to ``extract()``.
+
+    Returns:
+        A list of regular expression strings if ``out_path`` is
+        ``False``, otherwise ``None``.
     """
     verbose = kwargs.get('verbose', 0)
     show_pp = show(verbose, VERBOSITY.PREPROCESSING)

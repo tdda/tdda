@@ -4,7 +4,21 @@ TDDA's API for Rexpy
 ``tdda.rexpy``
 --------------
 
+Functions
+~~~~~~~~~
+
 .. automodule:: tdda.rexpy.rexpy
-    :members:
+    :members: extract, pdextract
+
+Extractor Class
+~~~~~~~~~~~~~~~
+
+.. autoclass:: tdda.rexpy.rexpy.Extractor
+    :members: extract, coverage, incremental_coverage, full_incremental_coverage, n_examples
+
+Coverage Object
+~~~~~~~~~~~~~~~
+
+.. autoclass:: tdda.rexpy.rexpy.Coverage
 
 .. _rexpy_examples:
