@@ -54,42 +54,31 @@ def discover(
     verbose=True,
     **kwargs,
 ):
-    """
-    Automatically discover potentially useful constraints that characterize
-    the data provided in the file.
+    """Discover constraints characterizing the data provided.
 
-    Input:
-
-        *indata*:
-            Data for which constraints are to be discovered.
-            Can be a path to a suitable data file or a suitable
-            data object (such as a DataFrame).
-
-        *constraints_path*:
-            The path to which to write the constraints.
-            If None, constraints are not written.
-            If '-', constraints are sent to stdout.
-
-        *backend*:
-            Backend to use (original/o, numpy_nullable/n, or pyarrow/a).
-
-        *report_path*:
-            Path for reports. Extension is ignored.
-            Will write reports to variations of this path if set;
-            otherwuse uses constraints_path
-
-        *report_formats*:
-            List of report formats to write from:
-               html, markdown (or md), text (or txt), yaml, json, toml
-
-        *verbose*:
-            Controls level of output reporting
-
-        *kwargs*:
-            Passed to discover_df
+    Args:
+        indata: Data for which constraints are to be discovered. Can be
+            a path to a data file (CSV, parquet, or other flat file) or
+            a DataFrame (Pandas or Polars).
+        constraints_path: Path to write discovered constraints to. If
+            ``None``, constraints are not written. If ``'-'``,
+            constraints are written to stdout.
+        report_path: Path for reports (extension ignored). Writes
+            reports to variations of this path if set; otherwise uses
+            ``constraints_path``.
+        report_formats: List of report formats to write. Options:
+            ``'html'``, ``'markdown'`` (or ``'md'``), ``'text'`` (or
+            ``'txt'``), ``'yaml'``, ``'json'``, ``'toml'``.
+        engine: DataFrame engine: ``'pandas'`` or ``'polars'``.
+        backend: Pandas backend: ``'numpy_nullable'`` (or ``'n'``),
+            ``'pyarrow'`` (or ``'a'``), or ``'original'`` (or ``'o'``).
+        verbose: Controls level of output reporting. Default is
+            ``True``.
+        **kwargs: Additional keyword arguments passed to
+            ``discover_df``.
 
     Returns:
-        ``tdda.constraints.pd.constraints.PandasVerification`` object.
+        DatasetConstraints: Discovered constraints.
     """
     kind = source_kind(indata)
 
@@ -129,35 +118,24 @@ def verify(
     md_path=None,
     **kwargs,
 ):
-    """
-    Verify that (i.e. check whether) the data provided
-    satisfies the constraints in the JSON ``.tdda`` file provided.
+    """Verify that the data provided satisfies the constraints in the
+    ``.tdda`` file provided.
 
-    Inputs:
-
-        *indata*:
-             Path to a file containing data to be verified or
-             object containing data to be verified.
-
-        *constraints_path*:
-             The path to a JSON ``.tdda`` file.
-             Alternatively, can be an in-memory
-             ``tdda.constraints.base.DatasetConstraints`` object.
-
-        *verbose*:
-            Controls level of output reporting
-
-        *backend*:
-            Backend to use (original/o, numpy_nullable/n, or pyarrow/a).
-
-        *md_path*:
-            Path to metadata for indata (if any)
-
-        *kwargs*:
-            Passed to discover_df
+    Args:
+        indata: Path to a data file or a DataFrame to be verified.
+        constraints_path: Path to a JSON ``.tdda`` file, or an
+            in-memory ``DatasetConstraints`` object.
+        outdata: Optional destination for output data.
+        verbose: Controls level of output reporting. Default is
+            ``True``.
+        engine: DataFrame engine: ``'pandas'`` or ``'polars'``.
+        backend: Pandas backend: ``'numpy_nullable'`` (or ``'n'``),
+            ``'pyarrow'`` (or ``'a'``), or ``'original'`` (or ``'o'``).
+        md_path: Path to metadata for ``indata``, if any.
+        **kwargs: Additional keyword arguments passed to ``verify_df``.
 
     Returns:
-        JSON description of constraints.
+        PandasVerification: Verification results.
     """
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)
@@ -187,37 +165,22 @@ def verify(
 def detect(
     indata, constraints_path, outpath=None, engine=None, backend=None, **kwargs
 ):
-    """
-    Check the records from the Pandas DataFrame provided, to detect
-    records that fail any of the constraints in the JSON ``.tdda`` file
-    provided. This is anomaly detection.
+    """Detect records that fail any of the constraints in the ``.tdda``
+    file provided.
 
-    Inputs:
-
-        *indata*:
-             Path to data to be checked or object containining data.
-
-        *constraints_path*:
-             The path to a JSON ``.tdda`` file.
-             Alternatively, can be an in-memory
-             ``tdda.constraints.base.DatasetConstraints`` object.
-
-        *outpath*:
-            Optional destination to write output records.
-            Normally path for a CSV or parquet file.
-            None for no output.
-
-        *verbose*:
-            Controls level of output reporting
-
-        *backend*:
-            Backend to use (original/o, numpy_nullable/n, or pyarrow/a).
-
-        *kwargs*:
-            Passed to discover_df
+    Args:
+        indata: Path to a data file or a DataFrame to be checked.
+        constraints_path: Path to a JSON ``.tdda`` file, or an
+            in-memory ``DatasetConstraints`` object.
+        outpath: Optional path for output records (CSV or parquet).
+            ``None`` for no output.
+        engine: DataFrame engine: ``'pandas'`` or ``'polars'``.
+        backend: Pandas backend: ``'numpy_nullable'`` (or ``'n'``),
+            ``'pyarrow'`` (or ``'a'``), or ``'original'`` (or ``'o'``).
+        **kwargs: Additional keyword arguments passed to ``detect_df``.
 
     Returns:
-        ``tdda.constraints.pd.constraints.PandasDetection`` object.
+        PandasDetection: Detection results.
     """
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)

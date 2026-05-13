@@ -212,9 +212,19 @@ class TDDAObject(OrderedDict):
 
 
 class DatasetConstraints(object):
-    """
-    Container for constraints pertaining to a dataset.
-    Currently only supports per-field constraints.
+    """Constraints discovered for a dataset.
+
+    Returned by ``discover_df``, ``discover_db_table``, and related
+    functions. Can also be loaded from a ``.tdda`` JSON file.
+
+    Attributes:
+        fields: Per-field constraints, keyed by field name.
+        n_records: Number of records in the source dataset.
+        n_selected: Number of records selected (if filtering was applied).
+        source: Source path or description.
+
+    The key method for saving discovered constraints is ``to_json()``,
+    which serializes the constraints to a ``.tdda`` JSON string.
     """
 
     def __init__(
@@ -540,19 +550,37 @@ class Fields(TDDAObject):
 
 
 class FieldConstraints(object):
-    """
-    Container for constraints on a field.
+    """Constraints discovered for a single field.
+
+    Holds a dictionary of constraints keyed by constraint kind. The
+    constraint kinds potentially present are:
+
+    - **type**: coarse TDDA type (``'bool'``, ``'int'``, ``'real'``,
+      ``'string'``, or ``'date'``).
+    - **min**: minimum value (non-string fields).
+    - **max**: maximum value (non-string fields).
+    - **min_length**: shortest string length (string fields).
+    - **max_length**: longest string length (string fields).
+    - **sign**: sign constraint (``'positive'``, ``'non-negative'``,
+      ``'zero'``, ``'non-positive'``, ``'negative'``, or ``'null'``).
+    - **max_nulls**: maximum number of null values allowed.
+    - **no_duplicates**: ``True`` if all non-null values are distinct
+      (string fields).
+    - **allowed_values**: list of permitted values (string fields with
+      few distinct values).
+    - **rex**: list of regular expressions that values must match
+      (string fields, if rex discovery is enabled).
+
+    Attributes:
+        name: Field name.
+        constraints: ``OrderedDict`` of constraint objects keyed by kind.
+
+    Args:
+        name: Field name, or ``None`` if applying to multiple fields.
+        constraints: List of constraint objects to initialise with.
     """
 
     def __init__(self, name=None, constraints=None):
-        """
-        The name of the field can be supplied, or left as null (None).
-        Leaving it null can be appropriate if the same constraint is
-        to be used for multiple fields.
-
-        Constraints can be supplied as a list; if so, these will be copied
-        into the dictionary using the constraint kind as a key.
-        """
         self.name = name
         self.constraints = OrderedDict()
         for c in constraints or {}:
@@ -598,20 +626,24 @@ class FieldConstraints(object):
 
 
 class MultiFieldConstraints(FieldConstraints):
-    """
-    Container for constraints on a pairs (or higher numbers) of fields
+    """Constraints discovered for a group of two or more fields.
+
+    Subclass of ``FieldConstraints`` for multi-field constraints such
+    as cross-field relationships.
+
+    Attributes:
+        names: Tuple of field names.
+        constraints: ``OrderedDict`` of constraint objects keyed by kind.
+
+    Args:
+        names: Field names, or ``None``. Leaving them null can be
+            appropriate if the same constraint is to be used for
+            multiple field groups, though it will not serialize
+            particularly well.
+        constraints: List of constraint objects to initialise with.
     """
 
     def __init__(self, names=None, constraints=None):
-        """
-        The names of the fields can be supplied, or left as null (None).
-        Leaving them null can be appropriate if the same constraint is
-        to be used for multiple field groups, though will not serialize
-        terrible well.
-
-        Constraints can be supplied as a list; if so, these will be copied
-        into the dictionary using the constraint kind as a key.
-        """
         self.names = tuple(names)
         self.constraints = OrderedDict()
         for c in constraints or {}:
@@ -957,9 +989,19 @@ class TransformConstraint(Constraint):
 
 
 class Verification(object):
-    """
-    Container for the result of a constraint verification for a dataset
-    in the context of a given set of constraints.
+    """Result of verifying a dataset against a set of constraints.
+
+    Returned by ``verify_df``, ``verify_db_table``, and related functions.
+    Also used to represent detection results when anomaly detection is
+    performed.
+
+    Attributes:
+        passes: Number of constraints that passed.
+        failures: Number of constraints that failed.
+        fields: Per-field verification results, keyed by field name.
+        n_source_records: Number of records in the source dataset.
+        report: Which fields to include in string output: ``'all'``
+            or ``'fields'`` (only fields with failures).
     """
 
     def __init__(
@@ -1442,15 +1484,11 @@ class Detection(object):
 
     def __init__(self, obj, n_passing_records, n_failing_records):
         """
-        *obj*:
-                            Object containing information about the detection,
-                            of a type specific to the data source.
-
-        *n_passing_records:
-                            Number of passing records.
-
-        *n_failing_records:
-                            Number of failing records.
+        Args:
+            obj: Object containing information about the detection,
+                of a type specific to the data source.
+            n_passing_records: Number of passing records.
+            n_failing_records: Number of failing records.
         """
         self.obj = obj
         self.n_passing_records = n_passing_records

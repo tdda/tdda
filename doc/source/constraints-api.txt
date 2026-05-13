@@ -1,37 +1,39 @@
 TDDA's Constraints API
 ======================
 
-``tdda.constraints``
---------------------
+Basic API for Pandas DataFrames
+-------------------------------
 
-.. automodule:: tdda.constraints
-    :members: discover_df, verify_df, detect_df
-    :noindex:
+.. automodule:: tdda.constraints.api
+    :members: discover, verify, detect
 
-.. automodule:: tdda.constraints.pd.constraints
-    :members: PandasConstraintCalculator, PandasConstraintDetector, PandasConstraintVerifier, PandasConstraintDiscoverer, PandasVerification, PandasDetection
-
-.. automodule:: tdda.constraints
-    :members: discover_db_table, verify_db_table, detect_db_table
+Basic API for Database Tables
+-----------------------------
 
 .. automodule:: tdda.constraints.db.constraints
-    :members: DatabaseConstraintCalculator, DatabaseConstraintVerifier, DatabaseVerification, DatabaseConstraintDiscoverer
+    :members: discover_db_table, verify_db_table, detect_db_table
+
+Basic Constraints Objects
+-------------------------
+
+.. automodule:: tdda.constraints.base
+    :members: Verification, DatasetConstraints, FieldConstraints, MultiFieldConstraints
+
+Pandas Constraints Objects
+--------------------------
+
+.. automodule:: tdda.constraints.pd.constraints
+    :members: PandasVerification, PandasDetection
+
+Database Constraints Objects
+----------------------------
+
+.. automodule:: tdda.constraints.db.constraints
+    :members: DatabaseVerification
+    :no-index:
 
 Extension Framework
 -------------------
 
 .. automodule:: tdda.constraints.extension
-    :members:
-
-Constraints API
----------------
-
-.. automodule:: tdda.constraints.baseconstraints
-    :members:
-
-Underlying API Classes
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: tdda.constraints.base
-    :members: DatasetConstraints, FieldConstraints, MultiFieldConstraints, Constraint, MinConstraint, MaxConstraint, SignConstraint, TypeConstraint, MaxNullsConstraint, NoDuplicatesConstraint, AllowedValuesConstraint, MinLengthConstraint, MaxLengthConstraint, LtConstraint, LteConstraint, EqConstraint, GtConstraint, GteConstraint, RexConstraint, Verification
-
+    :members: ExtensionBase

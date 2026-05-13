@@ -113,78 +113,67 @@ import sys
 
 
 class ExtensionBase:
-    """
-    An extension must provide a class that is based on the
-    ``ExtensionBase`` class, providing implementations for its
-    ``applicable``, ``help``, ``discover`` and ``verify`` methods.
+    """Base class for tdda command-line extensions.
+
+    Subclass this to add support for new data sources to the ``tdda``
+    command. The subclass must implement ``applicable()``, and should
+    implement ``discover()``, ``verify()``, and ``detect()``.
+
+    Args:
+        argv: List of command-line argument strings (e.g. ``sys.argv``).
+        verbose: If ``True``, enable verbose output. Default is
+            ``False``.
     """
 
     def __init__(self, argv, verbose=False):
-        """
-        A subclass of ``ExtensionBase`` should call its superclass
-        ``__init__`` initialisation method with a list of argument
-        strings (such as ``sys.path``).
-        """
         self.argv = argv
         self.verbose = verbose
 
     def applicable(self):
-        """
-        Should return ``True`` if the ``argv`` property contains
-        command-line parameters that can be used by this implementation.
+        """Return ``True`` if this extension can handle the given arguments.
 
-        For example, if the extension can handle data stored in Excel
-        ``.xlsx`` files, then ``applicable`` should return ``True`` if
-        any of its parameters are filenames that have a ``.xlsx`` suffix.
+        For example, an extension for Excel files should return ``True``
+        if any of the ``argv`` strings have a ``.xlsx`` suffix.
         """
         return False
 
     def help(self, stream=sys.stdout):
-        """
-        Should document the extension by writing lines to the given
-        output stream. Used by the ``tdda`` command's ``help`` option.
+        """Write help text for this extension to ``stream``.
+
+        Args:
+            stream: Output stream. Default is ``sys.stdout``.
         """
         pass
 
     def spec(self):
-        """
-        Should return a short one-line string describing, briefly,
-        how to specify the input source.
+        """Return a brief one-line string describing how to specify the
+        input source.
         """
         return ''
 
     def discover(self):
-        """
-        Should implement constraint discovery.
+        """Implement constraint discovery.
 
-        Use ``self.argv`` to get whatever optional or mandatory flags or
-        parameters are required to specify the data from which constraints
-        are to be discovered, and the name of the file to which the
-        constraints are to be written.
+        Use ``self.argv`` to obtain the data source and output path for
+        the discovered constraints.
         """
         pass
 
     def verify(self):
-        """
-        Should implement constraint verification.
+        """Implement constraint verification.
 
-        Read constraints from a ``.tdda`` file specified on the command
-        line and verify them on the specified data. Use ``self.argv`` to
-        get whatever optional or mandatory flags or parameters are required
-        to specify the data on which constraints are to be verified.
+        Read constraints from a ``.tdda`` file specified in ``self.argv``
+        and verify them against the specified data.
         """
         pass
 
     def detect(self):
-        """
-        Should implement constraint detection.
+        """Implement constraint detection.
 
-        Read constraints from a ``.tdda`` file specified on the command
-        line, verify them on the specified data, and produce detection
-        output. Use ``self.argv`` to get whatever optional or mandatory
-        flags or parameters are required to specify the data, where the
-        output detection data should be written, and detection-specific
-        flags.
+        Read constraints from a ``.tdda`` file specified in ``self.argv``,
+        verify them against the specified data, and write detection output.
+        Use ``self.argv`` to get the data source, where the detection
+        output should be written, and any detection-specific flags.
         """
         pass
 

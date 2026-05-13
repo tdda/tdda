@@ -3,7 +3,49 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
+/*
+Colours:
+*/
+
+:root {
+
+    --link-colour: #c60f0f;
+
+    --dark-red: #600000;
+    --darker-red: #400000;
+    --very-light-pink: #FFF4F4;
+    --very-dark-grey: #222;
+
+    --class-overline-colour:   var(--dark-red);
+    --class-background-colour: var(--very-light-pink);
+    --class-parameter-colour:  var(--dark-red);
+
+/*  GREENS
+    --parameters-header-colour:      #193f1f;
+    --parameters-background-colour:  #edf3ef;
+    --parameters-overline-colour:    #1a5e30;
+*/
+
+
+/*  PURPLES */
+
+    --parameters-header-colour:      #19001f;
+    --parameters-background-colour:  #f3eff3;
+    --parameters-overline-colour:    #301030;
+
+/*    --note-background-colour:        #1a4028 */
+    --note-background-colour:        #400000;
+
+    --key-border-colour: var(--dark-red);
+    --key-background-color: var(--very-light-pink);
+    --key-text-colour: var(--very-dark-grey);
+
+}
+
+
+
 @import url("basic.css");
+
 
 /* -- page layout ----------------------------------------------------------- */
 
@@ -201,7 +243,7 @@ div.body h5 { font-size: 110%; }
 div.body h6 { font-size: 100%; }
 
 a.headerlink {
-    color: #c60f0f;
+    color: var(--link-colour);
     font-size: 0.8em;
     padding: 0 4px 0 4px;
     text-decoration: none;
@@ -334,15 +376,23 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 
 /* API Code headers */
 html.writer-html4 .rst-content dl:not(.docutils)>dt,html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple)>dt{
-    background:#edf3ef;
-    color:#193f1f;
-    border-top:3px solid #1a5e30;
+    background: var(parameters-overline-colour);
+    color: var(parameters-header-colour);
+    border-top:3px solid var(parameters-overline-colour);
+}
+
+html.writer-html4 .rst-content dl:not(.docutils) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt, html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
+    margin-bottom: 6px;
+    border: none;
+    border-left: 3px solid var(--key-border-colour);
+    background: var(--key-background-color);
+    color: var(--key-text-colour);
 }
 
 .rst-content dl:not(.docutils) dt {
-    background:#edf3ef;
-    color:#193f1f;
-    border-top:3px solid #1a5e30;
+    background: var(--parameters-background-colour);
+    color: var(--parameters-header-colour);
+    border-top:3px solid var(--parameters-overline-colour);
 }
 
 span.pre{
@@ -376,12 +426,12 @@ span.pre{
 }
 
 .rst-content .note .admonition-title,.rst-content .note .wy-alert-title,.rst-content .seealso .admonition-title,.rst-content .seealso .wy-alert-title,.rst-content .wy-alert-info.admonition-todo .admonition-title,.rst-content .wy-alert-info.admonition-todo .wy-alert-title,.rst-content .wy-alert-info.admonition .admonition-title,.rst-content .wy-alert-info.admonition .wy-alert-title,.rst-content .wy-alert-info.attention .admonition-title,.rst-content .wy-alert-info.attention .wy-alert-title,.rst-content .wy-alert-info.caution .admonition-title,.rst-content .wy-alert-info.caution .wy-alert-title,.rst-content .wy-alert-info.danger .admonition-title,.rst-content .wy-alert-info.danger .wy-alert-title,.rst-content .wy-alert-info.error .admonition-title,.rst-content .wy-alert-info.error .wy-alert-title,.rst-content .wy-alert-info.hint .admonition-title,.rst-content .wy-alert-info.hint .wy-alert-title,.rst-content .wy-alert-info.important .admonition-title,.rst-content .wy-alert-info.important .wy-alert-title,.rst-content .wy-alert-info.tip .admonition-title,.rst-content .wy-alert-info.tip .wy-alert-title,.rst-content .wy-alert-info.warning .admonition-title,.rst-content .wy-alert-info.warning .wy-alert-title,.rst-content .wy-alert.wy-alert-info .admonition-title,.wy-alert.wy-alert-info .rst-content .admonition-title,.wy-alert.wy-alert-info .wy-alert-title{
-    background:#1a4028;
+    background: var(--note-background-colour);
 }
 
-/* Field list spacing: separate Raises/Returns from Parameters */
-dl.field-list dt.field-even,
-dl.field-list dd.field-even {
+/* Field list spacing: add breathing room between each field entry */
+dl.field-list dd + dt,
+dl.field-list dd + dt + dd {
     margin-top: 0.5em;
 }
 
@@ -396,4 +446,19 @@ dl.field-list dd.field-even {
 
 .wy-side-nav-search .wy-dropdown > a:hover, .wy-side-nav-search > a:hover {
     background: #272525;
+}
+
+
+/* Code classes */
+
+html.writer-html4 .rst-content dl:not(.docutils) > dt, html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) > dt {
+    display: table;
+    margin: 6px 0;
+    font-size: 90%;
+    line-height: normal;
+    background: var(--very-light-pink);
+    color: var(--dark-red);
+    border-top: 3px solid var(--dark-red);
+    padding: 6px;
+    position:relative
 }
