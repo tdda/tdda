@@ -442,7 +442,7 @@ class TestUtilityFunctions(ReferenceTestCase):
         ]
         parts = [part1, part2]
         expected = '\n'.join(['|1 2|3|', ' a b /', ' c   /'])
-        self.assertEqual(x.aligned_parts(parts), expected)
+        self.assertEqual(x._aligned_parts(parts), expected)
 
     def test_aligned_parts2(self):
         x = Extractor([])
@@ -464,7 +464,7 @@ class TestUtilityFunctions(ReferenceTestCase):
         ]
         parts = [part1, part2, part3, part4]
         expected = '\n'.join(['|1 2|3|4|5|', ' a b   . !', ' c   /   !'])
-        self.assertEqual(x.aligned_parts(parts), expected)
+        self.assertEqual(x._aligned_parts(parts), expected)
 
     def testIDCounter(self):
         c = IDCounter()
@@ -500,57 +500,57 @@ class TestHelperMethods(ReferenceTestCase):
     def test_coarse_character_classification(self):
         x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for c in ' \t\r\n\f\v':
-            self.assertEqual(x.coarse_classify_char(c), ' ')
+            self.assertEqual(x._coarse_classify_char(c), ' ')
         for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + ':;<=>?@[]^_`{|}~':
-            self.assertEqual(x.coarse_classify_char(c), '.')
+            self.assertEqual(x._coarse_classify_char(c), '.')
         for i in range(0, 0x1C):  # 1C to 1F are considered whitespace
             # in unicode
             c = chr(i)
             if not c in '\t\r\n\f\v':
-                self.assertEqual(x.coarse_classify_char(c), '*')
+                self.assertEqual(x._coarse_classify_char(c), '*')
 
     def test_coarse_string_classification(self):
         x = self.x
         for i in range(ord('A'), ord('Z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for i in range(ord('a'), ord('z') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for i in range(ord('0'), ord('9') + 1):
-            self.assertEqual(x.coarse_classify_char(chr(i)), C)
+            self.assertEqual(x._coarse_classify_char(chr(i)), C)
         for c in ' \t\r\n\f\v':
-            self.assertEqual(x.coarse_classify_char(c), ' ')
+            self.assertEqual(x._coarse_classify_char(c), ' ')
         for c in ' \t\r\n\f\v':
-            self.assertEqual(x.coarse_classify_char(c), ' ')
+            self.assertEqual(x._coarse_classify_char(c), ' ')
         for c in '!"#$%&' + "'" + '()*+,-.' + '\\' + r':;<=>?@[\]^_`{|}~':
-            self.assertEqual(x.coarse_classify_char(c), '.')
+            self.assertEqual(x._coarse_classify_char(c), '.')
         for i in range(0, 0x1C):  # 1C to 1F are considered whitespace
             # in unicode
             c = chr(i)
             if not c in '\t\r\n\f\v':
-                self.assertEqual(x.coarse_classify_char(c), '*')
-        self.assertEqual(x.coarse_classify_char(chr(127)), '*')
+                self.assertEqual(x._coarse_classify_char(c), '*')
+        self.assertEqual(x._coarse_classify_char(chr(127)), '*')
 
     def test_coarse_classification(self):
         x = self.x
-        self.assertEqual(x.coarse_classify('255-SI-32'), CtoUC('CCC.CC.CC'))
+        self.assertEqual(x._coarse_classify('255-SI-32'), CtoUC('CCC.CC.CC'))
         guid = '1f65c9e8-cf9a-4e53-b7d0-c48a26a21b7c'
         sig = CtoUC('CCCCCCCC.CCCC.CCCC.CCCC.CCCCCCCCCCCC')
-        self.assertEqual(x.coarse_classify(guid), sig)
+        self.assertEqual(x._coarse_classify(guid), sig)
         self.assertEqual(
-            x.coarse_classify('(0131) 123 4567'), CtoUC('.CCCC. CCC CCCC')
+            x._coarse_classify('(0131) 123 4567'), CtoUC('.CCCC. CCC CCCC')
         )
         self.assertEqual(
-            x.coarse_classify('2016-01-02T10:11:12 +0300z'),
+            x._coarse_classify('2016-01-02T10:11:12 +0300z'),
             CtoUC('CCCC.CC.CCCCC.CC.CC .CCCCC'),
         )
         self.assertEqual(
-            x.coarse_classify('2016-01-02T10:11:12\a+0300z'),
+            x._coarse_classify('2016-01-02T10:11:12\a+0300z'),
             CtoUC('CCCC.CC.CCCCC.CC.CC*.CCCCC'),
         )
 
@@ -691,7 +691,7 @@ class TestHelperMethods(ReferenceTestCase):
         rle = (('C', 3), ('.', 1), ('C', 2), ('.', 1), ('C', 3))
         an = Cats.AlphaNumeric.re_string
         punc = Cats.Punctuation.re_string
-        rex = self.x.rle2re(rle)
+        rex = self.x._rle2re(rle)
         self.assertEqual(
             rex, '^%s{3}%s%s{2}%s%s{3}$' % (an, punc, an, punc, an)
         )
@@ -733,17 +733,17 @@ class TestHelperMethods(ReferenceTestCase):
         punc = Cats.Punctuation.re_string
         expected = '^%s{2,3}%s%s{2}%s%s{3,4}$' % (an, punc, an, punc, an)
         x = Extractor([])
-        self.assertEqual(x.vrle2re(rrle), expected)
+        self.assertEqual(x._vrle2re(rrle), expected)
 
     def test_sort_by_len(self):
         # Really designed for sorting lists/tuples, but everything with
         # a length will behave the same
         x = Extractor(['a'])
-        self.assertEqual(x.sort_by_length([]), [])
-        self.assertEqual(x.sort_by_length(['a']), ['a'])
-        self.assertEqual(x.sort_by_length(['a', 'ab']), ['a', 'ab'])
+        self.assertEqual(x._sort_by_length([]), [])
+        self.assertEqual(x._sort_by_length(['a']), ['a'])
+        self.assertEqual(x._sort_by_length(['a', 'ab']), ['a', 'ab'])
         self.assertIn(
-            x.sort_by_length(['abcdef', '', 'aa', 'bb', 'ccc', 'zzyy', '1']),
+            x._sort_by_length(['abcdef', '', 'aa', 'bb', 'ccc', 'zzyy', '1']),
             (
                 ['', '1', 'aa', 'bb', 'ccc', 'zzyy', 'abcdef'],
                 ['', '1', 'bb', 'aa', 'ccc', 'zzyy', 'abcdef'],
@@ -770,7 +770,7 @@ class TestHelperMethods(ReferenceTestCase):
             ('/', 1, 1, 'fixed'),
         ]
         patterns = [http, https]
-        results = x.merge_fixed_omnipresent_at_pos(patterns)
+        results = x._merge_fixed_omnipresent_at_pos(patterns)
         expected = [
             [[('http', 1, 1, 'fixed')], [('https', 1, 1, 'fixed')]],
             [

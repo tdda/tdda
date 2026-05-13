@@ -598,7 +598,7 @@ class Extractor(object):
         verbose=DEFAULT_VERBOSITY,
     ):
         """Initialize and, unless extract=False, run extraction."""
-        self.verbose = self.set_verbosity(verbose)
+        self.verbose = self._set_verbosity(verbose)
         self.size = size or Size(use_sampling=False if size == 0 else None)
         if self.size.use_sampling:
             self.by_length = Tree()  # Also store examples by length
@@ -610,27 +610,27 @@ class Extractor(object):
         self.variableLengthFrags = variableLengthFrags
         self.specialize = specialize
         self.tag = tag  # Returned tagged (grouped) RE
-        # self.examples = self.clean(examples)  !!!
+        # self.examples = self._clean(examples)  !!!
         if callable(examples):
             self.check_fn = examples
         else:
-            self.check_fn = self.check_for_failures
-            self.all_examples = self.clean(examples)
+            self.check_fn = self._check_for_failures
+            self.all_examples = self._clean(examples)
         strings, _ = self.check_fn([], self.size.do_all)
-        self.examples = self.clean(strings)
+        self.examples = self._clean(strings)
 
         self.results = None
         self.warnings = []
         self.n_too_many_groups = 0
         self.Cats = Categories(
-            self.thin_extras(extra_letters), full_escape=full_escape
+            self._thin_extras(extra_letters), full_escape=full_escape
         )  # no dialect
         if dialect == 'perl':
             dialect = None
         self.dialect = dialect
         if dialect is not None:
             self.OutCats = Categories(
-                self.thin_extras(extra_letters),
+                self._thin_extras(extra_letters),
                 full_escape=full_escape,
                 dialect=dialect,
             )  # output dialect
@@ -644,7 +644,7 @@ class Extractor(object):
         if extract:
             self.extract()  # Stores results
 
-    def set_verbosity(self, verbosity):
+    def _set_verbosity(self, verbosity):
         if type(verbosity) != int:
             verbosity = int(bool(verbosity))
         if verbosity == 2:  # old max
@@ -671,26 +671,26 @@ class Extractor(object):
 
             attempt = 1
             failures = []
-            self.show_inputs()
+            self._show_inputs()
             while attempt <= size.max_sampled_attempts + 1:
-                if self.show(VERBOSITY.PASSES):
+                if self._show(VERBOSITY.PASSES):
                     strings = self.examples.strings
                     print(
                         '\n*** Pass %d (%s strings)' % (attempt, len(strings))
                     )
-                    if self.show(VERBOSITY.DETAIL):
+                    if self._show(VERBOSITY.DETAIL):
                         print(
                             'Examples: %s ... %s' % (strings[:5], strings[-5:])
                         )
-                self.results = self.batch_extract()
+                self.results = self._batch_extract()
                 maxN = (
                     None
                     if attempt > size.max_sampled_attempts
                     else size.do_all_exceptions
                 )
                 failex, re_freqs = self.check_fn(self.results.rex, maxN)
-                failex = self.clean(failex)
-                if self.show(VERBOSITY.PASSES):
+                failex = self._clean(failex)
+                if self._show(VERBOSITY.PASSES):
                     print('%s REs:' % len(self.results.rex))
                     for r in self.results.rex:
                         print('    %s' % r)
@@ -704,12 +704,12 @@ class Extractor(object):
                     len(failex.strings) <= size.do_all_exceptions
                     or attempt > size.max_sampled_attempts
                 ):
-                    if self.show(VERBOSITY.PASSES):
+                    if self._show(VERBOSITY.PASSES):
                         print('\n\n\n*** Now doing all failures...')
                     self.examples.strings.extend(failex.strings)
                     self.examples.freqs.extend(failex.freqs)
                     self.examples.update()
-                    if self.show(VERBOSITY.PASSES):
+                    if self._show(VERBOSITY.PASSES):
                         print(
                             '\n\n\n*** Total strings = %s'
                             % len(failex.strings)
@@ -725,13 +725,13 @@ class Extractor(object):
                     self.examples.update()
                 attempt += 1
 
-            self.add_warnings()
-            self.results.remove(self.find_bad_patterns(re_freqs))
-            self.convert_rex_to_dialect()
+            self._add_warnings()
+            self.results.remove(self._find_bad_patterns(re_freqs))
+            self._convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
 
-    def show(self, verbosity):
+    def _show(self, verbosity):
         """
         Returns whether to show something at the verbosity level provided.
         Usually verbosity is a value from (or a combined value from)
@@ -739,22 +739,22 @@ class Extractor(object):
         """
         return self.verbose & verbosity
 
-    def show_inputs(self):
-        if self.show(VERBOSITY.INPUTS):
+    def _show_inputs(self):
+        if self._show(VERBOSITY.INPUTS):
             print('INPUTS:')
             for s in self.examples.strings:
                 print(s)
             print()
 
-    def check_for_failures(self, rexes, maxExamples):
+    def _check_for_failures(self, rexes, maxExamples):
         """
         This method is the default check_fn
         (See the definition of example_check_function below.)
         """
-        failures, freqs, re_freqs = self.sample_non_matches(rexes, maxExamples)
+        failures, freqs, re_freqs = self._sample_non_matches(rexes, maxExamples)
         return Examples(failures, freqs), re_freqs
 
-    def find_bad_patterns(self, freqs):
+    def _find_bad_patterns(self, freqs):
         """
         Given freqs, a list of frequencies (for the corresponding indexed RE)
         identify indexes to patterns that:
@@ -780,7 +780,7 @@ class Extractor(object):
             )
         return deletions
 
-    def add_warnings(self):
+    def _add_warnings(self):
         if self.n_too_many_groups:
             self.warnings.append(
                 '%d string%s assigned to .{m,n} for needing '
@@ -791,7 +791,7 @@ class Extractor(object):
                 )
             )
 
-    def thin_extras(self, extra_letters):
+    def _thin_extras(self, extra_letters):
         if not extra_letters or len(extra_letters) == 1:
             return extra_letters
         keep = []
@@ -800,7 +800,7 @@ class Extractor(object):
                 keep.append(L)
         return ''.join(keep) if keep else None
 
-    def clean(self, examples):
+    def _clean(self, examples):
         """
         Normalize examples into an ``Examples`` object.
 
@@ -833,14 +833,14 @@ class Extractor(object):
                     if len(stripped) != len(s):
                         self.n_stripped += n
 
-        if self.show(VERBOSITY.INPUTS):
+        if self._show(VERBOSITY.INPUTS):
             print('Examples:')
             pprint([(k, v) for (k, v) in counter.items()])
             print()
 
         return Examples(list(counter.keys()), ilist(counter.values()))
 
-    def batch_extract(self):
+    def _batch_extract(self):
         """
         Run a single extraction pass over the current working examples.
 
@@ -861,8 +861,8 @@ class Extractor(object):
         examples = self.examples.strings
         freqs = self.examples.freqs
         # First, run-length encode each (distinct) example
-        rles = [self.run_length_encode_coarse_classes(s) for s in examples]
-        self.poss_show_items(VERBOSITY.RLE, rles, 'RLEs')
+        rles = [self._run_length_encode_coarse_classes(s) for s in examples]
+        self._poss_show_items(VERBOSITY.RLE, rles, 'RLEs')
         rle_freqs = IDCounter()
         example2r_id = ilist([1]) * len(examples)  # same length as rles
         r_id2v_id = {}
@@ -887,7 +887,7 @@ class Extractor(object):
             # initially added
             # Note, these totals include repeats.
 
-        self.poss_show_items(VERBOSITY.VRLE, vrles, 'VRLEs')
+        self._poss_show_items(VERBOSITY.VRLE, vrles, 'VRLEs')
 
         # For each example, record the id of the VRLE to which it belongs
         # and stash that away inside the Examples object.
@@ -897,22 +897,22 @@ class Extractor(object):
 
         # Refine the fragments in the VRLEs
         for vrle in vrles:
-            grouped = self.refine_fragments(vrle, vrle_freqs.ids[vrle])
+            grouped = self._refine_fragments(vrle, vrle_freqs.ids[vrle])
             refined.append(grouped)
 
         self.examples.vrle_freqs = vrle_freqs
 
-        merged = self.merge_patterns(refined)
-        self.poss_show_items(VERBOSITY.MERGED, merged, 'Merged VRLEs')
+        merged = self._merge_patterns(refined)
+        self._poss_show_items(VERBOSITY.MERGED, merged, 'Merged VRLEs')
         if self.specialize:
-            merged = self.specialize_patterns(merged)
-            self.poss_show_items(
+            merged = self._specialize(merged)
+            self._poss_show_items(
                 VERBOSITY.SPECIALIZED, merged, 'Specializsed, merged VRLEs'
             )
-        mergedrex = [self.vrle2re(m, tagged=self.tag) for m in merged]
-        self.poss_show_items(VERBOSITY.MERGED_REX, mergedrex, 'Merged Rexes')
-        mergedfrags = [self.vrle2refrags(m) for m in merged]
-        self.poss_show_items(
+        mergedrex = [self._vrle2re(m, tagged=self.tag) for m in merged]
+        self._poss_show_items(VERBOSITY.MERGED_REX, mergedrex, 'Merged Rexes')
+        mergedfrags = [self._vrle2refrags(m) for m in merged]
+        self._poss_show_items(
             VERBOSITY.MERGED_FRAGS, mergedfrags, 'Merged Frags'
         )
         return ResultsSummary(
@@ -926,30 +926,30 @@ class Extractor(object):
             extractor=self,
         )
 
-    def poss_show_items(self, mask, items, header):
-        if self.show(mask):
+    def _poss_show_items(self, mask, items, header):
+        if self._show(mask):
             print(f'{header}:')
             for items in items:
                 print(items)
             print()
 
-    def convert_rex_to_dialect(self):
+    def _convert_rex_to_dialect(self):
         self.results.convert_to_dialect(self)
 
-    def specialize(self, patterns):
+    def _specialize(self, patterns):
         """
         Check all the catpure groups in each patterns and simplify any
         that are sufficiently low frequency.
         """
         return patterns
 
-    def coarse_classify(self, s):
+    def _coarse_classify(self, s):
         """
         Classify each character in a string into one of the coarse categories
         """
-        return ''.join(self.coarse_classify_char(c) for c in s)
+        return ''.join(self._coarse_classify_char(c) for c in s)
 
-    def coarse_classify_char(self, c):
+    def _coarse_classify_char(self, c):
         """
         Classify character into one of the coarse categories
         """
@@ -960,7 +960,7 @@ class Extractor(object):
         assert re.match(Cats.Other.re_single, c)
         return Cats.Other.code
 
-    def run_length_encode_coarse_classes(self, s):
+    def _run_length_encode_coarse_classes(self, s):
         """
         Return the run-length encoding of the coarse classification of s.
 
@@ -968,14 +968,14 @@ class Extractor(object):
         would produce an unwieldy regex — the whole string is treated
         as a single catch-all fragment instead.
         """
-        rle = run_length_encode(self.coarse_classify(s))
+        rle = run_length_encode(self._coarse_classify(s))
         if len(rle) <= MAX_GROUPS:
             return rle
         else:
             self.n_too_many_groups += 1
             return run_length_encode(CODE.ANY * len(s))
 
-    def merge_patterns(self, patterns):
+    def _merge_patterns(self, patterns):
         """
         Merge refined VRLE patterns by aligning on shared fixed anchors.
 
@@ -984,37 +984,37 @@ class Extractor(object):
         """
         if len(patterns) == 1:
             return patterns
-        patterns = self.sort_by_length(patterns)
+        patterns = self._sort_by_length(patterns)
         level = 0
         parts = [patterns]  # Start off with each whole pattern
         # as a single part
         n_parts = len(parts)
         DO_ALIGNMENT = True
         while level < N_ALIGNMENT_LEVELS and DO_ALIGNMENT:
-            parts = self.alignment_step(parts, level)
+            parts = self._alignment_step(parts, level)
             if len(parts) == n_parts:  # no change this time; next level
                 level += 1
             else:
                 n_parts = len(parts)
-        patterns = self.join_parts(parts)
+        patterns = self._join_parts(parts)
         return patterns
 
-    def alignment_step(self, parts, level):
+    def _alignment_step(self, parts, level):
         new_parts = []
         n_parts = len(parts)
         for part in parts:
             if level == 0:
-                new_parts.extend(self.merge_fixed_omnipresent_at_pos(part))
+                new_parts.extend(self._merge_fixed_omnipresent_at_pos(part))
             elif level == 1:
-                new_parts.extend(self.merge_fixed_only_present_at_pos(part))
+                new_parts.extend(self._merge_fixed_only_present_at_pos(part))
             else:
                 raise ValueError('Level out of range (%d)' % level)
-        if self.show(VERBOSITY.ALIGNED):
+        if self._show(VERBOSITY.ALIGNED):
             print('\nOUT:')
-            print(self.aligned_parts(new_parts))
+            print(self._aligned_parts(new_parts))
         return new_parts
 
-    def merge_fixed_omnipresent_at_pos(self, patterns):
+    def _merge_fixed_omnipresent_at_pos(self, patterns):
         """
         Split patterns at fixed fragments that appear at the same
         position in every pattern.
@@ -1070,12 +1070,12 @@ class Extractor(object):
             return right_parts(patterns, rightFixed)
         return [patterns]
 
-    def merge_fixed_only_present_at_pos(self, patterns):
+    def _merge_fixed_only_present_at_pos(self, patterns):
         """
         Split patterns at fixed fragments that always appear at the
         same position when present, but need not appear in every pattern.
 
-        Like ``merge_fixed_omnipresent_at_pos``, but the anchor need
+        Like ``_merge_fixed_omnipresent_at_pos``, but the anchor need
         not be universal — it just must never appear at more than one
         position across the patterns. Checks both left and
         right-relative positions.
@@ -1117,7 +1117,7 @@ class Extractor(object):
             return right_parts(patterns, rightFixed)
         return [patterns]
 
-    def join_parts(self, parts):
+    def _join_parts(self, parts):
         if not parts:
             return []
         out = [[] for i in range(len(parts[0]))]
@@ -1127,7 +1127,7 @@ class Extractor(object):
                     out[i].extend(row)
         return out
 
-    def sort_by_length(self, patterns):
+    def _sort_by_length(self, patterns):
         if patterns:
             M = max(len(p) for p in patterns if p is not None) + 1
             f = lambda p: len(p) if p is not None else M
@@ -1135,33 +1135,33 @@ class Extractor(object):
         else:
             return []
 
-    def pad(self, p, q):
+    def _pad(self, p, q):
         if self.verbose:
-            print(self.vrle2re(self.despecify(p), True))
-            print(self.vrle2re(self.despecify(q), True))
+            print(self._vrle2re(self._despecify(p), True))
+            print(self._vrle2re(self._despecify(q), True))
             print()
         return p  # padded
 
-    def despecify(self, pattern):
-        return list(self.despecify_frag(frag) for frag in pattern)
+    def _despecify(self, pattern):
+        return list(self._despecify_frag(frag) for frag in pattern)
 
-    def despecify_frag(self, frag):
+    def _despecify_frag(self, frag):
         r, m, M = frag[:3]
         if m == M == 1:
             return frag
         else:
             return (r, 1, None) if len(frag) == 3 else (r, 1, None, 'fixed')
 
-    def similarity(self, p, q):
+    def _similarity(self, p, q):
         return 1
 
-    def sample(self, n):
+    def _sample(self, n):
         """
         Sample self.all_examples for potentially faster induction.
         """
-        return self.sample_examples(self.all_examples, n)
+        return self._sample_examples(self.all_examples, n)
 
-    def sample_examples(self, examples, n):
+    def _sample_examples(self, examples, n):
         """
         Sample examples provided for potentially faster induction.
         """
@@ -1172,12 +1172,12 @@ class Extractor(object):
             [examples.freqs[i] for i in sample_indices],
         )
 
-    def sample_non_matches(self, rexes, maxN=None):
+    def _sample_non_matches(self, rexes, maxN=None):
         """
-        Like ``find_non_matches``, but caps the failures returned at
+        Like ``_find_non_matches``, but caps the failures returned at
         ``maxN``, sampling randomly if there are more.
         """
-        failures, freqs, re_freqs = self.find_non_matches(rexes)
+        failures, freqs, re_freqs = self._find_non_matches(rexes)
         if maxN is not None:
             if len(failures) > maxN:
                 z = list(zip(failures, freqs))
@@ -1190,7 +1190,7 @@ class Extractor(object):
                 freqs = [s[1] for s in sampled]
         return failures, freqs, re_freqs
 
-    def find_non_matches(self, rexes):
+    def _find_non_matches(self, rexes):
         """
         Return all examples not matched by any regex in rexes.
 
@@ -1225,7 +1225,7 @@ class Extractor(object):
         out_freqs = [freqs[i] for i in indices]
         return failures, out_freqs, re_freqs
 
-    def pattern_matches(self):
+    def _pattern_matches(self):
         compiled = [cre(r) for r in self.results.rex]
         results = OrderedDict()
         for x in self.examples.strings:
@@ -1242,7 +1242,7 @@ class Extractor(object):
                 print('Example "%s" did not match any pattern' % x)
         return results
 
-    def analyse_fragments(self, vrle, v_id):
+    def _analyse_fragments(self, vrle, v_id):
         """
         Collect per-fragment character data across all examples matching vrle.
 
@@ -1258,7 +1258,7 @@ class Extractor(object):
         - the fragment descriptor from the VRLE
         """
         examples = self.examples
-        regex = cre(self.vrle2re(vrle, tagged=True))
+        regex = cre(self._vrle2re(vrle, tagged=True))
         n_frags = len(vrle)
         frag_chars = [set([]) for i in range(n_frags)]
         frag_strings = [set([]) for i in range(n_frags)]
@@ -1287,7 +1287,7 @@ class Extractor(object):
                         frag_strings[i].add(g)
                         n_strings[i] = len(frag_strings[i])
                     frag_chars[i] = frag_chars[i].union(set(list(g)))
-                    (frag_rlefcs[i], frag_rlecs[i]) = self.rle_fc_c(
+                    (frag_rlefcs[i], frag_rlecs[i]) = self._rle_fc_c(
                         g, frag, frag_rlefcs[i], frag_rlecs[i]
                     )
         if self.verbose >= 2:
@@ -1295,7 +1295,7 @@ class Extractor(object):
             print('      Char VRLE:', frag_rlecs)
         return zip(frag_chars, frag_strings, frag_rlefcs, frag_rlecs, vrle)
 
-    def refine_fragments(self, vrle, v_id):
+    def _refine_fragments(self, vrle, v_id):
         """
         Narrow the character class for each fragment in a VRLE.
 
@@ -1306,7 +1306,7 @@ class Extractor(object):
         punctuation set, or the original coarse class as a fallback.
         """
         examples = self.examples
-        ga = self.analyse_fragments(vrle, v_id)
+        ga = self._analyse_fragments(vrle, v_id)
         out = []
         Cats = self.Cats
         size = self.size
@@ -1360,7 +1360,7 @@ class Extractor(object):
                 out.append((refined, m, M))
         return out
 
-    def rle_fc_c(self, s, pattern, rlefc_in, rlec_in):
+    def _rle_fc_c(self, s, pattern, rlefc_in, rlec_in):
         """
         Update the accumulated run-length encodings of fine classes and
         literal characters for the substring s matching a coarse fragment.
@@ -1398,7 +1398,7 @@ class Extractor(object):
         nc = 0
 
         for c in s:
-            fc = self.fine_class(c)
+            fc = self._fine_class(c)
             if fc == last_fc:
                 nfc += 1
             else:
@@ -1425,7 +1425,7 @@ class Extractor(object):
             ),
         )
 
-    def fine_class(self, c):
+    def _fine_class(self, c):
         """
         Map a character in coarse class 'C' (AlphaNumeric) to a fine class.
         """
@@ -1441,7 +1441,7 @@ class Extractor(object):
         else:
             return cats.ULetter_.code
 
-    def fragment2re(self, fragment, tagged=False, as_re=True, output=False):
+    def _fragment2re(self, fragment, tagged=False, as_re=True, output=False):
         """
         Convert a single VRLE fragment to a regex string.
 
@@ -1473,7 +1473,7 @@ class Extractor(object):
             part = regex + ('?' if m == 0 and M == 1 else ('{%d,%s}' % (m, M)))
         return capture_group(part) if (tagged and not fixed) else part
 
-    def vrle2re(self, vrles, tagged=False, as_re=True, output=False):
+    def _vrle2re(self, vrles, tagged=False, as_re=True, output=False):
         """
         Convert a VRLE pattern to a regular expression string.
 
@@ -1491,7 +1491,7 @@ class Extractor(object):
                 character classes rather than the internal ones.
         """
         parts = [
-            self.fragment2re(frag, tagged=tagged, as_re=as_re, output=output)
+            self._fragment2re(frag, tagged=tagged, as_re=as_re, output=output)
             for frag in vrles
         ]
         if self.n_stripped > 0:
@@ -1500,7 +1500,7 @@ class Extractor(object):
             parts = ws + parts + ws
         return poss_term_re(''.join(parts))
 
-    def vrle2refrags(self, vrles, output=False):
+    def _vrle2refrags(self, vrles, output=False):
         """
         Convert variable run-length-encoded code string to regular expression
         and list of fragments
@@ -1511,7 +1511,7 @@ class Extractor(object):
                 [Fragment(ws, True)]
                 + [
                     Fragment(
-                        self.fragment2re(
+                        self._fragment2re(
                             frag, tagged=False, as_re=True, output=output
                         ),
                         len(frag) < 4,
@@ -1524,7 +1524,7 @@ class Extractor(object):
         else:
             return [
                 Fragment(
-                    self.fragment2re(
+                    self._fragment2re(
                         frag, tagged=False, as_re=True, output=output
                     ),
                     len(frag) < 4,
@@ -1532,7 +1532,7 @@ class Extractor(object):
                 for frag in vrles
             ]
 
-    def rle2re(self, rles, tagged=False, as_re=True):
+    def _rle2re(self, rles, tagged=False, as_re=True):
         """
         Convert run-length-encoded code string to regular expression
         """
@@ -1544,11 +1544,11 @@ class Extractor(object):
             parts.append(('(%s)' % part) if tagged else part)
         return poss_term_re(''.join(parts))
 
-    def humanish_frag(self, frag):
-        as_re = self.fragment2re(frag)
+    def _humanish_frag(self, frag):
+        as_re = self._fragment2re(frag)
         return as_re.replace('\\', '').replace(' ', '_')
 
-    def aligned_parts(self, parts):
+    def _aligned_parts(self, parts):
         """
         Given a list of parts, each consisting of the fragments from a set
         of partially aligned patterns, show them aligned, and in a somewhat
@@ -1564,7 +1564,7 @@ class Extractor(object):
                 w = 0
                 for r, row in enumerate(part):
                     if len(row) > c:
-                        frag = self.humanish_frag(row[c])
+                        frag = self._humanish_frag(row[c])
                         lines[r].append(frag)
                         w = max(w, len(frag))
                     else:
@@ -1669,32 +1669,32 @@ class Extractor(object):
     def __str__(self):
         return str(self.results or 'No results (yet)')
 
-    def build_tree(self, vrles):
+    def _build_tree(self, vrles):
         fulls = vrles[:]
-        tree = self.build_tree_inner(vrles, fulls)
-        self.add_freqs_to_tree(tree)
+        tree = self._build_tree_inner(vrles, fulls)
+        self._add_freqs_to_tree(tree)
         return tree
 
-    def add_freqs_to_tree(self, tree):
+    def _add_freqs_to_tree(self, tree):
         freqs = self.examples.vrle_freqs
         for key, values in tree.items():
             for i, v in enumerate(values):
                 if type(v) is tuple:
                     values[i] = (v[1], freqs[v[1]])
                 else:
-                    self.add_freqs_to_tree(v)
+                    self._add_freqs_to_tree(v)
 
-    def build_tree_inner(self, vrles, fulls=None):
+    def _build_tree_inner(self, vrles, fulls=None):
         """
         Turn the VRLEs into a tree based on the different initial fragments.
         """
         tree = Tree()
         for partial, full in zip(vrles, fulls):
             if partial:
-                key, entry = self.vrle_entry(partial, full)
+                key, entry = self._vrle_entry(partial, full)
                 tree[key].append(entry)
         for key, entries in tree.items():
-            v = self.build_tree_inner(
+            v = self._build_tree_inner(
                 [e[0] for e in entries if e[0]],
                 [e[1] for e in entries if e[0]],
             )
@@ -1707,13 +1707,13 @@ class Extractor(object):
                 tree[key] = entries
         return tree if len(tree) > 0 else None
 
-    def vrle_entry(self, partial, full):
+    def _vrle_entry(self, partial, full):
         return (
-            self.vrle_key(partial[0]),
+            self._vrle_key(partial[0]),
             (partial[1:] if len(partial) > 1 else None, full),
         )
 
-    def vrle_key(self, vrle):
+    def _vrle_key(self, vrle):
         (c, m, M) = vrle[:3]
         fixed = len(vrle) == 4
         if fixed:
@@ -1721,10 +1721,10 @@ class Extractor(object):
         else:
             return c
 
-    def find_frag_sep_frag_repeated(self, tree, existing=None, results=None):
+    def _find_frag_sep_frag_repeated(self, tree, existing=None, results=None):
         r"""
         This specifically looks for patterns in the tree constructed
-        by self.build_tree of the general form
+        by self._build_tree of the general form
 
             A
             ABA
@@ -1767,7 +1767,7 @@ class Extractor(object):
                             v[j] = results
                 else:
                     newpat = existing + [k]
-                    results, _ = self.find_frag_sep_frag_repeated(
+                    results, _ = self._find_frag_sep_frag_repeated(
                         item, newpat, results
                     )
         return results, tree
@@ -2378,17 +2378,17 @@ class ResultsSummary(object):
         if add_dot_star:
             dot_star = ((x.Cats.Any.code, None, None),)
             self.refrags.append([Fragment('.*', True)])
-            self.rex.append(x.vrle2re(dot_star, tagged=x.tag))
+            self.rex.append(x._vrle2re(dot_star, tagged=x.tag))
 
     def convert_to_dialect(self, x):
         if not x.dialect:
             return  # No dialect set, so nothing to do
         self.rex = [
-            x.vrle2re(m, tagged=x.tag, output=True) for m in self.refined_vrles
+            x._vrle2re(m, tagged=x.tag, output=True) for m in self.refined_vrles
         ]
 
         self.refrags = [
-            x.vrle2refrags(m, output=True) for m in self.refined_vrles
+            x._vrle2refrags(m, output=True) for m in self.refined_vrles
         ]
 
     def __str__(self):
