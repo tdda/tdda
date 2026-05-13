@@ -12,17 +12,17 @@ def main(f, fw):
             if line.startswith('##'):
                 if 'SYNOPSIS' in line:
                     synopsis = True
-                    out.append(line)
+                    out.append('###' + line[2:])
                     out.append('```')  # start pre. x as unknown language
                 else:
                     if synopsis:
                         out.append('```\n')  # end pre
-                    out.append(line)
+                    out.append('###' + line[2:])
                     synopsis = False
             else:
                 m = re.match(TITLE_RE, line)
                 if m:
-                    out.append(f'# Command: `{m.group(1)}`\n\n')
+                    out.append(f'## `{m.group(1)}`\n\n')
         elif synopsis:
             line = line.replace('`', '').replace('*', '')
             out.append(line)

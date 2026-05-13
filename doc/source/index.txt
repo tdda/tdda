@@ -102,33 +102,19 @@ Contents
    overview.md
    installation.txt
    constraints.txt
-   rexpy-regex.txt
    gentest.txt
    referencetest.txt
-   constraints-api.txt
-   rexpy-api.txt
+   rexpy-regex.txt
    tddadiff.md
    serialformat.md
+   constraints-api.txt
+   rexpy-api.txt
+   cli.md
    configuration.md
    windows.txt
    tests.txt
    examples.txt
    changes.txt
-
-   tdda.md
-   tdda-discover.md
-   tdda-verify.md
-   tdda-detect.md
-   tdda-diff.md
-   tdda-serial.md
-   tdda-gentest.md
-   tdda-tag.md
-   tdda-examples.md
-   tdda-version.md
-   tdda-config.md
-   tdda-test.md
-   tdda-help.md
-   rexpy.md
 
 
 

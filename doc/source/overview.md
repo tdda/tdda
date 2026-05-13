@@ -46,11 +46,11 @@ with references, or the [blog](http://www.tdda.info/pages/table-of-contents.html
   or from a (Python) list of examples.
   There is also a command-line utility for Rexpy (`rexpy` command).
 
-* The [`tdda diff`](tdda-diff) tool can compare dataframes in Parquet
+* The [`tdda diff`](cli.md#tdda-diff) tool can compare dataframes in Parquet
   file and/or flat files and report differences. Command-line options
   and other specifiers control what differences are reported, and how.
 
-* The [`tdda.serial`](tdda-serial) format allows the documentation
+* The [`tdda.serial`](cli.md#tdda-serial) format allows the documentation
   of CSV and other flat-file formats in use in the companion
   `.serial` file for more accurate and portable reading and writing
   of flat files. The `tdda serial` command provides functionality

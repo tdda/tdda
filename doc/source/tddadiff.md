@@ -1,2 +1,2 @@
-# `tdda diff`: See Differences in Tabular Data (DataFrames and Flat Files)
+# tdda diff: Display Differences in Tabular Data (DataFrames and Flat Files)
 
