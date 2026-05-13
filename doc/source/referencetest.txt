@@ -8,18 +8,18 @@ Reference Tests
 Methods and Functions
 ---------------------
 .. automodule:: tdda.referencetest.referencetest
-    :members:
+    :members: ReferenceTest, tag
 
 ``unittest`` Framework Support
 ------------------------------
 
 .. automodule:: tdda.referencetest.referencetestcase
-    :members:
+    :members: ReferenceTestCase, main
 
 ``pytest`` Framework Support
 ----------------------------
 .. automodule:: tdda.referencetest.referencepytest
-    :members:
+    :members: ref, set_defaults, set_default_data_location
 
 .. _reference_test_examples:
 

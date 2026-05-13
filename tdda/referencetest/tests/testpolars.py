@@ -5,10 +5,8 @@
 import os
 import unittest
 
-try:
-    import polars as pl
-except:
-    pl = None
+import pandas as pd
+import polars as pl
 
 
 from tdda.plutils import loosen_polars_type
@@ -26,11 +24,14 @@ def refloc(filename):
     return os.path.join(os.path.dirname(__file__), 'testdata', filename)
 
 
+def PandasDataFrame(n):
+    return pd.DataFrame(getattr(PYTHON_DATA, f'df{n}'))
+
+
 def PolarsDataFrame(n):
     return pl.DataFrame(getattr(PYTHON_DATA, f'df{n}'))
 
 
-@unittest.skipIf(pl is None, 'No Polars')
 class TestPolarsDataFrames(ReferenceTestCase):
     def test_frames_ok(self):
         compare = PolarsComparison(verbose=False)
@@ -271,6 +272,39 @@ class TestPolarsDataFrames(ReferenceTestCase):
             for t2 in (b, d):
                 self.assertFalse(polars_types_match(t1, t2, 'permissive'))
                 self.assertFalse(polars_types_match(t2, t1, 'loose'))
+
+
+class TestHighLevelPolars(ReferenceTestCase):
+    def setUp(self):
+        super().setUp()
+        self._polars_verbose = self.polars.verbose
+
+    def tearDown(self):
+        self.polars.verbose = self._polars_verbose
+        super().tearDown()
+
+    def test_hl_assert_equivalent_ok(self):
+        df1 = PolarsDataFrame(1)
+        self.assertDataFramesEquivalent(df1, df1)
+
+    def test_hl_assert_equivalent_fail(self):
+        df1 = PolarsDataFrame(1)
+        df2 = PolarsDataFrame(2)
+        self.polars.verbose = False
+        with self.assertRaises(AssertionError):
+            self.assertDataFramesEquivalent(df1, df2)
+
+
+class TestCrossEngine(ReferenceTestCase):
+    def test_pandas_actual_polars_ref(self):
+        pdf = PandasDataFrame(1)
+        pldf = PolarsDataFrame(1)
+        self.assertDataFramesEquivalent(pdf, pldf, engine='pandas')
+
+    def test_polars_actual_pandas_ref(self):
+        pdf = PandasDataFrame(1)
+        pldf = PolarsDataFrame(1)
+        self.assertDataFramesEquivalent(pldf, pdf, engine='polars')
 
 
 class TestPolarsHelperFunctions(ReferenceTestCase):

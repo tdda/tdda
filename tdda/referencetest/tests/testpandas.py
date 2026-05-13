@@ -26,7 +26,6 @@ def PandasDataFrame(n):
     return pd.DataFrame(getattr(PYTHON_DATA, f'df{n}'))
 
 
-@unittest.skipIf(pd is None, 'no pandas')
 class TestPandasDataFrames(ReferenceTestCase):
     def test_frames_ok(self):
         compare = PandasComparison(verbose=False)
@@ -224,6 +223,27 @@ class TestPandasDataFrames(ReferenceTestCase):
             for t2 in (S, dms, dns):
                 self.assertFalse(pandas_types_match(t1, t2, 'permissive'))
                 self.assertFalse(pandas_types_match(t2, t1, 'loose'))
+
+
+class TestHighLevelPandas(ReferenceTestCase):
+    def setUp(self):
+        super().setUp()
+        self._pandas_verbose = self.pandas.verbose
+
+    def tearDown(self):
+        self.pandas.verbose = self._pandas_verbose
+        super().tearDown()
+
+    def test_hl_assert_equivalent_ok(self):
+        df1 = PandasDataFrame(1)
+        self.assertDataFramesEquivalent(df1, df1)
+
+    def test_hl_assert_equivalent_fail(self):
+        df1 = PandasDataFrame(1)
+        df2 = PandasDataFrame(2)
+        self.pandas.verbose = False
+        with self.assertRaises(AssertionError):
+            self.assertDataFramesEquivalent(df1, df2)
 
 
 if __name__ == '__main__':

@@ -379,6 +379,12 @@ span.pre{
     background:#1a4028;
 }
 
+/* Field list spacing: separate Raises/Returns from Parameters */
+dl.field-list dt.field-even,
+dl.field-list dd.field-even {
+    margin-top: 0.5em;
+}
+
 /* Search box border */
 .wy-side-nav-search input[type=text]{
     border-color:#402020;
