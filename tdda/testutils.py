@@ -31,6 +31,8 @@ from tdda.utils import (
     string_list,
     tex_name,
     tex_encode,
+    handle_rfc9839_forbiddens,
+    check_unicode_assignables,
 )
 from unicodedata import normalize
 
@@ -528,6 +530,131 @@ class TestTDDAUtils(ReferenceTestCase):
         }
         for k, v in cases.items():
             self.assertEqual((k, tex_name(k)), (k, v))
+
+
+class TestRFC9839(ReferenceTestCase):
+    REPL = '�'
+
+    def test_clean_text_unchanged(self):
+        s = 'Hello, world!\tline\nnext\r'
+        self.assertEqual(handle_rfc9839_forbiddens(s), s)
+
+    def test_permitted_controls_survive(self):
+        for ch in ('\t', '\n', '\r'):
+            self.assertEqual(handle_rfc9839_forbiddens(ch), ch)
+
+    def test_nul_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a\x00b'), 'ab')
+
+    def test_nul_replaced(self):
+        self.assertEqual(
+            handle_rfc9839_forbiddens('a\x00b', delete=False),
+            'a' + self.REPL + 'b',
+        )
+
+    def test_c0_control_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a\x01b'), 'ab')
+
+    def test_form_feed_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a\x0Cb'), 'ab')
+
+    def test_form_feed_replaced(self):
+        self.assertEqual(
+            handle_rfc9839_forbiddens('a\x0Cb', delete=False),
+            'a' + self.REPL + 'b',
+        )
+
+    def test_del_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a\x7Fb'), 'ab')
+
+    def test_del_replaced(self):
+        self.assertEqual(
+            handle_rfc9839_forbiddens('a\x7Fb', delete=False),
+            'a' + self.REPL + 'b',
+        )
+
+    def test_c1_control_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a\x80b'), 'ab')
+
+    def test_c1_control_replaced(self):
+        self.assertEqual(
+            handle_rfc9839_forbiddens('a\x9Fb', delete=False),
+            'a' + self.REPL + 'b',
+        )
+
+    def test_surrogate_deleted(self):
+        s = 'a' + chr(0xD800) + 'b'
+        self.assertEqual(handle_rfc9839_forbiddens(s), 'ab')
+
+    def test_surrogate_replaced(self):
+        s = 'a' + chr(0xD800) + 'b'
+        self.assertEqual(
+            handle_rfc9839_forbiddens(s, delete=False),
+            'a' + self.REPL + 'b',
+        )
+
+    def test_noncharacter_fdd0_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a﷐b'), 'ab')
+
+    def test_noncharacter_fdef_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a﷯b'), 'ab')
+
+    def test_fffe_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a￾b'), 'ab')
+
+    def test_ffff_deleted(self):
+        self.assertEqual(handle_rfc9839_forbiddens('a￿b'), 'ab')
+
+    def test_plane1_fffe_deleted(self):
+        self.assertEqual(
+            handle_rfc9839_forbiddens('a' + chr(0x1FFFE) + 'b'), 'ab'
+        )
+
+    def test_mixed_string(self):
+        s = 'hello\x00\tworld\x7F\n'
+        self.assertEqual(handle_rfc9839_forbiddens(s), 'hello\tworld\n')
+
+    def test_check_clean_no_warnings(self):
+        self.assertEqual(check_unicode_assignables('hello', 'f'), [])
+
+    def test_check_c0_warning(self):
+        warnings = check_unicode_assignables('a\x01b', 'myfield')
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('myfield', warnings[0])
+        self.assertIn('C0 control', warnings[0])
+        self.assertIn('U+0001', warnings[0])
+
+    def test_check_del_c1_warning(self):
+        warnings = check_unicode_assignables('a\x7Fb', 'f')
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('DEL/C1 control', warnings[0])
+        self.assertIn('U+007F', warnings[0])
+
+    def test_check_noncharacter_warning(self):
+        warnings = check_unicode_assignables('a﷐b', 'f')
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('noncharacter', warnings[0])
+        self.assertIn('U+FDD0', warnings[0])
+
+    def test_check_surrogate_warning(self):
+        s = 'a' + chr(0xD800) + 'b'
+        warnings = check_unicode_assignables(s, 'f')
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('surrogate', warnings[0])
+        self.assertIn('U+D800', warnings[0])
+
+    def test_check_multiple_types(self):
+        s = 'a\x01b\x7Fc'
+        warnings = check_unicode_assignables(s, 'f')
+        self.assertEqual(len(warnings), 2)
+        types = ' '.join(warnings)
+        self.assertIn('C0 control', types)
+        self.assertIn('DEL/C1 control', types)
+
+    def test_check_permitted_controls_no_warnings(self):
+        self.assertEqual(
+            check_unicode_assignables('a\tb\nc\r', 'f'), []
+        )
 
 
 if __name__ == '__main__':

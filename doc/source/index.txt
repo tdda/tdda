@@ -109,6 +109,7 @@ Contents
    serialformat.md
    constraints-api.txt
    rexpy-api.txt
+   utils-api.txt
    cli.md
    configuration.md
    windows.txt

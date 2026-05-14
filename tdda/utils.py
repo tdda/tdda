@@ -102,15 +102,19 @@ class PassFailStats:
 
 
 def nvl(v, w):
-    """
-    This function is used as syntactic sugar for replacing null values.
-    """
+    """Return w if v is None, otherwise v."""
     return w if v is None else v
 
 
 def swap_ext(path, new_ext):
-    """
-    Replaces the extension of path to new_ext
+    """Replace the extension of path with new_ext.
+
+    Args:
+        path (str): File path whose extension to replace.
+        new_ext (str): New extension, with or without a leading dot.
+
+    Returns:
+        Path with the new extension.
     """
     base, ext = os.path.splitext(path)
     dot = '' if new_ext == '' or new_ext.startswith('.') else '.'
@@ -118,12 +122,15 @@ def swap_ext(path, new_ext):
 
 
 def swap_ext_q(path, new_ext):
-    """
-    Replaces the extension of path to new_ext
+    """Replace the extension of path with new_ext, reporting whether it changed.
 
-    Return (new path, changed)
+    Args:
+        path (str): File path whose extension to replace.
+        new_ext (str): New extension, with or without a leading dot.
 
-    where changed is True iff the old and new extensions are different
+    Returns:
+        Tuple of (new_path, changed) where changed is True iff the
+        extension differed from the original.
     """
     outpath = swap_ext(path, new_ext)
     _, ext = os.path.splitext(path)
@@ -132,10 +139,16 @@ def swap_ext_q(path, new_ext):
 
 
 def handle_tilde(path):
-    """
-    Handle paths starting tilde.
+    """Expand a leading tilde in path to the user's home directory.
 
-    Does nothing unless path is a string and starts with '~'
+    Does nothing unless path is a string starting with '~'.
+
+    Args:
+        path: Path to expand. Non-strings are returned unchanged.
+
+    Returns:
+        Expanded path string, or the original value if no expansion
+        was needed.
     """
     if type(path) is str and path.startswith('~'):
         return os.path.expanduser(path)
@@ -144,9 +157,14 @@ def handle_tilde(path):
 
 
 def dict_to_json(d, path=None):
-    """
-    Dumps appropriately formatted version of dictionary d to JSON.
-    If path is given, it goes there; otherwise, the JSON is returned.
+    """Serialize d to formatted JSON, writing to path or returning as a string.
+
+    Args:
+        d (dict): Dictionary to serialize.
+        path (str): If given, write JSON to this file; otherwise return it.
+
+    Returns:
+        Formatted JSON string, or None if path was given.
     """
     json_text = strip_lines(json.dumps(d, indent=4, ensure_ascii=False)) + '\n'
     if path:
@@ -157,9 +175,14 @@ def dict_to_json(d, path=None):
 
 
 def dict_to_yaml(d, path=None):
-    """
-    Dumps appropriately formatted version of dictionary d to YAML.
-    If path is given, it goes there; otherwise, the YAML is returned.
+    """Serialize d to YAML, writing to path or returning as a string.
+
+    Args:
+        d (dict): Dictionary to serialize.
+        path (str): If given, write YAML to this file; otherwise return it.
+
+    Returns:
+        YAML string, or None if path was given.
     """
     if path:
         with open(path, 'w') as f:
@@ -169,9 +192,14 @@ def dict_to_yaml(d, path=None):
 
 
 def dict_to_toml(d, path=None):
-    """
-    Dumps appropriately formatted version of dictionary d to JSON.
-    If path is given, it goes there; otherwise, the JSON is returned.
+    """Serialize d to TOML, writing to path or returning as a string.
+
+    Args:
+        d (dict): Dictionary to serialize.
+        path (str): If given, write TOML to this file; otherwise return it.
+
+    Returns:
+        TOML string, or None if path was given.
     """
     if path:
         with open(path, 'wb') as f:
@@ -181,6 +209,18 @@ def dict_to_toml(d, path=None):
 
 
 def json_sanitize(v):
+    """Recursively convert v to a JSON-serializable value.
+
+    Converts NaN/NaT/<NA> to None, datetimes to ISO strings (dropping
+    the time part when it is midnight), objects with __dict__ to dicts,
+    and leaves primitives unchanged.
+
+    Args:
+        v: Value to sanitize.
+
+    Returns:
+        JSON-serializable equivalent of v.
+    """
     if repr(v) in ('nan', 'NaT', '<NA>'):
         return None
     elif v is None or type(v) in (str, int, float, bool):
@@ -205,11 +245,16 @@ def remove_falsy_values(d):
 
 
 def strip_lines(s):
-    """
-    Splits the given string into lines (at newlines), strips trailing
-    whitespace from each line before rejoining.
+    """Strip trailing whitespace from each line in s.
 
-    Is careful about last newline.
+    Splits on newlines, strips trailing whitespace from each line, and
+    rejoins. Preserves a trailing newline if the original string had one.
+
+    Args:
+        s (str): String to process.
+
+    Returns:
+        String with trailing whitespace removed from each line.
     """
     end = '\n' if s.endswith('\n') else ''
     return '\n'.join([line.rstrip() for line in s.splitlines()]) + end
@@ -252,23 +297,30 @@ def to_pc(v, mindp=2):
 
 
 def n_glyphs(s):
-    """
-    Returns the number of glyphs in a string.
-    """
+    """Return the number of user-perceived glyphs (grapheme clusters) in s."""
     return len(regex.findall(r'\X', s))
 
 
 def tddadir(*path):
-    """
-    Returns the full path to path where path is in the base tdda directory
+    """Return the full path to a location inside the base tdda directory.
+
+    Args:
+        *path: Path components to join after the tdda package root.
+
+    Returns:
+        Absolute path within the tdda package directory.
     """
     return os.path.join(TDDADIR, *path)
 
 
 def constraints_testdata_path(path):
-    """
-    Returns the full path to path where path is in the constraints
-    testdata directory
+    """Return the full path to a file in the constraints testdata directory.
+
+    Args:
+        path (str): Relative path within the testdata directory.
+
+    Returns:
+        Absolute path to the file.
     """
     return os.path.join(TDDADIR, 'constraints', 'testdata', path)
 
@@ -296,9 +348,17 @@ def richgoodbad(s, colour=True, cond=True):
 
 
 def write_or_return(content, dump, stringify, path=None, binary=False):
-    """
-    If path has a value, write content to it and return None.
-    Use binary mode for writing if binary it set.
+    """Write content to path, or return it as a string.
+
+    Args:
+        content: Content to write or return.
+        dump: Callable used to write content to a file object.
+        stringify: Callable used to convert content to a string.
+        path (str): If given, write to this path and return None.
+        binary (bool): If True, open path in binary mode.
+
+    Returns:
+        String representation of content, or None if path was given.
     """
     if path:
         mode = 'wb' if binary else 'w'
@@ -353,10 +413,7 @@ def squote(string, escape=True):
 
 
 def is_sequence(L):
-    """
-    Tests whether L is a list, tuple or something similar
-    (in particular, that it can be indexed).
-    """
+    """Return True if L is a list, tuple, or other indexable/iterable non-string."""
     return (
         hasattr(L, '__getitem__') or hasattr(L, '__iter__')
     ) and not hasattr(L, 'strip')
@@ -367,8 +424,10 @@ def is_parquet(path):
 
 
 class Dummy(object):
-    """
-    A dummy object. For whatever.
+    """A simple object whose attributes are set from keyword arguments.
+
+    Useful as a lightweight stand-in wherever a plain object with
+    named attributes is needed.
     """
 
     def __init__(self, **kwargs):
@@ -458,25 +517,37 @@ def tdda_nf_map():
 def normal_form_tk(
     s, remove_accents=True, strip=False, standardize_space=False, nfkd=False
 ):
-    """
-    Maps a string to TDDA normal form (NFTK), which is normal
-    Unicode Normal Form TKC (or TKD, if specified)
-    with some extra mappings of commonly confused characters
-    and the option to strip accents, and to normalize and trim space.
+    """Map s to TDDA Normal Form TK (NFTK) with options for KC or KD
+    and also some whitespace normalization options.
 
-    ARGS:
-        s:                 String to be normalized
-        remove_accents:    If True many accents are removed (default True)
-        strip:             Strips leading and trailing space if True
-        standardize_space: Replaces multiple spaces with single space
-        nfkd:              If True, returns NFKD rather than the default NFKC
+    NFTK applies Unicode Compatibility Normalization (NFKC or NFKD)
+    plus additional mappings for commonly confused characters, with
+    optional accent removal and space normalization.
 
-    Main non-"kompatability" adjustments are:
+    Extra mappings beyond NFKC/NFKD include:
+        - Dashes and minus signs → ASCII hyphen-minus
+        - Curly quotes and apostrophes → ASCII ' and "
+        - Tab and a few other whitespace forms → space
+        - Some combined characters like œ → oe
 
-        Replace dashes and minus signs with ASCII -
-        Replace curly and left quotes/apostrophes to ASCII ' and "
-        Replace each TAB character with a (single) space.
+    Args:
+        s (str): String to normalize.
+        remove_accents (bool): Strip combining diacritical marks
+            (default True).
+        strip (bool): Strip leading and trailing whitespace
+            (default False).
+        standardize_space (bool): Collapse runs of spaces to a single
+            space (default False).
+        nfkd (bool): Use NFKD base form instead of the default NFKC
+            (default False).
 
+    Returns:
+        Normalized string.
+
+    Note:
+        Unless the whitespace handling is required, the short form
+        ``nftk()`` should normally be used (or ``nftkd()`` if decomposed
+        form is required in edge cases).
     """
     global TDDA_NF_MAP
     if TDDA_NF_MAP is None:
@@ -498,11 +569,22 @@ def normal_form_tk(
 
 
 def nftk(s):
-    """
-    Normalizes string to form TKC, which:
-      - Uses normal form KC (compatibility composed)
-      - Also maps various quotes, dashes etc. to ASCII
-      - Strips all accents
+    """Normalize s to TDDA Normal Form TKC (NFKC base, accents stripped).
+
+    Equivalent to nftkc(s). Applies Unicode Compatibility Normalization
+    KC, maps various quotes, dashes, and similar characters to ASCII
+    equivalents, and strips combining diacritical marks.
+
+    The difference between TKC and TKD is canonical composition vs.
+    decomposition after compatibility normalization. They differ mainly
+    for characters with combining marks, such as some Hangul syllable
+    blocks (e.g. 가).
+
+    Args:
+        s (str): String to normalize.
+
+    Returns:
+        Normalized string in TK form.
     """
     return normal_form_tk(s)
 
@@ -510,11 +592,22 @@ nftkc = nftk
 
 
 def nftkd(s):
-    """
-    Normalizes string to form TKD, which:
-      - Uses normal form KD (compatibility decomposed)
-      - Maps various quotes, dashes etc. to ASCII
-      - Strips all accents
+    """Normalize s to TDDA Normal Form TKD (NFKD base, accents stripped).
+
+    Applies Unicode Compatibility Normalization KD, maps various quotes,
+    dashes, and similar characters to ASCII equivalents, and strips
+    combining diacritical marks.
+
+    The difference between TKC and TKD is canonical composition vs.
+    decomposition after compatibility normalization. They differ mainly
+    for characters with combining marks, such as some Hangul syllable
+    blocks (e.g. 가).
+
+    Args:
+        s (str): String to normalize.
+
+    Returns:
+        Normalized string in TKD form.
     """
     return normal_form_tk(s, nfkd=True)
 
@@ -568,9 +661,16 @@ def debug(*args, buf=None, verbose=True, **kw):
 
 
 def listify(v, sort=False):
-    """
-    If v is not a list, convert it to a list.
-    In particularly, turn a scalar, v, into [v]
+    """Convert v to a list if it is not already one.
+
+    Tuples are converted to lists; None becomes []; scalars become [v].
+
+    Args:
+        v: Value to listify.
+        sort (bool): If True, return the list sorted (default False).
+
+    Returns:
+        v as a list.
     """
     L = (
         v
@@ -585,9 +685,7 @@ def listify(v, sort=False):
 
 
 def delistify(L):
-    """
-    Turn L into a scalar if it is a singleton list (or similar).
-    """
+    """Return the sole element of L if it is a singleton sequence, else L."""
     return L[0] if (is_sequence(L) and len(L) == 1) else L
 
 
@@ -783,13 +881,18 @@ def split_string_list(s):
 
 
 def plural(n, s, pl=None, inc_n=True, full_plural=None):
-    """
-    Returns a string like '23 fields' or '1 field' where the
-    number is n, the stem is s and the plural is either stem + 's',
-    stem + pl, or full_plural (if provided).
+    """Return a count-and-noun string such as '3 fields' or '1 field'.
 
-    If inc_n is False, just returns s, singular or pluralized (no number)
-    based on n.
+    Args:
+        n (int): Count.
+        s (str): Singular noun stem.
+        pl (str): Suffix to append for plural; defaults to 's'.
+        inc_n (bool): If True (default), prefix the noun with n.
+        full_plural (str): Full plural word, overriding s + pl.
+
+    Returns:
+        Formatted string such as '1 field' or '3 fields', or just the
+        noun (singular or plural) when inc_n is False.
     """
     if full_plural is not None:
         p = full_plural
@@ -805,7 +908,17 @@ def plural(n, s, pl=None, inc_n=True, full_plural=None):
 
 
 def string_list(list_, conjunction='and', oxford=False):
-    """Returns a string from the list of the form "A, B, C and D"""
+    """Join a list of items into a natural-language string.
+
+    Args:
+        list_ (list): Items to join.
+        conjunction (str): Word before the last item (default 'and').
+        oxford (bool): If True, add a comma before the conjunction
+            when there are more than two items (default False).
+
+    Returns:
+        Items joined as e.g. 'a, b and c', or 'none' for an empty list.
+    """
     list_ = list(list_)
     if len(list_) == 0:
         return 'none'
@@ -842,3 +955,150 @@ def unicode_definite(s):
 
 def utf8_definite(s):
     return s if type(s) == bytes else s.encode('UTF-8')
+
+
+def handle_rfc9839_forbiddens(text, delete=True):
+    """Remove or replace RFC 9839 forbidden characters from text.
+
+    Forbidden characters are:
+        - Surrogates: U+D800–U+DFFF
+        - C0 controls except tab (U+09), LF (U+0A), CR (U+0D): U+00–U+1F
+        - DEL and C1 controls: U+7F–U+9F
+        - Noncharacters: U+FDD0–U+FDEF (32 chars) and U+xFFFE/U+xFFFF
+          for all 17 Unicode planes (34 chars)
+
+    Args:
+        text (str): Text to clean.
+        delete (bool): If True (default), remove forbidden characters.
+            If False, replace them with U+FFFD (REPLACEMENT CHARACTER).
+
+    Returns:
+        Cleaned text with forbidden characters removed or replaced.
+    """
+    replacement = unicodedata.lookup('REPLACEMENT CHARACTER')
+    result = []
+    for char in text:
+        code_point = ord(char)
+
+        # Check surrogates (U+D800-U+DFFF)
+        if 0xD800 <= code_point <= 0xDFFF:
+            if not delete:
+               result.append(replacement)
+            continue
+
+        # Check C0 controls (except tab/LF/CR)
+        # U+00-U+1F except 09 (tab), 0A (LF), 0D (CR)
+        if 0x00 <= code_point <= 0x1F and code_point not in (
+            0x09,
+            0x0A,
+            0x0D,
+        ):
+            if not delete:
+               result.append(replacement)
+            continue
+
+        # Check DEL and C1 controls (U+7F-U+9F)
+        if 0x7F <= code_point <= 0x9F:
+            if not delete:
+               result.append(replacement)
+            continue
+
+        # Check noncharacters
+        # U+FDD0-U+FDEF (32 noncharacters)
+        if 0xFDD0 <= code_point <= 0xFDEF:
+            if not delete:
+               result.append(replacement)
+            continue
+
+        # U+xFFFE and U+xFFFF for all 17 planes
+        if (code_point & 0xFFFF) in (0xFFFE, 0xFFFF):
+            if not delete:
+               result.append(replacement)
+            continue
+
+        # Character is allowed
+        result.append(char)
+
+    return ''.join(result)
+
+
+
+def check_unicode_assignables(text, field_name):
+    """Return warnings for RFC 9839 forbidden characters found in text.
+
+    Checks for but does not reject characters outside the Unicode
+    Assignables subset: surrogates, C0 controls (except tab/LF/CR),
+    DEL and C1 controls, and noncharacters.
+
+    Args:
+        text (str): Text to check.
+        field_name (str): Label used in warning messages.
+
+    Returns:
+        List of warning strings, one per category of problematic
+        character found, or an empty list if the text is clean.
+    """
+    warnings = []
+    problematic_chars = set()
+
+    for char in text:
+        code_point = ord(char)
+
+        # Check surrogates (U+D800-U+DFFF)
+        if 0xD800 <= code_point <= 0xDFFF:
+            problematic_chars.add(
+                (code_point, 'surrogate', f'U+{code_point:04X}')
+            )
+
+        # Check C0 controls (except tab/LF/CR)
+        # U+00-U+1F except 09 (tab), 0A (LF), 0D (CR)
+        elif 0x00 <= code_point <= 0x1F and code_point not in (
+            0x09,
+            0x0A,
+            0x0D,
+        ):
+            problematic_chars.add(
+                (code_point, 'C0 control', f'U+{code_point:04X}')
+            )
+
+        # Check DEL and C1 controls (U+7F-U+9F)
+        elif 0x7F <= code_point <= 0x9F:
+            problematic_chars.add(
+                (code_point, 'DEL/C1 control', f'U+{code_point:04X}')
+            )
+
+        # Check noncharacters
+        # U+FDD0-U+FDEF (32 noncharacters)
+        elif 0xFDD0 <= code_point <= 0xFDEF:
+            problematic_chars.add(
+                (code_point, 'noncharacter', f'U+{code_point:04X}')
+            )
+
+        # U+xFFFE and U+xFFFF for all 17 planes
+        elif (code_point & 0xFFFF) in (0xFFFE, 0xFFFF):
+            problematic_chars.add(
+                (code_point, 'noncharacter', f'U+{code_point:04X}')
+            )
+
+    # Generate warnings
+    if problematic_chars:
+        # Group by type for clearer messages
+        by_type = {}
+        for code_point, char_type, code_str in sorted(problematic_chars):
+            if char_type not in by_type:
+                by_type[char_type] = []
+            by_type[char_type].append(code_str)
+
+        for char_type, codes in sorted(by_type.items()):
+            if len(codes) <= 5:
+                code_list = ', '.join(codes)
+            else:
+                code_list = (
+                    ', '.join(codes[:5]) + f', and {len(codes) - 5} more'
+                )
+            warnings.append(
+                f'{field_name}: Contains {char_type} characters: {code_list}'
+            )
+
+    return warnings
+

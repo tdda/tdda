@@ -1,0 +1,26 @@
+TDDA Utility Functions
+======================
+
+``tdda.utils``
+--------------
+
+String Normalization
+~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: tdda.utils.nftk
+
+.. autofunction:: tdda.utils.nftkd
+
+.. autofunction:: tdda.utils.normal_form_tk
+
+Unicode Glyph Counting
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: tdda.utils.n_glyphs
+
+RFC 9839 Character Handling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: tdda.utils.handle_rfc9839_forbiddens
+
+.. autofunction:: tdda.utils.check_unicode_assignables
