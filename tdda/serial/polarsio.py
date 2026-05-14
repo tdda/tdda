@@ -97,6 +97,23 @@ def serial_to_polars_read_csv_args(
     map_other_bools_to_string=False,
     backend=None,
 ):
+    """Convert SerialMetadata to keyword arguments for polars.read_csv.
+
+    Args:
+        md (SerialMetadata): Metadata describing the CSV file format.
+        warner: Optional callable for issuing warnings.
+        serializable (bool): If True, return only JSON-serializable
+            values (e.g. dtype repr strings instead of Polars types).
+        map_other_bools_to_string (bool): If True, boolean fields
+            whose metadata specifies non-true/false values are mapped
+            to string type.
+        backend: Unused; accepted for API consistency with the pandas
+            equivalent.
+
+    Returns:
+        Dict of keyword arguments suitable for passing to
+        polars.read_csv.
+    """
     kw, _, _r = serial_to_polars_read_csv_args_and_postproc(
         md,
         warner=warner,
@@ -355,76 +372,53 @@ def csv_to_polars(
     infer_datetime_formats=False,
     **kw,
 ):
-    """
-    Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
-    and extra metadata.
+    """Load a CSV file into a Polars DataFrame using metadata for type guidance.
 
     Args:
+        path (str): Path to the data file (usually CSV) to be read.
+            If None, md_path must be set and contain the path to the
+            data.
+        md_path (str): Optional path to the associated metadata file.
+            If path is None, this must be set and contain the path to
+            the data (CSV file). If path is not None, the path in the
+            metadata file is ignored. If md_path is None, path must
+            not be None. In this case, if find_md is set to True, this
+            function will try to find an associated metadata file and
+            use that if possible, and will raise an error if it cannot
+            be found.
+        md_file_type (str): Optional specification of the kind of
+            metadata file. One of 'tdda.serial', 'csvw',
+            'frictionless'.
+        find_md (bool): If True, the library will try to find
+            associated metadata based on filename conventions.
+            Should not be set if md_path is provided. If associated
+            metadata cannot be found, an error will be raised.
+        upgrade_types (bool): If True (the default), upgrade some
+            object-dtype columns to stricter types.
+        upgrade_possible_ints (bool): If True (not the default),
+            upgrade float columns with nulls but no fractional
+            components to nullable Int types.
+        return_md (bool): If True, returns a (DataFrame, metadata)
+            tuple instead of just the DataFrame.
+        table_number (int): If set, use the nth table (indexed from
+            zero) from a multi-table metadata file.
+        preferred (str): Override the metadata flavour used. By
+            default csv_to_polars uses the polars.read_csv flavour if
+            present. Can be set to 'tdda.serial' or 'csvw'.
+        map_other_bools_to_string (bool): If True, boolean fields
+            whose metadata specifies non-true/false values are read
+            as strings. Default: False.
+        include_data_path_in_md: If None, the path is not set in
+            tdda.serial metadata. If set to any truthy value, the
+            path to the datafile is included. For csvw and
+            frictionless, None causes a url/path to be written.
+        verbosity (int): Controls warning output for the metadata
+            reader.
+        **kw: Passed directly to polars.read_csv, overriding any
+            values derived from the metadata file.
 
-       path     The path to the data file (usually CSV) to be read.
-                If this is None, the md_path must be set and contain
-                the path to the data.
-
-       md_path   The optional path to the associated metadata file.
-
-                If path is None, this must be set and contain the
-                path to the data (CSV file).
-
-                If path is not None, the path in the metadata file
-                is ignored.
-
-                If md_path is None, path must not be None.
-                In this case, if find_md is set to True, this function
-                will try to find an associated metadata file and use
-                that if possible, and will raise an error if it cannot
-                be found.
-
-       md_file_type   Optional specification of the kind of metadata file.
-                      Should be one of
-                          'tdda.serial'
-                          'csvw'
-                          'frictionless'
-
-       find_md   If this is set to True, the library will try to find
-                associated metadata based on filename conventions.
-                This should not be set if md_path is provided.
-                If assocaited metadata cannot be found, an error
-                will be raised when this is set.
-
-       upgrade_types   If True (the default), this will upgrade
-                       some columns read_csv will create as object
-                       (dtype object) to stricter types.
-
-       upgrade_possible_ints   If True (not the default), any float
-                               columns with nulls but with no fractional
-                               components will be upgraded to Ints.
-
-       return_md   If true, returns DataFrame and metadata (as tuple)
-
-       table_number  If set, use the specified table number (indexed
-                     from zero) in the metadata
-
-       preferred  Normally, if tdda.serial metadata is used,
-                  csv_to_polars will use the polars.read_csv metadata flavour
-                  if present. This can be set to 'tdda.serial'
-                  or 'csvw' to override that.
-
-       map_other_bools_to_string   If True, when metadata specifies
-                                   non-true/false values as bools
-                                   the boolean fields are read as strings.
-                                   Default: False
-
-       include_data_path_in_md: If None, the path is not set in tdda.serial
-                                metadata. If set to any Truthy value,
-                                the path to the datafile is included.
-                                For csvw and frictionless,
-                                None causes a url/path to be written
-
-       verbosity   For metadata reader
-
-       **kw     These keyword arguments are passed to pandas.read_csv,
-                and can be used to override values from the
-                metadata file.
+    Returns:
+        DataFrame, or (DataFrame, metadata) tuple if return_md is True.
     """
     md, path, md_path = get_metadata_for_reader(
         path=path,

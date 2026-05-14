@@ -935,11 +935,11 @@ The ``FLAGS`` (switches, options) available are:
   ``-?``, ``--?``, ``-h``, ``--help``
     Show Gentest's help message
 
-  ``-m MAX_FILES``, ``--maxfiles MAX_FILES``
+  ``-m MAX_FILES``, ``--max-files MAX_FILES``
     Maximum number of files for Gentest to track.
 
   ``-r``, ``--relative-paths``
-    Show relative paths wherever possible'
+    Show relative paths wherever possible
 
   ``-n ITERATIONS``, ``--iterations``
     Number of times to run the command (default 2)
@@ -950,10 +950,13 @@ The ``FLAGS`` (switches, options) available are:
   ``-E``, ``--no-stderr``
     Do not generate a test checking output to ``stderr``
 
-  ``-Z``, ``--nonzeroexit``
+  ``-Z``, ``--non-zero-exit``
     Do not require exit status to be 0
 
   ``-C``, ``--no-clobber``
     Do not overwrite existing test script or reference directory
+
+  ``-N``, ``--no-config``
+    Use default configuration (ignore ``~/.tdda.toml``)
 
 

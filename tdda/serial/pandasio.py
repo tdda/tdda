@@ -162,6 +162,19 @@ def serial_type_to_pandas_dtype(fieldtype, backend=None, config=None):
 
 
 def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
+    """Convert SerialMetadata to keyword arguments for pandas.read_csv.
+
+    Args:
+        md (SerialMetadata): Metadata describing the CSV file format.
+        backend (str): Pandas dtype backend, e.g. 'numpy_nullable' or
+            'pyarrow'.
+        warner: Optional callable for issuing warnings.
+        config: Optional tdda configuration object.
+
+    Returns:
+        Dict of keyword arguments suitable for passing to
+        pandas.read_csv.
+    """
     Warn = nvl(warner, warn)
     backend = get_backend(backend, config)
     if PANDAS.read_key in md.libs:
@@ -692,68 +705,46 @@ def csv_to_pandas(
     config=None,
     **kw,
 ):
-    """
-    Load the data from a CSV file into a Pandas DataFrame use pandas.read_csv
-    and extra metadata.
+    """Load a CSV file into a Pandas DataFrame using metadata for type guidance.
 
     Args:
+        path (str): Path to the data file (usually CSV) to be read.
+            If None, md_path must be set and contain the path to the
+            data. Can contain ':' to trigger metadata search.
+        md_path (str): Optional path to the associated metadata file.
+            If path is None, this must be set and contain the path to
+            the data (CSV file). If path is not None, the path in the
+            metadata file is ignored. If md_path is None, path must not
+            be None. In this case, if find_md is set to True, this
+            function will try to find an associated metadata file and
+            use that if possible, and will raise an error if it cannot
+            be found.
+        md_file_type (str): Optional specification of the kind of
+            metadata file. One of 'tdda.serial', 'csvw',
+            'frictionless'.
+        find_md (bool): If True, the library will try to find
+            associated metadata based on filename conventions.
+            Should not be set if md_path is provided. If associated
+            metadata cannot be found, an error will be raised.
+        upgrade_types (bool): If True (the default), upgrade some
+            object-dtype columns to stricter types.
+        upgrade_possible_ints (bool): If True (not the default),
+            upgrade float columns with nulls but no fractional
+            components to nullable Int types.
+        return_md (bool): If True, returns a (DataFrame, metadata)
+            tuple instead of just the DataFrame.
+        table_number (int): If set, use the nth table (indexed from
+            zero) from a multi-table metadata file.
+        preferred (str): Override the metadata flavour used. By
+            default csv_to_pandas uses the pandas.read_csv flavour if
+            present. Can be set to 'tdda.serial' or 'csvw'.
+        verbosity (int): Controls warning output for the metadata
+            reader.
+        **kw: Passed directly to pandas.read_csv, overriding any
+            values derived from the metadata file.
 
-       path     The path to the data file (usually CSV) to be read.
-                If this is None, the md_path must be set and contain
-                the path to the data. Can contain ':' to trigger md search.
-
-       md_path   The optional path to the associated metadata file.
-
-                 If path is None, this must be set and contain the
-                 path to the data (CSV file).
-
-                 If path is not None, the path in the metadata file
-                 is ignored.
-
-                 If md_path is None, path must not be None.
-                 In this case, if findmd is set to True, this function
-                 will try to find an associated metadata file and use
-                 that if possible, and will raise an error if it cannot
-                 be found.
-
-       md_file_type   Optional specification of the kind of metadata file.
-                      Should be one of
-                          'tdda.serial'
-                          'csvw'
-                          'frictionless'
-
-       find_md   If this is set to True, the library will try to find
-                 associated metadata based on filename conventions.
-                 This should not be set if md_path is provided.
-                 If associated metadata cannot be found, an error
-                 will be raised when this is set.
-
-       nullable  Set to False to use traditional Pandas
-                 non-nullable types for floats etc.
-
-       upgrade_types   If True (the default), this will upgrade
-                       some columns read_csv will create as object
-                       (dtype object) to stricter types.
-
-       upgrade_possible_ints   If True (not the default), any float
-                               columns with nulls but with no fractional
-                               components will be upgraded to Ints.
-
-       return_md     If true, returns DataFrame and metadata (as tuple)
-
-       table_number  If set, use the specified table number (indexed
-                     from zero) in the metadata
-
-       preferred  Normally, if tdda.serial metadata is used,
-                  csv_to_pandas will use the panda.read_csv metadata flavour
-                  if present. This can be set to 'tdda.serial'
-                  or 'csvw' to override that.
-
-       verbosity   For metadata Reader
-
-       **kw     These keyword arguments are passed to pandas.read_csv,
-                and can be used to override values from the
-                metadata file.
+    Returns:
+        DataFrame, or (DataFrame, metadata) tuple if return_md is True.
     """
     md, path, md_path = get_metadata_for_reader(
         path=path,
@@ -849,70 +840,48 @@ def pandas_to_csv(
     warner=None,
     **kw_overrides,
 ):
-    """
-    Write pandas dataframe provided to flat file to the path or buffer
-    provided with options to use a tdda serial file to specify the format
-    or to write a companion .serial file.
+    """Write a Pandas DataFrame to a CSV file, optionally using metadata.
 
     Args:
-        df: the dataframe to write
-
-    path_or_buf: the path, path object, or buf for writing
-
-    md_inpath:  An optional tdda serial (or csvw) file to write
-                alongside the CSV data.
-
-    md_outpath: An optional tdda serial file to write with the
-                format used.
-                This can be a path or True.
-                If True, the .serial path will be the
-                path for the data with the extension swapped to .serial.
-
-    auto_md_inpath: If true, will choose the inpath for metadata
-                    automatically
-
-    auto_md_outpath: If true, will choose the outpath for metadata
-                     automatically
-
-    flavour:   By default, the .serial file will include only tdda.serial.
-               Either a single flavour (as a string)
-               or a list of flavours can be provided.
-
-    preferred_in_flavour: If there are multiple formats available
-                          in the tdda.serial file, by default it will
-                          use the first available of:
-                             pandas.DataFrame.to_csv
-                             pandas.read_csv
-                             tdda.serial
-                          failing which, anything it can find.
-
-                          If a preferred_flavour is specified,
-                          that will be used if available.
-
-    find_safe_null: If true, a null representation will be chosen
-                    that is safe for this data (not present in any
-                    string column).
-
-    include_data_path_in_md: If None, the path is not set in tdda.serial
-                             metadata. If set to any Truthy value,
-                             the path to the datafile is included.
-                             For csvw and frictionless,
-                             None causes a url/path to be written
-
-    **kw_overrides: keyword parameters are passed straight to DataFrame.to_csv.
-          Any specified here override those generated be reading
-          in_mdpath. It is usually better not to mix
-          in_mdpath and **overrides, as it is easy to generate
-          incompatibilities. Any na_rep specified as an override
-          will be replaced if find_safe_null is set and the nominated
-          null indicator is not, in fact safe. (A warning is issued.)
+        df (DataFrame): The DataFrame to write.
+        path (str): Path to write the CSV data to.
+        md_inpath (str): Optional path to a .serial (or CSVW) metadata
+            file to use when writing the CSV.
+        md_outpath (str or bool): Optional path to write a .serial
+            metadata file describing the format used. If True, the
+            .serial path is derived from the data path by swapping the
+            extension.
+        auto_md_inpath (bool): If True, find the input metadata path
+            automatically from filename conventions.
+        auto_md_outpath (bool): If True, choose the output metadata
+            path automatically.
+        flavour (str or list): Flavour(s) to include in the written
+            .serial file. By default only 'tdda.serial' is included.
+        preferred_in_flavour (str): If multiple formats are available
+            in the .serial file, use this one. By default, uses the
+            first available of: pandas.DataFrame.to_csv,
+            pandas.read_csv, tdda.serial, or anything it can find.
+        find_safe_null (bool): If True, choose a null representation
+            that is safe for this data (not present in any string
+            column).
+        include_data_path_in_md: If None, the path is not set in
+            tdda.serial metadata. If set to any truthy value, the
+            path to the datafile is included. For csvw and
+            frictionless, None causes a url/path to be written.
+        **kw_overrides: Passed directly to DataFrame.to_csv,
+            overriding any values derived from md_inpath. It is
+            usually better not to mix md_inpath and overrides as it
+            is easy to generate incompatibilities. Any na_rep
+            specified here will be replaced if find_safe_null is set
+            and the nominated null indicator is not safe (a warning
+            is issued).
 
     Returns:
-        Object with:
-            .md_out_path    (if written, else None)
-            .out_path       (path data written to, if any)
-            .md_inpath      (the path from which metadata for writing was read)
-            .to_csv_kwargs  (the keyword args used to write the CSV file)
+        Object with attributes:
+            .md_out_path: path metadata was written to, or None.
+            .out_path: path data was written to, or None.
+            .md_inpath: path from which write metadata was read.
+            .to_csv_kwargs: keyword args used to write the CSV.
     """
     Warn = nvl(warner, warn)
     md_in, path, md_inpath = get_metadata_for_writer(

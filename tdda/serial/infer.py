@@ -1211,6 +1211,42 @@ def infer_format_from_flat_file(
     quoting=None,
     **kw,
 ):
+    """Infer SerialMetadata for a flat file by sampling its contents.
+
+    Reads a sample of the file and infers delimiter, quoting style,
+    encoding, field types, date formats, and null indicators.
+
+    Args:
+        path (str): Path to the flat file (CSV or similar) to sample.
+        lines_to_use (int): Number of lines to sample. Uses a default
+            sample size if not specified.
+        warner: Optional callable for issuing warnings.
+        add_defaults (bool): If True, include default values (e.g.
+            standard encoding, quote char) in the inferred metadata
+            even when they match the library default.
+        report_added_defaults (bool): If True (the default), issue
+            warnings when defaults are added. Only relevant when
+            add_defaults is True.
+        raise_error (bool): If True, raise an error on problems rather
+            than issuing a warning.
+        delimiter (str): Override the inferred field separator.
+        quote_char (str): Override the inferred quote character.
+        escape (str): Override the inferred escape character.
+        no_escape (bool): If True, treat no escape character as given
+            (do not infer one).
+        stutter (bool): Override whether stutter (doubled-quote)
+            escaping is used.
+        null (str): Override the inferred null indicator string.
+        encoding (str): Override the inferred file encoding.
+        date_format (str): Override the inferred date format.
+        datetime_format (str): Override the inferred datetime format.
+        quoting (str): Override the inferred quoting style (e.g.
+            'QUOTE_MINIMAL', 'QUOTE_ALL').
+        **kw: Additional keyword arguments passed to MetadataInferrer.
+
+    Returns:
+        SerialMetadata inferred from the file.
+    """
     inferrer = MetadataInferrer(
         path,
         lines_to_use,

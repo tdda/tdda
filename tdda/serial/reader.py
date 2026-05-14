@@ -38,33 +38,28 @@ def load_metadata(
     preferred_serial_flavour=None,
     verbosity=VERBOSITY,
 ):
-    """
-    Attempt to load metadata from path given.
+    """Load metadata from a .serial, CSVW, or Frictionless file.
 
     Args:
+        path (str): Path to the metadata file.
+        md_file_type (str): Optional metadata file type. One of
+            'tdda.serial', 'csvw', 'frictionless'.
+        table_number (int): If specified, use the nth table from a
+            multi-table metadata file (indexed from zero). Raises an
+            error if not present.
+        for_table_name (str): If specified, select the metadata from
+            a multi-table metadata file by matching the end of the url
+            in the metadata to this table name.
+        preferred_serial_flavour (str or list): If multiple metadata
+            flavours are found at the same level of a .serial file,
+            the one to choose (or a priority list).
+        verbosity (int): Controls warning/error output.
+            2: errors and warnings to stderr.
+            1: warnings to stderr only.
+            0: silent.
 
-      path    Path to the metadata file
-
-      md_file_type    Optional metadata file type. One of
-                      'tdda.serial'
-                      'csvw'
-                      'frictionless'
-
-      table_number  If specified, use the nth table from a CSVW file.
-                    Raise an error if not present, (indexed from zero)
-
-      for_table_name  If specified, use choose the metadata from
-                      a metadata file describing multiple tables
-                      by matching the (end of the) url in the metadata
-                      to this table name
-
-      preferred_serial_flavour: If multiple metadata flavours are found
-                                at the same level of a .serial file,
-                                the one to choose (or priority list).
-
-      verbosity:   2: errors and warnings to stderr
-                   1: warnings to stderr
-                   0: don't show errors or warnings
+    Returns:
+        SerialMetadata (or subclass) loaded from the file.
     """
     stem, ext = os.path.splitext(path)
     lcstem, ext = stem.lower(), ext.lower()

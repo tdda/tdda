@@ -54,27 +54,29 @@ FIELDTYPE_TO_FRICTIONLESS = {
 
 
 class FrictionlessMetadata(SerialMetadata):
-    """
-    Subclass of SerialMetadata specifically for Frictionless Metadata provided
-    in Frictionless format.
+    """SerialMetadata subclass that reads Frictionless metadata.
 
-    Imports the information from a frictionless YAML.JSON file
-    (typically foo.resource.yaml or similar for file foo.csv)
-    to SerialMetadata.
+    Imports metadata from a Frictionless YAML or JSON file (typically
+    foo.resource.yaml or similar for file foo.csv) into the
+    SerialMetadata representation.
 
     Args:
-        spec should normally either be a path to a Frictionless file
-            (.yaml or .json)
-             or a dictionary of the form returned by performing
-             a load on such a (valid) Frictionless file).
-             If None, minimal initialization is performed
+        spec (str or dict): Path to a Frictionless file (.yaml or
+            .json), or a dict of the form returned by loading a valid
+            Frictionless file. If None, minimal initialization is
+            performed.
+        extensions (bool): If True, accept tdda Frictionless
+            extensions.
+        table_number (int): If set, use the nth table (indexed from
+            zero) from a multi-table Frictionless file.
+        for_table_name (str): If set, select the table whose path ends
+            with this name from a multi-table Frictionless file.
+        verbosity (int): Controls warning/error output.
 
-    Validation Properties:
-            ._valid     is True if no errors were encountered
-            ._errors    is a list of (textual) errors (if any)
-            ._warnings  is a list of (textual) warnings generated
-                        while reading the Frictionless information
-
+    Validation attributes (read-only):
+        _valid (bool): True if no errors were encountered.
+        _errors (list): Textual errors found while reading.
+        _warnings (list): Textual warnings generated while reading.
     """
 
     def __init__(
@@ -490,14 +492,13 @@ def serial_date_format_to_frictionless(fmt, extensions=False, fieldtype=None):
 
 
 def serial_to_frictionless(md):
-    """
-    Converts a SerialMetadata object to a FrictionlessMetadata Object.
+    """Convert a SerialMetadata object to a FrictionlessMetadata object.
 
     Args:
-        md: A SerialMetatadata object.
+        md (SerialMetadata): Metadata to convert.
 
     Returns:
-            A (braoadly equivalent) FrictionlessMetadata obkect
+        A broadly equivalent FrictionlessMetadata object.
     """
     frictionless = FrictionlessMetadata()
     frictionless.__dict__.update(md.__dict__)

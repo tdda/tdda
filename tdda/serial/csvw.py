@@ -101,26 +101,28 @@ class CSVW:
 
 
 class CSVWMetadata(SerialMetadata):
-    """
-    Subclass of SerialMetadata specifically for CSVW Metadata provided
-    in CSVW format.
+    """SerialMetadata subclass that reads CSVW metadata.
 
-    Imports the information from a csvw JSON file
-    (typically foo-metadata.json for file foo.csv)
-    to SerialMetadata.
+    Imports metadata from a CSVW JSON file (typically
+    foo-metadata.json for file foo.csv) into the SerialMetadata
+    representation.
 
     Args:
-        spec should normally either be a path to a CSVW file (usually .json)
-             or a dictionary of the form returned by performing
-             a json.load such a (valid) CSVW).
-             If None, minimal initialization is performed
+        spec (str or dict): Path to a CSVW file (usually .json), or a
+            dict of the form returned by json.load on a valid CSVW
+            file. If None, minimal initialization is performed.
+        extensions (bool): If True, accept tdda CSVW extensions.
+        table_number (int): If set, use the nth table (indexed from
+            zero) from a multi-table CSVW file.
+        for_table_name (str): If set, select the table whose url ends
+            with this name from a multi-table CSVW file.
+        url (str): Override the url for the data file.
+        verbosity (int): Controls warning/error output.
 
-    Validation Properties:
-            ._valid     is True if no errors were encountered
-            ._errors    is a list of (textual) errors (if any)
-            ._warnings  is a list of (textual) warnings generated
-                        while reading the CSVW information
-
+    Validation attributes (read-only):
+        _valid (bool): True if no errors were encountered.
+        _errors (list): Textual errors found while reading.
+        _warnings (list): Textual warnings generated while reading.
     """
 
     def __init__(
@@ -473,27 +475,29 @@ class CSVWMetadata(SerialMetadata):
         self.process_dialect()
 
     def process_dialect(self):
-        """
+        r"""
         Processes the dialect part of a CSVW specification.
 
         https://w3c.github.io/csvw/metadata/#dfn-dialect-descriptions
         specifies the defaults for these as:
 
-        {
-            "encoding": "utf-8",
-            "lineTerminators": ["\r\n", "\n"],
-            "quoteChar": "\"",
-            "doubleQuote": true,
-            "skipRows": 0,
-            "commentPrefix": "#",
-            "header": true,
-            "headerRowCount": 1,
-            "delimiter": ",",
-            "skipColumns": 0,
-            "skipBlankRows": false,
-            "skipInitialSpace": false,
-            "trim": false
-        }
+        .. code-block:: json
+
+            {
+                "encoding": "utf-8",
+                "lineTerminators": ["\r\n", "\n"],
+                "quoteChar": "\"",
+                "doubleQuote": true,
+                "skipRows": 0,
+                "commentPrefix": "#",
+                "header": true,
+                "headerRowCount": 1,
+                "delimiter": ",",
+                "skipColumns": 0,
+                "skipBlankRows": false,
+                "skipInitialSpace": false,
+                "trim": false
+            }
 
         which presumably means that a conformant CSV reader will
         use those settings if they are not specified in the CSVW file.
@@ -716,14 +720,15 @@ def serial_date_format_to_csvw(fmt, extensions=False, fieldtype=None):
 
 
 def serial_to_csvw(md, name='data.csv'):
-    """
-    Converts a SerialMetadata object to a CSVWMetadata Object.
+    """Convert a SerialMetadata object to a CSVWMetadata object.
 
     Args:
-        md: A SerialMetatadata object.
+        md (SerialMetadata): Metadata to convert.
+        name (str): Data file name to record in the CSVW url field
+            (default 'data.csv').
 
     Returns:
-            A (braoadly equivalent) CSVWMetadata obkect
+        A broadly equivalent CSVWMetadata object.
     """
     csvw = CSVWMetadata(url=name)
     csvw.__dict__.update(md.__dict__)
