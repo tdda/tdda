@@ -3,7 +3,8 @@ import regex as re
 
 from collections import OrderedDict, namedtuple
 
-from tdda.utils import XML, TDDAError
+from tdda.utils import TDDAError
+from tdda.xmlgen import XML
 
 
 RE_FLAGS = re.UNICODE | re.DOTALL

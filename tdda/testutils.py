@@ -9,7 +9,6 @@ from tdda.utils import (
     to_pc,
     n_glyphs,
     handle_tilde,
-    XML,
     squote,
     DQuote,
     tddadir,
@@ -23,6 +22,7 @@ from tdda.utils import (
     CONSTRAINTSDIR,
     PDCONSTRAINTSDIR,
     normal_form_tk,
+    nftk, nftkc, nftkd,
     is_sequence,
     listify,
     globlike_match,
@@ -151,149 +151,6 @@ class TestTDDAUtils(ReferenceTestCase):
         self.assertEqual(handle_tilde('foo.csv'), 'foo.csv')
         self.assertEqual(handle_tilde('/foo.csv'), '/foo.csv')
 
-
-class TestXMLGeneration(ReferenceTestCase):
-    def testSimpleXMLGen(self):
-        x = XML()
-        x.OpenElement('foo')
-        x.WriteElement(
-            'bar',
-            'Contents of bar oné, twø, thrέé',
-            attributes=(('a1', 1), ('a2', 2)),
-        )
-        x.CloseElement()
-        stripped = x.xml().strip()
-        self.assertEqual(
-            stripped,
-            """
-<?xml version="1.0" encoding="UTF-8"?>
-<foo>
-    <bar a1="1" a2="2">Contents of bar oné, twø, thrέé</bar>
-</foo>
-""".strip(),
-        )
-        self.assertEqual(type(stripped), str)
-
-    def testSimpleLatin1XMLGen(self):
-        x = XML(inputEncoding='latin1')
-        x.OpenElement('foo')
-        x.WriteElement(
-            'bar',
-            'Contents of bar oné, twø, threé'.encode('latin1'),
-            attributes=(('a1', 1), ('a2', 2)),
-        )
-        x.CloseElement()
-        stripped = x.xml().strip()
-        self.assertEqual(
-            stripped,
-            """
-<?xml version="1.0" encoding="UTF-8"?>
-<foo>
-    <bar a1="1" a2="2">Contents of bar oné, twø, threé</bar>
-</foo>
-""".strip(),
-        )
-        self.assertEqual(type(stripped), str)
-
-    def testSimpleLatin9XMLGen(self):
-        x = XML(inputEncoding='latin9')
-        x.OpenElement('foo')
-        x.WriteElement(
-            'bar',
-            'Contents of bar oné, twø, threé at €3.'.encode('latin9'),
-            attributes=(('a1', 1), ('a2', 2)),
-        )
-        x.CloseElement()
-        stripped = x.xml().strip()
-        self.assertEqual(
-            stripped,
-            """
-<?xml version="1.0" encoding="UTF-8"?>
-<foo>
-    <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
-</foo>
-""".strip(),
-        )
-        self.assertEqual(type(stripped), str)
-
-    def testHarderLatin9XMLGen(self):
-        x = XML(inputEncoding='latin9')
-        x.OpenElement('foo')
-        x.WriteElement(
-            'bar',
-            'Contents of bar oné, twø, threé at €3.',
-            attributes=(('a1', 1), ('a2', 2)),
-        )
-        x.WriteElement(
-            'bas',
-            'N/A/N/A of 78042 on N/A at N/Abarceló hotels & resorts'.encode(
-                'latin9'
-            ),
-        )
-        x.CloseElement()
-        stripped = x.xml().strip()
-        self.assertEqual(
-            stripped,
-            """
-<?xml version="1.0" encoding="UTF-8"?>
-<foo>
-    <bar a1="1" a2="2">Contents of bar oné, twø, threé at €3.</bar>
-    <bas>N/A/N/A of 78042 on N/A at N/Abarceló hotels &amp; resorts</bas>
-</foo>
-""".strip(),
-        )
-        self.assertEqual(type(stripped), str)
-
-    def testHTML5ExternalCSS(self):
-        x = XML(html=5, title='Test Page', css=['style.css', 'theme.css'])
-        x.WriteElement('h1', 'Hello World')
-        x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-ext.html')
-        )
-
-    def testHTML5InlineCSS(self):
-        x = XML(html=5, title='Test Page', css='body { margin: 0; }')
-        x.WriteElement('p', 'Content')
-        x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-inline.html')
-        )
-
-    def testHTML5EmptyElements(self):
-        x = XML(html=5, omitHeader=1)
-        x.OpenElement('div', '', {})
-        # Non-void empty elements should use open/close tags
-        x.WriteElement('td', '', {})
-        x.WriteElement('span', '', {})
-        x.WriteElement('div', '', {})
-        # Void elements should self-close
-        x.WriteElement('input', '', {'type': 'text'})
-        x.WriteElement('br', '', {})
-        x.WriteElement('hr', '', {})
-        x.WriteElement('img', '', {'src': 'test.png'})
-        x.CloseElement('div')
-        x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-empty-elements.html')
-        )
-
-    def testHTML5TableFormatting(self):
-        x = XML(html=5, omitHeader=1)
-        x.OpenElement('table')
-        x.OpenElement('tr')
-        # Pattern that causes missing newline: OpenElement + CloseElement with tight=True
-        x.OpenElement('td')
-        x.WriteContent('Cell 1')
-        x.CloseElement('td', tight=True)  # This causes missing newline!
-        x.WriteElement('td', 'Cell 2')
-        x.WriteElement('td', '')  # Empty cell
-        x.CloseElement('tr')
-        x.CloseElement('table')
-        x.CloseXML()
-        self.assertStringCorrect(
-            x.xml(), os.path.join(TESTDIR, 'html5-table-formatting.html')
-        )
 
     def testSQuote(self):
         self.assertEqual(squote(''), "''")
@@ -541,6 +398,25 @@ class TestXMLGeneration(ReferenceTestCase):
                 (k, normal_form_tk(k, standardize_space=True, strip=True)),
                 (k, v),
             )
+
+    def testNFTK(self):
+
+        s = '“é”가'
+        sc = unicodedata.normalize('NFKC', s)
+        sd = unicodedata.normalize('NFKD', s)
+
+        expectedc = unicodedata.normalize('NFKC', '"e"가')
+        expectedd = unicodedata.normalize('NFKD', '"e"가')
+
+        self.assertFalse(sc == sd)
+
+        stkc = nftkc(s)
+        stkd = nftkd(s)
+        self.assertFalse(stkc == stkd)
+
+        self.assertEqual(stkc, expectedc)
+        self.assertEqual(stkd, expectedd)
+        self.assertEqual(nftk(expectedd), expectedc)
 
     def testIsSequence(self):
         self.assertTrue(is_sequence([0, 1]))

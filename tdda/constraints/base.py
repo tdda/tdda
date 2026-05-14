@@ -31,7 +31,6 @@ from tdda.utils import (
     richbad,
     unicode_definite,
     richgoodbad,
-    XML,
     write_or_return,
     tdda_css,
     constraint_val,
@@ -45,6 +44,7 @@ from tdda.utils import (
     plural,
 )
 from tdda.version import writable_version
+from tdda.xmlgen import XML
 
 from rich import print as rprint
 

@@ -17,6 +17,7 @@ from tdda.referencetest.testtagging import *
 from tdda.referencetest.test_tagging_meta import *
 from tdda.serial.testserial import *
 from tdda.testutils import *
+from tdda.testxml import *
 from tdda.testconfig import *
 from tdda.pd.testpdutils import *
 
