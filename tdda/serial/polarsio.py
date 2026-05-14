@@ -174,10 +174,11 @@ def serial_to_polars_read_csv_args_and_postproc(
     backend=None,
     no_postproc_warnings=False,
 ):
-    """
-    Convert metadata to dictionary of keyword arguments for Polars.
+    """Convert metadata to ``polars.read_csv`` kwargs plus post-processing info.
 
-    backend: not used by Polars
+    Also returns post-processing instructions (type casts to apply after
+    reading) and a column rename map. ``backend`` is unused; accepted
+    for API consistency with the pandas equivalent.
     """
     Warn = nvl(warner, warn)
     f = pl_dtype_to_str if serializable else str_to_pl_dtype
@@ -483,10 +484,7 @@ def as_polars_serial_lib_args(kw):
 
 
 def polars_read_df(path, nullable=False, **kw):
-    """
-    Reads a pandas data frame from parquet or csv, as the extension suggests.
-    Prefers nullable types.
-    """
+    """Read a Polars DataFrame from a CSV or Parquet file by extension."""
     _, ext = os.path.splitext(path)
     if ext == '.csv':
         return csv_to_polars(path, **kw)
@@ -498,10 +496,7 @@ def polars_read_df(path, nullable=False, **kw):
 
 
 def polars_write_df(df, path):
-    """
-    Writes a pandas data frame as parquet or csv, as the extension suggests.
-    Does not write the index.
-    """
+    """Write a Polars DataFrame to CSV or Parquet, determined by extension."""
     _, ext = os.path.splitext(path)
     if ext == '.csv':
         df.write_csv(path)
@@ -512,9 +507,7 @@ def polars_write_df(df, path):
 
 
 def serial_to_polars_read_csv_python(md, backend=None, warner=None, **kw):
-    """
-    backend is not used for polars.
-    """
+    """Return ``polars.read_csv`` kwargs for use in plain Python CSV reading."""
     csv_kw, postproc, rename_map = serial_to_polars_read_csv_args_and_postproc(
         md, warner=warner, no_postproc_warnings=True
     )

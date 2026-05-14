@@ -13,7 +13,7 @@ Colours:
 
     --dark-red: #600000;
     --darker-red: #400000;
-    --very-light-pink: #FFF4F4;
+    --very-light-pink: #EFE8E8;
     --very-dark-grey: #222;
 
     --class-overline-colour:   var(--dark-red);
@@ -27,11 +27,17 @@ Colours:
 */
 
 
-/*  PURPLES */
-
+/*  PURPLES
     --parameters-header-colour:      #19001f;
     --parameters-background-colour:  #f3eff3;
     --parameters-overline-colour:    #301030;
+*/
+
+/* GREYS */
+    --parameters-header-colour:      #191919;
+    --parameters-background-colour:  #f3f3f3;
+    --parameters-overline-colour:    #191919;
+
 
 /*    --note-background-colour:        #1a4028 */
     --note-background-colour:        #400000;

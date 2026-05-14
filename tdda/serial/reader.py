@@ -144,17 +144,17 @@ def _get_metadata(
     config=None,
     verbosity=VERBOSITY,
 ):
-    """
-    Internal helper function for csv read and write functions.
-    Users should normally use get_metadata_for_reader or
-    get_metadata_for writer.
+    """Locate and load metadata for a CSV read or write operation.
 
-    Finds the metadata from the path, if available, or the path
-    from the metadata, adhering to the preferences specified.
-    Then loads the metadata, if found.
+    Internal helper; callers should use ``get_metadata_for_reader`` or
+    ``get_metadata_for_writer`` instead.
 
-    Returns a tuple consisting of the metadata, the data path and the metadata
-    path. If one of the input paths was None, it will now be updated.
+    Resolves the data path from metadata (or vice versa) according to
+    the specified preferences, then loads the metadata if found.
+
+    Returns:
+        tuple: ``(metadata, data_path, metadata_path)`` — any path that
+        was None on entry is filled in if it could be determined.
     """
     assert rw in ('r', 'w')
     is_for_reader = rw == 'r'
@@ -265,18 +265,15 @@ def get_metadata_for_writer(
 
 
 def find_metadata_kind(mds, preferred=None):
-    """
-    Breadth-first search of dict or list of dicts
-    for a recognized blob of metadata.
+    """Breadth-first search of a dict (or list of dicts) for metadata.
 
-    Returns the kind and subportion representing
-    the metadata for the first found, or, if there are ties
-    at the same leve, the preferred tdda.serial metadata flavour,
-    if specified. The preferred metadata flavour can be
-    a single flavour or a list. If it is a list, the preferences
-    run from higherest to lowest
+    Returns the kind and the sub-portion of the structure that
+    represents the metadata. When multiple flavours are found at the
+    same level, the ``preferred`` flavour wins; it may be a single
+    string or a priority list (highest first).
 
-    If no metadata is found, returns None, None
+    Returns:
+        tuple: ``(kind, metadata_dict)``, or ``(None, None)`` if not found.
     """
     preferred = preferred or []
     if not is_sequence(preferred):
@@ -308,10 +305,11 @@ def find_metadata_kind(mds, preferred=None):
 
 
 def set_delimiter_from_path(kw, path, sep_key):
-    """
-    If no delimiter is set in kw (with sep_key), and the extension for
-    path is .csv, .tsv, or .psv, set the (field separation) delimit in
-    kw to the appropriate value.
+    """Set the delimiter in ``kw`` from the file extension if not already set.
+
+    Sets ``kw[sep_key]`` to ``,``, ``\\t``, or ``|`` for ``.csv``,
+    ``.tsv``, or ``.psv`` files respectively, unless a delimiter is
+    already present in ``kw``.
     """
     kw = kw or {}
     if not kw.get('delimiter') and not kw.get(sep_key):
@@ -326,9 +324,7 @@ def set_delimiter_from_path(kw, path, sep_key):
 
 
 def has_csvw_context(json_path):
-    """
-    Check for CSVW sig in JSON file
-    """
+    """Return True if the JSON file contains a CSVW ``@context`` signature."""
     with open(json_path) as f:
         d = json.load(f)
     if isinstance(d, dict):

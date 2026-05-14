@@ -1,7 +1,7 @@
 Installation
 ============
 
-If you don't need source, the simplest way to install the TDDA library is
+If you don‘t need source, the simplest way to install the TDDA library is
 to do a normal ``pip`` install::
 
     pip install tdda
@@ -14,8 +14,8 @@ right one, use::
 replacing ``python`` with whatever you need to use to run your target
 version of Python.
 
-If you want it installed for all users and don't have write access to
-your Python's site packages, you should change the permissions
+If you want it installed for all users and don‘t have write access to
+your Python‘s site packages, you should change the permissions
 so that you can write it, or log in as a user who does have permission,
 or add ``sudo`` before the ``pip`` or ``python`` command.
 
@@ -38,7 +38,7 @@ Source installation
 The `tdda <https://github.com/tdda/tdda>`_ project is hosted on Github at
 `github.com/tdda/tdda <https://github.com/tdda/tdda>`_.
 
-If you want to do a source installation, that's probably all you need to know,
+If you want to do a source installation, that‘s probably all you need to know,
 but::
 
     git clone git@github.com:tdda/tdda.git
@@ -85,8 +85,8 @@ for example::
     OK (skipped=15)
 
 
-Some tests will be skipped (``s``) if you don't have various libraries
-or haven't (yet) told TDDA about any databases you might want to use.
+Some tests will be skipped (``s``) if you don‘t have various libraries
+or haven‘t (yet) told TDDA about any databases you might want to use.
 
 
 .. _optional_installations:

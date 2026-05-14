@@ -19,7 +19,7 @@ Fonts that are known not to support these characters on Windows include:
  * ``Lucida Console``
  * ``Lucida Sans Typewriter``
 
-The font for a Command Prompt window can be set through the window's
+The font for a Command Prompt window can be set through the window‘s
 ``Properties``.
 
 Alternatively, the ``--ascii`` flag can be used when using verify or

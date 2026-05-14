@@ -208,7 +208,7 @@ Older Versions
   on lines other than where intended.
 
 * The :py:mod:`tdda.constraints` package is now more resilient against
-  unexpected type mismatches. Previously, if the type didn't match, then
+  unexpected type mismatches. Previously, if the type didn‘t match, then
   in some circumstances exceptions would be (incorrectly) raised for other
   constraints, rather than failures.
 

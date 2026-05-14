@@ -164,13 +164,11 @@ class CSVWMetadata(SerialMetadata):
         self.validate()
 
     def read(self, spec):
-        """
-        Reads the CSVW spec from the file if spec is a path to a file
-        Stores spec in ._csvw.
+        """Read the CSVW spec from file or dict and store in ``._csvw``.
 
         Args:
-            spec: path to CSVW file or JSON-read contents thereof
-                  (or equivalent)
+            spec (str or dict): Path to a CSVW file, or a dict
+                of the form returned by json.load on a valid CSVW file.
         """
         if type(spec) == str:
             with open(spec) as f:
@@ -293,41 +291,30 @@ class CSVWMetadata(SerialMetadata):
             f.write(out)
 
     def set_if_attr_non_null(self, d, key, attribute=None):
-        """
-        Set item key in dictionary d to the value of
-        the given attribute of self, which defaults to key.
+        """Set ``d[key]`` to ``self.<attribute>`` if non-null.
 
         Args:
-            d          dictionary
-            key        key to set
-            attribute  attribute in self to look up (defaults to key)
-
-        Returns:
-            None
+            d (dict): Dictionary to update.
+            key (str): Key to set.
+            attribute (str): Attribute of self to look up; defaults to key.
         """
         value = getattr(self, nvl(attribute, key), None)
         if value is not None:
             d[key] = value
 
     def set_if_non_null(self, d, key, value):
-        """
-        Set item key in dictionary d to value, if it is not null.
+        """Set ``d[key] = value`` if value is not None.
 
         Args:
-            d          dictionary
-            key        key to set
-            value      the value to which to set the key in d
-
-        Returns:
-            None
+            d (dict): Dictionary to update.
+            key (str): Key to set.
+            value: Value to assign.
         """
         if value is not None:
             d[key] = value
 
     def get_schema_and_columns(self):
-        """
-        Sets _schema and _columns from CSVW
-        """
+        """Set ``_schema`` and ``_columns`` from the CSVW spec."""
         try:
             tables = self._csvw.get('tables')
             if tables:
@@ -388,17 +375,14 @@ class CSVWMetadata(SerialMetadata):
             self._columns = []
 
     def get_context(self):
-        """
-        CSVW files have a mandatory @context property that should have
-        the value http://www.w3.org/ns/csvw (CSVW.CONTEXT).
+        """Read and validate the mandatory ``@context`` property.
 
-        That can be stored as a string or as the first item in a list.
-        The value is a list, the second element should be a dictionary
-        containing one or both of the keys:
-
-            @base — a base URL for interpreting other URLS
-            @language - a natural language code such as en
-
+        CSVW files must have ``@context`` set to
+        http://www.w3.org/ns/csvw (``CSVW.CONTEXT``). It may be stored
+        as a plain string or as the first item in a list; when a list,
+        the second element may be a dict with keys ``@base`` (a base URL
+        for resolving other URLs) and/or ``@language`` (a language code
+        such as ``en``).
         """
         value = self._csvw.get('@context')
         properties = None
@@ -442,12 +426,10 @@ class CSVWMetadata(SerialMetadata):
             self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
-        """
-        Reads the dialect parameter from the first tableSchema
-        of the first table in the csvw spec.
+        """Read the dialect from the CSVW spec into ``_dialect``.
 
-        If there no dialect section, reads it from 'dc:replaces'
-        instead, if there is one.
+        Reads from the first table's dialect section. Falls back to the
+        ``dc:replaces`` block if no dialect section is present.
         """
         self._dialect = dialect = self._csvw.get('dialect', {})
         if not dialect and hasattr(self, '_table') and self._table is not None:
@@ -649,9 +631,7 @@ class CSVWMultiMetadata:
 
 
 def csvw_date_format_to_serial(fmt, extensions=False):
-    """
-    Converts CSVW date formats to nearest equivalent yyyydate format.
-    """
+    """Convert a CSVW date format string to the nearest yyyydate equivalent."""
     if not fmt:
         return None
     if '%' in fmt:

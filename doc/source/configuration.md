@@ -39,7 +39,7 @@ config = Config(load=False)
 ```
 
 If the `load=False` parameter is not set, a Config() object with
-the user's configuration will be loaded.
+the user‘s configuration will be loaded.
 
 In either case, the configuration can be modified after load. This will
 not alter the configuration file.

@@ -62,7 +62,7 @@ The major components of the TDDA module are:
 * **Metadata tools for Flat Files:** The ``tdda.serial`` modules
   and ``tdda serial`` command assist with more reliable reading
   and writing of flat files (CSV etc.) using metadata, both in
-  ``tdda``'s own format, and with the [CSVW](https://csvw.org) (``.csvw``)
+  ``tdda``‘s own format, and with the [CSVW](https://csvw.org) (``.csvw``)
   and [Frictionless](https://frictionlessdata.io) formats.
 
 * **DataFrame Diff utilities:** A new ``tdda diff`` utility allows

@@ -111,13 +111,11 @@ class FrictionlessMetadata(SerialMetadata):
         self.validate()
 
     def read(self, spec):
-        """
-        Reads the Frictionless spec from the file if spec is a path to a file
-        Stores spec in ._frictionless.
+        """Read the Frictionless spec from file or dict into ``._frictionless``.
 
         Args:
-            spec: path to Frictionless file or JSON-read contents thereof
-                  (or equivalent)
+            spec (str or dict): Path to a Frictionless file (.yaml or
+                .json), or a dict of the form returned by loading one.
         """
         if type(spec) == str:
             self._frictionless = load_json_or_yaml(spec)
@@ -226,44 +224,33 @@ class FrictionlessMetadata(SerialMetadata):
         write_json_or_yaml(d, path, indent=indent)
 
     def set_if_attr_non_null(self, d, key, attribute=None):
-        """
-        Set item key in dictionary d to the value of
-        the given attribute of self, which defaults to key.
+        """Set ``d[key]`` to ``self.<attribute>`` if non-null.
 
         Args:
-            d          dictionary
-            key        key to set
-            attribute  attribute in self to look up (defaults to key)
-
-        Returns:
-            None
+            d (dict): Dictionary to update.
+            key (str): Key to set.
+            attribute (str): Attribute of self to look up; defaults to key.
         """
         value = getattr(self, nvl(attribute, key), None)
         if value is not None:
             d[key] = value
 
     def set_if_non_null(self, d, key, value):
-        """
-        Set item key in dictionary d to value, if it is not null.
+        """Set ``d[key] = value`` if value is not None.
 
         Args:
-            d          dictionary
-            key        key to set
-            value      the value to which to set the key in d
-
-        Returns:
-            None
+            d (dict): Dictionary to update.
+            key (str): Key to set.
+            value: Value to assign.
         """
         if value is not None:
             d[key] = value
 
     def get_schema_and_fields(self):
-        """
-        Sets _schema and _columns from Frictionless.
+        """Set ``_schema`` and ``_fields`` from the Frictionless spec.
 
-        Could be in a resource in a package
-        or in a resource not in a package
-        or without any wrapper
+        Handles three layouts: resource inside a package, standalone
+        resource with a schema key, or bare schema without a wrapper.
         """
         if 'resources' in self._frictionless:  # package
             self._resources = resources = self._frictionless.get('resources')
@@ -327,15 +314,11 @@ class FrictionlessMetadata(SerialMetadata):
             self._fullpath = os.path.join(self._metadata_source_dir, self._url)
 
     def get_dialect(self):
-        """
-        Reads the dialect parameter from the first tableSchema
-        of the first table in the frictionless spec.
+        """Read the dialect from the Frictionless spec.
 
-        If there no dialect section, reads it from 'dc:replaces'
-        instead, if there is one.
-
-        Supports both flat dialect (frictionless v4: delimiter etc. at
-        top level) and nested {'csv': {...}} form we used to write.
+        Supports flat v4 dialect (CSV keys at top level) and the older
+        nested ``{'csv': {...}}`` form. Falls back to ``dc:replaces`` if
+        no dialect section is present.
         """
         self._dialect = dialect = self._resource.get('dialect', {})
         # Flat form (correct v4): CSV keys at top level of dialect.

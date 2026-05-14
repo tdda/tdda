@@ -117,19 +117,15 @@ class PANDAS:
 
 
 def csvw_to_pandas_kwargs(spec, extensions=False):
-    """
-    Construct a suitable set of kwargs to pass to pandas.read_csv
-    to get it to read a CSV file in conformance to the csvw
-    specification in spec.
+    """Return ``pandas.read_csv`` kwargs that implement a CSVW spec.
 
     Args:
-        spec should either be a path to a CSVW file (usually .json or .csvw)
-             or a dictionary of the form returned by performing
-             a json.load such a (valid) CSVW).
+        spec (str or dict): Path to a CSVW file (.json or .csvw), or
+            a dict of the form returned by json.load on one.
+        extensions (bool): If True, accept tdda CSVW extensions.
 
     Returns:
-        kwargs dictionary for pandas csv_read function, implementing
-        the spec given as closely as possible.
+        Dict of keyword arguments for ``pandas.read_csv``.
     """
     md = CSVWMetadata(spec, extensions=extensions)
     kw = serial_to_pandas_read_csv_args(md)
@@ -304,12 +300,11 @@ def serial_to_pandas_write_csv_args(
 
 
 def pandas_read_csv_to_serial(params, backend=None, warner=None, config=None):
-    """
-    Given a dictionary of pandas.read_csv parameters
-    (usually from a 'pandas.read_csv' block in a .serial file),
-    Construct the equivalent tdda.serial parameters, so far as possible
-    and return these as a pair of dicts---the first with the general
-    parameters and the second with the FieldMetadata dictionaries
+    """Convert a ``pandas.read_csv`` parameter dict to tdda.serial parameters.
+
+    Typically used with a ``'pandas.read_csv'`` block from a ``.serial``
+    file. Returns a dict of general SerialMetadata kwargs (including a
+    ``fields`` entry with FieldMetadata dicts where applicable).
     """
     Warn = nvl(warner, warn)
     kw = {}
@@ -375,23 +370,16 @@ def pandas_read_csv_to_serial(params, backend=None, warner=None, config=None):
 
 
 def pandas_dtype_to_fieldtype(dtype, col=None):
-    """
-    Converts a pandas dtype to a serial.base.FieldType
+    """Convert a pandas dtype to a ``FieldType`` constant.
 
     Args:
-
-        dtype   is the pandas datatype to be converted.
-                It can be provided as the actual dtype (df[col].dtype)
-                or as the string version of that (str(df[col].dtype)).
-
-        col     (Optional) the column of values (a pd.Series, typically)
-
-        backend:  Preferred backend for pandas
+        dtype: The pandas dtype, as a dtype object or its string
+            representation (e.g. ``str(df[col].dtype)``).
+        col (pd.Series): Optional column of values; used to inspect
+            actual Python types when dtype is ``object``.
 
     Returns:
-
-        The fieldtype (a value from FieldType) if recognized,
-        or None if no recognized dtype is found.
+        A ``FieldType`` value if recognized, or ``None``.
     """
     dt = str(dtype) if type(dtype) is not str else dtype
     dtl = dt.lower()
@@ -506,24 +494,18 @@ def is_dtype_datelike(t):
 
 
 def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
-    """
-    Create SerialMetadata for writing DataFrame df from pandas.
+    """Create SerialMetadata for a DataFrame being written with pandas.
 
     Args:
-        df     the DataFrame used to get field name and type information
-
-        outpath   path to which to write the metadata.
-                  If None, not written.
-                  Always returned.
-
-        flavour: the flavour or flavours to include.
-                 Can be a string (for a single flavour) or a list
-                 If no flavours are provided, this will write the tdda.serial.
-
-        kw:       the parameters used with df.to_csv
+        df (pd.DataFrame): Source of field names and type information.
+        outpath (str): Path to write metadata to; if None, not written
+            but the SerialMetadata object is still returned.
+        flavour (str or list): Metadata flavour(s) to include. Defaults
+            to ``tdda.serial``.
+        **kw: Parameters that will be passed to ``df.to_csv``.
 
     Returns:
-        SerialMetadata object
+        SerialMetadata: Metadata object describing the DataFrame.
     """
     fields = [pandas_col_to_field_metadata(df[c]) for c in df]
     idx = kw.get('index')
@@ -592,30 +574,19 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
 def pandas_col_to_field_metadata(
     field, fieldtype=None, fmt=None, date_fmt=None, backend=None
 ):
-    """
-    Produces a FieldMetadata object for the pandas series provided
-    in field.
+    """Return a ``FieldMetadata`` object for a pandas Series.
 
     Args:
-
-        field: a pandas series
-
-        fieldtype:         Optional fieldtype to use. Must be compatible
-                           with the data in the field if validate is True
-
-        fmt:               Optional format information for the field
-
-        date_fmt:          Optional format to use for date/datetime fields
-                           instead of the ISO8601 default. Typically the
-                           actual write format used, expressed as a named
-                           format or strftime string.
-
-        backend:           Preferred pandas backend
+        field (pd.Series): The column to describe.
+        fieldtype (str): Optional ``FieldType`` override; inferred from
+            dtype if not given.
+        fmt (str): Optional format string for the field.
+        date_fmt (str): Format for date/datetime fields if ``fmt`` is
+            not set; a named format or strftime string.
+        backend: Preferred pandas backend (unused, for API consistency).
 
     Returns:
-
-        FieldMetadata object for the field
-
+        FieldMetadata: Metadata object for the column.
     """
     if fieldtype:
         fieldtype = fieldtype
@@ -637,12 +608,7 @@ def item(v):
 
 
 def yn2bool(v):
-    """
-    Convert string v
-        to True is it starts with Y or y
-        to False if it startsw ith N or n
-    Otherwise return None
-    """
+    """Convert a Y/N string to True, False, or None."""
     return (
         None
         if pd.isnull(v)
@@ -655,17 +621,14 @@ def yn2bool(v):
 
 
 def to_pandas_date_format(v, for_write=False):
-    """
-    Convert a tdda.serial date format string to the appropriate value
-    for pandas date_format parameter.
+    """Convert a tdda.serial format string to a pandas ``date_format`` value.
 
-    For named generic formats:
-      - ISO8601 variants: return 'ISO8601' on read (pandas handles any
-        ISO variant); return canonical strftime on write.
-      - Euro/US variants: return canonical strftime for both read and write.
-      - Unspecified (eu, us): not yet implemented; raises an error.
-
-    For specific strftime strings: pass through unchanged.
+    Named ISO8601 formats return ``'ISO8601'`` on read (pandas accepts
+    any ISO variant) and the canonical strftime on write. Euro/US
+    named formats return their canonical strftime for both read and
+    write. Unspecified generic formats (``eu``, ``us``) raise
+    ``NotImplementedError``. Raw strftime strings pass through
+    unchanged.
     """
     if v is None:
         return None

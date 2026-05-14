@@ -176,13 +176,12 @@ ALL_NAMED_FORMATS = set(NAMED_FORMAT_TO_STRFTIME) | UNSPECIFIED_NAMED_FORMATS
 
 
 def serial_format_to_strftime(v):
-    """
-    Convert a tdda.serial format string to a strftime format string.
+    """Convert a tdda.serial format string to a strftime format string.
 
-    - Named ISO8601/Euro/US formats → canonical strftime from NAMED_FORMAT_TO_STRFTIME
-    - Unspecified formats (eu, us) → raises NotImplementedError
-    - Raw strftime strings (contain %) → pass through unchanged
-    - None → None
+    Named ISO8601/Euro/US formats map to their canonical strftime via
+    ``NAMED_FORMAT_TO_STRFTIME``. Unspecified formats (``eu``, ``us``)
+    raise ``NotImplementedError``. Raw strftime strings (containing
+    ``%``) pass through unchanged. ``None`` returns ``None``.
     """
     if v is None:
         return None
@@ -364,7 +363,7 @@ class FieldMetadata:
         return d.get(k, None)
 
     def validate(self):
-        if self.fieldtype not in FIELDTYPES:
+        if self.fieldtype is not None and self.fieldtype not in FIELDTYPES:
             self._errors.append(
                 f'Unknown field type "{self.fieldtype}" for field {self.name}'
             )
@@ -651,16 +650,16 @@ class SerialMetadata:
     def write(
         self, path, use_serial_ext=True, indent=4, verbose=0, date_style=None
     ):
-        """
-        Writes metadata to file.
+        """Write metadata to a ``.serial`` file.
 
         Args:
-            path: path to write to. If this does not end in '.serial'
-                  is will be changed to .serial unless keep_ext is set to True
-
-            use_serial_ext: Set to True to keep the extension provided in path.
-
-            date_style: DateStyle value controlling output format style.
+            path (str): Output path. Changed to ``.serial`` extension
+                unless ``use_serial_ext`` is False.
+            use_serial_ext (bool): If False, keep the extension in path
+                unchanged.
+            indent (int): JSON indentation level (default 4).
+            verbose (int): If non-zero, print the output path.
+            date_style (DateStyle): Controls output date format style.
         """
         outpath = swap_ext(path, '.serial') if use_serial_ext else path
         with open(outpath, 'w') as f:
@@ -702,9 +701,7 @@ class SerialMetadata:
             return default
 
     def single_null_indicator(self, default='', warner=None):
-        """
-        Get a single null indicator (for writing, mostly)
-        """
+        """Return a single null indicator string, for use when writing."""
         Warn = nvl(warner, warn)
         if self.null_indicator is None:
             # look at fields
@@ -780,9 +777,7 @@ def unobjectify(o):
 
 
 def nonnull(v):
-    """
-    test value v for whether it should be dumped.
-    """
+    """Return True if v is non-null and non-empty (should be serialized)."""
     return v is not None and v != [] and v != () and v != {}
 
 
