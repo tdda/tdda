@@ -110,7 +110,8 @@ pygments_style = 'sphinx'
 #keep_warnings = False
 
 
-smartquotes = False
+smartquotes = True
+smartquotes_action = 'D'
 
 # -- Options for HTML output ----------------------------------------------
 
