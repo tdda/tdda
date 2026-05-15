@@ -7,7 +7,7 @@ SYNOPSIS
   [1mtdda diff [22m[[1m‐‐fields [4m[22mFIELD1,FIELD2[24m,...]
               [[1m‐‐xfields [4m[22mFIELD1,FIELD2[24m,...  ]
               [[1m‐‐horizontal[22m] [[1m‐H[22m] [[1m‐‐vertical[22m] [[1m‐V[22m]
-              [[1m‐‐infer‐md[22m] [[1m‐‐no‐md[22m]
+              [[1m‐‐find‐md[22m] [[1m‐‐no‐md[22m]
               [[1m‐‐maxdiffs [4m[22mN[24m] [[1m‐‐key [4m[22mFIELD[24m]
               [[1m‐‐mono[22m] [[1m‐‐bw[22m] [[1m‐‐colours[22m, [1m‐c[22m, [1m‐‐colours [4m[22mCOLOURS[24m]
               [[1m‐‐dps [4m[22mN[24m]  [[1m‐‐precision [4m[22mN[24m]
@@ -52,10 +52,10 @@ OPTIONS
   [1m‐‐vertical[22m, [1m‐V[22m,
     Vertical dispay (left above right)
 
-  [1m‐‐infer‐md[0m
+  [1m‐‐find‐md[0m
     Attempt to find associated metadata for flat files.
 
-  [1m‐‐no‐md[22m, [1m‐‐no‐infer‐md[0m
+  [1m‐‐no‐md[22m, [1m‐‐no‐find‐md[0m
     Do not attempt to find associated metadata for flat files.
 
   [1m‐‐key [4m[22mFIELD[0m
@@ -65,10 +65,12 @@ OPTIONS
     Maximum number of differences to show.
 
   [1m‐‐mono[0m
-    Show monochrome output. Also enables ‐‐LR by default
+    Show monochrome output with different values in bold and shared values
+    dimmed.
 
   [1m‐‐bw[0m
-    Show black and white output. Also enables ‐‐LR by default
+    Show black and white output with different values in bold and shared
+    values in the terminal’s default style.
 
   [1m‐‐colours[22m, [1m‐c[22m, [1m‐‐colours [4m[22mCOLOURS[0m
     Use colours specified e.g. ‐c red‐blue
@@ -95,7 +97,7 @@ OPTIONS
 
   [1m‐‐prefixes [4m[22mPREFIXES[0m
     Use prefixes specified as labels for the two datasets
-    e.g. ‐‐prefixes "actual: ‐ref: "
+    e.g. ‐‐prefixes "actual:‐ref:" or "actual: ‐ref: " to include spaces
 
   [1m‐N[22m, [1m‐‐no‐config[0m
     Use default configuration (ignore ˜/.tdda.toml)
@@ -132,35 +134,33 @@ EXAMPLES
 
   This is the simplest form of the command. It will read a.csv and
   convert it to a data frame, using the default back end (Pandas).
+  tdda diff a.csv b.csv ‐‐vertical
 
+  Compare two CSV files, stacking left and right values vertically
+  rather than side by side. Useful when there are many columns or
+  long values.
+  tdda diff before.parquet after.parquet ‐‐key Income,Expenditure
 
+  Compare two Parquet files using a composite join key. The fields
+  [1mIncome [22mand [1mExpenditure [22mmust form a primary key in both datasets.
+  Rows are matched by key rather than by position.
+  tdda diff actual.csv expected.csv ‐‐AE ‐‐bw
 
+  Compare two CSV files using [1mA: [22mand [1mE: [22mas markers for actual and
+  expected, with monochrome bold highlighting instead of colour.
+  tdda diff foo.csv: bar.csv:
 
+  Compare two CSV files, asking TDDA to find associated metadata files
+  for each using naming conventions (e.g. [1m@.serial [22mor [1mfoo‐metadata.json[0m
+  in the same directory).
+  tdda diff foo.csv bar.txt:money.serial
 
+  Compare [1mfoo.csv [22m(loaded with default settings) against [1mbar.txt[22m,
+  using [1mmoney.serial [22mas the metadata file describing its format.
+  tdda diff a.parquet b.csv ‐‐loose ‐‐dps 3
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  Compare a Parquet file against a CSV file with loose type matching
+  and floating‐point values compared to 3 decimal places.
 
 
 

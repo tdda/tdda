@@ -74,7 +74,7 @@ class TDDADiff:
         self.key = key
         self.auto_key = auto_key
         self.verbosity = verbosity
-        self.find_md = self.dconfig.infer_md
+        self.find_md = self.dconfig.find_md
         self.quick = quick
         self.dflib = self.df_or_pl(pd, pl)
         self.console = console or stdout_console
@@ -127,8 +127,10 @@ class TDDADiff:
                 if table:
                     self.console.print()
                     self.console.print(table)
+            return True
         elif self.verbosity > 1:
             print('No differences.')
+        return False
 
     def process_args(self):
         parser = self.parser()
@@ -139,15 +141,15 @@ class TDDADiff:
         if more:
             s = 's' if len(more) > 1 else ''
             unks = ','.join(more)
-            self.error('Unknown argument%s: %s' % (s, unks))
+            self.error('Unknown argument%s: %s' % (s, unks), code=2)
 
         self.__dict__.update(vars(flags))
 
         if not self.left:
-            self.error('No input data specified.')
+            self.error('No input data specified.', code=2)
 
         if not self.right:
-            self.error('No output data specified.')
+            self.error('No output data specified.', code=2)
 
         if self.dps and self.precision is None:
             self.precision = self.dps
@@ -155,7 +157,7 @@ class TDDADiff:
         if self.colours:
             colours = [c.strip() for c in self.colours.lower().split('-')]
             if len(colours) != 2:
-                self.error('Form: --colours left-right.')
+                self.error('Form: --colours left-right.', code=2)
             p.set_colours(*colours)
         if self.bw:
             p.bw = True
@@ -172,12 +174,12 @@ class TDDADiff:
         if self.prefixes:
             prefixes = self.prefixes.split('-')
             if len(prefixes) != 2:
-                self.error('Form: --prefixes left-right.')
+                self.error('Form: --prefixes left-right.', code=2)
             p.set_prefixes(*prefixes)
 
         if self.horizontal:
             if self.vertical:
-                self.error('Cannot use --horizontal and --vertical together.')
+                self.error('Cannot use --horizontal and --vertical together.', code=2)
             else:
                 p.vertical = False
         elif self.vertical:
@@ -191,7 +193,7 @@ class TDDADiff:
 
         if self.key:
             self.key = split_string_list(self.key)
-        if self.infer_md:
+        if self.find_md_flag:
             self.find_md = True
         elif self.no_md:
             self.find_md = False
@@ -214,9 +216,9 @@ class TDDADiff:
 
         self.engine, self.backend = process_pandas_flags(self.config, self)
 
-    def error(self, msg):
+    def error(self, msg, code=1):
         print(msg, file=sys.stderr)
-        sys.exit(1)
+        sys.exit(code)
 
     def parser(self):
         formatter = argparse.RawDescriptionHelpFormatter
@@ -257,14 +259,15 @@ class TDDADiff:
         )
 
         parser.add_argument(
-            '--infer-md',
+            '--find-md',
+            dest='find_md_flag',
             action='store_true',
             help='Attempt to find associated metadata for flat files.',
         )
 
         parser.add_argument(
             '--no-md',
-            '--no-infer-md',
+            '--no-find-md',
             action='store_true',
             help='Do not attempt to find associated metadata for flat files.',
         )
@@ -279,13 +282,13 @@ class TDDADiff:
         parser.add_argument(
             '--mono',
             action='store_true',
-            help='Show monochrome output. Also enables --LR by default',
+            help='Show monochrome output.',
         )
 
         parser.add_argument(
             '--bw',
             action='store_true',
-            help='Show black and white output. Also enables --LR by default',
+            help='Show black and white output.',
         )
 
         parser.add_argument(
@@ -317,7 +320,7 @@ class TDDADiff:
             type=str,
             action='store',
             help='Use prefixes specified as labels for the two datasets, '
-            'e.g. --prefixes "actual: -ref: "',
+            'e.g. --prefixes "actual:-ref:"',
         )
 
         parser.add_argument(
@@ -394,9 +397,17 @@ class TDDADiff:
 
 
 def ddiff_helper(args, config=None, console=None):
-    config = get_config(config)
+    no_config = config is None and (
+        '-N' in args or '--no-config' in args
+    )
+    config = get_config(config, force_no_global=no_config)
     tddadiff = TDDADiff(config, cli_args=args, console=console)
-    tddadiff.ddiff()
+    try:
+        if tddadiff.ddiff():
+            sys.exit(1)
+    except Exception as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == '__main__':

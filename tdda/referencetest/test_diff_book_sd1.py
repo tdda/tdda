@@ -3,7 +3,7 @@ test_diff_book_sd1.py: Automatically generated test code from tdda gentest.
 
 Generation command:
 
-tdda gentest 'tdda diff testdata/elements3-old.parquet testdata/elements3-new.parquet --vertical --mono --polars' 'test_diff_book_sd1.py' '.'
+tdda gentest 'tdda diff testdata/elements3-old.parquet testdata/elements3-new.parquet --vertical --mono --polars' 'test_diff_book_sd1.py' '.' --non-zero-exit
 """
 
 import os
@@ -29,7 +29,7 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
         self.assertIsNone(self.exception)
 
     def test_exit_code(self):
-        self.assertEqual(self.exit_code, 0)
+        self.assertEqual(self.exit_code, 1)
 
     @tag
     def test_stdout(self):

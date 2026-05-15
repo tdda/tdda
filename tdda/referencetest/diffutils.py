@@ -181,11 +181,11 @@ def check_is_usable_key(left, right, key, raise_if_not=False):
         if R.shape[0] == nR:
             return True
         elif raise_if_not:
-            error(f'{str_key} is not a primary key for in right DataFrame.')
+            error(f'{str_key} is not a primary key for the right DataFrame.')
         else:
             return False
     elif raise_if_not:
-        error(f'{str_key} is not a primary key for in left DataFrame.')
+        error(f'{str_key} is not a primary key for the left DataFrame.')
     return False
 
 

@@ -73,9 +73,13 @@ class TestTDDADiff(ReferenceTestCase):
     def diff(self, args, console=None):
         """Helper for tdda diff tests"""
         with capture_output() as c:
-            ddiff_helper(args, config=Config(testing=True), console=console)
+            try:
+                ddiff_helper(args, config=Config(testing=True), console=console)
+                exit_code = 0
+            except SystemExit as e:
+                exit_code = e.code
             result = str(c)
-        return result
+        return result, exit_code
 
     def difftest(self, left, right, flags=None, flagpart=None, width=80):
         L, R = inpath(left), inpath(right)
@@ -95,7 +99,7 @@ class TestTDDADiff(ReferenceTestCase):
         )
         args = [L, R] + (flags or [])
         targs = [left, right] + (flags or [])
-        actual = self.diff(args, console=console)
+        actual, exit_code = self.diff(args, console=console)
         title = ' '.join(['tdda diff'] + targs)
         if GENSVG:
             console.save_svg(

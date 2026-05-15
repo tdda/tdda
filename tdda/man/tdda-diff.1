@@ -7,7 +7,7 @@
 \fBtdda diff\fR [\fB--fields\fR \fIFIELD1,FIELD2\fP,...]
             [\fB--xfields\fR \fIFIELD1,FIELD2\fP,...  ]
             [\fB--horizontal\fR] [\fB-H\fR] [\fB--vertical\fR] [\fB-V\fR]
-            [\fB--infer-md\fR] [\fB--no-md\fR]
+            [\fB--find-md\fR] [\fB--no-md\fR]
             [\fB--maxdiffs\fR \fIN\fP] [\fB--key\fR \fIFIELD\fP]
             [\fB--mono\fR] [\fB--bw\fR] [\fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP]
             [\fB--dps\fR \fIN\fP]  [\fB--precision\fR \fIN\fP]
@@ -60,12 +60,12 @@ as typed values after reading. Ke
   Vertical dispay (left above right)
 
 .PP
-\fB--infer-md\fR
+\fB--find-md\fR
 .br
   Attempt to find associated metadata for flat files.
 
 .PP
-\fB--no-md\fR, \fB--no-infer-md\fR
+\fB--no-md\fR, \fB--no-find-md\fR
 .br
   Do not attempt to find associated metadata for flat files.
 
@@ -82,12 +82,14 @@ as typed values after reading. Ke
 .PP
 \fB--mono\fR
 .br
-  Show monochrome output. Also enables --LR by default
+  Show monochrome output with different values in bold and shared values
+  dimmed.
 
 .PP
 \fB--bw\fR
 .br
-  Show black and white output. Also enables --LR by default
+  Show black and white output with different values in bold and shared
+  values in the terminal's default style.
 
 .PP
 \fB--colours\fR, \fB-c\fR, \fB--colours\fR \fICOLOURS\fP
@@ -130,7 +132,7 @@ as typed values after reading. Ke
 \fB--prefixes\fR \fIPREFIXES\fP
 .br
   Use prefixes specified as labels for the two datasets
-  e.g. --prefixes "actual: -ref: "
+  e.g. --prefixes "actual:-ref:" or "actual: -ref: " to include spaces
 
 .PP
 \fB-N\fR, \fB--no-config\fR
@@ -188,3 +190,42 @@ tdda diff a.csv a.csv
 .PP
 This is the simplest form of the command. It will read a.csv and
 convert it to a data frame, using the default back end (Pandas).
+.IP "  1." 5
+tdda diff a.csv b.csv --vertical
+
+.PP
+Compare two CSV files, stacking left and right values vertically
+rather than side by side. Useful when there are many columns or
+long values.
+.IP "  1." 5
+tdda diff before.parquet after.parquet --key Income,Expenditure
+
+.PP
+Compare two Parquet files using a composite join key. The fields
+\fBIncome\fR and \fBExpenditure\fR must form a primary key in both datasets.
+Rows are matched by key rather than by position.
+.IP "  1." 5
+tdda diff actual.csv expected.csv --AE --bw
+
+.PP
+Compare two CSV files using \fBA:\fR and \fBE:\fR as markers for actual and
+expected, with monochrome bold highlighting instead of colour.
+.IP "  1." 5
+tdda diff foo.csv: bar.csv:
+
+.PP
+Compare two CSV files, asking TDDA to find associated metadata files
+for each using naming conventions (e.g. \fB@.serial\fR or \fBfoo-metadata.json\fR
+in the same directory).
+.IP "  1." 5
+tdda diff foo.csv bar.txt:money.serial
+
+.PP
+Compare \fBfoo.csv\fR (loaded with default settings) against \fBbar.txt\fR,
+using \fBmoney.serial\fR as the metadata file describing its format.
+.IP "  1." 5
+tdda diff a.parquet b.csv --loose --dps 3
+
+.PP
+Compare a Parquet file against a CSV file with loose type matching
+and floating-point values compared to 3 decimal places.

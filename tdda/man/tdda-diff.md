@@ -9,7 +9,7 @@
 `tdda diff` [`--fields` *FIELD1,FIELD2*,...]
             [`--xfields` *FIELD1,FIELD2*,...  ]
             [`--horizontal`] [`-H`] [`--vertical`] [`-V`]
-            [`--infer-md`] [`--no-md`]
+            [`--find-md`] [`--no-md`]
             [`--maxdiffs` *N*] [`--key` *FIELD*]
             [`--mono`] [`--bw`] [`--colours`, `-c`, `--colours` *COLOURS*]
             [`--dps` *N*]  [`--precision` *N*]
@@ -55,10 +55,10 @@ as typed values after reading. Ke
   Vertical dispay (left above right)
 
 
-`--infer-md`  
+`--find-md`  
   Attempt to find associated metadata for flat files.
 
-`--no-md`, `--no-infer-md`  
+`--no-md`, `--no-find-md`  
   Do not attempt to find associated metadata for flat files.
 
 `--key` *FIELD*  
@@ -69,10 +69,12 @@ as typed values after reading. Ke
 
 
 `--mono`  
-  Show monochrome output. Also enables --LR by default
+  Show monochrome output with different values in bold and shared values
+  dimmed.
 
 `--bw`  
-  Show black and white output. Also enables --LR by default
+  Show black and white output with different values in bold and shared
+  values in the terminal's default style.
 
 `--colours`, `-c`, `--colours` *COLOURS*  
   Use colours specified e.g. -c red-blue
@@ -101,7 +103,7 @@ as typed values after reading. Ke
 
 `--prefixes` *PREFIXES*  
   Use prefixes specified as labels for the two datasets
-  e.g. --prefixes "actual: -ref: "
+  e.g. --prefixes "actual:-ref:" or "actual: -ref: " to include spaces
 
 
 `-N`, `--no-config`  
@@ -143,4 +145,37 @@ Data suitable for all examples can be obtained with
 
 This is the simplest form of the command. It will read a.csv and
 convert it to a data frame, using the default back end (Pandas).
+
+2. tdda diff a.csv b.csv --vertical
+
+Compare two CSV files, stacking left and right values vertically
+rather than side by side. Useful when there are many columns or
+long values.
+
+3. tdda diff before.parquet after.parquet --key Income,Expenditure
+
+Compare two Parquet files using a composite join key. The fields
+`Income` and `Expenditure` must form a primary key in both datasets.
+Rows are matched by key rather than by position.
+
+4. tdda diff actual.csv expected.csv --AE --bw
+
+Compare two CSV files using `A:` and `E:` as markers for actual and
+expected, with monochrome bold highlighting instead of colour.
+
+5. tdda diff foo.csv: bar.csv:
+
+Compare two CSV files, asking TDDA to find associated metadata files
+for each using naming conventions (e.g. `@.serial` or `foo-metadata.json`
+in the same directory).
+
+6. tdda diff foo.csv bar.txt:money.serial
+
+Compare `foo.csv` (loaded with default settings) against `bar.txt`,
+using `money.serial` as the metadata file describing its format.
+
+7. tdda diff a.parquet b.csv --loose --dps 3
+
+Compare a Parquet file against a CSV file with loose type matching
+and floating-point values compared to 3 decimal places.
 

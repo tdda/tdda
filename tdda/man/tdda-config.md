@@ -144,7 +144,7 @@ Discover should include an allowed-fields constraint.
 How strictly to check types when comparing dataframes.  
 **Default:** `"medium"`  
 **Allowed:** `"strict"`, `"medium"`, `"loose"`
-### `infer_md`
+### `find_md`
 Infer metadata when comparing dataframes with tdda diff.  
 **Default:** `true`  
 **Allowed:** `true`, `false`

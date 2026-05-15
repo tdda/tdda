@@ -38,6 +38,36 @@ This Version
 * **3.0** `dict_to_tex` function in `tdda.utils` for test-driven document
   development (TDDA) with TeX and LaTeX
 
+* **3.0** `tdda tag` command and `-F`/`--log-failures` flag for
+  :py:mod:`tdda.referencetest`: running tests with ``-F`` writes the
+  fully-qualified names of any failing tests to a file; ``tdda tag``
+  then adds ``@tag`` decorators
+  to those tests so they can be re-run in isolation with ``-1``.
+  The ``-9``/``--untag`` flag removes all ``@tag`` decorators
+  on tests run.
+
+* **3.0** `allowed` and `required` fields in constraints files: `discover`
+  now records which fields were present when constraints were generated.
+  `verify` and `detect` can then flag fields that are missing (required)
+  or unexpected (not allowed).
+
+* **3.0** `tdda config` command for inspecting the active configuration:
+
+    - ``tdda config`` or ``tdda config --current`` shows the effective config
+    - ``tdda config --default`` shows built-in default values
+    - ``tdda config --file`` shows only values set in the config file
+    - ``tdda config --annotated`` annotates output with allowed values
+
+* **3.0** Improved `pytest` support for :py:mod:`tdda.referencetest`:
+  ``--write-all``, ``--tagged``, and ``-9``/``--untag`` flags now work
+  with ``pytest`` via a ``conftest.py`` module, in addition to the
+  existing ``unittest``-based support.
+
+* **3.0** Improved encoding detection in `tdda.serial`: when reading flat
+  files, encoding is now detected using ``chardet`` with fallback through
+  UTF-8, UTF-8-SIG, UTF-16, and Latin-1, with automatic promotion from
+  Latin-1 to CP1252 where appropriate.
+
 * **3.0** Some changes to switch names (`--write-all` to `--write-all-records`)
 
 * **3.0** Less over-entitization in HTML output
