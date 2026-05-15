@@ -6,7 +6,7 @@ import os
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from checkeagle.xmlgen import XML
+from tdda.xmlgen import XML
 
 
 TESTDIR = 'testdata'
