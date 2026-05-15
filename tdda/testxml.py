@@ -9,7 +9,7 @@ from tdda.referencetest import ReferenceTestCase, tag
 from tdda.xmlgen import XML
 
 
-TESTDIR = 'testdata'
+TESTDIR = os.path.join(os.path.dirname(__file__), 'testdata')
 
 
 class TestXMLGeneration(ReferenceTestCase):

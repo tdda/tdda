@@ -37,6 +37,7 @@ pythonpath = [
 norecursedirs = [
     'constraints',
     'deprecated',
+    'doc',
     'pd',
     'gentest',
     'rexpy',
