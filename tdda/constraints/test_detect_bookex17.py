@@ -9,11 +9,14 @@ tdda gentest 'tdda detect testdata/accounts25k.parquet testdata/accountsv2.tdda 
 import os
 import sys
 import tempfile
+import unittest
+from shutil import which
 
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
 
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestX_DETECT_BOOKEX17(ReferenceTestCase):
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'detect_bookex17')

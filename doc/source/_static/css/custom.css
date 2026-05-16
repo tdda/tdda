@@ -468,3 +468,29 @@ html.writer-html4 .rst-content dl:not(.docutils) > dt, html.writer-html5 .rst-co
     padding: 6px;
     position:relative
 }
+
+/* -- link colours for inline code spans ------------------------------------ */
+
+/* .rst-content code.literal (specificity 0,2,1) beats plain a code (0,0,2)  */
+/* so we need .rst-content a code.literal (0,3,1) to win.                    */
+.rst-content a code.literal,
+.rst-content a:visited code.literal,
+.rst-content a:hover code.literal,
+.rst-content a code,
+.rst-content a:visited code,
+.rst-content a:hover code {
+    color: inherit;
+}
+
+/* -- code size in headings ------------------------------------------------- */
+
+/* .rst-content code.literal (0,2,1) shrinks code to 85% of the heading.     */
+/* .rst-content h1 code.literal (0,3,1) restores it to match heading size.   */
+.rst-content h1 code.literal, .rst-content h1 code,
+.rst-content h2 code.literal, .rst-content h2 code,
+.rst-content h3 code.literal, .rst-content h3 code,
+.rst-content h4 code.literal, .rst-content h4 code,
+.rst-content h5 code.literal, .rst-content h5 code,
+.rst-content h6 code.literal, .rst-content h6 code {
+    font-size: 1em;
+}

@@ -9,11 +9,14 @@ tdda gentest 'tdda discover -xG testdata/accounts1k.csv scratch/accountsex12.tdd
 import os
 import sys
 import tempfile
+import unittest
+from shutil import which
 
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
 
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestX_DISCOVER_BOOKEX12(ReferenceTestCase):
     cwd = os.path.abspath(os.path.dirname(__file__))
     refdir = os.path.join(cwd, 'ref', 'discover_bookex12')

@@ -30,11 +30,11 @@ with references, or the [blog](http://www.tdda.info/pages/table-of-contents.html
   used to
 
    - *discover* constraints from a (Pandas) DataFrame, and write them
-     out as JSON (`tdda discover` command).
+     out as JSON ([`tdda discover`](cli.md#tdda-discover) command).
    - *verify* that datasets meet the constraints in the constraints file
-     (`tdda verify` command).
+     ([`tdda verify`](cli.md#tdda-verify) command).
    - *detect* individual records/values that fail to meet the constraints
-     (`tdda detect` command).
+     ([`tdda detect`](cli.md#tdda-detect) command).
 
   As well as data frames in parquet files and flat (CSV) files,
   it also supports tables in a variety of relation databases without extraction.
@@ -44,7 +44,7 @@ with references, or the [blog](http://www.tdda.info/pages/table-of-contents.html
 * The [`tdda.rexpy`](#tdda.rexpy.rexpy) library is a tool for automatically
   inferring regular expressions from a column in a Pandas DataFrame
   or from a (Python) list of examples.
-  There is also a command-line utility for Rexpy (`rexpy` command).
+  There is also a command-line utility for Rexpy ([`rexpy`](cli.md#rexpy) command).
 
 * The [`tdda diff`](cli.md#tdda-diff) tool can compare dataframes in Parquet
   file and/or flat files and report differences. Command-line options
@@ -53,7 +53,7 @@ with references, or the [blog](http://www.tdda.info/pages/table-of-contents.html
 * The [`tdda.serial`](cli.md#tdda-serial) format allows the documentation
   of CSV and other flat-file formats in use in the companion
   `.serial` file for more accurate and portable reading and writing
-  of flat files. The `tdda serial` command provides functionality
+  of flat files. The [`tdda serial`](cli.md#tdda-serial) command provides functionality
   for reading and writing `tdda.serial` metadata, as well as for
   reading and writing [CSVW](https://csvw.org)
   and [Frictionless](https://frictionlessdata.io) metadata,

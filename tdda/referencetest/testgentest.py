@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import tempfile
+import unittest
 
 from tdda.utils import REFTESTDIR
 
@@ -57,6 +58,7 @@ def set_test_attributes(t):
     t.iterations = 2
 
 
+@unittest.skipIf(not shutil.which('tdda'), 'tdda not installed')
 class TestGenTest(ReferenceTestCase):
     @classmethod
     def setUpClass(cls):

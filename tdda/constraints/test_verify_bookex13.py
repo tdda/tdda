@@ -9,11 +9,14 @@ tdda gentest 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda --n
 import os
 import sys
 import tempfile
+import unittest
+from shutil import which
 
 from tdda.referencetest import ReferenceTestCase
 from tdda.referencetest.gentest import exec_command
 
 
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestX_VERIFY_BOOKEX13(ReferenceTestCase):
     command = 'tdda verify testdata/accounts1k.csv testdata/accountsex12.tdda --no-config'
     cwd = os.path.abspath(os.path.dirname(__file__))

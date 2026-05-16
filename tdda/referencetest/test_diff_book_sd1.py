@@ -9,11 +9,14 @@ tdda gentest 'tdda diff testdata/elements3-old.parquet testdata/elements3-new.pa
 import os
 import sys
 import tempfile
+import unittest
+from shutil import which
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.gentest import exec_command
 
 
+@unittest.skipIf(not which('tdda'), 'tdda not installed')
 class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
     command = 'tdda diff testdata/elements3-old.parquet testdata/elements3-new.parquet --vertical --mono --polars'
     cwd = os.path.abspath(os.path.dirname(__file__))

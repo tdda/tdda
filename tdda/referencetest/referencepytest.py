@@ -84,8 +84,8 @@ Tests can use this additional fixture::
         ref_special.assertStringCorrect(resultfile, 'something.csv')
 
 
-Tagged Tests
-~~~~~~~~~~~~
+Tagged Tests (pytest)
+~~~~~~~~~~~~~~~~~~~~~
 
 If the tests are run with the ``--tagged``
 command-line option, then only tests that have been decorated with
@@ -122,8 +122,8 @@ For example::
 If run with ``pytest --tagged``, only the tagged tests are
 run (``test_a``, ``TestMyClass.test_x`` and ``TestMyClass.test_y``).
 
-Regeneration of Results
-~~~~~~~~~~~~~~~~~~~~~~~
+Regeneration of Results (pytest)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When ``pytest`` is run with ``--write-all`` or ``--write``, it causes
 the framework to regenerate reference data files. Different kinds of

@@ -1,8 +1,8 @@
 # tdda diff: Display Differences in Tabular Data (DataFrames and Flat Files)
 
-## The Problem `tdda diff` Addresses
+## The Problem [`tdda diff`](cli.md#tdda-diff) Addresses
 
-`tdda diff` aims to be a visual diff for tabular data. To explain:
+[`tdda diff`](cli.md#tdda-diff) aims to be a visual diff for tabular data. To explain:
 
  - The traditional Unix/Linux `diff` command (and `git diff`) show
    lines that are different between two files, usually with either
@@ -45,9 +45,9 @@
     come in. The lines with `<` are from `bat.txt` and the ones with `>`
     are from `lamb.txt`.
 
- - 'Visual' diff tools are similar but usually show the whole of each
+ - ‘Visual’ diff tools are similar but usually show the whole of each
    file side by side, highlighting the specific parts of lines that
-   are different and allowing the two to be scrolled "in sync" even
+   are different and allowing the two to be scrolled “in sync” even
    when there are blocks of lines only in one or the other. They often
    use colour as well (as does `git diff`).
 
@@ -59,7 +59,7 @@
  - If the two files are identical, `diff` produces no output (and exits
    with code 0), and `opendiff` says "No differences" (and exits with code 0).
 
- - `tdda diff` uses the functionality for comparing DataFrames in
+ - [`tdda diff`](cli.md#tdda-diff) uses the functionality for comparing DataFrames in
    reference testing to provide a capability somewhere between these
    for datasets stored as either parquet files or flat files such as
    CSV files. It also exposes some of the extra options provided by
@@ -69,7 +69,7 @@
    to the text files we used, with a header line and commas
    instead of spaces between the words (because all the lines have
    six comma-separated values, including two blanks) and use
-   `tdda diff`, we get this:
+   [`tdda diff`](cli.md#tdda-diff), we get this:
 
    ![TDDA Diff Output for bat.csv and lamb.csv](image/tdda-diff-bat-lamb.png)
 
@@ -89,7 +89,7 @@
       And,everywhere,that,Mary,went,
       that,lamb,was,sure,to,go.
 
- - Notice that the default `tdda diff` output:
+ - Notice that the default [`tdda diff`](cli.md#tdda-diff) output:
     - Starts by summarizing the differences (if any)
     - Then shows a table with
       - Only the rows and columns with differences
@@ -106,7 +106,7 @@
 
 ## Data Types and Specificity
 
-The `tdda diff` functionality is new and somewhat experimental, but is
+The [`tdda diff`](cli.md#tdda-diff) functionality is new and somewhat experimental, but is
 powerful.
 
 In the case of tables stored in Parquet files, these are just loaded
@@ -211,7 +211,7 @@ where `PREFIXES` is a hyphen-separated pair of prefixes such as
 
 ## Joins, Keys, Field Order, and Row Order
 
-By default, `tdda diff` compares datasets row by row, in order,
+By default, [`tdda diff`](cli.md#tdda-diff) compares datasets row by row, in order,
 so if the order is different, or if there are missing rows on one side
 or the other, this will be reflected in the output. (This is quite
 different from `diff`.)
@@ -239,7 +239,7 @@ and `b.txt`
     False,0,0.6,,1970-01-31T00:00:00
     True,1,1.5,a,1999-12-31T23:59:58
 
-the default `tdda diff` would give:
+the default [`tdda diff`](cli.md#tdda-diff) would give:
 
    ![TDDA Diff Output for a.txt and b.txt](image/tdda-diff-a-b.png)
 

@@ -100,23 +100,23 @@ Contents
    :maxdepth: 2
 
    overview.md
-   installation.txt
-   constraints.txt
-   gentest.txt
-   referencetest.txt
-   rexpy-regex.txt
+   installation.md
+   constraints.md
+   gentest.md
+   referencetest.md
+   rexpy-regex.md
    tddadiff.md
    serialformat.md
-   constraints-api.txt
-   rexpy-api.txt
-   serial-api.txt
-   utils-api.txt
+   constraints-api.md
+   rexpy-api.md
+   serial-api.md
+   utils-api.md
    cli.md
    configuration.md
-   windows.txt
-   tests.txt
-   examples.txt
-   changes.txt
+   windows.md
+   tests.md
+   examples.md
+   changes.md
 
 
 
