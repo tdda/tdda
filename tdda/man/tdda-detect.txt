@@ -69,12 +69,18 @@ OPTIONS
   [1m‐f[22m, [1m‐‐fields            [22mReport only fields with failures
 
   [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]
-                          Report formats to write.
+                          Report formats to write, space‐separated.
+                          Formats: [1mhtml[22m, [1mmd [22m([1mmarkdown[22m), [1mtxt [22m([1mtext[22m),
+                          [1mjson[22m, [1myaml[22m, [1mtoml[22m.
+                          The stem of the output file is taken from
+                          [4mREPORT_PATH[24m if [1m‐o [22mis given, otherwise from
+                          [4mOUTPUT[24m.
   [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4msloppy[24m}
                           "sloppy" means consider all numeric types
                           equivalent
   [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[0m
-                          Path for reports
+                          Stem path for report files (extension is replaced
+                          by the format).
 
   [1m‐‐write‐all‐records   [22mInclude passing records
   [1m‐‐per‐constraint   [22mWrite one flag column per failing constraint in
@@ -86,8 +92,6 @@ OPTIONS
                         default, all original columns will be included.
   [1m‐‐output‐fiel[22mds [OUTPUT_FIELDS ...]
                         Specify original columns to write out.
-  [1m‐[22mr, ‐‐report [REPORT ...]
-                        Report formats to write.
   [1m‐‐interleave   [22mInterleave ok columns with original fields.
   [1m‐‐no‐interleave   [22mDo not interleave ok columns with original fields.
   [1m‐‐index   [22mInclude a row‐number index in the output file when
@@ -118,11 +122,73 @@ OPTIONS
                             [1ma [22mfor pyarrow
                             [1mo [22mfor original.
 
+EXAMPLES
+
+  (The example data can be obtained by running [1mtdda examples[22m, which will
+  create various directories, including [1mconstraints_examples[22m, containing
+  source data for these examples.)
+
+  1) [1mtdda detect elements.parquet elements.tdda elements‐failures.parquet[0m
+
+  This command reads data from [1melements.parquet[22m, checks it against the
+  constraints in [1melements.tdda[22m, and writes records with one or more
+  constraint failures to [1melements‐failures.parquet[22m.
+
+  2) [1mtdda detect elements.parquet elements.tdda elements‐failures.parquet ‐r[0m
+[1mhtml ‐o elements[0m
+
+  As above, and also writes an HTML report to [1melements.html[22m.
+
+  3) [1mtdda detect elements.parquet elements.tdda elements‐failures.parquet ‐r md[0m
+[1mjson txt ‐o elements[0m
+
+  As above, and also writes reports to [1melements.md[22m, [1melements.json[22m,
+  and [1melements.txt[22m.
+
 SEE ALSO
 
   tdda verify
   tdda discover
   tdda serial
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

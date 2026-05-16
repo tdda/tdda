@@ -124,21 +124,31 @@ def find_associated_metadata_file(path, raise_error=False):
         if os.path.exists(md_path):
             return md_path
 
-    # tdda.serial — wildcard match (@ acts as glob *)
+    # tdda.serial, frictionless schema/package, and CSVW — wildcard match (@ acts as glob *)
     data_stem = os.path.basename(pathstem)
     directory = os.path.dirname(base) or '.'
-    serial_ext = TDDASERIAL.ext
+    wildcard_exts = (
+        TDDASERIAL.ext,
+        '.schema.json', '.schema.yaml',
+        '.package.json', '.package.yaml',
+        '-metadata.json',
+        '-csvmetadata.json',
+        '-csv-metadata.json',
+        '.csvmetadata.json',
+        '.csv-metadata.json',
+    )
     matches = []
     try:
         entries = os.listdir(directory)
     except OSError:
         entries = []
     for entry in entries:
-        if '@' in entry and entry.endswith(serial_ext):
-            pattern_stem = entry[: -len(serial_ext)]
-            pattern = re.escape(pattern_stem).replace('@', '.*')
-            if re.fullmatch(pattern, data_stem):
-                matches.append(os.path.join(directory, entry))
+        for wext in wildcard_exts:
+            if '@' in entry and entry.endswith(wext):
+                pattern_stem = entry[: -len(wext)]
+                pattern = re.escape(pattern_stem).replace('@', '.*')
+                if re.fullmatch(pattern, data_stem):
+                    matches.append(os.path.join(directory, entry))
     if len(matches) == 1:
         return matches[0]
     if len(matches) > 1:

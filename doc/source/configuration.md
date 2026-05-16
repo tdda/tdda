@@ -6,7 +6,7 @@ by storing settings in a configuration file.
 ## Location on configuration file
 
 The configuration files is called `.tdda.toml` in the home directory
-(i.e.\ `~`/`$HOME` on Unix-like and Linux systems and `%USERPROFILE%`
+(i.e. `~`/`$HOME` on Unix-like and Linux systems and `%USERPROFILE%`
 on Windows).
 
 ## Format
@@ -38,7 +38,7 @@ from tdda.config import Config
 config = Config(load=False)
 ```
 
-If the `load=False` parameter is not set, a Config() object with
+If the `load=False` parameter is not set, a `Config()` object with
 the user‘s configuration will be loaded.
 
 In either case, the configuration can be modified after load. This will

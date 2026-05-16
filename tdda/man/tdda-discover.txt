@@ -53,8 +53,14 @@ OPTIONS
   [1m‐g[22m, [1m‐‐group‐rex       [22mGroup regular expression generation
   [1m‐G[22m, [1m‐‐no‐group‐rex    [22mDo not group regular expression generation *
 
-  [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]       Report formats to write.
-  [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[24m   Path for reports
+  [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]       Report formats to write, space‐separated.
+                          Formats: [1mhtml[22m, [1mmd [22m([1mmarkdown[22m), [1mtxt [22m([1mtext[22m),
+                          [1mjson[22m, [1myaml[22m, [1mtoml[22m.
+                          The stem of the output file is taken from
+                          [4mREPORT_PATH[24m if [1m‐o [22mis given, otherwise from
+                          [4mCONSTRAINTS[24m.
+  [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[24m   Stem path for report files (extension
+                          is replaced by the format).
 
   [1m‐‐no‐md                 [22mDo not create metadata in constraints file
   [1m‐‐allowed               [22mCreate allowed‐fields constraint (default)
@@ -121,7 +127,17 @@ EXAMPLES
     ‐ a metadata filed to be used to interpret the [1m.csv [22mfile is provided
       explicitly.
 
-  4) [1mtdda discover ‐‐rex postgres:elements[0m
+  4) [1mtdda discover elements.parquet elements.tdda ‐r html ‐o elements[0m
+
+  This discovers constraints as in example 1, and also writes an HTML
+  report to [1melements.html[22m.
+
+  5) [1mtdda discover elements.parquet elements.tdda ‐r md json txt ‐o elements[0m
+
+  This discovers constraints as in example 1, and also writes reports
+  to [1melements.md[22m, [1melements.json[22m, and [1melements.txt[22m.
+
+  6) [1mtdda discover ‐‐rex postgres:elements[0m
 
   This is similar again except that now the postgres:specifier will be
   interpreted as a database connection file in the user’s home
@@ -140,22 +156,6 @@ SEE ALSO
   tdda verify
   tdda detect
   tdda serial
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

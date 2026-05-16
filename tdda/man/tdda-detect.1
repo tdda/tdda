@@ -82,7 +82,17 @@ the same functions as \fBtdda verify\fR\&.
 .PP
 \fB-r\fR, \fB--report\fR [\fIREPORT\fP ...]
 .br
-                        Report formats to write.
+                        Report formats to write, space-separated.
+.br
+                        Formats: \fBhtml\fR, \fBmd\fR (\fBmarkdown\fR), \fBtxt\fR (\fBtext\fR),
+.br
+                        \fBjson\fR, \fByaml\fR, \fBtoml\fR\&.
+.br
+                        The stem of the output file is taken from
+.br
+                        \fIREPORT_PATH\fP if \fB-o\fR is given, otherwise from
+.br
+                        \fIOUTPUT\fP\&.
 .br
 \fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIsloppy\fP}
 .br
@@ -92,7 +102,9 @@ the same functions as \fBtdda verify\fR\&.
 .br
 \fB-o\fR, \fB--report-path\fR \fIREPORT_PATH\fP
 .br
-                        Path for reports
+                        Stem path for report files (extension is replaced
+.br
+                        by the format).
 
 .PP
 \fB--write-all-records\fR   Include passing records
@@ -114,10 +126,6 @@ the same functions as \fBtdda verify\fR\&.
 \fB--output-fiel\fRds [OUTPUT_FIELDS ...]
 .br
                       Specify original columns to write out.
-.br
-\fB-\fRr, --report [REPORT ...]
-.br
-                      Report formats to write.
 .br
 \fB--interleave\fR   Interleave ok columns with original fields.
 .br
@@ -174,6 +182,32 @@ the same functions as \fBtdda verify\fR\&.
                           \fBa\fR for pyarrow
 .br
                           \fBo\fR for original.
+
+.SH EXAMPLES
+(The example data can be obtained by running \fBtdda examples\fR, which will
+create various directories, including \fBconstraints_examples\fR, containing
+source data for these examples.)
+
+.PP
+1) \fBtdda detect elements.parquet elements.tdda elements-failures.parquet\fR
+
+.PP
+This command reads data from \fBelements.parquet\fR, checks it against the
+constraints in \fBelements.tdda\fR, and writes records with one or more
+constraint failures to \fBelements-failures.parquet\fR\&.
+
+.PP
+2) \fBtdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements\fR
+
+.PP
+As above, and also writes an HTML report to \fBelements.html\fR\&.
+
+.PP
+3) \fBtdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements\fR
+
+.PP
+As above, and also writes reports to \fBelements.md\fR, \fBelements.json\fR,
+and \fBelements.txt\fR\&.
 
 .SH SEE ALSO
 tdda-verify(1),

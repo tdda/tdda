@@ -64,12 +64,25 @@ The following options are available.
 \fB-G\fR, \fB--no-group-rex\fR    Do not group regular expression generation *
 
 .PP
-\fB-r\fR, \fB--report\fR [\fIREPORT\fP ...]       Report formats to write.
+\fB-r\fR, \fB--report\fR [\fIREPORT\fP ...]       Report formats to write, space-separated.
 .br
-\fB-o\fR, \fB--report-path\fR \fIREPORT_PATH\fP   Path for reports
+                        Formats: \fBhtml\fR, \fBmd\fR (\fBmarkdown\fR), \fBtxt\fR (\fBtext\fR),
+.br
+                        \fBjson\fR, \fByaml\fR, \fBtoml\fR\&.
+.br
+                        The stem of the output file is taken from
+.br
+                        \fIREPORT_PATH\fP if \fB-o\fR is given, otherwise from
+.br
+                        \fICONSTRAINTS\fP\&.
+.br
+\fB-o\fR, \fB--report-path\fR \fIREPORT_PATH\fP   Stem path for report files (extension
+.br
+                        is replaced by the format).
 
 .PP
 \fB--no-md\fR                 Do not create metadata in constraints file
+.br
 \fB--allowed\fR               Create allowed-fields constraint (default)
 .br
 \fB--no-allowed\fR            Do not create allowed-fields constraint
@@ -77,6 +90,7 @@ The following options are available.
 \fB--required\fR              Create required-fields constraint (default)
 .br
 \fB--no-required\fR           Do not create required-fields constraint
+.br
 \fB--no-allowed-required\fR   Same as \fB--no-allowed --no-required\fR
 .br
 \fB--no-ar\fR                 Same as \fB--no-allowed --no-required\fR
@@ -158,7 +172,21 @@ This is similar to the last two except that:
     explicitly.
 
 .PP
-4) \fBtdda discover --rex postgres:elements\fR
+4) \fBtdda discover elements.parquet elements.tdda -r html -o elements\fR
+
+.PP
+This discovers constraints as in example 1, and also writes an HTML
+report to \fBelements.html\fR\&.
+
+.PP
+5) \fBtdda discover elements.parquet elements.tdda -r md json txt -o elements\fR
+
+.PP
+This discovers constraints as in example 1, and also writes reports
+to \fBelements.md\fR, \fBelements.json\fR, and \fBelements.txt\fR\&.
+
+.PP
+6) \fBtdda discover --rex postgres:elements\fR
 
 .PP
 This is similar again except that now the postgres:specifier will be

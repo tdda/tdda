@@ -136,6 +136,9 @@ made. There are several choices:
      Specifying `bat.csv:bat-metadata.json` tells TDDA to use the
      metadata in `bat-metadata.json`.
 
+For more detail on this,
+see [tdda.serial colon format](serialformat.md#tdda-serial-colon-format).
+
 The left-hand and right-hand files can be in different format,
 i.e. comparisons between parquet and flat files are allowed,
 and also between flat files in quite different formats.

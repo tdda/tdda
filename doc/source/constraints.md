@@ -8,7 +8,7 @@ including `.csv` and other flat files, Parquet files, and Pandas DataFrames.
 
 The module includes:
 
-* The [`tdda`](cli.md#tdda) Command-line Tool for discovering constraints in data,
+* The [`tdda`](cli.md#tdda) command-line tool for discovering constraints in data,
   and for verifying data against those constraints,
   using the [TDDA JSON file format](#tdda_json_file_format) (`.tdda` files).
 * A Python `tdda.constraints` library containing classes that
@@ -30,6 +30,9 @@ To use databases, you may need
 to install extra optional packages.
 See {ref}`optional_installations`.
 :::
+
+For a much more detailed tutorial introduction on using TDDA for
+data validation, read chapter 1-7 of [the book](https://book.tdda.info).
 
 
 (tdda_command_line_tool)=
@@ -71,7 +74,9 @@ tdda discover [FLAGS] input [constraints.tdda]
 
 * `input` is one of:
 
-  - a `.csv` file
+  - a `.csv` file or other flat file
+    (which can have
+    [associated metadata](serialformat.md#tdda-serial-colon-format))
   - a `-`, meaning that a `.csv` file should be read from standard input
   - a `parquet` file containing a DataFrame, with extension
     `.parquet`
@@ -83,7 +88,7 @@ tdda discover [FLAGS] input [constraints.tdda]
 If no constraints output file is provided, or if `-` is used,
 the constraints are written to standard output (`stdout`).
 
-Optional flags are:
+Optional flags include:
 
 - `-r` or `--rex`, to include regular expression generation
 - `-R` or `--norex`, to exclude regular expression generation
@@ -114,8 +119,9 @@ tdda verify [FLAGS] input [constraints.tdda]
 
 * `input` is one of:
 
-  - a `.csv` file
-  - a `-`, meaning it will read a `.csv` file from standard input
+  - a flat file (e.g. `.csv`), which can have
+    [associated metadata](serialformat.md#tdda-serial-colon-format)
+  - a `-`, meaning it will read a flat file from standard input
   - a `parquet` file containing a DataFrame, with extension
     `.parquet`
   - a database table
@@ -123,14 +129,13 @@ tdda verify [FLAGS] input [constraints.tdda]
 * `constraints.tdda`, if provided, is a JSON `.tdda` file
   containing constraints.
 
-If no constraints file is provided and the input is a `.csv` or
-a `.feather` file,
+If no constraints file is provided and the input is a flat file,
 a constraints file with the same path as the input file, but with a `.tdda`
 extension, will be used.
 
 For database tables, the constraints file parameter is mandatory.
 
-Optional flags are:
+Optional flags include:
 
 * `-a`, `--all`  
   Report all fields, even if there are no failures
@@ -146,7 +151,7 @@ Optional flags are:
   strict typing, `int` is considered different from `real`.
 
 See [Constraints for CSV Files and Pandas DataFrames](#tdda_csv_file)
-for details of how a `.csv` file is read.
+for details of how a flat file is read.
 
 See [Constraints for Databases](#tdda_db_table)
 for details of how database tables are accessed.
@@ -171,27 +176,28 @@ tdda detect [FLAGS] input constraints.tdda output
 
 * `input` is one of:
 
-  - a `.csv` file name
-  - a `-`, meaning it will read a `.csv` file from standard input
-  - a `feather` file containing a DataFrame, with extension
-    `.feather`
+  - a flat file (e.g. `.csv`), which can have
+    [associated metadata](serialformat.md#tdda-serial-colon-format)
+  - a `-`, meaning it will read a flat file from standard input
+  - a `parquet` file containing a DataFrame, with extension
+    `.parquet`
   - a database table
 
-* `constraints.tdda`, is a JSON `.tdda` file constaining constraints.
+* `constraints.tdda`, is a JSON `.tdda` file containing constraints.
 
 * `output` is one of:
 
   - a `.csv` file to be created containing failing records
   - a `-`, meaning it will write the `.csv` file containing
     failing records to standard output
-  - a `feather` file with extension `.feather`, to be created
+  - a `parquet` file with extension `.parquet`, to be created
     containing a DataFrame of failing records
 
-If no constraints file is provided and the input is a `.csv` or feather file,
+If no constraints file is provided and the input is a flat file,
 a constraints file with the same path as the input file, but with a `.tdda`
 extension, will be used.
 
-Optional flags are:
+Optional flags include:
 
 * `-a`, `--all`  
   Report all fields, even if there are no failures
@@ -216,14 +222,14 @@ Optional flags are:
 * `--index`  
   Include a row-number index in the output file. The row number is
   automatically included if no output fields are specified. Rows are
-  usually numbered from 1, unless the (feather) input file already has
+  usually numbered from 1, unless the (parquet) input file already has
   an index.
 
 If no records fail any of the constraints, then no output file is
 created (and if the output file already exists, it is deleted).
 
 See [Constraints for CSV Files and Pandas DataFrames](#tdda_csv_file)
-for details of how a `.csv` file is read.
+for details of how a flat file is read.
 
 See [Constraints for Databases](#tdda_db_table)
 for details of how database tables are accessed.
@@ -235,9 +241,9 @@ on options.
 
 ## Constraints for CSV Files and Pandas DataFrames
 
-If a `.csv` file is used with the [`tdda`](cli.md#tdda) command-line tool, it will be
-processed by the standard Pandas `.csv` file reader with
-the following settings:
+If a flat file (`.csv` or other) is used with the [`tdda`](cli.md#tdda)
+command-line tool, it will by default be processed by the standard Pandas
+`.csv` file reader with the following settings:
 
 * `index_col` is `None`
 * `infer_datetime_format` is `True`
@@ -246,6 +252,10 @@ the following settings:
 * `escapechar` is `\` (backslash)
 * `na_values` are the empty string, `"NaN"`, and `"NULL"`
 * `keep_default_na` is `False`
+
+The [`tdda.serial` colon format](serialformat.md#tdda-serial-colon-format)
+can be used to supply metadata describing the flat file, allowing more
+accurate reading (types, separators, encodings, and so on).
 
 
 (tdda_db_table)=
@@ -404,6 +414,48 @@ each included constraint:
     "rex": list of regular expressions, to cover all cases
 }
 ```
+
+It may also include a dataset section with
+`allowed_fields` or `required_fields`, or both.
+By default, this looks like this:
+
+```json
+"dataset": {
+    "allowed_fields": [],
+    "required_fields": [
+        "*"
+    ]
+}
+```
+
+The `allowed_fields` section is a list of fields
+that are allowed to be present in the dataset to be validated,
+in addition to those listed in the `fields` section.
+(It makes no sense not to allow fields with constraints
+in data, so those are implicitly allowed.)
+The wildcards `*` (for any substring) and `?` (for any single character)
+are allowed, so it would be possible to use
+
+```json
+"allowed_fields": ["checksum", "sha*"]
+```
+
+to allow `checksum` and any field starting `sha` in the validation
+data, or `"allowed_fields": "*"` (or `["*"]`) to allow any extra fields.
+
+The `required_fields` section specifies fields that must be present
+in the data that is checked. It can also use wildcards, but these
+now operate only over the fields listed. The default value `["*"]`
+means that all listed fields are required. If only a subset are required,
+they can be listed explicitly or using wildcards. So
+
+```json
+"required_fields": ["checksum", "sha*"]
+```
+
+would mean that the `checksum` field (which should be among those
+in the `fields` section) and any fields in the `fields` section starting
+`sha` are required in data when it is validated.
 
 
 (constraint_examples)=

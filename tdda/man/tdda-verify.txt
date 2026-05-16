@@ -6,7 +6,7 @@ SYNOPSIS
 
   [1mtdda verify [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m]
               [[1m‐‐colour[22m] [[1m‐‐no‐colour[22m]
-              [[1m‐epsilon EPSILON[22m] [[1m‐a[22m] [[1m‐f[22m] [[1m‐r [22m[[4mREPORT[24m ...]]
+              [[1m‐epsilon EPSILON[22m] [[1m‐a[22m] [[1m‐f[22m]
               [[1m‐t {strict,sloppy}[22m] [[1m‐‐verify‐required‐fields[22m]
               [[1m‐‐verify‐allowed‐fields[22m] [[1m‐‐no‐verify‐required‐fields[22m]
               [[1m‐‐no‐verify‐allowed‐fields[22m] [[1m‐‐varf[22m] [[1m‐‐no‐varf[22m]
@@ -60,8 +60,6 @@ OPTIONS
                           failures
   [1m‐f[22m, [1m‐‐fields            [22mReport only fields with failures
 
-  [1m‐r[22m, [1m‐‐report [22m[[4mREPORT[24m ...]
-                          Report formats to write.
   [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4msloppy[24m}
                           "sloppy" means consider all numeric types
                           equivalent
@@ -92,6 +90,8 @@ SEE ALSO
   tdda detect
   tdda discover
   tdda serial
+
+
 
 
 

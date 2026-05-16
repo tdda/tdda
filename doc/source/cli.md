@@ -100,23 +100,30 @@ The following options are available.
 `-g`, `--group-rex`       Group regular expression generation  
 `-G`, `--no-group-rex`    Do not group regular expression generation *  
 
-`-r`, `--report` [*REPORT* ...]       Report formats to write.  
-`-o`, `--report-path` *REPORT_PATH*   Path for reports  
+`-r`, `--report` [*REPORT* ...]       Report formats to write, space-separated.  
+Formats: `html`, `md` (`markdown`), `txt` (`text`),
+`json`, `yaml`, `toml`.
+The stem of the output file is taken from
+*REPORT_PATH* if `-o` is given, otherwise from
+*CONSTRAINTS*.
 
-`--no-md`                 Do not create metadata in constraints file
+`-o`, `--report-path` *REPORT_PATH*   Stem path for report files (extension  
+is replaced by the format).
+
+`--no-md`                 Do not create metadata in constraints file  
 `--allowed`               Create allowed-fields constraint (default)  
 `--no-allowed`            Do not create allowed-fields constraint  
 `--required`              Create required-fields constraint (default)  
-`--no-required`           Do not create required-fields constraint
+`--no-required`           Do not create required-fields constraint  
 `--no-allowed-required`   Same as `--no-allowed --no-required`  
 `--no-ar`                 Same as `--no-allowed --no-required`  
 `--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-                        (when dataframe engine is Pandas)  
-                            `n` for numpy_nullable *  
-                            `a` for pyarrow  
-                            `o` for original.  
+(when dataframe engine is Pandas)
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original.
 
 ### EXAMPLES
 
@@ -168,7 +175,17 @@ This is similar to the last two except that:
   - a metadata filed to be used to interpret the `.csv` file is provided
     explicitly.
 
-4) `tdda discover --rex postgres:elements`
+4) `tdda discover elements.parquet elements.tdda -r html -o elements`
+
+This discovers constraints as in example 1, and also writes an HTML
+report to `elements.html`.
+
+5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`
+
+This discovers constraints as in example 1, and also writes reports
+to `elements.md`, `elements.json`, and `elements.txt`.
+
+6) `tdda discover --rex postgres:elements`
 
 This is similar again except that now the postgres:specifier will be
 interpreted as a database connection file in the user's home
@@ -201,7 +218,7 @@ tdda-serial(1)
 ```
 tdda verify [-h] [-?] [-7] [--no-config]
             [--colour] [--no-colour]
-            [-epsilon EPSILON] [-a] [-f] [-r [REPORT ...]]
+            [-epsilon EPSILON] [-a] [-f]
             [-t {strict,sloppy}] [--verify-required-fields]
             [--verify-allowed-fields] [--no-verify-required-fields]
             [--no-verify-allowed-fields] [--varf] [--no-varf]
@@ -252,35 +269,39 @@ values cause constraints to be violated: the companion command
 `--epsilon` *EPSILON*       Epsilon fuzziness (tolerance for comparisons)  
 
 `-a`, `--all`               Report all fields, even if there are no  
-                        failures  
+failures
+
 `-f`, `--fields`            Report only fields with failures  
 
-`-r`, `--report` [*REPORT* ...]  
-                        Report formats to write.  
 `-t`, `--type_checking` {*strict*,*sloppy*}  
-                        "sloppy" means consider all numeric types  
-                        equivalent  
+"sloppy" means consider all numeric types
+equivalent
 
 `--verify-required-fields`, `--vrf`
-                        Force verify of required fields  
+Force verify of required fields
+
 `--verify-allowed-fields`, `--vaf`  
-                        Force verify of allowed fields  
+Force verify of allowed fields
+
 `--no-verify-required-fields`, `--no-vrf`  
-                        Force no verication of required fields  
+Force no verication of required fields
+
 `--no-verify-allowed-fields`, `--no-vaf`  
-                        Force no verification of allowed fields  
+Force no verification of allowed fields
+
 `--varf`, `--vraf`          Force verification of allowed and required  
-                        fields  
+fields
+
 `--no-varf`, `--no-vraf`    Force no verification of allowed and required  
-                        fields  
+fields
 
 `--pandas`, `--pd`          Use Pandas as DataFrame engine.  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-                        (When dataframe engine is Pandas)  
-                          `n` for numpy_nullable *  
-                          `a` for pyarrow  
-                          `o` for original.  
+(When dataframe engine is Pandas)
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original.
 
 ### SEE ALSO
 
@@ -362,58 +383,96 @@ the same functions as `tdda verify`.
 
 
 `-a`, `--all`               Report all fields, even if there are no  
-                        failures  
+failures
+
 `-f`, `--fields`            Report only fields with failures  
 
 `-r`, `--report` [*REPORT* ...]  
-                        Report formats to write.  
+Report formats to write, space-separated.
+Formats: `html`, `md` (`markdown`), `txt` (`text`),
+`json`, `yaml`, `toml`.
+The stem of the output file is taken from
+*REPORT_PATH* if `-o` is given, otherwise from
+*OUTPUT*.
+
 `-t`, `--type_checking` {*strict*,*sloppy*}  
-                        "sloppy" means consider all numeric types  
-                        equivalent  
+"sloppy" means consider all numeric types
+equivalent
+
 `-o`, `--report-path` *REPORT_PATH*  
-                        Path for reports  
+Stem path for report files (extension is replaced
+by the format).
 
 `--write-all-records`   Include passing records  
 `--per-constraint   `   Write one flag column per failing constraint in  
-                      addition to n_failures. Set by default.  
+addition to n_failures. Set by default.
+
 `--no-per-constraint`   Do not write out any per-constraint flag columns  
 `--no-original-field`s  Do not write out original fields columns  
 `--original-fields  `   Write out original fields columns (default)  
 `--no-output-fields `   Do not write out any original fields in the output. By  
-                      default, all original columns will be included.  
+default, all original columns will be included.
+
 `--output-fiel`ds [OUTPUT_FIELDS ...]  
-                      Specify original columns to write out.  
-`-`r, --report [REPORT ...]  
-                      Report formats to write.  
+Specify original columns to write out.
+
 `--interleave       `   Interleave ok columns with original fields.  
 `--no-interleave    `   Do not interleave ok columns with original fields.  
 `--index            `   Include a row-number index in the output file when  
-                      detecting. Rows are usually numbered from 1, unless  
-                      the input file already has an index.  
+detecting. Rows are usually numbered from 1, unless
+the input file already has an index.
+
 `--int              `   Write out boolean fields as integers, with 1 for true  
-                      and 0 for false.  
+and 0 for false.
+
 `--k`ey [KEY ...]       Key or key fields to use when reporting failures  
 
 `--verify-required-fields`, `--vrf`  
-                        Force verify of required fields  
+Force verify of required fields
+
 `--verify-allowed-fields`, `--vaf`  
-                        Force verify of allowed fields  
+Force verify of allowed fields
+
 `--no-verify-required-fields`, `--no-vrf`  
-                        Force no verication of required fields  
+Force no verication of required fields
+
 `--no-verify-allowed-fields`, `--no-vaf`  
-                        Force no verification of allowed fields  
+Force no verification of allowed fields
+
 `--varf`, `--vraf`          Force verification of allowed and required  
-                        fields  
+fields
+
 `--no-varf`, `--no-vraf`    Force no verification of allowed and required  
-                        fields  
+fields
 
 `--pandas`, `--pd`          Use Pandas as DataFrame engine.  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-                        (When dataframe engine is Pandas)  
-                          `n` for numpy_nullable *  
-                          `a` for pyarrow  
-                          `o` for original.  
+(When dataframe engine is Pandas)
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original.
+
+### EXAMPLES
+
+(The example data can be obtained by running `tdda examples`, which will
+create various directories, including `constraints_examples`, containing
+source data for these examples.)
+
+1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`
+
+This command reads data from `elements.parquet`, checks it against the
+constraints in `elements.tdda`, and writes records with one or more
+constraint failures to `elements-failures.parquet`.
+
+2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`
+
+As above, and also writes an HTML report to `elements.html`.
+
+3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`
+
+As above, and also writes reports to `elements.md`, `elements.json`,
+and `elements.txt`.
 
 ### SEE ALSO
 
@@ -550,10 +609,10 @@ as typed values after reading. Ke
 `--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-                        (when dataframe engine is Pandas)  
-                            `n` for numpy_nullable *  
-                            `a` for pyarrow  
-                            `o` for original.  
+(when dataframe engine is Pandas)
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original.
 
 
 
@@ -662,13 +721,13 @@ for tdda.serial, CSVW, and frictionless.
 `--to FMT`             Specify output metadata format (see list of formats above)
 
 `-B BE, --backend BE`  Specify backend for Pandas flavours:
-                         `n`: `numpy_nullable`
-                         `a`: `pyarrow`
-                         `o`: for original Pandas backend.
+`n`: `numpy_nullable`
+`a`: `pyarrow`
+`o`: for original Pandas backend.
 
 `--for FILE`            Filename for data to use when generating CSVW
-                        or Frictionless data.
-                        (Can also be used for `tdda.serial` and `.py` output)
+or Frictionless data.
+(Can also be used for `tdda.serial` and `.py` output)
 
 `-N, --no-config`        Use default configuration (ignore ~/.tdda.toml)
 
@@ -798,10 +857,10 @@ tdda gentest   'SHELL COMMAND' [OPTIONS]
   -h, --help            show this help message and exit
   -?, --?               Same as -h or --help
   -m, --max-files MAX_FILES
-                        Max files to track
+Max files to track
   -r, --relative-paths  Show relative paths wherever possible
   -n, --iterations ITERATIONS
-                        Number of times to run the command (default 2)
+Number of times to run the command (default 2)
   -O, --no-stdout       Do not generate a test checking output to STDOUT
   -E, --no-stderr       Do not generate a test checking output to STDERR
   -Z, --non-zero-exit   Do not require exit status to be 0

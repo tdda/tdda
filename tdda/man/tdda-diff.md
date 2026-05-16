@@ -17,15 +17,18 @@
             [`--prefixes` *PREFIXES*]
             [`-N`] [`--no-config`]
             [`--strict`] [`--medium`] [`--loose`] [`--permissive`]
-            *LEFT* *RIGHT* [*OUTPATH*]
+            *LEFT* *RIGHT*
 
 ## POSITIONAL ARGUMENTS
 
-*LEFT*
+*LEFT* The first dataset to be compared, as a parquet or flat file (e.g. CSV),
+       optionally with metadata.
+       (Normally thought of as left or actual)
 
-*RIGHT*
+*RIGHT*  The second dataset to be compared as a parquet or flat file (e.g. CSV),
+         optionally with metadata.
+         (Normally thought of as right, expected, reference, etc.)
 
-*OUTPATH*
 
 ## DESCRIPTION
 
@@ -38,7 +41,7 @@ numeric comparisons. It also provides a number of options for controlling
 the display of differences.
 
 By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+as typed values after reading.
 
 ## OPTIONS
 

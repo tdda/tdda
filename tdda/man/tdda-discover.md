@@ -55,14 +55,20 @@ The following options are available.
 `-g`, `--group-rex`       Group regular expression generation  
 `-G`, `--no-group-rex`    Do not group regular expression generation *  
 
-`-r`, `--report` [*REPORT* ...]       Report formats to write.  
-`-o`, `--report-path` *REPORT_PATH*   Path for reports  
+`-r`, `--report` [*REPORT* ...]       Report formats to write, space-separated.  
+                        Formats: `html`, `md` (`markdown`), `txt` (`text`),  
+                        `json`, `yaml`, `toml`.  
+                        The stem of the output file is taken from  
+                        *REPORT_PATH* if `-o` is given, otherwise from  
+                        *CONSTRAINTS*.  
+`-o`, `--report-path` *REPORT_PATH*   Stem path for report files (extension  
+                        is replaced by the format).  
 
-`--no-md`                 Do not create metadata in constraints file
+`--no-md`                 Do not create metadata in constraints file  
 `--allowed`               Create allowed-fields constraint (default)  
 `--no-allowed`            Do not create allowed-fields constraint  
 `--required`              Create required-fields constraint (default)  
-`--no-required`           Do not create required-fields constraint
+`--no-required`           Do not create required-fields constraint  
 `--no-allowed-required`   Same as `--no-allowed --no-required`  
 `--no-ar`                 Same as `--no-allowed --no-required`  
 `--pandas`, `--pd`          Use Pandas as DataFrame engine. *  
@@ -123,7 +129,17 @@ This is similar to the last two except that:
   - a metadata filed to be used to interpret the `.csv` file is provided
     explicitly.
 
-4) `tdda discover --rex postgres:elements`
+4) `tdda discover elements.parquet elements.tdda -r html -o elements`
+
+This discovers constraints as in example 1, and also writes an HTML
+report to `elements.html`.
+
+5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`
+
+This discovers constraints as in example 1, and also writes reports
+to `elements.md`, `elements.json`, and `elements.txt`.
+
+6) `tdda discover --rex postgres:elements`
 
 This is similar again except that now the postgres:specifier will be
 interpreted as a database connection file in the user's home

@@ -8,7 +8,7 @@
 
 `tdda verify` [`-h`] [`-?`] [`-7`] [`--no-config`]
             [`--colour`] [`--no-colour`]
-            [`-epsilon EPSILON`] [`-a`] [`-f`] [`-r` [*REPORT* ...]]
+            [`-epsilon EPSILON`] [`-a`] [`-f`]
             [`-t {strict,sloppy}`] [`--verify-required-fields`]
             [`--verify-allowed-fields`] [`--no-verify-required-fields`]
             [`--no-verify-allowed-fields`] [`--varf`] [`--no-varf`]
@@ -62,8 +62,6 @@ values cause constraints to be violated: the companion command
                         failures  
 `-f`, `--fields`            Report only fields with failures  
 
-`-r`, `--report` [*REPORT* ...]  
-                        Report formats to write.  
 `-t`, `--type_checking` {*strict*,*sloppy*}  
                         "sloppy" means consider all numeric types  
                         equivalent  

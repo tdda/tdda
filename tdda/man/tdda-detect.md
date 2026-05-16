@@ -73,12 +73,18 @@ the same functions as `tdda verify`.
 `-f`, `--fields`            Report only fields with failures  
 
 `-r`, `--report` [*REPORT* ...]  
-                        Report formats to write.  
+                        Report formats to write, space-separated.  
+                        Formats: `html`, `md` (`markdown`), `txt` (`text`),  
+                        `json`, `yaml`, `toml`.  
+                        The stem of the output file is taken from  
+                        *REPORT_PATH* if `-o` is given, otherwise from  
+                        *OUTPUT*.  
 `-t`, `--type_checking` {*strict*,*sloppy*}  
                         "sloppy" means consider all numeric types  
                         equivalent  
 `-o`, `--report-path` *REPORT_PATH*  
-                        Path for reports  
+                        Stem path for report files (extension is replaced  
+                        by the format).  
 
 `--write-all-records`   Include passing records  
 `--per-constraint   `   Write one flag column per failing constraint in  
@@ -90,8 +96,6 @@ the same functions as `tdda verify`.
                       default, all original columns will be included.  
 `--output-fiel`ds [OUTPUT_FIELDS ...]  
                       Specify original columns to write out.  
-`-`r, --report [REPORT ...]  
-                      Report formats to write.  
 `--interleave       `   Interleave ok columns with original fields.  
 `--no-interleave    `   Do not interleave ok columns with original fields.  
 `--index            `   Include a row-number index in the output file when  
@@ -121,6 +125,27 @@ the same functions as `tdda verify`.
                           `n` for numpy_nullable *  
                           `a` for pyarrow  
                           `o` for original.  
+
+## EXAMPLES
+
+(The example data can be obtained by running `tdda examples`, which will
+create various directories, including `constraints_examples`, containing
+source data for these examples.)
+
+1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`
+
+This command reads data from `elements.parquet`, checks it against the
+constraints in `elements.tdda`, and writes records with one or more
+constraint failures to `elements-failures.parquet`.
+
+2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`
+
+As above, and also writes an HTML report to `elements.html`.
+
+3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`
+
+As above, and also writes reports to `elements.md`, `elements.json`,
+and `elements.txt`.
 
 ## SEE ALSO
 

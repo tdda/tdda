@@ -1113,3 +1113,60 @@ all is handled:
 
 %% docdata/examplereadpl.py
 
+
+(tdda-serial-colon-format)=
+
+## Using `tdda.serial` Metadata in the `tdda` Library
+
+For all [`tdda`](cli.md#tdda) command-line commands, and in most places within
+API calls where CSV or other flat file is specified, there is the
+option to specify the file format using `tdda.serial` files,
+CSVW files, or Frictionless files. This is based on the `:` (colon) specifier.
+
+When specifying a path to a CSV (or other flat) file:
+
+ * If the path is used by itself, the `tdda` library will use
+   either `tdda.serial.csv_to_pandas` or `tdda.serial.csv_to_polars`
+   to read it into a DataFrame. The default is currently pandas
+   (with the `numpy_nullable` back end), but this can be
+   [configured](configuration.md)
+   or, in many cases controlled with command line flags
+   (`--polars`, `--pandas`, `--backend BACKEND` (for Pandas only)).
+
+ * If the path ends in a colon (e.g. `foo.csv:`), TDDA will search
+   for metadata in the same directory as the file and, if it finds
+   one, pass that to the appropriate `csv_to_...` function for
+   more accurate DataFrame generation.
+
+   In doing this, it will look for the following in priority order,
+   given a file `foo.csv`:
+
+     - `foo.csv.serial` (`tdda.serial` metadata)
+     - `foo.serial` (`tdda.serial` metadata). This is actually more
+       common than the previous form, but if there are multiple files
+       with different extensions, the former is more specific, so is
+       checked first.
+     - Anything that matches foo using `@` as a wildcard, e.g.
+       `@.serial`, `f@.serial`, `f@o.serial`, `@oo.serial`.
+       (`@` acts like `*` in the shell, while avoiding needing
+       `*` in filenames, which can be awkward.)
+     - `foo-metadata.json`, `foo-csvmetadata.json`, `foo-csv-metadata.json`,
+       `foo.csvmetadata.json`, `foo.csv-metadata.json`
+       (all of which are common conventions for CSVW metadata files).
+     - The same CSVW patterns with `@` wildcards
+     - `foo.serial.json`,
+       `foo.serial.yaml`,
+       `foo.resource.json`,
+       `foo.resource.yaml`,
+       `foo.package.json`,
+       `foo.package.yaml`,
+       all of which are common for Frictionless metadata files.
+     - The same patterns for `serial` or `package` frictionless files
+       with `@` wildcards. Wildcards are not searched in `resource` files,
+       because in frictionless these always correspond to a single
+       data file.
+
+ * If the path contains a colon, the part to the right of the colon
+   will be interpreted as a metadata file. So `foo.csv:bar.serial`
+   will use `bar.serial`.
+

@@ -57,7 +57,7 @@ Colours:
 
 body {
     font-family: Palatino, "Palatino Linotype", Georgia, Garamond, Baskerville, Serif;
-    font-size: 100%;
+    font-size: 95%;
     background-color: #283038;
     color: #000;
     margin: 0 auto 0 auto;
@@ -246,7 +246,7 @@ div.body h2 { font-size: 160%; }
 div.body h3 { font-size: 140%; }
 div.body h4 { font-size: 120%; }
 div.body h5 { font-size: 110%; }
-div.body h6 { font-size: 100%; }
+div.body h6 { font-size: 95%; }
 
 a.headerlink {
     color: var(--link-colour);
@@ -369,14 +369,14 @@ div.sphinxsidebar.current.toctree-l1.current.current {
 
 .rst-content code.literal, .rst-content tt.literal {
     color: #202030;
-    font-size: 85%;
+    font-size: 95%;
     padding: 0;
 }
 
 .rst-content code, .rst-content tt, code {
     background: none;
     border: none;
-    font-size: 85%;
+    font-size: 95%;
     padding: 0;
 }
 
