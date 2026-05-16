@@ -8,9 +8,46 @@
 
 .PP
 \fBtdda gentest\fR   '\fISHELL COMMAND\fP\&' [\fIOPTIONS\fP]
-                 [\fItest_output.py\fP [\fIreference files\fP]]
+               [\fItest_output.py\fP] [\fIreference files\fP] [\fIdir\fP]
 
 .SH DESCRIPTION
+Gentest will create Python tests, using the tdda's reference-testing
+capabilities, for terminal-based programs written in any language.
+For example, the shell command can be a built-in shell command
+or can run a shell script, an R program,
+or of course a Python program.
+
+.PP
+It has a wizard, invoked just by tying \fBgentest\fR, that prompts for
+the information it needs before generating the tests.
+
+.PP
+Alternatively, the command to be tested and optionally other parameters
+can all be specified on the command line.
+
+.PP
+Gentest's tests:
+ - Run the provided command more than once (by default)
+ - Captures output to \fBstdout\fR and \fBstderr\fR
+ - Captures the exit code
+ - Notices any files created in the directory or subdirectories
+   or other specified places
+ - Uses variations in output and other heuristics to identify
+   parts of the output that appear variable and uses \fBrexpy\fR
+   to write reference tests that only test things that appear
+   to be fixed and not system dependent.
+ - Writes a Python test script, using \fBtdda.referencetest\fR, that contains
+   a set of tests of the shell command specified.
+
+.PP
+The test script can then, of course, be edited by hand.
+
+.PP
+The test script script, when run, executes the command again and
+checks that its behaviour is as expected (i.e., is “the same”
+as the runs when Gentest ran originally, except for the variations
+allowed in the reference test specifications.
+
 .SH OPTIONS
 -h, --help            show this help message and exit
   -?, --?               Same as -h or --help
