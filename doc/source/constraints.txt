@@ -16,15 +16,15 @@ The module includes:
 * Python implementations of constraint discovery, verification and
   and anomaly detection for a number of data sources:
 
-  - ``.csv`` files
-  - Pandas and R DataFrames saved as ``.feather`` files
+  - ``.csv`` and other flat files
+  - Pandas and R DataFrames saved as ``.parquet`` files
   - PostgreSQL database tables (``postgres:``)
   - MySQL database tables (``mysql:``)
   - SQLite database tables (``sqlite:``)
-  - MongoDB document collections (``mongodb:``)
+  - MongoDB document collections (``mongodb:``; partial support)
 
 .. note::
-   To use databases, ``pandas``, ``.feather`` files etc. you may need
+   To use databases, you may need
    to install extra optional packages.
    See :ref:`optional_installations`.
 
@@ -75,8 +75,8 @@ and save the generated constraints as a
 
   - a ``.csv`` file
   - a ``-``, meaning that a ``.csv`` file should be read from standard input
-  - a :py:mod:`feather` file containing a DataFrame, with extension
-    ``.feather``
+  - a ``parquet`` file containing a DataFrame, with extension
+    ``.parquet``
   - a database table
 
 * ``constraints.tdda``, if provided, specifies the name of a file to
@@ -114,8 +114,8 @@ against constraints from a
 
   - a ``.csv`` file
   - a ``-``, meaning it will read a ``.csv`` file from standard input
-  - a :py:mod:`feather` file containing a DataFrame, with extension
-    ``.feather``
+  - a ``parquet`` file containing a DataFrame, with extension
+    ``.parquet``
   - a database table
 
 * ``constraints.tdda``, if provided, is a JSON ``.tdda`` file
