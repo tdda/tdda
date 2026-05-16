@@ -21,35 +21,33 @@ SYNOPSIS
 POSITIONAL ARGUMENTS
 
   [4mINPUT[24m is one of:
-    ‐ a csv file or other flat file (e.g. .csv, .txt, .psv)
-    ‐ a data frames in a Parquet files (.parquet)
+    ‐ a CSV file or other flat file (e.g. [1m.csv[22m, [1m.txt[22m, [1m.psv[22m),
+      optionally using [1m: [22mformat to specify flat‐file metadata
+      (see the help for [1mtdda serial[22m)
+    ‐ a data frame in a Parquet file ([1m.parquet[22m)
       e.g. from pandas, polars, R
-    ‐ Tables from PostgreSQL databases (e.g. postgres:tablename)
-    ‐ Tables from MySQL databases (e.g. mysql:tablename)
-    ‐ Tables from SQLite databases (e.g. sqlite:tablename)
-    ‐ Standard input, stdin. Use [1m‐ [22mto read specify this.
-
-  Metadata for flat files can also be specified or inferred.
-  Use [1mtdda help serial[22m, [1mtdda serial ‐‐help[22m, or [1mman tdda‐serial [22mfor
-  more information.
+    ‐ a table from PostgreSQL databases (e.g. [1mpostgres:tablename[22m)
+    ‐ a table from MySQL databases (e.g. [1mmysql:tablename[22m)
+    ‐ a table from SQLite databases (e.g. [1msqlite:tablename[22m)
+    ‐ Standard input (stdin): Use [1m‐ [22mto read from stdin
 
   [4mCONSTRAINTS[24m, if provided, is a JSON [1m.tdda [22mfile containing
   constraints.
 
   If no constraints file is provided, a file with the same path as
-  the input file, with a .tdda extension will be tried.
+  the input file, with a [1m.tdda [22mextension will be tried.
 
-  [4mOUTPUT[24m specifies the destiation for detected records.
+  [4mOUTPUT[24m specifies the destination for detected records.
 
-  This is usually a file if the the input was a file (e.g. a [1m.csv[0m
+  This is usually a file if the input was a file (e.g. a [1m.csv[0m
   file or a [1mparquet [22mfile), but does not have to be the same type.
   If the input is a database table, the output is always a database
   table in the same database.
 
 DESCRIPTION
 
-  The [1mtdda discover [22mcommand finds and reports data that fails to satisfy
-  the constraints in the [4mCONSTAINTS[24m file specified. It also performs all
+  The [1mtdda detect [22mcommand finds and reports data that fails to satisfy
+  the constraints in the [4mCONSTRAINTS[24m file specified. It also performs all
   the same functions as [1mtdda verify[22m.
 
 OPTIONS
@@ -60,7 +58,7 @@ OPTIONS
   [1m‐N[22m, [1m‐‐no‐config         [22mSkip loading [1m˜/.tdda.toml[0m
 
   [1m‐‐colour                [22mUse colour in terminal output
-  [1m‐‐no‐colour             [22mDo not not use colour in terminal output
+  [1m‐‐no‐colour             [22mDo not use colour in terminal output
 
   [1m‐‐epsilon [4m[22mEPSILON[24m       Epsilon fuzziness (tolerance for comparisons)
 
@@ -83,23 +81,23 @@ OPTIONS
                           by the format).
 
   [1m‐‐write‐all‐records   [22mInclude passing records
-  [1m‐‐per‐constraint   [22mWrite one flag column per failing constraint in
-                        addition to n_failures. Set by default.
+  [1m‐‐per‐constraint      [22mWrite one flag column per failing constraint in
+                          addition to n_failures. Set by default.
   [1m‐‐no‐per‐constraint   [22mDo not write out any per‐constraint flag columns
-  [1m‐‐no‐original‐field[22ms  Do not write out original fields columns
-  [1m‐‐original‐fields   [22mWrite out original fields columns (default)
-  [1m‐‐no‐output‐fields   [22mDo not write out any original fields in the output. By
-                        default, all original columns will be included.
-  [1m‐‐output‐fiel[22mds [OUTPUT_FIELDS ...]
-                        Specify original columns to write out.
-  [1m‐‐interleave   [22mInterleave ok columns with original fields.
-  [1m‐‐no‐interleave   [22mDo not interleave ok columns with original fields.
-  [1m‐‐index   [22mInclude a row‐number index in the output file when
-                        detecting. Rows are usually numbered from 1, unless
-                        the input file already has an index.
-  [1m‐‐int   [22mWrite out boolean fields as integers, with 1 for true
-                        and 0 for false.
-  [1m‐‐k[22mey [KEY ...]       Key or key fields to use when reporting failures
+  [1m‐‐no‐original‐fields  [22mDo not write out original fields columns
+  [1m‐‐original‐fields     [22mWrite out original fields columns (default)
+  [1m‐‐no‐output‐fields    [22mDo not write out any original fields in the output. By
+                          default, all original columns will be included.
+  [1m‐‐output‐fields [22m[[4mOUTPUT_FIELDS[24m ...]
+                          Specify original columns to write out.
+  [1m‐‐interleave          [22mInterleave ok columns with original fields.
+  [1m‐‐no‐interleave       [22mDo not interleave ok columns with original fields.
+  [1m‐‐index               [22mInclude a row‐number index in the output file when
+                          detecting. Rows are usually numbered from 1,
+                          unless the input file already has an index.
+  [1m‐‐int                 [22mWrite out boolean fields as integers, with 1 for true
+                          and 0 for false.
+  [1m‐‐key [KEY ...]       [22mKey or key fields to use when reporting failures
 
   [1m‐‐verify‐required‐fields[22m, [1m‐‐vrf[0m
                           Force verify of required fields
@@ -117,16 +115,16 @@ OPTIONS
   [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine.
   [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
   [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
-                          (When dataframe engine is Pandas)
+                          (when dataframe engine is Pandas)
                             [1mn [22mfor numpy_nullable *
                             [1ma [22mfor pyarrow
                             [1mo [22mfor original.
 
 EXAMPLES
 
-  (The example data can be obtained by running [1mtdda examples[22m, which will
+  The example data can be obtained by running [1mtdda examples[22m, which will
   create various directories, including [1mconstraints_examples[22m, containing
-  source data for these examples.)
+  source data for these examples.
 
   1) [1mtdda detect elements.parquet elements.tdda elements‐failures.parquet[0m
 
@@ -150,6 +148,8 @@ SEE ALSO
   tdda verify
   tdda discover
   tdda serial
+
+
 
 
 

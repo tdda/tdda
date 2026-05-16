@@ -152,10 +152,76 @@ name
   [1mtdda serial a‐metadata.json a.serial[0m
       Generate Converts [1mtdda.metadata [22mmetadata to CSVW
 
+USING SERIAL METADATA WITH TDDA COMMANDS
+
+  For all tdda command‐line commands, and in most places within
+  API calls where CSV or other flat file is specified, there is the
+  option to specify the file format using [1mtdda.serial [22mfiles,
+  CSVW files, or Frictionless files. This is based on the [1m: [22m(colon) specifier.
+
+  When specifying a path to a CSV (or other flat) file:
+  If the path is used by itself, the [1mtdda [22mlibrary will use
+  either [1mtdda.serial.csv_to_pandas [22mor [1mtdda.serial.csv_to_polars[0m
+  to read it into a DataFrame. The default is currently pandas
+  (with the [1mnumpy_nullable [22mback end), but this can be
+  configured
+  ⟨configuration.md⟩
+  or, in many cases controlled with command line flags
+  ([1m‐‐polars[22m, [1m‐‐pandas[22m, [1m‐‐backend BACKEND [22m(for Pandas only)).
+  If the path ends in a colon (e.g. [1mfoo.csv:[22m), TDDA will search
+  for metadata in the same directory as the file and, if it finds
+  one, pass that to the appropriate [1mcsv_to_... [22mfunction for
+  more accurate DataFrame generation.
+  In doing this, it will look for the following in priority order,
+  given a file [1mfoo.csv[22m:
+  [1mfoo.csv.serial [22m([1mtdda.serial [22mmetadata)
+  [1mfoo.serial [22m([1mtdda.serial [22mmetadata). This is actually more
+  common than the previous form, but if there are multiple files
+  with different extensions, the former is more specific, so is
+  checked first.
+  Anything that matches foo using [1m@ [22mas a wildcard, e.g.
+  [1m@.serial[22m, [1mf@.serial[22m, [1mf@o.serial[22m, [1m@oo.serial[22m.
+  ([1m@ [22macts like [1m* [22min the shell, while avoiding needing
+  [1m* [22min filenames, which can be awkward.)
+  [1mfoo‐metadata.json[22m, [1mfoo‐csvmetadata.json[22m, [1mfoo‐csv‐metadata.json[22m,
+  [1mfoo.csvmetadata.json[22m, [1mfoo.csv‐metadata.json[0m
+  (all of which are common conventions for CSVW metadata files).
+  The same CSVW patterns with [1m@ [22mwildcards
+  [1mfoo.serial.json[22m, [1mfoo.serial.yaml[22m, [1mfoo.resource.json[22m,
+  [1mfoo.resource.yaml[22m, [1mfoo.package.json[22m, [1mfoo.package.yaml[22m,
+  all of which are common for Frictionless metadata files.
+  The same patterns for [1mserial [22mor [1mpackage [22mfrictionless files
+  with [1m@ [22mwildcards. Wildcards are not searched in [1mresource [22mfiles,
+  because in frictionless these always correspond to a single
+  data file.
+  If the path contains a colon, the part to the right of the colon
+  will be interpreted as a metadata file. So [1mfoo.csv:bar.serial[0m
+  will use [1mbar.serial[22m.
+
 BUGS
 
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
   still many bugs an undesirable features in the implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

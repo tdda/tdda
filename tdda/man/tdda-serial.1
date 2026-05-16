@@ -188,6 +188,65 @@ for tdda.serial, CSVW, and frictionless.
 \fBtdda serial a-metadata.json a.serial\fR
     Generate Converts \fBtdda.metadata\fR metadata to CSVW
 
+.SH USING SERIAL METADATA WITH TDDA COMMANDS
+For all tdda command-line commands, and in most places within
+API calls where CSV or other flat file is specified, there is the
+option to specify the file format using \fBtdda.serial\fR files,
+CSVW files, or Frictionless files. This is based on the \fB:\fR (colon) specifier.
+
+.PP
+When specifying a path to a CSV (or other flat) file:
+.IP \(bu 2
+If the path is used by itself, the \fBtdda\fR library will use
+either \fBtdda.serial.csv_to_pandas\fR or \fBtdda.serial.csv_to_polars\fR
+to read it into a DataFrame. The default is currently pandas
+(with the \fBnumpy_nullable\fR back end), but this can be
+configured
+\[la]configuration.md\[ra]
+or, in many cases controlled with command line flags
+(\fB--polars\fR, \fB--pandas\fR, \fB--backend BACKEND\fR (for Pandas only)).
+.IP \(bu 2
+If the path ends in a colon (e.g. \fBfoo.csv:\fR), TDDA will search
+for metadata in the same directory as the file and, if it finds
+one, pass that to the appropriate \fBcsv_to_...\fR function for
+more accurate DataFrame generation.
+.IP \(bu 2
+In doing this, it will look for the following in priority order,
+given a file \fBfoo.csv\fR:
+.RS
+.IP \(bu 2
+\fBfoo.csv.serial\fR (\fBtdda.serial\fR metadata)
+.IP \(bu 2
+\fBfoo.serial\fR (\fBtdda.serial\fR metadata). This is actually more
+common than the previous form, but if there are multiple files
+with different extensions, the former is more specific, so is
+checked first.
+.IP \(bu 2
+Anything that matches foo using \fB@\fR as a wildcard, e.g.
+\fB@.serial\fR, \fBf@.serial\fR, \fBf@o.serial\fR, \fB@oo.serial\fR\&.
+(\fB@\fR acts like \fB*\fR in the shell, while avoiding needing
+\fB*\fR in filenames, which can be awkward.)
+.IP \(bu 2
+\fBfoo-metadata.json\fR, \fBfoo-csvmetadata.json\fR, \fBfoo-csv-metadata.json\fR,
+\fBfoo.csvmetadata.json\fR, \fBfoo.csv-metadata.json\fR
+(all of which are common conventions for CSVW metadata files).
+.IP \(bu 2
+The same CSVW patterns with \fB@\fR wildcards
+.IP \(bu 2
+\fBfoo.serial.json\fR, \fBfoo.serial.yaml\fR, \fBfoo.resource.json\fR,
+\fBfoo.resource.yaml\fR, \fBfoo.package.json\fR, \fBfoo.package.yaml\fR,
+all of which are common for Frictionless metadata files.
+.IP \(bu 2
+The same patterns for \fBserial\fR or \fBpackage\fR frictionless files
+with \fB@\fR wildcards. Wildcards are not searched in \fBresource\fR files,
+because in frictionless these always correspond to a single
+data file.
+.RE
+.IP \(bu 2
+If the path contains a colon, the part to the right of the colon
+will be interpreted as a metadata file. So \fBfoo.csv:bar.serial\fR
+will use \fBbar.serial\fR\&.
+
 .SH BUGS
 The \fBtdda serial\fR functionality is fairly new, and there are probably
 still many bugs an undesirable features in the implementation.

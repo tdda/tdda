@@ -1,12 +1,12 @@
 NAME
 
-  [1mtdda verify [22m− Veriify that constraints are satisfied by data
+  [1mtdda verify [22m− Verify that constraints are satisfied by data
 
 SYNOPSIS
 
   [1mtdda verify [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m]
               [[1m‐‐colour[22m] [[1m‐‐no‐colour[22m]
-              [[1m‐epsilon EPSILON[22m] [[1m‐a[22m] [[1m‐f[22m]
+              [[1m‐‐epsilon [4m[22mEPSILON[24m] [[1m‐a[22m] [[1m‐f[22m]
               [[1m‐t {strict,sloppy}[22m] [[1m‐‐verify‐required‐fields[22m]
               [[1m‐‐verify‐allowed‐fields[22m] [[1m‐‐no‐verify‐required‐fields[22m]
               [[1m‐‐no‐verify‐allowed‐fields[22m] [[1m‐‐varf[22m] [[1m‐‐no‐varf[22m]
@@ -16,28 +16,26 @@ SYNOPSIS
 POSITIONAL ARGUMENTS
 
   [4mINPUT[24m is one of:
-    ‐ a csv file or other flat file (e.g. .csv, .txt, .psv)
-    ‐ a data frames in a Parquet files (.parquet)
+    ‐ a CSV file or other flat file (e.g. [1m.csv[22m, [1m.txt[22m, [1m.psv[22m),
+      optionally using [1m: [22mformat to specify flat‐file metadata
+      (see the help for [1mtdda serial[22m)
+    ‐ a data frame in a Parquet file ([1m.parquet[22m)
       e.g. from pandas, polars, R
-    ‐ Tables from PostgreSQL databases (e.g. postgres:tablename)
-    ‐ Tables from MySQL databases (e.g. mysql:tablename)
-    ‐ Tables from SQLite databases (e.g. sqlite:tablename)
-    ‐ Standard input, stdin. Use [1m‐ [22mto read specify this.
+    ‐ a table from PostgreSQL databases (e.g. [1mpostgres:tablename[22m)
+    ‐ a table from MySQL databases (e.g. [1mmysql:tablename[22m)
+    ‐ a table from SQLite databases (e.g. [1msqlite:tablename[22m)
+    ‐ Standard input (stdin): Use [1m‐ [22mto read from stdin
 
-  Metadata for flat files can also be specified or inferred.
-  Use [1mtdda help serial[22m, [1mtdda serial ‐‐help[22m, or [1mman tdda‐serial [22mfor
-  more information.
-
-  [4mCONSTRAINTS[24m, if provided, is a JSON .tdda file containing
+  [4mCONSTRAINTS[24m, if provided, is a JSON [1m.tdda [22mfile containing
   constraints.
 
   If no constraints file is provided, a file with the same path as
-  the input file, with a .tdda extension will be tried.
+  the input file, with a [1m.tdda [22mextension will be tried.
 
 DESCRIPTION
 
   The [1mtdda verify [22mcommand is used to check that data conforms
-  the the constraints specified. Any constraints not satisfied
+  to the constraints specified. Any constraints not satisfied
   by the data are reported, together with summary statistics.
 
   The [1mtdda verify [22mcommand does [4mnot[24m report which records and
@@ -52,7 +50,7 @@ OPTIONS
   [1m‐N[22m, [1m‐‐no‐config         [22mSkip loading [1m˜/.tdda.toml[0m
 
   [1m‐‐colour                [22mUse colour in terminal output
-  [1m‐‐no‐colour             [22mDo not not use colour in terminal output
+  [1m‐‐no‐colour             [22mDo not use colour in terminal output
 
   [1m‐‐epsilon [4m[22mEPSILON[24m       Epsilon fuzziness (tolerance for comparisons)
 
@@ -80,26 +78,28 @@ OPTIONS
   [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine.
   [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine.
   [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
-                          (When dataframe engine is Pandas)
+                          (when dataframe engine is Pandas)
                             [1mn [22mfor numpy_nullable *
                             [1ma [22mfor pyarrow
                             [1mo [22mfor original.
+
+EXAMPLES
+
+  The example data can be obtained by running [1mtdda examples[22m, which will
+  create various directories, including [1mconstraints_examples[22m, containing
+  source data for these examples.
+
+  1) [1mtdda verify elements.parquet elements.tdda[0m
+
+  This command reads data from [1melements.parquet [22mand checks it against the
+  constraints in [1melements.tdda[22m, reporting any constraints that are not
+  satisfied.
 
 SEE ALSO
 
   tdda detect
   tdda discover
   tdda serial
-
-
-
-
-
-
-
-
-
-
 
 
 

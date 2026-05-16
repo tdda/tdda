@@ -14,14 +14,15 @@
 
 .SH POSITIONAL ARGUMENTS
 \fIINPUT\fP is one of:
-  - a CSV file or other flat file (e.g. \fB\&.csv\fR, \fB\&.txt\fR, \fB\&.psv\fR)
-  - a data frame in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. \fB\&.csv\fR, \fB\&.txt\fR, \fB\&.psv\fR),
+    optionally using \fB:\fR format to specify flat-file metadata
+    (see the help for \fBtdda serial\fR)
+  - a data frame in a Parquet file (\fB\&.parquet\fR)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. \fBpostgres:tablename\fR)
-  - Tables from MySQL databases (e.g. \fBmysql:tablename\fR)
-  - Tables from SQLite databases (e.g. \fBsqlite:tablename\fR)
+  - a table from PostgreSQL databases (e.g. \fBpostgres:tablename\fR)
+  - a table from MySQL databases (e.g. \fBmysql:tablename\fR)
+  - a table from SQLite databases (e.g. \fBsqlite:tablename\fR)
   - Standard input (stdin): Use \fB-\fR to read from stdin
-    Metadata for flat files can also be specified or inferred.
 
 .PP
 (Use \fBtdda help serial\fR, \fBtdda serial --help\fR, or \fBman tdda-serial\fR
@@ -29,7 +30,7 @@ for more information.)
 
 .PP
 \fICONSTRAINTS\fP Name of the (JSON) constraints file to create.
-  - Will use \fB\&.tdda\fR extension if no extention is specified.
+  - Will use \fB\&.tdda\fR extension if no extension is specified.
   - Can be missing or \fB-\fR to write to standard output.
 
 .SH DESCRIPTION
@@ -40,7 +41,7 @@ The \fBtdda discover\fR command is used to find constraints that are satisfied
 The following options are available.
 
 .PP
-\fB*\fR indicates options that are the default beaviours
+\fB*\fR indicates options that are the default behaviours
 
 .PP
 \fB-h\fR, \fB--help\fR            Show this help message and exit
@@ -49,11 +50,11 @@ The following options are available.
 .br
 \fB-7\fR, \fB--ascii\fR           Report without using special characters
 .br
-\fB-N\fR, \fB--no-config\fR       Skip loading ~/.tdda.toml
+\fB-N\fR, \fB--no-config\fR       Skip loading \fB~/.tdda.toml\fR
 .br
-\fB--colour\fR                Use colour in terminal output *
+\fB--colour\fR              Use colour in terminal output *
 .br
-\fB--no-colour\fR             Do not not use colour in terminal output
+\fB--no-colour\fR           Do not use colour in terminal output
 .br
 \fB-x\fR, \fB--rex\fR             Include regular expression generation
 .br
@@ -110,28 +111,28 @@ The following options are available.
                             \fBo\fR for original.
 
 .SH EXAMPLES
-(The example data be obtained by running 'tdda examples', which will create
+The example data can be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
-data for these examples.)
+data for these examples.
 
 .PP
 1) \fBtdda discover elements.parquet elements.tdda\fR
 
 .PP
-This command will read data from elements.parquet and (attempt to
-find) constraints satifisfied by every record, and the data
-collectively.  By default this will may include minimum and maximum
+This command will read data from elements.parquet and (attempt to)
+find constraints satisfied by every record, and the data
+collectively.  By default this can include minimum and maximum
 constraints on field values or lengths, nullability constraints,
 uniqueness constraints, sign constraints, and allow-values
 constraints.
 
 .PP
-The results will be written to elements.tdda in a JSON format,
-including metadata.  The output constraints file, elements.tdda can be
-used with 'tdda verify', to which constriants another datasets with
-the same structure, are satisified, or with 'tdda detect', to find
-which records and/or values fail to satisfy the constraints. The TDDA
-can be edited (carefully) by hand, or programmatically, to add,
+The results will be written to \fBelements.tdda\fR in a JSON format,
+including metadata.  The output constraints file, \fBelements.tdda\fR can be
+used with \fBtdda verify\fR to verify that another dataset with the same
+structure satisfies the constraints, or with \fBtdda detect\fR to find
+which records and/or values fail to satisfy the constraints. The \fB\&.tdda\fR
+file can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
 .PP
@@ -145,20 +146,21 @@ from the CSV file specified, and writes the constraints to the screen
 .PP
 The CSV structure and field types will normally be inferred (possibly
 incorrectly) by TDDA, and if the inference is bad, the command may
-fail. If there is a file in the same directory with a name suggesting
-it is associated metadata describing the csv file, that will be
-used. Typical such files include:
+fail. If you use:
 
 .PP
-\fBelements.serial\fR         - a \fBtdda.serial\fR metadata specification
-.br
-\fBelements.csv.serial\fR     - a \fBtdda.serial\fR metadata specification
-.br
-\fBelements_metadata.json\fR  - a CSVW (CSV on the Web) specification
-.br
-\fBelements.table.json\fR     - a Frictionless table specification (JSON)
-.br
-\fBelements.table.yaml\fR     - a Frictionless table specification (YAML)
+\fBtdda discover elements.csv:format.serial\fR
+
+.PP
+metadata in \fBformat.serial\fR will be used to guide the DataFrame
+creation. If you use
+
+.PP
+\fBtdda discover elements.csv:\fR
+
+.PP
+it will look for any associated metadata for \fBelements.csv\fR using
+naming conventions described in the help for \fBtdda serial\fR\&.
 
 .PP
 3) \fBtdda discover --rex md.serial:elements.parquet\fR
@@ -168,7 +170,7 @@ This is similar to the last two except that:
   - regular expression inference is requested (\fB--rex\fR) for text fields.
     Rexpy will be used to attempt to infer one or a few regular
     expressions that characterize each field in the input data.
-  - a metadata filed to be used to interpret the \fB\&.csv\fR file is provided
+  - a metadata file to be used to interpret the \fB\&.csv\fR file is provided
     explicitly.
 
 .PP

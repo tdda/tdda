@@ -4,26 +4,27 @@
 \fBtdda\fR \- test-driven data analysis
 
 .SH SYNOPSIS
-\fBtdda discover\fR      Perform constraint discovery
+\fBtdda discover\fR      Generate constraints for data validation
 .br
-\fBtdda verify\fR        Verify data against constraints
+\fBtdda verify\fR        Verify (validate) data against constraints
 .br
-\fBtdda detect\fR        Detect failed constraints on data
+\fBtdda detect\fR        Detect data that fails constraints
 
 .PP
-\fBtdda examples\fR      Copy the example data and code
+\fBtdda examples\fR      Copy the tdda example data and code
 .br
-\fBtdda gentest\fR       Generate a reference test "automagically"
+\fBtdda gentest\fR       Auto-generate Python tests for code in any language
 
 .PP
-\fBtdda diff\fR          Compare two parquet or CSV files
+\fBtdda diff\fR          Find difference in datasets in parquet or CSV files
 .br
-\fBtdda serial\fR        Convert or view .serial, CSVW,
-                   and Frictionless metadata
+\fBtdda serial\fR        Convert or infer flat-file metadata in tdda.serial,
+.br
+                   CSVW, or Frictionless formats
 .br
 \fBtdda tag\fR           Tag tests that failed in the last reference test run
 .br
-\fBtdda config\fR        Show or edit TDDA configuration
+\fBtdda config\fR        Show TDDA configuration
 
 .PP
 \fBtdda version\fR       Print the TDDA version number
@@ -33,16 +34,15 @@
 \fBtdda help COMMAND\fR  Print help on COMMAND (e.g. discover, verify)
 
 .PP
-\fBtdda test\fR          Run the tdda library's tests.
+\fBtdda test\fR          Run the tdda library's self-tests.
 
 .SH OPTIONS
-\fB-\fRv, \fB--version\fR       Print version number (same as tdda version)
+\fB-v\fR, \fB--version\fR       Print version number (same as tdda version)
 .br
 \fB-h\fR, \fB-?\fR, \fB--help\fR      Print this help
 
 .SH SEE ALSO
-rexpy(1),
-tdda(3)
+rexpy(1)
 
 .PP
 TDDA Book

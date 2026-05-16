@@ -15,20 +15,21 @@ SYNOPSIS
 POSITIONAL ARGUMENTS
 
   [4mINPUT[24m is one of:
-    ‐ a CSV file or other flat file (e.g. [1m.csv[22m, [1m.txt[22m, [1m.psv[22m)
-    ‐ a data frame in a Parquet files (.parquet)
+    ‐ a CSV file or other flat file (e.g. [1m.csv[22m, [1m.txt[22m, [1m.psv[22m),
+      optionally using [1m: [22mformat to specify flat‐file metadata
+      (see the help for [1mtdda serial[22m)
+    ‐ a data frame in a Parquet file ([1m.parquet[22m)
       e.g. from pandas, polars, R
-    ‐ Tables from PostgreSQL databases (e.g. [1mpostgres:tablename[22m)
-    ‐ Tables from MySQL databases (e.g. [1mmysql:tablename[22m)
-    ‐ Tables from SQLite databases (e.g. [1msqlite:tablename[22m)
+    ‐ a table from PostgreSQL databases (e.g. [1mpostgres:tablename[22m)
+    ‐ a table from MySQL databases (e.g. [1mmysql:tablename[22m)
+    ‐ a table from SQLite databases (e.g. [1msqlite:tablename[22m)
     ‐ Standard input (stdin): Use [1m‐ [22mto read from stdin
-      Metadata for flat files can also be specified or inferred.
 
   (Use [1mtdda help serial[22m, [1mtdda serial ‐‐help[22m, or [1mman tdda‐serial[0m
   for more information.)
 
   [4mCONSTRAINTS[24m Name of the (JSON) constraints file to create.
-    ‐ Will use [1m.tdda [22mextension if no extention is specified.
+    ‐ Will use [1m.tdda [22mextension if no extension is specified.
     ‐ Can be missing or [1m‐ [22mto write to standard output.
 
 DESCRIPTION
@@ -40,14 +41,14 @@ OPTIONS
 
   The following options are available.
 
-  [1m* [22mindicates options that are the default beaviours
+  [1m* [22mindicates options that are the default behaviours
 
   [1m‐h[22m, [1m‐‐help            [22mShow this help message and exit
   [1m‐?[22m, [1m‐‐?               [22mSame as [1m‐h [22mor [1m‐‐help[0m
   [1m‐7[22m, [1m‐‐ascii           [22mReport without using special characters
-  [1m‐N[22m, [1m‐‐no‐config       [22mSkip loading ˜/.tdda.toml
-  [1m‐‐colour                [22mUse colour in terminal output *
-  [1m‐‐no‐colour             [22mDo not not use colour in terminal output
+  [1m‐N[22m, [1m‐‐no‐config       [22mSkip loading [1m˜/.tdda.toml[0m
+  [1m‐‐colour              [22mUse colour in terminal output *
+  [1m‐‐no‐colour           [22mDo not use colour in terminal output
   [1m‐x[22m, [1m‐‐rex             [22mInclude regular expression generation
   [1m‐X[22m, [1m‐‐no‐rex          [22mExclude regular expression generation *
   [1m‐g[22m, [1m‐‐group‐rex       [22mGroup regular expression generation
@@ -79,25 +80,26 @@ OPTIONS
 
 EXAMPLES
 
-  (The example data be obtained by running ’tdda examples’, which will create
+  The example data can be obtained by running ’tdda examples’, which will
+create
   various directories, including constraints_examples, containing the source
-  data for these examples.)
+  data for these examples.
 
   1) [1mtdda discover elements.parquet elements.tdda[0m
 
-  This command will read data from elements.parquet and (attempt to
-  find) constraints satifisfied by every record, and the data
-  collectively.  By default this will may include minimum and maximum
+  This command will read data from elements.parquet and (attempt to)
+  find constraints satisfied by every record, and the data
+  collectively.  By default this can include minimum and maximum
   constraints on field values or lengths, nullability constraints,
   uniqueness constraints, sign constraints, and allow‐values
   constraints.
 
-  The results will be written to elements.tdda in a JSON format,
-  including metadata.  The output constraints file, elements.tdda can be
-  used with ’tdda verify’, to which constriants another datasets with
-  the same structure, are satisified, or with ’tdda detect’, to find
-  which records and/or values fail to satisfy the constraints. The TDDA
-  can be edited (carefully) by hand, or programmatically, to add,
+  The results will be written to [1melements.tdda [22min a JSON format,
+  including metadata.  The output constraints file, [1melements.tdda [22mcan be
+  used with [1mtdda verify [22mto verify that another dataset with the same
+  structure satisfies the constraints, or with [1mtdda detect [22mto find
+  which records and/or values fail to satisfy the constraints. The [1m.tdda[0m
+  file can be edited (carefully) by hand, or programmatically, to add,
   remove, tighten, or loosen constraints.
 
   2) [1mtdda discover elements.csv[0m
@@ -108,15 +110,17 @@ EXAMPLES
 
   The CSV structure and field types will normally be inferred (possibly
   incorrectly) by TDDA, and if the inference is bad, the command may
-  fail. If there is a file in the same directory with a name suggesting
-  it is associated metadata describing the csv file, that will be
-  used. Typical such files include:
+  fail. If you use:
 
-  [1melements.serial         [22m‐ a [1mtdda.serial [22mmetadata specification
-  [1melements.csv.serial     [22m‐ a [1mtdda.serial [22mmetadata specification
-  [1melements_metadata.json  [22m‐ a CSVW (CSV on the Web) specification
-  [1melements.table.json     [22m‐ a Frictionless table specification (JSON)
-  [1melements.table.yaml     [22m‐ a Frictionless table specification (YAML)
+  [1mtdda discover elements.csv:format.serial[0m
+
+  metadata in [1mformat.serial [22mwill be used to guide the DataFrame
+  creation. If you use
+
+  [1mtdda discover elements.csv:[0m
+
+  it will look for any associated metadata for [1melements.csv [22musing
+  naming conventions described in the help for [1mtdda serial[22m.
 
   3) [1mtdda discover ‐‐rex md.serial:elements.parquet[0m
 
@@ -124,7 +128,7 @@ EXAMPLES
     ‐ regular expression inference is requested ([1m‐‐rex[22m) for text fields.
       Rexpy will be used to attempt to infer one or a few regular
       expressions that characterize each field in the input data.
-    ‐ a metadata filed to be used to interpret the [1m.csv [22mfile is provided
+    ‐ a metadata file to be used to interpret the [1m.csv [22mfile is provided
       explicitly.
 
   4) [1mtdda discover elements.parquet elements.tdda ‐r html ‐o elements[0m
@@ -156,10 +160,6 @@ SEE ALSO
   tdda verify
   tdda detect
   tdda serial
-
-
-
-
 
 
 

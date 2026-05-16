@@ -17,20 +17,21 @@
 ## POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
-  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`)
-  - a data frame in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`),
+    optionally using `:` format to specify flat-file metadata
+    (see the help for `tdda serial`)
+  - a data frame in a Parquet file (`.parquet`)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. `postgres:tablename`)
-  - Tables from MySQL databases (e.g. `mysql:tablename`)
-  - Tables from SQLite databases (e.g. `sqlite:tablename`)
+  - a table from PostgreSQL databases (e.g. `postgres:tablename`)
+  - a table from MySQL databases (e.g. `mysql:tablename`)
+  - a table from SQLite databases (e.g. `sqlite:tablename`)
   - Standard input (stdin): Use `-` to read from stdin
-    Metadata for flat files can also be specified or inferred.
 
 (Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial`
 for more information.)
 
 *CONSTRAINTS* Name of the (JSON) constraints file to create.
-  - Will use `.tdda` extension if no extention is specified.
+  - Will use `.tdda` extension if no extension is specified.
   - Can be missing or `-` to write to standard output.
 
 ## DESCRIPTION
@@ -42,14 +43,14 @@ The `tdda discover` command is used to find constraints that are satisfied
 
 The following options are available.
 
-`*` indicates options that are the default beaviours
+`*` indicates options that are the default behaviours
 
 `-h`, `--help`            Show this help message and exit  
 `-?`, `--?`               Same as `-h` or `--help`  
 `-7`, `--ascii`           Report without using special characters  
-`-N`, `--no-config`       Skip loading ~/.tdda.toml  
-`--colour`                Use colour in terminal output *  
-`--no-colour`             Do not not use colour in terminal output  
+`-N`, `--no-config`       Skip loading `~/.tdda.toml`  
+`--colour`              Use colour in terminal output *  
+`--no-colour`           Do not use colour in terminal output  
 `-x`, `--rex`             Include regular expression generation  
 `-X`, `--no-rex`          Exclude regular expression generation *  
 `-g`, `--group-rex`       Group regular expression generation  
@@ -81,25 +82,25 @@ The following options are available.
 
 ## EXAMPLES
 
-(The example data be obtained by running 'tdda examples', which will create
+The example data can be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
-data for these examples.)
+data for these examples.
 
 1) `tdda discover elements.parquet elements.tdda`
 
-This command will read data from elements.parquet and (attempt to
-find) constraints satifisfied by every record, and the data
-collectively.  By default this will may include minimum and maximum
+This command will read data from elements.parquet and (attempt to)
+find constraints satisfied by every record, and the data
+collectively.  By default this can include minimum and maximum
 constraints on field values or lengths, nullability constraints,
 uniqueness constraints, sign constraints, and allow-values
 constraints.
 
-The results will be written to elements.tdda in a JSON format,
-including metadata.  The output constraints file, elements.tdda can be
-used with 'tdda verify', to which constriants another datasets with
-the same structure, are satisified, or with 'tdda detect', to find
-which records and/or values fail to satisfy the constraints. The TDDA
-can be edited (carefully) by hand, or programmatically, to add,
+The results will be written to `elements.tdda` in a JSON format,
+including metadata.  The output constraints file, `elements.tdda` can be
+used with `tdda verify` to verify that another dataset with the same
+structure satisfies the constraints, or with `tdda detect` to find
+which records and/or values fail to satisfy the constraints. The `.tdda`
+file can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
 2) `tdda discover elements.csv`
@@ -110,15 +111,18 @@ from the CSV file specified, and writes the constraints to the screen
 
 The CSV structure and field types will normally be inferred (possibly
 incorrectly) by TDDA, and if the inference is bad, the command may
-fail. If there is a file in the same directory with a name suggesting
-it is associated metadata describing the csv file, that will be
-used. Typical such files include:
+fail. If you use:
 
-`elements.serial`         - a `tdda.serial` metadata specification  
-`elements.csv.serial`     - a `tdda.serial` metadata specification  
-`elements_metadata.json`  - a CSVW (CSV on the Web) specification  
-`elements.table.json`     - a Frictionless table specification (JSON)  
-`elements.table.yaml`     - a Frictionless table specification (YAML)  
+`tdda discover elements.csv:format.serial`
+
+metadata in `format.serial` will be used to guide the DataFrame
+creation. If you use
+
+`tdda discover elements.csv:`
+
+it will look for any associated metadata for `elements.csv` using
+naming conventions described in the help for `tdda serial`.
+
 
 3) `tdda discover --rex md.serial:elements.parquet`
 
@@ -126,7 +130,7 @@ This is similar to the last two except that:
   - regular expression inference is requested (`--rex`) for text fields.
     Rexpy will be used to attempt to infer one or a few regular
     expressions that characterize each field in the input data.
-  - a metadata filed to be used to interpret the `.csv` file is provided
+  - a metadata file to be used to interpret the `.csv` file is provided
     explicitly.
 
 4) `tdda discover elements.parquet elements.tdda -r html -o elements`

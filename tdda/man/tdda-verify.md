@@ -2,13 +2,13 @@
 
 ## NAME
 
-`tdda verify` - Veriify that constraints are satisfied by data
+`tdda verify` - Verify that constraints are satisfied by data
 
 ## SYNOPSIS
 
 `tdda verify` [`-h`] [`-?`] [`-7`] [`--no-config`]
             [`--colour`] [`--no-colour`]
-            [`-epsilon EPSILON`] [`-a`] [`-f`]
+            [`--epsilon` *EPSILON*] [`-a`] [`-f`]
             [`-t {strict,sloppy}`] [`--verify-required-fields`]
             [`--verify-allowed-fields`] [`--no-verify-required-fields`]
             [`--no-verify-allowed-fields`] [`--varf`] [`--no-varf`]
@@ -18,28 +18,26 @@
 ## POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
-  - a csv file or other flat file (e.g. .csv, .txt, .psv)
-  - a data frames in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`),
+    optionally using `:` format to specify flat-file metadata
+    (see the help for `tdda serial`)
+  - a data frame in a Parquet file (`.parquet`)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. postgres:tablename)
-  - Tables from MySQL databases (e.g. mysql:tablename)
-  - Tables from SQLite databases (e.g. sqlite:tablename)
-  - Standard input, stdin. Use `-` to read specify this.
+  - a table from PostgreSQL databases (e.g. `postgres:tablename`)
+  - a table from MySQL databases (e.g. `mysql:tablename`)
+  - a table from SQLite databases (e.g. `sqlite:tablename`)
+  - Standard input (stdin): Use `-` to read from stdin
 
-Metadata for flat files can also be specified or inferred.
-Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial` for
-more information.
-
-*CONSTRAINTS*, if provided, is a JSON .tdda file containing
+*CONSTRAINTS*, if provided, is a JSON `.tdda` file containing
 constraints.
 
 If no constraints file is provided, a file with the same path as
-the input file, with a .tdda extension will be tried.
+the input file, with a `.tdda` extension will be tried.
 
 ## DESCRIPTION
 
 The `tdda verify` command is used to check that data conforms
-the the constraints specified. Any constraints not satisfied
+to the constraints specified. Any constraints not satisfied
 by the data are reported, together with summary statistics.
 
 The `tdda verify` command does *not* report which records and
@@ -54,7 +52,7 @@ values cause constraints to be violated: the companion command
 `-N`, `--no-config`         Skip loading `~/.tdda.toml`  
 
 `--colour`                Use colour in terminal output  
-`--no-colour`             Do not not use colour in terminal output  
+`--no-colour`             Do not use colour in terminal output  
 
 `--epsilon` *EPSILON*       Epsilon fuzziness (tolerance for comparisons)  
 
@@ -82,10 +80,22 @@ values cause constraints to be violated: the companion command
 `--pandas`, `--pd`          Use Pandas as DataFrame engine.  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-                        (When dataframe engine is Pandas)  
+                        (when dataframe engine is Pandas)  
                           `n` for numpy_nullable *  
                           `a` for pyarrow  
                           `o` for original.  
+
+## EXAMPLES
+
+The example data can be obtained by running `tdda examples`, which will
+create various directories, including `constraints_examples`, containing
+source data for these examples.
+
+1) `tdda verify elements.parquet elements.tdda`
+
+This command reads data from `elements.parquet` and checks it against the
+constraints in `elements.tdda`, reporting any constraints that are not
+satisfied.
 
 ## SEE ALSO
 

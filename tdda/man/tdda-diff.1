@@ -15,16 +15,19 @@
             [\fB--prefixes\fR \fIPREFIXES\fP]
             [\fB-N\fR] [\fB--no-config\fR]
             [\fB--strict\fR] [\fB--medium\fR] [\fB--loose\fR] [\fB--permissive\fR]
-            \fILEFT\fP \fIRIGHT\fP [\fIOUTPATH\fP]
+            \fILEFT\fP \fIRIGHT\fP
 
 .SH POSITIONAL ARGUMENTS
-\fILEFT\fP
+\fILEFT\fP The first dataset to be compared, as a parquet or flat file (e.g. CSV),
+       optionally using \fB:\fR format to specify flat-file metadata
+       (see the help for \fBtdda serial\fR).
+       (Normally thought of as left or actual)
 
 .PP
-\fIRIGHT\fP
-
-.PP
-\fIOUTPATH\fP
+\fIRIGHT\fP  The second dataset to be compared as a parquet or flat file (e.g. CSV),
+         optionally using \fB:\fR format to specify flat-file metadata
+         (see the help for \fBtdda serial\fR).
+         (Normally thought of as right, expected, reference, etc.)
 
 .SH DESCRIPTION
 The \fBtdda diff\fR command compares two tabular datasets in CSV or Parquet
@@ -37,7 +40,7 @@ the display of differences.
 
 .PP
 By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+as typed values after reading.
 
 .SH OPTIONS
 \fB--fields\fR \fIFIELD1,FIELD2\fP,...

@@ -20,18 +20,15 @@
 
 .SH POSITIONAL ARGUMENTS
 \fIINPUT\fP is one of:
-  - a csv file or other flat file (e.g. .csv, .txt, .psv)
-  - a data frames in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. \fB\&.csv\fR, \fB\&.txt\fR, \fB\&.psv\fR),
+    optionally using \fB:\fR format to specify flat-file metadata
+    (see the help for \fBtdda serial\fR)
+  - a data frame in a Parquet file (\fB\&.parquet\fR)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. postgres:tablename)
-  - Tables from MySQL databases (e.g. mysql:tablename)
-  - Tables from SQLite databases (e.g. sqlite:tablename)
-  - Standard input, stdin. Use \fB-\fR to read specify this.
-
-.PP
-Metadata for flat files can also be specified or inferred.
-Use \fBtdda help serial\fR, \fBtdda serial --help\fR, or \fBman tdda-serial\fR for
-more information.
+  - a table from PostgreSQL databases (e.g. \fBpostgres:tablename\fR)
+  - a table from MySQL databases (e.g. \fBmysql:tablename\fR)
+  - a table from SQLite databases (e.g. \fBsqlite:tablename\fR)
+  - Standard input (stdin): Use \fB-\fR to read from stdin
 
 .PP
 \fICONSTRAINTS\fP, if provided, is a JSON \fB\&.tdda\fR file containing
@@ -39,20 +36,20 @@ constraints.
 
 .PP
 If no constraints file is provided, a file with the same path as
-the input file, with a .tdda extension will be tried.
+the input file, with a \fB\&.tdda\fR extension will be tried.
 
 .PP
-\fIOUTPUT\fP specifies the destiation for detected records.
+\fIOUTPUT\fP specifies the destination for detected records.
 
 .PP
-This is usually a file if the the input was a file (e.g. a \fB\&.csv\fR
+This is usually a file if the input was a file (e.g. a \fB\&.csv\fR
 file or a \fBparquet\fR file), but does not have to be the same type.
 If the input is a database table, the output is always a database
 table in the same database.
 
 .SH DESCRIPTION
-The \fBtdda discover\fR command finds and reports data that fails to satisfy
-the constraints in the \fICONSTAINTS\fP file specified. It also performs all
+The \fBtdda detect\fR command finds and reports data that fails to satisfy
+the constraints in the \fICONSTRAINTS\fP file specified. It also performs all
 the same functions as \fBtdda verify\fR\&.
 
 .SH OPTIONS
@@ -67,7 +64,7 @@ the same functions as \fBtdda verify\fR\&.
 .PP
 \fB--colour\fR                Use colour in terminal output
 .br
-\fB--no-colour\fR             Do not not use colour in terminal output
+\fB--no-colour\fR             Do not use colour in terminal output
 
 .PP
 \fB--epsilon\fR \fIEPSILON\fP       Epsilon fuzziness (tolerance for comparisons)
@@ -109,39 +106,39 @@ the same functions as \fBtdda verify\fR\&.
 .PP
 \fB--write-all-records\fR   Include passing records
 .br
-\fB--per-constraint\fR   Write one flag column per failing constraint in
+\fB--per-constraint\fR      Write one flag column per failing constraint in
 .br
-                      addition to n_failures. Set by default.
+                        addition to n_failures. Set by default.
 .br
 \fB--no-per-constraint\fR   Do not write out any per-constraint flag columns
 .br
-\fB--no-original-field\fRs  Do not write out original fields columns
+\fB--no-original-fields\fR  Do not write out original fields columns
 .br
-\fB--original-fields\fR   Write out original fields columns (default)
+\fB--original-fields\fR     Write out original fields columns (default)
 .br
-\fB--no-output-fields\fR   Do not write out any original fields in the output. By
+\fB--no-output-fields\fR    Do not write out any original fields in the output. By
 .br
-                      default, all original columns will be included.
+                        default, all original columns will be included.
 .br
-\fB--output-fiel\fRds [OUTPUT_FIELDS ...]
+\fB--output-fields\fR [\fIOUTPUT_FIELDS\fP ...]
 .br
-                      Specify original columns to write out.
+                        Specify original columns to write out.
 .br
-\fB--interleave\fR   Interleave ok columns with original fields.
+\fB--interleave\fR          Interleave ok columns with original fields.
 .br
-\fB--no-interleave\fR   Do not interleave ok columns with original fields.
+\fB--no-interleave\fR       Do not interleave ok columns with original fields.
 .br
-\fB--index\fR   Include a row-number index in the output file when
+\fB--index\fR               Include a row-number index in the output file when
 .br
-                      detecting. Rows are usually numbered from 1, unless
+                        detecting. Rows are usually numbered from 1,
 .br
-                      the input file already has an index.
+                        unless the input file already has an index.
 .br
-\fB--int\fR   Write out boolean fields as integers, with 1 for true
+\fB--int\fR                 Write out boolean fields as integers, with 1 for true
 .br
-                      and 0 for false.
+                        and 0 for false.
 .br
-\fB--k\fRey [KEY ...]       Key or key fields to use when reporting failures
+\fB--key [KEY ...]\fR       Key or key fields to use when reporting failures
 
 .PP
 \fB--verify-required-fields\fR, \fB--vrf\fR
@@ -175,7 +172,7 @@ the same functions as \fBtdda verify\fR\&.
 .br
 \fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
 .br
-                        (When dataframe engine is Pandas)
+                        (when dataframe engine is Pandas)
 .br
                           \fBn\fR for numpy_nullable *
 .br
@@ -184,9 +181,9 @@ the same functions as \fBtdda verify\fR\&.
                           \fBo\fR for original.
 
 .SH EXAMPLES
-(The example data can be obtained by running \fBtdda examples\fR, which will
+The example data can be obtained by running \fBtdda examples\fR, which will
 create various directories, including \fBconstraints_examples\fR, containing
-source data for these examples.)
+source data for these examples.
 
 .PP
 1) \fBtdda detect elements.parquet elements.tdda elements-failures.parquet\fR

@@ -6,33 +6,32 @@
 
 ## SYNOPSIS
 
-`tdda discover`      Perform constraint discovery  
-`tdda verify`        Verify data against constraints  
-`tdda detect`        Detect failed constraints on data  
+`tdda discover`      Generate constraints for data validation  
+`tdda verify`        Verify (validate) data against constraints  
+`tdda detect`        Detect data that fails constraints  
 
-`tdda examples`      Copy the example data and code  
-`tdda gentest`       Generate a reference test "automagically"  
+`tdda examples`      Copy the tdda example data and code  
+`tdda gentest`       Auto-generate Python tests for code in any language  
 
-`tdda diff`          Compare two parquet or CSV files  
-`tdda serial`        Convert or view .serial, CSVW,
-                   and Frictionless metadata  
+`tdda diff`          Find difference in datasets in parquet or CSV files  
+`tdda serial`        Convert or infer flat-file metadata in tdda.serial,  
+                   CSVW, or Frictionless formats  
 `tdda tag`           Tag tests that failed in the last reference test run  
-`tdda config`        Show or edit TDDA configuration  
+`tdda config`        Show TDDA configuration  
 
 `tdda version`       Print the TDDA version number  
 `tdda help`          Print this help  
 `tdda help COMMAND`  Print help on COMMAND (e.g. discover, verify)  
 
-`tdda test`          Run the tdda library's tests.  
+`tdda test`          Run the tdda library's self-tests.  
 
 ## OPTIONS
 
-`-`v, `--version`       Print version number (same as tdda version)  
+`-v`, `--version`       Print version number (same as tdda version)  
 `-h`, `-?`, `--help`      Print this help  
 
 ## SEE ALSO
 
-rexpy(1),
-tdda(3)
+rexpy(1)
 
 [TDDA Book](https://book.tdda.info)

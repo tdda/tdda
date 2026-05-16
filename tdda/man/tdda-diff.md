@@ -22,11 +22,13 @@
 ## POSITIONAL ARGUMENTS
 
 *LEFT* The first dataset to be compared, as a parquet or flat file (e.g. CSV),
-       optionally with metadata.
+       optionally using `:` format to specify flat-file metadata
+       (see the help for `tdda serial`).
        (Normally thought of as left or actual)
 
 *RIGHT*  The second dataset to be compared as a parquet or flat file (e.g. CSV),
-         optionally with metadata.
+         optionally using `:` format to specify flat-file metadata
+         (see the help for `tdda serial`).
          (Normally thought of as right, expected, reference, etc.)
 
 

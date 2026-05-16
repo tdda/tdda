@@ -1,12 +1,12 @@
 .nh
 .TH "TDDA VERIFY" 1 "January 2026" "3.0" "tdda verify manual"
 .SH NAME
-\fBtdda verify\fR \- Veriify that constraints are satisfied by data
+\fBtdda verify\fR \- Verify that constraints are satisfied by data
 
 .SH SYNOPSIS
 \fBtdda verify\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR]
             [\fB--colour\fR] [\fB--no-colour\fR]
-            [\fB-epsilon EPSILON\fR] [\fB-a\fR] [\fB-f\fR]
+            [\fB--epsilon\fR \fIEPSILON\fP] [\fB-a\fR] [\fB-f\fR]
             [\fB-t {strict,sloppy}\fR] [\fB--verify-required-fields\fR]
             [\fB--verify-allowed-fields\fR] [\fB--no-verify-required-fields\fR]
             [\fB--no-verify-allowed-fields\fR] [\fB--varf\fR] [\fB--no-varf\fR]
@@ -15,30 +15,27 @@
 
 .SH POSITIONAL ARGUMENTS
 \fIINPUT\fP is one of:
-  - a csv file or other flat file (e.g. .csv, .txt, .psv)
-  - a data frames in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. \fB\&.csv\fR, \fB\&.txt\fR, \fB\&.psv\fR),
+    optionally using \fB:\fR format to specify flat-file metadata
+    (see the help for \fBtdda serial\fR)
+  - a data frame in a Parquet file (\fB\&.parquet\fR)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. postgres:tablename)
-  - Tables from MySQL databases (e.g. mysql:tablename)
-  - Tables from SQLite databases (e.g. sqlite:tablename)
-  - Standard input, stdin. Use \fB-\fR to read specify this.
+  - a table from PostgreSQL databases (e.g. \fBpostgres:tablename\fR)
+  - a table from MySQL databases (e.g. \fBmysql:tablename\fR)
+  - a table from SQLite databases (e.g. \fBsqlite:tablename\fR)
+  - Standard input (stdin): Use \fB-\fR to read from stdin
 
 .PP
-Metadata for flat files can also be specified or inferred.
-Use \fBtdda help serial\fR, \fBtdda serial --help\fR, or \fBman tdda-serial\fR for
-more information.
-
-.PP
-\fICONSTRAINTS\fP, if provided, is a JSON .tdda file containing
+\fICONSTRAINTS\fP, if provided, is a JSON \fB\&.tdda\fR file containing
 constraints.
 
 .PP
 If no constraints file is provided, a file with the same path as
-the input file, with a .tdda extension will be tried.
+the input file, with a \fB\&.tdda\fR extension will be tried.
 
 .SH DESCRIPTION
 The \fBtdda verify\fR command is used to check that data conforms
-the the constraints specified. Any constraints not satisfied
+to the constraints specified. Any constraints not satisfied
 by the data are reported, together with summary statistics.
 
 .PP
@@ -58,7 +55,7 @@ values cause constraints to be violated: the companion command
 .PP
 \fB--colour\fR                Use colour in terminal output
 .br
-\fB--no-colour\fR             Do not not use colour in terminal output
+\fB--no-colour\fR             Do not use colour in terminal output
 
 .PP
 \fB--epsilon\fR \fIEPSILON\fP       Epsilon fuzziness (tolerance for comparisons)
@@ -108,13 +105,26 @@ values cause constraints to be violated: the companion command
 .br
 \fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
 .br
-                        (When dataframe engine is Pandas)
+                        (when dataframe engine is Pandas)
 .br
                           \fBn\fR for numpy_nullable *
 .br
                           \fBa\fR for pyarrow
 .br
                           \fBo\fR for original.
+
+.SH EXAMPLES
+The example data can be obtained by running \fBtdda examples\fR, which will
+create various directories, including \fBconstraints_examples\fR, containing
+source data for these examples.
+
+.PP
+1) \fBtdda verify elements.parquet elements.tdda\fR
+
+.PP
+This command reads data from \fBelements.parquet\fR and checks it against the
+constraints in \fBelements.tdda\fR, reporting any constraints that are not
+satisfied.
 
 .SH SEE ALSO
 tdda-detect(1),

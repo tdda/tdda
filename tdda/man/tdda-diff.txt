@@ -15,15 +15,20 @@ SYNOPSIS
               [[1m‐‐prefixes [4m[22mPREFIXES[24m]
               [[1m‐N[22m] [[1m‐‐no‐config[22m]
               [[1m‐‐strict[22m] [[1m‐‐medium[22m] [[1m‐‐loose[22m] [[1m‐‐permissive[22m]
-              [4mLEFT[24m [4mRIGHT[24m [[4mOUTPATH[24m]
+              [4mLEFT[24m [4mRIGHT[0m
 
 POSITIONAL ARGUMENTS
 
-  [4mLEFT[0m
+  [4mLEFT[24m The first dataset to be compared, as a parquet or flat file (e.g. CSV),
+         optionally using [1m: [22mformat to specify flat‐file metadata
+         (see the help for [1mtdda serial[22m).
+         (Normally thought of as left or actual)
 
-  [4mRIGHT[0m
-
-  [4mOUTPATH[0m
+  [4mRIGHT[24m  The second dataset to be compared as a parquet or flat file (e.g.
+CSV),
+           optionally using [1m: [22mformat to specify flat‐file metadata
+           (see the help for [1mtdda serial[22m).
+           (Normally thought of as right, expected, reference, etc.)
 
 DESCRIPTION
 
@@ -36,7 +41,7 @@ DESCRIPTION
   the display of differences.
 
   By default, comparisons are row‐based and consider all fields (columns),
-  as typed values after reading. Ke
+  as typed values after reading.
 
 OPTIONS
 
@@ -161,11 +166,6 @@ EXAMPLES
 
   Compare a Parquet file against a CSV file with loose type matching
   and floating‐point values compared to 3 decimal places.
-
-
-
-
-
 
 
 

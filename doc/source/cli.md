@@ -9,34 +9,33 @@
 
 ### SYNOPSIS
 ```
-tdda discover      Perform constraint discovery  
-tdda verify        Verify data against constraints  
-tdda detect        Detect failed constraints on data  
+tdda discover      Generate constraints for data validation  
+tdda verify        Verify (validate) data against constraints  
+tdda detect        Detect data that fails constraints  
 
-tdda examples      Copy the example data and code  
-tdda gentest       Generate a reference test "automagically"  
+tdda examples      Copy the tdda example data and code  
+tdda gentest       Auto-generate Python tests for code in any language  
 
-tdda diff          Compare two parquet or CSV files  
-tdda serial        Convert or view .serial, CSVW,
-                   and Frictionless metadata  
+tdda diff          Find difference in datasets in parquet or CSV files  
+tdda serial        Convert or infer flat-file metadata in tdda.serial,  
+                   CSVW, or Frictionless formats  
 tdda tag           Tag tests that failed in the last reference test run  
-tdda config        Show or edit TDDA configuration  
+tdda config        Show TDDA configuration  
 
 tdda version       Print the TDDA version number  
 tdda help          Print this help  
 tdda help COMMAND  Print help on COMMAND (e.g. discover, verify)  
 
-tdda test          Run the tdda library's tests.  
+tdda test          Run the tdda library's self-tests.  
 ```
 ### OPTIONS
 
-`-`v, `--version`       Print version number (same as tdda version)  
+`-v`, `--version`       Print version number (same as tdda version)  
 `-h`, `-?`, `--help`      Print this help  
 
 ### SEE ALSO
 
-rexpy(1),
-tdda(3)
+rexpy(1)
 
 [TDDA Book](https://book.tdda.info)
 
@@ -62,20 +61,21 @@ tdda discover [-h] [-?] [-7] [--no-config] [--colour]
 ### POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
-  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`)
-  - a data frame in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`),
+    optionally using `:` format to specify flat-file metadata
+    (see the help for `tdda serial`)
+  - a data frame in a Parquet file (`.parquet`)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. `postgres:tablename`)
-  - Tables from MySQL databases (e.g. `mysql:tablename`)
-  - Tables from SQLite databases (e.g. `sqlite:tablename`)
+  - a table from PostgreSQL databases (e.g. `postgres:tablename`)
+  - a table from MySQL databases (e.g. `mysql:tablename`)
+  - a table from SQLite databases (e.g. `sqlite:tablename`)
   - Standard input (stdin): Use `-` to read from stdin
-    Metadata for flat files can also be specified or inferred.
 
 (Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial`
 for more information.)
 
 *CONSTRAINTS* Name of the (JSON) constraints file to create.
-  - Will use `.tdda` extension if no extention is specified.
+  - Will use `.tdda` extension if no extension is specified.
   - Can be missing or `-` to write to standard output.
 
 ### DESCRIPTION
@@ -87,14 +87,14 @@ The `tdda discover` command is used to find constraints that are satisfied
 
 The following options are available.
 
-`*` indicates options that are the default beaviours
+`*` indicates options that are the default behaviours
 
 `-h`, `--help`            Show this help message and exit  
 `-?`, `--?`               Same as `-h` or `--help`  
 `-7`, `--ascii`           Report without using special characters  
-`-N`, `--no-config`       Skip loading ~/.tdda.toml  
-`--colour`                Use colour in terminal output *  
-`--no-colour`             Do not not use colour in terminal output  
+`-N`, `--no-config`       Skip loading `~/.tdda.toml`  
+`--colour`              Use colour in terminal output *  
+`--no-colour`           Do not use colour in terminal output  
 `-x`, `--rex`             Include regular expression generation  
 `-X`, `--no-rex`          Exclude regular expression generation *  
 `-g`, `--group-rex`       Group regular expression generation  
@@ -127,25 +127,25 @@ is replaced by the format).
 
 ### EXAMPLES
 
-(The example data be obtained by running 'tdda examples', which will create
+The example data can be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
-data for these examples.)
+data for these examples.
 
 1) `tdda discover elements.parquet elements.tdda`
 
-This command will read data from elements.parquet and (attempt to
-find) constraints satifisfied by every record, and the data
-collectively.  By default this will may include minimum and maximum
+This command will read data from elements.parquet and (attempt to)
+find constraints satisfied by every record, and the data
+collectively.  By default this can include minimum and maximum
 constraints on field values or lengths, nullability constraints,
 uniqueness constraints, sign constraints, and allow-values
 constraints.
 
-The results will be written to elements.tdda in a JSON format,
-including metadata.  The output constraints file, elements.tdda can be
-used with 'tdda verify', to which constriants another datasets with
-the same structure, are satisified, or with 'tdda detect', to find
-which records and/or values fail to satisfy the constraints. The TDDA
-can be edited (carefully) by hand, or programmatically, to add,
+The results will be written to `elements.tdda` in a JSON format,
+including metadata.  The output constraints file, `elements.tdda` can be
+used with `tdda verify` to verify that another dataset with the same
+structure satisfies the constraints, or with `tdda detect` to find
+which records and/or values fail to satisfy the constraints. The `.tdda`
+file can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
 2) `tdda discover elements.csv`
@@ -156,15 +156,18 @@ from the CSV file specified, and writes the constraints to the screen
 
 The CSV structure and field types will normally be inferred (possibly
 incorrectly) by TDDA, and if the inference is bad, the command may
-fail. If there is a file in the same directory with a name suggesting
-it is associated metadata describing the csv file, that will be
-used. Typical such files include:
+fail. If you use:
 
-`elements.serial`         - a `tdda.serial` metadata specification  
-`elements.csv.serial`     - a `tdda.serial` metadata specification  
-`elements_metadata.json`  - a CSVW (CSV on the Web) specification  
-`elements.table.json`     - a Frictionless table specification (JSON)  
-`elements.table.yaml`     - a Frictionless table specification (YAML)  
+`tdda discover elements.csv:format.serial`
+
+metadata in `format.serial` will be used to guide the DataFrame
+creation. If you use
+
+`tdda discover elements.csv:`
+
+it will look for any associated metadata for `elements.csv` using
+naming conventions described in the help for `tdda serial`.
+
 
 3) `tdda discover --rex md.serial:elements.parquet`
 
@@ -172,7 +175,7 @@ This is similar to the last two except that:
   - regular expression inference is requested (`--rex`) for text fields.
     Rexpy will be used to attempt to infer one or a few regular
     expressions that characterize each field in the input data.
-  - a metadata filed to be used to interpret the `.csv` file is provided
+  - a metadata file to be used to interpret the `.csv` file is provided
     explicitly.
 
 4) `tdda discover elements.parquet elements.tdda -r html -o elements`
@@ -212,13 +215,13 @@ tdda-serial(1)
 
 ### NAME
 
-`tdda verify` - Veriify that constraints are satisfied by data
+`tdda verify` - Verify that constraints are satisfied by data
 
 ### SYNOPSIS
 ```
 tdda verify [-h] [-?] [-7] [--no-config]
             [--colour] [--no-colour]
-            [-epsilon EPSILON] [-a] [-f]
+            [--epsilon EPSILON] [-a] [-f]
             [-t {strict,sloppy}] [--verify-required-fields]
             [--verify-allowed-fields] [--no-verify-required-fields]
             [--no-verify-allowed-fields] [--varf] [--no-varf]
@@ -228,28 +231,26 @@ tdda verify [-h] [-?] [-7] [--no-config]
 ### POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
-  - a csv file or other flat file (e.g. .csv, .txt, .psv)
-  - a data frames in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`),
+    optionally using `:` format to specify flat-file metadata
+    (see the help for `tdda serial`)
+  - a data frame in a Parquet file (`.parquet`)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. postgres:tablename)
-  - Tables from MySQL databases (e.g. mysql:tablename)
-  - Tables from SQLite databases (e.g. sqlite:tablename)
-  - Standard input, stdin. Use `-` to read specify this.
+  - a table from PostgreSQL databases (e.g. `postgres:tablename`)
+  - a table from MySQL databases (e.g. `mysql:tablename`)
+  - a table from SQLite databases (e.g. `sqlite:tablename`)
+  - Standard input (stdin): Use `-` to read from stdin
 
-Metadata for flat files can also be specified or inferred.
-Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial` for
-more information.
-
-*CONSTRAINTS*, if provided, is a JSON .tdda file containing
+*CONSTRAINTS*, if provided, is a JSON `.tdda` file containing
 constraints.
 
 If no constraints file is provided, a file with the same path as
-the input file, with a .tdda extension will be tried.
+the input file, with a `.tdda` extension will be tried.
 
 ### DESCRIPTION
 
 The `tdda verify` command is used to check that data conforms
-the the constraints specified. Any constraints not satisfied
+to the constraints specified. Any constraints not satisfied
 by the data are reported, together with summary statistics.
 
 The `tdda verify` command does *not* report which records and
@@ -264,7 +265,7 @@ values cause constraints to be violated: the companion command
 `-N`, `--no-config`         Skip loading `~/.tdda.toml`  
 
 `--colour`                Use colour in terminal output  
-`--no-colour`             Do not not use colour in terminal output  
+`--no-colour`             Do not use colour in terminal output  
 
 `--epsilon` *EPSILON*       Epsilon fuzziness (tolerance for comparisons)  
 
@@ -298,10 +299,22 @@ fields
 `--pandas`, `--pd`          Use Pandas as DataFrame engine.  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-(When dataframe engine is Pandas)
+(when dataframe engine is Pandas)
 `n` for numpy_nullable *
 `a` for pyarrow
 `o` for original.
+
+### EXAMPLES
+
+The example data can be obtained by running `tdda examples`, which will
+create various directories, including `constraints_examples`, containing
+source data for these examples.
+
+1) `tdda verify elements.parquet elements.tdda`
+
+This command reads data from `elements.parquet` and checks it against the
+constraints in `elements.tdda`, reporting any constraints that are not
+satisfied.
 
 ### SEE ALSO
 
@@ -337,35 +350,33 @@ tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
 ### POSITIONAL ARGUMENTS
 
 *INPUT* is one of:
-  - a csv file or other flat file (e.g. .csv, .txt, .psv)
-  - a data frames in a Parquet files (.parquet)
+  - a CSV file or other flat file (e.g. `.csv`, `.txt`, `.psv`),
+    optionally using `:` format to specify flat-file metadata
+    (see the help for `tdda serial`)
+  - a data frame in a Parquet file (`.parquet`)
     e.g. from pandas, polars, R
-  - Tables from PostgreSQL databases (e.g. postgres:tablename)
-  - Tables from MySQL databases (e.g. mysql:tablename)
-  - Tables from SQLite databases (e.g. sqlite:tablename)
-  - Standard input, stdin. Use `-` to read specify this.
-
-Metadata for flat files can also be specified or inferred.
-Use `tdda help serial`, `tdda serial --help`, or `man tdda-serial` for
-more information.
+  - a table from PostgreSQL databases (e.g. `postgres:tablename`)
+  - a table from MySQL databases (e.g. `mysql:tablename`)
+  - a table from SQLite databases (e.g. `sqlite:tablename`)
+  - Standard input (stdin): Use `-` to read from stdin
 
 *CONSTRAINTS*, if provided, is a JSON `.tdda` file containing
 constraints.
 
 If no constraints file is provided, a file with the same path as
-the input file, with a .tdda extension will be tried.
+the input file, with a `.tdda` extension will be tried.
 
-*OUTPUT* specifies the destiation for detected records.
+*OUTPUT* specifies the destination for detected records.
 
-This is usually a file if the the input was a file (e.g. a `.csv`
+This is usually a file if the input was a file (e.g. a `.csv`
 file or a `parquet` file), but does not have to be the same type.
 If the input is a database table, the output is always a database
 table in the same database.
 
 ### DESCRIPTION
 
-The `tdda discover` command finds and reports data that fails to satisfy
-the constraints in the *CONSTAINTS* file specified. It also performs all
+The `tdda detect` command finds and reports data that fails to satisfy
+the constraints in the *CONSTRAINTS* file specified. It also performs all
 the same functions as `tdda verify`.
 
 ### OPTIONS
@@ -376,7 +387,7 @@ the same functions as `tdda verify`.
 `-N`, `--no-config`         Skip loading `~/.tdda.toml`  
 
 `--colour`                Use colour in terminal output  
-`--no-colour`             Do not not use colour in terminal output  
+`--no-colour`             Do not use colour in terminal output  
 
 `--epsilon` *EPSILON*       Epsilon fuzziness (tolerance for comparisons)  
 
@@ -404,28 +415,28 @@ Stem path for report files (extension is replaced
 by the format).
 
 `--write-all-records`   Include passing records  
-`--per-constraint   `   Write one flag column per failing constraint in  
+`--per-constraint`      Write one flag column per failing constraint in  
 addition to n_failures. Set by default.
 
 `--no-per-constraint`   Do not write out any per-constraint flag columns  
-`--no-original-field`s  Do not write out original fields columns  
-`--original-fields  `   Write out original fields columns (default)  
-`--no-output-fields `   Do not write out any original fields in the output. By  
+`--no-original-fields`  Do not write out original fields columns  
+`--original-fields`     Write out original fields columns (default)  
+`--no-output-fields`    Do not write out any original fields in the output. By  
 default, all original columns will be included.
 
-`--output-fiel`ds [OUTPUT_FIELDS ...]  
+`--output-fields` [*OUTPUT_FIELDS* ...]  
 Specify original columns to write out.
 
-`--interleave       `   Interleave ok columns with original fields.  
-`--no-interleave    `   Do not interleave ok columns with original fields.  
-`--index            `   Include a row-number index in the output file when  
-detecting. Rows are usually numbered from 1, unless
-the input file already has an index.
+`--interleave`          Interleave ok columns with original fields.  
+`--no-interleave`       Do not interleave ok columns with original fields.  
+`--index`               Include a row-number index in the output file when  
+detecting. Rows are usually numbered from 1,
+unless the input file already has an index.
 
-`--int              `   Write out boolean fields as integers, with 1 for true  
+`--int`                 Write out boolean fields as integers, with 1 for true  
 and 0 for false.
 
-`--k`ey [KEY ...]       Key or key fields to use when reporting failures  
+`--key [KEY ...]`       Key or key fields to use when reporting failures  
 
 `--verify-required-fields`, `--vrf`  
 Force verify of required fields
@@ -448,16 +459,16 @@ fields
 `--pandas`, `--pd`          Use Pandas as DataFrame engine.  
 `--polars`, `--pl`          Use Polars as DataFrame engine.  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
-(When dataframe engine is Pandas)
+(when dataframe engine is Pandas)
 `n` for numpy_nullable *
 `a` for pyarrow
 `o` for original.
 
 ### EXAMPLES
 
-(The example data can be obtained by running `tdda examples`, which will
+The example data can be obtained by running `tdda examples`, which will
 create various directories, including `constraints_examples`, containing
-source data for these examples.)
+source data for these examples.
 
 1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`
 
@@ -502,15 +513,20 @@ tdda diff [--fields FIELD1,FIELD2,...]
             [--prefixes PREFIXES]
             [-N] [--no-config]
             [--strict] [--medium] [--loose] [--permissive]
-            LEFT RIGHT [OUTPATH]
+            LEFT RIGHT
 ```
 ### POSITIONAL ARGUMENTS
 
-*LEFT*
+*LEFT* The first dataset to be compared, as a parquet or flat file (e.g. CSV),
+       optionally using `:` format to specify flat-file metadata
+       (see the help for `tdda serial`).
+       (Normally thought of as left or actual)
 
-*RIGHT*
+*RIGHT*  The second dataset to be compared as a parquet or flat file (e.g. CSV),
+         optionally using `:` format to specify flat-file metadata
+         (see the help for `tdda serial`).
+         (Normally thought of as right, expected, reference, etc.)
 
-*OUTPATH*
 
 ### DESCRIPTION
 
@@ -523,7 +539,7 @@ numeric comparisons. It also provides a number of options for controlling
 the display of differences.
 
 By default, comparisons are row-based and consider all fields (columns),
-as typed values after reading. Ke
+as typed values after reading.
 
 ### OPTIONS
 
@@ -824,6 +840,55 @@ or Frictionless data.
 `tdda serial a-metadata.json a.serial`
     Generate Converts `tdda.metadata` metadata to CSVW
 
+### USING SERIAL METADATA WITH TDDA COMMANDS
+
+For all tdda command-line commands, and in most places within
+API calls where CSV or other flat file is specified, there is the
+option to specify the file format using `tdda.serial` files,
+CSVW files, or Frictionless files. This is based on the `:` (colon) specifier.
+
+When specifying a path to a CSV (or other flat) file:
+
+ * If the path is used by itself, the `tdda` library will use
+   either `tdda.serial.csv_to_pandas` or `tdda.serial.csv_to_polars`
+   to read it into a DataFrame. The default is currently pandas
+   (with the `numpy_nullable` back end), but this can be
+   [configured](configuration.md)
+   or, in many cases controlled with command line flags
+   (`--polars`, `--pandas`, `--backend BACKEND` (for Pandas only)).
+
+ * If the path ends in a colon (e.g. `foo.csv:`), TDDA will search
+   for metadata in the same directory as the file and, if it finds
+   one, pass that to the appropriate `csv_to_...` function for
+   more accurate DataFrame generation.
+
+ * In doing this, it will look for the following in priority order,
+   given a file `foo.csv`:
+
+     - `foo.csv.serial` (`tdda.serial` metadata)
+     - `foo.serial` (`tdda.serial` metadata). This is actually more
+       common than the previous form, but if there are multiple files
+       with different extensions, the former is more specific, so is
+       checked first.
+     - Anything that matches foo using `@` as a wildcard, e.g.
+       `@.serial`, `f@.serial`, `f@o.serial`, `@oo.serial`.
+       (`@` acts like `*` in the shell, while avoiding needing
+       `*` in filenames, which can be awkward.)
+     - `foo-metadata.json`, `foo-csvmetadata.json`, `foo-csv-metadata.json`,
+       `foo.csvmetadata.json`, `foo.csv-metadata.json`
+       (all of which are common conventions for CSVW metadata files).
+     - The same CSVW patterns with `@` wildcards
+     - `foo.serial.json`, `foo.serial.yaml`, `foo.resource.json`,
+       `foo.resource.yaml`, `foo.package.json`, `foo.package.yaml`,
+       all of which are common for Frictionless metadata files.
+     - The same patterns for `serial` or `package` frictionless files
+       with `@` wildcards. Wildcards are not searched in `resource` files,
+       because in frictionless these always correspond to a single
+       data file.
+
+ * If the path contains a colon, the part to the right of the colon
+   will be interpreted as a metadata file. So `foo.csv:bar.serial`
+   will use `bar.serial`.
 
 
 

@@ -4,37 +4,37 @@ NAME
 
 SYNOPSIS
 
-  [1mtdda discover      [22mPerform constraint discovery
-  [1mtdda verify        [22mVerify data against constraints
-  [1mtdda detect        [22mDetect failed constraints on data
+  [1mtdda discover      [22mGenerate constraints for data validation
+  [1mtdda verify        [22mVerify (validate) data against constraints
+  [1mtdda detect        [22mDetect data that fails constraints
 
-  [1mtdda examples      [22mCopy the example data and code
-  [1mtdda gentest       [22mGenerate a reference test "automagically"
+  [1mtdda examples      [22mCopy the tdda example data and code
+  [1mtdda gentest       [22mAuto‐generate Python tests for code in any language
 
-  [1mtdda diff          [22mCompare two parquet or CSV files
-  [1mtdda serial        [22mConvert or view .serial, CSVW,
-                     and Frictionless metadata
+  [1mtdda diff          [22mFind difference in datasets in parquet or CSV files
+  [1mtdda serial        [22mConvert or infer flat‐file metadata in tdda.serial,
+                     CSVW, or Frictionless formats
   [1mtdda tag           [22mTag tests that failed in the last reference test run
-  [1mtdda config        [22mShow or edit TDDA configuration
+  [1mtdda config        [22mShow TDDA configuration
 
   [1mtdda version       [22mPrint the TDDA version number
   [1mtdda help          [22mPrint this help
   [1mtdda help COMMAND  [22mPrint help on COMMAND (e.g. discover, verify)
 
-  [1mtdda test          [22mRun the tdda library’s tests.
+  [1mtdda test          [22mRun the tdda library’s self‐tests.
 
 OPTIONS
 
-  [1m‐[22mv, [1m‐‐version       [22mPrint version number (same as tdda version)
+  [1m‐v[22m, [1m‐‐version       [22mPrint version number (same as tdda version)
   [1m‐h[22m, [1m‐?[22m, [1m‐‐help      [22mPrint this help
 
 SEE ALSO
 
   rexpy
-  tdda
 
   TDDA Book
   ⟨https://book.tdda.info⟩
+
 
 
 
