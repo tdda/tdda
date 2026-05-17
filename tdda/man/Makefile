@@ -1,3 +1,6 @@
+DATE    = May 2026
+VERSION = 3.0
+
 TARGETS = tdda.txt \
           tdda-discover.txt \
           tdda-detect.txt \
@@ -44,7 +47,9 @@ tdda-config.md: tdda-config.md.in gen_config_params.py
 	python preprocess.py tdda-config.md.in tdda-config.md
 
 $(TARGETS): %.txt: %.md
-	go-md2man -in $< -out $*.1
+	sed 's|%%DATE%%|$(DATE)|g; s|%%VERSION%%|$(VERSION)|g' $< > $*.md.tmp
+	go-md2man -in $*.md.tmp -out $*.1
+	rm $*.md.tmp
 	cat $*.1 | python sideheads.py | groff -Tutf8 > $@
 	cp $*.1 /usr/local/man/man1
 	python clean_markdown.py $*.md sphinx/$*.md

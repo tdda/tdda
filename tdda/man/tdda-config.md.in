@@ -1,4 +1,4 @@
-# "TDDA VERSION" 1 "January 2026" "3.0" "tdda config manual"
+# "TDDA VERSION" 1 "%%DATE%%" "%%VERSION%%" "tdda config manual"
 ## NAME
 
 `tdda config` - Shows config settings

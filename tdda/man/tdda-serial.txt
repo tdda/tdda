@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda serial  [22m− Converts, interrogates and creates serial metadata files.
+  [1mtdda serial [22mâ Converts and generates serial metadata files.
 
 SYNOPSIS
 
@@ -12,16 +12,16 @@ SYNOPSIS
 
   [1mtdda serial [22m[FLAGS] [1mindata outmetadata[0m
 
-  Creates metadata for in [1mindata [22min [1moutmetadata[0m
+  Creates metadata for [1mindata [22min [1moutmetadata[0m
 
   [1mtdda serial [22m[FLAGS] [1minmetadata script.py[0m
 
   Creates Python code for reading a file in the format in [1minmetadata [22mas
   Python. Often, a reading library would be specified, e.g.
 
-  [1mtdda serial a.serial a.py [22m‐‐to pd.r
+  [1mtdda serial a.serial a.py ‐‐to pd.r[0m
 
-  which specifies that they Python script should use [1mpandas.read_csv[22m.
+  which specifies that the Python script should use [1mpandas.read_csv[22m.
 
   Supported formats [1mFMT[22m:
 
@@ -46,24 +46,27 @@ SYNOPSIS
 
 OPTIONS
 
-  [1m‐‐to FMT             [22mSpecify output metadata format (see list of formats
-above)
+  [1m‐‐to FMT               [22mSpecify output metadata format (see list of
+                         formats above)
 
-  [1m‐B BE, ‐‐backend BE  [22mSpecify backend for Pandas flavours:
-                           [1mn[22m: [1mnumpy_nullable[0m
-                           [1ma[22m: [1mpyarrow[0m
-                           [1mo[22m: for original Pandas backend.
+  [1m‐B BE, ‐‐backend BE    [22mSpecify backend for Pandas flavours:
+                             [1mn[22m: [1mnumpy_nullable[0m
+                             [1ma[22m: [1mpyarrow[0m
+                             [1mo[22m: [1moriginal [22mPandas backend.
 
-  [1m‐‐for FILE            [22mFilename for data to use when generating CSVW
-                          or Frictionless data.
-                          (Can also be used for [1mtdda.serial [22mand [1m.py [22moutput)
+  [1m‐‐for FILE             [22mFilename for data to use when generating CSVW
+                         or Frictionless data.
+                         (Can also be used for [1mtdda.serial [22mand [1m.py[0m
+                         output)
 
-  [1m‐N, ‐‐no‐config        [22mUse default configuration (ignore ˜/.tdda.toml)
+  [1m‐N, ‐‐no‐config        [22mUse default configuration (ignore [1m˜/.tdda.toml[22m)
 
   [1m‐g, ‐‐gen, ‐‐generate  [22mGenerate (infer) metadata for flat file
 
   [1m‐q, ‐‐quiet            [22mQuiet output
+
   [1m‐v, ‐‐verbose          [22mVerbose output
+
   [1m‐V, ‐‐Verbose          [22mMore verbose output
 
 Options used primarily or exclusively with [1m‐‐generate[22m/[1m‐‐gen[22m/[1m‐g[0m
@@ -71,86 +74,90 @@ Options used primarily or exclusively with [1m‐‐generate[22m/[1m‐‐gen
   [1m‐‐sep D, ‐‐delimiter D     [22mSpecify [1mD [22mas the field separator.
 
   [1m‐‐quote‐char Q, ‐‐quote Q  [22mSpecify [1mQ [22mas the quote character.
-                               (Q is always [1m" [22mor [1m’ [22min practice.)
+                             (Q is always [1m" [22mor [1m’ [22min practice.)
 
   [1m‐‐nulls S                  [22mSpecify null indicator, or comma‐separated
-                               list of null indicators.
+                             list of null indicators.
 
   [1m‐‐escape                   [22mUse backslash as escape character.
-                               [1mNOTE: [22mAlways backslash: does not take argument.
+                             [1mNOTE: [22mAlways backslash: does not take
+                             argument.
 
   [1m‐‐no‐escape                [22mDo not support backslash escaping with [1m‐g[22m.
-                               [1mNOTE: [22mThis only affects quotes, separators,
-                               and backslashes. Standard escapes for control
-                               sequences (\t, \n, \t, \f) are always supported.
+                             [1mNOTE: [22mThis only affects quotes, separators,
+                             and backslashes. Standard escapes for
+                             control sequences (\t, \n, \r, \f)
+                             are always supported.
 
   [1m‐‐stutter                  [22mSpecify quote stuttering.
-                               Usually an alternative to [1m‐‐escape[22m.
+                             Usually an alternative to [1m‐‐escape[22m.
 
   [1m‐‐no‐stutter               [22mDo not use quote stuttering.
-                               Usually used with [1m‐‐escape[22m.
+                             Usually used with [1m‐‐escape[22m.
 
   [1m‐‐encoding ENC, ‐e ENC     [22mSpecify [1mENC [22mas encoding.
 
-  [1m‐‐date‐format D            [22mSpecify [1mD [22mas the (file‐wide default) date format.
+  [1m‐‐date‐format D            [22mSpecify [1mD [22mas the (file‐wide default)
+                             date format.
 
   [1m‐‐datetime‐format D        [22mSpecify [1mD [22mas the (file‐wide default) format
-                               for [1mdatetime [22mfields.
+                             for [1mdatetime [22mfields.
 
   [1m‐‐sample‐lines N, ‐n N     [22mUse (up to) [1mN [22msample lines when inferring
-                               metadata.
+                             metadata.
 
   [1m‐‐single‐field, ‐1         [22mInform the metadata inferred that the file
-                               contains only a single field (column).
+                             contains only a single field (column).
 
   [1m‐‐include‐path             [22mInclude [1mpath [22min [1m.serial [22moutput
 
   [1m‐‐exclude‐path             [22mDo not include in [1m.serial [22moutput
 
-  [1m‐‐quoting Q                [22mSet [1mquoting [22mto [1mQ[22m. Q must be one of:
+  [1m‐‐quoting Q                [22mSet [1mquoting [22mto [1mQ[22m. [1mQ [22mmust be one of:
+                               [1mQUOTE_ALL[0m
+                               [1mQUOTE_MINIMAL[0m
+                               [1mQUOTE_NONNUMERIC[0m
+                               [1mQUOTE_NONE[0m
+                               [1mQUOTE_NOTNULL[0m
+                               [1mQUOTE_STRINGS[0m
+                               [1mQUOTE_STRINGS_ONLY[0m
 
-                            * ‘QUOTE_ALL‘
-                            * ‘QUOTE_MINIMAL‘
-                            * ‘QUOTE_NONNUMERIC‘
-                            * ‘QUOTE_NONE‘
-                            * ‘QUOTE_NOTNULL‘
-                            * ‘QUOTE_STRINGS‘
-                            * ‘QUOTE_STRINGS_ONLY‘
+  [1m‐‐use‐literal‐dates        [22mSpecifies that date formats should be
+                             written to [1m.serial [22mfiles with unambiguous
+                             literal examples such as [1m2000‐12‐31T12:34:56[22m.
 
-  [1m‐‐use‐literal‐dates         [22mSpecifies that date formats should be written
-                                to [1m.serial [22mfiles with unambiguous
-                                literal examples such as [1m2000‐12‐31T12:34:56[22m.
+  [1m‐‐use‐yyyy‐dates           [22mSpecifies that date formats should be
+                             written to [1m.serial [22mfiles in the form
+                             exemplified by [1mYYYY‐MM‐DD HH:MM:SS[22m.
 
-  [1m‐‐use‐yyyy‐dates            [22mSpecifies that date formats should be written
-                                to [1m.serial [22mfiles in the form examplified
-                                by [1mYYYY‐MM‐DD HH:MM:SS[22m.
-
-  [1m‐‐use‐pc‐dates              [22mSpecifies that date formats should be written
-                                to [1m.serial [22mfiles in Python
-                                [1mstrftime[22m‐compatible % formats, exemplified by
-                                [1m%Y‐%m‐%dT%H:%M:%S[22m.
+  [1m‐‐use‐pc‐dates             [22mSpecifies that date formats should be
+                             written to [1m.serial [22mfiles in Python
+                             [1mstrftime[22m‐compatible % formats, exemplified
+                             by [1m%Y‐%m‐%dT%H:%M:%S[22m.
 
 EXAMPLES
 
-  [1mtdda serial a.csv a.serial[0m
-     Generate tdda.serial metadata describing format of [1ma.csv [22min [1ma.serial[22m.
+  1) [1mtdda serial a.csv a.serial[0m
+      Generate tdda.serial metadata describing format of [1ma.csv[0m
+      in [1ma.serial[0m
 
-  [1mtdda serial ‐‐to . a.csv a.serial[0m
-      Same as previous, expicitly specifying the default, [1mtdda.serial[22m,
-      output format with [1m.[22m.
+  2) [1mtdda serial ‐‐to . a.csv a.serial[0m
+      Same as previous, explicitly specifying the default, [1mtdda.serial[22m,
+      output format ([1m. [22mis short for [1mtdda.serial [22mformat).
 
-  [1mtdda serial a.csv a‐metadata.json[0m
-      Generate CSVW metadata describing format of [1ma.csv [22min [1ma‐metadata.json[0m
+  3) [1mtdda serial a.csv a‐metadata.json[0m
+      Generate CSVW metadata describing format of [1ma.csv[0m
+      in [1ma‐metadata.json[0m
 
-  [1mtdda serial ‐‐to csvw a.csv a.json[0m
-      Same as previous, explicitly specifying format with non‐standard output
-name
+  4) [1mtdda serial ‐‐to csvw a.csv a.json[0m
+      Same as previous, explicitly specifying format with non‐standard
+      output name
 
-  [1mtdda serial a.serial a‐metadata.json[0m
-      Generate Converts [1mtdda.metadata [22mmetadata to CSVW
+  5) [1mtdda serial a.serial a‐metadata.json[0m
+      Converts [1mtdda.serial [22mmetadata to CSVW
 
-  [1mtdda serial a‐metadata.json a.serial[0m
-      Generate Converts [1mtdda.metadata [22mmetadata to CSVW
+  6) [1mtdda serial a‐metadata.json a.serial[0m
+      Converts CSVW metadata to [1mtdda.serial[0m
 
 USING SERIAL METADATA WITH TDDA COMMANDS
 
@@ -164,8 +171,7 @@ USING SERIAL METADATA WITH TDDA COMMANDS
   either [1mtdda.serial.csv_to_pandas [22mor [1mtdda.serial.csv_to_polars[0m
   to read it into a DataFrame. The default is currently pandas
   (with the [1mnumpy_nullable [22mback end), but this can be
-  configured
-  ⟨configuration.md⟩
+  configured (see [1mtdda config[22m)
   or, in many cases controlled with command line flags
   ([1m‐‐polars[22m, [1m‐‐pandas[22m, [1m‐‐backend BACKEND [22m(for Pandas only)).
   If the path ends in a colon (e.g. [1mfoo.csv:[22m), TDDA will search
@@ -201,13 +207,7 @@ USING SERIAL METADATA WITH TDDA COMMANDS
 BUGS
 
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
-  still many bugs an undesirable features in the implementation.
-
-
-
-
-
-
+  still bugs and undesirable features in the implementation.
 
 
 

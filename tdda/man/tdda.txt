@@ -30,10 +30,10 @@ OPTIONS
 
 SEE ALSO
 
-  rexpy
+  [1mrexpy[0m
 
-  TDDA Book
-  ⟨https://book.tdda.info⟩
+  [1mTDDA Book[0m
+  [1m⟨https://book.tdda.info⟩[0m
 
 
 

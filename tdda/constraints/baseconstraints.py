@@ -64,6 +64,8 @@ class BaseConstraintVerifier(BaseConstraintCalculator, BaseConstraintDetector):
     def __init__(self, epsilon=None, type_checking=None, **kwargs):
         self.epsilon = EPSILON_DEFAULT if epsilon is None else epsilon
         self.type_checking = type_checking or DEFAULT_TYPE_CHECKING
+        if self.type_checking == 'loose':
+            self.type_checking = 'sloppy'
         assert self.type_checking in TYPE_CHECKING_OPTIONS
         self.cache = {}
 

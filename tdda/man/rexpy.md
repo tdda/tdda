@@ -1,8 +1,8 @@
-# "REXPY" 1 "April 2026" "3.0" "rexpy manual"
+# "REXPY" 1 "%%DATE%%" "%%VERSION%%" "rexpy manual"
 
 ## NAME
 
-`rexpy` -- infer regular expressions from example strings
+`rexpy` — infer regular expressions from example strings
 
 ## SYNOPSIS
 
@@ -84,5 +84,4 @@ standard output.
 
 ## SEE ALSO
 
-tdda(1),
-tdda-discover(1)
+`tdda(1)`, `tdda-discover(1)`

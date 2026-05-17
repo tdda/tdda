@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda tag  [22m‐‐ tag tests that failed in the last reference test run
+  [1mtdda tag [22mâ tag tests that failed in the last reference test run
 
 SYNOPSIS
 
@@ -8,13 +8,12 @@ SYNOPSIS
 
 DESCRIPTION
 
-  The [1mtdda tag [22mcommand reads the log of failing tests written by the most
-  recent reference test run and adds [1m@tag [22mdecorators to those tests in
-  their source files. Tagged tests can then be run in isolation, allowing
-  a rapid edit‐test cycle focused on failing tests.
-
-  Before [1mtdda tag [22mcan be used, tests must be run with failure logging
-  enabled, which writes the IDs of failing tests to a log file.
+  The [1mtdda tag [22mcommand reads the log of failing tests written by the
+  most recent logged [1mtdda.referencetest [22mrun and adds [1m@tag [22mdecorators
+  to those tests in their source files. Tagged tests can then be run in
+  isolation, allowing a rapid edit‐test cycle focused on failing
+  tests. A logged run of [1mtdda.referencetest [22muses [1m‐‐log‐failures [22mor
+  (for unittest‐style tests only) [1m‐F[22m.
 
 WORKFLOW
 
@@ -42,10 +41,11 @@ WORKFLOW
 
 SEE ALSO
 
-  tdda
-  tdda reftest
-  tdda reftest unittest
-  tdda reftest pytest
+  [1mtdda[0m
+
+
+
+
 
 
 

@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda config [22m− Shows config settings
+  [1mtdda config [22mâ Shows config settings
 
 SYNOPSIS
 
@@ -90,7 +90,7 @@ leading # such as #FF0000 for pure red. Interpreted by the rich library.
   [1mDefault: "strict"[0m
   [1mAllowed: "strict"[22m, [1m"medium"[22m, [1m"loose"[0m
 
-  Log failing test IDs to file for use with tdda tag.
+  Log failing test IDs to file for use with [1mtdda tag[22m.
   [1mDefault: false[0m
   [1mAllowed: true[22m, [1mfalse[0m
 

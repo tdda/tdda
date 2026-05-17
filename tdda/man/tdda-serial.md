@@ -1,8 +1,8 @@
-# "TDDA SERIAL" 1 "January 2026" "3.0" "tdda serial manual"
+# "TDDA SERIAL" 1 "%%DATE%%" "%%VERSION%%" "tdda serial manual"
 
 ## NAME
 
-`tdda serial`  - Converts, interrogates and creates serial metadata files.
+`tdda serial` — Converts and generates serial metadata files.
 
 ## SYNOPSIS
 
@@ -14,16 +14,16 @@ to another, in `outpath`.
 
 `tdda serial` [FLAGS] `indata` `outmetadata`
 
-Creates metadata for in `indata` in `outmetadata`
+Creates metadata for `indata` in `outmetadata`
 
 `tdda serial` [FLAGS] `inmetadata` `script.py`
 
 Creates Python code for reading a file in the format in `inmetadata` as
 Python. Often, a reading library would be specified, e.g.
 
-`tdda serial` `a.serial` `a.py` --to pd.r
+`tdda serial` `a.serial` `a.py` `--to pd.r`
 
-which specifies that they Python script should use `pandas.read_csv`.
+which specifies that the Python script should use `pandas.read_csv`.
 
 
 Supported formats `FMT`:
@@ -49,23 +49,27 @@ for tdda.serial, CSVW, and frictionless.
 
 ## OPTIONS
 
-`--to FMT`             Specify output metadata format (see list of formats above)
+`--to FMT`               Specify output metadata format (see list of
+                       formats above)
 
-`-B BE, --backend BE`  Specify backend for Pandas flavours:
-                         `n`: `numpy_nullable`
-                         `a`: `pyarrow`
-                         `o`: for original Pandas backend.
+`-B BE, --backend BE`    Specify backend for Pandas flavours:
+                           `n`: `numpy_nullable`
+                           `a`: `pyarrow`
+                           `o`: `original` Pandas backend.
 
-`--for FILE`            Filename for data to use when generating CSVW
-                        or Frictionless data.
-                        (Can also be used for `tdda.serial` and `.py` output)
+`--for FILE`             Filename for data to use when generating CSVW
+                       or Frictionless data.
+                       (Can also be used for `tdda.serial` and `.py`
+                       output)
 
-`-N, --no-config`        Use default configuration (ignore ~/.tdda.toml)
+`-N, --no-config`        Use default configuration (ignore `~/.tdda.toml`)
 
 `-g, --gen, --generate`  Generate (infer) metadata for flat file
 
 `-q, --quiet`            Quiet output
+
 `-v, --verbose`          Verbose output
+
 `-V, --Verbose`          More verbose output
 
 ## Options used primarily or exclusively with `--generate`/`--gen`/`-g`
@@ -73,87 +77,92 @@ for tdda.serial, CSVW, and frictionless.
 `--sep D, --delimiter D`     Specify `D` as the field separator.
 
 `--quote-char Q, --quote Q`  Specify `Q` as the quote character.
-                             (Q is always `"` or `'` in practice.)
+                           (Q is always `"` or `'` in practice.)
 
 `--nulls S`                  Specify null indicator, or comma-separated
-                             list of null indicators.
+                           list of null indicators.
 
 `--escape`                   Use backslash as escape character.
-                             **NOTE:** Always backslash: does not take argument.
+                           **NOTE:** Always backslash: does not take
+                           argument.
 
 `--no-escape`                Do not support backslash escaping with `-g`.
-                             **NOTE:** This only affects quotes, separators,
-                             and backslashes. Standard escapes for control
-                             sequences (\t, \n, \t, \f) are always supported.
+                           **NOTE:** This only affects quotes, separators,
+                           and backslashes. Standard escapes for
+                           control sequences (\t, \n, \r, \f)
+                           are always supported.
 
 `--stutter`                  Specify quote stuttering.
-                             Usually an alternative to `--escape`.
+                           Usually an alternative to `--escape`.
 
 `--no-stutter`               Do not use quote stuttering.
-                             Usually used with `--escape`.
+                           Usually used with `--escape`.
 
 
 
 `--encoding ENC, -e ENC`     Specify `ENC` as encoding.
 
-`--date-format D`            Specify `D` as the (file-wide default) date format.
+`--date-format D`            Specify `D` as the (file-wide default)
+                           date format.
 
 `--datetime-format D`        Specify `D` as the (file-wide default) format
-                             for `datetime` fields.
+                           for `datetime` fields.
 
 `--sample-lines N, -n N`     Use (up to) `N` sample lines when inferring
-                             metadata.
+                           metadata.
 
 `--single-field, -1`         Inform the metadata inferred that the file
-                             contains only a single field (column).
+                           contains only a single field (column).
 
 `--include-path`             Include `path` in `.serial` output
 
 `--exclude-path`             Do not include in `.serial` output
 
-`--quoting Q`                Set `quoting` to `Q`. Q must be one of:
+`--quoting Q`                Set `quoting` to `Q`. `Q` must be one of:
+                             `QUOTE_ALL`
+                             `QUOTE_MINIMAL`
+                             `QUOTE_NONNUMERIC`
+                             `QUOTE_NONE`
+                             `QUOTE_NOTNULL`
+                             `QUOTE_STRINGS`
+                             `QUOTE_STRINGS_ONLY`
 
-                              * `QUOTE_ALL`
-                              * `QUOTE_MINIMAL`
-                              * `QUOTE_NONNUMERIC`
-                              * `QUOTE_NONE`
-                              * `QUOTE_NOTNULL`
-                              * `QUOTE_STRINGS`
-                              * `QUOTE_STRINGS_ONLY`
+`--use-literal-dates`        Specifies that date formats should be
+                           written to `.serial` files with unambiguous
+                           literal examples such as `2000-12-31T12:34:56`.
 
-`--use-literal-dates`         Specifies that date formats should be written
-                              to `.serial` files with unambiguous
-                              literal examples such as `2000-12-31T12:34:56`.
+`--use-yyyy-dates`           Specifies that date formats should be
+                           written to `.serial` files in the form
+                           exemplified by `YYYY-MM-DD HH:MM:SS`.
 
-`--use-yyyy-dates`            Specifies that date formats should be written
-                              to `.serial` files in the form examplified
-                              by `YYYY-MM-DD HH:MM:SS`.
-
-`--use-pc-dates`              Specifies that date formats should be written
-                              to `.serial` files in Python
-                              `strftime`-compatible % formats, exemplified by
-                              `%Y-%m-%dT%H:%M:%S`.
+`--use-pc-dates`             Specifies that date formats should be
+                           written to `.serial` files in Python
+                           `strftime`-compatible % formats, exemplified
+                           by `%Y-%m-%dT%H:%M:%S`.
 
 ## EXAMPLES
 
-`tdda serial a.csv a.serial`
-   Generate tdda.serial metadata describing format of `a.csv` in `a.serial`.
+1) `tdda serial a.csv a.serial`  
+    Generate tdda.serial metadata describing format of `a.csv`
+    in `a.serial`
 
-`tdda serial --to . a.csv a.serial`
-    Same as previous, expicitly specifying the default, `tdda.serial`,
-    output format with `.`.
+2) `tdda serial --to . a.csv a.serial`  
+    Same as previous, explicitly specifying the default, `tdda.serial`,
+    output format (`.` is short for `tdda.serial` format).
 
-`tdda serial a.csv a-metadata.json`
-    Generate CSVW metadata describing format of `a.csv` in `a-metadata.json`
+3) `tdda serial a.csv a-metadata.json`  
+    Generate CSVW metadata describing format of `a.csv`
+    in `a-metadata.json`
 
-`tdda serial --to csvw a.csv a.json`
-    Same as previous, explicitly specifying format with non-standard output name
+4) `tdda serial --to csvw a.csv a.json`  
+    Same as previous, explicitly specifying format with non-standard
+    output name
 
-`tdda serial a.serial a-metadata.json`
-    Generate Converts `tdda.metadata` metadata to CSVW
+5) `tdda serial a.serial a-metadata.json`  
+    Converts `tdda.serial` metadata to CSVW
 
-`tdda serial a-metadata.json a.serial`
-    Generate Converts `tdda.metadata` metadata to CSVW
+6) `tdda serial a-metadata.json a.serial`  
+    Converts CSVW metadata to `tdda.serial`
 
 ## USING SERIAL METADATA WITH TDDA COMMANDS
 
@@ -168,7 +177,7 @@ When specifying a path to a CSV (or other flat) file:
    either `tdda.serial.csv_to_pandas` or `tdda.serial.csv_to_polars`
    to read it into a DataFrame. The default is currently pandas
    (with the `numpy_nullable` back end), but this can be
-   [configured](configuration.md)
+   configured (see `tdda config`)
    or, in many cases controlled with command line flags
    (`--polars`, `--pandas`, `--backend BACKEND` (for Pandas only)).
 
@@ -210,4 +219,4 @@ When specifying a path to a CSV (or other flat) file:
 ## BUGS
 
 The `tdda serial` functionality is fairly new, and there are probably
-still many bugs an undesirable features in the implementation.
+still bugs and undesirable features in the implementation.

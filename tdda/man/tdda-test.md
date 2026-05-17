@@ -1,8 +1,8 @@
-# "TDDA TEST" 1 "April 2026" "3.0" "tdda test manual"
+# "TDDA TEST" 1 "%%DATE%%" "%%VERSION%%" "tdda test manual"
 
 ## NAME
 
-`tdda test`  -- Run the tdda libraries tests 
+`tdda test` — Run the tdda library's self-tests
 
 ## SYNOPSIS
 
@@ -10,7 +10,7 @@
 
 ## DESCRIPTION
 
-Runs tdda's (internal) tests.
+Runs tdda's (internal) self-tests.
 
 **NOTE:** It is hard to guarantee that all will pass on all systems
 given that dependencies are not tightly pinned. It is not necessarily
@@ -19,4 +19,4 @@ fail.
 
 ## SEE ALSO
 
-tdda(1),
+`tdda(1)`

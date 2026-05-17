@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda test  [22m‐‐ Run the tdda libraries tests
+  [1mtdda test [22mâ Run the tdda library’s self‐tests
 
 SYNOPSIS
 
@@ -8,7 +8,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-  Runs tdda’s (internal) tests.
+  Runs tdda’s (internal) self‐tests.
 
   [1mNOTE: [22mIt is hard to guarantee that all will pass on all systems
   given that dependencies are not tightly pinned. It is not necessarily
@@ -17,7 +17,7 @@ DESCRIPTION
 
 SEE ALSO
 
-  tdda
+  [1mtdda[0m
 
 
 

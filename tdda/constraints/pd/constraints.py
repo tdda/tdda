@@ -4,8 +4,8 @@ The ``tdda.constraints.pd.constraints`` module provides an
 implementation of TDDA constraint discovery and verification
 for Pandas DataFrames.
 
-This allows it to be used for data in CSV files, or for Pandas or R
-DataFrames saved as Feather files.
+This allows it to be used for data in CSV files, or for DataFrames
+read from Parquet files.
 
 The top-level functions are:
 
@@ -815,11 +815,12 @@ def verify_df(
             is that min/max values of zero do not have any tolerance,
             i.e. the wrong sign always generates a failure.
 
-        type_checking: ``'strict'`` or ``'sloppy'``. Defaults to
+        type_checking: ``'strict'``, ``'sloppy'``, or ``'loose'``
+            (``'loose'`` and ``'sloppy'`` are equivalent). Defaults to
             ``'sloppy'`` for Pandas, because Pandas silently promotes
             integer and boolean columns to reals and objects when they
-            contain nulls. With ``'sloppy'``, such promotions do not
-            generate type failures. With ``'strict'``, a ``float``
+            contain nulls. With ``'sloppy'``/``'loose'``, such promotions
+            do not generate type failures. With ``'strict'``, a ``float``
             column ``c`` may only satisfy an ``int`` constraint if
             ``c.dropna().astype(int) == c.dropna()``, and similarly
             Object fields will satisfy a ``bool`` constraint only if
@@ -928,11 +929,12 @@ def detect_df(
             is that min/max values of zero do not have any tolerance,
             i.e. the wrong sign always generates a failure.
 
-        type_checking: ``'strict'`` or ``'sloppy'``. Defaults to
+        type_checking: ``'strict'``, ``'sloppy'``, or ``'loose'``
+            (``'loose'`` and ``'sloppy'`` are equivalent). Defaults to
             ``'sloppy'`` for Pandas, because Pandas silently promotes
             integer and boolean columns to reals and objects when they
-            contain nulls. With ``'sloppy'``, such promotions do not
-            generate type failures. With ``'strict'``, a ``float``
+            contain nulls. With ``'sloppy'``/``'loose'``, such promotions
+            do not generate type failures. With ``'strict'``, a ``float``
             column ``c`` may only satisfy an ``int`` constraint if
             ``c.dropna().astype(int) == c.dropna()``, and similarly
             Object fields will satisfy a ``bool`` constraint only if

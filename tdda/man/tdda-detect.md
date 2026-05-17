@@ -1,14 +1,14 @@
-# "TDDA DETECT" 1 "January 2026" "3.0" "tdda detect manual"
+# "TDDA DETECT" 1 "%%DATE%%" "%%VERSION%%" "tdda detect manual"
 
 ## NAME
 
-`tdda detect` - Detect data that does not obey supplied constraints
+`tdda detect` — Detect data that does not obey supplied constraints
 
 ## SYNOPSIS
 
 `tdda detect` [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
-            [-t {strict,sloppy}] [--write-all-records]
+            [-t {strict,loose}] [--write-all-records]
             [--per-constraint] [--no-per-constraint]
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
@@ -77,12 +77,12 @@ the same functions as `tdda verify`.
                         The stem of the output file is taken from  
                         *REPORT_PATH* if `-o` is given, otherwise from  
                         *OUTPUT*.  
-`-t`, `--type_checking` {*strict*,*sloppy*}  
-                        "sloppy" means consider all numeric types  
+`-t`, `--type_checking` {*strict*,*loose*}  
+                        "loose" means consider all numeric types  
                         equivalent  
 `-o`, `--report-path` *REPORT_PATH*  
-                        Stem path for report files (extension is replaced  
-                        by the format).  
+                        Stem path for report files (extension is
+                        replaced by the format).  
 
 `--write-all-records`   Include passing records  
 `--per-constraint`      Write one flag column per failing constraint in  
@@ -130,23 +130,23 @@ The example data can be obtained by running `tdda examples`, which will
 create various directories, including `constraints_examples`, containing
 source data for these examples.
 
-1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`
+1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`  
 
 This command reads data from `elements.parquet`, checks it against the
 constraints in `elements.tdda`, and writes records with one or more
 constraint failures to `elements-failures.parquet`.
 
-2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`
+2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`  
 
 As above, and also writes an HTML report to `elements.html`.
 
-3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`
+3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`  
 
 As above, and also writes reports to `elements.md`, `elements.json`,
 and `elements.txt`.
 
 ## SEE ALSO
 
-tdda-verify(1),
-tdda-discover(1),
-tdda-serial(1)
+`tdda-verify(1)`,
+`tdda-discover(1)`,
+`tdda-serial(1)`

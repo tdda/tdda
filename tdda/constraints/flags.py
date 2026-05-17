@@ -191,8 +191,8 @@ def verify_parser(usage=''):
     parser.add_argument(
         '-t',
         '--type_checking',
-        choices=['strict', 'sloppy'],
-        help='"sloppy" means consider all numeric types equivalent',
+        choices=['strict', 'sloppy', 'loose'],
+        help='"loose" (or "sloppy") means consider all numeric types equivalent',
     )
     add_verify_fields_flags(parser)
     return parser
@@ -222,8 +222,8 @@ def detect_parser(usage=''):
     parser.add_argument(
         '-t',
         '--type_checking',
-        choices=['strict', 'sloppy'],
-        help='"sloppy" means consider all numeric types equivalent',
+        choices=['strict', 'sloppy', 'loose'],
+        help='"loose" (or "sloppy") means consider all numeric types equivalent',
     )
     parser.add_argument(
         '--write-all-records',

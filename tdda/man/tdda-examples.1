@@ -1,22 +1,25 @@
 .nh
-.TH "TDDA EXAMPLES" 1 "January 2026" "3.0" "tdda examples manual"
+.TH "TDDA EXAMPLES" 1 "May 2026" "3.0" "tdda examples manual"
 .SH NAME
-\fBtdda\fR examples \- Creates example data for TDDA
+\fBtdda examples\fR — Creates example data for TDDA
 
 .SH SYNOPSIS
 \fBtdda examples\fR [OUTDIR]
+.br
 \fBtdda examples\fR [\fIMODULE...\fP] [OUTDIR]
+.br
 \fBtdda examples\fR \fBall\fR [OUTDIR]
 
 .SH POSITIONAL ARGUMENTS
 \fIMODULE\fP can be any of:
-  - referencetest
-  - constraints
-  - rexpy
-  - gentest
-  - book
-.br
-If not specified, all the first four will be used created, without
+  - \fBreferencetest\fR
+  - \fBconstraints\fR
+  - \fBrexpy\fR
+  - \fBgentest\fR
+  - \fBbook\fR
+
+.PP
+If not specified, all the first four will be created, without
 requiring internet access.
 
 .PP
@@ -36,25 +39,26 @@ or for a particular module if specified.
 If no module is specified, examples for all four are written out.
 
 .PP
-Examples are always created in subdirectories of the current directory \fB\&.\fR
+Examples are created in subdirectories of \fIOUTDIR\fP (default: the current directory \fB\&.\fR).
 
 .SH EXAMPLES
-a. \fBtdda examples\fR
+1) \fBtdda examples\fR
+.br
    Creates the referencetest, constraints, rexpy, and gentest
    examples in \fB\&.\fR
 
 .PP
-b. \fBtdda examples gentest\fR
+2) \fBtdda examples gentest\fR
 .br
    Creates \fBexamples_gentest\fR in \fB\&.\fR
 
 .PP
-c. \fBtdda examples gentest book\fR
+3) \fBtdda examples gentest book\fR
 .br
    Creates gentest and book examples in \fB\&.\fR
 
 .PP
-d. \fBtdda examples all\fR
+4) \fBtdda examples all\fR
 .br
    Creates all the examples, four from local files and the book
    examples from GitHub in \fB\&.\fR

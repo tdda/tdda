@@ -1,8 +1,8 @@
-# "TDDA DIFF" 1 "January 2026" "3.0" "tdda diff manual"
+# "TDDA DIFF" 1 "%%DATE%%" "%%VERSION%%" "tdda diff manual"
 
 ## NAME
 
-`tdda diff`  -- compare csv or parquet files
+`tdda diff` — compare csv or parquet files
 
 ## SYNOPSIS
 
@@ -11,7 +11,7 @@
             [`--horizontal`] [`-H`] [`--vertical`] [`-V`]
             [`--find-md`] [`--no-md`]
             [`--maxdiffs` *N*] [`--key` *FIELD*]
-            [`--mono`] [`--bw`] [`--colours`, `-c`, `--colours` *COLOURS*]
+            [`--mono`] [`--bw`] [`--colours` *COLOURS*] [`-c` *COLOURS*]
             [`--dps` *N*]  [`--precision` *N*]
             [`--AE`] [`--LR`] [`--angles`] [`--pm`]
             [`--prefixes` *PREFIXES*]
@@ -21,15 +21,15 @@
 
 ## POSITIONAL ARGUMENTS
 
-*LEFT* The first dataset to be compared, as a parquet or flat file (e.g. CSV),
-       optionally using `:` format to specify flat-file metadata
+*LEFT* The first dataset to be compared, as a parquet or flat file
+       (e.g. CSV), optionally using `:` format to specify flat-file metadata
        (see the help for `tdda serial`).
        (Normally thought of as left or actual)
 
-*RIGHT*  The second dataset to be compared as a parquet or flat file (e.g. CSV),
-         optionally using `:` format to specify flat-file metadata
-         (see the help for `tdda serial`).
-         (Normally thought of as right, expected, reference, etc.)
+*RIGHT* The second dataset to be compared as a parquet or flat file
+        (e.g. CSV), optionally using `:` format to specify flat-file metadata
+        (see the help for `tdda serial`).
+        (Normally thought of as right, expected, reference, etc.)
 
 
 ## DESCRIPTION
@@ -47,17 +47,19 @@ as typed values after reading.
 
 ## OPTIONS
 
+`*` indicates options that are the default behaviours
+
 `--fields` *FIELD1,FIELD2*,...  
   Check only these fields (comma-separated list)
 
 `--xfields` *FIELD1,FIELD2*,...  
   Check all fields except these (comma-separated list)
 
-`--horizontal`, `-H`,  
-  Horizontal dispay (left and right, side by side)
+`--horizontal`, `-H`  
+  Horizontal display (left and right, side by side)
 
-`--vertical`, `-V`,  
-  Vertical dispay (left above right)
+`--vertical`, `-V`  
+  Vertical display (left above right)
 
 
 `--find-md`  
@@ -74,20 +76,20 @@ as typed values after reading.
 
 
 `--mono`  
-  Show monochrome output with different values in bold and shared values
-  dimmed.
+  Show monochrome output with different values in bold
+  and shared values dimmed.
 
 `--bw`  
   Show black and white output with different values in bold and shared
   values in the terminal's default style.
 
-`--colours`, `-c`, `--colours` *COLOURS*  
-  Use colours specified e.g. -c red-blue
+`--colours` *COLOURS*, `-c` *COLOURS*  
+  Use colours specified e.g. `-c red-blue`
 
 
 `--dps` *N*  
   Number of decimal places to show for floating-point values.
-  Also sets precision if not specified separately
+  Also sets precision if not specified separately.
 
 `--precision` *N*  
   Precision for floating point comparisons. Two floats `a` and `b` will be
@@ -97,7 +99,7 @@ as typed values after reading.
   Use `A:` and `E:` as labels for the two datasets (actual/expected)
 
 `--LR`  
-  Use `L:` and `R:`  as labels for the two datasets (left/right)
+  Use `L:` and `R:` as labels for the two datasets (left/right)
 
 `--angles`  
   Use `<` and `>` as labels for the two datasets
@@ -108,11 +110,11 @@ as typed values after reading.
 
 `--prefixes` *PREFIXES*  
   Use prefixes specified as labels for the two datasets
-  e.g. --prefixes "actual:-ref:" or "actual: -ref: " to include spaces
+  e.g. `--prefixes "actual:-ref:"` or `"actual: -ref: "` to include spaces
 
 
 `-N`, `--no-config`  
-  Use default configuration (ignore ~/.tdda.toml)
+  Use default configuration (ignore `~/.tdda.toml`)
 
 `--strict`  
   Use strict type comparisons
@@ -146,40 +148,40 @@ Data suitable for all examples can be obtained with
 
 `tdda examples diff`
 
-1. tdda diff a.csv a.csv
+1) `tdda diff a.csv a.csv`  
 
-This is the simplest form of the command. It will read a.csv and
+This is the simplest form of the command. It will read `a.csv` and
 convert it to a data frame, using the default back end (Pandas).
 
-2. tdda diff a.csv b.csv --vertical
+2) `tdda diff a.csv b.csv --vertical`  
 
 Compare two CSV files, stacking left and right values vertically
 rather than side by side. Useful when there are many columns or
 long values.
 
-3. tdda diff before.parquet after.parquet --key Income,Expenditure
+3) `tdda diff before.parquet after.parquet --key Income,Expenditure`  
 
 Compare two Parquet files using a composite join key. The fields
 `Income` and `Expenditure` must form a primary key in both datasets.
 Rows are matched by key rather than by position.
 
-4. tdda diff actual.csv expected.csv --AE --bw
+4) `tdda diff actual.csv expected.csv --AE --bw`  
 
 Compare two CSV files using `A:` and `E:` as markers for actual and
 expected, with monochrome bold highlighting instead of colour.
 
-5. tdda diff foo.csv: bar.csv:
+5) `tdda diff foo.csv: bar.csv:`  
 
 Compare two CSV files, asking TDDA to find associated metadata files
-for each using naming conventions (e.g. `@.serial` or `foo-metadata.json`
-in the same directory).
+for each using naming conventions (e.g. `@.serial` or
+`foo-metadata.json` in the same directory).
 
-6. tdda diff foo.csv bar.txt:money.serial
+6) `tdda diff foo.csv bar.txt:money.serial`  
 
 Compare `foo.csv` (loaded with default settings) against `bar.txt`,
 using `money.serial` as the metadata file describing its format.
 
-7. tdda diff a.parquet b.csv --loose --dps 3
+7) `tdda diff a.parquet b.csv --loose --dps 3`  
 
 Compare a Parquet file against a CSV file with loose type matching
 and floating-point values compared to 3 decimal places.

@@ -1,7 +1,7 @@
 .nh
-.TH "TDDA SERIAL" 1 "January 2026" "3.0" "tdda serial manual"
+.TH "TDDA SERIAL" 1 "May 2026" "3.0" "tdda serial manual"
 .SH NAME
-\fBtdda serial\fR  \- Converts, interrogates and creates serial metadata files.
+\fBtdda serial\fR — Converts and generates serial metadata files.
 
 .SH SYNOPSIS
 \fBtdda serial\fR [FLAGS] \fBinmetadata\fR \fBoutmetadata\fR
@@ -16,7 +16,7 @@ to another, in \fBoutpath\fR\&.
 \fBtdda serial\fR [FLAGS] \fBindata\fR \fBoutmetadata\fR
 
 .PP
-Creates metadata for in \fBindata\fR in \fBoutmetadata\fR
+Creates metadata for \fBindata\fR in \fBoutmetadata\fR
 
 .PP
 \fBtdda serial\fR [FLAGS] \fBinmetadata\fR \fBscript.py\fR
@@ -26,10 +26,10 @@ Creates Python code for reading a file in the format in \fBinmetadata\fR as
 Python. Often, a reading library would be specified, e.g.
 
 .PP
-\fBtdda serial\fR \fBa.serial\fR \fBa.py\fR --to pd.r
+\fBtdda serial\fR \fBa.serial\fR \fBa.py\fR \fB--to pd.r\fR
 
 .PP
-which specifies that they Python script should use \fBpandas.read_csv\fR\&.
+which specifies that the Python script should use \fBpandas.read_csv\fR\&.
 
 .PP
 Supported formats \fBFMT\fR:
@@ -57,28 +57,34 @@ Format is usually inferred from filename if following common conventions
 for tdda.serial, CSVW, and frictionless.
 
 .SH OPTIONS
-\fB--to FMT\fR             Specify output metadata format (see list of formats above)
+\fB--to FMT\fR               Specify output metadata format (see list of
+                       formats above)
 
 .PP
-\fB-B BE, --backend BE\fR  Specify backend for Pandas flavours:
-                         \fBn\fR: \fBnumpy_nullable\fR
-                         \fBa\fR: \fBpyarrow\fR
-                         \fBo\fR: for original Pandas backend.
+\fB-B BE, --backend BE\fR    Specify backend for Pandas flavours:
+                           \fBn\fR: \fBnumpy_nullable\fR
+                           \fBa\fR: \fBpyarrow\fR
+                           \fBo\fR: \fBoriginal\fR Pandas backend.
 
 .PP
-\fB--for FILE\fR            Filename for data to use when generating CSVW
-                        or Frictionless data.
-                        (Can also be used for \fBtdda.serial\fR and \fB\&.py\fR output)
+\fB--for FILE\fR             Filename for data to use when generating CSVW
+                       or Frictionless data.
+                       (Can also be used for \fBtdda.serial\fR and \fB\&.py\fR
+                       output)
 
 .PP
-\fB-N, --no-config\fR        Use default configuration (ignore ~/.tdda.toml)
+\fB-N, --no-config\fR        Use default configuration (ignore \fB~/.tdda.toml\fR)
 
 .PP
 \fB-g, --gen, --generate\fR  Generate (infer) metadata for flat file
 
 .PP
 \fB-q, --quiet\fR            Quiet output
+
+.PP
 \fB-v, --verbose\fR          Verbose output
+
+.PP
 \fB-V, --Verbose\fR          More verbose output
 
 .SH Options used primarily or exclusively with \fB--generate\fR/\fB--gen\fR/\fB-g\fR
@@ -86,47 +92,50 @@ for tdda.serial, CSVW, and frictionless.
 
 .PP
 \fB--quote-char Q, --quote Q\fR  Specify \fBQ\fR as the quote character.
-                             (Q is always \fB"\fR or \fB\&'\fR in practice.)
+                           (Q is always \fB"\fR or \fB\&'\fR in practice.)
 
 .PP
 \fB--nulls S\fR                  Specify null indicator, or comma-separated
-                             list of null indicators.
+                           list of null indicators.
 
 .PP
 \fB--escape\fR                   Use backslash as escape character.
-                             \fBNOTE:\fP Always backslash: does not take argument.
+                           \fBNOTE:\fP Always backslash: does not take
+                           argument.
 
 .PP
 \fB--no-escape\fR                Do not support backslash escaping with \fB-g\fR\&.
-                             \fBNOTE:\fP This only affects quotes, separators,
-                             and backslashes. Standard escapes for control
-                             sequences (\\t, \\n, \\t, \\f) are always supported.
+                           \fBNOTE:\fP This only affects quotes, separators,
+                           and backslashes. Standard escapes for
+                           control sequences (\\t, \\n, \\r, \\f)
+                           are always supported.
 
 .PP
 \fB--stutter\fR                  Specify quote stuttering.
-                             Usually an alternative to \fB--escape\fR\&.
+                           Usually an alternative to \fB--escape\fR\&.
 
 .PP
 \fB--no-stutter\fR               Do not use quote stuttering.
-                             Usually used with \fB--escape\fR\&.
+                           Usually used with \fB--escape\fR\&.
 
 .PP
 \fB--encoding ENC, -e ENC\fR     Specify \fBENC\fR as encoding.
 
 .PP
-\fB--date-format D\fR            Specify \fBD\fR as the (file-wide default) date format.
+\fB--date-format D\fR            Specify \fBD\fR as the (file-wide default)
+                           date format.
 
 .PP
 \fB--datetime-format D\fR        Specify \fBD\fR as the (file-wide default) format
-                             for \fBdatetime\fR fields.
+                           for \fBdatetime\fR fields.
 
 .PP
 \fB--sample-lines N, -n N\fR     Use (up to) \fBN\fR sample lines when inferring
-                             metadata.
+                           metadata.
 
 .PP
 \fB--single-field, -1\fR         Inform the metadata inferred that the file
-                             contains only a single field (column).
+                           contains only a single field (column).
 
 .PP
 \fB--include-path\fR             Include \fBpath\fR in \fB\&.serial\fR output
@@ -135,58 +144,64 @@ for tdda.serial, CSVW, and frictionless.
 \fB--exclude-path\fR             Do not include in \fB\&.serial\fR output
 
 .PP
-\fB--quoting Q\fR                Set \fBquoting\fR to \fBQ\fR\&. Q must be one of:
-
-.EX
-                          * `QUOTE_ALL`
-                          * `QUOTE_MINIMAL`
-                          * `QUOTE_NONNUMERIC`
-                          * `QUOTE_NONE`
-                          * `QUOTE_NOTNULL`
-                          * `QUOTE_STRINGS`
-                          * `QUOTE_STRINGS_ONLY`
-.EE
+\fB--quoting Q\fR                Set \fBquoting\fR to \fBQ\fR\&. \fBQ\fR must be one of:
+                             \fBQUOTE_ALL\fR
+                             \fBQUOTE_MINIMAL\fR
+                             \fBQUOTE_NONNUMERIC\fR
+                             \fBQUOTE_NONE\fR
+                             \fBQUOTE_NOTNULL\fR
+                             \fBQUOTE_STRINGS\fR
+                             \fBQUOTE_STRINGS_ONLY\fR
 
 .PP
-\fB--use-literal-dates\fR         Specifies that date formats should be written
-                              to \fB\&.serial\fR files with unambiguous
-                              literal examples such as \fB2000-12-31T12:34:56\fR\&.
+\fB--use-literal-dates\fR        Specifies that date formats should be
+                           written to \fB\&.serial\fR files with unambiguous
+                           literal examples such as \fB2000-12-31T12:34:56\fR\&.
 
 .PP
-\fB--use-yyyy-dates\fR            Specifies that date formats should be written
-                              to \fB\&.serial\fR files in the form examplified
-                              by \fBYYYY-MM-DD HH:MM:SS\fR\&.
+\fB--use-yyyy-dates\fR           Specifies that date formats should be
+                           written to \fB\&.serial\fR files in the form
+                           exemplified by \fBYYYY-MM-DD HH:MM:SS\fR\&.
 
 .PP
-\fB--use-pc-dates\fR              Specifies that date formats should be written
-                              to \fB\&.serial\fR files in Python
-                              \fBstrftime\fR-compatible % formats, exemplified by
-                              \fB%Y-%m-%dT%H:%M:%S\fR\&.
+\fB--use-pc-dates\fR             Specifies that date formats should be
+                           written to \fB\&.serial\fR files in Python
+                           \fBstrftime\fR-compatible % formats, exemplified
+                           by \fB%Y-%m-%dT%H:%M:%S\fR\&.
 
 .SH EXAMPLES
-\fBtdda serial a.csv a.serial\fR
-   Generate tdda.serial metadata describing format of \fBa.csv\fR in \fBa.serial\fR\&.
+1) \fBtdda serial a.csv a.serial\fR
+.br
+    Generate tdda.serial metadata describing format of \fBa.csv\fR
+    in \fBa.serial\fR
 
 .PP
-\fBtdda serial --to . a.csv a.serial\fR
-    Same as previous, expicitly specifying the default, \fBtdda.serial\fR,
-    output format with \fB\&.\fR\&.
+2) \fBtdda serial --to . a.csv a.serial\fR
+.br
+    Same as previous, explicitly specifying the default, \fBtdda.serial\fR,
+    output format (\fB\&.\fR is short for \fBtdda.serial\fR format).
 
 .PP
-\fBtdda serial a.csv a-metadata.json\fR
-    Generate CSVW metadata describing format of \fBa.csv\fR in \fBa-metadata.json\fR
+3) \fBtdda serial a.csv a-metadata.json\fR
+.br
+    Generate CSVW metadata describing format of \fBa.csv\fR
+    in \fBa-metadata.json\fR
 
 .PP
-\fBtdda serial --to csvw a.csv a.json\fR
-    Same as previous, explicitly specifying format with non-standard output name
+4) \fBtdda serial --to csvw a.csv a.json\fR
+.br
+    Same as previous, explicitly specifying format with non-standard
+    output name
 
 .PP
-\fBtdda serial a.serial a-metadata.json\fR
-    Generate Converts \fBtdda.metadata\fR metadata to CSVW
+5) \fBtdda serial a.serial a-metadata.json\fR
+.br
+    Converts \fBtdda.serial\fR metadata to CSVW
 
 .PP
-\fBtdda serial a-metadata.json a.serial\fR
-    Generate Converts \fBtdda.metadata\fR metadata to CSVW
+6) \fBtdda serial a-metadata.json a.serial\fR
+.br
+    Converts CSVW metadata to \fBtdda.serial\fR
 
 .SH USING SERIAL METADATA WITH TDDA COMMANDS
 For all tdda command-line commands, and in most places within
@@ -201,8 +216,7 @@ If the path is used by itself, the \fBtdda\fR library will use
 either \fBtdda.serial.csv_to_pandas\fR or \fBtdda.serial.csv_to_polars\fR
 to read it into a DataFrame. The default is currently pandas
 (with the \fBnumpy_nullable\fR back end), but this can be
-configured
-\[la]configuration.md\[ra]
+configured (see \fBtdda config\fR)
 or, in many cases controlled with command line flags
 (\fB--polars\fR, \fB--pandas\fR, \fB--backend BACKEND\fR (for Pandas only)).
 .IP \(bu 2
@@ -249,4 +263,4 @@ will use \fBbar.serial\fR\&.
 
 .SH BUGS
 The \fBtdda serial\fR functionality is fairly new, and there are probably
-still many bugs an undesirable features in the implementation.
+still bugs and undesirable features in the implementation.

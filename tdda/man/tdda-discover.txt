@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda discover [22m− automatically generate constraints for data
+  [1mtdda discover [22mâ automatically generate constraints for data
 
 SYNOPSIS
 
@@ -157,9 +157,9 @@ create
 
 SEE ALSO
 
-  tdda verify
-  tdda detect
-  tdda serial
+  [1mtdda verify[0m
+  [1mtdda detect[0m
+  [1mtdda serial[0m
 
 
 

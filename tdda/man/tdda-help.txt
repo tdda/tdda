@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda help [22m− Provides help on [1mtdda [22mand its sub‐commands.
+  [1mtdda help [22mâ Provides help on [1mtdda [22mand its sub‐commands.
 
 SYNOPSIS
 
@@ -10,15 +10,20 @@ SYNOPSIS
 POSITIONAL ARGUMENTS
 
   [4mCOMMAND[24m can be any of:
+
   [1mdiscover[0m
   [1mverify[0m
   [1mdetect[0m
-  [1mgentest[0m
-  [1mdiff[0m
-  [1mtag[0m
-  [1mserial[0m
+
   [1mexamples[0m
+  [1mgentest[0m
+
+  [1mdiff[0m
+  [1mserial[0m
+
+  [1mtag[0m
   [1mconfig[0m
+
   [1mhelp[0m
   [1mversion[0m
   [1mtest[0m
@@ -28,7 +33,7 @@ DESCRIPTION
   Shows help on a tdda subcommand or topic.
 
   Taking inspiration from [1mgit[22m, if the man pages are installed,
-  help on main commands can be obtained with
+  help on main commands can also be obtained with
 
   [1mman tdda‐COMMAND[0m
 
@@ -45,11 +50,6 @@ EXAMPLES
   [1mtdda help               [22mShows this help
 
   [1mtdda help gentest       [22mShows help on gentest
-
-
-
-
-
 
 
 

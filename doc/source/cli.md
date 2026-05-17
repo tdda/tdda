@@ -35,7 +35,7 @@ tdda test          Run the tdda library's self-tests.
 
 ### SEE ALSO
 
-rexpy(1)
+`rexpy(1)`
 
 [TDDA Book](https://book.tdda.info)
 
@@ -46,7 +46,7 @@ rexpy(1)
 
 ### NAME
 
-`tdda discover` - automatically generate constraints for data
+`tdda discover` — automatically generate constraints for data
 
 ### SYNOPSIS
 ```
@@ -131,7 +131,7 @@ The example data can be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
 data for these examples.
 
-1) `tdda discover elements.parquet elements.tdda`
+1) `tdda discover elements.parquet elements.tdda`  
 
 This command will read data from elements.parquet and (attempt to)
 find constraints satisfied by every record, and the data
@@ -148,7 +148,7 @@ which records and/or values fail to satisfy the constraints. The `.tdda`
 file can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
-2) `tdda discover elements.csv`
+2) `tdda discover elements.csv`  
 
 This command is almost the same as the first except that it reads data
 from the CSV file specified, and writes the constraints to the screen
@@ -169,7 +169,7 @@ it will look for any associated metadata for `elements.csv` using
 naming conventions described in the help for `tdda serial`.
 
 
-3) `tdda discover --rex md.serial:elements.parquet`
+3) `tdda discover --rex md.serial:elements.parquet`  
 
 This is similar to the last two except that:
   - regular expression inference is requested (`--rex`) for text fields.
@@ -178,17 +178,17 @@ This is similar to the last two except that:
   - a metadata file to be used to interpret the `.csv` file is provided
     explicitly.
 
-4) `tdda discover elements.parquet elements.tdda -r html -o elements`
+4) `tdda discover elements.parquet elements.tdda -r html -o elements`  
 
 This discovers constraints as in example 1, and also writes an HTML
 report to `elements.html`.
 
-5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`
+5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`  
 
 This discovers constraints as in example 1, and also writes reports
 to `elements.md`, `elements.json`, and `elements.txt`.
 
-6) `tdda discover --rex postgres:elements`
+6) `tdda discover --rex postgres:elements`  
 
 This is similar again except that now the postgres:specifier will be
 interpreted as a database connection file in the user's home
@@ -204,9 +204,9 @@ to get help with the database connection file format.
 
 ### SEE ALSO
 
-tdda-verify(1),
-tdda-detect(1),
-tdda-serial(1)
+`tdda-verify(1)`,
+`tdda-detect(1)`,
+`tdda-serial(1)`
 
 ---
 
@@ -215,14 +215,14 @@ tdda-serial(1)
 
 ### NAME
 
-`tdda verify` - Verify that constraints are satisfied by data
+`tdda verify` — Verify that constraints are satisfied by data
 
 ### SYNOPSIS
 ```
 tdda verify [-h] [-?] [-7] [--no-config]
             [--colour] [--no-colour]
             [--epsilon EPSILON] [-a] [-f]
-            [-t {strict,sloppy}] [--verify-required-fields]
+            [-t {strict,loose}] [--verify-required-fields]
             [--verify-allowed-fields] [--no-verify-required-fields]
             [--no-verify-allowed-fields] [--varf] [--no-varf]
             [--pandas] [--polars] [--backend BACKEND]
@@ -274,8 +274,8 @@ failures
 
 `-f`, `--fields`            Report only fields with failures  
 
-`-t`, `--type_checking` {*strict*,*sloppy*}  
-"sloppy" means consider all numeric types
+`-t`, `--type_checking` {*strict*,*loose*}  
+"loose" means consider all numeric types
 equivalent
 
 `--verify-required-fields`, `--vrf`
@@ -310,7 +310,7 @@ The example data can be obtained by running `tdda examples`, which will
 create various directories, including `constraints_examples`, containing
 source data for these examples.
 
-1) `tdda verify elements.parquet elements.tdda`
+1) `tdda verify elements.parquet elements.tdda`  
 
 This command reads data from `elements.parquet` and checks it against the
 constraints in `elements.tdda`, reporting any constraints that are not
@@ -318,9 +318,9 @@ satisfied.
 
 ### SEE ALSO
 
-tdda-detect(1),
-tdda-discover(1),
-tdda-serial(1)
+`tdda-detect(1)`,
+`tdda-discover(1)`,
+`tdda-serial(1)`
 
 ---
 
@@ -329,13 +329,13 @@ tdda-serial(1)
 
 ### NAME
 
-`tdda detect` - Detect data that does not obey supplied constraints
+`tdda detect` — Detect data that does not obey supplied constraints
 
 ### SYNOPSIS
 ```
 tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
-            [-t {strict,sloppy}] [--write-all-records]
+            [-t {strict,loose}] [--write-all-records]
             [--per-constraint] [--no-per-constraint]
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
@@ -406,13 +406,13 @@ The stem of the output file is taken from
 *REPORT_PATH* if `-o` is given, otherwise from
 *OUTPUT*.
 
-`-t`, `--type_checking` {*strict*,*sloppy*}  
-"sloppy" means consider all numeric types
+`-t`, `--type_checking` {*strict*,*loose*}  
+"loose" means consider all numeric types
 equivalent
 
 `-o`, `--report-path` *REPORT_PATH*  
-Stem path for report files (extension is replaced
-by the format).
+Stem path for report files (extension is
+replaced by the format).
 
 `--write-all-records`   Include passing records  
 `--per-constraint`      Write one flag column per failing constraint in  
@@ -470,26 +470,26 @@ The example data can be obtained by running `tdda examples`, which will
 create various directories, including `constraints_examples`, containing
 source data for these examples.
 
-1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`
+1) `tdda detect elements.parquet elements.tdda elements-failures.parquet`  
 
 This command reads data from `elements.parquet`, checks it against the
 constraints in `elements.tdda`, and writes records with one or more
 constraint failures to `elements-failures.parquet`.
 
-2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`
+2) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r html -o elements`  
 
 As above, and also writes an HTML report to `elements.html`.
 
-3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`
+3) `tdda detect elements.parquet elements.tdda elements-failures.parquet -r md json txt -o elements`  
 
 As above, and also writes reports to `elements.md`, `elements.json`,
 and `elements.txt`.
 
 ### SEE ALSO
 
-tdda-verify(1),
-tdda-discover(1),
-tdda-serial(1)
+`tdda-verify(1)`,
+`tdda-discover(1)`,
+`tdda-serial(1)`
 
 ---
 
@@ -498,7 +498,7 @@ tdda-serial(1)
 
 ### NAME
 
-`tdda diff`  -- compare csv or parquet files
+`tdda diff` — compare csv or parquet files
 
 ### SYNOPSIS
 ```
@@ -507,7 +507,7 @@ tdda diff [--fields FIELD1,FIELD2,...]
             [--horizontal] [-H] [--vertical] [-V]
             [--find-md] [--no-md]
             [--maxdiffs N] [--key FIELD]
-            [--mono] [--bw] [--colours, -c, --colours COLOURS]
+            [--mono] [--bw] [--colours COLOURS] [-c COLOURS]
             [--dps N]  [--precision N]
             [--AE] [--LR] [--angles] [--pm]
             [--prefixes PREFIXES]
@@ -517,15 +517,15 @@ tdda diff [--fields FIELD1,FIELD2,...]
 ```
 ### POSITIONAL ARGUMENTS
 
-*LEFT* The first dataset to be compared, as a parquet or flat file (e.g. CSV),
-       optionally using `:` format to specify flat-file metadata
+*LEFT* The first dataset to be compared, as a parquet or flat file
+       (e.g. CSV), optionally using `:` format to specify flat-file metadata
        (see the help for `tdda serial`).
        (Normally thought of as left or actual)
 
-*RIGHT*  The second dataset to be compared as a parquet or flat file (e.g. CSV),
-         optionally using `:` format to specify flat-file metadata
-         (see the help for `tdda serial`).
-         (Normally thought of as right, expected, reference, etc.)
+*RIGHT* The second dataset to be compared as a parquet or flat file
+        (e.g. CSV), optionally using `:` format to specify flat-file metadata
+        (see the help for `tdda serial`).
+        (Normally thought of as right, expected, reference, etc.)
 
 
 ### DESCRIPTION
@@ -543,17 +543,19 @@ as typed values after reading.
 
 ### OPTIONS
 
+`*` indicates options that are the default behaviours
+
 `--fields` *FIELD1,FIELD2*,...  
   Check only these fields (comma-separated list)
 
 `--xfields` *FIELD1,FIELD2*,...  
   Check all fields except these (comma-separated list)
 
-`--horizontal`, `-H`,  
-  Horizontal dispay (left and right, side by side)
+`--horizontal`, `-H`  
+  Horizontal display (left and right, side by side)
 
-`--vertical`, `-V`,  
-  Vertical dispay (left above right)
+`--vertical`, `-V`  
+  Vertical display (left above right)
 
 
 `--find-md`  
@@ -570,20 +572,20 @@ as typed values after reading.
 
 
 `--mono`  
-  Show monochrome output with different values in bold and shared values
-  dimmed.
+  Show monochrome output with different values in bold
+  and shared values dimmed.
 
 `--bw`  
   Show black and white output with different values in bold and shared
   values in the terminal's default style.
 
-`--colours`, `-c`, `--colours` *COLOURS*  
-  Use colours specified e.g. -c red-blue
+`--colours` *COLOURS*, `-c` *COLOURS*  
+  Use colours specified e.g. `-c red-blue`
 
 
 `--dps` *N*  
   Number of decimal places to show for floating-point values.
-  Also sets precision if not specified separately
+  Also sets precision if not specified separately.
 
 `--precision` *N*  
   Precision for floating point comparisons. Two floats `a` and `b` will be
@@ -593,7 +595,7 @@ as typed values after reading.
   Use `A:` and `E:` as labels for the two datasets (actual/expected)
 
 `--LR`  
-  Use `L:` and `R:`  as labels for the two datasets (left/right)
+  Use `L:` and `R:` as labels for the two datasets (left/right)
 
 `--angles`  
   Use `<` and `>` as labels for the two datasets
@@ -604,11 +606,11 @@ as typed values after reading.
 
 `--prefixes` *PREFIXES*  
   Use prefixes specified as labels for the two datasets
-  e.g. --prefixes "actual:-ref:" or "actual: -ref: " to include spaces
+  e.g. `--prefixes "actual:-ref:"` or `"actual: -ref: "` to include spaces
 
 
 `-N`, `--no-config`  
-  Use default configuration (ignore ~/.tdda.toml)
+  Use default configuration (ignore `~/.tdda.toml`)
 
 `--strict`  
   Use strict type comparisons
@@ -642,40 +644,40 @@ Data suitable for all examples can be obtained with
 
 `tdda examples diff`
 
-1. tdda diff a.csv a.csv
+1) `tdda diff a.csv a.csv`  
 
-This is the simplest form of the command. It will read a.csv and
+This is the simplest form of the command. It will read `a.csv` and
 convert it to a data frame, using the default back end (Pandas).
 
-2. tdda diff a.csv b.csv --vertical
+2) `tdda diff a.csv b.csv --vertical`  
 
 Compare two CSV files, stacking left and right values vertically
 rather than side by side. Useful when there are many columns or
 long values.
 
-3. tdda diff before.parquet after.parquet --key Income,Expenditure
+3) `tdda diff before.parquet after.parquet --key Income,Expenditure`  
 
 Compare two Parquet files using a composite join key. The fields
 `Income` and `Expenditure` must form a primary key in both datasets.
 Rows are matched by key rather than by position.
 
-4. tdda diff actual.csv expected.csv --AE --bw
+4) `tdda diff actual.csv expected.csv --AE --bw`  
 
 Compare two CSV files using `A:` and `E:` as markers for actual and
 expected, with monochrome bold highlighting instead of colour.
 
-5. tdda diff foo.csv: bar.csv:
+5) `tdda diff foo.csv: bar.csv:`  
 
 Compare two CSV files, asking TDDA to find associated metadata files
-for each using naming conventions (e.g. `@.serial` or `foo-metadata.json`
-in the same directory).
+for each using naming conventions (e.g. `@.serial` or
+`foo-metadata.json` in the same directory).
 
-6. tdda diff foo.csv bar.txt:money.serial
+6) `tdda diff foo.csv bar.txt:money.serial`  
 
 Compare `foo.csv` (loaded with default settings) against `bar.txt`,
 using `money.serial` as the metadata file describing its format.
 
-7. tdda diff a.parquet b.csv --loose --dps 3
+7) `tdda diff a.parquet b.csv --loose --dps 3`  
 
 Compare a Parquet file against a CSV file with loose type matching
 and floating-point values compared to 3 decimal places.
@@ -687,7 +689,7 @@ and floating-point values compared to 3 decimal places.
 
 ### NAME
 
-`tdda serial`  - Converts, interrogates and creates serial metadata files.
+`tdda serial` — Converts and generates serial metadata files.
 
 ### SYNOPSIS
 ```
@@ -699,7 +701,7 @@ to another, in outpath.
 
 tdda serial [FLAGS] indata outmetadata
 
-Creates metadata for in indata in outmetadata
+Creates metadata for indata in outmetadata
 
 tdda serial [FLAGS] inmetadata script.py
 
@@ -708,7 +710,7 @@ Python. Often, a reading library would be specified, e.g.
 
 tdda serial a.serial a.py --to pd.r
 
-which specifies that they Python script should use pandas.read_csv.
+which specifies that the Python script should use pandas.read_csv.
 
 
 Supported formats FMT:
@@ -734,23 +736,27 @@ for tdda.serial, CSVW, and frictionless.
 ```
 ### OPTIONS
 
-`--to FMT`             Specify output metadata format (see list of formats above)
+`--to FMT`               Specify output metadata format (see list of
+formats above)
 
-`-B BE, --backend BE`  Specify backend for Pandas flavours:
+`-B BE, --backend BE`    Specify backend for Pandas flavours:
 `n`: `numpy_nullable`
 `a`: `pyarrow`
-`o`: for original Pandas backend.
+`o`: `original` Pandas backend.
 
-`--for FILE`            Filename for data to use when generating CSVW
+`--for FILE`             Filename for data to use when generating CSVW
 or Frictionless data.
-(Can also be used for `tdda.serial` and `.py` output)
+(Can also be used for `tdda.serial` and `.py`
+output)
 
-`-N, --no-config`        Use default configuration (ignore ~/.tdda.toml)
+`-N, --no-config`        Use default configuration (ignore `~/.tdda.toml`)
 
 `-g, --gen, --generate`  Generate (infer) metadata for flat file
 
 `-q, --quiet`            Quiet output
+
 `-v, --verbose`          Verbose output
+
 `-V, --Verbose`          More verbose output
 
 ### Options used primarily or exclusively with `--generate`/`--gen`/`-g`
@@ -758,87 +764,92 @@ or Frictionless data.
 `--sep D, --delimiter D`     Specify `D` as the field separator.
 
 `--quote-char Q, --quote Q`  Specify `Q` as the quote character.
-                             (Q is always `"` or `'` in practice.)
+                           (Q is always `"` or `'` in practice.)
 
 `--nulls S`                  Specify null indicator, or comma-separated
-                             list of null indicators.
+                           list of null indicators.
 
 `--escape`                   Use backslash as escape character.
-                             **NOTE:** Always backslash: does not take argument.
+                           **NOTE:** Always backslash: does not take
+                           argument.
 
 `--no-escape`                Do not support backslash escaping with `-g`.
-                             **NOTE:** This only affects quotes, separators,
-                             and backslashes. Standard escapes for control
-                             sequences (\t, \n, \t, \f) are always supported.
+                           **NOTE:** This only affects quotes, separators,
+                           and backslashes. Standard escapes for
+                           control sequences (\t, \n, \r, \f)
+                           are always supported.
 
 `--stutter`                  Specify quote stuttering.
-                             Usually an alternative to `--escape`.
+                           Usually an alternative to `--escape`.
 
 `--no-stutter`               Do not use quote stuttering.
-                             Usually used with `--escape`.
+                           Usually used with `--escape`.
 
 
 
 `--encoding ENC, -e ENC`     Specify `ENC` as encoding.
 
-`--date-format D`            Specify `D` as the (file-wide default) date format.
+`--date-format D`            Specify `D` as the (file-wide default)
+                           date format.
 
 `--datetime-format D`        Specify `D` as the (file-wide default) format
-                             for `datetime` fields.
+                           for `datetime` fields.
 
 `--sample-lines N, -n N`     Use (up to) `N` sample lines when inferring
-                             metadata.
+                           metadata.
 
 `--single-field, -1`         Inform the metadata inferred that the file
-                             contains only a single field (column).
+                           contains only a single field (column).
 
 `--include-path`             Include `path` in `.serial` output
 
 `--exclude-path`             Do not include in `.serial` output
 
-`--quoting Q`                Set `quoting` to `Q`. Q must be one of:
+`--quoting Q`                Set `quoting` to `Q`. `Q` must be one of:
+                             `QUOTE_ALL`
+                             `QUOTE_MINIMAL`
+                             `QUOTE_NONNUMERIC`
+                             `QUOTE_NONE`
+                             `QUOTE_NOTNULL`
+                             `QUOTE_STRINGS`
+                             `QUOTE_STRINGS_ONLY`
 
-                              * `QUOTE_ALL`
-                              * `QUOTE_MINIMAL`
-                              * `QUOTE_NONNUMERIC`
-                              * `QUOTE_NONE`
-                              * `QUOTE_NOTNULL`
-                              * `QUOTE_STRINGS`
-                              * `QUOTE_STRINGS_ONLY`
+`--use-literal-dates`        Specifies that date formats should be
+                           written to `.serial` files with unambiguous
+                           literal examples such as `2000-12-31T12:34:56`.
 
-`--use-literal-dates`         Specifies that date formats should be written
-                              to `.serial` files with unambiguous
-                              literal examples such as `2000-12-31T12:34:56`.
+`--use-yyyy-dates`           Specifies that date formats should be
+                           written to `.serial` files in the form
+                           exemplified by `YYYY-MM-DD HH:MM:SS`.
 
-`--use-yyyy-dates`            Specifies that date formats should be written
-                              to `.serial` files in the form examplified
-                              by `YYYY-MM-DD HH:MM:SS`.
-
-`--use-pc-dates`              Specifies that date formats should be written
-                              to `.serial` files in Python
-                              `strftime`-compatible % formats, exemplified by
-                              `%Y-%m-%dT%H:%M:%S`.
+`--use-pc-dates`             Specifies that date formats should be
+                           written to `.serial` files in Python
+                           `strftime`-compatible % formats, exemplified
+                           by `%Y-%m-%dT%H:%M:%S`.
 
 ### EXAMPLES
 
-`tdda serial a.csv a.serial`
-   Generate tdda.serial metadata describing format of `a.csv` in `a.serial`.
+1) `tdda serial a.csv a.serial`  
+    Generate tdda.serial metadata describing format of `a.csv`
+    in `a.serial`
 
-`tdda serial --to . a.csv a.serial`
-    Same as previous, expicitly specifying the default, `tdda.serial`,
-    output format with `.`.
+2) `tdda serial --to . a.csv a.serial`  
+    Same as previous, explicitly specifying the default, `tdda.serial`,
+    output format (`.` is short for `tdda.serial` format).
 
-`tdda serial a.csv a-metadata.json`
-    Generate CSVW metadata describing format of `a.csv` in `a-metadata.json`
+3) `tdda serial a.csv a-metadata.json`  
+    Generate CSVW metadata describing format of `a.csv`
+    in `a-metadata.json`
 
-`tdda serial --to csvw a.csv a.json`
-    Same as previous, explicitly specifying format with non-standard output name
+4) `tdda serial --to csvw a.csv a.json`  
+    Same as previous, explicitly specifying format with non-standard
+    output name
 
-`tdda serial a.serial a-metadata.json`
-    Generate Converts `tdda.metadata` metadata to CSVW
+5) `tdda serial a.serial a-metadata.json`  
+    Converts `tdda.serial` metadata to CSVW
 
-`tdda serial a-metadata.json a.serial`
-    Generate Converts `tdda.metadata` metadata to CSVW
+6) `tdda serial a-metadata.json a.serial`  
+    Converts CSVW metadata to `tdda.serial`
 
 ### USING SERIAL METADATA WITH TDDA COMMANDS
 
@@ -853,7 +864,7 @@ When specifying a path to a CSV (or other flat) file:
    either `tdda.serial.csv_to_pandas` or `tdda.serial.csv_to_polars`
    to read it into a DataFrame. The default is currently pandas
    (with the `numpy_nullable` back end), but this can be
-   [configured](configuration.md)
+   configured (see `tdda config`)
    or, in many cases controlled with command line flags
    (`--polars`, `--pandas`, `--backend BACKEND` (for Pandas only)).
 
@@ -895,7 +906,7 @@ When specifying a path to a CSV (or other flat) file:
 ### BUGS
 
 The `tdda serial` functionality is fairly new, and there are probably
-still many bugs an undesirable features in the implementation.
+still bugs and undesirable features in the implementation.
 
 ---
 
@@ -904,16 +915,30 @@ still many bugs an undesirable features in the implementation.
 
 ### NAME
 
-`tdda gentest` - Gentest writes tests, so you don't have to.™
+`tdda gentest` — Gentest writes tests, so you don't have to.™
 
 ### SYNOPSIS
 ```
-tdda gentest   Runs Wizard
+tdda gentest   Runs the Gentest Wizard
 
-tdda gentest   'SHELL COMMAND' [OPTIONS]
-               [test_output.py] [reference files] [dir]
+tdda gentest   'SHELL COMMAND' [OPTIONS] [test_output.py]
+               [REFERENCE_FILE ...]
 
 ```
+### POSITIONAL ARGUMENTS
+
+*SHELL COMMAND* is the command to be tested. It should normally be
+enclosed in single quotes. It can be any terminal command — a shell
+built-in, a shell script, an R program, a Python program, or anything
+else that can be run from the terminal.
+
+*test_output.py* is the name of the Python test script to generate.
+If not specified, Gentest derives a name from the command.
+
+*REFERENCE_FILE ...* are optional additional files or directories
+that Gentest should monitor for files created or modified during
+command execution.
+
 ### DESCRIPTION
 
 Gentest will create Python tests, using the tdda's reference-testing
@@ -922,14 +947,14 @@ For example, the shell command can be a built-in shell command
 or can run a shell script, an R program,
 or of course a Python program.
 
-It has a wizard, invoked just by tying `gentest`, that prompts for
+It has a wizard, invoked just by typing `gentest`, that prompts for
 the information it needs before generating the tests.
 
 Alternatively, the command to be tested and optionally other parameters
 can all be specified on the command line.
 
 Gentest's tests:
- - Run the provided command more than once (by default)
+ - Runs the provided command more than once (by default)
  - Captures output to `stdout` and `stderr`
  - Captures the exit code
  - Notices any files created in the directory or subdirectories
@@ -943,28 +968,96 @@ Gentest's tests:
 
 The test script can then, of course, be edited by hand.
 
-The test script script, when run, executes the command again and
+The test script, when run, executes the command again and
 checks that its behaviour is as expected (i.e., is “the same”
-as the runs when Gentest ran originally, except for the variations
-allowed in the reference test specifications.
+as when Gentest ran originally, except for the variations
+allowed in the reference test specifications).
 
 ### OPTIONS
 
-  -h, --help            show this help message and exit
-  -?, --?               Same as -h or --help
-  -m, --max-files MAX_FILES
-Max files to track
-  -r, --relative-paths  Show relative paths wherever possible
-  -n, --iterations ITERATIONS
-Number of times to run the command (default 2)
-  -O, --no-stdout       Do not generate a test checking output to STDOUT
-  -E, --no-stderr       Do not generate a test checking output to STDERR
-  -Z, --non-zero-exit   Do not require exit status to be 0
-  -C, --no-clobber      Do not overwrite existing test script or reference directory
-  -N, --no-config       Use default configuration (ignore ~/.tdda.toml)
+`-h, --help`            Show this help message and exit  
+`-?, --?`               Same as -h or --help  
+`-m N, --max-files N`   Max files to track  
+`-r, --relative-paths`  Show relative paths wherever possible  
+`-n N, --iterations N`  Number of times, `N`, to run the command
+(default 2)
 
+`-O, --no-stdout`       Do not generate a test checking output to STDOUT  
+`-E, --no-stderr`       Do not generate a test checking output to STDERR  
+`-Z, --non-zero-exit`   Do not require exit status to be 0  
+`-C, --no-clobber`      Do not overwrite existing test script or  
+reference directory
+
+`-N, --no-config`       Use default configuration (ignore `~/.tdda.toml`)  
 
 ### EXAMPLES
+
+1) `tdda gentest`  
+
+Runs the Gentest wizard, which presents a dialogue something like this
+(where all suggested answers, in square brackets, are accepted by
+hitting `RETURN`). (Obviously, this is an improbably simple command test;
+it's usually a command to run a script or program.
+```
+$ tdda gentest
+Enter shell command to be tested: echo "Hey, cats!"
+Enter name for test script [test_echo__Hey__cats__]:
+Check all files written under $(pwd)?: [y]:
+Check all files written under (gentest's) $TMPDIR?: [y]:
+Enter other files/directories to be checked, one per line, then a blank line:
+
+Check stdout?: [y]:
+Check stderr?: [y]:
+Exit code should be zero?: [y]:
+Clobber (overwrite) previous outputs (if they exist)?: [y]:
+Number of times to run script?: [2]:
+
+Running command 'echo "Hey, cats!"' to generate output (run 1 of 2).
+Saved (non-empty) output to stdout to /home/tdda/ref/echo__Hey__cats__/STDOUT.
+Saved (empty) output to stderr to /home/tdda/ref/echo__Hey__cats__/STDERR.
+
+Running command 'echo "Hey, cats!"' to generate output (run 2 of 2).
+Saved (non-empty) output to stdout to /home/tdda/ref/echo__Hey__cats__/2/STDOUT.
+Saved (empty) output to stderr to /home/tdda/ref/echo__Hey__cats__/2/STDERR.
+
+Test script written as /home/tdda/test_echo__Hey__cats__.py
+Command execution took: 0.022s
+
+SUMMARY:
+
+Directory to run in:        /home/tdda
+Shell command:              echo "Hey, cats!"
+Test script generated:      /home/tdda/test_echo__Hey__cats__.py
+Reference files: (none)
+Check stdout:               yes (was 'Hey, cats!\n')
+Check stderr:               yes (was empty)
+Expected exit code:         0
+Clobbering permitted:       yes
+Number of times script ran: 2
+Number of tests written:    4
+```
+
+2) `tdda gentest 'echo "Hey, cats!"' 'test_echo.py' -n 3`  
+
+Same as above except that the command and a custom name for the
+test script has been supplied, so the wizard does not run, and the
+number of times to run the command has been increased to three.
+
+The test script produced is almost identical except for the number
+of times the command is run.
+
+3) `tdda gentest 'diff verifier1.txt verifier2.txt' -Z`  
+
+Gentest will normally fail if the program produces a non-zero exit
+code, generally indicating an error. Commands like `diff`, however,
+produce a non-zero exit code (1) when there are differences. The `-Z`
+option (or `--non-zero-exit`) allows the exit code to be non-zero, and
+Gentest generates a test that checks it is the expected value (1, in
+this case, if the two verifier files should be different).
+
+### SEE ALSO
+
+`rexpy(1)`, `tdda-diff(1)`
 
 ---
 
@@ -973,7 +1066,7 @@ Number of times to run the command (default 2)
 
 ### NAME
 
-`tdda tag`  -- tag tests that failed in the last reference test run
+`tdda tag` — tag tests that failed in the last reference test run
 
 ### SYNOPSIS
 ```
@@ -981,13 +1074,12 @@ tdda tag
 ```
 ### DESCRIPTION
 
-The `tdda tag` command reads the log of failing tests written by the most
-recent reference test run and adds `@tag` decorators to those tests in
-their source files. Tagged tests can then be run in isolation, allowing
-a rapid edit-test cycle focused on failing tests.
-
-Before `tdda tag` can be used, tests must be run with failure logging
-enabled, which writes the IDs of failing tests to a log file.
+The `tdda tag` command reads the log of failing tests written by the
+most recent logged `tdda.referencetest` run and adds `@tag` decorators
+to those tests in their source files. Tagged tests can then be run in
+isolation, allowing a rapid edit-test cycle focused on failing
+tests. A logged run of `tdda.referencetest` uses `--log-failures` or
+(for unittest-style tests only) `-F`.
 
 ### WORKFLOW
 
@@ -1017,10 +1109,7 @@ When all tests are passing:
 
 ### SEE ALSO
 
-tdda(1),
-tdda-reftest(1),
-tdda-reftest-unittest(1),
-tdda-reftest-pytest(1)
+`tdda(1)`
 
 ---
 
@@ -1029,23 +1118,24 @@ tdda-reftest-pytest(1)
 
 ### NAME
 
-`tdda` examples - Creates example data for TDDA
+`tdda examples` — Creates example data for TDDA
 
 ### SYNOPSIS
 ```
-tdda examples [OUTDIR]
-tdda examples [MODULE...] [OUTDIR]
+tdda examples [OUTDIR]  
+tdda examples [MODULE...] [OUTDIR]  
 tdda examples all [OUTDIR]
 ```
 ### POSITIONAL ARGUMENTS
 
 *MODULE* can be any of:
-  - referencetest
-  - constraints
-  - rexpy
-  - gentest
-  - book  
-If not specified, all the first four will be used created, without
+  - `referencetest`
+  - `constraints`
+  - `rexpy`
+  - `gentest`
+  - `book`
+
+If not specified, all the first four will be created, without
 requiring internet access.
 
 *OUTDIR* is an optional directory in which to write the example
@@ -1063,21 +1153,21 @@ or for a particular module if specified.
 
 If no module is specified, examples for all four are written out.
 
-Examples are always created in subdirectories of the current directory `.`
+Examples are created in subdirectories of *OUTDIR* (default: the current directory `.`).
 
 ### EXAMPLES
 
-a. `tdda examples`
+1) `tdda examples`  
    Creates the referencetest, constraints, rexpy, and gentest
    examples in `.`
 
-b. `tdda examples gentest`  
+2) `tdda examples gentest`  
    Creates `examples_gentest` in `.`
 
-c. `tdda examples gentest book`  
+3) `tdda examples gentest book`  
    Creates gentest and book examples in `.`
 
-d. `tdda examples all`  
+4) `tdda examples all`  
    Creates all the examples, four from local files and the book
    examples from GitHub in `.`
 
@@ -1085,9 +1175,10 @@ d. `tdda examples all`
 
 ## `tdda version`
 
+
 ### NAME
 
-`tdda version` - Reports the installed version of tdda
+`tdda version` — Reports the (active) installed version of tdda
 
 ### SYNOPSIS
 ```
@@ -1095,7 +1186,7 @@ tdda version
 ```
 ### DESCRIPTION
 
-Reports the version number of the installed TDDA tools.
+Reports the version number of the (active) TDDA tools.
 
 ### EXAMPLES
 
@@ -1105,9 +1196,10 @@ Reports the version number of the installed TDDA tools.
 
 ## `tdda config`
 
+
 ### NAME
 
-`tdda config` - Shows config settings
+`tdda config` — Shows config settings
 
 ### SYNOPSIS
 ```
@@ -1197,7 +1289,7 @@ How strictly to check types in reference test comparisons.
 **Default:** `"strict"`  
 **Allowed:** `"strict"`, `"medium"`, `"loose"`
 #### `log_failures`
-Log failing test IDs to file for use with tdda tag.  
+Log failing test IDs to file for use with `tdda tag`.  
 **Default:** `false`  
 **Allowed:** `true`, `false`
 
@@ -1268,7 +1360,7 @@ Path(s) to search for serial metadata files; relative paths are resolved relativ
 
 ### NAME
 
-`tdda test`  -- Run the tdda libraries tests 
+`tdda test` — Run the tdda library's self-tests
 
 ### SYNOPSIS
 ```
@@ -1276,7 +1368,7 @@ tdda test
 ```
 ### DESCRIPTION
 
-Runs tdda's (internal) tests.
+Runs tdda's (internal) self-tests.
 
 **NOTE:** It is hard to guarantee that all will pass on all systems
 given that dependencies are not tightly pinned. It is not necessarily
@@ -1285,7 +1377,7 @@ fail.
 
 ### SEE ALSO
 
-tdda(1),
+`tdda(1)`
 
 ---
 
@@ -1294,7 +1386,7 @@ tdda(1),
 
 ### NAME
 
-`tdda help` - Provides help on `tdda` and its sub-commands.
+`tdda help` — Provides help on `tdda` and its sub-commands.
 
 ### SYNOPSIS
 ```
@@ -1305,27 +1397,29 @@ tdda help COMMAND
 
 *COMMAND* can be any of:
 
- - `discover`
- - `verify`
- - `detect`
+`discover`  
+`verify`  
+`detect`  
 
- - `gentest`
- - `diff`
- - `tag`
- - `serial`
- - `examples`
+`examples`  
+`gentest`  
 
- - `config`
- - `help`
- - `version`
- - `test`
+`diff`  
+`serial`  
+
+`tag`  
+`config`  
+
+`help`  
+`version`  
+`test`  
 
 ### DESCRIPTION
 
 Shows help on a tdda subcommand or topic.
 
 Taking inspiration from `git`, if the man pages are installed,
-help on main commands can be obtained with
+help on main commands can also be obtained with
 
    `man tdda-COMMAND`
 
@@ -1337,7 +1431,7 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 
    `tdda discover --help`
 
-###  EXAMPLES
+### EXAMPLES
 
 `tdda help`               Shows this help
 
@@ -1350,7 +1444,7 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 
 ### NAME
 
-`rexpy` -- infer regular expressions from example strings
+`rexpy` — infer regular expressions from example strings
 
 ### SYNOPSIS
 ```
@@ -1432,5 +1526,4 @@ standard output.
 
 ### SEE ALSO
 
-tdda(1),
-tdda-discover(1)
+`tdda(1)`, `tdda-discover(1)`

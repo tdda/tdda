@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda [22mexamples − Creates example data for TDDA
+  [1mtdda examples [22mâ Creates example data for TDDA
 
 SYNOPSIS
 
@@ -11,12 +11,13 @@ SYNOPSIS
 POSITIONAL ARGUMENTS
 
   [4mMODULE[24m can be any of:
-    ‐ referencetest
-    ‐ constraints
-    ‐ rexpy
-    ‐ gentest
-    ‐ book
-  If not specified, all the first four will be used created, without
+    ‐ [1mreferencetest[0m
+    ‐ [1mconstraints[0m
+    ‐ [1mrexpy[0m
+    ‐ [1mgentest[0m
+    ‐ [1mbook[0m
+
+  If not specified, all the first four will be created, without
   requiring internet access.
 
   [4mOUTDIR[24m is an optional directory in which to write the example
@@ -33,25 +34,24 @@ DESCRIPTION
 
   If no module is specified, examples for all four are written out.
 
-  Examples are always created in subdirectories of the current directory [1m.[0m
+  Examples are created in subdirectories of [4mOUTDIR[24m (default: the current
+directory [1m.[22m).
 
 EXAMPLES
 
-  a. [1mtdda examples[0m
+  1) [1mtdda examples[0m
      Creates the referencetest, constraints, rexpy, and gentest
      examples in [1m.[0m
 
-  b. [1mtdda examples gentest[0m
+  2) [1mtdda examples gentest[0m
      Creates [1mexamples_gentest [22min [1m.[0m
 
-  c. [1mtdda examples gentest book[0m
+  3) [1mtdda examples gentest book[0m
      Creates gentest and book examples in [1m.[0m
 
-  d. [1mtdda examples all[0m
+  4) [1mtdda examples all[0m
      Creates all the examples, four from local files and the book
      examples from GitHub in [1m.[0m
-
-
 
 
 

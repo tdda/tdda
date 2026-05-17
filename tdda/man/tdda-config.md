@@ -1,7 +1,8 @@
-# "TDDA VERSION" 1 "January 2026" "3.0" "tdda config manual"
+# "TDDA CONFIG" 1 "%%DATE%%" "%%VERSION%%" "tdda config manual"
+
 ## NAME
 
-`tdda config` - Shows config settings
+`tdda config` — Shows config settings
 
 ## SYNOPSIS
 
@@ -91,7 +92,7 @@ How strictly to check types in reference test comparisons.
 **Default:** `"strict"`  
 **Allowed:** `"strict"`, `"medium"`, `"loose"`
 ### `log_failures`
-Log failing test IDs to file for use with tdda tag.  
+Log failing test IDs to file for use with `tdda tag`.  
 **Default:** `false`  
 **Allowed:** `true`, `false`
 

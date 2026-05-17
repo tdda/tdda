@@ -1,20 +1,18 @@
 .nh
-.TH "TDDA TAG" 1 "April 2026" "3.0" "tdda tag manual"
+.TH "TDDA TAG" 1 "May 2026" "3.0" "tdda tag manual"
 .SH NAME
-\fBtdda tag\fR  -- tag tests that failed in the last reference test run
+\fBtdda tag\fR — tag tests that failed in the last reference test run
 
 .SH SYNOPSIS
 \fBtdda tag\fR
 
 .SH DESCRIPTION
-The \fBtdda tag\fR command reads the log of failing tests written by the most
-recent reference test run and adds \fB@tag\fR decorators to those tests in
-their source files. Tagged tests can then be run in isolation, allowing
-a rapid edit-test cycle focused on failing tests.
-
-.PP
-Before \fBtdda tag\fR can be used, tests must be run with failure logging
-enabled, which writes the IDs of failing tests to a log file.
+The \fBtdda tag\fR command reads the log of failing tests written by the
+most recent logged \fBtdda.referencetest\fR run and adds \fB@tag\fR decorators
+to those tests in their source files. Tagged tests can then be run in
+isolation, allowing a rapid edit-test cycle focused on failing
+tests. A logged run of \fBtdda.referencetest\fR uses \fB--log-failures\fR or
+(for unittest-style tests only) \fB-F\fR\&.
 
 .SH WORKFLOW
 A typical workflow with \fBunittest\fR-style tests (\fBReferenceTestCase\fR) is:
@@ -53,7 +51,4 @@ When all tests are passing:
 \fBpytest --untag          # Remove @tag decorators\fR
 
 .SH SEE ALSO
-tdda(1),
-tdda-reftest(1),
-tdda-reftest-unittest(1),
-tdda-reftest-pytest(1)
+\fBtdda(1)\fR

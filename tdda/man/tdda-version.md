@@ -1,7 +1,8 @@
-# "TDDA VERSION" 1 "January 2026" "3.0" "tdda version manual"
+# "TDDA VERSION" 1 "%%DATE%%" "%%VERSION%%" "tdda version manual"
+
 ## NAME
 
-`tdda version` - Reports the installed version of tdda
+`tdda version` — Reports the (active) installed version of tdda
 
 ## SYNOPSIS
 
@@ -9,7 +10,7 @@
 
 ## DESCRIPTION
 
-Reports the version number of the installed TDDA tools.
+Reports the version number of the (active) TDDA tools.
 
 ## EXAMPLES
 

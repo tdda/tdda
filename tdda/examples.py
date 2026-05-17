@@ -84,7 +84,8 @@ def copy(srcdir, destination):
             copy_accounts_data_unzipped(destination)
         else:
             for run in (0, 1):
-                binary = 'b' if run or fullname.endswith('.feather') else ''
+                binary = ('b' if run or fullname.endswith('.feather')
+                          or fullname.endswith('.parquet') else '')
                 try:
                     with open(fullname, 'r%s' % binary) as fin:
                         with open(

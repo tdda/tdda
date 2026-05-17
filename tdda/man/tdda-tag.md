@@ -1,8 +1,8 @@
-# "TDDA TAG" 1 "April 2026" "3.0" "tdda tag manual"
+# "TDDA TAG" 1 "%%DATE%%" "%%VERSION%%" "tdda tag manual"
 
 ## NAME
 
-`tdda tag`  -- tag tests that failed in the last reference test run
+`tdda tag` — tag tests that failed in the last reference test run
 
 ## SYNOPSIS
 
@@ -10,13 +10,12 @@
 
 ## DESCRIPTION
 
-The `tdda tag` command reads the log of failing tests written by the most
-recent reference test run and adds `@tag` decorators to those tests in
-their source files. Tagged tests can then be run in isolation, allowing
-a rapid edit-test cycle focused on failing tests.
-
-Before `tdda tag` can be used, tests must be run with failure logging
-enabled, which writes the IDs of failing tests to a log file.
+The `tdda tag` command reads the log of failing tests written by the
+most recent logged `tdda.referencetest` run and adds `@tag` decorators
+to those tests in their source files. Tagged tests can then be run in
+isolation, allowing a rapid edit-test cycle focused on failing
+tests. A logged run of `tdda.referencetest` uses `--log-failures` or
+(for unittest-style tests only) `-F`.
 
 ## WORKFLOW
 
@@ -46,7 +45,4 @@ When all tests are passing:
 
 ## SEE ALSO
 
-tdda(1),
-tdda-reftest(1),
-tdda-reftest-unittest(1),
-tdda-reftest-pytest(1)
+`tdda(1)`

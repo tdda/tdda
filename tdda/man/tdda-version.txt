@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda version [22m− Reports the installed version of tdda
+  [1mtdda version [22mâ Reports the (active) installed version of tdda
 
 SYNOPSIS
 
@@ -8,7 +8,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-  Reports the version number of the installed TDDA tools.
+  Reports the version number of the (active) TDDA tools.
 
 EXAMPLES
 

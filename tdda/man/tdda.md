@@ -1,4 +1,4 @@
-# TDDA 1 "January 2026" "3.0" "tdda manual"
+# TDDA 1 "%%DATE%%" "%%VERSION%%" "tdda manual"
 
 ## NAME
 
@@ -32,6 +32,6 @@
 
 ## SEE ALSO
 
-rexpy(1)
+`rexpy(1)`
 
 [TDDA Book](https://book.tdda.info)

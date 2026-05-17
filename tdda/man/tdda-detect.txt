@@ -1,12 +1,12 @@
 NAME
 
-  [1mtdda detect [22m− Detect data that does not obey supplied constraints
+  [1mtdda detect [22mâ Detect data that does not obey supplied constraints
 
 SYNOPSIS
 
   [1mtdda detect [22m[‐h] [‐?] [‐7] [‐‐no‐config] [‐‐colour] [‐‐no‐colour]
               [‐epsilon EPSILON] [‐o REPORT_PATH] [‐a] [‐f]
-              [‐t {strict,sloppy}] [‐‐write‐all‐records]
+              [‐t {strict,loose}] [‐‐write‐all‐records]
               [‐‐per‐constraint] [‐‐no‐per‐constraint]
               [‐‐no‐original‐fields] [‐‐original‐fields]
               [‐‐no‐output‐fields] [‐‐output‐fields [OUTPUT_FIELDS ...]]
@@ -73,12 +73,12 @@ OPTIONS
                           The stem of the output file is taken from
                           [4mREPORT_PATH[24m if [1m‐o [22mis given, otherwise from
                           [4mOUTPUT[24m.
-  [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4msloppy[24m}
-                          "sloppy" means consider all numeric types
+  [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4mloose[24m}
+                          "loose" means consider all numeric types
                           equivalent
   [1m‐o[22m, [1m‐‐report‐path [4m[22mREPORT_PATH[0m
-                          Stem path for report files (extension is replaced
-                          by the format).
+                          Stem path for report files (extension is
+                          replaced by the format).
 
   [1m‐‐write‐all‐records   [22mInclude passing records
   [1m‐‐per‐constraint      [22mWrite one flag column per failing constraint in
@@ -145,9 +145,9 @@ EXAMPLES
 
 SEE ALSO
 
-  tdda verify
-  tdda discover
-  tdda serial
+  [1mtdda verify[0m
+  [1mtdda discover[0m
+  [1mtdda serial[0m
 
 
 

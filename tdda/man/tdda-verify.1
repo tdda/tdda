@@ -1,13 +1,13 @@
 .nh
-.TH "TDDA VERIFY" 1 "January 2026" "3.0" "tdda verify manual"
+.TH "TDDA VERIFY" 1 "May 2026" "3.0" "tdda verify manual"
 .SH NAME
-\fBtdda verify\fR \- Verify that constraints are satisfied by data
+\fBtdda verify\fR — Verify that constraints are satisfied by data
 
 .SH SYNOPSIS
 \fBtdda verify\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR]
             [\fB--colour\fR] [\fB--no-colour\fR]
             [\fB--epsilon\fR \fIEPSILON\fP] [\fB-a\fR] [\fB-f\fR]
-            [\fB-t {strict,sloppy}\fR] [\fB--verify-required-fields\fR]
+            [\fB-t {strict,loose}\fR] [\fB--verify-required-fields\fR]
             [\fB--verify-allowed-fields\fR] [\fB--no-verify-required-fields\fR]
             [\fB--no-verify-allowed-fields\fR] [\fB--varf\fR] [\fB--no-varf\fR]
             [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
@@ -68,9 +68,9 @@ values cause constraints to be violated: the companion command
 \fB-f\fR, \fB--fields\fR            Report only fields with failures
 
 .PP
-\fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIsloppy\fP}
+\fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIloose\fP}
 .br
-                        "sloppy" means consider all numeric types
+                        "loose" means consider all numeric types
 .br
                         equivalent
 
@@ -127,6 +127,6 @@ constraints in \fBelements.tdda\fR, reporting any constraints that are not
 satisfied.
 
 .SH SEE ALSO
-tdda-detect(1),
-tdda-discover(1),
-tdda-serial(1)
+\fBtdda-detect(1)\fR,
+\fBtdda-discover(1)\fR,
+\fBtdda-serial(1)\fR

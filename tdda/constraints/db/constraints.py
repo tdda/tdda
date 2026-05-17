@@ -639,9 +639,11 @@ def verify_db_table(
             is that min/max values of zero do not have any tolerance,
             i.e. the wrong sign always generates a failure.
 
-        type_checking: ``'strict'`` or ``'sloppy'``. Defaults to
-            ``'strict'`` for databases. With ``'sloppy'``, a database
-            ``real`` column may satisfy an ``int`` type constraint.
+        type_checking: ``'strict'``, ``'sloppy'``, or ``'loose'``
+            (``'loose'`` and ``'sloppy'`` are equivalent). Defaults to
+            ``'strict'`` for databases. With ``'sloppy'``/``'loose'``,
+            a database ``real`` column may satisfy an ``int`` type
+            constraint.
         testing: If ``True``, suppresses type-compatibility warnings.
             Should only be set when running automated tests. Default
             is ``False``.
@@ -734,9 +736,11 @@ def detect_db_table(
             is that min/max values of zero do not have any tolerance,
             i.e. the wrong sign always generates a failure.
 
-        type_checking: ``'strict'`` or ``'sloppy'``. Defaults to
-            ``'strict'`` for databases. With ``'sloppy'``, a database
-            ``real`` column may satisfy an ``int`` type constraint.
+        type_checking: ``'strict'``, ``'sloppy'``, or ``'loose'``
+            (``'loose'`` and ``'sloppy'`` are equivalent). Defaults to
+            ``'strict'`` for databases. With ``'sloppy'``/``'loose'``,
+            a database ``real`` column may satisfy an ``int`` type
+            constraint.
         testing: If ``True``, suppresses type-compatibility warnings.
             Default is ``False``.
         **kwargs: Additional keyword arguments.

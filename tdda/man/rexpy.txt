@@ -1,6 +1,6 @@
 NAME
 
-  [1mrexpy [22m‐‐ infer regular expressions from example strings
+  [1mrexpy [22mâ infer regular expressions from example strings
 
 SYNOPSIS
 
@@ -82,8 +82,8 @@ OPTIONS
 
 SEE ALSO
 
-  tdda
-  tdda discover
+  [1mtdda[0m
+
 
 
 

@@ -1,8 +1,8 @@
-# "TDDA DISCOVER" 1 "January 2026" "3.0" "tdda discover manual"
+# "TDDA DISCOVER" 1 "%%DATE%%" "%%VERSION%%" "tdda discover manual"
 
 ## NAME
 
-`tdda discover` - automatically generate constraints for data
+`tdda discover` — automatically generate constraints for data
 
 ## SYNOPSIS
 
@@ -86,7 +86,7 @@ The example data can be obtained by running 'tdda examples', which will create
 various directories, including constraints_examples, containing the source
 data for these examples.
 
-1) `tdda discover elements.parquet elements.tdda`
+1) `tdda discover elements.parquet elements.tdda`  
 
 This command will read data from elements.parquet and (attempt to)
 find constraints satisfied by every record, and the data
@@ -103,7 +103,7 @@ which records and/or values fail to satisfy the constraints. The `.tdda`
 file can be edited (carefully) by hand, or programmatically, to add,
 remove, tighten, or loosen constraints.
 
-2) `tdda discover elements.csv`
+2) `tdda discover elements.csv`  
 
 This command is almost the same as the first except that it reads data
 from the CSV file specified, and writes the constraints to the screen
@@ -124,7 +124,7 @@ it will look for any associated metadata for `elements.csv` using
 naming conventions described in the help for `tdda serial`.
 
 
-3) `tdda discover --rex md.serial:elements.parquet`
+3) `tdda discover --rex md.serial:elements.parquet`  
 
 This is similar to the last two except that:
   - regular expression inference is requested (`--rex`) for text fields.
@@ -133,17 +133,17 @@ This is similar to the last two except that:
   - a metadata file to be used to interpret the `.csv` file is provided
     explicitly.
 
-4) `tdda discover elements.parquet elements.tdda -r html -o elements`
+4) `tdda discover elements.parquet elements.tdda -r html -o elements`  
 
 This discovers constraints as in example 1, and also writes an HTML
 report to `elements.html`.
 
-5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`
+5) `tdda discover elements.parquet elements.tdda -r md json txt -o elements`  
 
 This discovers constraints as in example 1, and also writes reports
 to `elements.md`, `elements.json`, and `elements.txt`.
 
-6) `tdda discover --rex postgres:elements`
+6) `tdda discover --rex postgres:elements`  
 
 This is similar again except that now the postgres:specifier will be
 interpreted as a database connection file in the user's home
@@ -159,6 +159,6 @@ to get help with the database connection file format.
 
 ## SEE ALSO
 
-tdda-verify(1),
-tdda-detect(1),
-tdda-serial(1)
+`tdda-verify(1)`,
+`tdda-detect(1)`,
+`tdda-serial(1)`

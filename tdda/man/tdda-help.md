@@ -1,8 +1,8 @@
-# "TDDA HELP" 1 "January 2026" "3.0" "tdda help manual"
+# "TDDA HELP" 1 "%%DATE%%" "%%VERSION%%" "tdda help manual"
 
 ## NAME
 
-`tdda help` - Provides help on `tdda` and its sub-commands.
+`tdda help` — Provides help on `tdda` and its sub-commands.
 
 ## SYNOPSIS
 
@@ -13,27 +13,29 @@
 
 *COMMAND* can be any of:
 
- - `discover`
- - `verify`
- - `detect`
+`discover`  
+`verify`  
+`detect`  
 
- - `gentest`
- - `diff`
- - `tag`
- - `serial`
- - `examples`
+`examples`  
+`gentest`  
 
- - `config`
- - `help`
- - `version`
- - `test`
+`diff`  
+`serial`  
+
+`tag`  
+`config`  
+
+`help`  
+`version`  
+`test`  
 
 ## DESCRIPTION
 
 Shows help on a tdda subcommand or topic.
 
 Taking inspiration from `git`, if the man pages are installed,
-help on main commands can be obtained with
+help on main commands can also be obtained with
 
    `man tdda-COMMAND`
 
@@ -45,7 +47,7 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 
    `tdda discover --help`
 
-##  EXAMPLES
+## EXAMPLES
 
 `tdda help`               Shows this help
 

@@ -1,15 +1,15 @@
-# "TDDA VERIFY" 1 "January 2026" "3.0" "tdda verify manual"
+# "TDDA VERIFY" 1 "%%DATE%%" "%%VERSION%%" "tdda verify manual"
 
 ## NAME
 
-`tdda verify` - Verify that constraints are satisfied by data
+`tdda verify` — Verify that constraints are satisfied by data
 
 ## SYNOPSIS
 
 `tdda verify` [`-h`] [`-?`] [`-7`] [`--no-config`]
             [`--colour`] [`--no-colour`]
             [`--epsilon` *EPSILON*] [`-a`] [`-f`]
-            [`-t {strict,sloppy}`] [`--verify-required-fields`]
+            [`-t {strict,loose}`] [`--verify-required-fields`]
             [`--verify-allowed-fields`] [`--no-verify-required-fields`]
             [`--no-verify-allowed-fields`] [`--varf`] [`--no-varf`]
             [`--pandas`] [`--polars`] [`--backend` *BACKEND*]
@@ -60,8 +60,8 @@ values cause constraints to be violated: the companion command
                         failures  
 `-f`, `--fields`            Report only fields with failures  
 
-`-t`, `--type_checking` {*strict*,*sloppy*}  
-                        "sloppy" means consider all numeric types  
+`-t`, `--type_checking` {*strict*,*loose*}  
+                        "loose" means consider all numeric types  
                         equivalent  
 
 `--verify-required-fields`, `--vrf`
@@ -91,7 +91,7 @@ The example data can be obtained by running `tdda examples`, which will
 create various directories, including `constraints_examples`, containing
 source data for these examples.
 
-1) `tdda verify elements.parquet elements.tdda`
+1) `tdda verify elements.parquet elements.tdda`  
 
 This command reads data from `elements.parquet` and checks it against the
 constraints in `elements.tdda`, reporting any constraints that are not
@@ -99,6 +99,6 @@ satisfied.
 
 ## SEE ALSO
 
-tdda-detect(1),
-tdda-discover(1),
-tdda-serial(1)
+`tdda-detect(1)`,
+`tdda-discover(1)`,
+`tdda-serial(1)`

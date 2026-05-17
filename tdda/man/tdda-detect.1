@@ -1,12 +1,12 @@
 .nh
-.TH "TDDA DETECT" 1 "January 2026" "3.0" "tdda detect manual"
+.TH "TDDA DETECT" 1 "May 2026" "3.0" "tdda detect manual"
 .SH NAME
-\fBtdda detect\fR \- Detect data that does not obey supplied constraints
+\fBtdda detect\fR — Detect data that does not obey supplied constraints
 
 .SH SYNOPSIS
 \fBtdda detect\fR [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [-epsilon EPSILON] [-o REPORT_PATH] [-a] [-f]
-            [-t {strict,sloppy}] [--write-all-records]
+            [-t {strict,loose}] [--write-all-records]
             [--per-constraint] [--no-per-constraint]
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
@@ -91,17 +91,16 @@ the same functions as \fBtdda verify\fR\&.
 .br
                         \fIOUTPUT\fP\&.
 .br
-\fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIsloppy\fP}
+\fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIloose\fP}
 .br
-                        "sloppy" means consider all numeric types
+                        "loose" means consider all numeric types
 .br
                         equivalent
 .br
 \fB-o\fR, \fB--report-path\fR \fIREPORT_PATH\fP
 .br
-                        Stem path for report files (extension is replaced
-.br
-                        by the format).
+                        Stem path for report files (extension is
+                        replaced by the format).
 
 .PP
 \fB--write-all-records\fR   Include passing records
@@ -207,6 +206,6 @@ As above, and also writes reports to \fBelements.md\fR, \fBelements.json\fR,
 and \fBelements.txt\fR\&.
 
 .SH SEE ALSO
-tdda-verify(1),
-tdda-discover(1),
-tdda-serial(1)
+\fBtdda-verify(1)\fR,
+\fBtdda-discover(1)\fR,
+\fBtdda-serial(1)\fR
