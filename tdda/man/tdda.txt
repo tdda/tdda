@@ -1,6 +1,6 @@
 NAME
 
-  [1mtdda [22m− test‐driven data analysis
+  [1mtdda [22mâ test‐driven data analysis
 
 SYNOPSIS
 
@@ -20,6 +20,7 @@ SYNOPSIS
   [1mtdda version       [22mPrint the TDDA version number
   [1mtdda help          [22mPrint this help
   [1mtdda help COMMAND  [22mPrint help on COMMAND (e.g. discover, verify)
+  [1mtdda installman    [22mInstall tdda man pages
 
   [1mtdda test          [22mRun the tdda library’s self‐tests.
 
@@ -34,7 +35,6 @@ SEE ALSO
 
   [1mTDDA Book[0m
   [1m⟨https://book.tdda.info⟩[0m
-
 
 
 

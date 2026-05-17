@@ -49,7 +49,8 @@ def help(extensions, cmd=None, stream=sys.stdout):
             'version',
             'examples',
             'help',
-            'config'
+            'config',
+            'installman'
         ):
             print_help(cmd, stream)
         else:
@@ -206,6 +207,10 @@ def main_with_argv(argv, verbose=True):
         from tdda.config import show_config
 
         show_config(*argv[2:])
+    elif name == 'installman':
+        from tdda.man.installmanpages import install_man_pages_cli
+
+        install_man_pages_cli(argv[2:])
     else:
         help(extensions, stream=sys.stderr)
         sys.exit(1)

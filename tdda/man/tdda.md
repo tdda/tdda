@@ -2,7 +2,7 @@
 
 ## NAME
 
-`tdda` - test-driven data analysis
+`tdda` — test-driven data analysis
 
 ## SYNOPSIS
 
@@ -22,6 +22,7 @@
 `tdda version`       Print the TDDA version number  
 `tdda help`          Print this help  
 `tdda help COMMAND`  Print help on COMMAND (e.g. discover, verify)  
+`tdda installman`    Install tdda man pages  
 
 `tdda test`          Run the tdda library's self-tests.  
 
@@ -32,6 +33,6 @@
 
 ## SEE ALSO
 
-`rexpy(1)`
+`rexpy(1)`, `tdda-installman(1)`
 
 [TDDA Book](https://book.tdda.info)

@@ -5,7 +5,7 @@
 
 ### NAME
 
-`tdda` - test-driven data analysis
+`tdda` — test-driven data analysis
 
 ### SYNOPSIS
 ```
@@ -25,6 +25,7 @@ tdda config        Show TDDA configuration
 tdda version       Print the TDDA version number  
 tdda help          Print this help  
 tdda help COMMAND  Print help on COMMAND (e.g. discover, verify)  
+tdda installman    Install tdda man pages  
 
 tdda test          Run the tdda library's self-tests.  
 ```
@@ -35,7 +36,7 @@ tdda test          Run the tdda library's self-tests.
 
 ### SEE ALSO
 
-`rexpy(1)`
+`rexpy(1)`, `tdda-installman(1)`
 
 [TDDA Book](https://book.tdda.info)
 
@@ -1413,13 +1414,14 @@ tdda help COMMAND
 `help`  
 `version`  
 `test`  
+`installman`  
 
 ### DESCRIPTION
 
 Shows help on a tdda subcommand or topic.
 
-Taking inspiration from `git`, if the man pages are installed,
-help on main commands can also be obtained with
+Taking inspiration from `git`, if the man pages are installed
+(see `tdda installman`), help on main commands can also be obtained with
 
    `man tdda-COMMAND`
 
@@ -1436,6 +1438,73 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 `tdda help`               Shows this help
 
 `tdda help gentest`       Shows help on gentest
+
+### SEE ALSO
+
+`tdda-installman(1)`
+
+---
+
+## `tdda installman`
+
+
+### NAME
+
+`tdda installman` — install tdda man pages
+
+### SYNOPSIS
+```
+tdda installman [--system]
+```
+### DESCRIPTION
+
+Installs the `tdda` man pages so they can be accessed with the `man` command.
+
+Once installed, the main `tdda` man page is available as:
+
+man tdda
+
+Man pages for `tdda` subcommands are available as:
+
+`man tdda-COMMAND`
+
+For example:
+
+`man tdda-discover`  
+`man tdda-gentest`
+
+The `rexpy` man page is accessed as:
+
+`man rexpy`
+
+By default, man pages are installed to `~/.local/share/man/man1`.
+On MacOS, this directory may not be in the default man search path;
+if so, `tdda installman` will print the line to add to your shell
+config file to make the man pages available in new shells.
+
+With `--system`, man pages are installed to `/usr/local/share/man/man1`,
+which is in the default search path on most systems but may require
+running with `sudo`.
+
+On Windows, man pages are not supported; consider running `tdda` under
+WSL (Windows Subsystem for Linux).
+
+### OPTIONS
+
+`--system`, `-s`  
+  Install system-wide to `/usr/local/share/man/man1` (may require sudo).
+
+### EXAMPLES
+
+1) `tdda installman`  
+   Install man pages to `~/.local/share/man/man1`.
+
+2) `tdda installman --system`  
+   Install man pages system-wide (may require sudo).
+
+### SEE ALSO
+
+`tdda-help(1)`
 
 ---
 

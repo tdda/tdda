@@ -1,0 +1,66 @@
+NAME
+
+  [1mtdda installman [22mâ install tdda man pages
+
+SYNOPSIS
+
+  [1mtdda installman [22m[‐‐system]
+
+DESCRIPTION
+
+  Installs the [1mtdda [22mman pages so they can be accessed with the [1mman [22mcommand.
+
+  Once installed, the main [1mtdda [22mman page is available as:
+
+  man tdda
+
+  Man pages for [1mtdda [22msubcommands are available as:
+
+  [1mman tdda‐COMMAND[0m
+
+  For example:
+
+  [1mman tdda‐discover[0m
+  [1mman tdda‐gentest[0m
+
+  The [1mrexpy [22mman page is accessed as:
+
+  [1mman rexpy[0m
+
+  By default, man pages are installed to [1m˜/.local/share/man/man1[22m.
+  On MacOS, this directory may not be in the default man search path;
+  if so, [1mtdda installman [22mwill print the line to add to your shell
+  config file to make the man pages available in new shells.
+
+  With [1m‐‐system[22m, man pages are installed to [1m/usr/local/share/man/man1[22m,
+  which is in the default search path on most systems but may require
+  running with [1msudo[22m.
+
+  On Windows, man pages are not supported; consider running [1mtdda [22munder
+  WSL (Windows Subsystem for Linux).
+
+OPTIONS
+
+  [1m‐‐system[22m, [1m‐s[0m
+    Install system‐wide to [1m/usr/local/share/man/man1 [22m(may require sudo).
+
+EXAMPLES
+
+  1) [1mtdda installman[0m
+     Install man pages to [1m˜/.local/share/man/man1[22m.
+
+  2) [1mtdda installman ‐‐system[0m
+     Install man pages system‐wide (may require sudo).
+
+SEE ALSO
+
+  [1mtdda help[0m
+
+
+
+
+
+
+
+
+

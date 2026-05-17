@@ -29,13 +29,14 @@
 `help`  
 `version`  
 `test`  
+`installman`  
 
 ## DESCRIPTION
 
 Shows help on a tdda subcommand or topic.
 
-Taking inspiration from `git`, if the man pages are installed,
-help on main commands can also be obtained with
+Taking inspiration from `git`, if the man pages are installed
+(see `tdda installman`), help on main commands can also be obtained with
 
    `man tdda-COMMAND`
 
@@ -52,3 +53,7 @@ Help can also be obtained on each command with `--help`, `-h` or `-?`, e.g.
 `tdda help`               Shows this help
 
 `tdda help gentest`       Shows help on gentest
+
+## SEE ALSO
+
+`tdda-installman(1)`

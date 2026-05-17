@@ -14,6 +14,7 @@ TARGETS = tdda.txt \
           tdda-version.txt \
           tdda-config.txt \
           tdda-test.txt \
+          tdda-installman.txt \
           rexpy.txt
 
 
@@ -30,6 +31,7 @@ CLI_SRCS = sphinx/tdda.md \
            sphinx/tdda-config.md \
            sphinx/tdda-test.md \
            sphinx/tdda-help.md \
+           sphinx/tdda-installman.md \
            sphinx/rexpy.md
 
 all: clean sphinx $(TARGETS) cli

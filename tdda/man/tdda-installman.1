@@ -1,0 +1,69 @@
+.nh
+.TH "TDDA INSTALLMAN" 1 "May 2026" "3.0" "tdda installman manual"
+.SH NAME
+\fBtdda installman\fR — install tdda man pages
+
+.SH SYNOPSIS
+\fBtdda installman\fR [--system]
+
+.SH DESCRIPTION
+Installs the \fBtdda\fR man pages so they can be accessed with the \fBman\fR command.
+
+.PP
+Once installed, the main \fBtdda\fR man page is available as:
+
+.PP
+man tdda
+
+.PP
+Man pages for \fBtdda\fR subcommands are available as:
+
+.PP
+\fBman tdda-COMMAND\fR
+
+.PP
+For example:
+
+.PP
+\fBman tdda-discover\fR
+.br
+\fBman tdda-gentest\fR
+
+.PP
+The \fBrexpy\fR man page is accessed as:
+
+.PP
+\fBman rexpy\fR
+
+.PP
+By default, man pages are installed to \fB~/.local/share/man/man1\fR\&.
+On MacOS, this directory may not be in the default man search path;
+if so, \fBtdda installman\fR will print the line to add to your shell
+config file to make the man pages available in new shells.
+
+.PP
+With \fB--system\fR, man pages are installed to \fB/usr/local/share/man/man1\fR,
+which is in the default search path on most systems but may require
+running with \fBsudo\fR\&.
+
+.PP
+On Windows, man pages are not supported; consider running \fBtdda\fR under
+WSL (Windows Subsystem for Linux).
+
+.SH OPTIONS
+\fB--system\fR, \fB-s\fR
+.br
+  Install system-wide to \fB/usr/local/share/man/man1\fR (may require sudo).
+
+.SH EXAMPLES
+1) \fBtdda installman\fR
+.br
+   Install man pages to \fB~/.local/share/man/man1\fR\&.
+
+.PP
+2) \fBtdda installman --system\fR
+.br
+   Install man pages system-wide (may require sudo).
+
+.SH SEE ALSO
+\fBtdda-help(1)\fR

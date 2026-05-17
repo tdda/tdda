@@ -27,13 +27,14 @@ POSITIONAL ARGUMENTS
   [1mhelp[0m
   [1mversion[0m
   [1mtest[0m
+  [1minstallman[0m
 
 DESCRIPTION
 
   Shows help on a tdda subcommand or topic.
 
-  Taking inspiration from [1mgit[22m, if the man pages are installed,
-  help on main commands can also be obtained with
+  Taking inspiration from [1mgit[22m, if the man pages are installed
+  (see [1mtdda installman[22m), help on main commands can also be obtained with
 
   [1mman tdda‐COMMAND[0m
 
@@ -51,10 +52,9 @@ EXAMPLES
 
   [1mtdda help gentest       [22mShows help on gentest
 
+SEE ALSO
 
-
-
-
+  [1mtdda installman[0m
 
 
 
