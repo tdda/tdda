@@ -20,9 +20,10 @@ requires-python = ">=3.8"
 name = "tdda"
 authors = [
     { name = "Nick Radcliffe", email = "njr@stochasticsolutions.com" },
-    { name = "Simon Brown" },
 ]
 dynamic=["version", "scripts", "dependencies", "keywords", "license", "readme"]
+
+description = "Test-driven data analysis: command-line tools and Python APIs for data validation, testing analytical pipelines, automatic test generation and more."
 
 
 [tool.pytest.ini_options]

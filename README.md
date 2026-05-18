@@ -1,119 +1,89 @@
-Test-Driven Data Analysis (Python TDDA library)
-===============================================
+# Test-Driven Data Analysis (TDDA)
 
-What is it?
------------
+The `tdda` package provides Python support for
+[test-driven data analysis](https://book.tdda.info)
+([1-page summary](http://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf),
+[blog](http://www.tdda.info/pages/table-of-contents.html#table-of-contents),
+[book](https://book.tdda.info)).
 
-The TDDA Python module provides command-line and Python API support for
-the overall process of data analysis, through the following tools:
+## Features
 
- - **Reference Testing**: extensions to `unittest` and `pytest` for
-   managing testing of data analysis pipelines, where the results are
-   typically much larger, and more complex, than single numerical
-   values.
+- **Reference Testing** (`tdda.referencetest`): extensions to `unittest` and
+  `pytest` for testing data analysis pipelines. Supports file-based
+  comparisons, semantic equivalence, automatic rewriting of reference results,
+  and test tagging.
 
- - **Constraints**: tools (and API) for discovery of constraints from data,
-   for validation of constraints on new data, and for anomaly detection.
+- **Automatic Test Generation** (`tdda gentest`): generates reference tests
+  for any command-line script or program (Python, R, shell, Makefile, ...).
+  *"Gentest writes tests, so you don't have to."*™
 
- - **Finding Regular Expressions (Rexpy)**: tools (and API) for automatically
-   inferring regular expressions from text data.
+- **Constraints** (`tdda.constraints`): discovers constraints from Pandas
+  DataFrames, Parquet files, flat files, and relational databases; verifies
+  new data against those constraints; detects failing records.
 
- - **Automatic Test Generation (Gentest)**: TDDA can generate tests for
-   more-or-less any command that can be run from a command line,
-   whether it be Python code, R code, a shell script, a shell
-   command, a `Makefile` or a multi-language pipeline involving
-   compiled code. _"Gentest writes tests, so you don't have to."™_
+- **Regular Expression Inference** (`tdda.rexpy`): automatically infers
+  regular expressions from a column of string data.
 
-<img width="100%" src="doc/source/image/tdda-machines-light.png"/>
+- **Data Diff** (`tdda diff`): compares data frames in Parquet or flat files
+  and reports differences in a visual format.
 
-Documentation
--------------
+- **Serial Format** (`tdda.serial`): documents CSV and flat-file formats in
+  `.serial` metadata files for accurate, portable reading and writing.
+  Supports conversion to/from [CSVW](https://csvw.org) and
+  [Frictionless](https://frictionlessdata.io) metadata.
 
-http://tdda.readthedocs.io
+- **Utility Functions** (`tdda.utils`): Unicode normalization (Normal Form TK),
+  glyph counting, and RFC 9839 support.
 
-Installation
-------------
+## Documentation
 
-The simplest way to install all of the TDDA Python modules is using *pip*:
+Full documentation: [tdda.readthedocs.io](https://tdda.readthedocs.io)
 
-    pip install tdda
+## Installation
 
-The full set of sources, including all examples, are downloadable from
-PyPi with:
+```
+pip install tdda
+```
 
-    pip download --no-binary :all: tdda
+To upgrade an existing installation:
 
-The sources are also publicly available from Github:
+```
+pip install -U tdda
+```
 
-    git clone git@github.com:tdda/tdda.git
+### Source installation
 
-Documentation is available at http://tdda.readthedocs.io.
+```
+git clone https://github.com/tdda/tdda.git
+cd tdda
+pip install .
+```
 
-If you clone the Github repo, use
+### Optional database support
 
-    python setup.py install
+```
+pip install pygresql                  # PostgreSQL
+pip install mysql-connector-python   # MySQL/MariaDB
+pip install pymongo                  # MongoDB
+```
 
-afterwards to install the command-line tools (`tdda` and `rexpy`).
+## Testing
 
+```
+tdda test
+```
 
-*Reference Tests*
------------------
+## Resources
 
-The `tdda.referencetest` library is used to support
-the creation of *reference tests*, based on either unittest or pytest.
+- [TDDA Blog](http://www.tdda.info)
+- [Book](https://book.tdda.info)
+- [Quick Reference Guide](http://www.tdda.info/pdf/tdda-quickref.pdf)
+- [1-page summary](https://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf)
+- [Full documentation](https://tdda.readthedocs.io)
+- [PyCon UK talk (video)](https://www.youtube.com/watch?v=FIw_7aUuY50)
+- [Mastodon](https://mathstodon.xyz/@tdda)
 
-These are like other tests except:
+## Authors
 
-  1. They have special support for comparing strings to files
-     and files to files.
-  2. That support includes the ability to provide exclusion patterns
-     (for things like dates and versions that might be in the output).
-  3. When a string/file assertion fails, it spits out the command you
-     need to diff the output.
-  4. If there were exclusion patterns, it also writes modified versions
-     of both the actual and expected output and also prints the diff
-     command needed to compare those.
-  5. They have special support for handling CSV files.
-  6. It supports flags (-w and -W)  to rewrite the reference (expected)
-     results once you have confirmed that the new actuals are correct.
-
-For more details from a source distribution or checkout, see the `README.md`
-file and examples in the `referencetest` subdirectory.
-
-*Constraints*
--------------
-
-The `tdda.constraints` library is used to 'discover' constraints
-from a (Pandas) DataFrame, write them out as JSON, and to verify that
-datasets meet the constraints in the constraints file.
-
-For more details from a source distribution or checkout, see the `README.md`
-file and examples in the `constraints` subdirectory.
-
-*Finding Regular Expressions*
------------------------------
-
-The `tdda` repository also includes `rexpy`, a tool for automatically
-inferring regular expressions from a single field of data examples.
-
-*Resources*
------------
-
-Resources on these topics include:
-
-  * TDDA Blog: http://www.tdda.info
-  * Quick Reference Guide ("Cheatsheet"): http://www.tdda.info/pdf/tdda-quickref.pdf
-  * 1-page summary: https://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf
-  * Full documentation: http://tdda.readthedocs.io
-  * General Notes on Constraints and Assertions: http://www.tdda.info/constraints-and-assertions
-  * Notes on using the Pandas constraints library:
-    http://www.tdda.info/constraint-discovery-and-verification-for-pandas-dataframes
-  * PyCon UK Talk on TDDA:
-      - Video: https://www.youtube.com/watch?v=FIw_7aUuY50
-      - Slides and Rough Transcript:   http://www.tdda.info/slides-and-rough-transcript-of-tdda-talk-from-pycon-uk-2016
-
-  * <a rel="me" href="https://mathstodon.xyz/@tdda">Mastodon</a>
-
-
-All examples, tests and code run under Python 2.7, Python 3.5 and Python 3.6.
-
+- Nick Radcliffe
+- Simon Brown
