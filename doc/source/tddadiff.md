@@ -65,7 +65,7 @@
    CSV files. It also exposes some of the extra options provided by
    referencetest's `assertDataFramesEquivalent` and similar methods.
 
-   For example, if we use a pair of csv files that are very similar
+   For example, if we use a pair of CSV files that are very similar
    to the text files we used, with a header line and commas
    instead of spaces between the words (because all the lines have
    six comma-separated values, including two blanks) and use
@@ -193,7 +193,7 @@ Colours can be controlled with `--colours C` (`-c C`) where c is a
 hyphen-separated pair of colour names such as
 `red-blue`, `red-green` etc. The default is `red-green`;
 this can be changed in the configuration file
-(see [Configuration](/configuration)).
+(see [Configuration](configuration.md)).
 
 Monochrome output can be requested with `--mono` (different values in bold,
 shared values dimmed) or `--bw` (different values in bold, shared values
@@ -248,5 +248,5 @@ the default [`tdda diff`](cli.md#tdda-diff) would give:
 
 whereas using the `--vertical`, `--mono` and `--AE` would give:
 
-   ![TDDA Diff Output for a.txt and b.txt with vertical, bw and AE switches](image/tdda-diff-a-b-V-AE.png)
+   ![TDDA Diff Output for a.txt and b.txt with vertical, mono and AE switches](image/tdda-diff-a-b-V-AE.png)
 

@@ -469,6 +469,14 @@ html.writer-html4 .rst-content dl:not(.docutils) > dt, html.writer-html5 .rst-co
     position:relative
 }
 
+/* -- float spacers: invisible del elements used to pad bullet height ------- */
+
+del, s {
+    visibility: hidden;
+    display: block;
+    height: 1em;
+}
+
 /* -- link colours for inline code spans ------------------------------------ */
 
 /* .rst-content code.literal (specificity 0,2,1) beats plain a code (0,0,2)  */

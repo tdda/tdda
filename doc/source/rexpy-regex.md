@@ -10,7 +10,7 @@ If `inputfile` is provided, it should contain one string per line;
 otherwise lines will be read from standard input.
 
 If `outputfile` is provided, regular expressions found will be written
-to that (one per line); otherwise they will be printed.
+to that (one per line); otherwise they will be written to standard output.
 
 Optional `FLAGS` may be used to modify Rexpy's behaviour:
 
@@ -18,7 +18,7 @@ Optional `FLAGS` may be used to modify Rexpy's behaviour:
   Discard first line, as a header.
 
 * `-?`, `--help`  
-  Print this usage information and exit (without error)
+  Print this usage information and exit (without error).
 
 * `-g`, `--group`  
   Generate capture groups for each variable fragment

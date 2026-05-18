@@ -3,10 +3,10 @@
 Various aspects of the behaviour of the TDDA Library can be configured
 by storing settings in a configuration file.
 
-## Location on configuration file
+## Location of configuration file
 
-The configuration files is called `.tdda.toml` in the home directory
-(i.e. `~`/`$HOME` on Unix-like and Linux systems and `%USERPROFILE%`
+The configuration file is called `.tdda.toml` in the home directory
+(i.e. `~` or `$HOME` on Unix-like and Linux systems, including Macs, and `%USERPROFILE%`
 on Windows).
 
 ## Format

@@ -13,7 +13,7 @@
 * **3.0** Extra reporting options for [`tdda discover`](cli.md#tdda-discover) and [`tdda detect`](cli.md#tdda-detect)
   (tables, HTML, Text, Markdown, JSON, YAML, TOML)
 
-* **3.0** `tddaserial`: metadata format for describing flat files
+* **3.0** `tdda.serial`: metadata format for describing flat files
   including:
 
     - Support for writing `pandas.read_csv` arguments
@@ -29,7 +29,7 @@
 
 * **3.0** Configuration file for controlling some behaviours via `.toml` file
 
-* **3.0** Support for grouped regular expressions in [[`rexpy`](cli.md#rexpy)](cli.md#rexpy) and colouring
+* **3.0** Support for grouped regular expressions in [`rexpy`](cli.md#rexpy) and colouring
 
 * **3.0** `nfkt` normalization in `tdda.utils`
 
@@ -91,10 +91,10 @@
 * **2.2** Added partial support for CSVW metadata (for CSV files)
   and some tests and test data in CSVW format.
 
-* **2.2** Extended support for writing temporary files when tests fails
+* **2.2** Extended support for writing temporary files when tests fail
   from strings/text files to dataframes, CSV files and Parquet files.
   This also means that the dataframe methods can now re-write reference
-  results using -W/--write-all etc.
+  results using `-W`/`--write-all` etc.
 
 * **2.2** Renamed some methods and parameters for DataFrame assertions
   and comparisons. In particular:
@@ -102,11 +102,11 @@
     - `assertOnDiskDataFrameCorrect` replaces assertCSVFileCorrect,
       with the path name now being `ref_path` rather than `ref_csv`.
       The old method remains, and calls the new method.
-      The new methods works with parquet files as well as with CSV files.
+      The new method works with parquet files as well as with CSV files.
     - `assertOnDiskDataFramesCorrect` replaces assertCSVFilesCorrect,
       with the path name now being `ref_paths` rather than `ref_csvs`.
       The old method remains, and calls the new method.
-      The new methods works with parquet files as well as with CSV files.
+      The new method works with parquet files as well as with CSV files.
 
 * **2.2** Better reporting of differences between data frames when
   tests fail or comparisons show differences.
@@ -192,7 +192,7 @@
 * Fixed issue with [`tdda test`](cli.md#tdda-test) command not working properly in the
   previous version, to self-test an installation.
 
-* Added new option flag `--interleave` for {ref}`tdda_detect_tool`.
+* Added new option flag `--interleave` for [`tdda detect`](cli.md#tdda-detect).
   This causes the `_ok` detection fields to be interleaved with the original
   fields that they refer to in the resulting detection dataset, rather than
   all appearing together at the far right hand side. This option was actually
@@ -233,7 +233,7 @@
   on lines other than where intended.
 
 * The `tdda.constraints` package is now more resilient against
-  unexpected type mismatches. Previously, if the type didn't match, then
+  unexpected type mismatches. Previously, if the type didn’t match, then
   in some circumstances exceptions would be (incorrectly) raised for other
   constraints, rather than failures.
 

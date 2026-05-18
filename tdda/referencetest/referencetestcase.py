@@ -78,6 +78,47 @@ If run with ``python mytests.py --tagged``, only the tagged tests are
 run (``TestMyClass1.test_a``, ``TestMyClass2.test_x`` and
 ``TestMyClass2.test_y``).
 
+The ``-9`` (or ``--untag``) option removes all ``@tag`` decorators from
+test source files, allowing a clean slate.
+
+Failure Logging and Auto-tagging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Running with ``-F`` (or ``--log-failures``) causes the names of any
+failing or erroring tests to be logged to a file. After the run,
+the ``tdda tag`` command reads that log and adds ``@tag`` decorators
+to the failing tests automatically.
+
+A typical ``unittest``-style workflow for focusing on failures is:
+
+.. code-block:: bash
+
+    python tests.py -9      # Remove any existing @tag decorators
+    python tests.py -F      # Run tests, logging failures
+    tdda tag                # Add @tag to failing tests
+    python tests.py -1      # Run only tagged (failing) tests
+
+When all tests pass, clean up the tags:
+
+.. code-block:: bash
+
+    python tests.py -9
+
+The equivalent workflow with ``pytest``:
+
+.. code-block:: bash
+
+    pytest --untag          # Remove any existing @tag decorators
+    pytest --log-failures   # Run tests, logging failures
+    tdda tag                # Add @tag to failing tests
+    pytest --tagged         # Run only tagged (failing) tests
+
+When all tests pass, clean up the tags:
+
+.. code-block:: bash
+
+    pytest --untag
+
 Regeneration of Results
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -106,9 +147,6 @@ and graph results)
 .. code-block:: bash
 
     python my_tests.py --write table graph
-
-``unittest`` Integration Details
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
 

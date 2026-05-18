@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 __unittest = True
 
 
@@ -38,7 +36,7 @@ def tag(test):
 
 class ReferenceTest(object):
     """Provides support for comparing results against reference
-    "known to be correct" results.
+    “known to be correct” results.
 
     Can be used with:
 
@@ -82,7 +80,7 @@ class ReferenceTest(object):
                   happen is often useful. Default is ``True``.
                 - ``print_fn``: Function to use to display information
                   while running tests. Must have the same signature as
-                  Python's built-in ``print``. Defaults to unbuffered
+                  Python’s built-in ``print``. Defaults to unbuffered
                   output to ``sys.stdout``.
                 - ``tmp_dir``: Directory where temporary files are written.
                   Temporary files are created when a text file check fails

@@ -279,7 +279,7 @@ texinfo_documents = [
 
 
 myst_heading_anchors = 6
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = ["colon_fence", "attrs_inline", "strikethrough"]
 
 
 def setup(app):

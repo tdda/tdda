@@ -1,7 +1,7 @@
 # Gentest: Automatic Test Generation for Unix & Linux Commands/Scripts
 
 Gentest automatically generates tests for shell
-scripts and command-line programs on Unix and Linux.
+scripts and command-line programs on Unix and Linux (including Macs and WSL).
 
 It can currently test
 
@@ -30,13 +30,13 @@ as expected.
 
 The key assumption Gentest makes is that the code you give it is
 running correctly when you run the [`tdda gentest`](cli.md#tdda-gentest) command. The
-tests Gentest creates don't really test that code is *correct*;
-merely that its behaviour is consistent and doesn't generate
+tests Gentest creates don’t really test that code is *correct*;
+merely that its behaviour is consistent and doesn’t generate
 error states. This is what we mean when we talk about *reference
 tests*: test that processes with known, believed correct
 *reference* outputs continue to operate as expected.
 
-"Consistent" doesn't need to mean *identical every time*.
+“Consistent” doesn’t need to mean *identical every time*.
 Gentest runs code more than once, and tries to cater for
 variations it sees and things that look like non-portable
 aspects of your environment.
@@ -150,7 +150,7 @@ display it in the terminal).
 idea to enclose the command in single quotes, and this may be
 necessary if it includes spaces or special characters. If
 the command itself uses single quotes, normal shell rules apply and
-they will need to be escaped. (It's generally easier to use the wizard
+they will need to be escaped. (It’s generally easier to use the wizard
 in such cases.)
 
 `③` Gentest then runs the command we specified a number of times---2 by default.
@@ -178,9 +178,9 @@ looking in the test script) are:
 
 ## The Generated Test Code
 
-We'll walk through the core of the generated test code briefly.
-Obviously, you can look at all of it: it's right there in
-`test_cat_hey.py`, but won't bother with the boilerplate.
+We’ll walk through the core of the generated test code briefly.
+Obviously, you can look at all of it: it’s right there in
+`test_cat_hey.py`, but won’t bother with the boilerplate.
 
 The core of the generated code is a test class (subclassing
 `tdda.ReferenceTestCase`, which inherits from `unittest.TestCase`),
@@ -201,8 +201,8 @@ def setUpClass(cls):
      cls.duration) = exec_command(cls.command, cls.cwd)
 ```
 
-When the code doesn't generate any files that need to be checked,
-there's then a single test for each of the four checks mentioned
+When the code doesn’t generate any files that need to be checked,
+there’s then a single test for each of the four checks mentioned
 above:
 
 * First, there was no exception (in which case, `self.exc` will be `None`):
@@ -219,7 +219,7 @@ above:
       self.assertEqual(self.exit_code, 0)
   ```
 
-* After this, there's a test to check the normal output to `sys.stdout`.
+* After this, there’s a test to check the normal output to `sys.stdout`.
   The reference output has been saved to `./ref/cat_hey/STDOUT`,
   and `self.refdir` is set (further up in the script) to
   `./ref/cat_hey/` (conceptually):
@@ -235,11 +235,11 @@ above:
   literal string, in this case) with the reference output, in the file.
   But the method does more than that, including accepting extra parameters
   to control the comparison, capturing output to file when the strings
-  don't match, and re-writing the reference if so instructed.
+  don’t match, and re-writing the reference if so instructed.
 
 * The last is the counterpart the `stdout` check, this time
   instead checking `stderr`. Since there was no output to
-  stderr, in this case it's actually just checking that there
+  stderr, in this case it’s actually just checking that there
   was no output:
 
   ```python
@@ -251,9 +251,9 @@ above:
 
 ## Test Failures
 
-Let's look at what happens in a few error and test cases.
-Using the same test code as before, let's change the output
-by changing what's in the file `hey`:
+Let’s look at what happens in a few error and test cases.
+Using the same test code as before, let’s change the output
+by changing what’s in the file `hey`:
 
 ```
 $ echo 'Ho, cats!' > hey
@@ -314,11 +314,11 @@ $ diff /var/folders/tx/z752bv1x6qx8swpncq8qg5mm0000gp/T/actual-raw-STDOUT /home/
 ```
 
 Here we can see that the change from Hey to Ho has been picked up.
-(You may see a claim that one of the files doesn't end with a newline;
-that's a bug.)
+(You may see a claim that one of the files doesn’t end with a newline;
+that’s a bug.)
 
 ③ Gentest also suggests a command for comparing post-processed versions of
-output. This isn't relevant in this case, but in cases later (when Gentest
+output. This isn’t relevant in this case, but in cases later (when Gentest
 decides that the output is not completely fixed) where this is useful.
 
 ## Updating the reference outputs if the new behaviour is correct
@@ -386,7 +386,7 @@ update the test with the new results.
 
 ## The Gentest Wizard
 
-To run Gentest's wizard (recommended in most cases), use:
+To run Gentest’s wizard (recommended in most cases), use:
 
 ```
 tdda gentest
@@ -398,7 +398,7 @@ accept by just hitting the `RETURN` (enter) key. The questions will be:
 
 * `Enter shell command to be tested:`<br>
   Here is when you give the full command you want tested,
-  e.g. `sh example2.sh`. You don't need to quote the command,
+  e.g. `sh example2.sh`. You don’t need to quote the command,
   even if it has spaces or special characters, which makes it
   easier if you need quotes in the command or its parameters.
 * `Enter name for test script [test_sh_example2_sh]:`<br>
@@ -413,18 +413,18 @@ accept by just hitting the `RETURN` (enter) key. The questions will be:
   Ordinarily, Gentest will watch to see whether your code
   writes any files in the current directory, or its subdirectories,
   and will use those as *reference* outputs, i.e. treat them
-  as files to be checked. Answer `n` if you don't
+  as files to be checked. Answer `n` if you don’t
   want this to be done.
-* `Check all files written under (gentest's) $TMPDIR?: [y]:`<br>
+* `Check all files written under (gentest’s) $TMPDIR?: [y]:`<br>
   Also by default, gentest will look for any files written to
   `$TMPDIR`, if that shell variable is set, or to the
-  system's temporary directory (usually, `/tmp`), if it is not.
-  Say `n` if you don't want gentest to look at
+  system’s temporary directory (usually, `/tmp`), if it is not.
+  Say `n` if you don’t want gentest to look at
   files written to the temporary directory.
 * `Enter other files/directories to be checked, one per line, then a blank line:`<br>
   You can specify other locations gentest should watch for files.
-  It's best not to make this a very high level directory (especially
-  not `/`, as this will be very slow), but if there's a location
+  It’s best not to make this a very high level directory (especially
+  not `/`, as this will be very slow), but if there’s a location
   your code is writing to, tell Gentest if you would like those files
   checked.
 * `Check stdout?: [y]:`<br>
@@ -433,9 +433,9 @@ accept by just hitting the `RETURN` (enter) key. The questions will be:
   output, which goes to `stdout` (file descriptor `1`)
   and `stderr` (file descriptor `2`),
   which is normally reserved for errors and warnings.
-  If you don't want Gentest to check `stdout`, say `n`.
+  If you don’t want Gentest to check `stdout`, say `n`.
 * `Check stderr?: [y]:`<br>
-  Again, if you don't want the standard error stream to be checked,
+  Again, if you don’t want the standard error stream to be checked,
   say no to this question.
 * `Exit code should be zero?: [y]:`<br>
   All programs on Unix and Linux return an exit status, which is
@@ -469,7 +469,7 @@ accept by just hitting the `RETURN` (enter) key. The questions will be:
 
 ## Example 2: Using the Gentest Wizard
 
-For this example, we'll use Gentest with the following shell script.
+For this example, we’ll use Gentest with the following shell script.
 `example2.sh`, in the current directory:
 
 ```bash
@@ -491,9 +491,9 @@ generate a few directories in the directory you are in, including
 `gentest` which contains this script. Either change to that
 directory or copy `example2.sh` up a level.
 
-We'll use the Gentest wizard, accepting the default suggestions after
-specifying `sh example2.sh` as the command to be tested, except that we'll
-ask gentest to run the script `10` times (for reasons we'll see below):
+We’ll use the Gentest wizard, accepting the default suggestions after
+specifying `sh example2.sh` as the command to be tested, except that we’ll
+ask gentest to run the script `10` times (for reasons we’ll see below):
 
 ```
 $ tdda gentest
@@ -550,8 +550,8 @@ Notice that in this case:
 
 `②` Gentest reports that nine lines were written to stdout when the code was run.
 
-If we run the tests, it's most likely all five tests will pass,
-(though not necessarily always, for reasons we'll discuss below):
+If we run the tests, it’s most likely all five tests will pass,
+(though not necessarily always, for reasons we’ll discuss below):
 
 ```
 $ python test_sh_example2_sh.py
@@ -564,7 +564,7 @@ OK
 
 This time there is one more test than
 [Example 1](#example1), because the script wrote a file (`FILE1`),
-for which there's now a reference test.
+for which there’s now a reference test.
 Additionally, some of the tests are more complex, to account for
 run-to-run variation and dependencies.
 
@@ -601,7 +601,7 @@ from the command.
   because different from run-to-run, but because the test was running
   in the directory `/home/tdda/tmp`. While not certain, it seems
   likely (to `Gentest`; or in less anthropomorphic terms,
-  to Gentest's authors) that this line is going to reflect the
+  to Gentest’s authors) that this line is going to reflect the
   directory in which the code was run, rather than being a hard-wired
   output that is always `/home/tdda/tmp`. If you were using
   Gentest for real, and saw that, and knew that in fact this *is*
@@ -611,8 +611,8 @@ from the command.
 * The second line, `11 Feb 2022 16:47:37` is ignored on two
   grounds. First, depending on how long Gentest took to run, it may
   have been different for different runs among the 10.
-  But even if it wasn't, this is a time within the window of times
-  when the test was run. Again, Gentest "assumes" that this is a current
+  But even if it wasn’t, this is a time within the window of times
+  when the test was run. Again, Gentest “assumes” that this is a current
   timestamp, that will be different if the test is run at different times,
   and indeed, that this time will probably never occur again.
   Of course, this may be wrong. It could be that the code contains
@@ -623,7 +623,7 @@ from the command.
   should of course remove it to force the check.
 * Finally, `tdda.local` is excluded from checking because the
   machine the code was running on reports its hostname as
-  `tdda.local`, so again, Gentest "considers it likely"
+  `tdda.local`, so again, Gentest “considers it likely”
   that this string is host-dependent, rather than fixed.
 
 ### Variable Text Comparisons
@@ -647,7 +647,7 @@ in the range 0 to 32,767.
 This generates two challenges, one of which Gentest rose to fully
 in this case, and the other of which it only partially matched.
 
-The first challenge is simply that output isn't consistent.
+The first challenge is simply that output isn’t consistent.
 Gentest noticed that, and characterized the line using
 a regular expression that describes the line.
 Unlike `ignore_lines`, which ignores whole lines
@@ -665,18 +665,18 @@ of them in fact. But, if we run the test enough times, it will
 fail, when a number under 1,000 is generated.
 Similarly, when you run the code, you might not get `[0-9]{4,5}`
 as the regular expression.
-If you're unlucky, you might get
+If you’re unlucky, you might get
 `[0-9]{5}` (about 2.6% chance if run it 10 times,
 but about a 48% chance if you use the default value of 2).
-Conversely, if you're very lucky, you might get `[0-9]{1,5}`,
+Conversely, if you’re very lucky, you might get `[0-9]{1,5}`,
 in which case it should always pass.
 
-In any case, this illustrates that Gentest's minimal artificial
-intelligence only goes so far, and it's a good idea to look at
+In any case, this illustrates that Gentest’s minimal artificial
+intelligence only goes so far, and it’s a good idea to look at
 the generated tests, and in this case, ideally adapt the
 regular expression to `[0-9]{1,5}`.
 
-If you write this to `fail.sh` (it's also in the gentest examples
+If you write this to `fail.sh` (it’s also in the gentest examples
 directory, if you run `tdda examples`):
 
 ```bash
@@ -710,7 +710,7 @@ Note exclusions:
 Ran 5 tests in 0.017s
 ```
 
-Notice how it's highlighting the `ignore_pattern`. And here's the diff
+Notice how it’s highlighting the `ignore_pattern`. And here’s the diff
 (for the run for the documentation):
 
 ```
@@ -755,7 +755,7 @@ tdda gentest 'Rscript 1-compute-weighted-average-tolerance-values.R' one
   for three taxas and prints them to the screen.
 
 * The `one` is a shorter name to use for the test script.
-  If we don't specify it, a rather long filename, based on a
+  If we don’t specify it, a rather long filename, based on a
   sanitized version of the command, will be used.
   (We could have specified `test_one.py` too, but `one` is enough.)
 
@@ -790,7 +790,7 @@ tdda gentest 'Rscript 1-compute-weighted-average-tolerance-values.R' one
 ### R Example 2: A PDF Plot
 
 The second script from the EPA generates a triptych of graphs.
-The code on the website displays the graphs as a pop-up, but we've
+The code on the website displays the graphs as a pop-up, but we’ve
 modified the code to write the graphs out as a PDF, which is rather
 easier to test.
 
@@ -801,7 +801,7 @@ the last, typing:
 tdda gentest 'Rscript 2-compute-cumulative-percentiles.R' two
 ```
 
-or use Gentest's wizard, by just typing:
+or use Gentest’s wizard, by just typing:
 
 ```
 tdda gentest
@@ -857,11 +857,11 @@ Ran 5 tests in 0.288s
 FAILED (failures=1)
 ```
 
-The reason it may pass or fail is that R's PDF writer writes a timestamp
+The reason it may pass or fail is that R’s PDF writer writes a timestamp
 into the PDF file, accurate to the second. If the timing is such that the
 timestamp is the same, to the second, for each of the two trial runs
 Gentest does by default, it will see two identical PDF files and assume
-they're always the same. But by the time you run the test, the time
+they’re always the same. But by the time you run the test, the time
 will almost certainly be later, and a slightly different PDF will be generated.
 
 In the case in which the trial PDFs were identical, the test code Gentest
@@ -874,7 +874,7 @@ def test_plots2_pdf(self):
 ```
 
 
-If, however, the PDF generation happened at different times during Gentest's
+If, however, the PDF generation happened at different times during Gentest’s
 trial runs, it will see different PDFs and generate a better test:
 
 ```python
@@ -908,7 +908,7 @@ expression shown, which both of these do.
   In fact, the diff command is quite likely to just say that the files are
   binary and differ. This is technically true, though some `diff` tools
   can be persuaded to show the differences anyway.
-  Even if you can't see them, what you can definitely do is open the two files
+  Even if you can’t see them, what you can definitely do is open the two files
   (the diff command includes their full paths) and look at them to see whether
   they look the same. Hopefully they will.
 
@@ -984,7 +984,7 @@ where
 The `FLAGS` (switches, options) available are:
 
 * `-?`, `--?`, `-h`, `--help`  
-  Show Gentest's help message
+  Show Gentest’s help message
 
 * `-m MAX_FILES`, `--max-files MAX_FILES`  
   Maximum number of files for Gentest to track.
@@ -992,7 +992,7 @@ The `FLAGS` (switches, options) available are:
 * `-r`, `--relative-paths`  
   Show relative paths wherever possible
 
-* `-n ITERATIONS`, `--iterations`  
+* `-n N`, `--iterations N`  
   Number of times to run the command (default 2)
 
 * `-O`, `--no-stdout`  

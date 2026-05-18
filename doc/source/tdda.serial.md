@@ -4,8 +4,8 @@ A `.serial` file (also known as a `tdda.serial` file)
 is a JSON file describing the format of one or more
 flat (“CSV”) files. It is the primary metadata format
 used by the `tdda` library, which includes various tools
-for working with `.serial` metadatain the `tdda.serial` module.
-The primary goal of `tdda.serial` is allow data in flat files to be read
+for working with `.serial` metadata in the `tdda.serial` module.
+The primary goal of `tdda.serial` is to allow data in flat files to be read
 more accurately and to serve as documentation of how data
 has been written to flat files.
 
@@ -204,23 +204,23 @@ All dataset-level keys are optional.
   to the library defaults. Applies to all `bool` fields unless
   overridden for a given field.
 
-**`quoting`** *string*
+**`quoting`** *(string)*
 : Specifies which values are quoted
   There is little consistency about which values are quoted in flat files.
   Python's `csv` module defines constants for various options, but fail
   to include one of the most important. The `tdda.serial` format allows
   quoting to be set to any of the values supported by Python `csv` and
-  also to one other common scheme. The values from Python'as `csv` library
+  also to one other common scheme. The values from Python's `csv` library
   are:
 
   - `QUOTE_ALL`: all values are quoted.
-  - `QUOTE_MINIMAL`: Only values that contain special characters.
+  - `QUOTE_MINIMAL`: Only values that contain special characters,
     such as the field delimiter, or literal newlines.
-  - `QUOTE_NONNUMERIC`: All non-numeric values (including nulls) are quored.
+  - `QUOTE_NONNUMERIC`: All non-numeric values (including nulls) are quoted.
   - `QUOTE_NONE`: No values are quoted (escape is used for special
     characters).
   - `QUOTE_NOTNULL`: All non-null values are quoted (including numbers)
-  - `QUOTE_STRINGS`: This is the same as QUOTE_NONUMERIC except that
+  - `QUOTE_STRINGS`: This is the same as QUOTE_NONNUMERIC except that
     null values are not quoted.
 
 The extra value supported by `tdda.serial` is
@@ -358,7 +358,8 @@ the `.serial` has the field entries in the same order as the data file.
 1. ISO8601
 
 ISO8601 is the most widely understood, unproblematical format for
-dates and times and is recommended for new data and date written.
+dates and times and is recommended for new data written with
+dates and datetimes.
 
 This can be specified in tdda serial as follows.
 
@@ -375,7 +376,7 @@ variation in separators, whereas writing is strict.
 The `tdda.serial` format allows date formats to be specified in three
 other ways:
 
-2. Dates can specified using:
+2. Dates can be specified using:
 
     - YYYY for four-digit years
     - YY for two-digit years
@@ -383,8 +384,8 @@ other ways:
     - DD for day
     - HH for hour
     - MM for minute (Same as month! That's OK. Context disambiguates.)
-    - MON for a spelt-out three letter month line Jan
-    - MONTH for a spelt-out full month line January
+    - MON for a spelt-out three letter month like Jan
+    - MONTH for a spelt-out full month like January
     - SS for whole seconds
     - SS.S, SS.SS etc. (any number of S's after period) for fractional seconds.
     - +ZZ:ZZ or +ZZZZ for timezone. (Can use `-` instead of `+`)
@@ -410,12 +411,12 @@ other ways:
     - `MM/DD/YYYY HH:MM:SS`
     - `MM.DD.YY HH:MM:SSAM`
 
-The string will always be standarized to upper case on write, but is
+The string will always be standardized to upper case on write, but is
 case insensitive on read, for `.serial` files. (For `CSVW` files,
-mixed case is used, followings CSVW's conventions).
+mixed case is used, following CSVW's conventions).
 
-3. Any **unambigous** date or datetime in the specified format
-   can be used as a specifier. By unambigous, we mean:
+3. Any **unambiguous** date or datetime in the specified format
+   can be used as a specifier. By unambiguous, we mean:
     - The day is at least 13
     - The year is either four digits or 60 or greater or 00
    So
@@ -451,7 +452,7 @@ mixed case is used, followings CSVW's conventions).
     - ` 01 Dec 22`
     - ` 22 Dec 01`
 
-   are not, because they are ambigous.
+   are not, because they are ambiguous.
 
 When reading `.serial` files the `tdda` library will accept
 any unambiguous date and reject anything it considers ambiguous.
@@ -568,7 +569,7 @@ and the following (starting) `tdda.serial` file:
 %% docdata/docdata.serial
 
 When read correctly in Pandas, this produces (with the nullable backend
-for Pandas to which `tdda.serial` default):
+for Pandas to which `tdda.serial` defaults):
 
 %% docdata/docdata-output.txt
 
@@ -580,7 +581,7 @@ is to use the `csv_to_x` functions.  In its simplest forms,
 
 %% docdata/csv2pandas.py
 
-all do the same thing, reading the flat file `docdata.csv` using the metadata
+all do the same thing, reading the flat file `docdata.txt` using the metadata
 specification in `docdata.serial`. The last two forms are only available when the
 `.serial` file has the same stem name as the flat file.
 
@@ -600,7 +601,7 @@ are the equivalent forms for Polars.
 **NOTE (`polars.read_csv`):**
 Whereas `csv_to_pandas` largely just translates metadata settings
 into arguments for `pandas.read_csv`, the corresponding `polars.read_csv`
-function is less flexible, and there are number of kidns of flat files
+function is less flexible, and there are a number of kinds of flat files
 that it struggles to read accurately. A particular example of this is
 that polars can only read ISO8601-formatted dates and datestamps.
 The `tdda.serial` `csv_to_polars` works around this by instructing
@@ -611,12 +612,12 @@ and then post-processing them to convert them to date or datetime fields.
 
 When a colon is added to the end of a flat file name or path
 to request that `tdda.serial` finds matching metadata,
-and then `find_metadata=True` is passed into relevant API calls,
+and then `find_md=True` is passed into relevant API calls,
 `tdda`'s matching process for a file `foo.ext` is as follows:
 
 1. It first looks for `foo.ext.serial` (in the same directory as `foo.ext`).
 
-2. It first looks for `foo.serial` (in the same directory as `foo.ext`).
+2. It then looks for `foo.serial` (in the same directory as `foo.ext`).
    (This the most common pattern; `foo.ext.serial` is checked first to
    allow matching of metadata when the same stem appears with multiple
    extensions, e.g. `.csv` and `.psv`)
@@ -670,12 +671,12 @@ and then `find_metadata=True` is passed into relevant API calls,
 
 Pandas has three different back ends for storing data.
 Its `original` one uses floating-point columns whenever integer fields
-contain null (`na`) values, and use the object type for strings,
+contain null (`na`) values, and uses the object type for strings,
 as well as for various other things.
 
 More recent versions of Pandas have introduced support for
 nullable integers (e.g. `Int64`) and a proper `string` type.
-This backend is called `nullable_numpy`.
+This backend is called `numpy_nullable`.
 
 Even more recently, Pandas has also added an (Apache) `pyarrow` backend,
 which also has (different) nullable integers and `string` types.
@@ -691,7 +692,7 @@ with values:
  - `n` or `numpy_nullable` for the `numpy_nullable` back end, and
  - `a` or `pyarrow` for the `pyarrow` back end.
 
-The API generally used a `backend` keyword argument on calls to specify
+The API generally uses a `backend` keyword argument on calls to specify
 the backend when appropriate.
 
 
@@ -736,15 +737,15 @@ arguments for `read_csv` methods from Pandas or Polars.
 
 %% docdata/tddaserial1.sh
 
-This command generates stand-alone Python code `docdata.py` containing
+This command generates stand-alone Python code `docdata_pandas.py` containing
 a function for reading flat file in the format specified by `docdata.serial`
 with Pandas, taking the path to the datafile as an argument.
 (Standalone, here, means code that does not require the `tdda` library.)
 
 %% docdata/tddaserial2.sh
 
-This command generates Python code `docdata.py` containing a function
-for reading flat file in the format specified by docdata.serial
+This command generates Python code `docdata_polars.py` containing a function
+for reading flat file in the format specified by `docdata.serial`
 with Polars, taking the path to the datafile as an argument.
 
 The `--for` parameter can be added so that the generated Python
@@ -775,9 +776,9 @@ metadata* is:
 
 %% docdata/pandas2csv1.py
 
-This will write a the Pandas dataframe `df` to `docdata2.csv` using
+This will write the Pandas dataframe `df` to `docdata1pd.csv` using
 `df.to_csv`, with default settings,
-and writing accompanying metadata to `docdata2pd.serial`.
+and writing accompanying metadata to `docdata1pd.serial`.
 
 Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
@@ -817,16 +818,16 @@ used to specify the write format might include:
 
 ### The `polars_to_csv` function
 
-The polars function works in the same was as its Pandas counterpart.
+The polars function works in the same way as its Pandas counterpart.
 
 The simplest form for writing a polars dataframe to CSV *with
 metadata* is:
 
 %% docdata/polars2csv1.py
 
-This will write a the Polars dataframe `df` to `docdata2.csv` using
-`df.to_csv`, with default settings,
-and writing accompanying metadata to `docdata2pd.serial`.
+This will write the Polars dataframe `df` to `docdata1pl.csv` using
+`df.write_csv`, with default settings,
+and writing accompanying metadata to `docdata1pl.serial`.
 
 Specific write formatting parameters can be passed directly to
 `to_csv` as keyword arguments, and these will also, where appropriate,
@@ -893,7 +894,7 @@ Basic usage is as follows:
 %% docdata/inference1.sh
 
 Warnings will be issued in some cases if the inference process has
-sinificant ambiguity, and the process may fail if `tdda.serial` cannot
+significant ambiguity, and the process may fail if `tdda.serial` cannot
 infer the format.
 
 Overrides for most top-level parameters can be provided with switches.
@@ -912,7 +913,7 @@ The available Override switches are:
 : Set field delimiter to `C`
 
 `--quote-char Q`, `--quote Q`
-: Set the quote character to `Q` (normally strigaht single or double quote)
+: Set the quote character to `Q` (normally straight single or double quote)
 
 `--escape`
 : Set the escape character to backslash (no argument)
@@ -1054,7 +1055,7 @@ between any supported formats and (in the case of Pandas, any of the
 ## Custom Sections within `tdda.serial` Files
 
 The primary goals of the `tdda.serial` format are to allow detailed
-specification of flat-file formats and to provide facilites for
+specification of flat-file formats and to provide facilities for
 utilising such specifications for more accurate reading and writing
 of data using (inherently ambiguous) flat-file formats. The `tdda.serial`
 specifications are not written with a single library in mind, and are
@@ -1069,7 +1070,7 @@ strings, booleans, arrays, and dictionaries), they can simply be written
 into a relevant section of a `tdda.serial` file.
 
 For example, we can convert the [Example](#example) `tdda.serial` file
-to ond that contains custom sections for Pandas `read_csv` function
+to one that contains custom sections for Pandas `read_csv` function
 and `DataFrame.to_csv` methods as follows:
 
 %% docdata/converttopd.sh
@@ -1090,7 +1091,7 @@ use different parameter names in some cases.
 
 
 Things are slightly more complicated when the parameters are not naturally
-espressible in JSON, as is the case with Polars types, which are passed
+expressible in JSON, as is the case with Polars types, which are passed
 as `type` objects. In this case, `tdda.serial` converts such objects
 to strings and the `csv_to_polars` method handles this when it uses them.
 
@@ -1104,10 +1105,10 @@ which produces:
 %% docdata/examplepl.serial
 
 Here, `last_seen` set to type `String` (i.e. `polars.String`) because
-Polars will no understand the date format. However, if the Python read
+Polars will not understand the date format. However, if the Python read
 code is generated with
 
-%% docdata/converttopl.sh
+%% docdata/converttoplpy.sh
 
 all is handled:
 

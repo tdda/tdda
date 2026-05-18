@@ -8,7 +8,7 @@ types of output:
     - a CSV file
     - a text file (for example: HTML, JSON, logfiles, graphs, tables, etc)
     - a string
-    - a Pandas DataFrame.
+    - a Pandas or Polars DataFrame.
 
 The main features are:
 
@@ -49,26 +49,15 @@ The main features are:
       wrong or if the intended behaviour has changed.
       Kinds are strings.
 
-Prerequisites
--------------
-
- - :py:mod:`pandas` optional, required for CSV file support, see https://pandas.pydata.org.
- - :py:mod:`pytest` optional, required for tests based on pytest rather than ``unittest``, see https://docs.pytest.org.
-
-These can be installed with::
-
-    pip install pandas
-    pip install pytest
-
 The module provides interfaces for this to be called from unit-tests
 based on either the standard Python :py:mod:`unittest` framework,
 or on :py:mod:`pytest`.
 
 
-Simple Examples
----------------
+Examples
+--------
 
-**Simple unittest example:**
+**Example Using unittest:**
 
 For use with :py:mod:`unittest`, the
 :py:class:`~tdda.referencetest.referencetest.ReferenceTest` API is provided
@@ -121,7 +110,7 @@ the files it has produced in the data output location, to check that
 they are as expected.
 
 
-**Simple pytest example:**
+**Example Using pytest:**
 
 
 For use with :py:mod:`pytest`, the

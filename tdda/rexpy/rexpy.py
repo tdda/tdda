@@ -128,7 +128,7 @@ Optional FLAGS may be used to modify Rexpy's behaviour:
                         e.g.     ^[A-Z]+\-[0-9]+$
                         becomes  "^[A-Z]+\-[0-9]+$"
 
-  --portable        Product maximally portable regular expressions
+  --portable        Produce maximally portable regular expressions
                     (e.g. [0-9] rather than \d). (This is the default.)
 
   --grep            Same as --portable

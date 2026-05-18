@@ -59,8 +59,12 @@ def copy_examples(name, destination='.', verbose=True):
         if verbose:
             print('Downloaded example files for the TDDA Book to %s' % outdir)
     else:
-        os.mkdir(outdir)
-        copy(srcdir, outdir)
+        try:
+            os.makedirs(outdir, exist_ok=True)
+            copy(srcdir, outdir)
+        except OSError as e:
+            print('copyexamples: %s' % e, file=sys.stderr)
+            sys.exit(1)
         if verbose:
             print('Copied example files for tdda.%s to %s' % (name, outdir))
 

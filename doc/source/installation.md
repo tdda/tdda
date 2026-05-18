@@ -1,6 +1,6 @@
 # Installation
 
-If you don't need source, the simplest way to install the TDDA library is
+If you don’t need source, the simplest way to install the TDDA library is
 to do a normal `pip` install:
 
 ```
@@ -18,7 +18,7 @@ replacing `python` with whatever you need to use to run your target
 version of Python.
 
 :::{note}
-If you run as a user who cannot write to the system's site-packages
+If you run as a user who cannot write to the system’s site-packages
 directory, this will install only for the current user. If you want
 `tdda` available for all users, you may need root access and to use
 `sudo pip install tdda`, with the usual caveats that this affects the
@@ -77,8 +77,8 @@ pip install -e .
 ```
 
 :::{note}
-If you see a `pyproject.toml` in the repository and are tempted to run
-`pip install -r pyproject.toml`, don't: that only installs the listed
+If you notice the `pyproject.toml` in the repository and are tempted to run
+`pip install -r pyproject.toml`, don’t: that only installs the listed
 *dependencies*, not `tdda` itself. The `tdda` command-line tools and the
 `tdda` Python package will not be available.
 :::
@@ -163,7 +163,7 @@ To run the test suite:
 tdda test
 ```
 
-Some tests will be skipped if you haven't configured any databases,
+Some tests will be skipped if you haven’t configured any databases,
 which is fine.
 
 
@@ -176,7 +176,7 @@ and verification functionality, depending on the data sources that you
 wish to use.
 
 * `pygresql` (required for PostgreSQL database tables)
-* `MySQL-python` or `mysqlclient` or `mysql-connector-python`
+* `mysql-connector-python` or `mysqlclient`
   (required for MySQL/MariaDB database tables)
 * `pymongo` (required for MongoDB document collections)
 
@@ -191,8 +191,7 @@ pip install pymongo
 and, for MySQL, **one** of:
 
 ```
-pip install MySQL-python
-pip install mysqlclient
 pip install mysql-connector-python
+pip install mysqlclient
 ```
 

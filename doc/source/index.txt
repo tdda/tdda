@@ -52,9 +52,8 @@ The major components of the TDDA module are:
   from (structured) textual data --- ``rexpy``. This was developed
   as part of constraint generation, but has broader utility.
 
-* **Automatic Test Generation:** From version 2.0 on,
-  the TDDA library also includes experimental features for
-  automatically generating tests for almost any command-line based
+* **Automatic Test Generation:** The TDDA library includes
+  the ability to generate tests for almost any command-line based
   program or script. The code to be tested can take the form of a
   shell script or any other command-line code, and can be written
   in any language or mix of languages.
@@ -62,8 +61,8 @@ The major components of the TDDA module are:
 * **Metadata tools for Flat Files:** The ``tdda.serial`` modules
   and ``tdda serial`` command assist with more reliable reading
   and writing of flat files (CSV etc.) using metadata, both in
-  ``tdda``‘s own format, and with the [CSVW](https://csvw.org) (``.csvw``)
-  and [Frictionless](https://frictionlessdata.io) formats.
+  ``tdda``‘s own format, and with the `CSVW <https://csvw.org>`_ (``.csvw``)
+  and `Frictionless <https://frictionlessdata.io>`_ formats.
 
 * **DataFrame Diff utilities:** A new ``tdda diff`` utility allows
   parameterized difference detection between data frames stored in
@@ -73,14 +72,14 @@ The ``tdda`` library serves as a concrete implementation of the ideas
 discussed in:
 
 * `Test-Driven Data Analysis, <https://book.tdda.info>`_
-  by Nicholas J. Radcliffe, CRC Press (book, release date 21 April 2026).
+  by Nicholas J. Radcliffe, CRC Press (book, available from all good booksellers and all sellers of good books).
 * the `Test-Driven Data Analysis
   <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_
   blog.
 
 When installed, the module offers a suite of command-line tools
 that can be used with data from any source, not just Python.  It also
-provides enhanced test methods for Python code, and the new
+provides enhanced test methods for Python code, and the
 *Gentest* functionality enables automatic generation of
 test programs for arbitrary code (not just Python code).  There is
 also a full Python API for all functionality.
@@ -131,8 +130,7 @@ Resources
 * `1-page summary of ideas <http://stochasticsolutions.com/pdf/TDDA-One-Pager.pdf>`_
 * `Quick-reference Guide / Cheat Sheet <http://www.tdda.info/pdf/tdda-quickref.pdf>`_
 * `TDDA Blog <http://www.tdda.info/pages/table-of-contents.html#table-of-contents>`_
-* `Twitter tdda0 <https://twitter.com/tdda0>`_
-* `Slack <https://tdda.slack.com>`_ (mail/DM on twitter for invitation)
+* `Mastodon @tdda@mathstodon.xyz <https://mathstodon.xyz/@tdda>`_
 * `Source Repository (Github) <https://github.com/tdda/tdda>`_
 
 

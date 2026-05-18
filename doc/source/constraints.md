@@ -34,6 +34,7 @@ See {ref}`optional_installations`.
 For a much more detailed tutorial introduction on using TDDA for
 data validation, read chapter 1-7 of [the book](https://book.tdda.info).
 
+![A two part image. Upper image: Stage I: Constraint Generation (cf. training). This shows a grid of training data labelled "believed to be good, with an arrow pointing to a "discover " icon (featuring a light bulb with gears), labelled automatic discovery of constraints. This has a further arrow pointing to a set of field constraints, as JSON, labeled "DISCOVERED CONSTRAINTS" (to be refined by hand). Lower image: Stage II: Data Validation (cf. scoring, inference, deployment, operationalization). Here Operational Data and (previously discovered/edited) constraints are fed into a verification process illustrated with a table with a checkmark. The verification stage has three outputs, a REPORT (document icon), ALERTS (bell icon) and a FAILING DATA table.](image/constraints-process.png)
 
 (tdda_command_line_tool)=
 
@@ -54,7 +55,7 @@ The following command forms are supported for data validation:
 See {ref}`examples` for more detail on the code and data
 examples that are included as part of the `tdda` package.
 
-See {ref}`tests` for more detail on the `tdda` package's own tests,
+See {ref}`tests` for more detail on the `tdda` package’s own tests,
 used to test that the package is installed and configured correctly.
 
 
@@ -242,16 +243,10 @@ on options.
 ## Constraints for CSV Files and Pandas DataFrames
 
 If a flat file (`.csv` or other) is used with the [`tdda`](cli.md#tdda)
-command-line tool, it will by default be processed by the standard Pandas
-`.csv` file reader with the following settings:
-
-* `index_col` is `None`
-* `infer_datetime_format` is `True`
-* `quotechar` is `"`
-* `quoting` is `csv.QUOTE_MINIMAL`
-* `escapechar` is `\` (backslash)
-* `na_values` are the empty string, `"NaN"`, and `"NULL"`
-* `keep_default_na` is `False`
+command-line tool, it will by default be read using
+[`tdda.serial.csv_to_pandas`](serial-api.md), which calls
+`pandas.read_csv` with modified default settings and performs
+date inference itself.
 
 The [`tdda.serial` colon format](serialformat.md#tdda-serial-colon-format)
 can be used to supply metadata describing the flat file, allowing more
@@ -325,7 +320,7 @@ These are:
 
 * For PostgreSQL: `pygresql` or `PyGreSQL`
 
-* For MySQL: `MySQL-python`, `mysqlclient` or `mysql-connector-python`
+* For MySQL: `mysql-connector-python` or `mysqlclient`
 
 * For SQLite: `sqlite3`
 
