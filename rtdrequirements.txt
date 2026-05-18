@@ -1,4 +1,5 @@
 # prerequisites
 -r requirements.txt
 cython
+myst-parser
 sphinx-rtd-theme
