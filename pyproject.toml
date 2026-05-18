@@ -17,7 +17,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">=3.8"
-name = "tddatddatdda"
+name = "tdda"
 authors = [
     { name = "Nick Radcliffe", email = "njr@stochasticsolutions.com" },
     { name = "Simon Brown" },

@@ -54,9 +54,10 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
-
+tdda/man/sphinx
 # PyBuilder
 target/
+doc/source/serialformat.html
 
 #Ipython Notebook
 .ipynb_checkpoints
@@ -78,3 +79,5 @@ privatedata
 *.key
 /Makefile
 
+tdda/serial/examples2
+tdda/serial/torture

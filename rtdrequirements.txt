@@ -1,9 +1,4 @@
 # prerequisites
-pytest
-pandas
+-r requirements.txt
 cython
 sphinx-rtd-theme
-pyyaml
-chardet >= 5.2
-rich >= 13.3
-
