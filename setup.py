@@ -47,6 +47,7 @@ setup(
     version=__version__,
     description='Test Driven Data Analysis',
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     author='Stochastic Solutions Limited',
     author_email='info@StochasticSolutions.com',
     license='MIT',
