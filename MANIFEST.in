@@ -1,3 +1,4 @@
 include README.md
+include llms.txt
 include LICENSE.txt
 include tdda/templates/tdda.css

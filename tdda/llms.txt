@@ -1,0 +1,30 @@
+# Test-Driven Data Analysis (TDDA)
+
+> Python library for constraint discovery and verification, reference
+> testing, and regular expression inference.
+
+## Summary
+
+TDDA provides three primary tools:
+
+1. **tdda.constraints**: Discover data constraints from existing datasets
+   and verify new data against them.
+2. **tdda.referencetest**: Semantic regression testing for text, DataFrames
+   (Pandas/Polars), and binary files.
+3. **tdda.rex**: Automated regular expression inference from data samples.
+
+## Documentation
+
+- [TDDA Documentation](https://tdda.readthedocs.io)
+- [CLI / Man Pages](https://github.com/tdda/tdda/blob/master/doc/source/cli.md) (also as [HTML](https://tdda.readthedocs.io/en/latest/cli.html))
+- [Source Code (GitHub)](https://github.com/tdda/tdda)
+- [Package (PyPI)](https://pypi.org/project/tdda/)
+
+## Book
+
+- [Test-Driven Data Analysis](https://www.routledge.com/Test-Driven-Data-Analysis/Radcliffe/p/book/9781032897158) (Radcliffe, CRC Press, 2026)
+- [Book resources](https://book.tdda.info)
+
+## Guides for LLMs and Coding Agents
+
+- [Reference Testing with TDDA: A Guide for LLMs and Coding Bots](https://tdda.info/md/076-reference-testing-with-tdda-a-guide-for-llms-and-coding-bots.md)
