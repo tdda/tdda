@@ -32,3 +32,4 @@ TDDA provides four primary tools:
 
 - [Reference Testing with TDDA: A Guide for LLMs and Coding Bots](https://tdda.info/md/076-reference-testing-with-tdda-a-guide-for-llms-and-coding-bots.md)
 - [CSV Metadata and tdda.serial: A Guide for LLMs and Coding Agents](https://tdda.info/md/077-csv-metadata-and-tdda-serial-a-guide-for-llms.md)
+- [Data Validation with tdda Constraints: A Guide for LLMs and Coding Agents](https://tdda.info/md/078-data-validation-with-tdda-constraints-a-guide-for-llms.md)

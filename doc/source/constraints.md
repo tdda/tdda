@@ -405,7 +405,7 @@ each included constraint:
     "max_nulls": maximum number of null values allowed,
     "sign": one of positive, negative, non-positive, non-negative,
     "no_duplicates": true if the field values must be unique,
-    "values": list of distinct allowed values,
+    "allowed_values": list of distinct allowed values,
     "rex": list of regular expressions, to cover all cases
 }
 ```
