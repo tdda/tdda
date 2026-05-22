@@ -5,13 +5,16 @@
 
 ## Summary
 
-TDDA provides three primary tools:
+TDDA provides four primary tools:
 
 1. **tdda.constraints**: Discover data constraints from existing datasets
    and verify new data against them.
 2. **tdda.referencetest**: Semantic regression testing for text, DataFrames
    (Pandas/Polars), and binary files.
-3. **tdda.rex**: Automated regular expression inference from data samples.
+3. **tdda.serial**: Metadata-guided reading and writing of CSV and flat files,
+   with companion `.serial` metadata files that record format details
+   (types, nulls, dates, separators) for accurate round-tripping.
+4. **tdda.rexpy**: Automated regular expression inference from data samples.
 
 ## Documentation
 
@@ -28,3 +31,4 @@ TDDA provides three primary tools:
 ## Guides for LLMs and Coding Agents
 
 - [Reference Testing with TDDA: A Guide for LLMs and Coding Bots](https://tdda.info/md/076-reference-testing-with-tdda-a-guide-for-llms-and-coding-bots.md)
+- [CSV Metadata and tdda.serial: A Guide for LLMs and Coding Agents](https://tdda.info/md/077-csv-metadata-and-tdda-serial-a-guide-for-llms.md)
