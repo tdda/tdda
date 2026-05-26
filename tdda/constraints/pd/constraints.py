@@ -739,16 +739,16 @@ def pandas_tdda_type(x):
     dts = str(dt).lower()
     if dt == np.dtype('O'):
         # objects could be either strings or booleans-with-nulls or dates
-        for v in x:
-            if type(v) in (bool, np.bool_):
-                return 'bool'
-            elif type(v) in (str, bytes):
-                return 'string'
-            elif isinstance(v, datetime.datetime):
-                return 'date'
-            elif isinstance(v, datetime.date):
-                return 'date'
-        # if it was all null, there's no way to tell its type, so say string
+        nn = x.dropna()
+        if len(nn) == 0:
+            return 'string'
+        v = nn.iloc[0]
+        if type(v) in (bool, np.bool_):
+            return 'bool'
+        if type(v) in (str, bytes):
+            return 'string'
+        if isinstance(v, (datetime.datetime, datetime.date)):
+            return 'date'
         return 'string'
     if is_categorical_dtype(dt) or dts.startswith('str'):
         return 'string'
