@@ -57,6 +57,7 @@ from tdda.constraints.baseconstraints import (
     MAX_CATEGORIES,
 )
 from tdda.pd.utils import (
+    coltype_is_boolean,
     is_string_col,
     is_string_dtype,
     is_categorical_dtype,
@@ -178,8 +179,12 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         )
 
     def calc_all_non_nulls_boolean(self, colname):
-        nn = self.df[colname].dropna()
-        return all(type(v) is bool for v in nn.to_list())
+        col = self.df[colname]
+        if coltype_is_boolean(col):
+            return True
+        if col.dtype != np.dtype('O'):
+            return False
+        return all(type(v) is bool for v in col.dropna())
 
     # def allowed_values_exclusions(self):
     #     # remarkably, Pandas returns various kinds of nulls as

@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from tdda.pdutils import loosen_pandas_type
+
 pdmaj = int(pd.__version__.split('.')[0])
 pd3 = pdmaj >= 3
 
@@ -46,6 +48,10 @@ def is_string_dtype(dtype):
         or is_categorical_dtype(dtype)
         or str(dtype).startswith('string')  # includes pyarrow
     )
+
+
+def coltype_is_boolean(col):
+    return loosen_pandas_type(col.dtype) == 'bool'
 
 
 def is_string_col(col):
