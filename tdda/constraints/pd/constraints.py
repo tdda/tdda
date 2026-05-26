@@ -66,6 +66,10 @@ from tdda.pd.utils import (
 from tdda.abstractdf import (
     all_non_nulls_boolean,
     calc_nunique,
+    col_max,
+    col_max_length,
+    col_min,
+    col_min_length,
     csv_to_dataframe,
     non_integer_values_count,
     non_null_count,
@@ -125,32 +129,16 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return pandas_types_compatible(x, y, colname=colname)
 
     def calc_min(self, colname):
-        if is_string_col(self.df[colname]):
-            m = self.df[colname].dropna().min()  # Otherwise -inf!
-        else:
-            m = self.df[colname].min()
-        if pandas_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
-            m = m.to_pydatetime(warn=False)
-        elif hasattr(m, 'item'):
-            m = m.item()
-        return m
+        return col_min(self.df[colname])
 
     def calc_max(self, colname):
-        if is_string_col(self.df[colname]):
-            M = self.df[colname].dropna().max()
-        else:
-            M = self.df[colname].max()
-        if pandas_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
-            M = M.to_pydatetime(warn=False)
-        elif hasattr(M, 'item'):
-            M = M.item()
-        return M
+        return col_max(self.df[colname])
 
     def calc_min_length(self, colname):
-        return self.df[colname].str.len().min()
+        return col_min_length(self.df[colname])
 
     def calc_max_length(self, colname):
-        return self.df[colname].str.len().max()
+        return col_max_length(self.df[colname])
 
     def calc_tdda_type(self, colname):
         return tdda_type(self.df[colname])

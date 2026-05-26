@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from tdda.pd.utils import coltype_is_boolean, pandas_tdda_type
+from tdda.pd.utils import coltype_is_boolean, is_string_col, pandas_tdda_type
 from tdda.pl.utils import polars_tdda_type
 from tdda.pdutils import pandas_types_match
 from tdda.plutils import polars_types_match
@@ -338,6 +338,44 @@ def all_non_nulls_boolean(col):
         return all(type(v) is bool for v in col.dropna())
     else:
         return col.dtype == pl.Boolean
+
+
+def col_min(col):
+    if is_pandas_series(col):
+        m = col.dropna().min() if is_string_col(col) else col.min()
+        if pd.isnull(m):
+            return None
+        if pandas_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
+            return m.to_pydatetime(warn=False)
+        return m.item() if hasattr(m, 'item') else m
+    else:
+        return col.min()
+
+
+def col_max(col):
+    if is_pandas_series(col):
+        M = col.dropna().max() if is_string_col(col) else col.max()
+        if pd.isnull(M):
+            return None
+        if pandas_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
+            return M.to_pydatetime(warn=False)
+        return M.item() if hasattr(M, 'item') else M
+    else:
+        return col.max()
+
+
+def col_min_length(col):
+    if is_pandas_series(col):
+        return col.str.len().min()
+    else:
+        return col.str.len_chars().min()
+
+
+def col_max_length(col):
+    if is_pandas_series(col):
+        return col.str.len().max()
+    else:
+        return col.str.len_chars().max()
 
 
 def null_count(col):
