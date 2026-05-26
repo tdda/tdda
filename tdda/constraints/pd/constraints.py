@@ -1209,12 +1209,12 @@ def save_df(df, path, index=False):
         print(default_csv_writer(df, None, index=index))
     else:
         fmt = file_format(path)
-    if fmt == 'parquet':
-        df.to_parquet(path=path, index=False)
-    elif fmt in ('csv', 'psv', 'tsv', 'txt'):
-        default_csv_writer(df, path, index=index)
-    else:
-        raise Exception(f'Unknown output format: {fmt}')
+        if fmt == 'parquet':
+            df.to_parquet(path=path, index=False)
+        elif fmt in ('csv', 'psv', 'tsv', 'txt'):
+            default_csv_writer(df, path, index=index)
+        else:
+            raise Exception(f'Unknown output format: {fmt}')
 
 
 def unique_column_name(df, name):
