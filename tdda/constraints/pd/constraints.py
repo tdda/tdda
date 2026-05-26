@@ -62,7 +62,13 @@ from tdda.pd.utils import (
     is_string_dtype,
     is_categorical_dtype,
 )
-from tdda.abstractdf import csv_to_dataframe
+from tdda.abstractdf import (
+    calc_nunique,
+    csv_to_dataframe,
+    non_integer_values_count,
+    non_null_count,
+    null_count,
+)
 
 
 from tdda.referencetest.checkpandas import (
@@ -153,13 +159,13 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return pandas_tdda_type(self.df[colname])
 
     def calc_null_count(self, colname):
-        return int(len(self.df) - self.df[colname].count())
+        return null_count(self.df[colname])
 
     def calc_non_null_count(self, colname):
-        return int(len(self.df) - self.calc_null_count(colname))
+        return non_null_count(self.df[colname])
 
     def calc_nunique(self, colname):
-        return int(self.df[colname].nunique())
+        return int(calc_nunique(self.df[colname]))
 
     def calc_unique_values(self, colname, include_nulls=True):
         values = self.df[colname].unique()
@@ -171,11 +177,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return nullvalues + sorted(v for v in values if not pd.isnull(v))
 
     def calc_non_integer_values_count(self, colname):
-        values = self.df[colname].dropna()
-        non_nulls = self.df[colname].count()
-        return int(
-            non_nulls - (values.astype(int) == values).astype(int).sum()
-        )
+        return non_integer_values_count(self.df[colname])
 
     def calc_all_non_nulls_boolean(self, colname):
         col = self.df[colname]

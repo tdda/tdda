@@ -314,6 +314,29 @@ def calc_nunique(col):
     return col.nunique() if is_pandas_series(col) else col.n_unique()
 
 
+def null_count(col):
+    if is_pandas_series(col):
+        return int(col.isnull().sum())
+    else:
+        return col.null_count()
+
+
+def non_null_count(col):
+    if is_pandas_series(col):
+        return int(col.count())
+    else:
+        return len(col) - col.null_count()
+
+
+def non_integer_values_count(col):
+    if is_pandas_series(col):
+        nn = col.dropna()
+        return int(len(nn) - (nn.astype(int) == nn).astype(int).sum())
+    else:
+        nn = col.drop_nulls()
+        return int((nn.cast(pl.Int64).cast(nn.dtype) != nn).sum())
+
+
 def get_engine_and_backend(engine=None, backend=None, config=None):
     config = get_config(config)
     return config.get('engine', engine), config.get('pandas_backend', backend)
