@@ -1304,7 +1304,6 @@ class Verification(object):
         ]
         rows = []
         htmlrows = []
-        any_rex = False
         constraint_fields = constraints['fields']
         for field, fc in constraint_fields.items():
             fail_details = fails['_field_stats'].get(field)
@@ -1362,7 +1361,6 @@ class Verification(object):
                                 coloured_tick_cross(not cfail),
                             ]
                         )
-                        any_rex = True
                     else:
                         htmlrow.extend(
                             [
@@ -1602,7 +1600,7 @@ def verify(
         # so that we can get an early error if the file isn't writable,
         # and so that we don't leave a bogus wrong file in place if
         # we turn out not to detect anything.
-        with open(outpath, 'w') as f:
+        with open(outpath, 'w') as _:
             pass
         os.remove(outpath)
 
@@ -1923,7 +1921,6 @@ def write_html_detect_report(d, outpath, config, table=None):
     """
     Writes a human-readable textual report on detection failures
     """
-    indent = '  '
     ffv = config.format_failure_values
     xml = XML(
         html=True,
@@ -1952,11 +1949,13 @@ def write_html_detect_report(d, outpath, config, table=None):
             xml.WriteElement('code', value)
             xml.CloseElement('li')
 
-            is_rex = constraint == 'rex'
-            label = f'Constraint: {constraint}: '
-            fval = config.format_constraint_value(
-                value, len(label), 4, rex=is_rex
-            )
+            # TODO: Can probably go. Confirm HTML is correct,
+            # including for rex constraints
+            # is_rex = constraint == 'rex'
+            # label = f'Constraint: {constraint}: '
+            # fval = config.format_constraint_value(
+            #     value, len(label), 4, rex=is_rex
+            # )
 
             nf = results['n_failures']
             n = nf + results['n_passes']

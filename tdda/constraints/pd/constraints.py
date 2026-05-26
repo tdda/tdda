@@ -407,7 +407,6 @@ class PandasConstraintDetector(BaseConstraintDetector):
         #                 self.interleave(self.df, orig_fields, nfailname)
 
         if outpath:
-            index_is_trivial = is_pd_index_trivial(out_df)
             if output_is_typed:
                 df_to_save = out_df
             else:

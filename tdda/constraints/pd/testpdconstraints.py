@@ -1299,7 +1299,7 @@ class TestPandasDataFrameConstraints(ReferenceTestCase):
             constraints = DatasetConstraints()
             with self.assertRaises(Exception):
                 constraints.initialize_from_dict(unicode_definite(cdict))
-                v = verify(df, cdict, repair=False)
+                _v = verify(df, cdict, repair=False)
 
 
 class TestPandasExampleAccountsData(ReferenceTestCase):
@@ -1311,7 +1311,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts1k.csv:')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover(
+        _c = discover(
             csv_path,
             constraints_path=tddafile1k,
             backend='original',
@@ -1337,7 +1337,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         pq_path = os.path.join(TESTDATADIR, 'accounts1k.parquet')
         tddafile1k = os.path.join(self.tmp_dir, 'accounts1kgen.tdda')
         reftddafile1k = os.path.join(TESTDATADIR, 'ref-accounts1k.tdda')
-        c = discover(pq_path, constraints_path=tddafile1k, verbose=False)
+        _c = discover(pq_path, constraints_path=tddafile1k, verbose=False)
         self.assertTextFileCorrect(
             tddafile1k,
             reftddafile1k,
@@ -1514,7 +1514,7 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         csv_path = os.path.join(TESTDATADIR, 'accounts25k.csv:')
         tddafile = os.path.join(self.tmp_dir, 'accounts25kgen.tdda')
         reftddafile = os.path.join(TESTDATADIR, 'ref-accounts25k.tdda')
-        c = discover(
+        _c = discover(
             csv_path,
             constraints_path=tddafile,
             backend='original',
