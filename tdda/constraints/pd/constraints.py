@@ -31,10 +31,7 @@ import sys
 
 from collections import OrderedDict
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 import numpy as np
 import pandas as pd
@@ -244,11 +241,6 @@ class PandasConstraintDetector(BaseConstraintDetector):
         else:
             self.date_cols = []
             self.out_df = None
-
-    def remove_if_exists(self, name):
-        if name in self.out_df:
-            del self.df[name]
-        warn(f'Updating old field {name}.')
 
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'min')
