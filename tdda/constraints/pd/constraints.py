@@ -61,13 +61,16 @@ from tdda.pd.utils import (
     is_string_col,
     is_string_dtype,
     is_categorical_dtype,
+    pandas_tdda_type,
 )
 from tdda.abstractdf import (
+    all_non_nulls_boolean,
     calc_nunique,
     csv_to_dataframe,
     non_integer_values_count,
     non_null_count,
     null_count,
+    tdda_type,
 )
 
 
@@ -92,12 +95,6 @@ from tdda.utils import (
     warn,
     json_sanitize,
 )
-
-# pd.tslib is deprecated in newer versions of Pandas
-if hasattr(pd, 'Timestamp'):
-    pandas_Timestamp = pd.Timestamp
-else:
-    pandas_Timestamp = pd.tslib.Timestamp
 
 DEBUG = False
 RE_FLAGS = re.UNICODE | re.DOTALL
@@ -156,7 +153,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return self.df[colname].str.len().max()
 
     def calc_tdda_type(self, colname):
-        return pandas_tdda_type(self.df[colname])
+        return tdda_type(self.df[colname])
 
     def calc_null_count(self, colname):
         return null_count(self.df[colname])
@@ -180,12 +177,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return non_integer_values_count(self.df[colname])
 
     def calc_all_non_nulls_boolean(self, colname):
-        col = self.df[colname]
-        if coltype_is_boolean(col):
-            return True
-        if col.dtype != np.dtype('O'):
-            return False
-        return all(type(v) is bool for v in col.dropna())
+        return all_non_nulls_boolean(self.df[colname])
 
     # def allowed_values_exclusions(self):
     #     # remarkably, Pandas returns various kinds of nulls as
@@ -723,59 +715,6 @@ def pandas_coarse_type(x):
     """
     t = pandas_tdda_type(x)
     return 'number' if t in ('bool', 'int', 'real') else t
-
-
-def pandas_tdda_type(x):
-    """
-    Returns the TDDA type of a column.
-
-    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
-
-    If *x* is ``None`` or something Pandas classes as null, 'null' is returned.
-
-    If *x* is not recognized as one of these, 'other' is returned.
-    """
-    if isinstance(x, str):
-        return 'string'
-    dt = getattr(x, 'dtype', None)
-    dts = str(dt).lower()
-    if dt == np.dtype('O'):
-        # objects could be either strings or booleans-with-nulls or dates
-        nn = x.dropna()
-        if len(nn) == 0:
-            return 'string'
-        v = nn.iloc[0]
-        if type(v) in (bool, np.bool_):
-            return 'bool'
-        if type(v) in (str, bytes):
-            return 'string'
-        if isinstance(v, (datetime.datetime, datetime.date)):
-            return 'date'
-        return 'string'
-    if is_categorical_dtype(dt) or dts.startswith('str'):
-        return 'string'
-    if isinstance(x, bool) or 'bool' in dts:
-        return 'bool'
-    if isinstance(x, int) or 'int' in dts:
-        return 'int'
-    if isinstance(x, float) or 'float' in dts or 'double' in dts:
-        return 'real'
-    if (
-        'date' in dts
-        or isinstance(x, datetime.datetime)
-        or isinstance(x, datetime.date)
-        or isinstance(x, pandas_Timestamp)
-    ):
-        return 'date'
-    if x is None:
-        return 'null'
-    null = pd.isnull(x)
-    if hasattr(null, 'size'):
-        null = False  # pd.isnull returned an array
-    if not isinstance(x, pd.core.series.Series) and null:
-        return 'null'
-    # Everything else is other, for now, including compound types,
-    return 'other'
 
 
 def verify_df(

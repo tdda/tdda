@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 import pandas as pd
 
@@ -52,6 +54,55 @@ def is_string_dtype(dtype):
 
 def coltype_is_boolean(col):
     return loosen_pandas_type(col.dtype) == 'bool'
+
+
+def pandas_tdda_type(x):
+    """
+    Returns the TDDA type of a pandas column or scalar value.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+    Returns 'null' for None or pandas null values, 'other' if unrecognized.
+    """
+    if isinstance(x, str):
+        return 'string'
+    dt = getattr(x, 'dtype', None)
+    dts = str(dt).lower()
+    if dt == np.dtype('O'):
+        # objects could be either strings or booleans-with-nulls or dates
+        nn = x.dropna()
+        if len(nn) == 0:
+            return 'string'
+        v = nn.iloc[0]
+        if type(v) in (bool, np.bool_):
+            return 'bool'
+        if type(v) in (str, bytes):
+            return 'string'
+        if isinstance(v, (datetime.datetime, datetime.date)):
+            return 'date'
+        return 'string'
+    if is_categorical_dtype(dt) or dts.startswith('str'):
+        return 'string'
+    if isinstance(x, bool) or 'bool' in dts:
+        return 'bool'
+    if isinstance(x, int) or 'int' in dts:
+        return 'int'
+    if isinstance(x, float) or 'float' in dts or 'double' in dts:
+        return 'real'
+    if (
+        'date' in dts
+        or isinstance(x, datetime.datetime)
+        or isinstance(x, datetime.date)
+        or isinstance(x, pd.Timestamp)
+    ):
+        return 'date'
+    if x is None:
+        return 'null'
+    null = pd.isnull(x)
+    if hasattr(null, 'size'):
+        null = False  # pd.isnull returned an array
+    if not isinstance(x, pd.core.series.Series) and null:
+        return 'null'
+    return 'other'
 
 
 def is_string_col(col):

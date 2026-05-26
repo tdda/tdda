@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
+from tdda.pd.utils import coltype_is_boolean, pandas_tdda_type
+from tdda.pl.utils import polars_tdda_type
 from tdda.pdutils import pandas_types_match
 from tdda.plutils import polars_types_match
 from tdda.state import get_config
@@ -312,6 +314,30 @@ def df_group_count(df, keys):
 
 def calc_nunique(col):
     return col.nunique() if is_pandas_series(col) else col.n_unique()
+
+
+def tdda_type(col):
+    """
+    Returns the TDDA type of a pandas or polars column.
+    """
+    if is_pandas_series(col):
+        return pandas_tdda_type(col)
+    else:
+        return polars_tdda_type(col)
+
+
+def all_non_nulls_boolean(col):
+    """
+    Returns True if all non-null values in col are boolean.
+    """
+    if is_pandas_series(col):
+        if coltype_is_boolean(col):
+            return True
+        if col.dtype != np.dtype('O'):
+            return False
+        return all(type(v) is bool for v in col.dropna())
+    else:
+        return col.dtype == pl.Boolean
 
 
 def null_count(col):
