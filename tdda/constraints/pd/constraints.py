@@ -733,7 +733,7 @@ def pandas_tdda_type(x):
 
     If *x* is not recognized as one of these, 'other' is returned.
     """
-    if type(x) == str:
+    if isinstance(x, str):
         return 'string'
     dt = getattr(x, 'dtype', None)
     dts = str(dt).lower()
@@ -752,11 +752,11 @@ def pandas_tdda_type(x):
         return 'string'
     if is_categorical_dtype(dt) or dts.startswith('str'):
         return 'string'
-    if type(x) == bool or 'bool' in dts:
+    if isinstance(x, bool) or 'bool' in dts:
         return 'bool'
-    if type(x) is int or 'int' in dts:
+    if isinstance(x, int) or 'int' in dts:
         return 'int'
-    if type(x) == float or 'float' in dts or 'double' in dts:
+    if isinstance(x, float) or 'float' in dts or 'double' in dts:
         return 'real'
     if (
         'date' in dts
