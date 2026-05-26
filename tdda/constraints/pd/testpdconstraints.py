@@ -233,7 +233,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                     self.assertFalse(pdc.pandas_types_compatible(Y[0], X[0]))
 
     def test_fuzzy_less_than_zero(self):
-        verifier = pdc.PandasConstraintVerifier(df=None)
         epsilon = 0.01
         for x in NEG_REALS:
             self.assertTrue(fuzzy_less_than(x, 0.0, epsilon))
@@ -284,7 +283,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             (-0.98999e-100, -1.0e-100),
         )
 
-        cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(MILLION + 10000 + SMALL, MILLION + 10000)
         epsilon = 0.01
         for x, y in goods + bad_goods:
@@ -293,7 +291,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             self.assertFalse(fuzzy_less_than(x, y, epsilon))
 
     def test_fuzzy_greater_than_zero(self):
-        cvt = ConstraintVerificationTester(self, df=None)
         epsilon = 0.01
         for x in POS_REALS:
             self.assertTrue(fuzzy_greater_than(x, 0.0, epsilon))
@@ -340,7 +337,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             (-MILLION - 10000.0000000001, -MILLION),
             (-1.0100001e-100, -1.0e-100),
         )
-        cvt = ConstraintVerificationTester(self, df=None)
         self.assertEqual(999900 - SMALL, 999900)
         epsilon = 0.01
         for x, y in goods + bad_goods:
@@ -606,7 +602,6 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
             self, df, type_checking='sloppy'
         )
         for col, value, strictness in goods:
-            cvt = strict_cvt if strictness == 'strict' else sloppy_cvt
             c = TypeConstraint(value)
             if strictness == 'strict':
                 strict_cvt.verify_tdda_type_constraint(col, c).isTrue()
@@ -1442,7 +1437,6 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
 
         passingConstraints = 54
         failingConstraints = 21
-        expected = (passingConstraints, failingConstraints)
 
         self.assertEqual(v.passes, passingConstraints)
         self.assertEqual(v.failures, failingConstraints)
@@ -1498,12 +1492,6 @@ class TestPandasExampleAccountsData(ReferenceTestCase):
         failingConstraints = 21
         passingRecords = 23373
         failingRecords = 1627
-        expected = (
-            passingConstraints,
-            failingConstraints,
-            passingRecords,
-            failingRecords,
-        )
         self.assertEqual(v.passes, passingConstraints)
         self.assertEqual(v.failures, failingConstraints)
         self.assertEqual(v.detection.n_passing_records, passingRecords)

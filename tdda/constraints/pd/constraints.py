@@ -302,20 +302,19 @@ class PandasConstraintDetector(BaseConstraintDetector):
         name = verification_field(colname, 'sign')
         c = self.df[colname]
 
-        if pandas_coarse_type(c) != 'number':
-            result = False
-        elif value == 'null':
-            self.out_df[name] = False
-        elif value == 'positive':
-            self.out_df[name] = detection_field(c, c > 0)
-        elif value == 'non-negative':
-            self.out_df[name] = detection_field(c, c >= 0)
-        elif value == 'zero':
-            self.out_df[name] = detection_field(c, c == 0)
-        elif value == 'non-positive':
-            self.out_df[name] = detection_field(c, c <= 0)
-        elif value == 'negative':
-            self.out_df[name] = detection_field(c, c < 0)
+        if pandas_coarse_type(c) == 'number':
+            if value == 'null':
+                self.out_df[name] = False
+            elif value == 'positive':
+                self.out_df[name] = detection_field(c, c > 0)
+            elif value == 'non-negative':
+                self.out_df[name] = detection_field(c, c >= 0)
+            elif value == 'zero':
+                self.out_df[name] = detection_field(c, c == 0)
+            elif value == 'non-positive':
+                self.out_df[name] = detection_field(c, c <= 0)
+            elif value == 'negative':
+                self.out_df[name] = detection_field(c, c < 0)
 
     def detect_max_nulls_constraint(self, colname, value):
         # found more nulls than are allowed, so mark all null values as bad
@@ -1197,9 +1196,8 @@ def load_df(path, md_path=None, find_md=False, backend=None, config=None):
     backend = get_backend(backend, config)
     if isinstance(path, StringIO):  # stream
         return default_csv_loader(path)
-    exists = os.path.exists(os.path.expanduser(path))
     stem, ext = os.path.splitext(path)
-    lcstem, ext = stem.lower(), ext.lower()
+    ext = ext.lower()
 
     path = handle_tilde(path)
 

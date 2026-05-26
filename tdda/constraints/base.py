@@ -509,7 +509,6 @@ class DatasetConstraints(object):
                 if c is None and kind in ('min', 'max'):
                     c = field.constraints.get(kind + '_length', None)
                 if c is not None:
-                    v = c.value
                     row.append(constraint_val(c.value, kind))
                     if kind == 'rex':
                         htmlrow.append(colour_regexes(c.value))
@@ -1172,14 +1171,11 @@ class Verification(object):
         """
         ascii = nvl(ascii, self.ascii)
         colour = nvl(colour, self.colour)
-        n_fields = len(self.fields)
         failing_field_items = list(
             (field, ver)
             for (field, ver) in self.fields.items()
             if ver.failures > 0
         )
-
-        n_fields_with_failures = len(failing_field_items)
         if self.report in ('fields', 'records'):
             # Report only fields with failures
             field_items = failing_field_items
@@ -1569,7 +1565,6 @@ def verify(
     config = get_config(config)
     results = VerificationClass(constraints, config=config, **kwargs)
     outpath = kwargs.get('outpath')
-    report_path = kwargs.get('reportpath')
     detect = (
         outpath is not None
         or kwargs.get('detect') is not None
