@@ -1250,7 +1250,7 @@ def convert_output_types(df, int_bools):
     trueval = '1' if int_bools else 'true'
     falseval = '0' if int_bools else 'false'
     pandas_true_values = (True, np.bool_(True))
-    pandas_false_values = (True, np.bool_(False))
+    pandas_false_values = (False, np.bool_(False))
     for col in list(df):
         c = df[col]
         if c.dtype in (np.dtype('O'), np.dtype(bool)):
