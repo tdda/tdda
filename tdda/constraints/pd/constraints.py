@@ -164,12 +164,11 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
     def calc_unique_values(self, colname, include_nulls=True):
         values = self.df[colname].unique()
         nullvalues = (
-            [v for v in self.df[colname].unique() if pd.isnull(v)]
+            [v for v in values if pd.isnull(v)]
             if include_nulls
             else []
         )
-        nonnullvalues = [v for v in values if not pd.isnull(v)]
-        return nullvalues + sorted(nonnullvalues)
+        return nullvalues + sorted(v for v in values if not pd.isnull(v))
 
     def calc_non_integer_values_count(self, colname):
         values = self.df[colname].dropna()
