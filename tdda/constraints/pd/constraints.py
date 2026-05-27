@@ -70,6 +70,7 @@ from tdda.abstractdf import (
     col_max_length,
     col_min,
     col_min_length,
+    col_names,
     csv_to_dataframe,
     non_integer_values_count,
     non_null_count,
@@ -120,7 +121,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return pd.to_datetime(value)
 
     def get_column_names(self):
-        return list(self.df)
+        return col_names(self.df)
 
     def get_nrecords(self):
         return len(self.df)
