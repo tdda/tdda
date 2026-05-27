@@ -56,20 +56,18 @@ def coltype_is_boolean(col):
     return loosen_pandas_type(col.dtype) == 'bool'
 
 
-def pandas_tdda_type(x):
+def pandas_col_to_tdda_type(col):
     """
-    Returns the TDDA type of a pandas column or scalar value.
+    Returns the TDDA type of a pandas Series (column).
 
     Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
-    Returns 'null' for None or pandas null values, 'other' if unrecognized.
+    Returns 'other' if unrecognized.
     """
-    if isinstance(x, str):
-        return 'string'
-    dt = getattr(x, 'dtype', None)
+    dt = col.dtype
     dts = str(dt).lower()
     if dt == np.dtype('O'):
-        # objects could be either strings or booleans-with-nulls or dates
-        nn = x.dropna()
+        # objects could be strings, booleans-with-nulls, or dates
+        nn = col.dropna()
         if len(nn) == 0:
             return 'string'
         v = nn.iloc[0]
@@ -82,26 +80,14 @@ def pandas_tdda_type(x):
         return 'string'
     if is_categorical_dtype(dt) or dts.startswith('str'):
         return 'string'
-    if isinstance(x, bool) or 'bool' in dts:
+    if 'bool' in dts:
         return 'bool'
-    if isinstance(x, int) or 'int' in dts:
+    if 'int' in dts:
         return 'int'
-    if isinstance(x, float) or 'float' in dts or 'double' in dts:
+    if 'float' in dts or 'double' in dts:
         return 'real'
-    if (
-        'date' in dts
-        or isinstance(x, datetime.datetime)
-        or isinstance(x, datetime.date)
-        or isinstance(x, pd.Timestamp)
-    ):
+    if 'date' in dts:
         return 'date'
-    if x is None:
-        return 'null'
-    null = pd.isnull(x)
-    if hasattr(null, 'size'):
-        null = False  # pd.isnull returned an array
-    if not isinstance(x, pd.core.series.Series) and null:
-        return 'null'
     return 'other'
 
 

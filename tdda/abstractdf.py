@@ -1,11 +1,12 @@
+import datetime
 import inspect
 
 import numpy as np
 import pandas as pd
 import polars as pl
 
-from tdda.pd.utils import coltype_is_boolean, is_string_col, pandas_tdda_type
-from tdda.pl.utils import polars_tdda_type
+from tdda.pd.utils import coltype_is_boolean, is_string_col, pandas_col_to_tdda_type
+from tdda.pl.utils import polars_col_to_tdda_type
 from tdda.pdutils import pandas_types_match
 from tdda.plutils import polars_types_match
 from tdda.state import get_config
@@ -329,14 +330,44 @@ def filter_out_nulls(values):
     return {v for v in values if not pd.isnull(v)}
 
 
-def tdda_type(col):
+def scalar_to_tdda_type(x):
+    """
+    Returns the TDDA type of a scalar value.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+    Returns 'null' for None or null values, 'other' if unrecognized.
+    """
+    if isinstance(x, (bool, np.bool_)):
+        return 'bool'
+    if isinstance(x, str):
+        return 'string'
+    if isinstance(x, (int, np.integer)):
+        return 'int'
+    if isinstance(x, (float, np.floating)):
+        return 'real'
+    if isinstance(x, (datetime.datetime, datetime.date, pd.Timestamp)):
+        return 'date'
+    if x is None:
+        return 'null'
+    null = pd.isnull(x)
+    if hasattr(null, '__len__'):
+        return 'other'
+    if null:
+        return 'null'
+    return 'other'
+
+
+def col_to_tdda_type(col):
     """
     Returns the TDDA type of a pandas or polars column.
     """
     if is_pandas_series(col):
-        return pandas_tdda_type(col)
+        return pandas_col_to_tdda_type(col)
     else:
-        return polars_tdda_type(col)
+        return polars_col_to_tdda_type(col)
+
+
+tdda_type = col_to_tdda_type  # backwards-compatible alias
 
 
 def all_non_nulls_boolean(col):
@@ -358,7 +389,7 @@ def col_min(col):
         m = col.dropna().min() if is_string_col(col) else col.min()
         if pd.isnull(m):
             return None
-        if pandas_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
+        if scalar_to_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
             return m.to_pydatetime(warn=False)
         return m.item() if hasattr(m, 'item') else m
     else:
@@ -370,7 +401,7 @@ def col_max(col):
         M = col.dropna().max() if is_string_col(col) else col.max()
         if pd.isnull(M):
             return None
-        if pandas_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
+        if scalar_to_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
             return M.to_pydatetime(warn=False)
         return M.item() if hasattr(M, 'item') else M
     else:

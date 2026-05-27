@@ -1,7 +1,7 @@
 import polars as pl
 
 
-def polars_tdda_type(col):
+def polars_col_to_tdda_type(col):
     """
     Returns the TDDA type of a Polars column.
 

@@ -61,7 +61,6 @@ from tdda.pd.utils import (
     is_string_col,
     is_string_dtype,
     is_categorical_dtype,
-    pandas_tdda_type,
 )
 from tdda.abstractdf import (
     all_non_nulls_boolean,
@@ -71,11 +70,13 @@ from tdda.abstractdf import (
     col_min,
     col_min_length,
     col_names,
+    col_to_tdda_type,
     csv_to_dataframe,
     filter_out_nulls,
     non_integer_values_count,
     non_null_count,
     null_count,
+    scalar_to_tdda_type,
     tdda_type,
     unique_values,
 )
@@ -693,13 +694,16 @@ def pandas_types_compatible(x, y, colname=None):
 
 def pandas_coarse_type(x):
     """
-    Returns the TDDA coarse type of *x*, a scalar value.
+    Returns the TDDA coarse type of *x*, a scalar or column value.
     The coarse types combine ``bool``, ``int`` and ``real`` into ``number``.
 
     Obviously, some people will dislike treating booleans as numbers.
     But it is necessary here.
     """
-    t = pandas_tdda_type(x)
+    if isinstance(x, pd.core.series.Series):
+        t = col_to_tdda_type(x)
+    else:
+        t = scalar_to_tdda_type(x)
     return 'number' if t in ('bool', 'int', 'real') else t
 
 
