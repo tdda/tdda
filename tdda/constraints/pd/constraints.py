@@ -72,10 +72,12 @@ from tdda.abstractdf import (
     col_min_length,
     col_names,
     csv_to_dataframe,
+    filter_out_nulls,
     non_integer_values_count,
     non_null_count,
     null_count,
     tdda_type,
+    unique_values,
 )
 
 
@@ -154,13 +156,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         return int(calc_nunique(self.df[colname]))
 
     def calc_unique_values(self, colname, include_nulls=True):
-        values = self.df[colname].unique()
-        nullvalues = (
-            [v for v in values if pd.isnull(v)]
-            if include_nulls
-            else []
-        )
-        return nullvalues + sorted(v for v in values if not pd.isnull(v))
+        return unique_values(self.df[colname], include_nulls=include_nulls)
 
     def calc_non_integer_values_count(self, colname):
         return non_integer_values_count(self.df[colname])
@@ -174,7 +170,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
     #     return [None, np.nan, pd.NaT, pd.NA, float('nan')]
 
     def filter_out_nulls(self, values):
-        return {v for v in values if not pd.isnull(v)}
+        return filter_out_nulls(values)
 
     def find_rexes(self, colname, values=None, seed=None):
         if values is None:

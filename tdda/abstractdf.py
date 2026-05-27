@@ -316,6 +316,19 @@ def calc_nunique(col):
     return col.nunique() if is_pandas_series(col) else col.n_unique()
 
 
+def unique_values(col, include_nulls=True):
+    if is_pandas_series(col):
+        values = col.unique()
+    else:
+        values = col.unique().to_list()
+    nullvalues = [v for v in values if pd.isnull(v)] if include_nulls else []
+    return nullvalues + sorted(v for v in values if not pd.isnull(v))
+
+
+def filter_out_nulls(values):
+    return {v for v in values if not pd.isnull(v)}
+
+
 def tdda_type(col):
     """
     Returns the TDDA type of a pandas or polars column.
