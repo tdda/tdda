@@ -73,6 +73,7 @@ from tdda.abstractdf import (
     col_to_tdda_type,
     csv_to_dataframe,
     filter_out_nulls,
+    is_null,
     non_integer_values_count,
     non_null_count,
     null_count,
@@ -118,7 +119,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
         self.df = df
 
     def is_null(self, value):
-        return pd.isnull(value)
+        return is_null(value)
 
     def to_datetime(self, value):
         return pd.to_datetime(value)

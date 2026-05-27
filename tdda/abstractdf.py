@@ -330,6 +330,10 @@ def filter_out_nulls(values):
     return {v for v in values if not pd.isnull(v)}
 
 
+def is_null(value):
+    return pd.isnull(value)
+
+
 def scalar_to_tdda_type(x):
     """
     Returns the TDDA type of a scalar value.
