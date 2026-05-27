@@ -186,7 +186,8 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             # so is always satisfied
         rexes = [re.compile(r, RE_FLAGS) for r in rexes]
         strings = [
-            unicode_definite(s) for s in self.df[colname].dropna().unique()
+            unicode_definite(s)
+            for s in unique_values(self.df[colname], include_nulls=False)
         ]
 
         failures = set()
