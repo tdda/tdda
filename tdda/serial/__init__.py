@@ -21,3 +21,4 @@ from tdda.serial.metadata import (
 from tdda.serial.csvw import CSVWMetadata, serial_to_csvw
 from tdda.serial.frictionless import FrictionlessMetadata, serial_to_frictionless
 from tdda.serial.infer import infer_format_from_flat_file
+from tdda.serial.dfio import read_df, write_df

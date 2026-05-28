@@ -77,6 +77,7 @@ from tdda.abstractdf import (
     fuzzy_gt,
     fuzzy_lt,
     is_null,
+    is_polars_df,
     non_integer_values_count,
     non_null_count,
     null_count,
@@ -1074,15 +1075,22 @@ def load_df(path, md_path=None, find_md=False, backend=None, config=None):
         )
 
 
+
 def save_df(df, path, index=False):
     if path == '-' or path is None:
         print(default_csv_writer(df, None, index=index))
     else:
         fmt = file_format(path)
         if fmt == 'parquet':
-            df.to_parquet(path=path, index=False)
+            if is_polars_df(df):
+                df.write_parquet(path)
+            else:
+                df.to_parquet(path=path, index=False)
         elif fmt in ('csv', 'psv', 'tsv', 'txt'):
-            default_csv_writer(df, path, index=index)
+            if is_polars_df(df):
+                df.write_csv(path)
+            else:
+                default_csv_writer(df, path, index=index)
         else:
             raise Exception(f'Unknown output format: {fmt}')
 
