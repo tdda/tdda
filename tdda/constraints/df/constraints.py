@@ -95,6 +95,7 @@ from tdda.referencetest.checkpandas import (
 )
 from tdda import rexpy
 
+from tdda.serial.dfio import read_df as serial_read_df
 from tdda.serial.reader import load_metadata
 from tdda.serial.utils import (
     find_associated_metadata_file,
@@ -1041,30 +1042,38 @@ def file_format(path):
         return 'parquet' if ext[1:].lower() == 'parquet' else 'csv'
 
 
-def load_df(path, md_path=None, find_md=False, backend=None, config=None):
+def load_df(path, md_path=None, find_md=False, engine=None,
+            backend=None, config=None):
     """
-    Loads a pandas DataFrame from a path or stream.
+    Loads a DataFrame from a path or stream.
 
     Args:
-        path is usually a file path to be read, but can be a stream
+        path is usually a file path to be read, but can be a StringIO
+        stream (pandas-only fallback).
 
         md_path is an optional path to an associated metadata file to use
 
-        infer_metadata  If a CSV file ('.csv', '.psv', '.tsv' or '.txt' file)
-                        is given and no metadata file is provided, this
-                        setting will cause the software to look for
-                        metadata using known patterns.
+        find_md  If a CSV file ('.csv', '.psv', '.tsv' or '.txt' file)
+                 is given and no metadata file is provided, this setting
+                 will cause the software to look for metadata using known
+                 patterns.
+
+        engine  'pandas' or 'polars'. Defaults to config, then 'pandas'.
+
+        backend  Pandas dtype backend ('numpy_nullable', 'pyarrow', etc.).
     """
-    backend = get_backend(backend, config)
-    if isinstance(path, StringIO):  # stream
+    if isinstance(path, StringIO):  # stream: pandas-only path
         return default_csv_loader(path)
     stem, ext = os.path.splitext(path)
     ext = ext.lower()
-
     path = handle_tilde(path)
-
     if ext == '.parquet':
-        return pd.read_parquet(path, dtype_backend=backend)
+        return serial_read_df(
+            path,
+            engine=engine,
+            backend=backend,
+            config=config,
+        )
     else:
         return csv_to_dataframe(
             path,
