@@ -12,7 +12,7 @@ def main(table, sql_path, conn=None, dbtype=None):
     print(str(h.db))
     print(str(dbc))
     print(str(h))
-    with open(sql_path) as f:
+    with open(sql_path, encoding='utf-8') as f:
         s = f.read()
         queries = [q.strip() for q in s.split(';\n')]
         queries = [q for q in queries if q]

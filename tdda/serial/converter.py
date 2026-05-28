@@ -467,7 +467,7 @@ class SerialConverter:
             fless = serial_to_frictionless(md_in)
             fless.write_frictionless(self.outpath, self.for_csv)
         elif self.broad_out == 'python':
-            with open(self.outpath, 'w') as f:
+            with open(self.outpath, 'w', encoding='utf-8') as f:
                 python_writer = PYTHON_WRITER.get(fmt)
                 if python_writer is None:
                     error(

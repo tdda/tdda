@@ -10,8 +10,8 @@ def main():
     sources = glob.glob('*.1')
     for inpath in sources:
         outpath = form_outpath(inpath)
-        with open(outpath, 'w') as f:
-            for line in open(inpath):
+        with open(outpath, 'w', encoding='utf-8') as f:
+            for line in open(inpath, encoding='utf-8'):
                 if line.startswith('.TH'):
                     continue
                 if line.upper().startswith('.SH '):

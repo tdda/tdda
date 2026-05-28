@@ -91,9 +91,11 @@ def copy(srcdir, destination):
                 binary = ('b' if run or fullname.endswith('.feather')
                           or fullname.endswith('.parquet') else '')
                 try:
-                    with open(fullname, 'r%s' % binary) as fin:
+                    enc = None if binary else 'utf-8'
+                    with open(fullname, 'r%s' % binary, encoding=enc) as fin:
                         with open(
-                            os.path.join(destination, name), 'w%s' % binary
+                            os.path.join(destination, name), 'w%s' % binary,
+                            encoding=enc,
                         ) as fout:
                             fout.write(fin.read())
                     break

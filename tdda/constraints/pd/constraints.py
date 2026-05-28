@@ -1120,7 +1120,7 @@ def discover_df(
 
         df = pd.DataFrame({'a': [1, 2, 3], 'b': ['one', 'two', np.nan]})
         constraints = discover_df(df)
-        with open('example_constraints.tdda', 'w') as f:
+        with open('example_constraints.tdda', 'w', encoding='utf-8') as f:
             f.write(constraints.to_json())
 
     See *simple_generation.py* in the :ref:`constraint_examples`
@@ -1159,7 +1159,7 @@ def write_constraints(
 ):
     out_json = constraints.to_json(tddafile=constraints_path)
     if constraints_path and constraints_path != '-':
-        with open(constraints_path, 'w') as f:
+        with open(constraints_path, 'w', encoding='utf-8') as f:
             f.write(out_json)
         if report_formats:
             constraints.write_discovery_reports(

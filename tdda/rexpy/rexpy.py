@@ -2736,7 +2736,7 @@ def rexpy_streams(
     elif in_path:
         if show_pp:
             print('Reading file %s.' % in_path)
-        with open(in_path) as f:
+        with open(in_path, encoding='utf-8') as f:
             strings = f.read().splitlines()
         if show(verbose, VERBOSITY.PREPROCESSING):
             print('Read file %s' % in_path)
@@ -2762,7 +2762,7 @@ def rexpy_streams(
     elif out_path:
         if show_pp:
             print('Writing results to %s.' % out_path)
-        with open(out_path, 'w') as f:
+        with open(out_path, 'w', encoding='utf-8') as f:
             for p in patterns:
                 f.write(p + '\n')
         if show_pp:

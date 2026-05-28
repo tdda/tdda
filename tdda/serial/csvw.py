@@ -171,7 +171,7 @@ class CSVWMetadata(SerialMetadata):
                 of the form returned by json.load on a valid CSVW file.
         """
         if type(spec) == str:
-            with open(spec) as f:
+            with open(spec, encoding='utf-8') as f:
                 self._csvw = json.load(f)
             self._metadata_source_path = os.path.abspath(spec)
             self._metadata_source_dir = os.path.dirname(os.path.abspath(spec))
@@ -287,7 +287,7 @@ class CSVWMetadata(SerialMetadata):
         if not csvfile:
             csvfile = self.path or self.choose_csv_from_csvw_name(path)
         out = self.to_csvw_json(csvfile=csvfile, lang=lang, indent=indent)
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             f.write(out)
 
     def set_if_attr_non_null(self, d, key, attribute=None):
@@ -359,7 +359,7 @@ class CSVWMetadata(SerialMetadata):
             path = os.path.join(
                 nvl(self._metadata_source_dir, ''), self._schema
             )
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 self._schema = json.load(f)
 
         if self._schema:

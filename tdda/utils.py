@@ -168,7 +168,7 @@ def dict_to_json(d, path=None):
     """
     json_text = strip_lines(json.dumps(d, indent=4, ensure_ascii=False)) + '\n'
     if path:
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             f.write(json_text)
     else:
         return json_text
@@ -185,7 +185,7 @@ def dict_to_yaml(d, path=None):
         YAML string, or None if path was given.
     """
     if path:
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             yaml.dump(d, f)
     else:
         return yaml.dump(d)
@@ -362,7 +362,8 @@ def write_or_return(content, dump, stringify, path=None, binary=False):
     """
     if path:
         mode = 'wb' if binary else 'w'
-        with open(path, mode) as f:
+        enc = None if binary else 'utf-8'
+        with open(path, mode, encoding=enc) as f:
             dump(content, f)
         return None
     else:
@@ -370,7 +371,7 @@ def write_or_return(content, dump, stringify, path=None, binary=False):
 
 
 def tdda_css():
-    with open(os.path.join(TEMPLATESDIR, 'tdda.css')) as f:
+    with open(os.path.join(TEMPLATESDIR, 'tdda.css'), encoding='utf-8') as f:
         return f.read()
 
 
@@ -749,7 +750,7 @@ def dict_to_tex_macros(d, outpath=None, verbose=False):
         for k, v in d.items()
     )
     if outpath:
-        with open(outpath, 'w') as f:
+        with open(outpath, 'w', encoding='utf-8') as f:
             f.write(defs)
         if verbose:
             print(f'Written {outpath}.')

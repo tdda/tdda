@@ -730,6 +730,7 @@ def csv_to_pandas(
     elif md:
         kw = md_kw
     else:
+        kw.setdefault('encoding', 'utf-8')
         if not 'backend' in kw:
             backend = get_backend(backend, config)
             if backend and backend != OG_BACKEND:

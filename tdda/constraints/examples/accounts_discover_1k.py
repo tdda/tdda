@@ -6,7 +6,7 @@ from tdda.constraints.pd.constraints import discover_df
 
 df = pd.read_csv('testdata/accounts1k.csv')
 constraints = discover_df(df)
-with open('accounts1k.tdda', 'w') as f:
+with open('accounts1k.tdda', 'w', encoding='utf-8') as f:
     f.write(constraints.to_json())
 print('Written accounts1k.tdda')
 

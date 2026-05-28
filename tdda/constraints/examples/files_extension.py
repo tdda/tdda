@@ -96,7 +96,7 @@ class TDDAFilesExtension(ExtensionBase):
         constraints = discover_directory(**params)
         results = constraints.to_json()
         if params['constraints_path']:
-            with open(params['constraints_path'], 'w') as f:
+            with open(params['constraints_path'], 'w', encoding='utf-8') as f:
                 f.write(results)
         else:
             print(results)
@@ -320,7 +320,7 @@ class FilesConstraintDetector(BaseConstraintDetector):
             for k in ok_output_names:
                 bad_output_names.append(k)
 
-            with open(outpath, 'w') as csvfile:
+            with open(outpath, 'w', encoding='utf-8') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=bad_output_names)
                 writer.writeheader()
                 for i, (name, size) in enumerate(zip(self.names, self.sizes)):

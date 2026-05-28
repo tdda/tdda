@@ -37,7 +37,7 @@ def write_pandas_kwargs(inpath, outpath):
     CSVW file at inpath.
     """
     if os.path.exists(os.path.dirname(outpath)):
-        with open(outpath, 'w') as f:
+        with open(outpath, 'w', encoding='utf-8') as f:
             out = fmt(csvw_to_pandas_kwargs(inpath))
             f.write(f'pd_kwargs = {out}\n')
     else:

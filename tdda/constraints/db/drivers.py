@@ -135,7 +135,7 @@ def initialize_db(table, sql_path, conn=None, dbtype=None, verbose=False):
         print('db:', str(h.db))
         print('dbc:', str(h.dbc))
         print('handler:', str(h))
-    with open(sql_path) as f:
+    with open(sql_path, encoding='utf-8') as f:
         s = f.read()
         queries = [q.strip() for q in s.split(';\n')]
         queries = [q for q in queries if q]
@@ -154,7 +154,7 @@ def parse_table_name(table, dbtype):
             dbkey = parts[0]
             conn_file = connection_file(dbkey)
             if os.path.exists(conn_file):
-                with open(conn_file) as f:
+                with open(conn_file, encoding='utf-8') as f:
                     j = json.load(f)
                 if 'dbtype' in j:
                     dbtype = j.get('dbtype')
@@ -426,7 +426,7 @@ class ConnectionSpec:
     """
 
     def __init__(self, filename):
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             d = json.loads(f.read())
         self.dbtype = d.get('dbtype')
 
