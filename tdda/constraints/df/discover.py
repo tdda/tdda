@@ -72,7 +72,7 @@ def discover_df_from_file(
     if df_path == '-':
         df_path = StringIO(sys.stdin.read())
         md_df_path = None
-    df = load_df(df_path, backend=backend)
+    df = load_df(df_path, engine=engine, backend=backend)
     return discover_df(
         df,
         constraints_path,

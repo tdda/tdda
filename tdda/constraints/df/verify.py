@@ -46,6 +46,7 @@ def verify_df_from_file(
     constraints_path,
     verbose=True,
     md_path=None,
+    engine=None,
     backend=None,
     **kwargs,
 ):
@@ -74,7 +75,7 @@ def verify_df_from_file(
         stem, ext = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    df = load_df(df_path, md_path=md_path, backend=backend)
+    df = load_df(df_path, md_path=md_path, engine=engine, backend=backend)
     v = verify_df(
         df, constraints_path, md_path=md_path, backend=backend, **kwargs
     )

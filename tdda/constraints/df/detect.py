@@ -46,6 +46,7 @@ def detect_df_from_file(
     df_path,
     constraints_path,
     outpath=None,
+    engine=None,
     backend=None,
     verbose=True,
     **kwargs,
@@ -77,7 +78,7 @@ def detect_df_from_file(
         (stem, ext) = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
 
-    df = load_df(df_path, backend=backend)
+    df = load_df(df_path, engine=engine, backend=backend)
     v = detect_df(
         df,
         constraints_path,
