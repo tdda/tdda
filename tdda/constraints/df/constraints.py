@@ -479,44 +479,7 @@ class DFConstraintVerifier(
         )
 
     def repair_field_types(self, constraints):
-        # We sometimes haven't inferred the field types correctly for
-        # the dataframe (e.g. if we read it from a csv file, "string"
-        # fields might look like numeric ones, if they only contain digits).
-        # We can try to use the constraint information to try to repair this,
-        # but it's not always going to be successful.
-        for c in self.df.columns.tolist():
-            if c not in constraints:
-                continue
-            ser = self.df[c]
-            try:
-                ctype = constraints[c]['type'].value
-                dtype = ser.dtype
-                if ctype == 'string' and not is_string_col(ser):
-                    is_numeric = True
-                    is_real = False
-                    for limit in ('min', 'max'):
-                        if limit in constraints[c]:
-                            limitval = constraints[c][limit].value
-                            if type(limitval) in (int, float):
-                                if type(limitval) == float:
-                                    is_real = True
-                            else:
-                                is_numeric = False
-                                break
-                    if is_numeric:
-                        if is_real:
-                            is_real = self.calc_non_integer_values_count(c) > 0
-                        self.df[c] = np.where(
-                            ser.notnull(), ser.astype(str), np.nan
-                        )
-                        if not is_real:
-                            self.df[c] = self.df[c].str.replace(
-                                '.0', '', regex=False
-                            )
-                elif ctype == 'bool' and str(dtype).lower().startswith('int'):
-                    self.df[c] = ser.astype(bool)
-            except Exception as e:
-                print('%s: %s' % (e.__class__.__name__, str(e)))
+        repair_field_types(self.df, constraints)
 
 
 class DFVerification(Verification):
@@ -1122,6 +1085,42 @@ def save_df(df, path, index=False):
             default_csv_writer(df, path, index=index)
         else:
             raise Exception(f'Unknown output format: {fmt}')
+
+
+def repair_field_types(df, constraints):
+    # Use constraint type info to fix columns mistyped on CSV read
+    # (e.g. a string field containing only digits may look numeric).
+    for c in df.columns.tolist():
+        if c not in constraints:
+            continue
+        ser = df[c]
+        try:
+            ctype = constraints[c]['type'].value
+            dtype = ser.dtype
+            if ctype == 'string' and not is_string_col(ser):
+                is_numeric = True
+                is_real = False
+                for limit in ('min', 'max'):
+                    if limit in constraints[c]:
+                        limitval = constraints[c][limit].value
+                        if type(limitval) in (int, float):
+                            if type(limitval) == float:
+                                is_real = True
+                        else:
+                            is_numeric = False
+                            break
+                if is_numeric:
+                    if is_real:
+                        is_real = non_integer_values_count(ser) > 0
+                    df[c] = np.where(
+                        ser.notnull(), ser.astype(str), np.nan
+                    )
+                    if not is_real:
+                        df[c] = df[c].str.replace('.0', '', regex=False)
+            elif ctype == 'bool' and str(dtype).lower().startswith('int'):
+                df[c] = ser.astype(bool)
+        except Exception as e:
+            print('%s: %s' % (e.__class__.__name__, str(e)))
 
 
 def unique_column_name(df, name):
