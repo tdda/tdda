@@ -83,7 +83,7 @@ class Test_TAGGING_META(ReferenceTestCase):
         nR, nA = len(ref_lines), len(actual_lines)
         self.assertEqual(nR, nA)
         for r, a in zip(ref_lines, actual_lines):
-            self.assertEqual(a[-len(r) :], r)
+            self.assertEqual(a.replace('\\', '/')[-len(r) :], r)
 
 
 if __name__ == '__main__':
