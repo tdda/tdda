@@ -2156,24 +2156,24 @@ class TestExtraction(ReferenceTestCase):
         pprint(tree)
 
     @unittest.skipIf(pandas is None, 'No pandas here')
-    def testpdextract(self):
+    def testdfextract(self):
         df = pd.DataFrame(
             {'a3': ['one', 'two', np.nan], 'a45': ['three', 'four', 'five']}
         )
 
-        re3 = pdextract(df['a3'])
-        re45 = pdextract(df['a45'])
-        re345 = pdextract([df['a3'], df['a45']])
+        re3 = dfextract(df['a3'])
+        re45 = dfextract(df['a45'])
+        re345 = dfextract([df['a3'], df['a45']])
 
         self.assertEqual(re3, ['^[a-z]{3}$'])
         self.assertEqual(re45, ['^[a-z]{4,5}$'])
         self.assertEqual(re345, ['^[a-z]{3,5}$'])
 
     @unittest.skipIf(pandas is None, 'No pandas here')
-    def testpdextract2(self):
+    def testdfextract2(self):
         df = pd.DataFrame({'ab': ['one', True, np.nan]})
         self.assertRaisesRegex(
-            ValueError, 'Non-null, non-string', pdextract, df['ab']
+            ValueError, 'Non-null, non-string', dfextract, df['ab']
         )
 
     def testRexpyCommandLineAPIQuoting(self):

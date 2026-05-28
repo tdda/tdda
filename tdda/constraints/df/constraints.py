@@ -181,7 +181,7 @@ class DFConstraintCalculator(BaseConstraintCalculator):
 
     def find_rexes(self, colname, values=None, seed=None):
         if values is None:
-            return rexpy.pdextract(self.df[colname], tag=self.group_rexes)
+            return rexpy.dfextract(self.df[colname], tag=self.group_rexes)
         else:
             return rexpy.extract(values, seed=None, tag=self.group_rexes)
 
