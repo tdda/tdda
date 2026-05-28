@@ -52,6 +52,14 @@ def is_polars_df(df):
     return not (is_pandas_df(df))
 
 
+def is_polars_series(x):
+    return isinstance(x, pl.Series)
+
+
+def is_series(x):
+    return isinstance(x, (pd.Series, pl.Series))
+
+
 def col_types_match(L, R, level=None):
     f = pandas_types_match if is_pandas_series(L) else polars_types_match
     return f(L.dtype, R.dtype, level)
@@ -447,6 +455,77 @@ def non_integer_values_count(col):
     else:
         nn = col.drop_nulls()
         return int((nn.cast(pl.Int64).cast(nn.dtype) != nn).sum())
+
+
+def coarse_type(x):
+    """
+    Returns the TDDA coarse type of x (scalar or column).
+    Combines 'bool', 'int', 'real' into 'number'.
+    """
+    if is_series(x):
+        t = col_to_tdda_type(x)
+    else:
+        t = scalar_to_tdda_type(x)
+    return 'number' if t in ('bool', 'int', 'real') else t
+
+
+def types_compatible(x, y, colname=None):
+    """
+    Returns True if x and y have the same coarse type.
+    Warns to stderr if not and colname is provided.
+    """
+    ok = coarse_type(x) == coarse_type(y)
+    if not ok and colname:
+        import sys
+        print(
+            'Warning: Failing incompatible types constraint for field %s '
+            'of type %s.\n(Constraint value %s of type %s.)'
+            % (colname, type(x), y, type(y)),
+            file=sys.stderr,
+        )
+    return ok
+
+
+def fuzzy_gt(a, b, epsilon):
+    fuzzed = b * (1 - epsilon) if b > 0 else b * (1 + epsilon)
+    return (a >= b) | (a >= fuzzed)
+
+
+def fuzzy_lt(a, b, epsilon):
+    fuzzed = b * (1 + epsilon) if b > 0 else b * (1 - epsilon)
+    return (a <= b) | (a <= fuzzed)
+
+
+def to_datetime(df, value):
+    if is_pandas_df(df):
+        return pd.to_datetime(value)
+    else:
+        return value
+
+
+def date_columns(df):
+    if is_pandas_df(df):
+        return list(df.select_dtypes(include=[np.datetime64]))
+    else:
+        return [
+            c for c in df.columns
+            if df[c].dtype == pl.Date
+            or isinstance(df[c].dtype, pl.Datetime)
+        ]
+
+
+def detection_field(column, expr, default=None):
+    if is_pandas_series(column):
+        if column.isnull().sum() == 0:
+            return expr.astype(bool)
+        null = np.nan if default is None else default
+        return np.where(pd.isnull(column), null, expr.astype('O'))
+    else:
+        null_mask = column.is_null()
+        if not null_mask.any():
+            return expr.cast(pl.Boolean)
+        null_val = None if default is None else default
+        return pl.when(null_mask).then(null_val).otherwise(expr)
 
 
 def get_engine_and_backend(engine=None, backend=None, config=None):

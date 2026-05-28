@@ -206,31 +206,31 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
     def test_coarse_types_of_base_types(self):
         self.assertEqual(dfc.scalar_to_tdda_type(None), 'null')
         for v in BOOLS:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.coarse_type(v), 'number')
         for v in INTS:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.coarse_type(v), 'number')
         for v in REALS:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.coarse_type(v), 'number')
         for v in STRINGS:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'string')
+            self.assertEqual(dfc.coarse_type(v), 'string')
         for v in DATES:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'date')
+            self.assertEqual(dfc.coarse_type(v), 'date')
         for v in OTHERS:
-            self.assertEqual(dfc.pandas_coarse_type(v), 'other')
+            self.assertEqual(dfc.coarse_type(v), 'other')
 
     def test_compatibility(self):
         for kind in (NUMBERS, STRINGS, DATES):
             x = kind[0]
             y = kind[-1]
-            self.assertTrue(dfc.pandas_types_compatible(x, y))
-            self.assertTrue(dfc.pandas_types_compatible(x, x))
+            self.assertTrue(dfc.types_compatible(x, y))
+            self.assertTrue(dfc.types_compatible(x, x))
 
     def test_incompatibility(self):
         for X in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
             for Y in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
                 if X is not Y:
-                    self.assertFalse(dfc.pandas_types_compatible(X[0], Y[0]))
-                    self.assertFalse(dfc.pandas_types_compatible(Y[0], X[0]))
+                    self.assertFalse(dfc.types_compatible(X[0], Y[0]))
+                    self.assertFalse(dfc.types_compatible(Y[0], X[0]))
 
     def test_fuzzy_less_than_zero(self):
         epsilon = 0.01

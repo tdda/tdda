@@ -45,8 +45,6 @@ from tdda.constraints.base import (
     Verification,
     Detection,
     constraints_from_path_or_dict,
-    fuzz_down,
-    fuzz_up,
     PassFailCount,
 )
 from tdda.constraints.baseconstraints import (
@@ -65,6 +63,7 @@ from tdda.pd.utils import (
 from tdda.abstractdf import (
     all_non_nulls_boolean,
     calc_nunique,
+    coarse_type,
     col_max,
     col_max_length,
     col_min,
@@ -72,13 +71,19 @@ from tdda.abstractdf import (
     col_names,
     col_to_tdda_type,
     csv_to_dataframe,
+    date_columns,
+    detection_field,
     filter_out_nulls,
+    fuzzy_gt,
+    fuzzy_lt,
     is_null,
     non_integer_values_count,
     non_null_count,
     null_count,
     scalar_to_tdda_type,
     tdda_type,
+    to_datetime,
+    types_compatible,
     unique_values,
 )
 
@@ -122,7 +127,7 @@ class DFConstraintCalculator(BaseConstraintCalculator):
         return is_null(value)
 
     def to_datetime(self, value):
-        return pd.to_datetime(value)
+        return to_datetime(self.df, value)
 
     def get_column_names(self):
         return col_names(self.df)
@@ -131,7 +136,7 @@ class DFConstraintCalculator(BaseConstraintCalculator):
         return len(self.df)
 
     def types_compatible(self, x, y, colname=None):
-        return pandas_types_compatible(x, y, colname=colname)
+        return types_compatible(x, y, colname=colname)
 
     def calc_min(self, colname):
         return col_min(self.df[colname])
@@ -219,7 +224,7 @@ class DFConstraintDetector(BaseConstraintDetector):
     def __init__(self, df):
         self.df = df
         if df is not None:
-            self.date_cols = list(df.select_dtypes(include=[np.datetime64]))
+            self.date_cols = date_columns(df)
             index = df.index.copy()
             if not index.name:
                 index.name = 'Index'
@@ -231,7 +236,7 @@ class DFConstraintDetector(BaseConstraintDetector):
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'min')
         c = self.df[colname]
-        if not pandas_types_compatible(c, value):
+        if not types_compatible(c, value):
             self.out_df[name] = False
         elif precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c >= value)
@@ -239,13 +244,13 @@ class DFConstraintDetector(BaseConstraintDetector):
             self.out_df[name] = detection_field(c, c > value)
         else:
             self.out_df[name] = detection_field(
-                c, df_fuzzy_gt(c, value, epsilon)
+                c, fuzzy_gt(c, value, epsilon)
             )
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'max')
         c = self.df[colname]
-        if not pandas_types_compatible(c, value):
+        if not types_compatible(c, value):
             self.out_df[name] = False
         elif precision == 'closed' or colname in self.date_cols:
             self.out_df[name] = detection_field(c, c <= value)
@@ -253,13 +258,13 @@ class DFConstraintDetector(BaseConstraintDetector):
             self.out_df[name] = detection_field(c, c < value)
         else:
             self.out_df[name] = detection_field(
-                c, df_fuzzy_lt(c, value, epsilon)
+                c, fuzzy_lt(c, value, epsilon)
             )
 
     def detect_min_length_constraint(self, colname, value):
         name = verification_field(colname, 'min_length')
         c = self.df[colname]
-        if pandas_coarse_type(c) != 'string':
+        if coarse_type(c) != 'string':
             self.out_df[name] = False
         else:
             self.out_df[name] = detection_field(c, c.str.len() >= value)
@@ -267,7 +272,7 @@ class DFConstraintDetector(BaseConstraintDetector):
     def detect_max_length_constraint(self, colname, value):
         name = verification_field(colname, 'max_length')
         c = self.df[colname]
-        if pandas_coarse_type(c) != 'string':
+        if coarse_type(c) != 'string':
             self.out_df[name] = False
         else:
             self.out_df[name] = detection_field(c, c.str.len() <= value)
@@ -280,7 +285,7 @@ class DFConstraintDetector(BaseConstraintDetector):
         name = verification_field(colname, 'sign')
         c = self.df[colname]
 
-        if pandas_coarse_type(c) == 'number':
+        if coarse_type(c) == 'number':
             if value == 'null':
                 self.out_df[name] = False
             elif value == 'positive':
@@ -317,7 +322,7 @@ class DFConstraintDetector(BaseConstraintDetector):
     def detect_rex_constraint(self, colname, violations):
         name = verification_field(colname, 'rex')
         c = self.df[colname]
-        if pandas_coarse_type(c) != 'string':
+        if coarse_type(c) != 'string':
             self.out_df[name] = False
         else:
             self.out_df[name] = detection_field(c, ~c.isin(violations))
@@ -672,40 +677,6 @@ class DFConstraintDiscoverer(
             allowed_fields=allowed_fields,
             required_fields=required_fields,
         )
-
-
-def pandas_types_compatible(x, y, colname=None):
-    """
-    Returns boolean indicating whether the coarse_type of *x* and *y* are
-    the same, for scalar values.
-
-    If *colname* is provided, and the check fails, a warning is issued
-    to stderr.
-    """
-    ok = pandas_coarse_type(x) == pandas_coarse_type(y)
-    if not ok and colname:
-        print(
-            'Warning: Failing incompatible types constraint for field %s '
-            'of type %s.\n(Constraint value %s of type %s.)'
-            % (colname, type(x), y, type(y)),
-            file=sys.stderr,
-        )
-    return ok
-
-
-def pandas_coarse_type(x):
-    """
-    Returns the TDDA coarse type of *x*, a scalar or column value.
-    The coarse types combine ``bool``, ``int`` and ``real`` into ``number``.
-
-    Obviously, some people will dislike treating booleans as numbers.
-    But it is necessary here.
-    """
-    if isinstance(x, pd.core.series.Series):
-        t = col_to_tdda_type(x)
-    else:
-        t = scalar_to_tdda_type(x)
-    return 'number' if t in ('bool', 'int', 'real') else t
 
 
 def verify_df(
@@ -1165,17 +1136,6 @@ def unique_column_name(df, name):
     return newname
 
 
-def detection_field(column, expr, default=None):
-    """
-    Construct a field for a detection result
-    """
-    if column.isnull().sum() == 0:
-        return expr.astype(bool)
-    else:
-        null = np.nan if default is None else default  # np.nan  # pd.NA
-        return np.where(pd.isnull(column), null, expr.astype('O'))
-
-
 def convert_output_types(df, int_bools):
     """
     Construct a new DataFrame with boolean values mapped to appropriate
@@ -1224,26 +1184,6 @@ def is_pd_index_trivial(df):
 
 def verification_field(col, ctype):
     return '%s_%s_ok' % (col, CONSTRAINT_SUFFIX_MAP[ctype])
-
-
-def df_fuzzy_gt(a, b, epsilon):
-    """
-    Returns a >~ b (a is greater than or approximately equal to b)
-
-    At the moment, this simply reduces b by 1% if it is positive,
-    and makes it 1% more negative if it is negative.
-    """
-    return (a >= b) | (a >= fuzz_down(b, epsilon))
-
-
-def df_fuzzy_lt(a, b, epsilon):
-    """
-    Returns a <~ b (a is less than or approximately equal to b)
-
-    At the moment, this increases b by 1% if it is positive,
-    and makes it 1% less negative if it is negative.
-    """
-    return (a <= b) | (a <= fuzz_up(b, epsilon))
 
 
 def is_ver_field(v, f):
