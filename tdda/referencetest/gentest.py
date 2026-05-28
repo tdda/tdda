@@ -1530,12 +1530,8 @@ def home_dir():
     """
     if 'HOME' in os.environ:
         return os.environ['HOME']
-    elif is_unix():
+    else:
         return os.path.expanduser('~')
-    elif is_windows():
-        from win32com.shell import shellcon, shell  # type: ignore
-
-        return shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
 
 
 def is_unix():
