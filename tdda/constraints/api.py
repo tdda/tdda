@@ -3,10 +3,10 @@ import sys
 import pandas as pd
 import polars as pl
 
-from tdda.constraints.pd.constraints import discover_df, verify_df, detect_df
-from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file
-from tdda.constraints.pd.detect import detect_df_from_file
+from tdda.constraints.df.constraints import discover_df, verify_df, detect_df
+from tdda.constraints.df.discover import discover_df_from_file
+from tdda.constraints.df.verify import verify_df_from_file
+from tdda.constraints.df.detect import detect_df_from_file
 
 from tdda.abstractdf import get_engine_and_backend
 from tdda.serial.utils import get_backend

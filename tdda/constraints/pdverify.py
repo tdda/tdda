@@ -3,4 +3,4 @@
 Compatibility module for TDDA Pandas constraints.
 """
 
-from tdda.constraints.pd.verify import *
+from tdda.constraints.df.verify import *

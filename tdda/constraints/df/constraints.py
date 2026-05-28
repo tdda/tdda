@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The ``tdda.constraints.pd.constraints`` module provides an
+The ``tdda.constraints.df.constraints`` module provides an
 implementation of TDDA constraint discovery and verification
 for Pandas DataFrames.
 
@@ -109,7 +109,7 @@ DEBUG = False
 RE_FLAGS = re.UNICODE | re.DOTALL
 
 
-class PandasConstraintCalculator(BaseConstraintCalculator):
+class DFConstraintCalculator(BaseConstraintCalculator):
     """
     Implementation of the Constraint Calculator methods for
     Pandas dataframes.
@@ -210,7 +210,7 @@ class PandasConstraintCalculator(BaseConstraintCalculator):
             return None
 
 
-class PandasConstraintDetector(BaseConstraintDetector):
+class DFConstraintDetector(BaseConstraintDetector):
     """
     Implementation of the Constraint Detector methods for
     Pandas dataframes.
@@ -456,9 +456,9 @@ class PandasConstraintDetector(BaseConstraintDetector):
         return df[new_fields]
 
 
-class PandasConstraintVerifier(
-    PandasConstraintCalculator,
-    PandasConstraintDetector,
+class DFConstraintVerifier(
+    DFConstraintCalculator,
+    DFConstraintDetector,
     BaseConstraintVerifier,
 ):
     """
@@ -467,8 +467,8 @@ class PandasConstraintVerifier(
     """
 
     def __init__(self, df, epsilon=None, type_checking=None):
-        PandasConstraintCalculator.__init__(self, df)
-        PandasConstraintDetector.__init__(self, df)
+        DFConstraintCalculator.__init__(self, df)
+        DFConstraintDetector.__init__(self, df)
         BaseConstraintVerifier.__init__(
             self, epsilon=epsilon, type_checking=type_checking
         )
@@ -514,7 +514,7 @@ class PandasConstraintVerifier(
                 print('%s: %s' % (e.__class__.__name__, str(e)))
 
 
-class PandasVerification(Verification):
+class DFVerification(Verification):
     """Verification result for a Pandas DataFrame.
 
     Extends ``Verification`` with ``to_frame()`` to convert the
@@ -619,10 +619,10 @@ class PandasVerification(Verification):
         return PassFailCount(field, self.detection.n_source_records - nf, nf)
 
 
-class PandasDetection(PandasVerification):
+class DFDetection(DFVerification):
     """Detection result for a Pandas DataFrame.
 
-    Extends ``PandasVerification`` with a ``detected()`` method giving
+    Extends ``DFVerification`` with a ``detected()`` method giving
     access to the detected records as a Pandas DataFrame.
 
     Attributes:
@@ -634,7 +634,7 @@ class PandasDetection(PandasVerification):
     """
 
     def __init__(self, *args, **kwargs):
-        PandasVerification.__init__(self, *args, **kwargs)
+        DFVerification.__init__(self, *args, **kwargs)
 
     def detected(self):
         """Return a DataFrame of detected (failing) records.
@@ -647,8 +647,8 @@ class PandasDetection(PandasVerification):
         return self.detection.obj if self.detection else None
 
 
-class PandasConstraintDiscoverer(
-    PandasConstraintCalculator, BaseConstraintDiscoverer
+class DFConstraintDiscoverer(
+    DFConstraintCalculator, BaseConstraintDiscoverer
 ):
     """
     Used to discover constraints on a Pandas DataFrame.
@@ -663,7 +663,7 @@ class PandasConstraintDiscoverer(
         allowed_fields=True,
         required_fields=True,
     ):
-        PandasConstraintCalculator.__init__(self, df)
+        DFConstraintCalculator.__init__(self, df)
         BaseConstraintDiscoverer.__init__(
             self,
             inc_rex=inc_rex,
@@ -756,7 +756,7 @@ def verify_df(
             DataFrame from CSV. Default is ``True``. Should not be used
             with DataFrames from reliable typed sources.
         report: ``'all'`` or ``'fields'``. Controls the behaviour of
-            ``__str__`` on the resulting ``PandasVerification`` object
+            ``__str__`` on the resulting ``DFVerification`` object
             (but not its content).
 
             ``'all'`` (the default) means that all fields are shown,
@@ -773,7 +773,7 @@ def verify_df(
         **kwargs: Additional keyword arguments passed to the verifier.
 
     Returns:
-        PandasVerification: Verification results, with ``passes`` and
+        DFVerification: Verification results, with ``passes`` and
         ``failures`` attributes. Use ``to_frame()`` to get results as a
         DataFrame, or ``str()`` to print a detailed report.
 
@@ -795,7 +795,7 @@ def verify_df(
     for a slightly fuller example.
     """
     backend = get_backend(backend, config)
-    pdv = PandasConstraintVerifier(
+    pdv = DFConstraintVerifier(
         df, epsilon=epsilon, type_checking=type_checking
     )
     if isinstance(constraints_path, dict):
@@ -808,7 +808,7 @@ def verify_df(
     n_records = df.shape[0]
     return pdv.verify(
         constraints,
-        VerificationClass=PandasVerification,
+        VerificationClass=DFVerification,
         report=report,
         n_source_records=n_records,
         **kwargs,
@@ -907,7 +907,7 @@ def detect_df(
         **kwargs: Additional keyword arguments passed to the verifier.
 
     Returns:
-        PandasDetection: Detection results. Use ``detected()`` to get
+        DFDetection: Detection results. Use ``detected()`` to get
         the DataFrame of failing records.
 
     Example::
@@ -921,7 +921,7 @@ def detect_df(
         detection_df = v.detected()
         print(detection_df.to_string())
     """
-    pdv = PandasConstraintVerifier(
+    pdv = DFConstraintVerifier(
         df, epsilon=epsilon, type_checking=type_checking
     )
     constraints = constraints_from_path_or_dict(constraints_path)
@@ -930,7 +930,7 @@ def detect_df(
     n_records = df.shape[0]
     return pdv.detect(
         constraints,
-        VerificationClass=PandasDetection,
+        VerificationClass=DFDetection,
         outpath=outpath,
         write_all_records=write_all_records,
         per_constraint=per_constraint,
@@ -1052,7 +1052,7 @@ def discover_df(
     See *simple_generation.py* in the :ref:`constraint_examples`
     for a slightly fuller example.
     """
-    disco = PandasConstraintDiscoverer(
+    disco = DFConstraintDiscoverer(
         df,
         inc_rex=inc_rex,
         group_rexes=group_rexes,

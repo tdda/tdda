@@ -46,8 +46,8 @@ from tdda.constraints.base import (
 from tdda.constraints.console import main_with_argv
 from tdda.constraints import discover, verify, detect
 
-from tdda.constraints.pd import constraints as pdc
-from tdda.constraints.pd.constraints import load_df
+from tdda.constraints.df import constraints as dfc
+from tdda.constraints.df.constraints import load_df
 from tdda.utils import (
     PDCONSTRAINTSDIR,
     CONSTRAINTSTESTDATADIR as TESTDATADIR,
@@ -134,7 +134,7 @@ class ConstraintVerificationTester:
 
     def __init__(self, tester, *args, **kwargs):
         self.tester = tester
-        self.verifier = pdc.PandasConstraintVerifier(*args, **kwargs)
+        self.verifier = dfc.DFConstraintVerifier(*args, **kwargs)
 
     def __getattr__(self, k):
         if k == 'decOutstanding':
@@ -189,48 +189,48 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
         assert ConstraintVerificationTester.outstandingAssertions == 0
 
     def test_tdda_types_of_base_types(self):
-        self.assertEqual(pdc.scalar_to_tdda_type(None), 'null')
+        self.assertEqual(dfc.scalar_to_tdda_type(None), 'null')
         for v in BOOLS:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'bool')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'bool')
         for v in INTS:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'int')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'int')
         for v in REALS:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'real')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'real')
         for v in STRINGS:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'string')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'string')
         for v in DATES:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'date')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'date')
         for v in OTHERS:
-            self.assertEqual(pdc.scalar_to_tdda_type(v), 'other')
+            self.assertEqual(dfc.scalar_to_tdda_type(v), 'other')
 
     def test_coarse_types_of_base_types(self):
-        self.assertEqual(pdc.scalar_to_tdda_type(None), 'null')
+        self.assertEqual(dfc.scalar_to_tdda_type(None), 'null')
         for v in BOOLS:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
         for v in INTS:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
         for v in REALS:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'number')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'number')
         for v in STRINGS:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'string')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'string')
         for v in DATES:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'date')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'date')
         for v in OTHERS:
-            self.assertEqual(pdc.pandas_coarse_type(v), 'other')
+            self.assertEqual(dfc.pandas_coarse_type(v), 'other')
 
     def test_compatibility(self):
         for kind in (NUMBERS, STRINGS, DATES):
             x = kind[0]
             y = kind[-1]
-            self.assertTrue(pdc.pandas_types_compatible(x, y))
-            self.assertTrue(pdc.pandas_types_compatible(x, x))
+            self.assertTrue(dfc.pandas_types_compatible(x, y))
+            self.assertTrue(dfc.pandas_types_compatible(x, x))
 
     def test_incompatibility(self):
         for X in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
             for Y in (NUMBERS, STRINGS, DATES, OTHERS, NULLS):
                 if X is not Y:
-                    self.assertFalse(pdc.pandas_types_compatible(X[0], Y[0]))
-                    self.assertFalse(pdc.pandas_types_compatible(Y[0], X[0]))
+                    self.assertFalse(dfc.pandas_types_compatible(X[0], Y[0]))
+                    self.assertFalse(dfc.pandas_types_compatible(Y[0], X[0]))
 
     def test_fuzzy_less_than_zero(self):
         epsilon = 0.01
@@ -350,7 +350,7 @@ class TestPandasIndividualConstraintVerifier(ReferenceTestCase):
                 'a': range(3),
             }
         )
-        v = pdc.PandasConstraintVerifier(df)
+        v = dfc.DFConstraintVerifier(df)
 
         # First check the max gets computed and cached correctly
         self.assertEqual(v.get_max('a'), 2)
@@ -873,7 +873,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dsc1 = DatasetConstraints(
             dfc1, allowed_fields=False, required_fields=False
         )
-        pdcv1 = pdc.PandasConstraintVerifier(df1)
+        pdcv1 = dfc.DFConstraintVerifier(df1)
         results1 = base.verify(
             dsc1, list(df1), pdcv1.verifiers(), n_source_records=10
         )
@@ -904,7 +904,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                 )
             )
         )
-        vdf = pdc.PandasVerification.verification_to_dataframe(results1)
+        vdf = dfc.DFVerification.verification_to_dataframe(results1)
         self.assertTrue(vdf.equals(expected))
 
         df2 = pd.DataFrame({'i': [1, 2, 2, 6, np.nan]})
@@ -912,7 +912,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dsc2 = DatasetConstraints(
             dfc2, allowed_fields=False, required_fields=False
         )
-        pdcv2 = pdc.PandasConstraintVerifier(df2)
+        pdcv2 = dfc.DFConstraintVerifier(df2)
         results2 = base.verify(
             dsc2, list(df2), pdcv2.verifiers(), n_source_records=10
         )
@@ -944,10 +944,10 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                 )
             )
         )
-        vdf = pdc.PandasVerification.verification_to_dataframe(results2)
+        vdf = dfc.DFVerification.verification_to_dataframe(results2)
         self.assertTrue(vdf.equals(expected))
 
-        pdcv2strict = pdc.PandasConstraintVerifier(df2, type_checking='strict')
+        pdcv2strict = dfc.DFConstraintVerifier(df2, type_checking='strict')
         results2strict = base.verify(
             dsc2, list(df2), pdcv2strict.verifiers(), n_source_records=10
         )
@@ -979,7 +979,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                 )
             )
         )
-        vdf = pdc.PandasVerification.verification_to_dataframe(results2strict)
+        vdf = dfc.DFVerification.verification_to_dataframe(results2strict)
         self.assertTrue(vdf.equals(expected))
 
         ic3 = FieldConstraints('i', [TypeConstraint('int')])
@@ -988,7 +988,7 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
         dsc3 = DatasetConstraints(
             dfc3, allowed_fields=False, required_fields=False
         )
-        pdcv3 = pdc.PandasConstraintVerifier(df3)
+        pdcv3 = dfc.DFConstraintVerifier(df3)
         results3 = base.verify(
             dsc3, list(df3), pdcv3.verifiers(), n_source_records=10
         )
@@ -1012,10 +1012,10 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
                 )
             )
         )
-        vdf = pdc.PandasVerification.verification_to_dataframe(results3)
+        vdf = dfc.DFVerification.verification_to_dataframe(results3)
         self.assertTrue(vdf.equals(expected))
 
-        pdcv3 = pdc.PandasConstraintVerifier(df3)
+        pdcv3 = dfc.DFConstraintVerifier(df3)
         results3 = base.verify(
             dsc3, list(df3), pdcv3.verifiers(), ascii=True, n_source_records=10
         )
@@ -1642,10 +1642,10 @@ class TestPandasMultipleConstraintDetector(
             }
         )
         n1 = len(df1)
-        verifier1 = pdc.PandasConstraintVerifier(df1)
+        verifier1 = dfc.DFConstraintVerifier(df1)
         v1 = verifier1.detect(
             constraints,
-            VerificationClass=pdc.PandasDetection,
+            VerificationClass=dfc.DFDetection,
             n_source_records=n1,
         )
         self.assertEqual(v1.passes, 2)
@@ -1660,10 +1660,10 @@ class TestPandasMultipleConstraintDetector(
             }
         )
         n2 = len(df2)
-        verifier2 = pdc.PandasConstraintVerifier(df2)
+        verifier2 = dfc.DFConstraintVerifier(df2)
         v2 = verifier2.detect(
             constraints,
-            VerificationClass=pdc.PandasDetection,
+            VerificationClass=dfc.DFDetection,
             per_constraint=True,
             output_fields=['i', 's'],
             n_source_records=n2,
@@ -2040,7 +2040,7 @@ class TestUtilityFunctions(ReferenceTestCase):
             'a_min_ok',
             'a_values_ok_68',
         ):
-            self.assertTrue(pdc.is_ver_field(name, 'a'))
+            self.assertTrue(dfc.is_ver_field(name, 'a'))
 
         for name in (
             'a_b',
@@ -2050,7 +2050,7 @@ class TestUtilityFunctions(ReferenceTestCase):
             'a_min_ok68',
             'a_transform_ok',
         ):
-            self.assertFalse(pdc.is_ver_field(name, 'a'))
+            self.assertFalse(dfc.is_ver_field(name, 'a'))
 
 
 class TestUtilityFunctions2(ReferenceTestCase):
