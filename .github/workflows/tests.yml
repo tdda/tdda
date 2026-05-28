@@ -30,4 +30,4 @@ jobs:
           pip install -e .
 
       - name: Run tests
-        run: python testtdda.py
+        run: python tdda/testtdda.py
