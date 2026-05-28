@@ -28,7 +28,7 @@ def example_constraint_generation(path=OUTPATH):
     if os.path.exists(path):
         os.unlink(path)
 
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         f.write(constraints.to_json())
 
     if os.path.exists(path):

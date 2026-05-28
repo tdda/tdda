@@ -298,7 +298,7 @@ class DatasetConstraints(object):
         """
         Builds a DatasetConstraints object from a json file
         """
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             text = f.read()
         obj = json.loads(text, object_pairs_hook=OrderedDict)
         self.initialize_from_dict(unicode_definite(obj))
@@ -1600,7 +1600,7 @@ def verify(
         # so that we can get an early error if the file isn't writable,
         # and so that we don't leave a bogus wrong file in place if
         # we turn out not to detect anything.
-        with open(outpath, 'w') as _:
+        with open(outpath, 'w', encoding='utf-8') as _:
             pass
         os.remove(outpath)
 
@@ -1864,7 +1864,7 @@ def write_text_detect_report(d, outpath, config):
     """
     indent = '  '
     ffv = config.format_failure_values
-    with open(outpath, 'w') as f:
+    with open(outpath, 'w', encoding='utf-8') as f:
         f.write('TDDA FAILURES REPORT\n\n')
         f.write('FIELDS:\n')
         for field, constraints in d['fields'].items():
@@ -1893,7 +1893,7 @@ def write_markdown_detect_report(d, outpath, config):
     Writes a human-readable textual report on detection failures
     """
     ffv = config.format_failure_values
-    with open(outpath, 'w') as f:
+    with open(outpath, 'w', encoding='utf-8') as f:
         f.write('# TDDA FAILURES REPORT:\n')
         f.write('## FIELDS:\n')
         for field, constraints in d['fields'].items():
@@ -1976,7 +1976,7 @@ def write_html_detect_report(d, outpath, config, table=None):
 
     xml.CloseXML()
 
-    with open(outpath, 'w') as f:
+    with open(outpath, 'w', encoding='utf-8') as f:
         f.write(xml.xml())
 
 

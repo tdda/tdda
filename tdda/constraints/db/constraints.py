@@ -846,7 +846,7 @@ def discover_db_table(
         db = pgdb.connect(dbspec)
         constraints = discover_db_table('postgres', db, tablename)
 
-        with open('myconstraints.tdda', 'w') as f:
+        with open('myconstraints.tdda', 'w', encoding='utf-8') as f:
             f.write(constraints.to_json())
     """
     disco = DatabaseConstraintDiscoverer(

@@ -55,9 +55,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         main(sys.stdin, sys.stdout)
     else:
-        with open(sys.argv[1]) as f:
+        with open(sys.argv[1], encoding='utf-8') as f:
             if len(sys.argv) > 2:
-                with open(sys.argv[2], 'w') as fw:
+                with open(sys.argv[2], 'w', encoding='utf-8') as fw:
                     main(f, fw)
             else:
                 main(f, sys.stdout)

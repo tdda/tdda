@@ -662,7 +662,7 @@ class SerialMetadata:
             date_style (DateStyle): Controls output date format style.
         """
         outpath = swap_ext(path, '.serial') if use_serial_ext else path
-        with open(outpath, 'w') as f:
+        with open(outpath, 'w', encoding='utf-8') as f:
             f.write(self.to_json(indent=indent, date_style=date_style))
         if verbose:
             print(f'Written {outpath}.')

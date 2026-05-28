@@ -107,11 +107,11 @@ def write_csv(lib, df, path, md_path=None, verify=False, **kwargs):
         'writer': TDDASERIAL.writer,
         lib: kw,
     }
-    with open(md_path, 'w') as f:
+    with open(md_path, 'w', encoding='utf-8') as f:
         json.dump(d, f, indent=4)
 
     if verify:
-        with open(md_path) as f:
+        with open(md_path, encoding='utf-8') as f:
             kw2 = json.load(f)
         assert kw == kw2
         df2 = fns.read(path, **kw2)
@@ -134,7 +134,7 @@ def pandas_write_csv(df, path, md_path=None, verify=False, **kwargs):
 def read_csv(lib, path, md_path=None, **kwargs):
     functions = FUNCTIONS[lib]
     md_path = metadata_path(path, md_path)
-    with open(md_path) as f:
+    with open(md_path, encoding='utf-8') as f:
         params = json.load(f)
     assert lib in params
     kwargs = params[lib]

@@ -76,7 +76,7 @@ def discover_constraints_from_database(
     output = constraints.to_json(tddafile=constraints_path)
 
     if constraints_path:
-        with open(constraints_path, 'w') as f:
+        with open(constraints_path, 'w', encoding='utf-8') as f:
             f.write(output)
     else:
         print(output)

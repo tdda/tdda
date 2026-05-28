@@ -497,7 +497,7 @@ def isyaml(path):
 
 
 def load_json_or_yaml(path):
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         if isyaml(path):
             return yamlload(f, Loader=YAMLLoader)
         else:
@@ -505,7 +505,7 @@ def load_json_or_yaml(path):
 
 
 def write_json_or_yaml(d, path, indent=None, verbose=False):
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         if isyaml(path):
             f.write(
                 yamldump(

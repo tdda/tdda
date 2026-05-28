@@ -12,7 +12,7 @@ from tdda.serial.examples.helpers import generate_base_python_lists
 
 
 def read_csv_explicit(datapath, md_path):
-    with open(md_path) as f:
+    with open(md_path, encoding='utf-8') as f:
         d = json.load(f)
     params = d['pandas.read_csv']
     df = pd.read_csv(datapath, **params)

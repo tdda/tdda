@@ -5,7 +5,7 @@ import sys
 
 def main(inpath, outpath=None):
     here = os.path.dirname(os.path.abspath(inpath))
-    with open(inpath) as f:
+    with open(inpath, encoding='utf-8') as f:
         lines = f.readlines()
     out = []
     for line in lines:
@@ -28,7 +28,7 @@ def main(inpath, outpath=None):
             out.append(line)
     text = ''.join(out)
     if outpath:
-        with open(outpath, 'w') as f:
+        with open(outpath, 'w', encoding='utf-8') as f:
             f.write(text)
     else:
         sys.stdout.write(text)

@@ -615,7 +615,7 @@ def show_config(*args):
         config_path = cross_platform_dot_file('~/.tdda.toml')
         if os.path.exists(config_path):
             print(f'\nConfig file is {config_path}:\n')
-            with open(config_path) as f:
+            with open(config_path, encoding='utf-8') as f:
                 print(f.read())
                 print()
     elif mode == 'current':

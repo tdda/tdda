@@ -63,7 +63,7 @@ def load_metadata(
     """
     stem, ext = os.path.splitext(path)
     lcstem, ext = stem.lower(), ext.lower()
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         text = f.read().strip()
     if ext == '.serial':  # tdda.serial file
         md = json.loads(text)
@@ -325,7 +325,7 @@ def set_delimiter_from_path(kw, path, sep_key):
 
 def has_csvw_context(json_path):
     """Return True if the JSON file contains a CSVW ``@context`` signature."""
-    with open(json_path) as f:
+    with open(json_path, encoding='utf-8') as f:
         d = json.load(f)
     if isinstance(d, dict):
         context = d.get('@context')
