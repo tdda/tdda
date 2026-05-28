@@ -34,7 +34,6 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
     def test_exit_code(self):
         self.assertEqual(self.exit_code, 1)
 
-    @tag
     def test_stdout(self):
         self.assertStringCorrect(
             self.output,

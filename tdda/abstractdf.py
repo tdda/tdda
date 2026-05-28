@@ -259,7 +259,7 @@ def csv_to_dataframe(
             md_path=md_path,
             md_file_type=md_file_type,
             find_md=find_md,
-            infer_datetime_format=infer_datetime_formats,
+            infer_datetime_formats=infer_datetime_formats,
         )
     elif engine == 'pandas':
         return csv_to_pandas(

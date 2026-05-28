@@ -1080,7 +1080,9 @@ def load_df(path, md_path=None, find_md=False, engine=None,
             md_path,
             find_md=find_md,
             infer_datetime_formats=True,
+            engine=engine,
             backend=backend,
+            config=config,
         )
 
 
