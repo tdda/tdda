@@ -322,7 +322,7 @@ def df_group_count(df, keys):
 
 
 def calc_nunique(col):
-    return col.nunique() if is_pandas_series(col) else col.n_unique()
+    return col.nunique() if is_pandas_series(col) else col.drop_nulls().n_unique()
 
 
 def unique_values(col, include_nulls=True):
