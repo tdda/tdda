@@ -199,8 +199,8 @@ information. This is done in the "simple" examples below:
 
        python simple_discovery.py
 
-to generate a TDDA file (`example_constraints.tdda`) for the following,
-tiny, generated dataset:
+   to generate a TDDA file (`example_constraints.tdda`) for the following,
+   tiny, generated dataset:
 
            a    b
         0  1  one
@@ -246,7 +246,7 @@ tiny, generated dataset:
    There should be 7 passes and 6 failures.
 
 
-# Example of extending the tdda.constraints module
+## Example of extending the tdda.constraints module
 
 The `files_extension.py` file contains Python source code for a very simple
 implementation of a (not very realistic or useful) extension to the

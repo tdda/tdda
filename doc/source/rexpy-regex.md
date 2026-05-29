@@ -25,11 +25,25 @@ Optional `FLAGS` may be used to modify Rexpy's behaviour:
   of each regular expression generated, i.e. surround
   variable components with parentheses, e.g.
 
-      `^[A-Z]+\-[0-9]+$`
+      ^[A-Z]+\-[0-9]+$
 
   becomes
 
-      `^([A-Z]+)\-([0-9]+)$`
+      ^([A-Z]+)\-([0-9]+)$
+
+  This is now the default.
+
+* `-G`, `--no-group`  
+  Do not generated capture groups for each variable fragment
+  of each regular expression generated, i.e. surround
+  variable components with parentheses, e.g.
+
+      ^([A-Z]+)\-([0-9]+)$
+
+  becomes
+
+      ^[A-Z]+\-[0-9]+$
+
 
 * `-q`, `--quote`  
   Display the resulting regular expressions as
@@ -37,11 +51,11 @@ Optional `FLAGS` may be used to modify Rexpy's behaviour:
   suitable for use in Unix shells, JSON, and string
   literals in many programming languages. e.g.
 
-      `^[A-Z]+\-[0-9]+$`
+      ^[A-Z]+\-[0-9]+$
 
   becomes
 
-      `"^[A-Z]+\\-[0-9]+$"`
+      "^[A-Z]+\\-[0-9]+$"
 
 * `--portable`  
   Produce maximally portable regular expressions
@@ -88,9 +102,30 @@ Optional `FLAGS` may be used to modify Rexpy's behaviour:
   Use fixed length fragments
 
 
-## Rexpy Examples
+(rexpy_examples)=
 
-```{eval-rst}
-.. automodule:: tdda.rexpy.examples
-    :members:
+## Supplied Rexpy Examples
+
+TDDA rexpy is supplied with a set of examples.
+
+To copy the rexpy examples, run the command:
+
+```
+tdda examples rexpy
+```
+
+This will create or overwrite a directory `rexpy_examples`
+in the current directory.
+
+Alternatively, you can copy all examples using the following command:
+
+```
+tdda examples
+```
+
+which will create a number of separate subdirectories.
+
+```{include} ../../tdda/rexpy/examples/README.md
+:heading-offset: 1
+:start-line: 2
 ```

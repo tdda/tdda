@@ -150,3 +150,5 @@ and `elements.txt`.
 `tdda-verify(1)`,
 `tdda-discover(1)`,
 `tdda-serial(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.

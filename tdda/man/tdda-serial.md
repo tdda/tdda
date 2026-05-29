@@ -220,3 +220,8 @@ When specifying a path to a CSV (or other flat) file:
 
 The `tdda serial` functionality is fairly new, and there are probably
 still bugs and undesirable features in the implementation.
+
+## SEE ALSO
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 8.
+

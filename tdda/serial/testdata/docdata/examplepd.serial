@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00",
+    "writer": "tdda.serial-3.0.03",
     "pandas.read_csv": {
         "sep": "|",
         "encoding": "UTF-8",
