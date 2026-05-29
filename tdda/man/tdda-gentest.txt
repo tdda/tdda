@@ -142,9 +142,9 @@ SEE ALSO
 
   [1mrexpy[0m
 
-
-
-
+  [1mTest Driven Data Analysis[0m
+  [1m⟨https://book.tdda.info⟩ book by Nicholas J. Radcliffe chapter 9 and chapter[0m
+[1m9 12 for reference testing more generally.[0m
 
 
 

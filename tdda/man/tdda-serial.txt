@@ -209,10 +209,10 @@ BUGS
   The [1mtdda serial [22mfunctionality is fairly new, and there are probably
   still bugs and undesirable features in the implementation.
 
+SEE ALSO
 
-
-
-
+  Test Driven Data Analysis
+  ⟨https://book.tdda.info⟩ book by Nicholas J. Radcliffe chapter 8.
 
 
 

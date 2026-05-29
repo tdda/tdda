@@ -325,6 +325,8 @@ satisfied.
 `tdda-discover(1)`,
 `tdda-serial(1)`
 
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.
+
 ---
 
 ## `tdda detect`
@@ -493,6 +495,8 @@ and `elements.txt`.
 `tdda-verify(1)`,
 `tdda-discover(1)`,
 `tdda-serial(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.
 
 ---
 
@@ -911,6 +915,10 @@ When specifying a path to a CSV (or other flat) file:
 The `tdda serial` functionality is fairly new, and there are probably
 still bugs and undesirable features in the implementation.
 
+### SEE ALSO
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 8.
+
 ---
 
 ## `tdda gentest`
@@ -1061,6 +1069,8 @@ this case, if the two verifier files should be different).
 ### SEE ALSO
 
 `rexpy(1)`, `tdda-diff(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 9, and chapter 9-12 for reference testing more generally.
 
 ---
 

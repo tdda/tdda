@@ -101,8 +101,8 @@ SEE ALSO
   [1mtdda discover[0m
   [1mtdda serial[0m
 
-
-
+  [1mTest Driven Data Analysis[0m
+  [1m⟨https://book.tdda.info⟩ book by Nicholas J. Radcliffe chapters 2 7.[0m
 
 
 
