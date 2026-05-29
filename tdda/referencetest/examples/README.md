@@ -1,4 +1,4 @@
-# Examples of using tdda.refererencetest.
+# Examples of using tdda.referencetest.
 
 **If you have a source distribution of the tdda library (typically cloned
 from Github), you should first copy the directory containing this README
@@ -39,8 +39,8 @@ or:
     pytest
     cd ..
 
-The tests should pass. (There are five tests in total, of which two
-are affected by generators.py.)
+The tests should pass. (There are 7 tests in total using unittest,
+or 8 using pytest, of which two are affected by generators.py.)
 
 ### Step 2:
 
@@ -53,16 +53,32 @@ Two tests should then fail and suggest suitable diff commands to run
 to see the differences.
 
 In this scenario, we assume that the new results are the ones we now
-want. So rerun with
+want. Before rewriting reference output, it's good practice to tag
+just the failing tests and rewrite only those, rather than rewriting
+everything with `-W` / `--write-all`. Here's the safe workflow:
 
-    python test_using_referencetestcase.py -W
+For unittest:
 
-or:
+    python unittest/test_using_referencetestcase.py -F
+    tdda tag
+    python unittest/test_using_referencetestcase.py -1
+    python unittest/test_using_referencetestcase.py -1W
+    python unittest/test_using_referencetestcase.py -9
 
-    pytest pytest/test_using_referencepytest.py --write-all -s
+`-F` runs all tests and records which ones failed. `tdda tag` tags
+those tests. `-1` runs only tagged tests (confirm just the two you
+expect are failing). `-1W` rewrites reference output for tagged tests
+only. `-9` removes all tags.
 
-and it will re-write the reference output to match your modified
-results. The files in the `reference` subdirectory will have changed
+For pytest:
+
+    pytest pytest/test_using_referencepytest.py --log-failures -s
+    tdda tag
+    pytest pytest/test_using_referencepytest.py --tagged -s
+    pytest pytest/test_using_referencepytest.py --write-all --tagged -s
+    pytest pytest/test_using_referencepytest.py -s
+
+The files in the `reference` subdirectory will have changed
 to reflect your changes to the generators.
 
 Running the tests should now pass again.
@@ -109,8 +125,8 @@ or:
     pytest
     cd ..
 
-The tests should pass. (There are five tests in total, of which three
-are affected by dataframes.py.)
+The tests should pass. (There are 7 tests in total using unittest,
+or 8 using pytest, of which five are affected by dataframes.py.)
 
 
 ### Step 2:
@@ -120,7 +136,7 @@ function in `dataframes.py` to change the DataFrame generated.
 One simple option is to change the default precision from 3 to (say) 2.
 This will result in a different string column `s` being generated.
 
-Three tests should then fail and suggest diff commands to run
+Five tests should then fail and suggest diff commands to run
 to see the differences. It also shows you, in some detail, where the
 differences are (in column `s`, if you made the suggested change).
 
@@ -129,16 +145,25 @@ CSV files, both of which have differences, and that both sets of
 differences are highlighted.
 
 We assume that these new (precision 2) results are the ones we want.
-So rerun with
+Use the same safe tagging workflow as in Scenario 1:
 
-    python test_using_referencetestcase.py -W
+For unittest:
 
-or:
+    python unittest/test_using_referencetestcase.py -F
+    tdda tag
+    python unittest/test_using_referencetestcase.py -1
+    python unittest/test_using_referencetestcase.py -1W
+    python unittest/test_using_referencetestcase.py -9
 
-    pytest pytest/test_using_referencepytest.py --write-all -s
+For pytest:
 
-and it will re-write the reference output to match your modified
-results. The files in the `reference` subdirectory will have changed
+    pytest pytest/test_using_referencepytest.py --log-failures -s
+    tdda tag
+    pytest pytest/test_using_referencepytest.py --tagged -s
+    pytest pytest/test_using_referencepytest.py --write-all --tagged -s
+    pytest pytest/test_using_referencepytest.py -s
+
+The files in the `reference` subdirectory will have changed
 to reflect your changes to the generators.
 
 Running the tests should now pass again.
