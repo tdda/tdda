@@ -9,7 +9,7 @@ UUIDs, phone numbers, email addresses, version numbers, and so on.
 It is not useful for free text.
 
 For all of these examples, run commands on the command line after
-cd'ing to this directory.
+changing to this directory with `cd`.
 
 ## Command-line examples
 
@@ -85,4 +85,24 @@ Run `rexpy --help` for full options. Useful flags include:
     -h, --header     Discard the first line (treat it as a header)
     -u, --underscore Allow underscore as a letter (useful for identifiers)
     -d, --dot        Allow dot as a letter (useful for identifiers)
-    -g, --group      Add capture groups around variable parts of the regex
+    -G, --no-group   Don't add extra capture groups to the regex
+    --portable       Use maximally portable regular expressions (default)
+    --perl           Use Perl-style regular expressions (e.g. \d)
+    --java           Use Java-style regular expressions (e.g. \p{Digit})
+    --posix          Use Posix-style regular expressions (e.g. [[:digit:]])
+
+
+## Regular Expression Styles
+
+    $ rexpy postcodes.txt
+    ^[A-Z]{1,2}[0-9]{1,2} [0-9][A-Z]{2}$
+
+    $ rexpy postcodes.txt --posix
+    ^[[:upper:]]{1,2}[[:digit:]]{1,2} [[:digit:]][[:upper:]]{2}$
+
+    $ rexpy postcodes.txt --java
+    ^\p{Upper}{1,2}\p{Digit}{1,2} \p{Digit}\p{Upper}{2}$
+
+    $ rexpy postcodes.txt --perl
+    ^[A-Z]{1,2}\d{1,2} \d[A-Z]{2}$
+

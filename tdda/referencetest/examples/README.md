@@ -8,7 +8,7 @@ file to somewhere else so that you do not modify the original.**
 ## Scenario 1: Testing Text/Text-File Generation
 
 You have a python module called `generators.py`, which is responsible
-for generating some two different HTML pages. (You can look at
+for generating two different HTML pages. (You can look at
 these in `reference/file_result.html` and
 `reference/string_result.html`.)
 
@@ -27,7 +27,7 @@ www.pytest.org pytest framework.
 
 ### Step 1:
 
-Run the tests using the initial unmodified version of generators.py.
+Run the tests using the initial unmodified version of `generators.py`.
 
 That's either:
 
@@ -40,11 +40,11 @@ or:
     cd ..
 
 The tests should pass. (There are 7 tests in total using unittest,
-or 8 using pytest, of which two are affected by generators.py.)
+or 8 using pytest, of which two are affected by `generators.py`.)
 
 ### Step 2:
 
-Make a one or more changes to the generation code in the `generate_string`
+Make one or more changes to the generation code in the `generate_string`
 function in `generators.py` to change the HTML output.
 Specifically, try changing the title in `<h1> ... </h1>`
 in some way (e.g. to upper case) in the generate_string function..
@@ -113,7 +113,7 @@ The ReferenceTest methods help here.
 
 ### Step 1:
 
-Run the tests using the initial unmodified version of dataframes.py.
+Run the tests using the initial unmodified version of `dataframes.py`.
 
 That's either:
 
@@ -126,12 +126,12 @@ or:
     cd ..
 
 The tests should pass. (There are 7 tests in total using unittest,
-or 8 using pytest, of which five are affected by dataframes.py.)
+or 8 using pytest, of which five are affected by `dataframes.py`.)
 
 
 ### Step 2:
 
-Make a one or more changes to the generation code in the `generate_dataframe`
+Make one or more changes to the generation code in the `generate_dataframe`
 function in `dataframes.py` to change the DataFrame generated.
 One simple option is to change the default precision from 3 to (say) 2.
 This will result in a different string column `s` being generated.
@@ -170,7 +170,7 @@ Running the tests should now pass again.
 
 ### Step 3:
 
-In the assertions for these cases, we have specified that content
+In the assertions for these cases, we have specified that the content of
 the `random` column should be ignored. So you could also completely
 change its generation to be something more like:
 
@@ -201,3 +201,10 @@ They should all still pass.
 - `type_matching`: how strictly to match types (`'strict'`, `'medium'`, `'none'`)
 - `fuzzy_nulls`: if `True`, treat different null representations as equivalent
 
+----
+
+For much more depth on reference testing, read
+the book Test-Driven Data Analysis, by Nicholas J. Radcliffe,
+particularly chapters 9-12. It is available at all good
+booksellers and all sellers of good books. It is also available,
+over time, free, online at <https://book.tdda.info>.

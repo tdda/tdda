@@ -1,16 +1,14 @@
-Examples for Gentest
-====================
+# Examples for Gentest
 
 This directory contains simple examples for Gentest.
 
 There are more complex examples, using R code as an illustration,
 in the subdirectory `r-examples`.
 
-Running the Examples
---------------------
+## Running the Examples
 
-Example 1: Hey!
-~~~~~~~~~~~~~~~
+### Example 1: Hey!
+
 Run
 
     tdda gentest 'echo hey'
@@ -21,7 +19,7 @@ This is Example 1 in the TDDA Gentest example at
 
 * Run the test by typing:
 
-    python test_echo_hey.py
+      python test_echo_hey.py
 
 * If all went well, the output will be something like:
 
@@ -32,13 +30,12 @@ This is Example 1 in the TDDA Gentest example at
 
       OK
 
-* You should now have a directory ref/echo_hey, which will contain two files.
+* You should now have a directory `ref/echo_hey`, which will contain two files.
   `STDOUT` should contain the output that `echo hey` produces.
   `STDERR` should be empty.
 
 
-Example 2: The Gentest Wizard with a Shell Script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Example 2: The Gentest Wizard with a Shell Script
 
 The second example uses the Gentest wizard.
 This is Example 2 in the TDDA Gentest example at
@@ -72,3 +69,11 @@ on timing and random numbers: You may get this:
 
 or you may get a failure. See the documentation for more details.
 
+
+----
+
+For much more depth on gentest and reference testing, read
+the book Test-Driven Data Analysis, by Nicholas J. Radcliffe,
+particularly chapters 9-12. It is available at all good
+booksellers and all sellers of good books. It is also available,
+over time, free, online at <https://book.tdda.info>.
