@@ -180,3 +180,24 @@ and rerun the tests (without the re-write flags, `-W` / `--write-all`).
 
 They should all still pass.
 
+
+## Ignore options
+
+### Text assertions (`assertStringCorrect`, `assertTextFileCorrect`)
+
+- `ignore_substrings`: list of strings; any line containing one is ignored
+- `ignore_patterns`: list of regular expressions; any line matching one is ignored
+- `remove_lines`: list of strings; matching lines are removed before comparison
+  (`ignore_lines` is a legacy alias for `remove_lines`)
+
+### DataFrame assertions (`assertDataFrameCorrect`, `assertCSVFileCorrect`)
+
+- `check_data`: list of columns to check (default: all)
+- `check_types`: list of columns whose types to check (default: all)
+- `check_order`: list of columns to check order for (default: all)
+- `condition`: a boolean Series to filter rows before comparison
+- `sortby`: column(s) to sort by before comparison
+- `precision`: number of decimal places for floating-point comparison
+- `type_matching`: how strictly to match types (`'strict'`, `'medium'`, `'none'`)
+- `fuzzy_nulls`: if `True`, treat different null representations as equivalent
+

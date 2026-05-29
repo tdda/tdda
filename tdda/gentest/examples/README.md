@@ -3,37 +3,37 @@ Examples for Gentest
 
 This directory contains simple examples for Gentest.
 
-there are more complex examples, using R code as an illustration,
+There are more complex examples, using R code as an illustration,
 in the subdirectory `r-examples`.
 
 Running the Examples
 --------------------
 
-Example 1: Hey, Cats!
-~~~~~~~~~~~~~~~~~~~~~
+Example 1: Hey!
+~~~~~~~~~~~~~~~
 Run
 
-    tdda gentest 'cat hey'
+    tdda gentest 'echo hey'
 
-which should generate a test file `test_cat_hey.py`.
+which should generate a test file `test_echo_hey.py`.
 This is Example 1 in the TDDA Gentest example at
 <https://tdda.readthedocs.io/gentest.html#example-1-hey-cats-not-using-wizard>.
 
 * Run the test by typing:
 
-    python test_cat_hey.py
+    python test_echo_hey.py
 
 * If all went well, the output will be something like:
 
-      python test_cat_hey.py
+      python test_echo_hey.py
       ....
       --------------------------------------------------------------------
       Ran 4 tests in 0.137s
 
       OK
 
-* You should now have a directory ref/cat_hey, which will contain two files.
-  `STDOUT` should contain the output the `cat hey` produces.
+* You should now have a directory ref/echo_hey, which will contain two files.
+  `STDOUT` should contain the output that `echo hey` produces.
   `STDERR` should be empty.
 
 
@@ -56,14 +56,14 @@ Invoke the wizard by just typing:
 * Accept the defaults for everything else except the number of times
   to run the script, where you should enter `10`.
 
-Gentest should generate `test_sh_example2.py`, and a new subdirectory
-`sh_example2` of the `ref` directory.
+Gentest should generate `test_sh_example2_sh.py`, and a new subdirectory
+`sh_example2_sh` of the `ref` directory.
 
 In this case, whether the tests pass when you run them will depend
-on timing random numbers: You may get this:
+on timing and random numbers: You may get this:
 
 
-    $ python test_two.py
+    $ python test_sh_example2_sh.py
     .....
     ----------------------------------------------------------------------
     Ran 5 tests in 0.258s

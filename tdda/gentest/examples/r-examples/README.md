@@ -76,7 +76,7 @@ the last, typing
 
     tdda gentest 'Rscript 2-compute-cumulative-percentiles.R' two
 
-or use Genest's wizard, by just typing:
+or use Gentest's wizard, by just typing:
 
     tdda gentest
 
@@ -84,13 +84,13 @@ or use Genest's wizard, by just typing:
 
     Enter name for test script [test_Rscript_2_compute_cumulative_percentiles_R]: two
 
-* Accept the deafiults for everything else, just hitting the `RETURN` (enter)
+* Accept the defaults for everything else, just hitting the `RETURN` (enter)
   key until it stops
 
 Gentest should generate `test_two.py`, and a new subdirectory `two` of the
 `ref` directory.
 
-In this case, whether the tasts pass when you run them will depend on timing
+In this case, whether the tests pass when you run them will depend on timing
 and luck: You may get this:
 
 
@@ -167,10 +167,10 @@ expression shown, which both of these do.
 
 * If you get this failure, you have a few options. First, Gentest suggests
   a `diff` command you can use to examine the differences.
-  In fact, the diff command is quite just to say that the files are
+  In fact, the diff command will just say that the files are
   binary and differ. This is technically true, though some `diff` tools
   can be persuaded to show the differences anyway.
-  Even if you can's see them, what you can definitely do it open the two files
+  Even if you can't see them, what you can definitely do is open the two files
   (the diff command includes their full paths) and look at them to see whether
   they look the same. Hopefully they will.
 
@@ -182,8 +182,8 @@ expression shown, which both of these do.
 
 * Alternatively, you can edit the test yourself, but this will require you
   to write one or more exclusion patterns, as Gentest did. They can, however,
-  be simpler.  One possibiity is to use `ignore_substrings`, which ignores
-  lines that contain the subtrings given.
+  be simpler.  One possibility is to use `ignore_substrings`, which ignores
+  lines that contain the substrings given.
 
     def test_plots2_pdf(self):
         ignores = [
@@ -194,7 +194,7 @@ expression shown, which both of these do.
                                os.path.join(self.refdir, 'plots2.pdf'),
                                ignore_substrings=ignores)
 
-* In future, Gentest will probably allow you to specify a time two
+* In future, Gentest will probably allow you to specify a time to
   wait between invocations of the test command, which would be another
   way to fix the problem.
 
