@@ -48,9 +48,9 @@
             "max_nulls": 0
         },
         "Group": {
-            "type": "real",
-            "min": 1.0,
-            "max": 18.0,
+            "type": "int",
+            "min": 1,
+            "max": 18,
             "sign": "positive"
         },
         "ChemicalSeries": {

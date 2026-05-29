@@ -52,7 +52,7 @@ The equivalent steps to the "elements" ones above are:
 
 1. Generate constraints using a small sample (1000 records).
 
-        tdda discover -r testdata/accounts1k.csv accounts1k.tdda
+        tdda discover -x testdata/accounts1k.csv accounts1k.tdda
 
 2. Verify the same data against those constraints.
 
@@ -164,7 +164,7 @@ tiny, generated dataset:
 
        python simple_verify_fail.py
 
-   There should be 5 passes and 7 failures.
+   There should be 7 passes and 6 failures.
 
 
 # Example of extending the tdda.constraints module
