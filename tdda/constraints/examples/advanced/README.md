@@ -49,3 +49,4 @@ with:
         tdda verify . files.tdda
 
    Now the `max_length` constraint on the `name` field should fail.
+   (The `size` constraints will also fail, since `touch` creates an empty file.)

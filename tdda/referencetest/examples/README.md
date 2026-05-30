@@ -49,7 +49,7 @@ function in `generators.py` to change the HTML output.
 Specifically, try changing the title in `<h1> ... </h1>`
 in some way (e.g. to upper case) in the generate_string function..
 
-Two tests should then fail and suggest suitable diff commands to run
+One test should then fail and suggest suitable diff commands to run
 to see the differences.
 
 In this scenario, we assume that the new results are the ones we now
@@ -66,9 +66,10 @@ For unittest:
     python unittest/test_using_referencetestcase.py -9
 
 `-F` runs all tests and records which ones failed. `tdda tag` tags
-those tests. `-1` runs only tagged tests (confirm just the two you
-expect are failing). `-1W` rewrites reference output for tagged tests
-only. `-9` removes all tags.
+those tests. `-1` runs only tagged tests (confirm just the one you
+expect is failing). `-1W` rewrites reference output for tagged tests
+only. `-9` removes all tags. When running with `-9` (or `--untag`),
+the tests are not actually run, so "NO TESTS RAN" is expected.
 
 For pytest:
 

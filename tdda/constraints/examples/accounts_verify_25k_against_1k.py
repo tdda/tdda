@@ -1,4 +1,4 @@
-# accounts_verify_10k_against_1k.py
+# accounts_verify_25k_against_1k.py
 
 import pandas as pd
 
