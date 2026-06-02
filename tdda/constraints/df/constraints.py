@@ -227,10 +227,13 @@ class DFConstraintDetector(BaseConstraintDetector):
         self.df = df
         if df is not None:
             self.date_cols = date_columns(df)
-            index = df.index.copy()
-            if not index.name:
-                index.name = 'Index'
-            self.out_df = pd.DataFrame(index=index)
+            if is_polars_df(df):
+                self.out_df = None
+            else:
+                index = df.index.copy()
+                if not index.name:
+                    index.name = 'Index'
+                self.out_df = pd.DataFrame(index=index)
         else:
             self.date_cols = []
             self.out_df = None
@@ -1068,14 +1071,14 @@ def load_df(path, md_path=None, find_md=False, engine=None,
     ext = ext.lower()
     path = handle_tilde(path)
     if ext == '.parquet':
-        return serial_read_df(
+        df = serial_read_df(
             path,
             engine=engine,
             backend=backend,
             config=config,
         )
     else:
-        return csv_to_dataframe(
+        df = csv_to_dataframe(
             path,
             md_path,
             find_md=find_md,
@@ -1084,6 +1087,7 @@ def load_df(path, md_path=None, find_md=False, engine=None,
             backend=backend,
             config=config,
         )
+    return df
 
 
 

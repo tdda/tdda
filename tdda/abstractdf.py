@@ -424,6 +424,8 @@ def col_min_length(col):
     if is_pandas_series(col):
         return col.str.len().min()
     else:
+        if col.dtype == pl.Categorical:
+            col = col.cast(pl.String)
         return col.str.len_chars().min()
 
 
@@ -431,6 +433,8 @@ def col_max_length(col):
     if is_pandas_series(col):
         return col.str.len().max()
     else:
+        if col.dtype == pl.Categorical:
+            col = col.cast(pl.String)
         return col.str.len_chars().max()
 
 
