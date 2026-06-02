@@ -6,7 +6,7 @@ SYNOPSIS
 
   [1mtdda verify [22m[[1m‐h[22m] [[1m‐?[22m] [[1m‐7[22m] [[1m‐‐no‐config[22m]
               [[1m‐‐colour[22m] [[1m‐‐no‐colour[22m]
-              [[1m‐‐epsilon [4m[22mEPSILON[24m] [[1m‐a[22m] [[1m‐f[22m]
+              [[1m‐‐epsilon [4m[22mEPSILON[24m] [[1m‐a[22m] [[1m‐f[22m] [[1m‐‐dense[22m]
               [[1m‐t {strict,loose}[22m] [[1m‐‐verify‐required‐fields[22m]
               [[1m‐‐verify‐allowed‐fields[22m] [[1m‐‐no‐verify‐required‐fields[22m]
               [[1m‐‐no‐verify‐allowed‐fields[22m] [[1m‐‐varf[22m] [[1m‐‐no‐varf[22m]
@@ -57,6 +57,7 @@ OPTIONS
   [1m‐a[22m, [1m‐‐all               [22mReport all fields, even if there are no
                           failures
   [1m‐f[22m, [1m‐‐fields            [22mReport only fields with failures
+  [1m‐‐dense               [22mCompact output: less vertical space used
 
   [1m‐t[22m, [1m‐‐type_checking [22m{[4mstrict[24m,[4mloose[24m}
                           "loose" means consider all numeric types
@@ -103,7 +104,6 @@ SEE ALSO
 
   [1mTest Driven Data Analysis[0m
   [1m⟨https://book.tdda.info⟩ book by Nicholas J. Radcliffe chapters 2 7.[0m
-
 
 
 

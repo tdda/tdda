@@ -1,0 +1,82 @@
+.nh
+.TH "TDDA HEAD" 1 "May 2026" "3.0" "tdda head manual"
+.SH NAME
+\fBtdda head\fR — Display the first N rows of a dataset
+
+.SH SYNOPSIS
+\fBtdda head\fR [\fB-h\fR] [\fBN\fR]
+            [\fB--fields\fR \fIFIELDS\fP] [\fB--xfields\fR \fIFIELDS\fP]
+            [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+            \fIINPUT\fP [\fIFIELD\fP ...]
+
+.SH POSITIONAL ARGUMENTS
+\fIINPUT\fP      Dataset path (CSV, Parquet, or colon syntax).
+
+.PP
+\fIFIELD\fP ...  Field names (or \fBfnmatch\fR wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to \fB--fields\fR;
+           both may be combined. Wildcards must be quoted in the shell.
+
+.SH DESCRIPTION
+The \fBtdda head\fR command displays the first N rows of a dataset (default 10)
+as a rich table.
+
+.PP
+Null values are shown as \fB∅\fR\&.
+
+.SH OPTIONS
+\fB-h\fR, \fB-?\fR, \fB--help\fR        Show this help message and exit
+
+.PP
+\fBN\fR                       Number of rows to show (default 10)
+
+.PP
+\fB--fields\fR \fIFIELDS\fP         Show only these fields. \fIFIELDS\fP is a
+                          comma- or space-separated list of field names
+                          or \fBfnmatch\fR wildcard patterns (e.g. \fBeu_*\fR,
+                          \fB[a-z]*\fR). Fields appear in the order
+                          specified. Requires quoting in the shell when
+                          using spaces or wildcards.
+
+.PP
+\fB--xfields\fR \fIFIELDS\fP        Exclude these fields. Same format as
+                          \fB--fields\fR\&. Fields appear in dataset order.
+
+.PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine (default)
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                          \fBn\fR for numpy_nullable *
+.br
+                          \fBa\fR for pyarrow
+.br
+                          \fBo\fR for original
+
+.SH EXAMPLES
+1) \fBtdda head accounts1k.parquet\fR
+
+.PP
+Display the first 10 rows of \fBaccounts1k.parquet\fR\&.
+
+.PP
+2) \fBtdda head 20 accounts1k.csv:\fR
+
+.PP
+Display the first 20 rows, using any associated metadata file.
+
+.PP
+3) \fBtdda head --fields 'name,balance' accounts1k.csv:\fR
+
+.PP
+Display only \fBname\fR and \fBbalance\fR for the first 10 rows.
+
+.SH SEE ALSO
+\fBtdda-cat(1)\fR,
+\fBtdda-tail(1)\fR,
+\fBtdda-sample(1)\fR,
+\fBtdda-ls(1)\fR,
+\fBtdda-diff(1)\fR,
+\fBtdda-serial(1)\fR

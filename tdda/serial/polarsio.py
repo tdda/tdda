@@ -431,6 +431,8 @@ def csv_to_polars(
         preferred=preferred or 'polars.read_csv',
         verbosity=verbosity,
     )
+    if md is not None and md.path is None and md_path is not None:
+        md.path = md_path
 
     Warn = warner or (warn if verbosity else lambda *a, **kw: None)
     postproc = {}

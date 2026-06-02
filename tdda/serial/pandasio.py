@@ -718,6 +718,8 @@ def csv_to_pandas(
         preferred=preferred or 'pandas.read_csv',
         verbosity=verbosity,
     )
+    if md is not None and md.path is None and md_path is not None:
+        md.path = md_path
     backend = get_backend(backend, config)
     if md:
         md_kw = serial_to_pandas_read_csv_args(

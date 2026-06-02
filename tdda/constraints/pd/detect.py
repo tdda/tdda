@@ -39,7 +39,7 @@ import numpy as np
 
 from tdda import __version__
 from tdda.state import get_config
-from tdda.constraints.flags import detect_parser, detect_flags
+from tdda.constraints.flags import detect_parser, detect_flags, check_constraints_file
 from tdda.constraints.pd.constraints import detect_df, load_df, file_format
 
 from tdda.utils import handle_tilde, nvl, cprint, print_stderr
@@ -79,6 +79,7 @@ def detect_df_from_file(
     elif constraints_path is None:
         (stem, ext) = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
+    check_constraints_file(constraints_path)
 
     df = load_df(df_path, backend=backend)
     v = detect_df(

@@ -1,0 +1,118 @@
+.nh
+.TH "TDDA CAT" 1 "May 2026" "3.0" "tdda cat manual"
+.SH NAME
+\fBtdda cat\fR — Display rows from a dataset as a rich table
+
+.SH SYNOPSIS
+\fBtdda cat\fR [\fB-h\fR] [\fBN\fR | \fB-N\fR | \fB+N\fR]
+           [\fB--fields\fR \fIFIELDS\fP] [\fB--xfields\fR \fIFIELDS\fP]
+           [\fB-r\fR \fIN\fP [\fB--seed\fR \fISEED\fP]]
+           [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+           \fIINPUT\fP [\fIFIELD\fP ...]
+
+.SH POSITIONAL ARGUMENTS
+\fIINPUT\fP is one of:
+  - a CSV file (or \fB\&.tsv\fR, \fB\&.psv\fR, \fB\&.txt\fR)
+  - a Parquet file (\fB\&.parquet\fR)
+  - a flat file with colon syntax to trigger metadata lookup
+    (e.g. \fBfoo.csv:\fR)
+  - a flat file with an explicit metadata path
+    (e.g. \fBfoo.csv:foo.serial\fR)
+
+.PP
+\fIFIELD\fP ...  Field names (or \fBfnmatch\fR wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to \fB--fields\fR;
+           both may be combined. Wildcards must be quoted in the shell.
+
+.SH DESCRIPTION
+The \fBtdda cat\fR command displays rows from a dataset as a rich table.
+
+.PP
+Without a row count, all rows are shown.
+
+.PP
+\fBN\fR or \fB-N\fR    First N rows
+.br
+  \fB+N\fR           Last N rows
+
+.PP
+Null values are shown as \fB∅\fR\&.
+
+.SH OPTIONS
+\fB-h\fR, \fB-?\fR, \fB--help\fR        Show this help message and exit
+
+.PP
+\fB--fields\fR \fIFIELDS\fP         Show only these fields. \fIFIELDS\fP is a
+                          comma- or space-separated list of field names
+                          or \fBfnmatch\fR wildcard patterns (e.g. \fBeu_*\fR,
+                          \fB[a-z]*\fR). Fields appear in the order
+                          specified. Requires quoting in the shell when
+                          using spaces or wildcards.
+
+.PP
+\fB--xfields\fR \fIFIELDS\fP        Exclude these fields. Same format as
+                          \fB--fields\fR\&. Fields appear in dataset order.
+
+.PP
+\fB-r\fR \fIN\fP, \fB--random\fR \fIN\fP      Show \fIN\fP random rows instead of a slice.
+
+.PP
+\fB--seed\fR \fISEED\fP             Random seed for \fB-r\fR\&. If omitted, a seed is
+                          chosen automatically and printed.
+
+.PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine (default)
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                          \fBn\fR for numpy_nullable *
+.br
+                          \fBa\fR for pyarrow
+.br
+                          \fBo\fR for original
+
+.SH EXAMPLES
+1) \fBtdda cat accounts1k.parquet\fR
+
+.PP
+Display all rows from \fBaccounts1k.parquet\fR\&.
+
+.PP
+2) \fBtdda cat -10 accounts1k.csv:\fR
+
+.PP
+Display the first 10 rows, using any associated metadata file.
+
+.PP
+3) \fBtdda cat +10 accounts1k.csv:\fR
+
+.PP
+Display the last 10 rows.
+
+.PP
+4) \fBtdda cat --fields 'name,balance' accounts1k.csv:\fR
+
+.PP
+Display only the \fBname\fR and \fBbalance\fR fields.
+
+.PP
+5) \fBtdda cat --fields 'amount*' --xfields '*_raw' accounts1k.csv:\fR
+
+.PP
+Display fields matching \fBamount*\fR, excluding those ending in \fB_raw\fR\&.
+
+.PP
+6) \fBtdda cat -r 20 --seed 42 accounts1k.csv:\fR
+
+.PP
+Display 20 random rows with a fixed seed.
+
+.SH SEE ALSO
+\fBtdda-head(1)\fR,
+\fBtdda-tail(1)\fR,
+\fBtdda-sample(1)\fR,
+\fBtdda-ls(1)\fR,
+\fBtdda-diff(1)\fR,
+\fBtdda-serial(1)\fR

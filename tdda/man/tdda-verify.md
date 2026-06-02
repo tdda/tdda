@@ -8,7 +8,7 @@
 
 `tdda verify` [`-h`] [`-?`] [`-7`] [`--no-config`]
             [`--colour`] [`--no-colour`]
-            [`--epsilon` *EPSILON*] [`-a`] [`-f`]
+            [`--epsilon` *EPSILON*] [`-a`] [`-f`] [`--dense`]
             [`-t {strict,loose}`] [`--verify-required-fields`]
             [`--verify-allowed-fields`] [`--no-verify-required-fields`]
             [`--no-verify-allowed-fields`] [`--varf`] [`--no-varf`]
@@ -59,6 +59,7 @@ values cause constraints to be violated: the companion command
 `-a`, `--all`               Report all fields, even if there are no  
                         failures  
 `-f`, `--fields`            Report only fields with failures  
+`--dense`               Compact output: less vertical space used  
 
 `-t`, `--type_checking` {*strict*,*loose*}  
                         "loose" means consider all numeric types  

@@ -11,7 +11,7 @@
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
             [-r [REPORT ...]] [--interleave] [--no-interleave]
-            [--index] [--int] [--key [KEY ...]]
+            [--index] [--int] [--key [KEY ...]] [--dense]
             [--verify-required-fields] [--verify-allowed-fields]
             [--no-verify-required-fields] [--no-verify-allowed-fields]
             [--varf] [--no-varf] [--pandas] [--polars]
@@ -138,6 +138,8 @@ the same functions as \fBtdda verify\fR\&.
                         and 0 for false.
 .br
 \fB--key [KEY ...]\fR       Key or key fields to use when reporting failures
+.br
+\fB--dense\fR               Compact output: less vertical space used
 
 .PP
 \fB--verify-required-fields\fR, \fB--vrf\fR

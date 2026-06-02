@@ -1,0 +1,82 @@
+.nh
+.TH "TDDA LS" 1 "May 2026" "3.0" "tdda ls manual"
+.SH NAME
+\fBtdda ls\fR — List fields in a dataset
+
+.SH SYNOPSIS
+\fBtdda ls\fR [\fB-h\fR] [\fB-1\fR|\fB--one-line\fR] [\fB-l\fR] [\fB--pandas\fR] [\fB--polars\fR]
+         [\fB--backend\fR \fIBACKEND\fP]
+         \fIINPUT\fP
+
+.SH POSITIONAL ARGUMENTS
+\fIINPUT\fP is one of:
+  - a CSV file (or \fB\&.tsv\fR, \fB\&.psv\fR, \fB\&.txt\fR)
+  - a Parquet file (\fB\&.parquet\fR)
+  - a flat file with colon syntax to trigger metadata lookup
+    (e.g. \fBfoo.csv:\fR)
+  - a flat file with an explicit metadata path
+    (e.g. \fBfoo.csv:foo.serial\fR)
+
+.SH DESCRIPTION
+The \fBtdda ls\fR command lists the fields in a dataset.
+
+.PP
+Without \fB--long\fR, it prints a one-line summary followed by the field
+names, right-aligned.
+
+.PP
+With \fB--long\fR, it prints a one-line summary followed by a table showing
+each field's dtype, minimum value, maximum value, and null count.
+
+.PP
+For flat files, a second line reports how the file was read and which
+metadata file was used, if any.
+
+.SH OPTIONS
+\fB-h\fR, \fB-?\fR, \fB--help\fR        Show this help message and exit
+
+.PP
+\fB-1\fR, \fB--one-line\fR          List all field names on one line, space-separated
+.br
+\fB-l\fR, \fB--long\fR              Show dtype, min, max, and null count per field
+
+.PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine (default)
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                          \fBn\fR for numpy_nullable *
+.br
+                          \fBa\fR for pyarrow
+.br
+                          \fBo\fR for original
+
+.SH EXAMPLES
+The example data can be obtained by running \fBtdda examples\fR, which will
+create various directories, including \fBserial_examples\fR\&.
+
+.PP
+1) \fBtdda ls accounts1k.parquet\fR
+
+.PP
+List the fields in \fBaccounts1k.parquet\fR\&.
+
+.PP
+2) \fBtdda ls -l accounts1k.csv:\fR
+
+.PP
+Show field details for \fBaccounts1k.csv\fR, using any associated metadata
+file found automatically.
+
+.PP
+3) \fBtdda ls -l accounts1k.csv --polars\fR
+
+.PP
+Show field details using Polars.
+
+.SH SEE ALSO
+\fBtdda-diff(1)\fR,
+\fBtdda-serial(1)\fR,
+\fBtdda-verify(1)\fR

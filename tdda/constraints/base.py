@@ -1018,6 +1018,7 @@ class Verification(object):
         index=False,
         in_place=False,
         colour=False,
+        dense=False,
         verify_allowed_fields=None,
         verify_required_fields=None,
         config=None,
@@ -1033,6 +1034,7 @@ class Verification(object):
         self.report = report
         self.ascii = ascii
         self.colour = config.get('colour', colour)
+        self.dense = dense
         self.detect = detect
         self.outpath = outpath
         self.write_all_records = write_all_records
@@ -1144,7 +1146,7 @@ class Verification(object):
         else:
             self.extra_fields = None  # No longer relevant
 
-    def dataset_constraints_results(self):
+    def dataset_constraints_results(self, dense=False):
         out = []
         if self.verify_allowed_fields:
             if self.extra_fields or self.report not in ('fields', 'records'):
@@ -1159,19 +1161,25 @@ class Verification(object):
                     'Missing (required) fields: %s'
                     % (', '.join(self.missing_fields) or 'None')
                 )
-        s = '\n'.join(out)
+        sep = '  ' if dense else '\n'
+        s = sep.join(out)
         return ('DATASET:\n\n%s\n\n' % s) if s else ''
 
-    def to_string(self, colour=None, ascii=None):
+    def to_string(self, colour=None, ascii=None, dense=None):
         """
         Returns string representation of the ``Verification`` object.
 
         The format of the string is controlled by the value of the
         object's ``report`` property. If this is set to 'fields',
         then it reports only those fields that have failures.
+
+        If ``dense`` is True (or the object's ``dense`` attribute is set),
+        fields are separated by single newlines and summary stat pairs
+        are placed on a single line, reducing vertical space.
         """
         ascii = nvl(ascii, self.ascii)
         colour = nvl(colour, self.colour)
+        dense = nvl(dense, self.dense)
         n_fields = len(self.fields)
         failing_field_items = list(
             (field, ver)
@@ -1185,7 +1193,8 @@ class Verification(object):
             field_items = failing_field_items
         else:
             field_items = self.fields.items()
-        fields = '\n\n'.join(
+        field_sep = '\n' if dense else '\n\n'
+        fields = field_sep.join(
             '%s: %s  %s  %s'
             % (
                 field,
@@ -1204,78 +1213,73 @@ class Verification(object):
         )
         fields_part = 'FIELDS:\n\n%s\n\n' % fields if fields else '\n'
 
-        dataset_part = self.dataset_constraints_results()
+        dataset_part = self.dataset_constraints_results(dense=dense)
 
         out = ['%s%sSUMMARY:\n' % (fields_part, dataset_part)]
         ss = self.summary_stats
+        pair_sep = '  ' if dense else '\n'
+        pair_trail = [] if dense else ['']
         if self.report == 'records' and 'records' in ss:
             sr = ss['records']
-            out.extend(
-                [
-                    f'Records: {sr.total:,}',
-                    'Failing Records: %s'
-                    % richgoodbad(
-                        f'{sr.failures:,} ({sr.bad_pc})',
-                        colour,
-                        sr.failures == 0,
-                    ),
-                    '',
-                ]
+            failing_records = richgoodbad(
+                f'{sr.failures:,} ({sr.bad_pc})',
+                colour,
+                sr.failures == 0,
             )
+            out.append(
+                f'Records: {sr.total:,}{pair_sep}'
+                f'Failing Records: {failing_records}'
+            )
+            out.extend(pair_trail)
 
         sf = ss['fields']
-        out.extend(
-            [
-                f'Constrained Fields: {sf.total:,}',
-                'Failing Fields: %s'
-                % richgoodbad(
-                    f'{sf.failures:,} ({sf.bad_pc})', colour, sf.failures == 0
-                ),
-                '',
-            ]
+        failing_fields = richgoodbad(
+            f'{sf.failures:,} ({sf.bad_pc})', colour, sf.failures == 0
         )
+        out.append(
+            f'Constrained Fields: {sf.total:,}{pair_sep}'
+            f'Failing Fields: {failing_fields}'
+        )
+        out.extend(pair_trail)
 
         if 'values' in ss:
             sv = ss['values']
-            out.extend(
-                [
-                    f'Constrained Values: {sv.total:,}',
-                    'Failing Values: %s'
-                    % richgoodbad(
-                        f'{sv.failures:,} ({sv.bad_pc})',
-                        colour,
-                        sv.failures == 0,
-                    ),
-                    '',
-                ]
+            failing_values = richgoodbad(
+                f'{sv.failures:,} ({sv.bad_pc})',
+                colour,
+                sv.failures == 0,
             )
+            out.append(
+                f'Constrained Values: {sv.total:,}{pair_sep}'
+                f'Failing Values: {failing_values}'
+            )
+            out.extend(pair_trail)
 
         sc = ss['constraints']
-        out.extend(
-            [
-                f'Constraints: {sc.total:,}',
-                'Failing Constraints: %s'
-                % richgoodbad(
-                    f'{sc.failures:,} ({sc.bad_pc})', colour, sc.failures == 0
-                ),
-            ]
+        failing_constraints = richgoodbad(
+            f'{sc.failures:,} ({sc.bad_pc})', colour, sc.failures == 0
+        )
+        out.append(
+            f'Constraints: {sc.total:,}{pair_sep}'
+            f'Failing Constraints: {failing_constraints}'
         )
 
         lines = []
-        if self.verify_allowed_fields:
+        if self.verify_allowed_fields and 'extras' in ss:
             n_extras = ss['extras']
             lines.append(
-                f'Extra (disallowed) fields: %s'
+                'Extra (disallowed) fields: %s'
                 % richgoodbad(f'{n_extras}', colour, n_extras == 0)
             )
-        if self.verify_required_fields:
+        if self.verify_required_fields and 'missing' in ss:
             n_missing = ss['missing']
             lines.append(
-                f'Missing (required) fields: %s'
+                'Missing (required) fields: %s'
                 % richgoodbad(f'{n_missing}', colour, n_missing == 0)
             )
         if lines:
-            out.extend([''] + lines)
+            trailer = [pair_sep.join(lines)] if dense else [''] + lines
+            out.extend(trailer)
         return '\n'.join(out)
 
     __str__ = to_string
@@ -1669,6 +1673,10 @@ def verify(
                 'records': PassFailCount('records', n_records, 0),
                 'values': PassFailCount('values', n_records * n_fields, 0),
             }
+            if results.verify_allowed_fields:
+                results.summary_stats['extras'] = len(results.extra_fields)
+            if results.verify_required_fields:
+                results.summary_stats['missing'] = len(results.missing_fields)
     else:
         results.create_summary_stats()
     return results

@@ -37,7 +37,7 @@ import pandas as pd
 import numpy as np
 
 from tdda import __version__
-from tdda.constraints.flags import verify_parser, verify_flags
+from tdda.constraints.flags import verify_parser, verify_flags, check_constraints_file
 from tdda.constraints.pd.constraints import verify_df, load_df
 
 from tdda.state import get_config
@@ -76,6 +76,7 @@ def verify_df_from_file(
     if constraints_path is None:
         stem, ext = os.path.splitext(df_path)
         constraints_path = stem + '.tdda'
+    check_constraints_file(constraints_path)
 
     df = load_df(df_path, md_path=md_path, backend=backend)
     v = verify_df(
