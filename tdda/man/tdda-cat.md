@@ -6,7 +6,7 @@
 
 ## SYNOPSIS
 
-`tdda cat` [`-h`] [`N` | `-N` | `+N`]
+`tdda cat` [`-h`] [`N` | `-N` | `+N`] [`-s` | `-S`]
            [`--fields` *FIELDS*] [`--xfields` *FIELDS*]
            [`-r` *N* [`--seed` *SEED*]]
            [`--pandas`] [`--polars`] [`--backend` *BACKEND*]
@@ -51,6 +51,14 @@ Null values are shown as `∅`.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
                           `--fields`. Fields appear in dataset order.  
 
+`-s`                        Short headers: column width driven by data;
+                          headers split at word boundaries (punctuation
+                          and lowercase→uppercase transitions) and packed
+                          onto as few lines as possible.  
+
+`-S`                        Short headers: as `-s` but split anywhere
+                          (mid-word) to fit the data width.  
+
 `-r` *N*, `--random` *N*      Show *N* random rows instead of a slice.  
 
 `--seed` *SEED*             Random seed for `-r`. If omitted, a seed is
@@ -88,6 +96,11 @@ Display fields matching `amount*`, excluding those ending in `_raw`.
 6) `tdda cat -r 20 --seed 42 accounts1k.csv:`
 
 Display 20 random rows with a fixed seed.
+
+7) `tdda cat -s accounts1k.csv:`
+
+Display all rows with compact multi-line headers, splitting at word
+boundaries (`open_date` → `open date`, `accountType` → `account Type`).
 
 ## SEE ALSO
 

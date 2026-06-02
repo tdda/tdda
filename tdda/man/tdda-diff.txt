@@ -59,10 +59,11 @@ OPTIONS
     Vertical display (left above right)
 
   [1m‐‐find‐md[0m
-    Attempt to find associated metadata for flat files.
+    Attempt to find associated metadata for flat files automatically,
+    without requiring [1m: [22mcolon syntax in the path.
 
   [1m‐‐no‐md[22m, [1m‐‐no‐find‐md[0m
-    Do not attempt to find associated metadata for flat files.
+    Do not attempt to find associated metadata for flat files (default).
 
   [1m‐‐key [4m[22mFIELD[0m
     Use this field as a join key when reporting differences.
@@ -174,7 +175,6 @@ EXAMPLES
 
   Compare a Parquet file against a CSV file with loose type matching
   and floating‐point values compared to 3 decimal places.
-
 
 
 

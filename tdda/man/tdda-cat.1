@@ -4,7 +4,7 @@
 \fBtdda cat\fR — Display rows from a dataset as a rich table
 
 .SH SYNOPSIS
-\fBtdda cat\fR [\fB-h\fR] [\fBN\fR | \fB-N\fR | \fB+N\fR]
+\fBtdda cat\fR [\fB-h\fR] [\fBN\fR | \fB-N\fR | \fB+N\fR] [\fB-s\fR | \fB-S\fR]
            [\fB--fields\fR \fIFIELDS\fP] [\fB--xfields\fR \fIFIELDS\fP]
            [\fB-r\fR \fIN\fP [\fB--seed\fR \fISEED\fP]]
            [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
@@ -52,6 +52,16 @@ Null values are shown as \fB∅\fR\&.
 .PP
 \fB--xfields\fR \fIFIELDS\fP        Exclude these fields. Same format as
                           \fB--fields\fR\&. Fields appear in dataset order.
+
+.PP
+\fB-s\fR                        Short headers: column width driven by data;
+                          headers split at word boundaries (punctuation
+                          and lowercase→uppercase transitions) and packed
+                          onto as few lines as possible.
+
+.PP
+\fB-S\fR                        Short headers: as \fB-s\fR but split anywhere
+                          (mid-word) to fit the data width.
 
 .PP
 \fB-r\fR \fIN\fP, \fB--random\fR \fIN\fP      Show \fIN\fP random rows instead of a slice.
@@ -108,6 +118,13 @@ Display fields matching \fBamount*\fR, excluding those ending in \fB_raw\fR\&.
 
 .PP
 Display 20 random rows with a fixed seed.
+
+.PP
+7) \fBtdda cat -s accounts1k.csv:\fR
+
+.PP
+Display all rows with compact multi-line headers, splitting at word
+boundaries (\fBopen_date\fR → \fBopen date\fR, \fBaccountType\fR → \fBaccount Type\fR).
 
 .SH SEE ALSO
 \fBtdda-head(1)\fR,

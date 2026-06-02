@@ -63,10 +63,11 @@ as typed values after reading.
 
 
 `--find-md`  
-  Attempt to find associated metadata for flat files.
+  Attempt to find associated metadata for flat files automatically,
+  without requiring `:` colon syntax in the path.
 
 `--no-md`, `--no-find-md`  
-  Do not attempt to find associated metadata for flat files.
+  Do not attempt to find associated metadata for flat files (default).
 
 `--key` *FIELD*  
   Use this field as a join key when reporting differences.

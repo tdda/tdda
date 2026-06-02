@@ -8,6 +8,7 @@ import os
 import random
 import re
 import sys
+import textwrap
 import argparse
 
 import pandas as pd
@@ -74,6 +75,7 @@ or via --fields (or both).  Wildcards are supported (quote in shell).
 
 
 _NULLS = ('None', 'NaT', 'nan', '<NA>', 'null')
+_SHORT_HEADER_FLOOR = 4
 
 
 def plain_value(v):
@@ -86,8 +88,11 @@ def format_value(v):
     return '[dim]∅[/dim]' if s in _NULLS else s
 
 
-def cat_table(df, data_path, md_path, engine, reader, title=None):
-    """Build and print a rich table of df rows."""
+def cat_table(df, data_path, md_path, engine, reader, title=None, short=None):
+    """Build and print a rich table of df rows.
+
+    short: None = normal; 's' = wrap headers at punctuation; 'S' = wrap anywhere
+    """
     if hasattr(df, 'columns') and hasattr(df.columns, 'tolist'):
         fields = df.columns.tolist()
         is_polars = False
@@ -129,15 +134,51 @@ def cat_table(df, data_path, md_path, engine, reader, title=None):
             for i in range(n_records)
         ]
 
-    widths = [len(f) for f in fields]
+    # Width from data only in short mode; otherwise include header width.
+    if short:
+        widths = [_SHORT_HEADER_FLOOR] * len(fields)
+    else:
+        widths = [len(f) for f in fields]
     for row in plain_rows:
         for i, val in enumerate(row):
             widths[i] = max(widths[i], len(val))
 
+    # Build multiline headers; adjust widths to fit longest header line.
+    if short == 's':
+        headers = []
+        for i, f in enumerate(fields):
+            # Split at punctuation and lowercase→uppercase transitions
+            tmp = re.sub(r'([a-z])([A-Z])', r'\1\n\2', f)
+            tmp = re.sub(r'[_.\-]', '\n', tmp)
+            segs = [s for s in tmp.split('\n') if s]
+            # Greedily pack segments onto lines at data width
+            target = widths[i]
+            lines, cur = [], ''
+            for seg in segs:
+                if not cur:
+                    cur = seg
+                elif len(cur) + 1 + len(seg) <= target:
+                    cur += ' ' + seg
+                else:
+                    lines.append(cur)
+                    cur = seg
+            if cur:
+                lines.append(cur)
+            headers.append('\n'.join(lines))
+            widths[i] = max(widths[i], max(len(l) for l in lines))
+    elif short == 'S':
+        headers = []
+        for i, f in enumerate(fields):
+            w = widths[i]
+            lines = textwrap.wrap(f, width=max(w, 1), break_long_words=True)
+            headers.append('\n'.join(lines))
+    else:
+        headers = list(fields)
+
     table_width = sum(widths) + len(widths) * 3 + 1
     table = Table(width=table_width)
-    for f, w in zip(fields, widths):
-        table.add_column(f, justify='right', min_width=w, no_wrap=True)
+    for h, w in zip(headers, widths):
+        table.add_column(h, justify='right', min_width=w, no_wrap=True)
     for row in display_rows:
         table.add_row(*row)
 
@@ -258,6 +299,14 @@ def cat_main(argv, command='cat'):
         help='Exclude these fields (comma or space-separated, wildcards ok)',
     )
     parser.add_argument(
+        '-s', dest='short', action='store_const', const='s', default=None,
+        help='Wrap headers at punctuation (_.-); column width from data only',
+    )
+    parser.add_argument(
+        '-S', dest='short', action='store_const', const='S',
+        help='Wrap headers anywhere; column width from data only',
+    )
+    parser.add_argument(
         '-r', '--random', dest='random', type=int, default=None,
         metavar='N',
         help='Show N random rows',
@@ -306,7 +355,7 @@ def cat_main(argv, command='cat'):
             df, flags.fields, flags.xfields, all_fields, is_polars
         )
 
-    cat_table(df, data_path, md_path, engine, reader)
+    cat_table(df, data_path, md_path, engine, reader, short=flags.short)
 
 
 def head_main(argv):

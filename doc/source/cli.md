@@ -573,10 +573,11 @@ as typed values after reading.
 
 
 `--find-md`  
-  Attempt to find associated metadata for flat files.
+  Attempt to find associated metadata for flat files automatically,
+  without requiring `:` colon syntax in the path.
 
 `--no-md`, `--no-find-md`  
-  Do not attempt to find associated metadata for flat files.
+  Do not attempt to find associated metadata for flat files (default).
 
 `--key` *FIELD*  
   Use this field as a join key when reporting differences.
@@ -783,7 +784,7 @@ Show field details using Polars.
 
 ### SYNOPSIS
 ```
-tdda cat [-h] [N | -N | +N]
+tdda cat [-h] [N | -N | +N] [-s | -S]
            [--fields FIELDS] [--xfields FIELDS]
            [-r N [--seed SEED]]
            [--pandas] [--polars] [--backend BACKEND]
@@ -828,6 +829,14 @@ using spaces or wildcards.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
 `--fields`. Fields appear in dataset order.
 
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries (punctuation
+and lowercase→uppercase transitions) and packed
+onto as few lines as possible.
+
+`-S`                        Short headers: as `-s` but split anywhere
+(mid-word) to fit the data width.
+
 `-r` *N*, `--random` *N*      Show *N* random rows instead of a slice.  
 
 `--seed` *SEED*             Random seed for `-r`. If omitted, a seed is
@@ -866,6 +875,11 @@ Display fields matching `amount*`, excluding those ending in `_raw`.
 
 Display 20 random rows with a fixed seed.
 
+7) `tdda cat -s accounts1k.csv:`
+
+Display all rows with compact multi-line headers, splitting at word
+boundaries (`open_date` → `open date`, `accountType` → `account Type`).
+
 ### SEE ALSO
 
 `tdda-head(1)`,
@@ -886,7 +900,7 @@ Display 20 random rows with a fixed seed.
 
 ### SYNOPSIS
 ```
-tdda head [-h] [N]
+tdda head [-h] [N] [-s | -S]
             [--fields FIELDS] [--xfields FIELDS]
             [--pandas] [--polars] [--backend BACKEND]
             INPUT [FIELD ...]
@@ -922,6 +936,13 @@ using spaces or wildcards.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
 `--fields`. Fields appear in dataset order.
 
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
 `--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
 `--polars`, `--pl`          Use Polars as DataFrame engine  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
@@ -943,6 +964,10 @@ Display the first 20 rows, using any associated metadata file.
 
 Display only `name` and `balance` for the first 10 rows.
 
+4) `tdda head -s 20 accounts1k.csv:`
+
+Display the first 20 rows with compact multi-line headers.
+
 ### SEE ALSO
 
 `tdda-cat(1)`,
@@ -963,7 +988,7 @@ Display only `name` and `balance` for the first 10 rows.
 
 ### SYNOPSIS
 ```
-tdda tail [-h] [N]
+tdda tail [-h] [N] [-s | -S]
             [--fields FIELDS] [--xfields FIELDS]
             [--pandas] [--polars] [--backend BACKEND]
             INPUT [FIELD ...]
@@ -999,6 +1024,13 @@ using spaces or wildcards.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
 `--fields`. Fields appear in dataset order.
 
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
 `--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
 `--polars`, `--pl`          Use Polars as DataFrame engine  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
@@ -1020,6 +1052,10 @@ Display the last 20 rows, using any associated metadata file.
 
 Display only `name` and `balance` for the last 10 rows.
 
+4) `tdda tail -s 20 accounts1k.csv:`
+
+Display the last 20 rows with compact multi-line headers.
+
 ### SEE ALSO
 
 `tdda-cat(1)`,
@@ -1040,7 +1076,7 @@ Display only `name` and `balance` for the last 10 rows.
 
 ### SYNOPSIS
 ```
-tdda sample [-h] [N] [--seed SEED]
+tdda sample [-h] [N] [--seed SEED] [-s | -S]
               [--fields FIELDS] [--xfields FIELDS]
               [--pandas] [--polars] [--backend BACKEND]
               INPUT [FIELD ...]
@@ -1082,6 +1118,13 @@ using spaces or wildcards.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
 `--fields`. Fields appear in dataset order.
 
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
 `--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
 `--polars`, `--pl`          Use Polars as DataFrame engine  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
@@ -1106,6 +1149,10 @@ Display 20 random rows with a fixed seed (reproducible).
 4) `tdda sample --fields 'name,balance' accounts1k.csv:`
 
 Display 10 random rows showing only `name` and `balance`.
+
+5) `tdda sample -s 20 --seed 42 accounts1k.csv:`
+
+Display 20 random rows with compact multi-line headers.
 
 ### SEE ALSO
 

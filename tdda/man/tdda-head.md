@@ -6,7 +6,7 @@
 
 ## SYNOPSIS
 
-`tdda head` [`-h`] [`N`]
+`tdda head` [`-h`] [`N`] [`-s` | `-S`]
             [`--fields` *FIELDS*] [`--xfields` *FIELDS*]
             [`--pandas`] [`--polars`] [`--backend` *BACKEND*]
             *INPUT* [*FIELD* ...]
@@ -42,6 +42,13 @@ Null values are shown as `∅`.
 `--xfields` *FIELDS*        Exclude these fields. Same format as
                           `--fields`. Fields appear in dataset order.  
 
+`-s`                        Short headers: column width driven by data;
+                          headers split at word boundaries and packed
+                          onto as few lines as possible.
+                          See `tdda-cat(1)` for details.  
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
 `--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
 `--polars`, `--pl`          Use Polars as DataFrame engine  
 `--backend`, `-B` *BACKEND*   Backend choice for Pandas  
@@ -62,6 +69,10 @@ Display the first 20 rows, using any associated metadata file.
 3) `tdda head --fields 'name,balance' accounts1k.csv:`
 
 Display only `name` and `balance` for the first 10 rows.
+
+4) `tdda head -s 20 accounts1k.csv:`
+
+Display the first 20 rows with compact multi-line headers.
 
 ## SEE ALSO
 

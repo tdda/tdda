@@ -405,7 +405,7 @@ class TDDADiffConfig(BaseConfig):
             doc='How strictly to check types when comparing dataframes.',
             values=['strict', 'medium', 'loose'],
         )
-        self.find_md = True
+        self.find_md = False
         self._doc_find_md = ParamDoc(
             doc='Find associated metadata when comparing dataframes with tdda diff.',
             values=[True, False],

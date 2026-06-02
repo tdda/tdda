@@ -4,7 +4,7 @@
 \fBtdda head\fR — Display the first N rows of a dataset
 
 .SH SYNOPSIS
-\fBtdda head\fR [\fB-h\fR] [\fBN\fR]
+\fBtdda head\fR [\fB-h\fR] [\fBN\fR] [\fB-s\fR | \fB-S\fR]
             [\fB--fields\fR \fIFIELDS\fP] [\fB--xfields\fR \fIFIELDS\fP]
             [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
             \fIINPUT\fP [\fIFIELD\fP ...]
@@ -43,6 +43,15 @@ Null values are shown as \fB∅\fR\&.
                           \fB--fields\fR\&. Fields appear in dataset order.
 
 .PP
+\fB-s\fR                        Short headers: column width driven by data;
+                          headers split at word boundaries and packed
+                          onto as few lines as possible.
+                          See \fBtdda-cat(1)\fR for details.
+
+.PP
+\fB-S\fR                        Short headers: split anywhere to fit data width.
+
+.PP
 \fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine (default)
 .br
 \fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine
@@ -72,6 +81,12 @@ Display the first 20 rows, using any associated metadata file.
 
 .PP
 Display only \fBname\fR and \fBbalance\fR for the first 10 rows.
+
+.PP
+4) \fBtdda head -s 20 accounts1k.csv:\fR
+
+.PP
+Display the first 20 rows with compact multi-line headers.
 
 .SH SEE ALSO
 \fBtdda-cat(1)\fR,
