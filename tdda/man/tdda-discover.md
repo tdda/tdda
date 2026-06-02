@@ -162,3 +162,5 @@ to get help with the database connection file format.
 `tdda-verify(1)`,
 `tdda-detect(1)`,
 `tdda-serial(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.

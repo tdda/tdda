@@ -1,0 +1,111 @@
+.nh
+.TH "TDDA SAMPLE" 1 "May 2026" "3.0" "tdda sample manual"
+.SH NAME
+\fBtdda sample\fR — Display N random rows from a dataset
+
+.SH SYNOPSIS
+\fBtdda sample\fR [\fB-h\fR] [\fBN\fR] [\fB--seed\fR \fISEED\fP] [\fB-s\fR | \fB-S\fR]
+              [\fB--fields\fR \fIFIELDS\fP] [\fB--xfields\fR \fIFIELDS\fP]
+              [\fB--pandas\fR] [\fB--polars\fR] [\fB--backend\fR \fIBACKEND\fP]
+              \fIINPUT\fP [\fIFIELD\fP ...]
+
+.SH POSITIONAL ARGUMENTS
+\fIINPUT\fP      Dataset path (CSV, Parquet, or colon syntax).
+
+.PP
+\fIFIELD\fP ...  Field names (or \fBfnmatch\fR wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to \fB--fields\fR;
+           both may be combined. Wildcards must be quoted in the shell.
+
+.SH DESCRIPTION
+The \fBtdda sample\fR command displays N randomly selected rows from a dataset
+(default 10) as a rich table.
+
+.PP
+When no \fB--seed\fR is given, a random seed is chosen automatically and printed
+so the result can be reproduced.
+
+.PP
+Null values are shown as \fB∅\fR\&.
+
+.SH OPTIONS
+\fB-h\fR, \fB-?\fR, \fB--help\fR        Show this help message and exit
+
+.PP
+\fBN\fR                       Number of random rows to show (default 10)
+
+.PP
+\fB--seed\fR \fISEED\fP             Random seed. If omitted, a seed is chosen
+                          automatically and printed.
+
+.PP
+\fB--fields\fR \fIFIELDS\fP         Show only these fields. \fIFIELDS\fP is a
+                          comma- or space-separated list of field names
+                          or \fBfnmatch\fR wildcard patterns (e.g. \fBeu_*\fR,
+                          \fB[a-z]*\fR). Fields appear in the order
+                          specified. Requires quoting in the shell when
+                          using spaces or wildcards.
+
+.PP
+\fB--xfields\fR \fIFIELDS\fP        Exclude these fields. Same format as
+                          \fB--fields\fR\&. Fields appear in dataset order.
+
+.PP
+\fB-s\fR                        Short headers: column width driven by data;
+                          headers split at word boundaries and packed
+                          onto as few lines as possible.
+                          See \fBtdda-cat(1)\fR for details.
+
+.PP
+\fB-S\fR                        Short headers: split anywhere to fit data width.
+
+.PP
+\fB--pandas\fR, \fB--pd\fR          Use Pandas as DataFrame engine (default)
+.br
+\fB--polars\fR, \fB--pl\fR          Use Polars as DataFrame engine
+.br
+\fB--backend\fR, \fB-B\fR \fIBACKEND\fP   Backend choice for Pandas
+.br
+                          \fBn\fR for numpy_nullable *
+.br
+                          \fBa\fR for pyarrow
+.br
+                          \fBo\fR for original
+
+.SH EXAMPLES
+1) \fBtdda sample accounts1k.parquet\fR
+
+.PP
+Display 10 random rows from \fBaccounts1k.parquet\fR, printing the seed used.
+
+.PP
+2) \fBtdda sample 50 accounts1k.csv:\fR
+
+.PP
+Display 50 random rows, using any associated metadata file.
+
+.PP
+3) \fBtdda sample 20 --seed 42 accounts1k.csv:\fR
+
+.PP
+Display 20 random rows with a fixed seed (reproducible).
+
+.PP
+4) \fBtdda sample --fields 'name,balance' accounts1k.csv:\fR
+
+.PP
+Display 10 random rows showing only \fBname\fR and \fBbalance\fR\&.
+
+.PP
+5) \fBtdda sample -s 20 --seed 42 accounts1k.csv:\fR
+
+.PP
+Display 20 random rows with compact multi-line headers.
+
+.SH SEE ALSO
+\fBtdda-cat(1)\fR,
+\fBtdda-head(1)\fR,
+\fBtdda-tail(1)\fR,
+\fBtdda-ls(1)\fR,
+\fBtdda-diff(1)\fR,
+\fBtdda-serial(1)\fR

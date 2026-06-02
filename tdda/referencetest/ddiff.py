@@ -1,3 +1,4 @@
+import re
 import sys
 
 import pandas as pd
@@ -35,6 +36,13 @@ DEFAULT_DPS = 7
 TDDA_DIFF_HELP = """
 Notes
 """
+
+
+def _parse_field_list(raw):
+    """Split a field spec (list or string) on commas and whitespace."""
+    if isinstance(raw, list):
+        raw = ' '.join(raw)
+    return [f for f in re.split(r'[\s,]+', raw) if f]
 
 
 class TDDADiff:
@@ -186,10 +194,10 @@ class TDDADiff:
             p.vertical = True
 
         if self.fields:
-            self.fields = [f.strip() for f in self.fields.split(',')]
+            self.fields = _parse_field_list(self.fields)
 
         if self.xfields:
-            self.xfields = [f.strip() for f in self.xfields.split(', ')]
+            self.xfields = _parse_field_list(self.xfields)
 
         if self.key:
             self.key = split_string_list(self.key)
@@ -348,16 +356,16 @@ class TDDADiff:
 
         parser.add_argument(
             '--fields',
-            type=str,
-            action='store',
-            help='Check only these fields (comma-separated list)',
+            nargs='+',
+            metavar='FIELD',
+            help='Check only these fields (space or comma-separated)',
         )
 
         parser.add_argument(
             '--xfields',
-            type=str,
-            action='store',
-            help='Check all fields except these (comma-separated list)',
+            nargs='+',
+            metavar='FIELD',
+            help='Check all fields except these (space or comma-separated)',
         )
 
         parser.add_argument(

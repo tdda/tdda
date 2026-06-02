@@ -1,0 +1,132 @@
+NAME
+
+  [1mtdda ls [22mâ List fields in a dataset
+
+SYNOPSIS
+
+  [1mtdda ls [22m[[1m‐h[22m] [[1m‐1[22m|[1m‐‐one‐line[22m] [[1m‐l[22m] [[1m‐‐pandas[22m] [[1m‐‐polars[22m]
+           [[1m‐‐backend [4m[22mBACKEND[24m]
+           [4mINPUT[0m
+
+POSITIONAL ARGUMENTS
+
+  [4mINPUT[24m is one of:
+    ‐ a CSV file (or [1m.tsv[22m, [1m.psv[22m, [1m.txt[22m)
+    ‐ a Parquet file ([1m.parquet[22m)
+    ‐ a flat file with colon syntax to trigger metadata lookup
+      (e.g. [1mfoo.csv:[22m)
+    ‐ a flat file with an explicit metadata path
+      (e.g. [1mfoo.csv:foo.serial[22m)
+
+DESCRIPTION
+
+  The [1mtdda ls [22mcommand lists the fields in a dataset.
+
+  Without [1m‐‐long[22m, it prints a one‐line summary followed by the field
+  names, right‐aligned.
+
+  With [1m‐‐long[22m, it prints a one‐line summary followed by a table showing
+  each field’s dtype, minimum value, maximum value, and null count.
+
+  For flat files, a second line reports how the file was read and which
+  metadata file was used, if any.
+
+OPTIONS
+
+  [1m‐h[22m, [1m‐?[22m, [1m‐‐help        [22mShow this help message and exit
+
+  [1m‐1[22m, [1m‐‐one‐line          [22mList all field names on one line, space‐separated
+  [1m‐l[22m, [1m‐‐long              [22mShow dtype, min, max, and null count per field
+
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine (default)
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                            [1mn [22mfor numpy_nullable *
+                            [1ma [22mfor pyarrow
+                            [1mo [22mfor original
+
+EXAMPLES
+
+  The example data can be obtained by running [1mtdda examples[22m, which will
+  create various directories, including [1mserial_examples[22m.
+
+  1) [1mtdda ls accounts1k.parquet[0m
+
+  List the fields in [1maccounts1k.parquet[22m.
+
+  2) [1mtdda ls ‐l accounts1k.csv:[0m
+
+  Show field details for [1maccounts1k.csv[22m, using any associated metadata
+  file found automatically.
+
+  3) [1mtdda ls ‐l accounts1k.csv ‐‐polars[0m
+
+  Show field details using Polars.
+
+SEE ALSO
+
+  [1mtdda diff[0m
+  [1mtdda serial[0m
+  [1mtdda verify[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

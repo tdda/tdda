@@ -13,7 +13,7 @@
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
             [-r [REPORT ...]] [--interleave] [--no-interleave]
-            [--index] [--int] [--key [KEY ...]]
+            [--index] [--int] [--key [KEY ...]] [--dense]
             [--verify-required-fields] [--verify-allowed-fields]
             [--no-verify-required-fields] [--no-verify-allowed-fields]
             [--varf] [--no-varf] [--pandas] [--polars]
@@ -102,6 +102,7 @@ the same functions as `tdda verify`.
 `--int`                 Write out boolean fields as integers, with 1 for true  
                         and 0 for false.  
 `--key [KEY ...]`       Key or key fields to use when reporting failures  
+`--dense`               Compact output: less vertical space used  
 
 `--verify-required-fields`, `--vrf`  
                         Force verify of required fields  
@@ -150,3 +151,5 @@ and `elements.txt`.
 `tdda-verify(1)`,
 `tdda-discover(1)`,
 `tdda-serial(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.

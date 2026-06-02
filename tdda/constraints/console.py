@@ -44,6 +44,11 @@ def help(extensions, cmd=None, stream=sys.stdout):
         if cmd in CONSTRAINTS_COMMANDS + (
             'gentest',
             'diff',
+            'ls',
+            'cat',
+            'head',
+            'tail',
+            'sample',
             'tag',
             'serial',
             'version',
@@ -159,7 +164,7 @@ def main_with_argv(argv, verbose=True):
                 return ext.detect()
         no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
-        items = ['referencetest', 'constraints', 'rexpy', 'gentest']
+        items = ['referencetest', 'constraints', 'rexpy', 'gentest', 'serial']
         args = argv[2:]
         outdir = '.'
         if args:
@@ -196,6 +201,26 @@ def main_with_argv(argv, verbose=True):
         from tdda.referencetest.referencetestcase import tag_failing_tests
 
         tag_failing_tests(argv[2:])
+    elif name == 'ls':
+        from tdda.serial.ls import ls_main
+
+        ls_main(argv[2:])
+    elif name == 'cat':
+        from tdda.serial.cat import cat_main
+
+        cat_main(argv[2:])
+    elif name == 'head':
+        from tdda.serial.cat import head_main
+
+        head_main(argv[2:])
+    elif name == 'tail':
+        from tdda.serial.cat import tail_main
+
+        tail_main(argv[2:])
+    elif name == 'sample':
+        from tdda.serial.cat import sample_main
+
+        sample_main(argv[2:])
     elif name == 'serial':
         from tdda.serial.converter import serial_cli
 

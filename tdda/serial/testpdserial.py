@@ -1847,5 +1847,17 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
         self.assertDataFramesEquivalent(ldf, df, type_matching='strict')
 
 
+class TestSerialPandasAlternateBooleans(ReferenceTestCase):
+    """
+    Tests for alternate boolean values at field level and dataset level.
+    """
+
+    def test_alternate_booleans_pandas(self):
+        df = csv_to_pandas(
+            tdpath('bools.csv'), tdpath('bools.serial'), backend='n'
+        )
+        self.assertDataFrameCorrect(df, tdpath('bools.parquet'))
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

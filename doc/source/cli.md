@@ -17,6 +17,11 @@ tdda examples      Copy the tdda example data and code
 tdda gentest       Auto-generate Python tests for code in any language  
 
 tdda diff          Find difference in datasets in parquet or CSV files  
+tdda ls            List fields in a dataset  
+tdda cat           Display rows from a dataset as a rich table  
+tdda head          Display the first N rows of a dataset  
+tdda tail          Display the last N rows of a dataset  
+tdda sample        Display N random rows from a dataset  
 tdda serial        Convert or infer flat-file metadata in tdda.serial,  
                    CSVW, or Frictionless formats  
 tdda tag           Tag tests that failed in the last reference test run  
@@ -209,6 +214,8 @@ to get help with the database connection file format.
 `tdda-detect(1)`,
 `tdda-serial(1)`
 
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.
+
 ---
 
 ## `tdda verify`
@@ -222,7 +229,7 @@ to get help with the database connection file format.
 ```
 tdda verify [-h] [-?] [-7] [--no-config]
             [--colour] [--no-colour]
-            [--epsilon EPSILON] [-a] [-f]
+            [--epsilon EPSILON] [-a] [-f] [--dense]
             [-t {strict,loose}] [--verify-required-fields]
             [--verify-allowed-fields] [--no-verify-required-fields]
             [--no-verify-allowed-fields] [--varf] [--no-varf]
@@ -274,6 +281,7 @@ values cause constraints to be violated: the companion command
 failures
 
 `-f`, `--fields`            Report only fields with failures  
+`--dense`               Compact output: less vertical space used  
 
 `-t`, `--type_checking` {*strict*,*loose*}  
 "loose" means consider all numeric types
@@ -323,6 +331,8 @@ satisfied.
 `tdda-discover(1)`,
 `tdda-serial(1)`
 
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.
+
 ---
 
 ## `tdda detect`
@@ -341,7 +351,7 @@ tdda detect [-h] [-?] [-7] [--no-config] [--colour] [--no-colour]
             [--no-original-fields] [--original-fields]
             [--no-output-fields] [--output-fields [OUTPUT_FIELDS ...]]
             [-r [REPORT ...]] [--interleave] [--no-interleave]
-            [--index] [--int] [--key [KEY ...]]
+            [--index] [--int] [--key [KEY ...]] [--dense]
             [--verify-required-fields] [--verify-allowed-fields]
             [--no-verify-required-fields] [--no-verify-allowed-fields]
             [--varf] [--no-varf] [--pandas] [--polars]
@@ -438,6 +448,7 @@ unless the input file already has an index.
 and 0 for false.
 
 `--key [KEY ...]`       Key or key fields to use when reporting failures  
+`--dense`               Compact output: less vertical space used  
 
 `--verify-required-fields`, `--vrf`  
 Force verify of required fields
@@ -491,6 +502,8 @@ and `elements.txt`.
 `tdda-verify(1)`,
 `tdda-discover(1)`,
 `tdda-serial(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapters 2-7.
 
 ---
 
@@ -560,10 +573,11 @@ as typed values after reading.
 
 
 `--find-md`  
-  Attempt to find associated metadata for flat files.
+  Attempt to find associated metadata for flat files automatically,
+  without requiring `:` colon syntax in the path.
 
 `--no-md`, `--no-find-md`  
-  Do not attempt to find associated metadata for flat files.
+  Do not attempt to find associated metadata for flat files (default).
 
 `--key` *FIELD*  
   Use this field as a join key when reporting differences.
@@ -682,6 +696,472 @@ using `money.serial` as the metadata file describing its format.
 
 Compare a Parquet file against a CSV file with loose type matching
 and floating-point values compared to 3 decimal places.
+
+---
+
+## `tdda ls`
+
+
+### NAME
+
+`tdda ls` — List fields in a dataset
+
+### SYNOPSIS
+```
+tdda ls [-h] [-1|--one-line] [-l] [--pandas] [--polars]
+         [--backend BACKEND]
+         INPUT
+```
+### POSITIONAL ARGUMENTS
+
+*INPUT* is one of:
+  - a CSV file (or `.tsv`, `.psv`, `.txt`)
+  - a Parquet file (`.parquet`)
+  - a flat file with colon syntax to trigger metadata lookup
+    (e.g. `foo.csv:`)
+  - a flat file with an explicit metadata path
+    (e.g. `foo.csv:foo.serial`)
+
+### DESCRIPTION
+
+The `tdda ls` command lists the fields in a dataset.
+
+Without `--long`, it prints a one-line summary followed by the field
+names, right-aligned.
+
+With `--long`, it prints a one-line summary followed by a table showing
+each field's dtype, minimum value, maximum value, and null count.
+
+For flat files, a second line reports how the file was read and which
+metadata file was used, if any.
+
+### OPTIONS
+
+`-h`, `-?`, `--help`        Show this help message and exit  
+
+`-1`, `--one-line`          List all field names on one line, space-separated  
+`-l`, `--long`              Show dtype, min, max, and null count per field  
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
+`--polars`, `--pl`          Use Polars as DataFrame engine  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original
+
+### EXAMPLES
+
+The example data can be obtained by running `tdda examples`, which will
+create various directories, including `serial_examples`.
+
+1) `tdda ls accounts1k.parquet`
+
+List the fields in `accounts1k.parquet`.
+
+2) `tdda ls -l accounts1k.csv:`
+
+Show field details for `accounts1k.csv`, using any associated metadata
+file found automatically.
+
+3) `tdda ls -l accounts1k.csv --polars`
+
+Show field details using Polars.
+
+### SEE ALSO
+
+`tdda-diff(1)`,
+`tdda-serial(1)`,
+`tdda-verify(1)`
+
+---
+
+## `tdda cat`
+
+
+### NAME
+
+`tdda cat` — Display rows from a dataset as a rich table
+
+### SYNOPSIS
+```
+tdda cat [-h] [N | -N | +N] [-s | -S]
+           [--fields FIELDS] [--xfields FIELDS]
+           [-r N [--seed SEED]]
+           [--pandas] [--polars] [--backend BACKEND]
+           INPUT [FIELD ...]
+```
+### POSITIONAL ARGUMENTS
+
+*INPUT* is one of:
+  - a CSV file (or `.tsv`, `.psv`, `.txt`)
+  - a Parquet file (`.parquet`)
+  - a flat file with colon syntax to trigger metadata lookup
+    (e.g. `foo.csv:`)
+  - a flat file with an explicit metadata path
+    (e.g. `foo.csv:foo.serial`)
+
+*FIELD* ...  Field names (or `fnmatch` wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to `--fields`;
+           both may be combined. Wildcards must be quoted in the shell.
+
+### DESCRIPTION
+
+The `tdda cat` command displays rows from a dataset as a rich table.
+
+Without a row count, all rows are shown.
+
+  `N` or `-N`    First N rows  
+  `+N`           Last N rows  
+
+Null values are shown as `∅`.
+
+### OPTIONS
+
+`-h`, `-?`, `--help`        Show this help message and exit  
+
+`--fields` *FIELDS*         Show only these fields. *FIELDS* is a
+comma- or space-separated list of field names
+or `fnmatch` wildcard patterns (e.g. `eu_*`,
+`[a-z]*`). Fields appear in the order
+specified. Requires quoting in the shell when
+using spaces or wildcards.
+
+`--xfields` *FIELDS*        Exclude these fields. Same format as
+`--fields`. Fields appear in dataset order.
+
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries (punctuation
+and lowercase→uppercase transitions) and packed
+onto as few lines as possible.
+
+`-S`                        Short headers: as `-s` but split anywhere
+(mid-word) to fit the data width.
+
+`-r` *N*, `--random` *N*      Show *N* random rows instead of a slice.  
+
+`--seed` *SEED*             Random seed for `-r`. If omitted, a seed is
+chosen automatically and printed.
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
+`--polars`, `--pl`          Use Polars as DataFrame engine  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original
+
+### EXAMPLES
+
+1) `tdda cat accounts1k.parquet`
+
+Display all rows from `accounts1k.parquet`.
+
+2) `tdda cat -10 accounts1k.csv:`
+
+Display the first 10 rows, using any associated metadata file.
+
+3) `tdda cat +10 accounts1k.csv:`
+
+Display the last 10 rows.
+
+4) `tdda cat --fields 'name,balance' accounts1k.csv:`
+
+Display only the `name` and `balance` fields.
+
+5) `tdda cat --fields 'amount*' --xfields '*_raw' accounts1k.csv:`
+
+Display fields matching `amount*`, excluding those ending in `_raw`.
+
+6) `tdda cat -r 20 --seed 42 accounts1k.csv:`
+
+Display 20 random rows with a fixed seed.
+
+7) `tdda cat -s accounts1k.csv:`
+
+Display all rows with compact multi-line headers, splitting at word
+boundaries (`open_date` → `open date`, `accountType` → `account Type`).
+
+### SEE ALSO
+
+`tdda-head(1)`,
+`tdda-tail(1)`,
+`tdda-sample(1)`,
+`tdda-ls(1)`,
+`tdda-diff(1)`,
+`tdda-serial(1)`
+
+---
+
+## `tdda head`
+
+
+### NAME
+
+`tdda head` — Display the first N rows of a dataset
+
+### SYNOPSIS
+```
+tdda head [-h] [N] [-s | -S]
+            [--fields FIELDS] [--xfields FIELDS]
+            [--pandas] [--polars] [--backend BACKEND]
+            INPUT [FIELD ...]
+```
+### POSITIONAL ARGUMENTS
+
+*INPUT*      Dataset path (CSV, Parquet, or colon syntax).
+
+*FIELD* ...  Field names (or `fnmatch` wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to `--fields`;
+           both may be combined. Wildcards must be quoted in the shell.
+
+### DESCRIPTION
+
+The `tdda head` command displays the first N rows of a dataset (default 10)
+as a rich table.
+
+Null values are shown as `∅`.
+
+### OPTIONS
+
+`-h`, `-?`, `--help`        Show this help message and exit  
+
+`N`                       Number of rows to show (default 10)  
+
+`--fields` *FIELDS*         Show only these fields. *FIELDS* is a
+comma- or space-separated list of field names
+or `fnmatch` wildcard patterns (e.g. `eu_*`,
+`[a-z]*`). Fields appear in the order
+specified. Requires quoting in the shell when
+using spaces or wildcards.
+
+`--xfields` *FIELDS*        Exclude these fields. Same format as
+`--fields`. Fields appear in dataset order.
+
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
+`--polars`, `--pl`          Use Polars as DataFrame engine  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original
+
+### EXAMPLES
+
+1) `tdda head accounts1k.parquet`
+
+Display the first 10 rows of `accounts1k.parquet`.
+
+2) `tdda head 20 accounts1k.csv:`
+
+Display the first 20 rows, using any associated metadata file.
+
+3) `tdda head --fields 'name,balance' accounts1k.csv:`
+
+Display only `name` and `balance` for the first 10 rows.
+
+4) `tdda head -s 20 accounts1k.csv:`
+
+Display the first 20 rows with compact multi-line headers.
+
+### SEE ALSO
+
+`tdda-cat(1)`,
+`tdda-tail(1)`,
+`tdda-sample(1)`,
+`tdda-ls(1)`,
+`tdda-diff(1)`,
+`tdda-serial(1)`
+
+---
+
+## `tdda tail`
+
+
+### NAME
+
+`tdda tail` — Display the last N rows of a dataset
+
+### SYNOPSIS
+```
+tdda tail [-h] [N] [-s | -S]
+            [--fields FIELDS] [--xfields FIELDS]
+            [--pandas] [--polars] [--backend BACKEND]
+            INPUT [FIELD ...]
+```
+### POSITIONAL ARGUMENTS
+
+*INPUT*      Dataset path (CSV, Parquet, or colon syntax).
+
+*FIELD* ...  Field names (or `fnmatch` wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to `--fields`;
+           both may be combined. Wildcards must be quoted in the shell.
+
+### DESCRIPTION
+
+The `tdda tail` command displays the last N rows of a dataset (default 10)
+as a rich table.
+
+Null values are shown as `∅`.
+
+### OPTIONS
+
+`-h`, `-?`, `--help`        Show this help message and exit  
+
+`N`                       Number of rows to show (default 10)  
+
+`--fields` *FIELDS*         Show only these fields. *FIELDS* is a
+comma- or space-separated list of field names
+or `fnmatch` wildcard patterns (e.g. `eu_*`,
+`[a-z]*`). Fields appear in the order
+specified. Requires quoting in the shell when
+using spaces or wildcards.
+
+`--xfields` *FIELDS*        Exclude these fields. Same format as
+`--fields`. Fields appear in dataset order.
+
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
+`--polars`, `--pl`          Use Polars as DataFrame engine  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original
+
+### EXAMPLES
+
+1) `tdda tail accounts1k.parquet`
+
+Display the last 10 rows of `accounts1k.parquet`.
+
+2) `tdda tail 20 accounts1k.csv:`
+
+Display the last 20 rows, using any associated metadata file.
+
+3) `tdda tail --fields 'name,balance' accounts1k.csv:`
+
+Display only `name` and `balance` for the last 10 rows.
+
+4) `tdda tail -s 20 accounts1k.csv:`
+
+Display the last 20 rows with compact multi-line headers.
+
+### SEE ALSO
+
+`tdda-cat(1)`,
+`tdda-head(1)`,
+`tdda-sample(1)`,
+`tdda-ls(1)`,
+`tdda-diff(1)`,
+`tdda-serial(1)`
+
+---
+
+## `tdda sample`
+
+
+### NAME
+
+`tdda sample` — Display N random rows from a dataset
+
+### SYNOPSIS
+```
+tdda sample [-h] [N] [--seed SEED] [-s | -S]
+              [--fields FIELDS] [--xfields FIELDS]
+              [--pandas] [--polars] [--backend BACKEND]
+              INPUT [FIELD ...]
+```
+### POSITIONAL ARGUMENTS
+
+*INPUT*      Dataset path (CSV, Parquet, or colon syntax).
+
+*FIELD* ...  Field names (or `fnmatch` wildcard patterns) to display.
+           Fields appear in the order given. Equivalent to `--fields`;
+           both may be combined. Wildcards must be quoted in the shell.
+
+### DESCRIPTION
+
+The `tdda sample` command displays N randomly selected rows from a dataset
+(default 10) as a rich table.
+
+When no `--seed` is given, a random seed is chosen automatically and printed
+so the result can be reproduced.
+
+Null values are shown as `∅`.
+
+### OPTIONS
+
+`-h`, `-?`, `--help`        Show this help message and exit  
+
+`N`                       Number of random rows to show (default 10)  
+
+`--seed` *SEED*             Random seed. If omitted, a seed is chosen
+automatically and printed.
+
+`--fields` *FIELDS*         Show only these fields. *FIELDS* is a
+comma- or space-separated list of field names
+or `fnmatch` wildcard patterns (e.g. `eu_*`,
+`[a-z]*`). Fields appear in the order
+specified. Requires quoting in the shell when
+using spaces or wildcards.
+
+`--xfields` *FIELDS*        Exclude these fields. Same format as
+`--fields`. Fields appear in dataset order.
+
+`-s`                        Short headers: column width driven by data;
+headers split at word boundaries and packed
+onto as few lines as possible.
+See `tdda-cat(1)` for details.
+
+`-S`                        Short headers: split anywhere to fit data width.  
+
+`--pandas`, `--pd`          Use Pandas as DataFrame engine (default)  
+`--polars`, `--pl`          Use Polars as DataFrame engine  
+`--backend`, `-B` *BACKEND*   Backend choice for Pandas  
+`n` for numpy_nullable *
+`a` for pyarrow
+`o` for original
+
+### EXAMPLES
+
+1) `tdda sample accounts1k.parquet`
+
+Display 10 random rows from `accounts1k.parquet`, printing the seed used.
+
+2) `tdda sample 50 accounts1k.csv:`
+
+Display 50 random rows, using any associated metadata file.
+
+3) `tdda sample 20 --seed 42 accounts1k.csv:`
+
+Display 20 random rows with a fixed seed (reproducible).
+
+4) `tdda sample --fields 'name,balance' accounts1k.csv:`
+
+Display 10 random rows showing only `name` and `balance`.
+
+5) `tdda sample -s 20 --seed 42 accounts1k.csv:`
+
+Display 20 random rows with compact multi-line headers.
+
+### SEE ALSO
+
+`tdda-cat(1)`,
+`tdda-head(1)`,
+`tdda-tail(1)`,
+`tdda-ls(1)`,
+`tdda-diff(1)`,
+`tdda-serial(1)`
 
 ---
 
@@ -909,6 +1389,10 @@ When specifying a path to a CSV (or other flat) file:
 The `tdda serial` functionality is fairly new, and there are probably
 still bugs and undesirable features in the implementation.
 
+### SEE ALSO
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 8.
+
 ---
 
 ## `tdda gentest`
@@ -1059,6 +1543,8 @@ this case, if the two verifier files should be different).
 ### SEE ALSO
 
 `rexpy(1)`, `tdda-diff(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 9, and chapter 9-12 for reference testing more generally.
 
 ---
 

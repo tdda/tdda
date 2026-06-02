@@ -20,9 +20,15 @@ BOOK_EXAMPLES_URL = (
 )
 
 
+SRCDIR_OVERRIDES = {
+    'serial': 'accounts_examples',
+}
+
+
 def examples_srcdir(name):
     path = os.path.join(os.path.dirname(__file__), name)
-    return os.path.join(path, 'examples')
+    srcdir = SRCDIR_OVERRIDES.get(name, 'examples')
+    return os.path.join(path, srcdir)
 
 
 def copy_examples(name, destination='.', verbose=True):

@@ -1,7 +1,7 @@
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.0.00",
+    "dc:creator": "tdda.serial-3.0.03",
     "tables": [
         {
             "tableSchema": {

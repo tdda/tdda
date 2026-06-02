@@ -28,9 +28,28 @@
 
 (reference_test_examples)=
 
-## Reference Test Examples
+## Supplied Reference Test Examples
 
-```{eval-rst}
-.. automodule:: tdda.referencetest.examples
-    :members:
+The `tdda.referencetest` module includes a set of examples,
+for both `unittest` and `pytest`.
+
+To copy these examples, run the command:
+
+```
+tdda examples referencetest [directory]
+```
+
+If `directory` is not supplied, `referencetest_examples` will be used.
+
+Alternatively, you can copy all examples using the following command:
+
+```
+tdda examples
+```
+
+which will create a number of separate subdirectories.
+
+```{include} ../../tdda/referencetest/examples/README.md
+:heading-offset: 1
+:start-line: 2
 ```

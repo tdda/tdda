@@ -1,0 +1,132 @@
+NAME
+
+  [1mtdda head [22mâ Display the first N rows of a dataset
+
+SYNOPSIS
+
+  [1mtdda head [22m[[1m‐h[22m] [[1mN[22m] [[1m‐s [22m| [1m‐S[22m]
+              [[1m‐‐fields [4m[22mFIELDS[24m] [[1m‐‐xfields [4m[22mFIELDS[24m]
+              [[1m‐‐pandas[22m] [[1m‐‐polars[22m] [[1m‐‐backend [4m[22mBACKEND[24m]
+              [4mINPUT[24m [[4mFIELD[24m ...]
+
+POSITIONAL ARGUMENTS
+
+  [4mINPUT[24m      Dataset path (CSV, Parquet, or colon syntax).
+
+  [4mFIELD[24m ...  Field names (or [1mfnmatch [22mwildcard patterns) to display.
+             Fields appear in the order given. Equivalent to [1m‐‐fields[22m;
+             both may be combined. Wildcards must be quoted in the shell.
+
+DESCRIPTION
+
+  The [1mtdda head [22mcommand displays the first N rows of a dataset (default 10)
+  as a rich table.
+
+  Null values are shown as [1mâ[22m.
+
+OPTIONS
+
+  [1m‐h[22m, [1m‐?[22m, [1m‐‐help        [22mShow this help message and exit
+
+  [1mN                       [22mNumber of rows to show (default 10)
+
+  [1m‐‐fields [4m[22mFIELDS[24m         Show only these fields. [4mFIELDS[24m is a
+                            comma‐ or space‐separated list of field names
+                            or [1mfnmatch [22mwildcard patterns (e.g. [1meu_*[22m,
+                            [1m[a‐z]*[22m). Fields appear in the order
+                            specified. Requires quoting in the shell when
+                            using spaces or wildcards.
+
+  [1m‐‐xfields [4m[22mFIELDS[24m        Exclude these fields. Same format as
+                            [1m‐‐fields[22m. Fields appear in dataset order.
+
+  [1m‐s                        [22mShort headers: column width driven by data;
+                            headers split at word boundaries and packed
+                            onto as few lines as possible.
+                            See [1mtdda‐cat(1) [22mfor details.
+
+  [1m‐S                        [22mShort headers: split anywhere to fit data width.
+
+  [1m‐‐pandas[22m, [1m‐‐pd          [22mUse Pandas as DataFrame engine (default)
+  [1m‐‐polars[22m, [1m‐‐pl          [22mUse Polars as DataFrame engine
+  [1m‐‐backend[22m, [1m‐B [4m[22mBACKEND[24m   Backend choice for Pandas
+                            [1mn [22mfor numpy_nullable *
+                            [1ma [22mfor pyarrow
+                            [1mo [22mfor original
+
+EXAMPLES
+
+  1) [1mtdda head accounts1k.parquet[0m
+
+  Display the first 10 rows of [1maccounts1k.parquet[22m.
+
+  2) [1mtdda head 20 accounts1k.csv:[0m
+
+  Display the first 20 rows, using any associated metadata file.
+
+  3) [1mtdda head ‐‐fields ’name,balance’ accounts1k.csv:[0m
+
+  Display only [1mname [22mand [1mbalance [22mfor the first 10 rows.
+
+  4) [1mtdda head ‐s 20 accounts1k.csv:[0m
+
+  Display the first 20 rows with compact multi‐line headers.
+
+SEE ALSO
+
+  [1mtdda cat[0m
+  [1mtdda tail[0m
+  [1mtdda sample[0m
+  [1mtdda ls[0m
+  [1mtdda diff[0m
+  [1mtdda serial[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -144,3 +144,6 @@ this case, if the two verifier files should be different).
 ## SEE ALSO
 
 `rexpy(1)`, `tdda-diff(1)`
+
+[Test Driven Data Analysis](https://book.tdda.info), book by Nicholas J. Radcliffe, chapter 9, and chapter 9-12 for reference testing more generally.
+

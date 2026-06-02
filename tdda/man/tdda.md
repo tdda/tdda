@@ -14,6 +14,11 @@
 `tdda gentest`       Auto-generate Python tests for code in any language  
 
 `tdda diff`          Find difference in datasets in parquet or CSV files  
+`tdda ls`            List fields in a dataset  
+`tdda cat`           Display rows from a dataset as a rich table  
+`tdda head`          Display the first N rows of a dataset  
+`tdda tail`          Display the last N rows of a dataset  
+`tdda sample`        Display N random rows from a dataset  
 `tdda serial`        Convert or infer flat-file metadata in tdda.serial,  
                    CSVW, or Frictionless formats  
 `tdda tag`           Tag tests that failed in the last reference test run  

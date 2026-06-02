@@ -6,7 +6,7 @@
 .SH SYNOPSIS
 \fBtdda verify\fR [\fB-h\fR] [\fB-?\fR] [\fB-7\fR] [\fB--no-config\fR]
             [\fB--colour\fR] [\fB--no-colour\fR]
-            [\fB--epsilon\fR \fIEPSILON\fP] [\fB-a\fR] [\fB-f\fR]
+            [\fB--epsilon\fR \fIEPSILON\fP] [\fB-a\fR] [\fB-f\fR] [\fB--dense\fR]
             [\fB-t {strict,loose}\fR] [\fB--verify-required-fields\fR]
             [\fB--verify-allowed-fields\fR] [\fB--no-verify-required-fields\fR]
             [\fB--no-verify-allowed-fields\fR] [\fB--varf\fR] [\fB--no-varf\fR]
@@ -66,6 +66,8 @@ values cause constraints to be violated: the companion command
                         failures
 .br
 \fB-f\fR, \fB--fields\fR            Report only fields with failures
+.br
+\fB--dense\fR               Compact output: less vertical space used
 
 .PP
 \fB-t\fR, \fB--type_checking\fR {\fIstrict\fP,\fIloose\fP}
@@ -130,3 +132,7 @@ satisfied.
 \fBtdda-detect(1)\fR,
 \fBtdda-discover(1)\fR,
 \fBtdda-serial(1)\fR
+
+.PP
+Test Driven Data Analysis
+\[la]https://book.tdda.info\[ra], book by Nicholas J. Radcliffe, chapters 2-7.

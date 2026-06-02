@@ -21,5 +21,3 @@
 ```{eval-rst}
 .. autoclass:: tdda.rexpy.rexpy.Coverage
 ```
-
-(rexpy_examples)=

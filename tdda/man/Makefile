@@ -8,6 +8,11 @@ TARGETS = tdda.txt \
           tdda-examples.txt \
           tdda-gentest.txt \
           tdda-help.txt \
+          tdda-ls.txt \
+          tdda-cat.txt \
+          tdda-head.txt \
+          tdda-tail.txt \
+          tdda-sample.txt \
           tdda-serial.txt \
           tdda-tag.txt \
           tdda-verify.txt \
@@ -23,6 +28,11 @@ CLI_SRCS = sphinx/tdda.md \
            sphinx/tdda-verify.md \
            sphinx/tdda-detect.md \
            sphinx/tdda-diff.md \
+           sphinx/tdda-ls.md \
+           sphinx/tdda-cat.md \
+           sphinx/tdda-head.md \
+           sphinx/tdda-tail.md \
+           sphinx/tdda-sample.md \
            sphinx/tdda-serial.md \
            sphinx/tdda-gentest.md \
            sphinx/tdda-tag.md \

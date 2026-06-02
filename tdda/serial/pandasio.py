@@ -241,10 +241,9 @@ def serial_to_pandas_read_csv_args(md, backend=None, warner=None, config=None):
     date_fields = []
     fields = []
     for fmd in md.fields:
-        if fmd.true_values and fmd.fieldtype.lower().startswith('bool'):
-            trues.update(fmd.true_values)
-        if fmd.false_values and fmd.fieldtype.lower().startswith('bool'):
-            falses.update(fmd.false_values)
+        if fmd.fieldtype and fmd.fieldtype.lower().startswith('bool'):
+            trues.update(fmd.true_values or md.true_values or [])
+            falses.update(fmd.false_values or md.false_values or [])
     if any(f.name != f.csvname for f in md.fields):
         kw['names'] = [f.name for f in md.fields]
         kw['header'] = 0
@@ -719,6 +718,8 @@ def csv_to_pandas(
         preferred=preferred or 'pandas.read_csv',
         verbosity=verbosity,
     )
+    if md is not None and md.path is None and md_path is not None:
+        md.path = md_path
     backend = get_backend(backend, config)
     if md:
         md_kw = serial_to_pandas_read_csv_args(

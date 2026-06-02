@@ -194,6 +194,12 @@ def verify_parser(usage=''):
         choices=['strict', 'sloppy', 'loose'],
         help='"loose" (or "sloppy") means consider all numeric types equivalent',
     )
+    parser.add_argument(
+        '--dense',
+        action='store_true',
+        help='compact output: no blank lines between fields, '
+        'summary pairs on one line',
+    )
     add_verify_fields_flags(parser)
     return parser
 
@@ -295,6 +301,12 @@ def detect_parser(usage=''):
         nargs='*',
         help='Key or key fields to use when reporting failures',
     )
+    parser.add_argument(
+        '--dense',
+        action='store_true',
+        help='compact output: no blank lines between fields, '
+        'summary pairs on one line',
+    )
     add_verify_fields_flags(parser)
     return parser
 
@@ -309,10 +321,13 @@ def verify_flags(parser, args, params):
         {
             'report': 'all',
             'ascii': False,
+            'dense': False,
         }
     )
     add_flags(flags, params, epsilon=True)
     va = nva = vr = nvr = False
+    if flags.dense:
+        params['dense'] = True
     if flags.all:
         params['report'] = 'all'
     elif flags.fields:
@@ -351,9 +366,12 @@ def detect_flags(parser, args, params):
         {
             'report': 'records',
             'ascii': False,
+            'dense': False,
         }
     )
     add_flags(flags, params, epsilon=True)
+    if flags.dense:
+        params['dense'] = True
     if flags.per_constraint and flags.no_per_constraint:
         print(
             'You must not specify both --per-constraint and --no-per-constraint.',
@@ -502,3 +520,8 @@ def add_verify_fields_flags(parser):
     )
 
     add_pandas_flags(parser)
+
+
+def check_constraints_file(path):
+    if not os.path.exists(path):
+        error('Constraints file not found: %s' % path)

@@ -44,3 +44,12 @@ Obviously, you should only rewrite the test output after carefully verifying
 the the changes are OK!
 
 All examples, tests and code should run under Python2 and Python3.
+
+
+----
+
+For much more depth on reference testing, read
+the book Test-Driven Data Analysis, by Nicholas J. Radcliffe,
+particularly chapters 9-12. It is available at all good
+booksellers and all sellers of good books. It is also available,
+over time, free, online at <https://book.tdda.info>.

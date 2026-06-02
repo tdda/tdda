@@ -12,6 +12,11 @@ SYNOPSIS
   [1mtdda gentest       [22mAuto‐generate Python tests for code in any language
 
   [1mtdda diff          [22mFind difference in datasets in parquet or CSV files
+  [1mtdda ls            [22mList fields in a dataset
+  [1mtdda cat           [22mDisplay rows from a dataset as a rich table
+  [1mtdda head          [22mDisplay the first N rows of a dataset
+  [1mtdda tail          [22mDisplay the last N rows of a dataset
+  [1mtdda sample        [22mDisplay N random rows from a dataset
   [1mtdda serial        [22mConvert or infer flat‐file metadata in tdda.serial,
                      CSVW, or Frictionless formats
   [1mtdda tag           [22mTag tests that failed in the last reference test run
@@ -35,11 +40,6 @@ SEE ALSO
 
   [1mTDDA Book[0m
   [1m⟨https://book.tdda.info⟩[0m
-
-
-
-
-
 
 
 

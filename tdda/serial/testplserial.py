@@ -1401,5 +1401,15 @@ def print_df(df):
         print(df)
 
 
+class TestSerialPolarsAlternateBooleans(ReferenceTestCase):
+    """
+    Tests for alternate boolean values at field level and dataset level.
+    """
+
+    def test_alternate_booleans_polars(self):
+        df = csv_to_polars(tdpath('bools.csv'), tdpath('bools.serial'))
+        self.assertDataFrameCorrect(df, tdpath('bools.parquet'))
+
+
 if __name__ == '__main__':
     ReferenceTestCase.main(testtdda=1)

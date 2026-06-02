@@ -1,0 +1,154 @@
+{
+    "creation_metadata": {
+        "local_time": "2026-05-29T17:12:40",
+        "utc_time": "2026-05-29T16:12:40+00:00",
+        "creator": "TDDA 3.0.03",
+        "source": "testdata/accounts1k.csv",
+        "host": "gardot.local",
+        "user": "njr",
+        "dataset": "accounts1k.csv",
+        "n_records": 1000,
+        "n_selected": 1000,
+        "tddafile": "accounts1k_refined.tdda"
+    },
+    "fields": {
+        "account_number": {
+            "type": "int",
+            "min": 10000000,
+            "max": 19999999,
+            "sign": "positive",
+            "max_nulls": 0,
+            "no_duplicates": true
+        },
+        "open_date": {
+            "type": "date",
+            "min": "2001-10-02 00:00:00",
+            "max_nulls": 0
+        },
+        "close_date": {
+            "type": "date",
+            "min": "2001-10-02 00:00:00"
+        },
+        "title": {
+            "type": "string",
+            "min_length": 2,
+            "max_length": 4,
+            "max_nulls": 0,
+            "allowed_values": [
+                "Dr",
+                "Miss",
+                "Mr",
+                "Mrs",
+                "Ms",
+                "Prof"
+            ]
+        },
+        "forename": {
+            "type": "string",
+            "min_length": 3,
+            "max_length": 9,
+            "max_nulls": 0,
+            "rex": [
+                "^([A-Z])([a-z]+)$"
+            ]
+        },
+        "middle_name": {
+            "type": "string",
+            "min_length": 3,
+            "max_length": 9,
+            "rex": [
+                "^([A-Z])([a-z]+)$"
+            ]
+        },
+        "surname": {
+            "type": "string",
+            "min_length": 3,
+            "max_length": 10,
+            "max_nulls": 0,
+            "rex": [
+                "^([A-Za-z]+)$"
+            ]
+        },
+        "address1": {
+            "type": "string",
+            "max_nulls": 0
+        },
+        "city": {
+            "type": "string",
+            "max_nulls": 0
+        },
+        "postcode": {
+            "type": "string",
+            "min_length": 6,
+            "max_length": 8,
+            "max_nulls": 0,
+            "rex": [
+                "^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$"
+            ]
+        },
+        "home_tel": {
+            "type": "string",
+            "min_length": 13,
+            "max_length": 13,
+            "max_nulls": 0,
+            "rex": [
+                "^([0-9]{4}) ([0-9]{3}) ([0-9]{4})$"
+            ]
+        },
+        "mobile_tel": {
+            "type": "string",
+            "min_length": 13,
+            "max_length": 13,
+            "max_nulls": 0,
+            "rex": [
+                "^([0-9]{4}) ([0-9]{3}) ([0-9]{4})$"
+            ]
+        },
+        "email": {
+            "type": "string",
+            "min_length": 14,
+            "max_nulls": 0,
+            "rex": [
+                "^([a-z0-9]+)@([a-z]+)\\.com$",
+                "^([a-z0-9]+)[.@]([a-z0-9]+)[.@]([a-z]+)\\.([a-z]{2,3})$",
+                "^([a-z]+)\\.([a-z0-9]+)@([a-z]+)\\.co\\.uk$"
+            ]
+        },
+        "account_type": {
+            "type": "string",
+            "min_length": 5,
+            "max_length": 8,
+            "max_nulls": 0,
+            "allowed_values": [
+                "basic",
+                "current",
+                "current+",
+                "offset",
+                "premium"
+            ]
+        },
+        "overdraft_limit": {
+            "type": "int",
+            "min": 0,
+            "max": 20000,
+            "sign": "non-negative",
+            "max_nulls": 0
+        },
+        "cash_card_number": {
+            "type": "string",
+            "min_length": 19,
+            "max_length": 19,
+            "max_nulls": 0,
+            "no_duplicates": true,
+            "rex": [
+                "^1202 ([0-9]{4}) ([0-9]{4}) ([0-9]{4})$"
+            ]
+        }
+    },
+    "dataset": {
+        "allowed_fields": [],
+        "required_fields": [
+            "*"
+        ]
+    }
+}

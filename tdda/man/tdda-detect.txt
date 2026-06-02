@@ -11,7 +11,7 @@ SYNOPSIS
               [‐‐no‐original‐fields] [‐‐original‐fields]
               [‐‐no‐output‐fields] [‐‐output‐fields [OUTPUT_FIELDS ...]]
               [‐r [REPORT ...]] [‐‐interleave] [‐‐no‐interleave]
-              [‐‐index] [‐‐int] [‐‐key [KEY ...]]
+              [‐‐index] [‐‐int] [‐‐key [KEY ...]] [‐‐dense]
               [‐‐verify‐required‐fields] [‐‐verify‐allowed‐fields]
               [‐‐no‐verify‐required‐fields] [‐‐no‐verify‐allowed‐fields]
               [‐‐varf] [‐‐no‐varf] [‐‐pandas] [‐‐polars]
@@ -98,6 +98,7 @@ OPTIONS
   [1m‐‐int                 [22mWrite out boolean fields as integers, with 1 for true
                           and 0 for false.
   [1m‐‐key [KEY ...]       [22mKey or key fields to use when reporting failures
+  [1m‐‐dense               [22mCompact output: less vertical space used
 
   [1m‐‐verify‐required‐fields[22m, [1m‐‐vrf[0m
                           Force verify of required fields
@@ -149,9 +150,8 @@ SEE ALSO
   [1mtdda discover[0m
   [1mtdda serial[0m
 
-
-
-
+  [1mTest Driven Data Analysis[0m
+  [1m⟨https://book.tdda.info⟩ book by Nicholas J. Radcliffe chapters 2 7.[0m
 
 
 

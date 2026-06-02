@@ -146,13 +146,13 @@ def discover_directory(path, constraints_path=None, **kwargs):
 def verify_directory_from_file(path, constraints_path, **kwargs):
     fv = FilesConstraintVerifier(path, **kwargs)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return fv.verify(constraints, **kwargs)
+    return fv.verify(constraints, n_source_records=fv.get_nrecords(), **kwargs)
 
 
 def detect_directory_from_file(path, constraints_path, **kwargs):
     fv = FilesConstraintVerifier(path, **kwargs)
     constraints = DatasetConstraints(loadpath=constraints_path)
-    return fv.detect(constraints, **kwargs)
+    return fv.detect(constraints, n_source_records=fv.get_nrecords(), **kwargs)
 
 
 class FilesConstraintCalculator(BaseConstraintCalculator):
@@ -165,7 +165,7 @@ class FilesConstraintCalculator(BaseConstraintCalculator):
     def get_nrecords(self):
         return len(os.listdir(self.path))
 
-    def types_compatible(self, x, y, colname):
+    def types_compatible(self, x, y):
         return type(x) == type(y)
 
     def calc_min(self, colname):

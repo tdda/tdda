@@ -1,0 +1,28 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "id",
+                "fieldtype": "int"
+            },
+            {
+                "name": "b_truefalse",
+                "fieldtype": "bool"
+            },
+            {
+                "name": "b_yesno",
+                "fieldtype": "bool",
+                "true_values": "yes",
+                "false_values": "no"
+            },
+            {
+                "name": "b_onoff",
+                "fieldtype": "bool"
+            }
+        ],
+        "true_values": ["on", "true"],
+        "false_values": ["off", "false"],
+        "null_indicator": ""
+    }
+}

@@ -1,7 +1,7 @@
 # Examples of using tdda.constraints with CSV files
 
 For all of these examples, you should run commands on the command line,
-after cd'ing to this directory.
+after changing to this directory with `cd`.
 
 
 ## Command-line Periodic table examples ("elements" dataset)
@@ -10,8 +10,24 @@ after cd'ing to this directory.
 
        tdda discover testdata/elements92.csv elements92.tdda
 
-   This reads data from testdata/elements92.csv,
-   and writes out discovered constraints to ./elements92.tdda
+   This reads data from `testdata/elements92.csv`,
+   and writes out discovered constraints to `elements92.tdda`.
+
+   The discovered constraints describe the training data. They are a
+   starting point, not a finished product. Before using them to validate
+   new data, it is worth reviewing them and applying domain knowledge.
+
+   For example, the `max: 92` on `Z` is an artefact of our sample: the
+   periodic table currently has 118 known elements, and the maximum atomic
+   number is a property of physics, not of our dataset. Similarly, the
+   `max` on `AtomicWeight` reflects the heaviest element in our sample
+   (Uranium, Z=92), and `Name` has `max_length: 12` — but Rutherfordium
+   (Z=104) has 13 letters. These constraints will generate spurious failures
+   the moment we see heavier elements.
+
+   A sensible response here is to remove the `max` on `Z` and `AtomicWeight`
+   entirely, and to relax `max_length` on `Name`. A pre-edited version with
+   these adjustments is provided as `testdata/elements92_refined.tdda`.
 
 2. Verify the same data against those constraints. (This, of course,
    should be successful.)
@@ -32,11 +48,20 @@ after cd'ing to this directory.
 
        tdda detect testdata/elements118.csv elements92.tdda elements118_detect.csv
 
-5. The example data includes elements118.tdda, a TDDA file generated from
+5. The example data includes `elements118.tdda`, a TDDA file generated from
    all 118 elements. You can verify that these constraints are satisfied
    by the larger dataset by running
 
        tdda verify testdata/elements118.csv elements118.tdda
+
+6. Now try verifying the 118-element data against the refined constraints
+   from step 1, which have had the sample-artifact maxima removed:
+
+       tdda verify testdata/elements118.csv testdata/elements92_refined.tdda
+
+   Fewer failures should remain---only those reflecting genuine differences
+   between the lighter and heavier elements (such as unmeasured physical
+   properties for superheavy elements).
 
 
 ## Command-line bank account data examples ("accounts" dataset)
@@ -46,13 +71,58 @@ more interesting as there is more data, and this data also includes dates
 and categorical values.
 
 These examples also include constraints for regular expressions on string
-fields. The two main datasets are accounts1k.csv and accounts25k.csv.
+fields. The two main datasets are `accounts1k.csv` and `accounts25k.csv`.
 
 The equivalent steps to the "elements" ones above are:
 
 1. Generate constraints using a small sample (1000 records).
 
-        tdda discover -r testdata/accounts1k.csv accounts1k.tdda
+        tdda discover -x testdata/accounts1k.csv accounts1k.tdda
+
+   As with elements, the discovered constraints are a starting point.
+   Again, there are obvious weaknesses with the constraints generated.
+
+   - **Date ranges**: The `max` dates on `open_date` and `close_date`
+     are the latest dates in the training sample. Any new account opened
+     after that date will fail the constraint — which is clearly wrong.
+     Remove them (or convert to a constraint that it isn't in the
+     future; see the book). The `min` dates should reflect when the bank
+     opened (which is October 2001), not the earliest date in the sample.
+
+   - **Account numbers**: The `min` (10,000,801) and `max` (12,994,290)
+     are the actual extremes in the sample. It is more meaningful to
+     round these to domain-appropriate bounds: for example, `min:
+     10000000` and `max: 19999999`, on the basis that all account numbers
+     appear to be eight-digit numbers starting with 1.
+
+   - **Duplicates**: The constraints disallow duplicate email addresses,
+     phone numbers, and postcodes, because none appeared in the training
+     sample. But a customer might hold multiple accounts, and many accounts
+     will share a postcode, so duplicates are expected in a larger dataset.
+     Remove `no_duplicates` from `email`, `home_tel`, `mobile_tel`, and
+     `postcode` unless shared email across accounts is not allowed.
+
+   - **Tightening allowed values**: Constraints sometimes need tightening,
+     not just relaxing. The `title` field has `allowed_values` containing
+     `"M"`, which is not a standard UK title. For a UK bank, domain
+     knowledge tells us to remove it. The refined allowed values are
+     `Dr`, `Miss`, `Mr`, `Mrs`, `Ms`, and `Prof`.
+
+   - **String length maxima**: Like date maxima, `max_length` on free-form
+     string fields such as `email` simply reflects the longest value seen
+     in the sample. Remove it or extend it to a generous bound, or any
+     new record with a longer-than-observed value will fail.
+
+   - **Redundant regex**: Where `allowed_values` is generated (as for
+     `title` and `account_type`), any `rex` constraint is redundant —
+     if the value is in the allowed list it will already match the
+     pattern. The `rex` constraints can safely be removed.
+
+   A refined version incorporating these changes is provided as
+   `testdata/accounts1k_refined.tdda`. Note that because we have
+   tightened the `title` constraint beyond what the training data
+   satisfies, verifying the training data against the refined constraints
+   will itself show a failure---which is exactly the point.
 
 2. Verify the same data against those constraints.
 
@@ -73,6 +143,15 @@ The equivalent steps to the "elements" ones above are:
 
        tdda verify testdata/accounts25k.csv accounts25k.tdda
 
+6. Now verify the larger dataset against the refined constraints from step 1:
+
+       tdda verify testdata/accounts25k.csv testdata/accounts1k_refined.tdda
+
+   Compare the failures with those from step 3. Failures from sample
+   artifacts (date ranges, duplicate phone numbers, emails and postcodes)
+   should be gone; what remains is more likely to reflect genuine data
+   quality issues.
+
 
 ## Python API Periodic table examples ("elements" dataset)
 
@@ -81,14 +160,14 @@ environment, Python API examples are provided which carry out the same
 steps as the command-line example steps above, but with each step
 explicitly implemented using custom Python code, using the API.
 
-The steps here are equivalent to steps 1 to 5 using the 'tdda' command
+The steps here are equivalent to steps 1 to 5 using the `tdda` command
 in the "elements" section above:
 
-1.  python elements_discover_92.py
-2.  python elements_verify_92.py
-3.  python elements_verify_118_against_92.py
-4.  python elements_detect_118_against_92.py
-5.  python elements_verify_118.py
+1.  `python elements_discover_92.py`
+2.  `python elements_verify_92.py`
+3.  `python elements_verify_118_against_92.py`
+4.  `python elements_detect_118_against_92.py`
+5.  `python elements_verify_118.py`
 
 ## Python API Bank Accounts Data examples ("accounts" dataset)
 
@@ -97,14 +176,18 @@ environment, Python API examples are provided which carry out the same
 steps as the command-line example steps above, but with each step
 explicitly implemented using custom Python code, using the API.
 
-The steps here are equivalent to steps 1 to 5 using the 'tdda' command
+The steps here are equivalent to steps 1 to 5 using the `tdda` command
 in the "elements" section above:
 
-1.  python accounts_discover_1k.py
-2.  python accounts_verify_1k.py
-3.  python accounts_verify_25k_against_1k.py
-4.  python accounts_detect_25k_against_1k.py
-5.  python accounts_verify_25k.py
+1.  `python accounts_discover_1k.py`
+2.  `python accounts_verify_1k.py`
+3.  `python accounts_verify_25k_against_1k.py`
+4.  `python accounts_detect_25k_against_1k.py`
+5.  `python accounts_verify_25k.py`
+
+Note: step 3 uses the pre-built `testdata/accounts1k.tdda` rather than
+the `accounts1k.tdda` generated by step 1. You could use either; the
+pre-built version is provided for convenience.
 
 
 ## Creating DataFrame Output from Verifications
@@ -120,8 +203,8 @@ information. This is done in the "simple" examples below:
 
        python simple_discovery.py
 
-to generate a TDDA file (./example_constraints.tdda) for the following,
-tiny, generated dataset:
+   to generate a TDDA file (`example_constraints.tdda`) for the following,
+   tiny, generated dataset:
 
            a    b
         0  1  one
@@ -144,13 +227,13 @@ tiny, generated dataset:
    Field a and another for Field b) and a column for each constraint.
    The values in the DataFrame are
 
-      True: if the constraint existed and was satisfied
-      False: if the constraint exists and was not satisified
-      NaN: if that constraint was not generated for that field
+      `True`: if the constraint existed and was satisfied
+      `False`: if the constraint exists and was not satisfied
+      `NaN`: if that constraint was not generated for that field
 
    (There are also columns for numbers of passes and failures.)
 
-3. Now repeat the exervise with another small, DataFrame that is not consistent
+3. Now repeat the exercise with another small DataFrame that is not consistent
    with many of the generated constraints, namely:
 
               a      b
@@ -164,61 +247,13 @@ tiny, generated dataset:
 
        python simple_verify_fail.py
 
-   There should be 5 passes and 7 failures.
+   There should be 7 passes and 6 failures.
 
 
-# Example of extending the tdda.constraints module
+---
 
-The "files_extension.py" file contains Python source code for a very simple
-implementation of a (not very realistic or useful) extension to the
-tdda.constraints module.
-
-The extension provides the ability to do constraint discovery and
-verification on directory/folder filesystem structure (the names and
-sizes of files).
-
-To enable this extension, add the following to your environment.
-
-For Linux, MacOS and other Unix systems:
-
-    export TDDA_EXTENSIONS=files_extension.TDDAFilesExtension
-    export PYTHONPATH=.:$PYTHONPATH
-
-For Microsoft Windows:
-
-    set TDDA_EXTENSIONS=files_extension.TDDAFilesExtension
-    set PYTHONPATH=.;%PYTHONPATH%
-
-Then you can discover constraints on all the example files in this directory
-with:
-
-1. Discover constraints on the files in the current directory:
-
-        tdda discover . files.tdda
-
-This should produce a set of constraints on the names and sizes of the files
-in this directory, and write these to the file files.tdda.
-
-2. Verify those constraints.
-
-        tdda verify . files.tdda
-
-   There should be a 'values' failure, because the list of files in the
-   current directory now includes "files.tdda", which didn't exist at the
-   point when the initial discovery was done.
-
-3. Move files.tdda to somewhere else (such as /tmp), and rerun the
-   verification:
-
-        mv files.tdda /tmp/files.tdda
-        tdda verify . /tmp/files.tdda
-
-   Now all the constraints should all pass.
-
-4. Create a new file that doesn't match all of those constraints (e.g. one
-   with a name that is longer than any of the existing names):
-
-        tdda verify . files.tdda
-
-   Now several constraints should fail.
-
+For much more depth on using constraints for validation, read
+the book Test-Driven Data Analysis, by Nicholas J. Radcliffe,
+particularly chapters 2 and 4–7. It is available at all good
+booksellers and all sellers of good books. It is also available,
+over time, free, online at <https://book.tdda.info>.

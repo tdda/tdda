@@ -42,10 +42,10 @@ def example_failing_verification():
     v = verify_df(df, TDDA_FILE)
 
     if v.failures > 0:
-        print('Correctly failed to verify dataframe that does not satisify '
+        print('Correctly failed to verify dataframe that does not satisfy '
               'all the constraints in %s' % TDDA_FILE)
-        if v.failures != 7 and v.passes != 5:
-            print('However, expected 7 failures and 5 passes.\n'
+        if v.failures != 6 or v.passes != 7:
+            print('However, expected 6 failures and 7 passes.\n'
                   'Actual: Failures: %d, Passes: %s.\n'
                   '*** Not great!' % (v.failures, v.passes))
             n_failures = 1
