@@ -522,8 +522,8 @@ class SerialMetadata:
         self.map_missing_trailing_cols_to_null = (
             map_missing_trailing_cols_to_null
         )
-        self.true_values = None
-        self.false_values = None
+        self.true_values = listify(true_values)
+        self.false_values = listify(false_values)
         self.header_row_count = header_row_count
         self.header_row = header_row
         self.comment_char = None

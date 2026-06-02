@@ -159,7 +159,7 @@ def main_with_argv(argv, verbose=True):
                 return ext.detect()
         no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
-        items = ['referencetest', 'constraints', 'rexpy', 'gentest']
+        items = ['referencetest', 'constraints', 'rexpy', 'gentest', 'serial']
         args = argv[2:]
         outdir = '.'
         if args:

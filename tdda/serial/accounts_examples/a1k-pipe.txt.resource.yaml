@@ -1,0 +1,53 @@
+name: a1k-pipe.txt
+type: table
+path: a1k-pipe.txt.psv
+scheme: file
+format: csv
+mediatype: text/csv
+encoding: utf-8
+dialect:
+  header: true
+  headerRows:
+  - 0
+  delimiter: '|'
+  quoteChar: '"'
+schema:
+  fields:
+  - name: account_number
+    type: integer
+  - name: open_date
+    type: date
+    format: YYYY-MM-DD
+  - name: close_date
+    type: date
+    format: YYYY-MM-DD
+  - name: title
+    type: string
+  - name: forename
+    type: string
+  - name: middle_name
+    type: string
+  - name: surname
+    type: string
+  - name: address1
+    type: string
+  - name: city
+    type: string
+  - name: postcode
+    type: string
+  - name: home_tel
+    type: string
+  - name: mobile_tel
+    type: string
+  - name: email
+    type: string
+  - name: account_type
+    type: string
+  - name: overdraft_limit
+    type: integer
+  - name: cash_card_number
+    type: string
+  - name: is_open
+    type: boolean
+  missingValues:
+  - ''

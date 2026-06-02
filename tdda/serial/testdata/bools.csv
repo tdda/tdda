@@ -1,0 +1,6 @@
+id,b_truefalse,b_yesno,b_onoff
+1,true,yes,on
+2,false,no,off
+3,true,,on
+4,false,no,
+5,true,yes,on

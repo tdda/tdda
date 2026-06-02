@@ -1,0 +1,84 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.0.03",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "account_number",
+                "fieldtype": "int"
+            },
+            {
+                "name": "open_date",
+                "fieldtype": "date"
+            },
+            {
+                "name": "close_date",
+                "fieldtype": "date"
+            },
+            {
+                "name": "title",
+                "fieldtype": "string"
+            },
+            {
+                "name": "forename",
+                "fieldtype": "string"
+            },
+            {
+                "name": "middle_name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "surname",
+                "fieldtype": "string"
+            },
+            {
+                "name": "address1",
+                "fieldtype": "string"
+            },
+            {
+                "name": "city",
+                "fieldtype": "string"
+            },
+            {
+                "name": "postcode",
+                "fieldtype": "string"
+            },
+            {
+                "name": "home_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "mobile_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "email",
+                "fieldtype": "string"
+            },
+            {
+                "name": "account_type",
+                "fieldtype": "string"
+            },
+            {
+                "name": "overdraft_limit",
+                "fieldtype": "int"
+            },
+            {
+                "name": "cash_card_number",
+                "fieldtype": "string"
+            },
+            {
+                "name": "is_open",
+                "fieldtype": "bool"
+            }
+        ],
+        "encoding": "utf-8",
+        "delimiter": "|",
+        "quote_char": "\"",
+        "date_format": "YYYY-MM-DD",
+        "null_indicator": "",
+        "header_row_count": 1,
+        "header_row": 0,
+        "quoting": "QUOTE_STRINGS_ONLY"
+    }
+}

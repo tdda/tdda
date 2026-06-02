@@ -1,0 +1,98 @@
+{
+    "@context": "http://www.w3.org/ns/csvw",
+    "dc:conformsTo": "data-package",
+    "dc:creator": "tdda.serial-3.0.03",
+    "tables": [
+        {
+            "tableSchema": {
+                "columns": [
+                    {
+                        "name": "account_number",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "open_date",
+                        "datatype": {
+                            "base": "date",
+                            "format": "yyyy-MM-dd"
+                        }
+                    },
+                    {
+                        "name": "close_date",
+                        "datatype": {
+                            "base": "date",
+                            "format": "yyyy-MM-dd"
+                        }
+                    },
+                    {
+                        "name": "title",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "forename",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "middle_name",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "surname",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "address1",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "city",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "postcode",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "home_tel",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "mobile_tel",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "email",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "account_type",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "overdraft_limit",
+                        "datatype": "integer"
+                    },
+                    {
+                        "name": "cash_card_number",
+                        "datatype": "string"
+                    },
+                    {
+                        "name": "is_open",
+                        "datatype": {
+                            "base": "boolean",
+                            "format": "yes|no"
+                        }
+                    }
+                ]
+            },
+            "url": "a1k-yes-no.csv"
+        }
+    ],
+    "dialect": {
+        "encoding": "utf-8",
+        "delimiter": ",",
+        "headerRowCount": 1,
+        "quoteChar": "\""
+    },
+    "null": ""
+}

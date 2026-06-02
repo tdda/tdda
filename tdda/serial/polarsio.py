@@ -287,8 +287,8 @@ def serial_to_polars_read_csv_args_and_postproc(
             # elif not fmt:
             # schema[field] = f(pl.String)
         if fmd.fieldtype and fmd.fieldtype.lower().startswith('bool'):
-            trues = listify(fmd.true_values)
-            falses = listify(fmd.false_values)
+            trues = listify(fmd.true_values or md.true_values)
+            falses = listify(fmd.false_values or md.false_values)
             if not trues and not falses and fmd.format and '|' in fmd.format:
                 parts = fmd.format.split('|')
                 if len(parts) == 2:
