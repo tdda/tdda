@@ -515,7 +515,7 @@ class DatasetConstraints(object):
                         htmlrow.append(colour_regexes(c.value))
                         any_rex = True
                     else:
-                        htmlrow.append('')
+                        htmlrow.append(constraint_val(c.value, kind))
                 else:
                     row.append('')
                     htmlrow.append(None)
