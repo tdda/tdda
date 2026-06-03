@@ -169,7 +169,7 @@ class FrictionlessMetadata(SerialMetadata):
     ):
         dialect = {}
         self.set_if_attr_non_null(dialect, 'header', 'header_row')
-        if self.header_row_count > 0:
+        if self.header_row_count and self.header_row_count > 0:
             dialect['header'] = True
             dialect['headerRows'] = list(range(nvl(self.header_row_count, 1)))
         self.set_if_attr_non_null(dialect, 'delimiter')
