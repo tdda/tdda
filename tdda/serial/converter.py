@@ -427,6 +427,7 @@ class SerialConverter:
         kw = {}
         if self.generate:
             md_out = self.infer_from_flat_file(warner=Warn)
+            md_in = md_out
         for fmt in self.out_formats:
             if fmt == 'tdda.serial':
                 pass

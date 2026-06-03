@@ -39,7 +39,7 @@ from tdda.state import get_config
 from tdda.constraints.flags import detect_parser, detect_flags, check_constraints_file
 from tdda.constraints.df.constraints import detect_df, load_df, file_format
 
-from tdda.utils import handle_tilde, nvl, cprint, print_stderr
+from tdda.utils import handle_tilde, nvl, cprint, print_stderr, tdda_path_info
 
 
 def detect_df_from_file(
@@ -122,7 +122,7 @@ class DFDetector:
 
     def detect(self):
         params = df_detect_params(self.argv[1:])
-        path = handle_tilde(params['df_path'])
+        path = tdda_path_info(params['df_path']).path
         if path is not None and path != '-' and not os.path.isfile(path):
             msg = f'{path} does not exist.' + (
                 '\nPerhaps you are trying to mix database tables and files.'
