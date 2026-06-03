@@ -382,11 +382,10 @@ def _set_flags_from_argv(argv=None):
     for option in ('--tagged', '--istagged'):
         if option in rest:
             idx = rest.index(option)
-            if idx:
-                rest = rest[:idx] + rest[idx + 1 :]
-                if option in ('-0', '--istagged'):
-                    check = True
-                else:
+            rest = rest[:idx] + rest[idx + 1 :]
+            if option in ('-0', '--istagged'):
+                check = True
+            else:
                     tagged = True
 
     if '--untag' in rest:
