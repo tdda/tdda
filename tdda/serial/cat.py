@@ -22,9 +22,9 @@ from tdda.utils import error, globlike_match, stdout_console
 
 COMMAND_DEFAULTS = {
     'cat':    dict(default_n=None, default_tail=False, default_random=False),
-    'head':   dict(default_n=10,   default_tail=False, default_random=False),
-    'tail':   dict(default_n=10,   default_tail=True,  default_random=False),
-    'sample': dict(default_n=10,   default_tail=False, default_random=True),
+    'head':   dict(default_n=20,   default_tail=False, default_random=False),
+    'tail':   dict(default_n=20,   default_tail=True,  default_random=False),
+    'sample': dict(default_n=20,   default_tail=False, default_random=True),
 }
 
 USAGES = {
@@ -46,7 +46,7 @@ tdda head [N] [--fields FIELDS] [--xfields FIELDS]
           [--pandas | --polars] [--backend BACKEND]
           INPUT [FIELD ...]
 
-Display the first N rows (default 10) of a dataset.
+Display the first N rows (default 20) of a dataset.
 
 Fields to display may be given as positional arguments after INPUT,
 or via --fields (or both).  Wildcards are supported (quote in shell).
@@ -56,7 +56,7 @@ tdda tail [N] [--fields FIELDS] [--xfields FIELDS]
           [--pandas | --polars] [--backend BACKEND]
           INPUT [FIELD ...]
 
-Display the last N rows (default 10) of a dataset.
+Display the last N rows (default 20) of a dataset.
 
 Fields to display may be given as positional arguments after INPUT,
 or via --fields (or both).  Wildcards are supported (quote in shell).
@@ -66,7 +66,7 @@ tdda sample [N] [--seed SEED] [--fields FIELDS] [--xfields FIELDS]
             [--pandas | --polars] [--backend BACKEND]
             INPUT [FIELD ...]
 
-Display N random rows (default 10) from a dataset.
+Display N random rows (default 20) from a dataset.
 
 Fields to display may be given as positional arguments after INPUT,
 or via --fields (or both).  Wildcards are supported (quote in shell).
