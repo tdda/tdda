@@ -61,6 +61,7 @@ exclude = [
     "tdda/serial/testdata",
     "tdda/serial/examples",
     "tdda/serial/examples2",
+    "tdda/serial/accounts_examples",
     "tdda/referencetest/testdata",
     "tdda/referencetest/examples",
     "tdda/referencetest/diffexamples",
