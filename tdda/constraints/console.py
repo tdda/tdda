@@ -165,7 +165,8 @@ def main_with_argv(argv, verbose=True):
         no_constraints(name, 'No detection available', argv[2:], extensions)
     elif name == 'examples':
         items = ['referencetest', 'constraints', 'rexpy', 'gentest', 'serial']
-        args = argv[2:]
+        args = [a for a in argv[2:] if a != '--dryrun']
+        dryrun = '--dryrun' in argv[2:]
         outdir = '.'
         if args:
             if 'all' in args:
@@ -184,7 +185,10 @@ def main_with_argv(argv, verbose=True):
                 else:
                     items = args
         for item in items:
-            copy_examples(item, destination=outdir, verbose=verbose)
+            if dryrun:
+                print(f'Copy {item} to {outdir}')
+            else:
+                copy_examples(item, destination=outdir, verbose=verbose)
     elif name == 'gentest':
         gentest_wrapper(argv[2:])
     elif name in ('version', '-v', '--version'):
