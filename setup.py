@@ -69,12 +69,14 @@ setup(
                             + ['tdda_json_file_format.md'],
         'tdda': data(['tdda'], ['man'])
                 + data(['tdda'], ['testdata'])
-                + ['README.md', 'LICENSE.txt', 'templates/tdda/css'],
+                + ['README.md', 'LICENSE.txt', 'templates/tdda/css',
+                   'llms.txt'],
         'tdda.constraints.db': data(['tdda', 'constraints', 'db'],
                                     ['init']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
-        'tdda.serial': data(['tdda', 'serial'], ['testdata', 'examples']),
+        'tdda.serial': data(['tdda', 'serial'], ['testdata', 'examples',
+                                                 'accounts_examples']),
     },
     entry_points = {
         'console_scripts': [
