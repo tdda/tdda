@@ -30,7 +30,6 @@ constraints_examples/testdata/accounts1k.tdda
 constraints_examples/testdata/accounts1k_refined.tdda
 constraints_examples/testdata/accounts25k.csv
 constraints_examples/testdata/accounts25k.parquet
-constraints_examples/testdata/accounts250k.parquet
 constraints_examples/testdata/accounts25k.tdda
 constraints_examples/testdata/ddd.csv
 constraints_examples/testdata/ddd.tdda
