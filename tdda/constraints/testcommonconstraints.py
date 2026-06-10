@@ -127,6 +127,8 @@ class TestCommonConstraints(ReferenceTestCase):
 
 
 class TestDiscoverReports(ReferenceTestCase):
+    norm_paths = True
+
     @classmethod
     def setUpClass(cls):
         small7x5path = testdata('small7x5.parquet')

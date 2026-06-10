@@ -39,6 +39,7 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
             self.output,
             os.path.join(self.refdir, 'STDOUT'),
             ignore_lines=[r'Value Differences (all rows with differences)'],
+            norm_paths=True,
         )
 
     def test_stderr(self):

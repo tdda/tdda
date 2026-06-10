@@ -68,6 +68,8 @@ def svgpath(filename):
 
 
 class TestTDDADiff(ReferenceTestCase):
+    norm_paths = True
+
     # HELPERS
 
     def diff(self, args, console=None):
