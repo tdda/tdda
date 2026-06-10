@@ -1098,6 +1098,8 @@ class TestPandasMultipleConstraintVerifier(ReferenceTestCase):
 
 
 class TestPandasDataFrameConstraints(ReferenceTestCase):
+    norm_paths = True
+
     def testDDD_df(self):
         csv_path = os.path.join(TESTDATADIR, 'ddd.csv')
         df = pd.read_csv(csv_path)

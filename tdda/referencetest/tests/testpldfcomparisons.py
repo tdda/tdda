@@ -31,6 +31,7 @@ CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
 
 
 class TestPolarsDataFrameComparisons(ReferenceTestCase):
+    norm_paths = True
     f, t = False, True
     m10000000 = pl.Series([t, f, f, f, f, f, f, f])
     m01000000 = pl.Series([f, t, f, f, f, f, f, f])

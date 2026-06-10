@@ -6,6 +6,7 @@ import re
 import sys
 import tempfile
 
+from tdda.referencetest.basecomparison import diffcmd
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.referencetest.checkfiles import FilesComparison
@@ -83,6 +84,11 @@ class ReferenceTest(object):
     # Windows-style paths to POSIX paths before comparison (only active
     # on Windows).
     norm_paths = False
+
+    # Platform-appropriate diff command prefixes for use with ignore_lines.
+    # Includes 'fc ' on Windows in addition to 'diff '.
+    _diffcmd = diffcmd()
+    _diff_cmds = ['diff '] + ([] if _diffcmd == 'diff' else [f'{_diffcmd} '])
 
     # Dictionary describing which kinds of reference files should be
     # regenerated when the tests are run. This should be set using the
