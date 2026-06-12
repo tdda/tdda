@@ -179,7 +179,7 @@ import tempfile
 import pytest
 
 from tdda.referencetest.referencetest import ReferenceTest, tag
-from tdda.referencetest.referencetestcase import _remove_tag_lines
+from tdda.referencetest.referencetestcase import ReferenceTestCase, _remove_tag_lines
 
 DEFAULT_FAIL_DIR = os.environ.get('TDDA_FAIL_DIR', tempfile.gettempdir())
 
@@ -302,9 +302,23 @@ def addoption(parser):
             action='store_true',
             help='--log-failures: write failing test IDs to a file for tdda tag',
         )
+        parser.addoption(
+            '--path-norm',
+            action='store_true',
+            help='--path-norm: normalise Windows paths to POSIX in comparisons',
+        )
     except ValueError:
         # ignore attempts to add parser options multiple times
         pass
+
+
+def configure(config):
+    """
+    Handle global options that take effect at configuration time,
+    such as ``--path-norm``.
+    """
+    if config.getoption('--path-norm', None):
+        ReferenceTestCase.set_defaults(norm_paths=True)
 
 
 def tagged(config, items):

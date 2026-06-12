@@ -337,6 +337,9 @@ def _set_flags_from_argv(argv=None):
                 elif flag == 'r':
                     report = True
                     arg = arg.replace('r', '')
+                elif flag == 'P':
+                    ReferenceTestCase.set_defaults(norm_paths=True)
+                    arg = arg.replace('P', '')
             rest[i] = '' if arg == '-' else arg
         else:
             break
@@ -402,6 +405,11 @@ def _set_flags_from_argv(argv=None):
         idx = rest.index('--no-log-failures')
         rest = rest[:idx] + rest[idx + 1 :]
         log_failures = False  # explicitly suppressed
+
+    if '--path-norm' in rest:
+        idx = rest.index('--path-norm')
+        rest = rest[:idx] + rest[idx + 1 :]
+        ReferenceTestCase.set_defaults(norm_paths=True)
 
     if regenerate:
         ReferenceTestCase.set_regeneration()

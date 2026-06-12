@@ -83,6 +83,9 @@ setup(
             'tdda = tdda.constraints.console:main',
             'rexpy = tdda.rexpy.rexpy:main',
         ],
+        'pytest11': [
+            'tdda = tdda.referencetest.pytestconfig',
+        ],
     },
     zip_safe=False,
     install_requires=[
