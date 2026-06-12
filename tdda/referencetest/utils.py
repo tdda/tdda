@@ -206,6 +206,20 @@ def remove_dict_keys_and_sort(o, keys):
         return o
 
 
+_HEAVY_TO_LIGHT = str.maketrans('┏━┳┓┃┡╇┩', '┌─┬┐│├┼┤')
+
+
+def normalise_rich_table(s):
+    """
+    Normalise Rich table box-drawing characters by mapping heavy header
+    border chars to their light equivalents. Useful as a preprocess
+    function when comparing Rich table output across platforms.
+    """
+    if isinstance(s, list):
+        return [line.translate(_HEAVY_TO_LIGHT) for line in s]
+    return s.translate(_HEAVY_TO_LIGHT)
+
+
 def json_normalizer(remove_keys=None):
     """
     Returns a JSON normalizer with key removal
