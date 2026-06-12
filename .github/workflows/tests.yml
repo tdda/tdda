@@ -30,4 +30,16 @@ jobs:
           pip install -e .
 
       - name: Run tests
-        run: python tdda/testtdda.py -P
+        env:
+          TDDA_FAIL_DIR: ${{ runner.temp }}/tdda-failures
+        run: |
+          python -c "import os; os.makedirs(os.environ['TDDA_FAIL_DIR'], exist_ok=True)"
+          python tdda/testtdda.py -P
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tdda-failures-${{ matrix.os }}
+          path: ${{ runner.temp }}/tdda-failures
+          if-no-files-found: ignore
