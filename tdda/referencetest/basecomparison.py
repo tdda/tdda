@@ -19,6 +19,7 @@ from collections import namedtuple
 
 from tdda.abstractdf import col_names
 from tdda.referencetest.diffutils import join_for_diff
+from tdda.referencetest.utils import copycmd, diffcmd
 from tdda.state import get_config
 from tdda.utils import nvl, error, debug
 
@@ -1013,13 +1014,6 @@ class DataFrameDiffs:
 
         return '\n'.join(msgs)
 
-
-def diffcmd():
-    return 'fc' if os.name and os.name != 'posix' else 'diff'
-
-
-def copycmd():
-    return 'copy' if os.name and os.name != 'posix' else 'cp'
 
 
 def df_col_pos(c, df):

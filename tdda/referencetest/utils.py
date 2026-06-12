@@ -206,6 +206,14 @@ def remove_dict_keys_and_sort(o, keys):
         return o
 
 
+def diffcmd():
+    return 'fc' if os.name and os.name != 'posix' else 'diff'
+
+
+def copycmd():
+    return 'copy' if os.name and os.name != 'posix' else 'cp'
+
+
 _HEAVY_TO_LIGHT = str.maketrans('┏━┳┓┃┡╇┩', '┌─┬┐│├┼┤')
 
 
@@ -218,6 +226,17 @@ def normalise_rich_table(s):
     if isinstance(s, list):
         return [line.translate(_HEAVY_TO_LIGHT) for line in s]
     return s.translate(_HEAVY_TO_LIGHT)
+
+
+def diff_parquet_pattern():
+    """
+    Returns a regex pattern that matches the 'Compare with:' diff command
+    line in DataFrame comparison output, for either 'diff' (Unix/Mac) or
+    'fc' (Windows).
+    """
+    cmds = '|'.join({'diff', diffcmd()})
+    return (r'(%s) .*/actual-df[0-9]+\.parquet'
+            r' .*/expected-df[0-9]+\.parquet') % cmds
 
 
 def json_normalizer(remove_keys=None):

@@ -7,6 +7,7 @@ from rich.console import Console
 
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
+from tdda.referencetest.utils import diff_parquet_pattern
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.checkpandas import (
     PandasComparison,
@@ -113,7 +114,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('one-diff-in-mem.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                diff_parquet_pattern()
             ],
         )
 
@@ -128,7 +129,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-str.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                diff_parquet_pattern(),
                 r'(str|object)',
             ],
         )
@@ -149,7 +150,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-float.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                diff_parquet_pattern()
             ],
         )
         self.assertStringCorrect(
@@ -172,7 +173,7 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-order.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                diff_parquet_pattern()
             ],
         )
 
