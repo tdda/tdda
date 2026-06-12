@@ -7,7 +7,7 @@ from rich.console import Console
 
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
-from tdda.referencetest.utils import diff_parquet_pattern
+from tdda.referencetest.utils import diff_parquet_pattern, normalise_rich_table
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.checkpandas import (
     PandasComparison,
@@ -38,7 +38,6 @@ E118PATH = os.path.join(CTESTDATA, 'elements118.csv')
 
 
 class TestPandasDataFrameComparisons(ReferenceTestCase):
-    norm_paths = True
     f, t = False, True
     m10000000 = pd.Series([t, f, f, f, f, f, f, f])
     m01000000 = pd.Series([f, t, f, f, f, f, f, f])
@@ -427,7 +426,10 @@ class TestPandasDataFrameComparisons(ReferenceTestCase):
         table = diff.details_table(df, rdf)
         result = rich_capture(table)
         self.assertStringCorrect(str(diff), fp('ddiff-1-details.txt'))
-        self.assertStringCorrect(result, fp('ddiff-1-rich-table.txt'))
+        self.assertStringCorrect(
+            result, fp('ddiff-1-rich-table.txt'),
+            preprocess=normalise_rich_table,
+        )
 
     def test_find_common_single_key45(self):
         n4 = n_squares(4)

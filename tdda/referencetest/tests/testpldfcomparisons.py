@@ -8,7 +8,7 @@ from rich.console import Console
 from tdda.abstractdf import col_names
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
-from tdda.referencetest.utils import diff_parquet_pattern
+from tdda.referencetest.utils import diff_parquet_pattern, normalise_rich_table
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.basecomparison import (
     DataFrameDiffs,
@@ -430,7 +430,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(diff), fp('ddiff-1-details.txt'), ignore_patterns=[r'[iI]nt64']
         )
         self.assertStringCorrect(
-            result, fp('ddiff-1-rich-table.txt'), ignore_patterns=[r'[iI]nt64']
+            result, fp('ddiff-1-rich-table.txt'), ignore_patterns=[r'[iI]nt64'],
+            preprocess=normalise_rich_table,
         )
 
 
