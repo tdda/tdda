@@ -38,6 +38,7 @@ E118PATH = os.path.join(CTESTDATA, 'elements118.csv')
 
 
 class TestPandasDataFrameComparisons(ReferenceTestCase):
+    norm_paths = True
     f, t = False, True
     m10000000 = pd.Series([t, f, f, f, f, f, f, f])
     m01000000 = pd.Series([f, t, f, f, f, f, f, f])

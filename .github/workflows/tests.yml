@@ -34,7 +34,7 @@ jobs:
           TDDA_FAIL_DIR: ${{ runner.temp }}/tdda-failures
         run: |
           python -c "import os; os.makedirs(os.environ['TDDA_FAIL_DIR'], exist_ok=True)"
-          python tdda/testtdda.py -P
+          python tdda/testtdda.py
 
       - name: Upload failure artifacts
         if: failure()

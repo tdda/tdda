@@ -6,13 +6,19 @@ from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase
 
 
+def wp(path):
+    if os.name == 'nt' and path.startswith('/'):
+        return 'C:' + path.replace('/', '\\')
+    return path
+
+
 class TestConfig(ReferenceTestCase):
     def testSerialInMetadataPath(self):
         config = Config(testing=True)  # empty, no load
         cwd = os.getcwd()
 
-        csvfile = '/any/old/dirpath/a.csv'
-        default_in_d = '/any/old/dirpath/_write.serial'
+        csvfile = wp('/any/old/dirpath/a.csv')
+        default_in_d = wp('/any/old/dirpath/_write.serial')
         default_in_cwd = './_write.serial'
 
         sc = config.serial
@@ -23,7 +29,7 @@ class TestConfig(ReferenceTestCase):
         self.assertEqual(sc._get_inpath_list(), [default_in_cwd])
 
         homedir_file = '~/write.serial'
-        abspath_file = '/any/old/dirpath/abs_write.serial'
+        abspath_file = wp('/any/old/dirpath/abs_write.serial')
 
         sc.md_inpath.extend([homedir_file, abspath_file])
 
