@@ -1,12 +1,20 @@
 __unittest = True
 
 
+import json
 import os
 import re
 import sys
 import tempfile
 
 from tdda.referencetest.basecomparison import diffcmd
+from tdda.referencetest.utils import (
+    apply_preprocess,
+    normalize_json,
+    normalize_json_for_comparison,
+    norm_paths_in_json,
+    remove_dict_keys,
+)
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.referencetest.checkfiles import FilesComparison
@@ -267,6 +275,7 @@ class ReferenceTest(object):
         fuzzy_nulls=False,
         engine=None,
         backend=None,
+        preprocess=None,
     ):
         """Check that an in-memory DataFrame matches an in-memory reference one.
 
@@ -328,11 +337,17 @@ class ReferenceTest(object):
             backend: Pandas backend: ``'numpy_nullable'``, ``'pyarrow'``,
                 or ``'original'``.
 
+            preprocess: An optional function (or list of functions) applied
+                to both DataFrames before comparison. If a list `[f, g]`
+                is given, `g(f(·))` is computed, where `·` is the DataFrame.
+
         Note:
             ``assertDataFramesEqual`` and ``assertDataFramesEquivalent``
             are identical; two names are provided for flexibility and as
             legacy support.
         """
+        df = apply_preprocess(df, preprocess)
+        ref_df = apply_preprocess(ref_df, preprocess)
         df, ref_df, lib = self.choose_common_df_lib(df, ref_df, engine)
         r = lib.check_dataframe(
             df,
@@ -372,6 +387,7 @@ class ReferenceTest(object):
         fuzzy_nulls=False,
         engine=None,
         backend=None,
+        preprocess=None,
         **kwargs,
     ):
         """Check that an in-memory DataFrame matches a saved reference
@@ -417,6 +433,7 @@ class ReferenceTest(object):
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             backend: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to ``csv_read_fn``.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
@@ -449,6 +466,7 @@ class ReferenceTest(object):
                 fuzzy_nulls=fuzzy_nulls,
                 engine=engine,
                 backend=backend,
+                preprocess=preprocess,
             )
 
     def assertStoredDataFrameCorrect(
@@ -817,9 +835,11 @@ class ReferenceTest(object):
                 text to the left or right must be identical in both strings.
             remove_lines: An optional list of substrings; lines containing
                 any of these substrings will be removed before comparison.
-            preprocess: An optional function that takes a list of strings
-                and preprocesses it; applied to both the actual and
-                expected strings before comparison.
+            preprocess: An optional function (or list of functions) that
+                takes a list of strings and preprocesses it; applied to both
+                the actual and expected strings before comparison.
+                If a list `[f, g]` is given, `g(f(·))` is computed, where
+                `·` is the list of strings.
             norm_paths: If `True`, normalise Windows-style paths to
                 POSIX paths before comparison (only active on Windows).
                 Applied after `preprocess` if both are specified.
@@ -858,6 +878,50 @@ class ReferenceTest(object):
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
+
+    def assertJSONCorrect(
+        self,
+        json_data,
+        ref_path,
+        kind=None,
+        remove_keys=None,
+        norm_paths=None,
+        preprocess=None,
+    ):
+        """Check that a JSON string matches the contents of a reference file.
+
+        The JSON is normalized before comparison: keys are sorted, indentation
+        is standardized to 2 spaces, and Unicode characters are preserved
+        (not ASCII-escaped). This means key ordering and whitespace differences
+        are ignored; only semantic differences are reported.
+
+        Args:
+            json_data: The actual JSON, as a string or parsed object.
+            ref_path: The name of the reference file.
+            kind: See `assertStringCorrect` for details.
+            remove_keys: An optional set/list of key names to remove from
+                the JSON at any depth before comparison.
+            norm_paths: If `True`, normalise Windows-style path separators
+                to POSIX in all string values. If a string or list of
+                strings, treat as fnmatch-style key globs and only normalise
+                values of matching keys.
+            preprocess: An optional function (or list of functions) applied
+                to the JSON string before parsing. If a list `[f, g]` is
+                given, `g(f(·))` is computed, where `·` is the JSON string.
+        """
+        if not isinstance(json_data, str):
+            json_data = json.dumps(
+                json_data, indent=2, sort_keys=True, ensure_ascii=False
+            )
+        normalizer = lambda lines: normalize_json_for_comparison(
+            lines,
+            remove_keys=remove_keys,
+            norm_paths=norm_paths,
+            preprocess=preprocess,
+        )
+        self.assertStringCorrect(
+            json_data, ref_path, kind=kind, preprocess=normalizer
+        )
 
     def assertTextFileCorrect(
         self,

@@ -239,6 +239,50 @@ def _norm_paths_in_obj(obj, norm_paths, key=None):
         return obj
 
 
+def apply_preprocess(x, xforms):
+    """Apply one or more transformation functions to x, left to right.
+
+    Args:
+        x: The value to transform.
+        xforms: A callable or list of callables to apply in sequence.
+    """
+    if xforms is None:
+        return x
+    if callable(xforms):
+        return xforms(x)
+    for f in xforms:
+        x = f(x)
+    return x
+
+
+def normalize_json_for_comparison(lines, remove_keys=None, norm_paths=None,
+                                   preprocess=None):
+    """Normalize JSON for comparison.
+
+    Applies user preprocessing, then parses, applies structural transforms
+    (remove_keys, norm_paths), and re-serializes with sorted keys, 2-space
+    indent, and Unicode preserved.
+
+    Args:
+        lines: JSON as a string or list of lines.
+        remove_keys: Optional set/list of key names to remove at any depth.
+        norm_paths: If `True`, normalise Windows paths in all string values.
+            If a string or list of strings, treat as fnmatch key globs.
+        preprocess: Optional function or list of functions applied to the
+            JSON string before parsing. If a list `[f, g]` is given,
+            `g(f(·))` is computed, where `·` is the JSON string.
+    """
+    s = '\n'.join(lines) if isinstance(lines, list) else lines
+    s = apply_preprocess(s, preprocess)
+    obj = json.loads(s)
+    if remove_keys:
+        obj = remove_dict_keys(obj, set(remove_keys))
+    serialized = json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+    if norm_paths:
+        serialized = norm_paths_in_json(serialized, norm_paths)
+    return serialized.splitlines()
+
+
 def norm_paths_in_json(s, norm_paths):
     """Normalise path strings in a JSON string.
 

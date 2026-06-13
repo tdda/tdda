@@ -22,7 +22,7 @@ from tdda.referencetest.basecomparison import (
     copycmd,
     FailureDiffs,
 )
-from tdda.referencetest.utils import get_encoding, FileType
+from tdda.referencetest.utils import apply_preprocess, get_encoding, FileType
 
 
 BinaryInfo = namedtuple(
@@ -154,8 +154,8 @@ class FilesComparison(BaseComparison):
         format = None
 
         if preprocess:
-            expected = preprocess(expected)
-            actual = preprocess(actual)
+            expected = apply_preprocess(expected, preprocess)
+            actual = apply_preprocess(actual, preprocess)
 
         if actual and len(actual[-1]) == 0:
             actual = actual[:-1]
