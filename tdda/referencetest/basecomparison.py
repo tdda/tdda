@@ -19,7 +19,7 @@ from collections import namedtuple
 
 from tdda.abstractdf import col_names
 from tdda.referencetest.diffutils import join_for_diff
-from tdda.referencetest.utils import copycmd, diffcmd
+from tdda.referencetest.utils import apply_preprocess, copycmd, diffcmd
 from tdda.state import get_config
 from tdda.utils import nvl, error, debug
 
@@ -538,6 +538,7 @@ class BaseComparison:
         precision=6,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         msgs=None,
         **kwargs,
     ):
@@ -596,6 +597,8 @@ class BaseComparison:
         df = self.load_serialized_dataframe(
             actual_path, loader=loader, **kwargs
         )
+        df = apply_preprocess(df, preprocess)
+        ref_df = apply_preprocess(ref_df, preprocess)
         return self.check_dataframe(
             df,
             ref_df,
@@ -625,6 +628,7 @@ class BaseComparison:
         sortby=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         msgs=None,
         **kwargs,
     ):
@@ -701,6 +705,7 @@ class BaseComparison:
                     sortby=sortby,
                     type_matching=type_matching,
                     fuzzy_nulls=fuzzy_nulls,
+                    preprocess=preprocess,
                     condition=condition,
                     msgs=msgs,
                     **kwargs,

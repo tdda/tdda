@@ -483,6 +483,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -521,6 +522,7 @@ class ReferenceTest(object):
             precision: See ``assertDataFramesEquivalent`` for details.
             type_matching: See ``assertDataFramesEquivalent`` for details.
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to
                 ``csv_read_fn``.
@@ -559,6 +561,7 @@ class ReferenceTest(object):
                 precision=precision,
                 type_matching=type_matching,
                 fuzzy_nulls=fuzzy_nulls,
+                preprocess=preprocess,
                 loader=csv_read_fn,
                 **kwargs,
             )
@@ -581,6 +584,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -600,6 +604,7 @@ class ReferenceTest(object):
             precision=precision,
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
+            preprocess=preprocess,
             engine=engine,
             **kwargs,
         )
@@ -618,6 +623,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -658,6 +664,7 @@ class ReferenceTest(object):
             precision: See ``assertDataFramesEquivalent`` for details.
             type_matching: See ``assertDataFramesEquivalent`` for details.
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to
                 ``csv_read_fn``.
@@ -694,6 +701,7 @@ class ReferenceTest(object):
                 type_matching=type_matching,
                 loader=csv_read_fn,
                 fuzzy_nulls=fuzzy_nulls,
+                preprocess=preprocess,
                 **kwargs,
             )
             (failures, msgs) = r
@@ -715,6 +723,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -732,6 +741,7 @@ class ReferenceTest(object):
             precision=precision,
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
+            preprocess=preprocess,
             engine=engine,
             **kwargs,
         )
