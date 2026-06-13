@@ -14,6 +14,7 @@ from tdda.referencetest.utils import (
     normalize_json_for_comparison,
     norm_paths_in_json,
     remove_dict_keys,
+    to_posix_newlines,
 )
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
@@ -759,6 +760,7 @@ class ReferenceTest(object):
         preprocess=None,
         norm_paths=None,
         max_permutation_cases=0,
+        norm_line_endings=True,
     ):
         """Check that two in-memory strings are equivalent.
 
@@ -788,6 +790,10 @@ class ReferenceTest(object):
         """
         preprocess = self._resolve_preprocess(preprocess, norm_paths)
         rl = remove_lines or ignore_lines
+        if norm_line_endings and isinstance(string, str):
+            string = to_posix_newlines(string)
+        if norm_line_endings and isinstance(expected, str):
+            expected = to_posix_newlines(expected)
         actual = string.splitlines() if isinstance(string, str) else string
         exp = expected.splitlines() if isinstance(expected, str) else expected
         r = self.files.check_strings(
@@ -802,6 +808,7 @@ class ReferenceTest(object):
             remove_lines=rl,
             preprocess=preprocess,
             max_permutation_cases=max_permutation_cases,
+            norm_line_endings=norm_line_endings,
         )
         (failures, msgs) = r
         self._check_failures(failures, msgs)
@@ -820,6 +827,7 @@ class ReferenceTest(object):
         preprocess=None,
         norm_paths=None,
         max_permutation_cases=0,
+        norm_line_endings=True,
     ):
         """Check that an in-memory string matches the contents from a
         reference text file.
@@ -885,6 +893,7 @@ class ReferenceTest(object):
                 remove_lines=rl,
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
@@ -948,6 +957,7 @@ class ReferenceTest(object):
         norm_paths=None,
         max_permutation_cases=0,
         encoding=None,
+        norm_line_endings=True,
     ):
         """Check that a text file matches the contents from a reference
         text file.
@@ -994,6 +1004,7 @@ class ReferenceTest(object):
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
                 encoding=encoding,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
@@ -1013,6 +1024,7 @@ class ReferenceTest(object):
         norm_paths=None,
         max_permutation_cases=0,
         encodings=None,
+        norm_line_endings=True,
     ):
         """Check that a collection of text files match the contents from a
         matching collection of reference text files.
@@ -1059,6 +1071,7 @@ class ReferenceTest(object):
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
                 encodings=encodings,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)

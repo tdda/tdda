@@ -22,7 +22,12 @@ from tdda.referencetest.basecomparison import (
     copycmd,
     FailureDiffs,
 )
-from tdda.referencetest.utils import apply_preprocess, get_encoding, FileType
+from tdda.referencetest.utils import (
+    apply_preprocess,
+    get_encoding,
+    to_posix_newlines,
+    FileType,
+)
 
 
 BinaryInfo = namedtuple(
@@ -62,6 +67,7 @@ class FilesComparison(BaseComparison):
         create_temporaries=True,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Compare two lists of strings (actual and expected), one-by-one.
@@ -147,7 +153,7 @@ class FilesComparison(BaseComparison):
         if msgs is None:
             msgs = Diffs()
 
-        normalize = self.normalize_function(lstrip, rstrip)
+        normalize = self.normalize_function(lstrip, rstrip, norm_line_endings)
         permutable = True
         failure_cases = []
         reconstruction = None
@@ -652,6 +658,7 @@ class FilesComparison(BaseComparison):
         create_temporaries=True,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Check a string (or list of strings) against the contents of a
@@ -683,6 +690,8 @@ class FilesComparison(BaseComparison):
             actuals = actual
             actual_ends_with_newline = expected_ends_with_newline
         else:
+            if norm_line_endings:
+                actual = to_posix_newlines(actual)
             actuals = actual.splitlines()
             actual_ends_with_newline = actual.endswith('\n')
         mpc = max_permutation_cases
@@ -701,6 +710,7 @@ class FilesComparison(BaseComparison):
             create_temporaries=create_temporaries,
             msgs=msgs,
             encoding=encoding,
+            norm_line_endings=norm_line_endings,
         )
         # if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -723,6 +733,7 @@ class FilesComparison(BaseComparison):
         max_permutation_cases=0,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Check a pair of text files, line by line, with optional
@@ -777,6 +788,7 @@ class FilesComparison(BaseComparison):
             max_permutation_cases=max_permutation_cases,
             msgs=msgs,
             encoding=enc,
+            norm_line_endings=norm_line_endings,
         )
         # if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -799,6 +811,7 @@ class FilesComparison(BaseComparison):
         max_permutation_cases=0,
         msgs=None,
         encodings=None,
+        norm_line_endings=True,
     ):
         """
         Compare a list of files against a list of reference files.
@@ -831,6 +844,7 @@ class FilesComparison(BaseComparison):
                     max_permutation_cases=max_permutation_cases,
                     msgs=msgs,
                     encoding=enc,
+                    norm_line_endings=norm_line_endings,
                 )
                 (n, msgs) = r
                 failures += n
@@ -916,19 +930,23 @@ class FilesComparison(BaseComparison):
         else:
             return len(actuals)
 
-    def normalize_function(self, left, right):
+    def normalize_function(self, left, right, norm_line_endings=True):
         """
         Return the appropriate function for stripping a string,
         with left and right being booleans that specify whether
         to strip on the two sides.
         """
         if left and right:
-            return lambda s: s.strip()
-        elif left:
-            return lambda s: s.lstrip()
+            return lambda s: s.strip()  # strip() covers \r
         elif right:
-            return lambda s: s.rstrip()
+            return lambda s: s.rstrip()  # rstrip() covers \r
+        elif left:
+            if norm_line_endings:
+                return lambda s: s.lstrip().rstrip('\r')
+            return lambda s: s.lstrip()
         else:
+            if norm_line_endings:
+                return lambda s: s.rstrip('\r')
             return lambda s: s
 
     def add_failures(
