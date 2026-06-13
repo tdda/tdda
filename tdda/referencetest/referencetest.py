@@ -718,6 +718,66 @@ class ReferenceTest(object):
             **kwargs,
         )
 
+    def assertStringsEquivalent(
+        self,
+        string,
+        expected,
+        lstrip=False,
+        rstrip=False,
+        ignore_substrings=None,
+        ignore_patterns=None,
+        remove_lines=None,
+        ignore_lines=None,
+        preprocess=None,
+        norm_paths=None,
+        max_permutation_cases=0,
+    ):
+        """Check that two in-memory strings are equivalent.
+
+        Like `assertStringCorrect` but compares two in-memory strings
+        rather than comparing against a reference file. The strings are
+        considered equivalent if they match after applying any
+        normalizations specified via the kwargs.
+
+        On failure, both strings are written to temporary files and a
+        diff command is suggested.
+
+        Args:
+            string: The actual string.
+            expected: The expected string.
+            lstrip: See `assertStringCorrect` for details.
+            rstrip: See `assertStringCorrect` for details.
+            ignore_substrings: See `assertStringCorrect` for details.
+            ignore_patterns: See `assertStringCorrect` for details.
+            remove_lines: See `assertStringCorrect` for details.
+            preprocess: See `assertStringCorrect` for details.
+            norm_paths: See `assertStringCorrect` for details.
+            max_permutation_cases: See `assertStringCorrect` for details.
+
+        Note:
+            The `ignore_lines` parameter is a backwards-compatible alias
+            for `remove_lines`.
+        """
+        preprocess = self._resolve_preprocess(preprocess, norm_paths)
+        rl = remove_lines or ignore_lines
+        actual = string.splitlines() if isinstance(string, str) else string
+        exp = expected.splitlines() if isinstance(expected, str) else expected
+        r = self.files.check_strings(
+            actual,
+            exp,
+            actual_path=None,
+            expected_path=None,
+            lstrip=lstrip,
+            rstrip=rstrip,
+            ignore_substrings=ignore_substrings,
+            ignore_patterns=ignore_patterns,
+            remove_lines=rl,
+            preprocess=preprocess,
+            max_permutation_cases=max_permutation_cases,
+        )
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
+
     def assertStringCorrect(
         self,
         string,
@@ -740,11 +800,11 @@ class ReferenceTest(object):
             string: The actual string.
             ref_path: The name of the reference file. The location of the
                 reference file is determined by the configuration via
-                ``set_data_location()``.
+                `set_data_location()`.
             kind: The reference kind, used to locate the reference file.
-            lstrip: If ``True``, whitespace is stripped from the start of
+            lstrip: If `True`, whitespace is stripped from the start of
                 each line before comparison.
-            rstrip: If ``True``, whitespace is stripped from the end of
+            rstrip: If `True`, whitespace is stripped from the end of
                 each line before comparison.
             ignore_substrings: An optional list of substrings; lines
                 containing any of these substrings will be ignored in the
@@ -760,9 +820,9 @@ class ReferenceTest(object):
             preprocess: An optional function that takes a list of strings
                 and preprocesses it; applied to both the actual and
                 expected strings before comparison.
-            norm_paths: If ``True``, normalise Windows-style paths to
+            norm_paths: If `True`, normalise Windows-style paths to
                 POSIX paths before comparison (only active on Windows).
-                Applied after ``preprocess`` if both are specified.
+                Applied after `preprocess` if both are specified.
             max_permutation_cases: An optional number specifying the
                 maximum number of permutations to allow; if the actual and
                 expected lists differ only in line order, and the number of
@@ -770,8 +830,8 @@ class ReferenceTest(object):
                 considered identical.
 
         Note:
-            The ``ignore_lines`` parameter is a backwards-compatible alias
-            for ``remove_lines``.
+            The `ignore_lines` parameter is a backwards-compatible alias
+            for `remove_lines`.
         """
         preprocess = self._resolve_preprocess(preprocess, norm_paths)
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
