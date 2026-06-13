@@ -1,5 +1,7 @@
+import fnmatch
 import json
 import os
+import re
 import sys
 import yaml
 
@@ -204,6 +206,57 @@ def remove_dict_keys_and_sort(o, keys):
         return [remove_dict_keys_and_sort(v, keys) for v in o]
     else:
         return o
+
+
+def _norm_path_string(s):
+    """Normalise a single path string from Windows to POSIX style."""
+    s = re.sub(r'[A-Za-z]:\\', '/', s)
+    return s.replace('\\', '/')
+
+
+def _norm_paths_in_obj(obj, norm_paths, key=None):
+    """Recursively normalise path strings in a parsed JSON object."""
+    if norm_paths is True:
+        key_matches = True
+    else:
+        patterns = (
+            [norm_paths] if isinstance(norm_paths, str) else list(norm_paths)
+        )
+        key_matches = key is not None and any(
+            fnmatch.fnmatch(key, p) for p in patterns
+        )
+
+    if isinstance(obj, dict):
+        return {
+            k: _norm_paths_in_obj(v, norm_paths, key=k)
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, (list, tuple)):
+        return [_norm_paths_in_obj(v, norm_paths, key=key) for v in obj]
+    elif isinstance(obj, str) and key_matches:
+        return _norm_path_string(obj)
+    else:
+        return obj
+
+
+def norm_paths_in_json(s, norm_paths):
+    """Normalise path strings in a JSON string.
+
+    Parses the JSON, applies path normalisation to string values, and
+    returns the result as a normalized JSON string (sorted keys, 2-space
+    indent, unicode preserved).
+
+    Args:
+        s: A JSON string or list of lines.
+        norm_paths: `True` to normalise all string values, or a string/list
+            of fnmatch-style key globs to restrict normalisation to values
+            of matching keys.
+    """
+    if isinstance(s, list):
+        s = '\n'.join(s)
+    obj = json.loads(s)
+    obj = _norm_paths_in_obj(obj, norm_paths)
+    return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
 
 
 def diffcmd():

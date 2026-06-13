@@ -8,11 +8,73 @@ import yaml
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.utils import (
+    norm_paths_in_json,
     normalize_json,
     normalize_yaml,
     remove_dict_keys,
     remove_dict_keys_and_sort,
 )
+
+
+WINDOWS_JSON = r"""
+{
+  "items": [
+    "C:\\a\\b.csv",
+    "hello"
+  ],
+  "name": "unchanged",
+  "nested": {
+    "count": 42,
+    "file_path": "C:\\tmp\\out.csv"
+  },
+  "source": "C:\\Users\\tdda\\data\\file.csv"
+}
+""".lstrip()
+
+POSIX_JSON = """
+{
+  "items": [
+    "/a/b.csv",
+    "hello"
+  ],
+  "name": "unchanged",
+  "nested": {
+    "count": 42,
+    "file_path": "/tmp/out.csv"
+  },
+  "source": "/Users/tdda/data/file.csv"
+}
+""".lstrip()
+
+FILE_PATH_NORMED_JSON = r"""
+{
+  "items": [
+    "C:\\a\\b.csv",
+    "hello"
+  ],
+  "name": "unchanged",
+  "nested": {
+    "count": 42,
+    "file_path": "/tmp/out.csv"
+  },
+  "source": "C:\\Users\\tdda\\data\\file.csv"
+}
+""".lstrip()
+
+SOURCE_AND_FILE_PATH_NORMED_JSON = r"""
+{
+  "items": [
+    "C:\\a\\b.csv",
+    "hello"
+  ],
+  "name": "unchanged",
+  "nested": {
+    "count": 42,
+    "file_path": "/tmp/out.csv"
+  },
+  "source": "/Users/tdda/data/file.csv"
+}
+""".lstrip()
 
 
 class TestUtils(ReferenceTestCase):
@@ -73,6 +135,31 @@ three:
 two:
   one: 1
 """,
+        )
+
+
+class TestNormPathsInJson(ReferenceTestCase):
+    def testNormPathsTrue(self):
+        self.assertStringsEquivalent(
+            norm_paths_in_json(WINDOWS_JSON, True), POSIX_JSON
+        )
+
+    def testNormPathsKeyGlob(self):
+        self.assertStringsEquivalent(
+            norm_paths_in_json(WINDOWS_JSON, '*_path'),
+            FILE_PATH_NORMED_JSON,
+        )
+
+    def testNormPathsKeyList(self):
+        self.assertStringsEquivalent(
+            norm_paths_in_json(WINDOWS_JSON, ['source', '*_path']),
+            SOURCE_AND_FILE_PATH_NORMED_JSON,
+        )
+
+    def testNormPathsNoOp(self):
+        self.assertStringsEquivalent(
+            norm_paths_in_json(WINDOWS_JSON, 'no_such_key'),
+            WINDOWS_JSON,
         )
 
 

@@ -30,6 +30,17 @@ BinaryInfo = namedtuple(
 )
 
 
+def file_ends_with_newline(path, encoding=None):
+    """Return True if the file at path ends with a newline."""
+    try:
+        enc = get_encoding(path, encoding)
+        with open(path, encoding=enc) as f:
+            content = f.read()
+        return content.endswith('\n')
+    except IOError:
+        return True
+
+
 def perms_ok(n_permutations, max_permutations):
     return max_permutations is None or n_permutations <= max_permutations
 
@@ -969,14 +980,21 @@ class FilesComparison(BaseComparison):
                         self.tmp_dir, 'expected-raw-' + commonname
                     )
                     raw_expected_path = tmpExpectedPath
-                    self.write_file(raw_expected_path, expected)
+                    self.write_file(raw_expected_path, expected,
+                                    trailing_newline=True)
                 if actual is not None and not raw_actual_path:
                     # no raw actual file, so write it
                     tmpActualPath = os.path.join(
                         self.tmp_dir, 'actual-raw-' + commonname
                     )
                     raw_actual_path = tmpActualPath
-                    self.write_file(raw_actual_path, actual)
+                    trailing_newline = (
+                        file_ends_with_newline(raw_expected_path, encoding)
+                        if raw_expected_path
+                        else True
+                    )
+                    self.write_file(raw_actual_path, actual,
+                                    trailing_newline=trailing_newline)
 
         if raw_actual_path and raw_expected_path:
             raw = 'raw' if (preprocess or reconstruction) else None
@@ -1004,16 +1022,15 @@ class FilesComparison(BaseComparison):
                 differ = '***\n' + raw_differ + '***\n\n'
             diffActual = os.path.join(self.tmp_dir, 'actual-' + commonname)
             diffExpected = os.path.join(self.tmp_dir, 'expected-' + commonname)
-            guide = expected_path or actual_path
             self.write_file(
                 diffActual,
                 (differ or '') + reconstruction.actual_lines(),
-                guide=guide,
+                trailing_newline=True,
             )
             self.write_file(
                 diffExpected,
                 (differ or '') + reconstruction.expected_lines(),
-                guide=guide,
+                trailing_newline=True,
             )
             actualsSame = (
                 '\n'.join(actual).strip()
@@ -1069,23 +1086,25 @@ class FilesComparison(BaseComparison):
                 % (binaryinfo.byteoffset, lengthinfo),
             )
 
-    def write_file(self, filename, contents, guide=None, encoding=None):
+    def write_file(self, filename, contents, trailing_newline=None,
+                   encoding=None):
         """
-        Write contents out to a file, optionally taking guidance from an
-        existing file as to whether to a newline at the end or not.
+        Write contents out to a file.
+
+        trailing_newline controls whether a final newline is written:
+          True  — always add one
+          False — never add one
+          None  — leave contents as-is (default)
         """
         enc = get_encoding(filename, encoding)
         if type(contents) in (list, tuple):
             contents = '\n'.join(contents)
+        if trailing_newline is True and not contents.endswith('\n'):
+            contents += '\n'
+        elif trailing_newline is False and contents.endswith('\n'):
+            contents = contents.rstrip('\n')
         with open(filename, 'w', encoding=enc) as f:
             f.write(contents)
-            if guide:
-                with open(guide, encoding=enc) as fg:
-                    lastline = None
-                    for line in fg.read():
-                        lastline = line
-                    if lastline and lastline.endswith('\n'):
-                        f.write('\n')
 
 
 class Reconstruction(object):
