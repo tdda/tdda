@@ -428,7 +428,12 @@ class SerialConfig(BaseConfig):
     def _get_inpath_list(self, csvpath=None):
         path = self.md_inpath
         paths = [path] if isinstance(path, str) else (path or [])
-        paths = [os.path.expanduser(p) for p in paths]
+        paths = [
+            os.path.normpath(os.path.expanduser(p))
+            if p.startswith('~')
+            else os.path.expanduser(p)
+            for p in paths
+        ]
         if csvpath:
             dir_ = os.path.dirname(os.path.abspath(csvpath))
             paths = [

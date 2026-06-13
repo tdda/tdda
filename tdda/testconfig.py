@@ -34,7 +34,9 @@ class TestConfig(ReferenceTestCase):
         sc.md_inpath.extend([homedir_file, abspath_file])
 
         homedir = os.path.expanduser('~')
-        abs_homedir_file = os.path.join(homedir, 'write.serial')
+        abs_homedir_file = os.path.normpath(
+            os.path.join(homedir, 'write.serial')
+        )
 
         # as before, plus the homedir file as an absolute path.
         # plus the absolute path given.
