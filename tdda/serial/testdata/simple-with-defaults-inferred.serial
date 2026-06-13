@@ -32,7 +32,7 @@
                 "fieldtype": "datetime"
             }
         ],
-        "encoding": "UTF-8",
+        "encoding": "utf-8",
         "delimiter": ",",
         "quote_char": "\"",
         "date_format": "YYYY-MM-DD",

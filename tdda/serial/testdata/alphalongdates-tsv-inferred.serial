@@ -68,6 +68,7 @@
                 "format": "MONTH DD, YYYY"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": "\t",
         "header_row_count": 1,
         "header_row": 0,

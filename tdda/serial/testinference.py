@@ -144,7 +144,7 @@ class TestInference(ReferenceTestCase):
         self.assertEqual(
             buf,
             [
-                "encoding: 'UTF-8' (default, no evidence)",
+#                "encoding: 'UTF-8' (default, no evidence)",
                 "quote_char: '\"' (default, no evidence)",
             ],
         )

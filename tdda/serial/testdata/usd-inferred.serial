@@ -12,6 +12,7 @@
                 "fieldtype": "date"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": ",",
         "date_format": "MM/DD/YYYY",
         "header_row_count": 1,

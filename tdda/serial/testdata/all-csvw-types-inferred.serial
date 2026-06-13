@@ -188,6 +188,7 @@
                 "fieldtype": "string"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": ",",
         "quote_char": "\"",
         "stutter_quotes": true,

@@ -255,6 +255,11 @@ def apply_preprocess(x, xforms):
     return x
 
 
+def to_posix_newlines(s):
+    """Convert Windows line endings to Unix in a string."""
+    return s.replace('\r\n', '\n')
+
+
 def normalize_json_for_comparison(lines, remove_keys=None, norm_paths=None,
                                    preprocess=None):
     """Normalize JSON for comparison.

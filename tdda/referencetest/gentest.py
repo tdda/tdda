@@ -27,6 +27,7 @@ from tdda.referencetest.utils import (
     FileType,
     get_encoding,
     protected_readlines,
+    to_posix_newlines,
 )
 from tdda.rexpy import extract
 
@@ -551,11 +552,12 @@ class TestGenerator:
                 file=sys.stderr,
             )
             if r.err:
-                print('*** Output to stderr was:\n%s' % r.err, file=sys.stderr)
+                print('*** Output to stderr was:\n%s'
+                      % to_posix_newlines(r.err), file=sys.stderr)
             else:
                 print(
                     '*** No output to stderr. Output to stdout was:\n%s'
-                    % r.out,
+                    % to_posix_newlines(r.out),
                     file=sys.stderr,
                 )
             print(

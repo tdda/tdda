@@ -28,6 +28,7 @@
                 "fieldtype": "date"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": ",",
         "date_format": "YYYY-MM-DD",
         "null_indicator": "",
