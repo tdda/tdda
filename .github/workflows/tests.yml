@@ -36,12 +36,23 @@ jobs:
           python -c "import os; os.makedirs(os.environ['TDDA_FAIL_DIR'], exist_ok=True)"
           python tdda/testtdda.py
 
+      - name: Copy gentest output to fail dir
+        if: failure()
+        run: |
+          python -c "
+          import os, shutil, tempfile
+          src = os.path.join(tempfile.gettempdir(), 'tdda', 'gentest')
+          dst = os.path.join(os.environ['TDDA_FAIL_DIR'], 'gentest')
+          if os.path.exists(src):
+              shutil.copytree(src, dst, dirs_exist_ok=True)
+          "
+        env:
+          TDDA_FAIL_DIR: ${{ runner.temp }}/tdda-failures
+
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: tdda-failures-${{ matrix.os }}
-          path: |
-            ${{ runner.temp }}/tdda-failures
-            ${{ runner.temp }}/tdda/gentest
+          path: ${{ runner.temp }}/tdda-failures
           if-no-files-found: ignore
