@@ -322,24 +322,26 @@ class TestGenTest(ReferenceTestCase):
             r.out.strip(),
             ref_path('a-stdout2.txt'),
             ignore_patterns=[
-                r'^Directory to run in: .*/tdda/gentest/testa$',
+                r'^Directory to run in: .*[/\\]tdda[/\\]gentest[/\\]testa$',
                 r'^Test script generated: '
-                r'.*/tdda/gentest/testa/test_python_2files_py.py$',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py$',
                 r'^Command execution took: .*$',
                 r'^Saved \(non-empty\) output to stdout to '
-                r'.*/tdda/gentest/testa/ref/python_2files_py/STDOUT.$',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]STDOUT.$',
                 r'^Saved \(empty\) output to stderr to '
-                r'.*/tdda/gentest/testa/ref/python_2files_py/STDERR.$',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]STDERR.$',
                 r'^Saved \(non-empty\) output to stdout to '
-                r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDOUT.',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]2[/\\]STDOUT.',
                 r'^Saved \(empty\) output to stderr to '
-                r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDERR.',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]2[/\\]STDERR.',
                 r'^Directory to run in: '
-                r'.*/tdda/gentest/testa',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa',
                 r'^Test script generated:'
-                r'.*/tdda/gentest/testa/test_python_2files_py.py',
+                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py',
                 r'^Test script written as .*'
-                r'/tdda/gentest/testa/test_python_2files_py.py$',
+                r'[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py$',
+                r'^Copied \$\(pwd\).*',
+                r'^\s+\$\(pwd\).*',
             ],
         )
         self.assertStringCorrect(
