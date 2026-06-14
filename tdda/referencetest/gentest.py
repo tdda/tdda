@@ -1340,7 +1340,7 @@ def as_join_repr(
     if path.startswith(cwd + os.path.sep):
         if path not in (cwd, cwd + os.path.sep):
             tail = path[len(cwd) :]
-            if os.path.isabs(tail):
+            if tail.startswith(os.sep):
                 tail = tail[1:]
             if as_pwd:
                 return os.path.join('%s%s%s' % (as_pwd, os.path.sep, tail))

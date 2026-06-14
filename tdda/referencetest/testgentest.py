@@ -352,6 +352,7 @@ class TestGenTest(ReferenceTestCase):
             out_path('testa/test_python_2files_py.py'),
             ref_path('a-test_python_2files_py.py'),
             norm_paths=True,
+            preprocess=lambda lines: [l.replace('\\\\', '\\') for l in lines],
         )
         self.assertFileCorrect(
             out_path('testa/ref/python_2files_py/STDOUT'),
