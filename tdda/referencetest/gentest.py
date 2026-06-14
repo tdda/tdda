@@ -654,7 +654,7 @@ class TestGenerator:
                             dirs.append(path)
                         else:
                             stat = os.stat(path)
-                            self.snapshot[path] = stat.st_ctime
+                            self.snapshot[path] = stat.st_mtime_ns
             if len(self.snapshot) > self.max_snapshot_files:
                 self.snapshot_fail()
 
@@ -692,10 +692,10 @@ class TestGenerator:
         for name in files:
             if not self.ignore(name):  # .pyc
                 path = os.path.join(dirpath, name)
-                ctime = os.stat(path).st_ctime
+                mtime_ns = os.stat(path).st_mtime_ns
                 if (
                     path not in self.snapshot
-                    or ctime > self.snapshot[path]
+                    or mtime_ns > self.snapshot[path]
                     or os.path.isdir(path)
                 ):
                     reference_files.add(path)
@@ -932,7 +932,7 @@ class TestGenerator:
         paths = self.generated_file_paths(in_cls=True)
         if paths:
             return '    generated_files = [\n        %s\n    ]' % (
-                ',\n    '.join(paths)
+                ',\n        '.join(paths)
             )
         else:
             return ''
