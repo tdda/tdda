@@ -321,27 +321,26 @@ class TestGenTest(ReferenceTestCase):
         self.assertStringCorrect(
             r.out.strip(),
             ref_path('a-stdout2.txt'),
+            norm_paths=True,
             ignore_patterns=[
-                r'^Directory to run in: .*[/\\]tdda[/\\]gentest[/\\]testa$',
+                r'^Directory to run in: .*/tdda/gentest/testa$',
                 r'^Test script generated: '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py$',
+                r'.*/tdda/gentest/testa/test_python_2files_py.py$',
                 r'^Command execution took: .*$',
                 r'^Saved \(non-empty\) output to stdout to '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]STDOUT.$',
+                r'.*/tdda/gentest/testa/ref/python_2files_py/STDOUT.$',
                 r'^Saved \(empty\) output to stderr to '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]STDERR.$',
+                r'.*/tdda/gentest/testa/ref/python_2files_py/STDERR.$',
                 r'^Saved \(non-empty\) output to stdout to '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]2[/\\]STDOUT.',
+                r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDOUT.',
                 r'^Saved \(empty\) output to stderr to '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]ref[/\\]python_2files_py[/\\]2[/\\]STDERR.',
+                r'.*/tdda/gentest/testa/ref/python_2files_py/2/STDERR.',
                 r'^Directory to run in: '
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa',
+                r'.*/tdda/gentest/testa',
                 r'^Test script generated:'
-                r'.*[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py',
+                r'.*/tdda/gentest/testa/test_python_2files_py.py',
                 r'^Test script written as .*'
-                r'[/\\]tdda[/\\]gentest[/\\]testa[/\\]test_python_2files_py.py$',
-                r'^Copied \$\(pwd\).*',
-                r'^\s+\$\(pwd\).*',
+                r'/tdda/gentest/testa/test_python_2files_py.py$',
             ],
         )
         self.assertStringCorrect(
@@ -349,10 +348,11 @@ class TestGenTest(ReferenceTestCase):
             ref_path('a-stderr2.txt'),
             ignore_lines=['RequestsDependencyWarning', '  warnings.warn('],
         )
-#        self.assertFileCorrect(
-#            out_path('testa/test_python_2files_py.py'),
-#            ref_path('a-test_python_2files_py.py'),
-#        )
+        self.assertFileCorrect(
+            out_path('testa/test_python_2files_py.py'),
+            ref_path('a-test_python_2files_py.py'),
+            norm_paths=True,
+        )
         self.assertFileCorrect(
             out_path('testa/ref/python_2files_py/STDOUT'),
             ref_path('testa/ref/python_2files_py/STDOUT'),
