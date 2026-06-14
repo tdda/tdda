@@ -41,5 +41,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: tdda-failures-${{ matrix.os }}
-          path: ${{ runner.temp }}/tdda-failures
+          path: |
+            ${{ runner.temp }}/tdda-failures
+            ${{ runner.temp }}/tdda/gentest
           if-no-files-found: ignore
