@@ -193,6 +193,7 @@ class BaseComparison:
                 ' Should be True, False or "object"'
             )
 
+        check_data = self.resolve_option_flag(check_data, ref_df)
         check_types = self.resolve_option_flag(check_types, ref_df)
         check_extra_cols = self.resolve_option_flag(check_extra_cols, df)
 
@@ -207,9 +208,11 @@ class BaseComparison:
         df = self._replace_cats(df)
         ref_df = self._replace_cats(ref_df)
 
-        # 2. Make initial set of missing columns
+        # 2. Make initial set of missing columns (only for fields being checked)
 
-        missing_cols = set(ref_names) - set(df_names)
+        missing_cols = (set(ref_names) - set(df_names)).intersection(
+            set(check_data)
+        )
 
         # 3. Check types of fields, where type checking is used.
         #    Also mark any fields not present in df that are
@@ -281,7 +284,6 @@ class BaseComparison:
 
         cols = state.common_cols
         if not quick or state.same_ignoring_types:
-            check_data = self.resolve_option_flag(check_data, ref_df)
             if check_data:
                 cols = [c for c in check_data if c in state.common_cols]
                 if idx:

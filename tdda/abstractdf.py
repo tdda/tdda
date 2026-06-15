@@ -1,9 +1,12 @@
+import datetime
 import inspect
 
 import numpy as np
 import pandas as pd
 import polars as pl
 
+from tdda.pd.utils import coltype_is_boolean, is_string_col, pandas_col_to_tdda_type
+from tdda.pl.utils import polars_col_to_tdda_type
 from tdda.pdutils import pandas_types_match
 from tdda.plutils import polars_types_match
 from tdda.state import get_config
@@ -47,6 +50,14 @@ def is_pandas_obj(o):
 
 def is_polars_df(df):
     return not (is_pandas_df(df))
+
+
+def is_polars_series(x):
+    return isinstance(x, pl.Series)
+
+
+def is_series(x):
+    return isinstance(x, (pd.Series, pl.Series))
 
 
 def col_types_match(L, R, level=None):
@@ -248,7 +259,7 @@ def csv_to_dataframe(
             md_path=md_path,
             md_file_type=md_file_type,
             find_md=find_md,
-            infer_datetime_format=infer_datetime_formats,
+            infer_datetime_formats=infer_datetime_formats,
         )
     elif engine == 'pandas':
         return csv_to_pandas(
@@ -274,8 +285,36 @@ def isnull_fn(df):
     return pd.isnull if df_type(df) == 'pandas' else lambda x: x is None
 
 
-def isnull_col(c):
+def eltwise_isnull(c):
+    """Element-wise: returns boolean Series, True where c is null."""
     return c.isnull() if is_pandas_series(c) else c.is_null()
+
+
+def eltwise_notnull(c):
+    """Element-wise: returns boolean Series, True where c is not null."""
+    return c.notnull() if is_pandas_series(c) else c.is_not_null()
+
+
+def eltwise_str_len(c):
+    """Element-wise: returns integer Series of string lengths."""
+    if is_pandas_series(c):
+        return c.str.len()
+    if c.dtype == pl.Categorical:
+        c = c.cast(pl.String)
+    return c.str.len_chars()
+
+
+def eltwise_isin(c, values):
+    """Element-wise: returns boolean Series, True where c is in values."""
+    return c.isin(values) if is_pandas_series(c) else c.is_in(values)
+
+
+def eltwise_is_duplicated(df, colname):
+    """Element-wise: returns boolean Series, True where colname is duplicated."""
+    if is_pandas_df(df):
+        return df.duplicated(colname, keep=False)
+    else:
+        return df[colname].is_duplicated()
 
 
 def fillnull_col(c, v):
@@ -283,6 +322,7 @@ def fillnull_col(c, v):
 
 
 def pd_scalar_eq(L, R):
+    """Null-safe scalar equality for pandas: null == null is True."""
     if pd.isnull(L):
         return pd.isnull(R)
     elif pd.isnull(R):
@@ -292,6 +332,7 @@ def pd_scalar_eq(L, R):
 
 
 def pl_scalar_eq(L, R):
+    """Scalar equality for polars values (polars handles nulls natively)."""
     return L == R
 
 
@@ -311,7 +352,216 @@ def df_group_count(df, keys):
 
 
 def calc_nunique(col):
-    return col.nunique() if is_pandas_series(col) else col.n_unique()
+    return col.nunique() if is_pandas_series(col) else col.drop_nulls().n_unique()
+
+
+def unique_values(col, include_nulls=True):
+    if is_pandas_series(col):
+        values = col.unique()
+    else:
+        values = col.unique().to_list()
+    nullvalues = [v for v in values if pd.isnull(v)] if include_nulls else []
+    return nullvalues + sorted(v for v in values if not pd.isnull(v))
+
+
+def filter_out_nulls(values):
+    return {v for v in values if not pd.isnull(v)}
+
+
+def is_null(value):
+    return pd.isnull(value)
+
+
+def scalar_to_tdda_type(x):
+    """
+    Returns the TDDA type of a scalar value.
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+    Returns 'null' for None or null values, 'other' if unrecognized.
+    """
+    if isinstance(x, (bool, np.bool_)):
+        return 'bool'
+    if isinstance(x, str):
+        return 'string'
+    if isinstance(x, (int, np.integer)):
+        return 'int'
+    if isinstance(x, (float, np.floating)):
+        return 'real'
+    if isinstance(x, (datetime.datetime, datetime.date, pd.Timestamp)):
+        return 'date'
+    if x is None:
+        return 'null'
+    null = pd.isnull(x)
+    if hasattr(null, '__len__'):
+        return 'other'
+    if null:
+        return 'null'
+    return 'other'
+
+
+def col_to_tdda_type(col):
+    """
+    Returns the TDDA type of a pandas or polars column.
+    """
+    if is_pandas_series(col):
+        return pandas_col_to_tdda_type(col)
+    else:
+        return polars_col_to_tdda_type(col)
+
+
+tdda_type = col_to_tdda_type  # backwards-compatible alias
+
+
+def all_non_nulls_boolean(col):
+    """
+    Returns True if all non-null values in col are boolean.
+    """
+    if is_pandas_series(col):
+        if coltype_is_boolean(col):
+            return True
+        if col.dtype != np.dtype('O'):
+            return False
+        return all(type(v) is bool for v in col.dropna())
+    else:
+        return col.dtype == pl.Boolean
+
+
+def col_min(col):
+    if is_pandas_series(col):
+        m = col.dropna().min() if is_string_col(col) else col.min()
+        if pd.isnull(m):
+            return None
+        if scalar_to_tdda_type(m) == 'date' and hasattr(m, 'to_pydatetime'):
+            return m.to_pydatetime(warn=False)
+        return m.item() if hasattr(m, 'item') else m
+    else:
+        return col.min()
+
+
+def col_max(col):
+    if is_pandas_series(col):
+        M = col.dropna().max() if is_string_col(col) else col.max()
+        if pd.isnull(M):
+            return None
+        if scalar_to_tdda_type(M) == 'date' and hasattr(M, 'to_pydatetime'):
+            return M.to_pydatetime(warn=False)
+        return M.item() if hasattr(M, 'item') else M
+    else:
+        return col.max()
+
+
+def col_min_length(col):
+    if is_pandas_series(col):
+        return col.str.len().min()
+    else:
+        if col.dtype == pl.Categorical:
+            col = col.cast(pl.String)
+        return col.str.len_chars().min()
+
+
+def col_max_length(col):
+    if is_pandas_series(col):
+        return col.str.len().max()
+    else:
+        if col.dtype == pl.Categorical:
+            col = col.cast(pl.String)
+        return col.str.len_chars().max()
+
+
+def null_count(col):
+    if is_pandas_series(col):
+        return int(col.isnull().sum())
+    else:
+        return col.null_count()
+
+
+def non_null_count(col):
+    if is_pandas_series(col):
+        return int(col.count())
+    else:
+        return len(col) - col.null_count()
+
+
+def non_integer_values_count(col):
+    if is_pandas_series(col):
+        nn = col.dropna()
+        return int(len(nn) - (nn.astype(int) == nn).astype(int).sum())
+    else:
+        nn = col.drop_nulls()
+        return int((nn.cast(pl.Int64).cast(nn.dtype) != nn).sum())
+
+
+def coarse_type(x):
+    """
+    Returns the TDDA coarse type of x (scalar or column).
+    Combines 'bool', 'int', 'real' into 'number'.
+    """
+    if is_series(x):
+        t = col_to_tdda_type(x)
+    else:
+        t = scalar_to_tdda_type(x)
+    return 'number' if t in ('bool', 'int', 'real') else t
+
+
+def types_compatible(x, y, colname=None):
+    """
+    Returns True if x and y have the same coarse type.
+    Warns to stderr if not and colname is provided.
+    """
+    ok = coarse_type(x) == coarse_type(y)
+    if not ok and colname:
+        import sys
+        print(
+            'Warning: Failing incompatible types constraint for field %s '
+            'of type %s.\n(Constraint value %s of type %s.)'
+            % (colname, type(x), y, type(y)),
+            file=sys.stderr,
+        )
+    return ok
+
+
+def fuzzy_gt(a, b, epsilon):
+    fuzzed = b * (1 - epsilon) if b > 0 else b * (1 + epsilon)
+    return (a >= b) | (a >= fuzzed)
+
+
+def fuzzy_lt(a, b, epsilon):
+    fuzzed = b * (1 + epsilon) if b > 0 else b * (1 - epsilon)
+    return (a <= b) | (a <= fuzzed)
+
+
+def to_datetime(df, value):
+    if is_pandas_df(df):
+        return pd.to_datetime(value)
+    else:
+        return value
+
+
+def date_columns(df):
+    if is_pandas_df(df):
+        return list(df.select_dtypes(include=[np.datetime64]))
+    else:
+        return [
+            c for c in df.columns
+            if df[c].dtype == pl.Date
+            or isinstance(df[c].dtype, pl.Datetime)
+        ]
+
+
+def detection_field(column, expr, default=None):
+    if is_pandas_series(column):
+        if column.isnull().sum() == 0:
+            return expr.astype(bool)
+        null = np.nan if default is None else default
+        return np.where(pd.isnull(column), null, expr.astype('O'))
+    else:
+        null_mask = column.is_null()
+        if not null_mask.any():
+            return expr.cast(pl.Boolean)
+        null_val = None if default is None else default
+        return pl.select(
+            pl.when(null_mask).then(null_val).otherwise(expr)
+        ).to_series()
 
 
 def get_engine_and_backend(engine=None, backend=None, config=None):

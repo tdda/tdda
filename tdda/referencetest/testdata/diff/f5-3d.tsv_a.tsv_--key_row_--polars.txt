@@ -12,10 +12,10 @@ Total number of columns with differences: 5:
            2: even
            2: date
 
-[1m                               Value Differences (all rows with differences)                               [0m
+[1mValue Differences (all rows with differences)[0m
 ┏━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃[1m [0m[1mrow[0m[1m [0m┃[1m [0m[1m   sq[0m[1m [0m┃[1m [0m[1m   sq[0m[1m [0m┃[1m [0m[1m  recip[0m[1m [0m┃[1m [0m[1m  recip[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m  name[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m   even[0m[1m [0m┃[1m [0m[1m      date[0m[1m [0m┃[1m [0m[1m      date[0m[1m [0m┃
-┃[1m [0m[1m   [0m[1m [0m┃[1m [0m[1mInt64[0m[1m [0m┃[1m [0m[1mInt64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃[1m [0m[1mString[0m[1m [0m┃[1m [0m[1mString[0m[1m [0m┃[1m [0m[1mBoolean[0m[1m [0m┃[1m [0m[1mBoolean[0m[1m [0m┃[1m [0m[1m    String[0m[1m [0m┃[1m [0m[1m    String[0m[1m [0m┃
+┃[1m [0m[1m   [0m[1m [0m┃[1m [0m[1mInt64[0m[1m [0m┃[1m [0m[1mInt64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃[1m [0m[1mFloat64[0m[1m [0m┃[1m [0m[1mString[0m[1m [0m┃[1m [0m[1mString[0m[1m [0m┃[1m [0m[1mBoolean[0m[1m [0m┃[1m [0m[1mBoolean[0m[1m [0m┃[1m [0m[1m      Date[0m[1m [0m┃[1m [0m[1m      Date[0m[1m [0m┃
 ┃[1m [0m[1m   [0m[1m [0m┃[1m [0m[1m    <[0m[1m [0m┃[1m [0m[1m    >[0m[1m [0m┃[1m [0m[1m      <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃[1m [0m[1m     <[0m[1m [0m┃[1m [0m[1m     >[0m[1m [0m┃[1m [0m[1m      <[0m[1m [0m┃[1m [0m[1m      >[0m[1m [0m┃[1m [0m[1m         <[0m[1m [0m┃[1m [0m[1m         >[0m[1m [0m┃
 ┡━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
 │   2 │     4 │     4 │     0.5 │     0.5 │    two │    two │    True │    True │ [31m2000-02-02[0m │ [32m2022-02-02[0m │

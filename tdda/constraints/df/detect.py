@@ -29,10 +29,7 @@ Parameters:
 import os
 import sys
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 import pandas as pd
 import numpy as np
@@ -40,7 +37,7 @@ import numpy as np
 from tdda import __version__
 from tdda.state import get_config
 from tdda.constraints.flags import detect_parser, detect_flags, check_constraints_file
-from tdda.constraints.pd.constraints import detect_df, load_df, file_format
+from tdda.constraints.df.constraints import detect_df, load_df, file_format
 
 from tdda.utils import handle_tilde, nvl, cprint, print_stderr, tdda_path_info
 
@@ -49,6 +46,7 @@ def detect_df_from_file(
     df_path,
     constraints_path,
     outpath=None,
+    engine=None,
     backend=None,
     verbose=True,
     **kwargs,
@@ -69,7 +67,7 @@ def detect_df_from_file(
         **kwargs: Passed to ``detect_df``.
 
     Returns:
-        ``tdda.constraints.pd.constraints.PandasDetection`` object.
+        ``tdda.constraints.df.constraints.DFDetection`` object.
     """
     if df_path == '-' or df_path is None:
         df_path = StringIO(sys.stdin.read())
@@ -81,7 +79,7 @@ def detect_df_from_file(
         constraints_path = stem + '.tdda'
     check_constraints_file(constraints_path)
 
-    df = load_df(df_path, backend=backend)
+    df = load_df(df_path, engine=engine, backend=backend)
     v = detect_df(
         df,
         constraints_path,
@@ -95,7 +93,7 @@ def detect_df_from_file(
     return v
 
 
-def pd_detect_parser():
+def df_detect_parser():
     parser = detect_parser(USAGE)
     parser.add_argument('input', help='CSV, parquet')
     parser.add_argument(
@@ -107,8 +105,8 @@ def pd_detect_parser():
     return parser
 
 
-def pd_detect_params(args):
-    parser = pd_detect_parser()
+def df_detect_params(args):
+    parser = df_detect_parser()
     params = {}
     flags = detect_flags(parser, args, params)
     params['df_path'] = flags.input
@@ -117,13 +115,13 @@ def pd_detect_params(args):
     return params
 
 
-class PandasDetector:
+class DFDetector:
     def __init__(self, argv, verbose=False):
         self.argv = argv
         self.verbose = verbose
 
     def detect(self):
-        params = pd_detect_params(self.argv[1:])
+        params = df_detect_params(self.argv[1:])
         path = tdda_path_info(params['df_path']).path
         if path is not None and path != '-' and not os.path.isfile(path):
             msg = f'{path} does not exist.' + (
@@ -140,7 +138,7 @@ def main(argv, verbose=True):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
-    v = PandasDetector(argv)
+    v = DFDetector(argv)
     v.verify()
 
 

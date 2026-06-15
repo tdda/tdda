@@ -67,6 +67,7 @@ from collections import Counter, defaultdict, namedtuple, OrderedDict
 from pprint import pprint
 
 from tdda import __version__
+from tdda.abstractdf import is_polars_series
 from tdda.utils import nvl, TDDAError
 
 
@@ -2507,26 +2508,26 @@ def extract(
     return r if as_object else r.results.rex if r.results else []
 
 
-def pdextract(cols, seed=None):
+def dfextract(cols, seed=None):
     """
-    Extract regular expression(s) from one or more Pandas columns.
+    Extract regular expression(s) from one or more DataFrame columns.
 
-    All columns provided should be string columns (i.e. of type
-    ``object`` or ``categorical``), possibly containing null values,
-    which are ignored.
+    All columns provided should be string columns, possibly containing
+    null values, which are ignored. Works with both Pandas and Polars
+    Series.
 
     Example::
 
         import numpy as np
         import pandas as pd
-        from tdda.rexpy import pdextract
+        from tdda.rexpy import dfextract
 
         df = pd.DataFrame({'a3': ["one", "two", np.nan],
                            'a45': ['three', 'four', 'five']})
 
-        re3 = pdextract(df['a3'])
-        re45 = pdextract(df['a45'])
-        re345 = pdextract([df['a3'], df['a45']])
+        re3 = dfextract(df['a3'])
+        re45 = dfextract(df['a45'])
+        re345 = dfextract([df['a3'], df['a45']])
 
     This should result in::
 
@@ -2535,7 +2536,7 @@ def pdextract(cols, seed=None):
         re345 = ['^[a-z]{3,5}$']
 
     Args:
-        cols: A Pandas ``Series`` or list of ``Series`` objects.
+        cols: A Pandas or Polars ``Series``, or list of ``Series`` objects.
         seed (int): Random seed for reproducibility. ``None`` (the
             default) means non-deterministic.
 
@@ -2546,7 +2547,10 @@ def pdextract(cols, seed=None):
         cols = [cols]
     strings = []
     for c in cols:
-        strings.extend(list(c.dropna().unique()))
+        if is_polars_series(c):
+            strings.extend(c.drop_nulls().unique().to_list())
+        else:
+            strings.extend(list(c.dropna().unique()))
     try:
         return extract(strings, seed=seed)
     except:
@@ -2554,6 +2558,10 @@ def pdextract(cols, seed=None):
             raise ValueError('Non-null, non-string values found in input.')
         else:
             raise
+
+
+# TODO: add alias once refactoring complete
+# pdextract = dfextract
 
 
 def get_omnipresent_at_pos(fragFreqCounters, n, **kwargs):

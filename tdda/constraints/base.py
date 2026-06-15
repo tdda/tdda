@@ -509,7 +509,6 @@ class DatasetConstraints(object):
                 if c is None and kind in ('min', 'max'):
                     c = field.constraints.get(kind + '_length', None)
                 if c is not None:
-                    v = c.value
                     row.append(constraint_val(c.value, kind))
                     if kind == 'rex':
                         htmlrow.append(colour_regexes(c.value))
@@ -1186,8 +1185,6 @@ class Verification(object):
             for (field, ver) in self.fields.items()
             if ver.failures > 0
         )
-
-        n_fields_with_failures = len(failing_field_items)
         if self.report in ('fields', 'records'):
             # Report only fields with failures
             field_items = failing_field_items
@@ -1312,7 +1309,6 @@ class Verification(object):
         ]
         rows = []
         htmlrows = []
-        any_rex = False
         constraint_fields = constraints['fields']
         for field, fc in constraint_fields.items():
             fail_details = fails['_field_stats'].get(field)
@@ -1370,7 +1366,6 @@ class Verification(object):
                                 coloured_tick_cross(not cfail),
                             ]
                         )
-                        any_rex = True
                     else:
                         htmlrow.extend(
                             [
@@ -1573,7 +1568,6 @@ def verify(
     config = get_config(config)
     results = VerificationClass(constraints, config=config, **kwargs)
     outpath = kwargs.get('outpath')
-    report_path = kwargs.get('reportpath')
     detect = (
         outpath is not None
         or kwargs.get('detect') is not None
@@ -1936,7 +1930,6 @@ def write_html_detect_report(d, outpath, config, table=None):
     """
     Writes a human-readable textual report on detection failures
     """
-    indent = '  '
     ffv = config.format_failure_values
     xml = XML(
         html=True,
@@ -1965,11 +1958,13 @@ def write_html_detect_report(d, outpath, config, table=None):
             xml.WriteElement('code', value)
             xml.CloseElement('li')
 
-            is_rex = constraint == 'rex'
-            label = f'Constraint: {constraint}: '
-            fval = config.format_constraint_value(
-                value, len(label), 4, rex=is_rex
-            )
+            # TODO: Can probably go. Confirm HTML is correct,
+            # including for rex constraints
+            # is_rex = constraint == 'rex'
+            # label = f'Constraint: {constraint}: '
+            # fval = config.format_constraint_value(
+            #     value, len(label), 4, rex=is_rex
+            # )
 
             nf = results['n_failures']
             n = nf + results['n_passes']

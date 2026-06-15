@@ -10,14 +10,14 @@ import sys
 
 from tdda.constraints.extension import ExtensionBase
 
-from tdda.constraints.pd.discover import PandasDiscoverer
-from tdda.constraints.pd.verify import PandasVerifier
-from tdda.constraints.pd.detect import PandasDetector
+from tdda.constraints.df.discover import DFDiscoverer
+from tdda.constraints.df.verify import DFVerifier
+from tdda.constraints.df.detect import DFDetector
 
 from tdda.utils import tdda_path_info
 
 
-class TDDAPandasExtension(ExtensionBase):
+class TDDADFExtension(ExtensionBase):
     def __init__(self, argv, verbose=False):
         ExtensionBase.__init__(self, argv, verbose=verbose)
 
@@ -45,10 +45,10 @@ class TDDAPandasExtension(ExtensionBase):
         return 'a CSV file or a .parquet file'
 
     def discover(self):
-        return PandasDiscoverer(self.argv, verbose=self.verbose).discover()
+        return DFDiscoverer(self.argv, verbose=self.verbose).discover()
 
     def verify(self):
-        return PandasVerifier(self.argv, verbose=self.verbose).verify()
+        return DFVerifier(self.argv, verbose=self.verbose).verify()
 
     def detect(self):
-        return PandasDetector(self.argv, verbose=self.verbose).detect()
+        return DFDetector(self.argv, verbose=self.verbose).detect()

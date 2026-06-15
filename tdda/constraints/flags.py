@@ -11,7 +11,7 @@ import sys
 from tdda.man.utils import get_help, print_help
 from tdda.state import set_load
 from tdda.utils import error
-from tdda.commonflags import add_pandas_flags, process_pandas_flags
+from tdda.commonflags import add_engine_flags, process_engine_flags
 
 
 class ManPageParser(argparse.ArgumentParser):
@@ -139,7 +139,7 @@ def discover_parser(usage=''):
         action='store_true',
         help='Do not create allowed or required fields dataset constraints',
     )
-    add_pandas_flags(parser)
+    add_engine_flags(parser)
     return parser
 
 
@@ -159,7 +159,7 @@ def discover_flags(parser, args, params):
     if flags.no_md:
         params['no_md'] = flags.no_md
 
-    params['engine'], params['backend'] = process_pandas_flags(None, flags)
+    params['engine'], params['backend'] = process_engine_flags(None, flags)
 
     params['allowed_fields'] = not (flags.no_allowed or flags.no_ar)
     params['required_fields'] = not (flags.no_required or flags.no_ar)
@@ -352,7 +352,7 @@ def verify_flags(parser, args, params):
     if vr and nvr:
         error('Inconsistent settings for verify-required-fields')
 
-    params['engine'], params['backend'] = process_pandas_flags(None, flags)
+    params['engine'], params['backend'] = process_engine_flags(None, flags)
 
     return flags
 
@@ -419,7 +419,7 @@ def detect_flags(parser, args, params):
     else:
         params['report_formats'] = []
 
-    params['engine'], params['backend'] = process_pandas_flags(None, flags)
+    params['engine'], params['backend'] = process_engine_flags(None, flags)
 
     return flags
 
@@ -519,7 +519,7 @@ def add_verify_fields_flags(parser):
         help='Force no verification of allowed and required fields',
     )
 
-    add_pandas_flags(parser)
+    add_engine_flags(parser)
 
 
 def check_constraints_file(path):

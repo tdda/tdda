@@ -10,7 +10,7 @@ ENGINES = {
 }
 
 
-def process_pandas_flags(config, o):
+def process_engine_flags(config, o):
     config = get_config(config)
     engine = 'polars' if o.polars else 'pandas' if o.pandas else None
     engine = ENGINES.get(engine, config.engine)
@@ -26,7 +26,7 @@ def process_pandas_flags(config, o):
     return engine, backend
 
 
-def add_pandas_flags(parser):
+def add_engine_flags(parser):
     parser.add_argument(
         '--pandas',
         '--pd',

@@ -28,17 +28,14 @@ input file, with a .tdda extension will be tried.
 import os
 import sys
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 import pandas as pd
 import numpy as np
 
 from tdda import __version__
 from tdda.constraints.flags import verify_parser, verify_flags, check_constraints_file
-from tdda.constraints.pd.constraints import verify_df, load_df
+from tdda.constraints.df.constraints import verify_df, load_df
 
 from tdda.state import get_config
 from tdda.utils import handle_tilde, nvl, cprint, tdda_path_info
@@ -49,6 +46,7 @@ def verify_df_from_file(
     constraints_path,
     verbose=True,
     md_path=None,
+    engine=None,
     backend=None,
     **kwargs,
 ):
@@ -78,7 +76,7 @@ def verify_df_from_file(
         constraints_path = stem + '.tdda'
     check_constraints_file(constraints_path)
 
-    df = load_df(df_path, md_path=md_path, backend=backend)
+    df = load_df(df_path, md_path=md_path, engine=engine, backend=backend)
     v = verify_df(
         df, constraints_path, md_path=md_path, backend=backend, **kwargs
     )
@@ -87,7 +85,7 @@ def verify_df_from_file(
     return v
 
 
-def pd_verify_parser():
+def df_verify_parser():
     parser = verify_parser(USAGE)
     parser.add_argument('input', nargs=1, help='CSV or parquet file')
     parser.add_argument(
@@ -96,8 +94,8 @@ def pd_verify_parser():
     return parser
 
 
-def pd_verify_params(args):
-    parser = pd_verify_parser()
+def df_verify_params(args):
+    parser = df_verify_parser()
     params = {}
     flags = verify_flags(parser, args, params)
     params['df_path'] = flags.input[0] if flags.input else None
@@ -105,13 +103,13 @@ def pd_verify_params(args):
     return params
 
 
-class PandasVerifier:
+class DFVerifier:
     def __init__(self, argv, verbose=False):
         self.argv = argv
         self.verbose = verbose
 
     def verify(self):
-        params = pd_verify_params(self.argv[1:])
+        params = df_verify_params(self.argv[1:])
         inpath = params['df_path']
         path = tdda_path_info(inpath).path
         if path is not None and path != '-' and not os.path.isfile(path):
@@ -124,7 +122,7 @@ def main(argv, verbose=True):
     if len(argv) > 1 and argv[1] in ('-v', '--version'):
         print(__version__)
         sys.exit(0)
-    v = PandasVerifier(argv)
+    v = DFVerifier(argv)
     v.verify()
 
 

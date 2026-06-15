@@ -22,9 +22,9 @@ import unittest
 
 from tdda.examples import copy_examples
 from tdda.constraints.base import Marks
-from tdda.constraints.pd.discover import pd_discover_parser
-from tdda.constraints.pd.verify import pd_verify_parser
-from tdda.constraints.pd.detect import pd_detect_parser
+from tdda.constraints.df.discover import df_discover_parser
+from tdda.constraints.df.verify import df_verify_parser
+from tdda.constraints.df.detect import df_detect_parser
 from tdda.man.utils import print_help
 from tdda.referencetest.gentest import gentest_wrapper
 from tdda.utils import swap_ext
@@ -32,7 +32,7 @@ from tdda.utils import swap_ext
 from tdda import __version__
 
 STANDARD_EXTENSIONS = [
-    'tdda.constraints.pd.extension.TDDAPandasExtension',
+    'tdda.constraints.df.extension.TDDADFExtension',
     'tdda.constraints.db.extension.TDDADatabaseExtension',
 ]
 

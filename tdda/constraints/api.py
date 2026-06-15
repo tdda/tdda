@@ -3,10 +3,10 @@ import sys
 import pandas as pd
 import polars as pl
 
-from tdda.constraints.pd.constraints import discover_df, verify_df, detect_df
-from tdda.constraints.pd.discover import discover_df_from_file
-from tdda.constraints.pd.verify import verify_df_from_file
-from tdda.constraints.pd.detect import detect_df_from_file
+from tdda.constraints.df.constraints import discover_df, verify_df, detect_df
+from tdda.constraints.df.discover import discover_df_from_file
+from tdda.constraints.df.verify import verify_df_from_file
+from tdda.constraints.df.detect import detect_df_from_file
 
 from tdda.abstractdf import get_engine_and_backend
 from tdda.serial.utils import get_backend
@@ -14,21 +14,15 @@ from tdda.serial.utils import get_backend
 
 def source_kind(src):
     """
-    Attempts to identify the kind of data source src is.
-    Usually it is a filepath to a known file type,
-    most often a csv or other flat file, or a parquet file,
-    or a DataFrame (currently a Pandas DataFrame).
+    Identifies the kind of data source src is.
 
     Returns:
 
-      'parquet' if it's a parquet file
-
-      'flat'    for any kind of text file
-                (currently,any string that does not look like a parquet file)
-
-      'pandas'  For a pandas DataFrame
-
-      None if it doesn't look like anything known.
+      'parquet'  for a parquet file path
+      'flat'     for any other file path (CSV or other flat file)
+      'pandas'   for a pandas DataFrame
+      'polars'   for a polars DataFrame
+      None       if unrecognised
 
     """
     if type(src) == str:
@@ -83,7 +77,7 @@ def discover(
     kind = source_kind(indata)
 
     engine, backend = get_engine_and_backend(engine, backend)
-    if kind == 'pandas':
+    if kind in ('pandas', 'polars'):
         return discover_df(
             indata,
             constraints_path,
@@ -93,10 +87,11 @@ def discover(
             verbose=verbose,
             **kwargs,
         )
-    elif kind in ('parquet', 'flat') and engine == 'pandas':
+    elif kind in ('parquet', 'flat'):
         return discover_df_from_file(
             indata,
             constraints_path,
+            engine=engine,
             report_path=report_path,
             report_formats=report_formats,
             backend=backend,
@@ -139,7 +134,7 @@ def verify(
     """
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)
-    if kind == 'pandas':
+    if kind in ('pandas', 'polars'):
         return verify_df(
             indata,
             constraints_path,
@@ -148,10 +143,11 @@ def verify(
             verbose=verbose,
             **kwargs,
         )
-    elif kind in ('parquet', 'flat') and engine == 'pandas':
+    elif kind in ('parquet', 'flat'):
         return verify_df_from_file(
             indata,
             constraints_path,
+            engine=engine,
             verbose=verbose,
             backend=backend,
             md_path=md_path,
@@ -184,7 +180,7 @@ def detect(
     """
     kind = source_kind(indata)
     engine, backend = get_engine_and_backend(engine, backend)
-    if kind == 'pandas':
+    if kind in ('pandas', 'polars'):
         return detect_df(
             indata,
             constraints_path,
@@ -193,7 +189,7 @@ def detect(
             backend=backend,
             **kwargs,
         )
-    elif kind in ('parquet', 'flat') and engine == 'pandas':
+    elif kind in ('parquet', 'flat'):
         return detect_df_from_file(
             indata,
             constraints_path,

@@ -1,5 +1,9 @@
+import datetime
+
 import numpy as np
 import pandas as pd
+
+from tdda.pdutils import loosen_pandas_type
 
 pdmaj = int(pd.__version__.split('.')[0])
 pd3 = pdmaj >= 3
@@ -46,6 +50,45 @@ def is_string_dtype(dtype):
         or is_categorical_dtype(dtype)
         or str(dtype).startswith('string')  # includes pyarrow
     )
+
+
+def coltype_is_boolean(col):
+    return loosen_pandas_type(col.dtype) == 'bool'
+
+
+def pandas_col_to_tdda_type(col):
+    """
+    Returns the TDDA type of a pandas Series (column).
+
+    Basic TDDA types are one of 'bool', 'int', 'real', 'string' or 'date'.
+    Returns 'other' if unrecognized.
+    """
+    dt = col.dtype
+    dts = str(dt).lower()
+    if dt == np.dtype('O'):
+        # objects could be strings, booleans-with-nulls, or dates
+        nn = col.dropna()
+        if len(nn) == 0:
+            return 'string'
+        v = nn.iloc[0]
+        if type(v) in (bool, np.bool_):
+            return 'bool'
+        if type(v) in (str, bytes):
+            return 'string'
+        if isinstance(v, (datetime.datetime, datetime.date)):
+            return 'date'
+        return 'string'
+    if is_categorical_dtype(dt) or dts.startswith('str'):
+        return 'string'
+    if 'bool' in dts:
+        return 'bool'
+    if 'int' in dts:
+        return 'int'
+    if 'float' in dts or 'double' in dts:
+        return 'real'
+    if 'date' in dts:
+        return 'date'
+    return 'other'
 
 
 def is_string_col(col):

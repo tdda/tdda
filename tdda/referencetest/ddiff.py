@@ -17,7 +17,7 @@ from tdda.utils import (
     warn,
     debug,
 )
-from tdda.commonflags import process_pandas_flags, add_pandas_flags
+from tdda.commonflags import process_engine_flags, add_engine_flags
 from tdda.abstractdf import (
     filter_fields,
 )
@@ -222,7 +222,7 @@ class TDDADiff:
         elif self.permissive or self.loose:
             self.type_checking = 'loose'
 
-        self.engine, self.backend = process_pandas_flags(self.config, self)
+        self.engine, self.backend = process_engine_flags(self.config, self)
 
     def error(self, msg, code=1):
         print(msg, file=sys.stderr)
@@ -400,7 +400,7 @@ class TDDADiff:
             action='store_true',
             help='Use loose (permissive) type comparisons',
         )
-        add_pandas_flags(parser)
+        add_engine_flags(parser)
         return parser
 
 

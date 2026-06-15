@@ -17,6 +17,7 @@ from tdda.serial.utils import (
     DataFrameWithMetadata,
 )
 
+from tdda.serial.dateutils import infer_date_format_from_strings
 from tdda.utils import listify, warn, nvl
 
 
@@ -355,6 +356,35 @@ def serial_to_polars_read_csv_args_and_postproc(
     return kw, postproc, rename_map
 
 
+def polars_infer_dates(df, specified_types=None):
+    """Try to parse string columns as dates, skipping explicitly typed ones."""
+    exprs = []
+    for name in df.columns:
+        if df[name].dtype != pl.String:
+            continue
+        spec = (specified_types or {}).get(name)
+        if spec in (pl.String, pl.Utf8):
+            continue
+        strings = df[name].drop_nulls().head(100).to_list()
+        fmt = infer_date_format_from_strings(strings)
+        if fmt is None:
+            continue
+        try:
+            if '%H' in fmt:
+                exprs.append(
+                    pl.col(name).str.to_datetime(format=fmt, strict=False)
+                )
+            else:
+                exprs.append(
+                    pl.col(name).str.to_date(format=fmt, strict=False)
+                )
+        except Exception:
+            pass
+    if exprs:
+        df = df.with_columns(exprs)
+    return df
+
+
 def csv_to_polars(
     path=None,
     md_path=None,
@@ -453,6 +483,8 @@ def csv_to_polars(
         kw = md_kw
 
     kw = set_delimiter_from_path(kw, path, 'separator')
+    if infer_datetime_formats:
+        kw.setdefault('try_parse_dates', True)
     df = pl.read_csv(path, **kw)
     if rename_map:
         rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
@@ -471,6 +503,8 @@ def csv_to_polars(
             df = df.with_columns(expr)
         except Exception:
             pass  # format was wrong; field stays as string
+    if infer_datetime_formats:
+        df = polars_infer_dates(df, specified_types=kw.get('schema'))
     return DataFrameWithMetadata(df, md) if return_md else df
 
 
