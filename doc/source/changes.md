@@ -4,6 +4,41 @@
 
 ## This Version
 
+* **3.1** CI Tests passing on all platforms (Windows as well as Linux/Mac).
+Over 100 tests were failing on Windows, but a huge number of these
+were problems with the tests (like \ vs / as path separator in reference
+results). But a few genuine changes:
+
+ - Gentest was broken on Windows and is now working
+ - Added --dense flag to tdda verify and tdda detect
+ - Added tdda cat, tdda head, tdda tail, tdda sample commands
+   for viewing data frames stored as CSV or parquet.
+ - Added tdda ls for listing metadata for a CSV or Parquet dataset,
+   (including types and null counts etc. after loading with any
+   specified metadata or None).
+ - Fixed problem with tdda examples serial not working
+ - Added norm-paths to all referencetest assert methods for text.
+   These convert Windows-style paths (drive letter and component separator)
+   to Unix style when checking strings.
+ - Add assertStringsEquivalent assertion, for comparing two in-memory
+   strings with TDDA-style exclusions/permitted variations.
+   This was missing (cf. assertDataframesEquivalent).
+ - Add assertJSONCorrect, for checking a JSON string in memory to a file
+   with appropriate exclusion options. Normalized JSON indentation and
+   key ordering and ascii encoding by default.
+ - Allow preprocess to be a list of functions (applied in order from
+   left to right) wherever it occurs.
+ - Add -P / --path_norm as option running TDDA tests (unittest/pytest).
+   This adds norm_paths to all text assertions where it is not explicitly
+   set to False.
+ - Add -s/-S flags for ddiff to prevent headers making columns unnecessarily
+   wide
+ - Text assertions convert Windows line endings ('\r\n')
+   to posix line endings ('\n') by default
+ - Fixed bug in the HTML version of discover reports
+ - --fields and --xfields on ddiff now accepts space-separated or
+   comma separated values.
+
 * **3.0** Detect functionality now works with databases
 
 * **3.0** [`tdda diff`](cli.md#tdda-diff) for visually comparing data frames (Parquet & CSV files)
