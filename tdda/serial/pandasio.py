@@ -276,12 +276,13 @@ def serial_to_pandas_write_csv_args(
     if PANDAS.write_key in md.libs:
         return md.libs[PANDAS.write_key]
 
+    Warn = nvl(warner, warn)
     kw = to_common_pandas_rw_args(md)
     kw['date_format'] = to_pandas_date_format(
-        md.single_date_format(), for_write=True
+        md.single_date_format(warner=Warn), for_write=True
     )
 
-    null = md.single_null_indicator()
+    null = md.single_null_indicator(warner=Warn)
     if null is not None:
         kw['na_rep'] = null
 
@@ -290,8 +291,6 @@ def serial_to_pandas_write_csv_args(
 
     if md.stutter_quotes in (True, False):
         kw['doublequote'] = md.stutter_quotes
-
-    kw['na_rep'] = md.single_null_indicator()
 
     # Possibly map to csv names
     # Possibly check for nulls in string fields
@@ -788,6 +787,30 @@ def serial_to_pandas_read_csv_python(
         if backend and backend != OG_BACKEND:
             kw['dtype_backend'] = backend
     return fill_template(PYTHON_TEMPLATES.PANDAS_READ, kw)
+
+
+def serial_to_pandas_write_csv_python(
+    md, backend=None, config=None, warner=None
+):
+    Warn = nvl(warner, warn)
+    bool_fields = [
+        f for f in md.fields
+        if f.fieldtype == 'bool'
+        and (f.format or f.true_values or f.false_values)
+    ]
+    if bool_fields or md.true_values or md.false_values:
+        Warn(
+            'Boolean formats cannot be expressed in'
+            ' pandas.DataFrame.to_csv;'
+            ' booleans will be written as True/False.'
+        )
+    kw = serial_to_pandas_write_csv_args(
+        md, backend=backend, config=config, warner=Warn
+    )
+    kw = {k: v for k, v in kw.items() if v is not None}
+    if 'index' not in kw:
+        kw['index'] = False
+    return fill_template(PYTHON_TEMPLATES.PANDAS_WRITE, kw)
 
 
 def pandas_to_csv(

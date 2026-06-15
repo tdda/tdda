@@ -82,6 +82,28 @@ def read_data(inpath):
 
 """
 
+    PANDAS_WRITE = """
+import pandas as pd
+
+def write_data(df, outpath):
+    df.to_csv(
+        outpath,
+        %s
+    )
+
+"""
+
+    POLARS_WRITE = """
+import polars as pl
+
+def write_data(df, outpath):
+    df.write_csv(
+        outpath,
+        %s
+    )
+
+"""
+
 
 DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 

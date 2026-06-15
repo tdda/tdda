@@ -10,8 +10,9 @@ from tdda.serial.infer import infer_format_from_flat_file
 from tdda.serial.metadata import SerialMetadata, get_metadata_flavours
 from tdda.serial.pandasio import (
     serial_to_pandas_read_csv_args,
-    serial_to_pandas_write_csv_args,
     serial_to_pandas_read_csv_python,
+    serial_to_pandas_write_csv_args,
+    serial_to_pandas_write_csv_python,
 )
 from tdda.serial.polarsio import (
     serial_to_polars_read_csv_args,
@@ -60,7 +61,13 @@ CONVERTER = {
 
 PYTHON_WRITER = {
     'pandas.read_csv': serial_to_pandas_read_csv_python,
+    'pandas.DataFrame.to_csv': serial_to_pandas_write_csv_python,
     'polars.read_csv': serial_to_polars_read_csv_python,
+}
+
+PYTHON_WRITE_FORMATS = {
+    'pandas.DataFrame.to_csv',
+    'polars.DataFrame.write_csv',
 }
 
 USAGE = """
@@ -472,8 +479,9 @@ class SerialConverter:
                 python_writer = PYTHON_WRITER.get(fmt)
                 if python_writer is None:
                     error(
-                        'Only pd.r (pandas.read_csv) and pl.r'
-                        ' (polars.read_csv) are supported\n'
+                        'Only pd.r (pandas.read_csv),'
+                        ' pd.w (pandas.DataFrame.to_csv),'
+                        ' and pl.r (polars.read_csv) are supported\n'
                         'for Python generation at this time.'
                     )
                 f.write(
@@ -482,7 +490,13 @@ class SerialConverter:
                     )
                 )
                 if self.for_csv:
-                    f.write(f'\ndf = read_data({self.for_csv!r})\n')
+                    if fmt in PYTHON_WRITE_FORMATS:
+                        Warn(
+                            f'Ignoring --for {self.for_csv!r}:'
+                            f' not applicable for write functions.'
+                        )
+                    else:
+                        f.write(f'\ndf = read_data({self.for_csv!r})\n')
         else:
             Warn(f'Invalid broad output type: {self.broad_out}.')
 

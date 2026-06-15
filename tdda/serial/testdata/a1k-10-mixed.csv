@@ -1,0 +1,11 @@
+account_number|open_date|close_date|title|forename|middle_name|surname|address1|city|postcode|home_tel|mobile_tel|email|account_type|overdraft_limit|cash_card_number|is_open
+12067823|02/11/2002|2018-10-11|Miss|Jessica|NULL|Palmer|24 Melbury Road|Cheadle Hulme|SK8 9EU|0656 559 5460|0794 211 1635|jessica.palmer@gmail.com|current|6900|1202 8636 9333 2534|no
+10156515|28/08/2011|2016-03-29|Mrs|Elsie|NULL|Watt|11 Southwell Road|Wisbech|PE13 9AP|0688 669 8749|0709 616 4494|elsie54@gmail.com|current|0|1202 8666 3520 9593|no
+10848668|09/09/2003|2017-03-05|Mr|Paul|Liam|Davis|29 Knight's Place|Twickenham|TW2 2VB|0353 500 9086|0752 602 6491|paul.davis36@yahoo.co.uk|basic|0|1202 8606 3898 1124|no
+11740257|17/10/2005|2010-02-26|Mr|Nathan|Charlie|Reid|21 Buttercup Square|Oxford|OX4 6SV|0756 820 4314|0768 854 8716|nathan7539@googlemail.co.uk|current+|0|1202 8616 5320 7863|no
+12693708|27/12/2002|2004-03-01|Mr|Ellis|Frederick|Carter|15 Gatton Park Lane|Brighton|BN1 1HD|0207 044 2441|0755 218 9342|ellis4889@hotmail.com|offset|13100|1202 8621 1116 5755|no
+11347063|03/03/2008|2013-12-04|Mr|Elijah|NULL|Fisher|2 Brenfield Drive|Hinckley|LE10 8WQ|0279 981 6621|0784 923 3673|okv7k6mn08xwxgn@googlemail.co.uk|current|0|1202 8621 0840 0523|no
+12094757|07/03/2010|NULL|Mrs|Clara|Ava|Walker|5 Ditton Reach|Thames Ditton|KT7 0ZT|0843 295 2714|0705 784 4779|ye4jxzzywz4i472j@runbox.co.uk|offset|0|1202 8605 9840 2291|yes
+12824955|09/03/2005|NULL|Mrs|Bonnie|NULL|Kay|28 Little Woodbury Drive|Derby|DE23 8TH|0505 300 4446|0705 426 8196|bonnie753@yahoo.co.uk|current|800|1202 8620 1506 4579|yes
+12736845|28/11/2011|NULL|Mr|Charles|Ronnie|Chapman|61 Kingsley Close|Thornton|FY5 3RT|0140 939 8078|0775 815 3161|x2yh@hotmail.co.uk|current|9600|1202 8663 1022 4459|yes
+12978556|15/12/2006|NULL|Mr|Mohammed|Charles|Young|26 Larkfield Park|Chepstow / Cas-Gwent|NP16 2DX|0247 120 7888|0779 914 4439|mohammed.young59@gmail.com|current|2400|1202 8662 2487 3776|yes

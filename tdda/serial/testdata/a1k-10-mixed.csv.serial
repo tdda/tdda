@@ -1,0 +1,85 @@
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "tdda.serial": {
+        "fields": [
+            {
+                "name": "account_number",
+                "fieldtype": "int"
+            },
+            {
+                "name": "open_date",
+                "fieldtype": "date",
+                "format": "DD/MM/YYYY"
+            },
+            {
+                "name": "close_date",
+                "fieldtype": "date",
+                "format": "YYYY-MM-DD"
+            },
+            {
+                "name": "title",
+                "fieldtype": "string"
+            },
+            {
+                "name": "forename",
+                "fieldtype": "string"
+            },
+            {
+                "name": "middle_name",
+                "fieldtype": "string"
+            },
+            {
+                "name": "surname",
+                "fieldtype": "string"
+            },
+            {
+                "name": "address1",
+                "fieldtype": "string"
+            },
+            {
+                "name": "city",
+                "fieldtype": "string"
+            },
+            {
+                "name": "postcode",
+                "fieldtype": "string"
+            },
+            {
+                "name": "home_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "mobile_tel",
+                "fieldtype": "string"
+            },
+            {
+                "name": "email",
+                "fieldtype": "string"
+            },
+            {
+                "name": "account_type",
+                "fieldtype": "string"
+            },
+            {
+                "name": "overdraft_limit",
+                "fieldtype": "int"
+            },
+            {
+                "name": "cash_card_number",
+                "fieldtype": "string"
+            },
+            {
+                "name": "is_open",
+                "fieldtype": "bool"
+            }
+        ],
+        "encoding": "utf-8",
+        "delimiter": "|",
+        "quote_char": "\"",
+        "null_indicator": "NULL",
+        "header_row_count": 1,
+        "header_row": 0,
+        "true_values": "yes",
+        "false_values": "no"
+    }
+}
