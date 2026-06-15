@@ -42,6 +42,7 @@ from tdda.utils import (
 )
 
 from tdda.examples import copy_accounts_data_unzipped
+from tdda.referencetest import tag
 
 
 TDDA_MD_IGNORES = [

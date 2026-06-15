@@ -32,3 +32,7 @@ TestPolarsDiscover.set_default_data_location(TESTDATADIR)
 #     engine = 'polars'
 #
 # TestPolarsDetect.set_default_data_location(TESTDATADIR)
+
+
+if __name__ == '__main__':
+    ReferenceTestCase.main(testtdda=1)

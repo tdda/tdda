@@ -627,3 +627,7 @@ class TestPandasCommandLine(ReferenceTestCase, DFCommandBase):
 
 TestPandasCommandAPI.set_default_data_location(TESTDATADIR)
 TestPandasCommandLine.set_default_data_location(TESTDATADIR)
+
+
+if __name__ == '__main__':
+    ReferenceTestCase.main(testtdda=1)
