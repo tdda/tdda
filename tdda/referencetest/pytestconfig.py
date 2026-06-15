@@ -24,6 +24,13 @@ def pytest_addoption(parser):
     referencepytest.addoption(parser)
 
 
+def pytest_configure(config):
+    """
+    Apply global options such as --path-norm at configuration time.
+    """
+    referencepytest.configure(config)
+
+
 def pytest_collection_modifyitems(session, config, items):
     """
     Extend pytest to only run tagged tests if run with --tagged,

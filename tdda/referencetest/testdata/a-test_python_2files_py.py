@@ -21,7 +21,7 @@ class Test_PYTHON_2FILES_PY(ReferenceTestCase):
 
     generated_files = [
         os.path.join(cwd, 'one.txt'),
-    os.path.join(cwd, 'subdir/one.txt')
+        os.path.join(cwd, 'subdir/one.txt')
     ]
     @classmethod
     def setUpClass(cls):

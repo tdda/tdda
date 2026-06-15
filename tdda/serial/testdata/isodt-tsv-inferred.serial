@@ -12,6 +12,7 @@
                 "fieldtype": "datetime"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": "\t",
         "date_format": "YYYY-MM-DDTHH:MM:SS",
         "datetime_format": "YYYY-MM-DDTHH:MM:SS",

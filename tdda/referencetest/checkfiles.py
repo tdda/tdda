@@ -22,12 +22,28 @@ from tdda.referencetest.basecomparison import (
     copycmd,
     FailureDiffs,
 )
-from tdda.referencetest.utils import get_encoding, FileType
+from tdda.referencetest.utils import (
+    apply_preprocess,
+    get_encoding,
+    to_posix_newlines,
+    FileType,
+)
 
 
 BinaryInfo = namedtuple(
     'BinaryInfo', ('byteoffset', 'actualLen', 'expectedLen')
 )
+
+
+def file_ends_with_newline(path, encoding=None):
+    """Return True if the file at path ends with a newline."""
+    try:
+        enc = get_encoding(path, encoding)
+        with open(path, encoding=enc) as f:
+            content = f.read()
+        return content.endswith('\n')
+    except IOError:
+        return True
 
 
 def perms_ok(n_permutations, max_permutations):
@@ -51,6 +67,7 @@ class FilesComparison(BaseComparison):
         create_temporaries=True,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Compare two lists of strings (actual and expected), one-by-one.
@@ -136,15 +153,15 @@ class FilesComparison(BaseComparison):
         if msgs is None:
             msgs = Diffs()
 
-        normalize = self.normalize_function(lstrip, rstrip)
+        normalize = self.normalize_function(lstrip, rstrip, norm_line_endings)
         permutable = True
         failure_cases = []
         reconstruction = None
         format = None
 
         if preprocess:
-            expected = preprocess(expected)
-            actual = preprocess(actual)
+            expected = apply_preprocess(expected, preprocess)
+            actual = apply_preprocess(actual, preprocess)
 
         if actual and len(actual[-1]) == 0:
             actual = actual[:-1]
@@ -641,6 +658,7 @@ class FilesComparison(BaseComparison):
         create_temporaries=True,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Check a string (or list of strings) against the contents of a
@@ -672,6 +690,8 @@ class FilesComparison(BaseComparison):
             actuals = actual
             actual_ends_with_newline = expected_ends_with_newline
         else:
+            if norm_line_endings:
+                actual = to_posix_newlines(actual)
             actuals = actual.splitlines()
             actual_ends_with_newline = actual.endswith('\n')
         mpc = max_permutation_cases
@@ -690,6 +710,7 @@ class FilesComparison(BaseComparison):
             create_temporaries=create_temporaries,
             msgs=msgs,
             encoding=encoding,
+            norm_line_endings=norm_line_endings,
         )
         # if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -712,6 +733,7 @@ class FilesComparison(BaseComparison):
         max_permutation_cases=0,
         msgs=None,
         encoding=None,
+        norm_line_endings=True,
     ):
         """
         Check a pair of text files, line by line, with optional
@@ -766,6 +788,7 @@ class FilesComparison(BaseComparison):
             max_permutation_cases=max_permutation_cases,
             msgs=msgs,
             encoding=enc,
+            norm_line_endings=norm_line_endings,
         )
         # if expected_ends_with_newline != actual_ends_with_newline:
         #    code = 1
@@ -788,6 +811,7 @@ class FilesComparison(BaseComparison):
         max_permutation_cases=0,
         msgs=None,
         encodings=None,
+        norm_line_endings=True,
     ):
         """
         Compare a list of files against a list of reference files.
@@ -820,6 +844,7 @@ class FilesComparison(BaseComparison):
                     max_permutation_cases=max_permutation_cases,
                     msgs=msgs,
                     encoding=enc,
+                    norm_line_endings=norm_line_endings,
                 )
                 (n, msgs) = r
                 failures += n
@@ -905,19 +930,23 @@ class FilesComparison(BaseComparison):
         else:
             return len(actuals)
 
-    def normalize_function(self, left, right):
+    def normalize_function(self, left, right, norm_line_endings=True):
         """
         Return the appropriate function for stripping a string,
         with left and right being booleans that specify whether
         to strip on the two sides.
         """
         if left and right:
-            return lambda s: s.strip()
-        elif left:
-            return lambda s: s.lstrip()
+            return lambda s: s.strip()  # strip() covers \r
         elif right:
-            return lambda s: s.rstrip()
+            return lambda s: s.rstrip()  # rstrip() covers \r
+        elif left:
+            if norm_line_endings:
+                return lambda s: s.lstrip().rstrip('\r')
+            return lambda s: s.lstrip()
         else:
+            if norm_line_endings:
+                return lambda s: s.rstrip('\r')
             return lambda s: s
 
     def add_failures(
@@ -969,14 +998,21 @@ class FilesComparison(BaseComparison):
                         self.tmp_dir, 'expected-raw-' + commonname
                     )
                     raw_expected_path = tmpExpectedPath
-                    self.write_file(raw_expected_path, expected)
+                    self.write_file(raw_expected_path, expected,
+                                    trailing_newline=True)
                 if actual is not None and not raw_actual_path:
                     # no raw actual file, so write it
                     tmpActualPath = os.path.join(
                         self.tmp_dir, 'actual-raw-' + commonname
                     )
                     raw_actual_path = tmpActualPath
-                    self.write_file(raw_actual_path, actual)
+                    trailing_newline = (
+                        file_ends_with_newline(raw_expected_path, encoding)
+                        if raw_expected_path
+                        else True
+                    )
+                    self.write_file(raw_actual_path, actual,
+                                    trailing_newline=trailing_newline)
 
         if raw_actual_path and raw_expected_path:
             raw = 'raw' if (preprocess or reconstruction) else None
@@ -1004,16 +1040,15 @@ class FilesComparison(BaseComparison):
                 differ = '***\n' + raw_differ + '***\n\n'
             diffActual = os.path.join(self.tmp_dir, 'actual-' + commonname)
             diffExpected = os.path.join(self.tmp_dir, 'expected-' + commonname)
-            guide = expected_path or actual_path
             self.write_file(
                 diffActual,
                 (differ or '') + reconstruction.actual_lines(),
-                guide=guide,
+                trailing_newline=True,
             )
             self.write_file(
                 diffExpected,
                 (differ or '') + reconstruction.expected_lines(),
-                guide=guide,
+                trailing_newline=True,
             )
             actualsSame = (
                 '\n'.join(actual).strip()
@@ -1069,23 +1104,25 @@ class FilesComparison(BaseComparison):
                 % (binaryinfo.byteoffset, lengthinfo),
             )
 
-    def write_file(self, filename, contents, guide=None, encoding=None):
+    def write_file(self, filename, contents, trailing_newline=None,
+                   encoding=None):
         """
-        Write contents out to a file, optionally taking guidance from an
-        existing file as to whether to a newline at the end or not.
+        Write contents out to a file.
+
+        trailing_newline controls whether a final newline is written:
+          True  — always add one
+          False — never add one
+          None  — leave contents as-is (default)
         """
         enc = get_encoding(filename, encoding)
         if type(contents) in (list, tuple):
             contents = '\n'.join(contents)
+        if trailing_newline is True and not contents.endswith('\n'):
+            contents += '\n'
+        elif trailing_newline is False and contents.endswith('\n'):
+            contents = contents.rstrip('\n')
         with open(filename, 'w', encoding=enc) as f:
             f.write(contents)
-            if guide:
-                with open(guide, encoding=enc) as fg:
-                    lastline = None
-                    for line in fg.read():
-                        lastline = line
-                    if lastline and lastline.endswith('\n'):
-                        f.write('\n')
 
 
 class Reconstruction(object):

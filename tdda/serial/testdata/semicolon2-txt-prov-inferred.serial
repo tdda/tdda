@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.00rc1",
+    "writer": "tdda.serial-0.0.0",
     "tdda.serial": {
         "fields": [
             {
@@ -24,6 +24,7 @@
                 "fieldtype": "string"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": ";",
         "quote_char": "\"",
         "null_indicator": "",

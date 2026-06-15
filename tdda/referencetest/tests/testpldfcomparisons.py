@@ -8,6 +8,7 @@ from rich.console import Console
 from tdda.abstractdf import col_names
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
+from tdda.referencetest.utils import diff_parquet_pattern, normalise_rich_table
 from tdda.referencetest.referencetest import ReferenceTest
 from tdda.referencetest.basecomparison import (
     DataFrameDiffs,
@@ -31,6 +32,7 @@ CSV_REF4_PATH = os.path.join(TESTDATA, 'four-squares.csv')
 
 
 class TestPolarsDataFrameComparisons(ReferenceTestCase):
+    norm_paths = True
     f, t = False, True
     m10000000 = pl.Series([t, f, f, f, f, f, f, f])
     m01000000 = pl.Series([f, t, f, f, f, f, f, f])
@@ -98,7 +100,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('one-diff-in-mem.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet'
+                diff_parquet_pattern()
             ],
         )
 
@@ -115,7 +117,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-str.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                diff_parquet_pattern(),
                 r'(object|String)',
                 r'[Ii]nt64',
             ],
@@ -143,7 +145,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-types-int-float.txt'),
             ignore_patterns=[
-                r'diff .*/actual-df\d{3}.parquet .*/expected-df\d{3}.parquet',
+                diff_parquet_pattern(),
                 r'[Ff]loat64',
                 r'[Ii]nt64',
             ],
@@ -173,7 +175,7 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(r.diffs),
             fp('diff-col-order.txt'),
             ignore_patterns=[
-                'diff .*/actual-df[0-9]+\\.parquet .*/expected-df[0-9]+\\.parquet'
+                diff_parquet_pattern()
             ],
         )
 
@@ -428,7 +430,8 @@ class TestPolarsDataFrameComparisons(ReferenceTestCase):
             str(diff), fp('ddiff-1-details.txt'), ignore_patterns=[r'[iI]nt64']
         )
         self.assertStringCorrect(
-            result, fp('ddiff-1-rich-table.txt'), ignore_patterns=[r'[iI]nt64']
+            result, fp('ddiff-1-rich-table.txt'), ignore_patterns=[r'[iI]nt64'],
+            preprocess=normalise_rich_table,
         )
 
 

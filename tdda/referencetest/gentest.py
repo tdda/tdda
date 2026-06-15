@@ -27,6 +27,7 @@ from tdda.referencetest.utils import (
     FileType,
     get_encoding,
     protected_readlines,
+    to_posix_newlines,
 )
 from tdda.rexpy import extract
 
@@ -551,11 +552,12 @@ class TestGenerator:
                 file=sys.stderr,
             )
             if r.err:
-                print('*** Output to stderr was:\n%s' % r.err, file=sys.stderr)
+                print('*** Output to stderr was:\n%s'
+                      % to_posix_newlines(r.err), file=sys.stderr)
             else:
                 print(
                     '*** No output to stderr. Output to stdout was:\n%s'
-                    % r.out,
+                    % to_posix_newlines(r.out),
                     file=sys.stderr,
                 )
             print(
@@ -652,7 +654,7 @@ class TestGenerator:
                             dirs.append(path)
                         else:
                             stat = os.stat(path)
-                            self.snapshot[path] = stat.st_ctime
+                            self.snapshot[path] = stat.st_mtime_ns
             if len(self.snapshot) > self.max_snapshot_files:
                 self.snapshot_fail()
 
@@ -690,10 +692,10 @@ class TestGenerator:
         for name in files:
             if not self.ignore(name):  # .pyc
                 path = os.path.join(dirpath, name)
-                ctime = os.stat(path).st_ctime
+                mtime_ns = os.stat(path).st_mtime_ns
                 if (
                     path not in self.snapshot
-                    or ctime > self.snapshot[path]
+                    or mtime_ns > self.snapshot[path]
                     or os.path.isdir(path)
                 ):
                     reference_files.add(path)
@@ -930,7 +932,7 @@ class TestGenerator:
         paths = self.generated_file_paths(in_cls=True)
         if paths:
             return '    generated_files = [\n        %s\n    ]' % (
-                ',\n    '.join(paths)
+                ',\n        '.join(paths)
             )
         else:
             return ''
@@ -1338,7 +1340,7 @@ def as_join_repr(
     if path.startswith(cwd + os.path.sep):
         if path not in (cwd, cwd + os.path.sep):
             tail = path[len(cwd) :]
-            if os.path.isabs(tail):
+            if tail.startswith(os.sep):
                 tail = tail[1:]
             if as_pwd:
                 return os.path.join('%s%s%s' % (as_pwd, os.path.sep, tail))

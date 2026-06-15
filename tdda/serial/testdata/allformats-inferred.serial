@@ -58,6 +58,7 @@
                 "format": "MM/DD/YY HH:MM:SS"
             }
         ],
+        "encoding": "utf-8",
         "delimiter": ",",
         "header_row_count": 1,
         "header_row": 0,

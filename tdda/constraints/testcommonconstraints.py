@@ -127,6 +127,8 @@ class TestCommonConstraints(ReferenceTestCase):
 
 
 class TestDiscoverReports(ReferenceTestCase):
+    norm_paths = True
+
     @classmethod
     def setUpClass(cls):
         small7x5path = testdata('small7x5.parquet')
@@ -136,10 +138,10 @@ class TestDiscoverReports(ReferenceTestCase):
         cls.constraints_json = c.to_json()
 
     def testDiscoverJSON(self):
-        self.assertStringCorrect(
+        self.assertJSONCorrect(
             self.constraints_json,
             tdpath('small7x5.tdda'),
-            ignore_patterns=TDDA_MD_IGNORES,
+            remove_keys={'creation_metadata'},
         )
 
     def testDiscoverYAML(self):

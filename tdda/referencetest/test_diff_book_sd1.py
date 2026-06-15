@@ -14,6 +14,7 @@ from shutil import which
 
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.gentest import exec_command
+from tdda.referencetest.utils import normalise_rich_table
 
 
 @unittest.skipIf(not which('tdda'), 'tdda not installed')
@@ -35,10 +36,15 @@ class TestX_DIFF_BOOK_SD1(ReferenceTestCase):
         self.assertEqual(self.exit_code, 1)
 
     def test_stdout(self):
+        # NOTE: norm_paths=True and preprocess=normalise_rich_table were
+        # added manually to ensure this test works on Windows as well as
+        # Unix/Linux/Mac.
         self.assertStringCorrect(
             self.output,
             os.path.join(self.refdir, 'STDOUT'),
             ignore_lines=[r'Value Differences (all rows with differences)'],
+            norm_paths=True,
+            preprocess=normalise_rich_table,
         )
 
     def test_stderr(self):

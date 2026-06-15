@@ -9,6 +9,7 @@ from tdda.state import set_testing, reset_config
 from tdda.referencetest import ReferenceTestCase
 
 from tdda.constraints.testconstraints import *
+from tdda.testexamples import *
 from tdda.rexpy.testrexpy import *
 from tdda.referencetest.tests.alltests import *
 from tdda.referencetest.testtddadiff import *

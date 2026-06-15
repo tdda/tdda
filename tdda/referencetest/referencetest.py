@@ -1,10 +1,21 @@
 __unittest = True
 
 
+import json
 import os
+import re
 import sys
 import tempfile
 
+from tdda.referencetest.basecomparison import diffcmd
+from tdda.referencetest.utils import (
+    apply_preprocess,
+    normalize_json,
+    normalize_json_for_comparison,
+    norm_paths_in_json,
+    remove_dict_keys,
+    to_posix_newlines,
+)
 from tdda.referencetest.checkpandas import PandasComparison
 from tdda.referencetest.checkpolars import PolarsComparison
 from tdda.referencetest.checkfiles import FilesComparison
@@ -34,6 +45,27 @@ def tag(test):
     return test
 
 
+def windows_paths_to_posix(lines):
+    """Normalise Windows-style paths to POSIX paths in a list of lines.
+
+    Replaces drive-letter prefixes (e.g. ``C:\\``) with ``/`` and
+    remaining backslashes with ``/``.
+
+    Args:
+        lines (list): Lines of text to normalise.
+
+    Returns:
+        list: Lines with Windows path separators replaced by ``/``.
+    """
+    normed = []
+    for line in lines:
+        line = re.sub(r'[A-Za-z]:\\', '/', line)
+        line = line.replace('\\', '/')
+        normed.append(line)
+    return normed
+
+
+
 class ReferenceTest(object):
     """Provides support for comparing results against reference
     “known to be correct” results.
@@ -56,6 +88,16 @@ class ReferenceTest(object):
 
     # Temporary directory
     tmp_dir = DEFAULT_FAIL_DIR
+
+    # If set to True on a subclass, all text assertions will normalise
+    # Windows-style paths to POSIX paths before comparison (only active
+    # on Windows).
+    norm_paths = False
+
+    # Platform-appropriate diff command prefixes for use with ignore_lines.
+    # Includes 'fc ' on Windows in addition to 'diff '.
+    _diffcmd = diffcmd()
+    _diff_cmds = ['diff '] + ([] if _diffcmd == 'diff' else [f'{_diffcmd} '])
 
     # Dictionary describing which kinds of reference files should be
     # regenerated when the tests are run. This should be set using the
@@ -80,7 +122,7 @@ class ReferenceTest(object):
                   happen is often useful. Default is ``True``.
                 - ``print_fn``: Function to use to display information
                   while running tests. Must have the same signature as
-                  Python’s built-in ``print``. Defaults to unbuffered
+                  Python's built-in ``print``. Defaults to unbuffered
                   output to ``sys.stdout``.
                 - ``tmp_dir``: Directory where temporary files are written.
                   Temporary files are created when a text file check fails
@@ -88,6 +130,9 @@ class ReferenceTest(object):
                   preprocessed versions can be inspected. If not set, the
                   ``TDDA_FAIL_DIR`` environment variable is used, or
                   ``tempfile.gettempdir()`` as a fallback.
+                - ``norm_paths``: If ``True``, normalise Windows-style paths
+                  to POSIX paths in all text assertions (only active on
+                  Windows). Default is ``False``.
         """
         for k in kwargs:
             if k == 'verbose':
@@ -96,6 +141,8 @@ class ReferenceTest(object):
                 cls.print_fn = kwargs[k]
             elif k == 'tmp_dir':
                 cls.tmp_dir = kwargs[k]
+            elif k == 'norm_paths':
+                cls.norm_paths = kwargs[k]
             else:
                 raise Exception('set_defaults: Unrecogized option %s' % k)
 
@@ -229,6 +276,7 @@ class ReferenceTest(object):
         fuzzy_nulls=False,
         engine=None,
         backend=None,
+        preprocess=None,
     ):
         """Check that an in-memory DataFrame matches an in-memory reference one.
 
@@ -290,11 +338,17 @@ class ReferenceTest(object):
             backend: Pandas backend: ``'numpy_nullable'``, ``'pyarrow'``,
                 or ``'original'``.
 
+            preprocess: An optional function (or list of functions) applied
+                to both DataFrames before comparison. If a list `[f, g]`
+                is given, `g(f(·))` is computed, where `·` is the DataFrame.
+
         Note:
             ``assertDataFramesEqual`` and ``assertDataFramesEquivalent``
             are identical; two names are provided for flexibility and as
             legacy support.
         """
+        df = apply_preprocess(df, preprocess)
+        ref_df = apply_preprocess(ref_df, preprocess)
         df, ref_df, lib = self.choose_common_df_lib(df, ref_df, engine)
         r = lib.check_dataframe(
             df,
@@ -334,6 +388,7 @@ class ReferenceTest(object):
         fuzzy_nulls=False,
         engine=None,
         backend=None,
+        preprocess=None,
         **kwargs,
     ):
         """Check that an in-memory DataFrame matches a saved reference
@@ -379,6 +434,7 @@ class ReferenceTest(object):
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             backend: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to ``csv_read_fn``.
         """
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
@@ -411,6 +467,7 @@ class ReferenceTest(object):
                 fuzzy_nulls=fuzzy_nulls,
                 engine=engine,
                 backend=backend,
+                preprocess=preprocess,
             )
 
     def assertStoredDataFrameCorrect(
@@ -427,6 +484,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -465,6 +523,7 @@ class ReferenceTest(object):
             precision: See ``assertDataFramesEquivalent`` for details.
             type_matching: See ``assertDataFramesEquivalent`` for details.
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to
                 ``csv_read_fn``.
@@ -503,6 +562,7 @@ class ReferenceTest(object):
                 precision=precision,
                 type_matching=type_matching,
                 fuzzy_nulls=fuzzy_nulls,
+                preprocess=preprocess,
                 loader=csv_read_fn,
                 **kwargs,
             )
@@ -525,6 +585,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -544,6 +605,7 @@ class ReferenceTest(object):
             precision=precision,
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
+            preprocess=preprocess,
             engine=engine,
             **kwargs,
         )
@@ -562,6 +624,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -602,6 +665,7 @@ class ReferenceTest(object):
             precision: See ``assertDataFramesEquivalent`` for details.
             type_matching: See ``assertDataFramesEquivalent`` for details.
             fuzzy_nulls: See ``assertDataFramesEquivalent`` for details.
+            preprocess: See ``assertDataFramesEquivalent`` for details.
             engine: See ``assertDataFramesEquivalent`` for details.
             **kwargs: Additional keyword arguments passed to
                 ``csv_read_fn``.
@@ -638,6 +702,7 @@ class ReferenceTest(object):
                 type_matching=type_matching,
                 loader=csv_read_fn,
                 fuzzy_nulls=fuzzy_nulls,
+                preprocess=preprocess,
                 **kwargs,
             )
             (failures, msgs) = r
@@ -659,6 +724,7 @@ class ReferenceTest(object):
         precision=None,
         type_matching=None,
         fuzzy_nulls=False,
+        preprocess=None,
         engine=None,
         **kwargs,
     ):
@@ -676,9 +742,76 @@ class ReferenceTest(object):
             precision=precision,
             type_matching=type_matching,
             fuzzy_nulls=fuzzy_nulls,
+            preprocess=preprocess,
             engine=engine,
             **kwargs,
         )
+
+    def assertStringsEquivalent(
+        self,
+        string,
+        expected,
+        lstrip=False,
+        rstrip=False,
+        ignore_substrings=None,
+        ignore_patterns=None,
+        remove_lines=None,
+        ignore_lines=None,
+        preprocess=None,
+        norm_paths=None,
+        max_permutation_cases=0,
+        norm_line_endings=True,
+    ):
+        """Check that two in-memory strings are equivalent.
+
+        Like `assertStringCorrect` but compares two in-memory strings
+        rather than comparing against a reference file. The strings are
+        considered equivalent if they match after applying any
+        normalizations specified via the kwargs.
+
+        On failure, both strings are written to temporary files and a
+        diff command is suggested.
+
+        Args:
+            string: The actual string.
+            expected: The expected string.
+            lstrip: See `assertStringCorrect` for details.
+            rstrip: See `assertStringCorrect` for details.
+            ignore_substrings: See `assertStringCorrect` for details.
+            ignore_patterns: See `assertStringCorrect` for details.
+            remove_lines: See `assertStringCorrect` for details.
+            preprocess: See `assertStringCorrect` for details.
+            norm_paths: See `assertStringCorrect` for details.
+            max_permutation_cases: See `assertStringCorrect` for details.
+
+        Note:
+            The `ignore_lines` parameter is a backwards-compatible alias
+            for `remove_lines`.
+        """
+        preprocess = self._resolve_preprocess(preprocess, norm_paths)
+        rl = remove_lines or ignore_lines
+        if norm_line_endings and isinstance(string, str):
+            string = to_posix_newlines(string)
+        if norm_line_endings and isinstance(expected, str):
+            expected = to_posix_newlines(expected)
+        actual = string.splitlines() if isinstance(string, str) else string
+        exp = expected.splitlines() if isinstance(expected, str) else expected
+        r = self.files.check_strings(
+            actual,
+            exp,
+            actual_path=None,
+            expected_path=None,
+            lstrip=lstrip,
+            rstrip=rstrip,
+            ignore_substrings=ignore_substrings,
+            ignore_patterns=ignore_patterns,
+            remove_lines=rl,
+            preprocess=preprocess,
+            max_permutation_cases=max_permutation_cases,
+            norm_line_endings=norm_line_endings,
+        )
+        (failures, msgs) = r
+        self._check_failures(failures, msgs)
 
     def assertStringCorrect(
         self,
@@ -692,7 +825,9 @@ class ReferenceTest(object):
         remove_lines=None,
         ignore_lines=None,
         preprocess=None,
+        norm_paths=None,
         max_permutation_cases=0,
+        norm_line_endings=True,
     ):
         """Check that an in-memory string matches the contents from a
         reference text file.
@@ -701,11 +836,11 @@ class ReferenceTest(object):
             string: The actual string.
             ref_path: The name of the reference file. The location of the
                 reference file is determined by the configuration via
-                ``set_data_location()``.
+                `set_data_location()`.
             kind: The reference kind, used to locate the reference file.
-            lstrip: If ``True``, whitespace is stripped from the start of
+            lstrip: If `True`, whitespace is stripped from the start of
                 each line before comparison.
-            rstrip: If ``True``, whitespace is stripped from the end of
+            rstrip: If `True`, whitespace is stripped from the end of
                 each line before comparison.
             ignore_substrings: An optional list of substrings; lines
                 containing any of these substrings will be ignored in the
@@ -718,9 +853,14 @@ class ReferenceTest(object):
                 text to the left or right must be identical in both strings.
             remove_lines: An optional list of substrings; lines containing
                 any of these substrings will be removed before comparison.
-            preprocess: An optional function that takes a list of strings
-                and preprocesses it; applied to both the actual and
-                expected strings before comparison.
+            preprocess: An optional function (or list of functions) that
+                takes a list of strings and preprocesses it; applied to both
+                the actual and expected strings before comparison.
+                If a list `[f, g]` is given, `g(f(·))` is computed, where
+                `·` is the list of strings.
+            norm_paths: If `True`, normalise Windows-style paths to
+                POSIX paths before comparison (only active on Windows).
+                Applied after `preprocess` if both are specified.
             max_permutation_cases: An optional number specifying the
                 maximum number of permutations to allow; if the actual and
                 expected lists differ only in line order, and the number of
@@ -728,9 +868,10 @@ class ReferenceTest(object):
                 considered identical.
 
         Note:
-            The ``ignore_lines`` parameter is a backwards-compatible alias
-            for ``remove_lines``.
+            The `ignore_lines` parameter is a backwards-compatible alias
+            for `remove_lines`.
         """
+        preprocess = self._resolve_preprocess(preprocess, norm_paths)
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_result(
@@ -752,9 +893,54 @@ class ReferenceTest(object):
                 remove_lines=rl,
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
+
+    def assertJSONCorrect(
+        self,
+        json_data,
+        ref_path,
+        kind=None,
+        remove_keys=None,
+        norm_paths=None,
+        preprocess=None,
+    ):
+        """Check that a JSON string matches the contents of a reference file.
+
+        The JSON is normalized before comparison: keys are sorted, indentation
+        is standardized to 2 spaces, and Unicode characters are preserved
+        (not ASCII-escaped). This means key ordering and whitespace differences
+        are ignored; only semantic differences are reported.
+
+        Args:
+            json_data: The actual JSON, as a string or parsed object.
+            ref_path: The name of the reference file.
+            kind: See `assertStringCorrect` for details.
+            remove_keys: An optional set/list of key names to remove from
+                the JSON at any depth before comparison.
+            norm_paths: If `True`, normalise Windows-style path separators
+                to POSIX in all string values. If a string or list of
+                strings, treat as fnmatch-style key globs and only normalise
+                values of matching keys.
+            preprocess: An optional function (or list of functions) applied
+                to the JSON string before parsing. If a list `[f, g]` is
+                given, `g(f(·))` is computed, where `·` is the JSON string.
+        """
+        if not isinstance(json_data, str):
+            json_data = json.dumps(
+                json_data, indent=2, sort_keys=True, ensure_ascii=False
+            )
+        normalizer = lambda lines: normalize_json_for_comparison(
+            lines,
+            remove_keys=remove_keys,
+            norm_paths=norm_paths,
+            preprocess=preprocess,
+        )
+        self.assertStringCorrect(
+            json_data, ref_path, kind=kind, preprocess=normalizer
+        )
 
     def assertTextFileCorrect(
         self,
@@ -768,8 +954,10 @@ class ReferenceTest(object):
         remove_lines=None,
         ignore_lines=None,
         preprocess=None,
+        norm_paths=None,
         max_permutation_cases=0,
         encoding=None,
+        norm_line_endings=True,
     ):
         """Check that a text file matches the contents from a reference
         text file.
@@ -788,6 +976,7 @@ class ReferenceTest(object):
             ignore_patterns: See ``assertStringCorrect`` for details.
             remove_lines: See ``assertStringCorrect`` for details.
             preprocess: See ``assertStringCorrect`` for details.
+            norm_paths: See ``assertStringCorrect`` for details.
             max_permutation_cases: See ``assertStringCorrect`` for details.
             encoding: Optional character encoding for reading the file.
 
@@ -795,6 +984,7 @@ class ReferenceTest(object):
             ``ignore_lines`` is a legacy alias for ``remove_lines``.
             ``assertFileCorrect`` is a legacy alias for this method.
         """
+        preprocess = self._resolve_preprocess(preprocess, norm_paths)
         expected_path = self._resolve_reference_path(ref_path, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_file(
@@ -814,6 +1004,7 @@ class ReferenceTest(object):
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
                 encoding=encoding,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
@@ -830,8 +1021,10 @@ class ReferenceTest(object):
         remove_lines=None,
         ignore_lines=None,
         preprocess=None,
+        norm_paths=None,
         max_permutation_cases=0,
         encodings=None,
+        norm_line_endings=True,
     ):
         """Check that a collection of text files match the contents from a
         matching collection of reference text files.
@@ -850,6 +1043,7 @@ class ReferenceTest(object):
             ignore_patterns: See ``assertStringCorrect`` for details.
             remove_lines: See ``assertStringCorrect`` for details.
             preprocess: See ``assertStringCorrect`` for details.
+            norm_paths: See ``assertStringCorrect`` for details.
             max_permutation_cases: See ``assertStringCorrect`` for details.
             encodings: Optional list of character encodings, one per file.
 
@@ -857,6 +1051,7 @@ class ReferenceTest(object):
             ``ignore_lines`` is a legacy alias for ``remove_lines``.
             ``assertFilesCorrect`` is a legacy alias for this method.
         """
+        preprocess = self._resolve_preprocess(preprocess, norm_paths)
         expected_paths = self._resolve_reference_paths(ref_paths, kind=kind)
         if self._should_regenerate(kind):
             self._write_reference_files(
@@ -876,6 +1071,7 @@ class ReferenceTest(object):
                 preprocess=preprocess,
                 max_permutation_cases=mpc,
                 encodings=encodings,
+                norm_line_endings=norm_line_endings,
             )
             (failures, msgs) = r
             self._check_failures(failures, msgs)
@@ -986,6 +1182,22 @@ class ReferenceTest(object):
         Internal method for check for failures and reporting them.
         """
         self.assert_fn(failures == 0, msgs.message())
+
+    def _resolve_preprocess(self, preprocess, norm_paths):
+        """Return effective preprocess function combining preprocess and
+        norm_paths.
+
+        If norm_paths is True (or set on the class) and we're on Windows,
+        windows_paths_to_posix is applied after preprocess (or alone if
+        preprocess is None). A per-call norm_paths value of None defers to
+        the class setting; an explicit True or False overrides it.
+        """
+        use = self.norm_paths if norm_paths is None else norm_paths
+        if not use or os.sep != '\\':
+            return preprocess
+        if preprocess is None:
+            return windows_paths_to_posix
+        return lambda lines: windows_paths_to_posix(preprocess(lines))
 
     def call_print_fn(self, *args, **kwargs):
         fn = self.print_fn or self._default_print_fn

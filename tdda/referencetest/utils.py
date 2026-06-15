@@ -1,5 +1,7 @@
+import fnmatch
 import json
 import os
+import re
 import sys
 import yaml
 
@@ -204,6 +206,139 @@ def remove_dict_keys_and_sort(o, keys):
         return [remove_dict_keys_and_sort(v, keys) for v in o]
     else:
         return o
+
+
+def _norm_path_string(s):
+    """Normalise a single path string from Windows to POSIX style."""
+    s = re.sub(r'[A-Za-z]:\\', '/', s)
+    return s.replace('\\', '/')
+
+
+def _norm_paths_in_obj(obj, norm_paths, key=None):
+    """Recursively normalise path strings in a parsed JSON object."""
+    if norm_paths is True:
+        key_matches = True
+    else:
+        patterns = (
+            [norm_paths] if isinstance(norm_paths, str) else list(norm_paths)
+        )
+        key_matches = key is not None and any(
+            fnmatch.fnmatch(key, p) for p in patterns
+        )
+
+    if isinstance(obj, dict):
+        return {
+            k: _norm_paths_in_obj(v, norm_paths, key=k)
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, (list, tuple)):
+        return [_norm_paths_in_obj(v, norm_paths, key=key) for v in obj]
+    elif isinstance(obj, str) and key_matches:
+        return _norm_path_string(obj)
+    else:
+        return obj
+
+
+def apply_preprocess(x, xforms):
+    """Apply one or more transformation functions to x, left to right.
+
+    Args:
+        x: The value to transform.
+        xforms: A callable or list of callables to apply in sequence.
+    """
+    if xforms is None:
+        return x
+    if callable(xforms):
+        return xforms(x)
+    for f in xforms:
+        x = f(x)
+    return x
+
+
+def to_posix_newlines(s):
+    """Convert Windows line endings to Unix in a string."""
+    return s.replace('\r\n', '\n')
+
+
+def normalize_json_for_comparison(lines, remove_keys=None, norm_paths=None,
+                                   preprocess=None):
+    """Normalize JSON for comparison.
+
+    Applies user preprocessing, then parses, applies structural transforms
+    (remove_keys, norm_paths), and re-serializes with sorted keys, 2-space
+    indent, and Unicode preserved.
+
+    Args:
+        lines: JSON as a string or list of lines.
+        remove_keys: Optional set/list of key names to remove at any depth.
+        norm_paths: If `True`, normalise Windows paths in all string values.
+            If a string or list of strings, treat as fnmatch key globs.
+        preprocess: Optional function or list of functions applied to the
+            JSON string before parsing. If a list `[f, g]` is given,
+            `g(f(·))` is computed, where `·` is the JSON string.
+    """
+    s = '\n'.join(lines) if isinstance(lines, list) else lines
+    s = apply_preprocess(s, preprocess)
+    obj = json.loads(s)
+    if remove_keys:
+        obj = remove_dict_keys(obj, set(remove_keys))
+    serialized = json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+    if norm_paths:
+        serialized = norm_paths_in_json(serialized, norm_paths)
+    return serialized.splitlines()
+
+
+def norm_paths_in_json(s, norm_paths):
+    """Normalise path strings in a JSON string.
+
+    Parses the JSON, applies path normalisation to string values, and
+    returns the result as a normalized JSON string (sorted keys, 2-space
+    indent, unicode preserved).
+
+    Args:
+        s: A JSON string or list of lines.
+        norm_paths: `True` to normalise all string values, or a string/list
+            of fnmatch-style key globs to restrict normalisation to values
+            of matching keys.
+    """
+    if isinstance(s, list):
+        s = '\n'.join(s)
+    obj = json.loads(s)
+    obj = _norm_paths_in_obj(obj, norm_paths)
+    return json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False)
+
+
+def diffcmd():
+    return 'fc' if os.name and os.name != 'posix' else 'diff'
+
+
+def copycmd():
+    return 'copy' if os.name and os.name != 'posix' else 'cp'
+
+
+_HEAVY_TO_LIGHT = str.maketrans('┏━┳┓┃┡╇┩', '┌─┬┐│├┼┤')
+
+
+def normalise_rich_table(s):
+    """
+    Normalise Rich table box-drawing characters by mapping heavy header
+    border chars to their light equivalents. Useful as a preprocess
+    function when comparing Rich table output across platforms.
+    """
+    if isinstance(s, list):
+        return [line.translate(_HEAVY_TO_LIGHT) for line in s]
+    return s.translate(_HEAVY_TO_LIGHT)
+
+
+def diff_parquet_pattern():
+    """
+    Returns a regex pattern that matches the 'Compare with:' diff command
+    line in DataFrame comparison output, for either 'diff' (Unix/Mac) or
+    'fc' (Windows).
+    """
+    cmds = '|'.join({'diff', diffcmd()})
+    return (r'(%s) .*/actual-df[0-9]+\.parquet'
+            r' .*/expected-df[0-9]+\.parquet') % cmds
 
 
 def json_normalizer(remove_keys=None):

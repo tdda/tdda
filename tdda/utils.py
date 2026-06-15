@@ -151,7 +151,7 @@ def handle_tilde(path):
         was needed.
     """
     if type(path) is str and path.startswith('~'):
-        return os.path.expanduser(path)
+        return os.path.normpath(os.path.expanduser(path))
     else:
         return path
 

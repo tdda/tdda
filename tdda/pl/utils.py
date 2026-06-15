@@ -11,9 +11,9 @@ def polars_col_to_tdda_type(col):
     dtype = col.dtype
     if dtype == pl.Boolean:
         return 'bool'
-    if dtype in pl.INTEGER_DTYPES:
+    if dtype.is_integer():
         return 'int'
-    if dtype in pl.FLOAT_DTYPES:
+    if dtype.is_float():
         return 'real'
     if dtype in (pl.String, pl.Categorical):
         return 'string'

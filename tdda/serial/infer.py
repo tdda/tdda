@@ -174,9 +174,11 @@ def read_file_lines(
     Returns (header, datalines, enc_used), or (None, [], None) if all
     encodings fail.
     """
-    candidates = [initial_enc] + [
-        e for e in ENCODING_FALLBACKS if e != initial_enc
-    ]
+    candidates = (
+        [initial_enc] + [e for e in ENCODING_FALLBACKS if e != initial_enc]
+        if initial_enc is not None
+        else list(ENCODING_FALLBACKS)
+    )
     for enc in candidates:
         datalines = []
         try:
@@ -518,7 +520,7 @@ class MetadataInferrer:
             return None
         self.header = header
         datalines.extend(lines)
-        if enc != self.encoding:
+        if self.encoding and enc != self.encoding:
             self.warn(
                 f'Encoding {self.encoding!r} failed; reading as {enc!r}.'
             )

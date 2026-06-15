@@ -5,7 +5,7 @@
 import os
 import tempfile
 
-from tdda.referencetest import ReferenceTestCase, tag
+from tdda.referencetest import ReferenceTestCase, windows_paths_to_posix, tag
 from tdda.referencetest.checkfiles import FilesComparison
 
 
@@ -315,6 +315,31 @@ class TestStrings(ReferenceTestCase):
                 ['abc', 'spangle', 'breadfruit'],
                 ['abc', 'spanner', 'grapefruit'],
                 preprocess=strip_first_seven,
+            )
+        )
+
+    def test_norm_paths(self):
+        compare = FilesComparison()
+        windows_lines = [
+            r'source: C:\Users\runner\work\tdda\small7x5.parquet',
+            r'from D:\any\old\dirpath to C:\other\path',
+            'no path here',
+        ]
+        unix_lines = [
+            'source: /Users/runner/work/tdda/small7x5.parquet',
+            'from /any/old/dirpath to /other/path',
+            'no path here',
+        ]
+        self.assertFalse(
+            compare.check_strings(
+                windows_lines,
+                unix_lines,
+                preprocess=windows_paths_to_posix,
+            )
+        )
+        self.assertTrue(
+            compare.check_strings(
+                windows_lines, unix_lines, create_temporaries=False
             )
         )
 

@@ -26,9 +26,6 @@ dynamic=["version", "scripts", "dependencies", "keywords", "license", "readme"]
 description = "Test-driven data analysis: command-line tools and Python APIs for data validation, testing analytical pipelines, automatic test generation and more."
 
 
-[tool.setuptools.package-data]
-tdda = ["llms.txt"]
-
 [tool.pytest.ini_options]
 pythonpath = [
   ".", "tdda"
@@ -61,6 +58,7 @@ exclude = [
     "tdda/serial/testdata",
     "tdda/serial/examples",
     "tdda/serial/examples2",
+    "tdda/serial/accounts_examples",
     "tdda/referencetest/testdata",
     "tdda/referencetest/examples",
     "tdda/referencetest/diffexamples",

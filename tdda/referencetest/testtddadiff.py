@@ -16,6 +16,7 @@ from tdda.abstractdf import col_names, df_add_named_col_with_values
 from tdda.config import Config
 from tdda.referencetest import ReferenceTestCase, tag
 from tdda.referencetest.captureoutput import capture_output
+from tdda.referencetest.utils import normalise_rich_table
 
 from tdda.referencetest.ddiff import (
     ddiff_helper,
@@ -68,7 +69,14 @@ def svgpath(filename):
 
 
 class TestTDDADiff(ReferenceTestCase):
+    norm_paths = True
+
     # HELPERS
+
+    def assertRichStringCorrect(self, actual, expected, **kw):
+        self.assertStringCorrect(
+            actual, expected, preprocess=normalise_rich_table, **kw
+        )
 
     def diff(self, args, console=None):
         """Helper for tdda diff tests"""
@@ -105,7 +113,7 @@ class TestTDDADiff(ReferenceTestCase):
             console.save_svg(
                 svgpath(filename), title=title, theme=DIMMED_MONOKAI
             )
-        self.assertStringCorrect(actual, expected, ignore_lines=RICH_TITLE_PAT)
+        self.assertRichStringCorrect(actual, expected, ignore_lines=RICH_TITLE_PAT)
         return actual
 
     # IDENTICAL FILES a vs a
@@ -138,21 +146,21 @@ class TestTDDADiff(ReferenceTestCase):
         actual = self.difftest('a.tsv', 'b.tsv')
 
         # Should also be same result as for csv
-        self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
+        self.assertRichStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
     def test_a_psv_b_psv(self):
         """Most basic diff of two CSV files with two diffs"""
         actual = self.difftest('a.psv', 'b.psv')
 
         # Should also be same result as for csv
-        self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
+        self.assertRichStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
     def test_a_parquet_b_parquet(self):
         """Most basic diff of two CSV files with two diffs"""
         actual = self.difftest('a.parquet', 'b.parquet')
 
         # Should also be same result as for csv
-        self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
+        self.assertRichStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
     # SINGLE COLUMN FILES
 
@@ -170,14 +178,14 @@ class TestTDDADiff(ReferenceTestCase):
         actual = self.difftest('a.csv', 'b.parquet')
 
         # Should also be same result as for csv
-        self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
+        self.assertRichStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
     def test_a_parquet_b_csv(self):
         """Parquet against csv"""
         actual = self.difftest('a.parquet', 'b.csv')
 
         # Should also be same result as for csv
-        self.assertStringCorrect(actual, refpath('a.csv_b.csv.txt'))
+        self.assertRichStringCorrect(actual, refpath('a.csv_b.csv.txt'))
 
     # NUMERIC DIFFERENCES
 

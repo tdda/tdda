@@ -57,7 +57,7 @@ class TestPolarsDataFrames(ReferenceTestCase):
         n1, s1 = compare.check_dataframe(df1, df2, precision=6)
         self.assertEqual(n1, 1)
         self.assertStringCorrect(
-            '\n'.join(s1), refloc('frames_fail1.txt'), ignore_lines=['diff ']
+            '\n'.join(s1), refloc('frames_fail1.txt'), ignore_lines=self._diff_cmds
         )
 
         n3, s3 = compare.check_dataframe(df1, df3, precision=3)
@@ -65,7 +65,7 @@ class TestPolarsDataFrames(ReferenceTestCase):
         self.assertStringCorrect(
             '\n'.join(s3),
             refloc('pl_frames_fail3.txt'),
-            ignore_lines=['diff '],
+            ignore_lines=self._diff_cmds,
         )
 
         n3m, s3m = compare.check_dataframe(
@@ -75,7 +75,7 @@ class TestPolarsDataFrames(ReferenceTestCase):
         self.assertStringCorrect(
             '\n'.join(s3m),
             refloc('pl_frames_fail3m.txt'),
-            ignore_lines=['diff '],
+            ignore_lines=self._diff_cmds,
         )
 
         self.assertFalse(

@@ -321,6 +321,7 @@ class TestGenTest(ReferenceTestCase):
         self.assertStringCorrect(
             r.out.strip(),
             ref_path('a-stdout2.txt'),
+            norm_paths=True,
             ignore_patterns=[
                 r'^Directory to run in: .*/tdda/gentest/testa$',
                 r'^Test script generated: '
@@ -350,6 +351,8 @@ class TestGenTest(ReferenceTestCase):
         self.assertFileCorrect(
             out_path('testa/test_python_2files_py.py'),
             ref_path('a-test_python_2files_py.py'),
+            norm_paths=True,
+            preprocess=lambda lines: [l.replace('\\\\', '\\') for l in lines],
         )
         self.assertFileCorrect(
             out_path('testa/ref/python_2files_py/STDOUT'),
