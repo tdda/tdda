@@ -16,7 +16,7 @@ from tdda.abstractdf import (
     is_pandas_df,
     is_pandas_series,
     is_pandas_obj,
-    isnull_col,
+    eltwise_isnull,
     lib,
 )
 from tdda.referencetest.samestructurediff import SameStructureDDiff
@@ -209,7 +209,7 @@ def same_structure_dataframe_diffs(
     d = {}
     missings = None
     if idx:
-        missings = isnull_col(df[idx]) | isnull_col(ref_df[idx])
+        missings = eltwise_isnull(df[idx]) | eltwise_isnull(ref_df[idx])
     n_vals = 0  # total number of values with differences
     # (including values from "extra" rows)
     for c in col_names(df):
@@ -286,9 +286,9 @@ def single_col_diffs(left, right, missings=None):
             and L.dtype != R.dtype
         ):
             L = L.astype(R.dtype)
-        different = ~(L.eq(R) | (isnull_col(L) & isnull_col(R)))
+        different = ~(L.eq(R) | (eltwise_isnull(L) & eltwise_isnull(R)))
     else:
-        different = ~(isnull_col(L) & isnull_col(R))
+        different = ~(eltwise_isnull(L) & eltwise_isnull(R))
     different = fillnull_col(different, True)
     if missings is not None:
         difference = different | missings

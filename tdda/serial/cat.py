@@ -14,6 +14,9 @@ import argparse
 import pandas as pd
 import polars as pl
 
+from io import StringIO
+
+from rich.console import Console
 from rich.table import Table
 
 from tdda.serial.ls import load_dataset, summary_line, reader_line
@@ -88,8 +91,19 @@ def format_value(v):
     return '[dim]∅[/dim]' if s in _NULLS else s
 
 
+def df_to_string(df, short=None):
+    """Return a plain-text string representation of df as a rich table."""
+    table = cat_table(df, None, None, None, None, short=short)
+    if table is None:
+        return ''
+    buf = StringIO()
+    console = Console(file=buf, no_color=True, highlight=False)
+    console.print(table)
+    return buf.getvalue()
+
+
 def cat_table(df, data_path, md_path, engine, reader, title=None, short=None):
-    """Build and print a rich table of df rows.
+    """Build a rich Table of df rows and return it; print header lines.
 
     short: None = normal; 's' = wrap headers at punctuation; 'S' = wrap anywhere
     """
@@ -103,17 +117,17 @@ def cat_table(df, data_path, md_path, engine, reader, title=None, short=None):
     n_records = len(df)
     n_fields = len(fields)
 
-    summary = summary_line(data_path, n_records, n_fields, engine)
-    if title:
-        summary = '%s  [%s]' % (summary, title)
-    stdout_console.print(summary)
-    rline = reader_line(reader, md_path)
-    if rline:
-        print(rline)
+    if data_path is not None:
+        summary = summary_line(data_path, n_records, n_fields, engine)
+        if title:
+            summary = '%s  [%s]' % (summary, title)
+        stdout_console.print(summary)
+        rline = reader_line(reader, md_path)
+        if rline:
+            print(rline)
 
     if n_records == 0:
-        print('(no rows)')
-        return
+        return None
 
     if is_polars:
         plain_rows = [
@@ -182,7 +196,7 @@ def cat_table(df, data_path, md_path, engine, reader, title=None, short=None):
     for row in display_rows:
         table.add_row(*row)
 
-    stdout_console.print(table)
+    return table
 
 
 def slice_df(df, n, tail=False):
@@ -355,7 +369,9 @@ def cat_main(argv, command='cat'):
             df, flags.fields, flags.xfields, all_fields, is_polars
         )
 
-    cat_table(df, data_path, md_path, engine, reader, short=flags.short)
+    table = cat_table(df, data_path, md_path, engine, reader, short=flags.short)
+    if table is not None:
+        stdout_console.print(table)
 
 
 def head_main(argv):

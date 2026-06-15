@@ -540,7 +540,12 @@ class DFDetectBase(DFTestBase, ParquetFileChecker):
         self.assertEqual(v.passes, 61)
         self.assertEqual(v.failures, 17)
         ddf = v.detected()
-        self.assertStringCorrect(ddf.to_string(), 'elements118rex_detect.df')
+        self.assertDataFrameCorrect(
+            ddf, 'elements118rex_detect.parquet', kind='parquet',
+            type_matching='medium',
+            check_data=self.all_fields_except(['Index']),
+            check_types=self.all_fields_except(['Index']),
+        )
 
     def testDetectElements118_csv_to_csv(self):
         self._detectElements('csv', 'csv')

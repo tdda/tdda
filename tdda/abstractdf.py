@@ -285,8 +285,36 @@ def isnull_fn(df):
     return pd.isnull if df_type(df) == 'pandas' else lambda x: x is None
 
 
-def isnull_col(c):
+def eltwise_isnull(c):
+    """Element-wise: returns boolean Series, True where c is null."""
     return c.isnull() if is_pandas_series(c) else c.is_null()
+
+
+def eltwise_notnull(c):
+    """Element-wise: returns boolean Series, True where c is not null."""
+    return c.notnull() if is_pandas_series(c) else c.is_not_null()
+
+
+def eltwise_str_len(c):
+    """Element-wise: returns integer Series of string lengths."""
+    if is_pandas_series(c):
+        return c.str.len()
+    if c.dtype == pl.Categorical:
+        c = c.cast(pl.String)
+    return c.str.len_chars()
+
+
+def eltwise_isin(c, values):
+    """Element-wise: returns boolean Series, True where c is in values."""
+    return c.isin(values) if is_pandas_series(c) else c.is_in(values)
+
+
+def eltwise_is_duplicated(df, colname):
+    """Element-wise: returns boolean Series, True where colname is duplicated."""
+    if is_pandas_df(df):
+        return df.duplicated(colname, keep=False)
+    else:
+        return df[colname].is_duplicated()
 
 
 def fillnull_col(c, v):
@@ -294,6 +322,7 @@ def fillnull_col(c, v):
 
 
 def pd_scalar_eq(L, R):
+    """Null-safe scalar equality for pandas: null == null is True."""
     if pd.isnull(L):
         return pd.isnull(R)
     elif pd.isnull(R):
@@ -303,6 +332,7 @@ def pd_scalar_eq(L, R):
 
 
 def pl_scalar_eq(L, R):
+    """Scalar equality for polars values (polars handles nulls natively)."""
     return L == R
 
 
@@ -529,7 +559,9 @@ def detection_field(column, expr, default=None):
         if not null_mask.any():
             return expr.cast(pl.Boolean)
         null_val = None if default is None else default
-        return pl.when(null_mask).then(null_val).otherwise(expr)
+        return pl.select(
+            pl.when(null_mask).then(null_val).otherwise(expr)
+        ).to_series()
 
 
 def get_engine_and_backend(engine=None, backend=None, config=None):

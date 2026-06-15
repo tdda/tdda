@@ -35,6 +35,7 @@ from io import StringIO
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from tdda.constraints.base import (
     STANDARD_FIELD_CONSTRAINTS,
@@ -73,10 +74,16 @@ from tdda.abstractdf import (
     csv_to_dataframe,
     date_columns,
     detection_field,
+    eltwise_is_duplicated,
+    eltwise_isin,
+    eltwise_isnull,
+    eltwise_notnull,
+    eltwise_str_len,
     filter_out_nulls,
     fuzzy_gt,
     fuzzy_lt,
     is_null,
+    is_pandas_df,
     is_polars_df,
     non_integer_values_count,
     non_null_count,
@@ -229,6 +236,7 @@ class DFConstraintDetector(BaseConstraintDetector):
             self.date_cols = date_columns(df)
             if is_polars_df(df):
                 self.out_df = None
+                self.out_cols = {}
             else:
                 index = df.index.copy()
                 if not index.name:
@@ -238,53 +246,59 @@ class DFConstraintDetector(BaseConstraintDetector):
             self.date_cols = []
             self.out_df = None
 
+    def _add_detect_col(self, name, value):
+        if is_polars_df(self.df):
+            self.out_cols[name] = value
+        else:
+            self.out_df[name] = value
+
     def detect_min_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'min')
         c = self.df[colname]
         if not types_compatible(c, value):
-            self.out_df[name] = False
+            self._add_detect_col(name, False)
         elif precision == 'closed' or colname in self.date_cols:
-            self.out_df[name] = detection_field(c, c >= value)
+            self._add_detect_col(name, detection_field(c, c >= value))
         elif precision == 'open':
-            self.out_df[name] = detection_field(c, c > value)
+            self._add_detect_col(name, detection_field(c, c > value))
         else:
-            self.out_df[name] = detection_field(
+            self._add_detect_col(name, detection_field(
                 c, fuzzy_gt(c, value, epsilon)
-            )
+            ))
 
     def detect_max_constraint(self, colname, value, precision, epsilon):
         name = verification_field(colname, 'max')
         c = self.df[colname]
         if not types_compatible(c, value):
-            self.out_df[name] = False
+            self._add_detect_col(name, False)
         elif precision == 'closed' or colname in self.date_cols:
-            self.out_df[name] = detection_field(c, c <= value)
+            self._add_detect_col(name, detection_field(c, c <= value))
         elif precision == 'open':
-            self.out_df[name] = detection_field(c, c < value)
+            self._add_detect_col(name, detection_field(c, c < value))
         else:
-            self.out_df[name] = detection_field(
+            self._add_detect_col(name, detection_field(
                 c, fuzzy_lt(c, value, epsilon)
-            )
+            ))
 
     def detect_min_length_constraint(self, colname, value):
         name = verification_field(colname, 'min_length')
         c = self.df[colname]
         if coarse_type(c) != 'string':
-            self.out_df[name] = False
+            self._add_detect_col(name, False)
         else:
-            self.out_df[name] = detection_field(c, c.str.len() >= value)
+            self._add_detect_col(name, detection_field(c, eltwise_str_len(c) >= value))
 
     def detect_max_length_constraint(self, colname, value):
         name = verification_field(colname, 'max_length')
         c = self.df[colname]
         if coarse_type(c) != 'string':
-            self.out_df[name] = False
+            self._add_detect_col(name, False)
         else:
-            self.out_df[name] = detection_field(c, c.str.len() <= value)
+            self._add_detect_col(name, detection_field(c, eltwise_str_len(c) <= value))
 
     def detect_tdda_type_constraint(self, colname, value):
         name = verification_field(colname, 'type')
-        self.out_df[name] = False
+        self._add_detect_col(name, False)
 
     def detect_sign_constraint(self, colname, value):
         name = verification_field(colname, 'sign')
@@ -292,47 +306,86 @@ class DFConstraintDetector(BaseConstraintDetector):
 
         if coarse_type(c) == 'number':
             if value == 'null':
-                self.out_df[name] = False
+                self._add_detect_col(name, False)
             elif value == 'positive':
-                self.out_df[name] = detection_field(c, c > 0)
+                self._add_detect_col(name, detection_field(c, c > 0))
             elif value == 'non-negative':
-                self.out_df[name] = detection_field(c, c >= 0)
+                self._add_detect_col(name, detection_field(c, c >= 0))
             elif value == 'zero':
-                self.out_df[name] = detection_field(c, c == 0)
+                self._add_detect_col(name, detection_field(c, c == 0))
             elif value == 'non-positive':
-                self.out_df[name] = detection_field(c, c <= 0)
+                self._add_detect_col(name, detection_field(c, c <= 0))
             elif value == 'negative':
-                self.out_df[name] = detection_field(c, c < 0)
+                self._add_detect_col(name, detection_field(c, c < 0))
 
     def detect_max_nulls_constraint(self, colname, value):
         # found more nulls than are allowed, so mark all null values as bad
         name = verification_field(colname, 'max_nulls')
         c = self.df[colname]
-        self.out_df[name] = pd.notnull(c)
+        self._add_detect_col(name, eltwise_notnull(c))
 
     def detect_no_duplicates_constraint(self, colname, value):
         # found duplicates, so mark anything duplicated as bad
         name = verification_field(colname, 'no_duplicates')
         c = self.df[colname]
-        unique = ~self.df.duplicated(colname, keep=False)
-        self.out_df[name] = detection_field(c, unique, default=True)
+        unique = ~eltwise_is_duplicated(self.df, colname)
+        self._add_detect_col(name, detection_field(c, unique, default=True))
 
     def detect_allowed_values_constraint(
         self, colname, allowed_values, violations
     ):
         name = verification_field(colname, 'allowed_values')
         c = self.df[colname]
-        self.out_df[name] = detection_field(c, ~c.isin(violations))
+        self._add_detect_col(name, detection_field(c, ~eltwise_isin(c, violations)))
 
     def detect_rex_constraint(self, colname, violations):
         name = verification_field(colname, 'rex')
         c = self.df[colname]
         if coarse_type(c) != 'string':
-            self.out_df[name] = False
+            self._add_detect_col(name, False)
         else:
-            self.out_df[name] = detection_field(c, ~c.isin(violations))
+            self._add_detect_col(name, detection_field(c, ~eltwise_isin(c, violations)))
 
     def write_detected_records(
+        self,
+        outpath=None,
+        write_all_records=False,
+        per_constraint=False,
+        output_fields=None,
+        index=False,
+        in_place=False,
+        rownumber_is_index=True,
+        int_bools=False,
+        interleave=False,
+        **kwargs,
+    ):
+        if is_polars_df(self.df):
+            return self._write_detected_records_polars(
+                outpath=outpath,
+                write_all_records=write_all_records,
+                per_constraint=per_constraint,
+                output_fields=output_fields,
+                index=index,
+                in_place=in_place,
+                rownumber_is_index=rownumber_is_index,
+                int_bools=int_bools,
+                interleave=interleave,
+                **kwargs,
+            )
+        return self._write_detected_records_pandas(
+            outpath=outpath,
+            write_all_records=write_all_records,
+            per_constraint=per_constraint,
+            output_fields=output_fields,
+            index=index,
+            in_place=in_place,
+            rownumber_is_index=rownumber_is_index,
+            int_bools=int_bools,
+            interleave=interleave,
+            **kwargs,
+        )
+
+    def _write_detected_records_pandas(
         self,
         outpath=None,
         write_all_records=False,
@@ -445,13 +498,112 @@ class DFConstraintDetector(BaseConstraintDetector):
             out_df = out_df[out_df[nfailname] > 0]
         return Detection(out_df, n_passing_records, n_failing_records)
 
+    def _write_detected_records_polars(
+        self,
+        outpath=None,
+        write_all_records=False,
+        per_constraint=False,
+        output_fields=None,
+        index=False,
+        in_place=False,
+        rownumber_is_index=True,
+        int_bools=False,
+        interleave=False,
+        **kwargs,
+    ):
+        if not self.out_cols:
+            return None
+        orig_fields = list(self.df.columns)
+        output_is_typed = outpath and file_format(outpath) == 'parquet'
+
+        n = len(self.df)
+        broadcast_cols = {
+            k: v if isinstance(v, pl.Series) else pl.Series(k, [v] * n)
+            for k, v in self.out_cols.items()
+        }
+        out_df = pl.DataFrame(broadcast_cols)
+        add_index = index or output_fields is None
+        if output_fields is None:
+            output_fields = []
+        elif len(output_fields) == 0:
+            output_fields = list(self.df.columns)
+
+        nfailname = (
+            'n_failures'
+            if 'n_failures' not in self.df.columns
+            else 'n_tdda_failures'
+        )
+        cols = out_df.columns
+        nf = len(cols)
+        true_sum = out_df.select(
+            pl.sum_horizontal([pl.col(c).cast(pl.Float64) for c in cols])
+        ).to_series()
+        null_sum = out_df.select(
+            pl.sum_horizontal(
+                [pl.col(c).is_null().cast(pl.Float64) for c in cols]
+            )
+        ).to_series()
+        fails = pl.Series([float(nf)] * len(out_df)) - true_sum - null_sum
+        out_df = out_df.with_columns(
+            fails.cast(pl.Int64).alias(nfailname)
+        )
+        n_failing_records = int((fails > 0).sum())
+        n_passing_records = len(self.df) - n_failing_records
+
+        if not per_constraint:
+            fnames = [n for n in out_df.columns if n != nfailname]
+            out_df = out_df.drop(fnames)
+
+        if in_place:
+            for fname in out_df.columns:
+                newname = unique_column_name(self.df, fname)
+                self.df = self.df.with_columns(
+                    out_df[fname].alias(newname)
+                )
+
+        if output_fields:
+            for fname in reversed(output_fields):
+                if fname in self.df.columns:
+                    if fname in self.out_cols:
+                        warn(f'Replacing old field {fname}.')
+                    else:
+                        out_df = out_df.insert_column(0, self.df[fname])
+                else:
+                    raise Exception(
+                        'DataFrame has no column %s' % fname
+                    )
+
+        if interleave:
+            out_df = self.interleave(out_df, orig_fields, nfailname)
+
+        if outpath:
+            if output_is_typed:
+                df_to_save = out_df
+            else:
+                df_to_save = polars_convert_output_types(out_df, int_bools)
+            if add_index:
+                stem = 'Index' if rownumber_is_index else 'RowNumber'
+                idxname = unique_column_name(df_to_save, stem)
+                idx = pl.Series(idxname, range(1, len(df_to_save) + 1))
+                df_to_save = df_to_save.insert_column(0, idx)
+            if not write_all_records:
+                df_to_save = df_to_save.filter(
+                    pl.col(nfailname) > 0
+                )
+            save_df(df_to_save, outpath, index=False)
+
+        if not write_all_records:
+            out_df = out_df.filter(pl.col(nfailname) > 0)
+        return Detection(out_df, n_passing_records, n_failing_records)
+
     def interleave(self, df, orig_fields, nfailname):
-        if set(orig_fields) - set(list(df)):
+        df_cols = col_names(df)
+        if set(orig_fields) - set(df_cols):
             return df
             # Only interleave if all of the original fields
             # are in the output
 
-        all_vfields = set(list(df)) - set(orig_fields) - set([nfailname])
+        all_vfields = set(df_cols) - set(orig_fields) - set([nfailname])
         new_fields = []
         for f in orig_fields:
             new_fields.append(f)
@@ -459,10 +611,10 @@ class DFConstraintDetector(BaseConstraintDetector):
                 sorted([v for v in all_vfields if is_ver_field(v, f)])
             )
         new_fields.append(nfailname)
-        if DEBUG and set(list(df)) != set(new_fields):
-            print('list(df))', list(df), len(list(df)))
+        if DEBUG and set(df_cols) != set(new_fields):
+            print('col_names(df)', df_cols, len(df_cols))
             print('new fields', new_fields, len(new_fields))
-        assert set(list(df)) == set(new_fields)
+        assert set(df_cols) == set(new_fields)
         return df[new_fields]
 
 
@@ -537,13 +689,18 @@ class DFVerification(Verification):
 
     def get_failure_values(self, field, constraint, key_fields, max_vals=None):
         indicator_field = self.indicator_field_name(field, constraint)
-        exists = (
-            indicator_field in self.detection.obj
-            and field in self.detection.obj
-        )
-        bad_val = 0  # 1 for bad field#
+        df_obj = self.detection.obj
+        df_cols = col_names(df_obj)
+        exists = indicator_field in df_cols and field in df_cols
         if exists:
-            df = self.detection.obj.query(f'{indicator_field} == {bad_val}')
+            if is_polars_df(df_obj):
+                df = df_obj.filter(
+                    pl.col(indicator_field) == self.bad_val
+                )
+            else:
+                df = df_obj.query(
+                    f'{indicator_field} == {self.bad_val}'
+                )
             if max_vals and df.shape[0] > max_vals:
                 df = df.head(max_vals)
             return zip(
@@ -559,8 +716,11 @@ class DFVerification(Verification):
         n_records = int(
             self.detection.n_passing_records + self.detection.n_failing_records
         )
-        if ok_field in df:
-            failures = int((df[ok_field] == 0).sum())
+        if ok_field in col_names(df):
+            if is_polars_df(df):
+                failures = int((df[ok_field] == False).sum())
+            else:
+                failures = int((df[ok_field] == 0).sum())
             passes = n_records - failures
             return pass_fail_stats(passes, failures, 'values')
         else:
@@ -578,10 +738,16 @@ class DFVerification(Verification):
             {
                 self.indicator_field_name(field, constraint)
                 for constraint in CONSTRAINT_SUFFIX_MAP
-            }.intersection(set(df))
+            }.intersection(set(col_names(df)))
         )
         if len(indicators) == 0:  # no failures
             nf = 0
+        elif is_polars_df(df):
+            nf = df.filter(
+                pl.any_horizontal(
+                    [pl.col(ind) == self.bad_val for ind in indicators]
+                )
+            ).shape[0]
         else:
             nf = df.query(
                 ' | '.join(
@@ -742,7 +908,7 @@ def verify_df(
         constraints.initialize_from_dict(unicode_definite(constraints_path))
     else:
         constraints = DatasetConstraints(loadpath=constraints_path)
-    if repair and backend == OG_BACKEND:
+    if repair and backend == OG_BACKEND and is_pandas_df(df):
         pdv.repair_field_types(constraints)
     n_records = df.shape[0]
     return pdv.verify(
@@ -864,7 +1030,7 @@ def detect_df(
         df, epsilon=epsilon, type_checking=type_checking
     )
     constraints = constraints_from_path_or_dict(constraints_path)
-    if repair:
+    if repair and is_pandas_df(df):
         pdv.repair_field_types(constraints)
     n_records = df.shape[0]
     return pdv.detect(
@@ -1113,7 +1279,7 @@ def save_df(df, path, index=False):
 def repair_field_types(df, constraints):
     # Use constraint type info to fix columns mistyped on CSV read
     # (e.g. a string field containing only digits may look numeric).
-    for c in df.columns.tolist():
+    for c in col_names(df):
         if c not in constraints:
             continue
         ser = df[c]
@@ -1152,7 +1318,7 @@ def unique_column_name(df, name):
     """
     i = 1
     newname = name
-    while newname in list(df):
+    while newname in col_names(df):
         i += 1
         newname = '%s_%d' % (name, i)
     return newname
@@ -1185,6 +1351,29 @@ def convert_output_types(df, int_bools):
         else:
             newdf[col] = c
     return newdf
+
+
+def polars_convert_output_types(df, int_bools):
+    """
+    Polars equivalent of convert_output_types: map boolean columns to
+    string true/false (or 1/0 if int_bools).
+    """
+    trueval = '1' if int_bools else 'true'
+    falseval = '0' if int_bools else 'false'
+    exprs = []
+    for col in df.columns:
+        if df[col].dtype == pl.Boolean:
+            exprs.append(
+                pl.when(pl.col(col).is_null())
+                .then(pl.lit(None, dtype=pl.String))
+                .when(pl.col(col))
+                .then(pl.lit(trueval))
+                .otherwise(pl.lit(falseval))
+                .alias(col)
+            )
+        else:
+            exprs.append(pl.col(col))
+    return df.select(exprs)
 
 
 def is_pd_index_trivial(df):
