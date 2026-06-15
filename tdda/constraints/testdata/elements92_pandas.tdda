@@ -1,15 +1,15 @@
 {
     "creation_metadata": {
-        "local_time": "2026-04-09T08:15:36",
-        "utc_time": "2026-04-09T07:15:36+00:00",
-        "creator": "TDDA 3.0.00rc1",
-        "source": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/constraints_examples/testdata/elements92.csv",
+        "local_time": "2026-06-15T16:33:51",
+        "utc_time": "2026-06-15T15:33:51+00:00",
+        "creator": "TDDA 3.1.00",
+        "source": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/njr/constraints_examples/testdata/elements92.csv",
         "host": "gardot.local",
         "user": "njr",
         "dataset": "elements92.csv",
         "n_records": 92,
         "n_selected": 92,
-        "tddafile": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/elements92.tdda"
+        "tddafile": "/var/folders/2y/72gfd2691h9gf2cy48xp8slh0000gn/T/njr/elements92.tdda"
     },
     "fields": {
         "Z": {
@@ -42,9 +42,9 @@
             "max_nulls": 0
         },
         "Group": {
-            "type": "real",
-            "min": 1.0,
-            "max": 18.0,
+            "type": "int",
+            "min": 1,
+            "max": 18,
             "sign": "positive"
         },
         "ChemicalSeries": {

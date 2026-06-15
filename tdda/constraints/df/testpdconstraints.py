@@ -55,6 +55,8 @@ from tdda.constraints.df.dftestbase import (
     DFDiscoverBase,
     DFDetectBase,
     DFCommandBase,
+    DFCommandAPIBase,
+    DFCommandLineBase,
     check_shell_output,
     rmdirs,
 )
@@ -149,8 +151,11 @@ class TestPandasDetect(ReferenceTestCase, DFDetectBase):
 
         df1 = pd.DataFrame(
             {
-                'i': [1, 2, 3, 4, np.nan],
-                's': ['one', 'two', 'three', 'four', np.nan],
+                'i': pd.array([1, 2, 3, 4, None], dtype='int64[pyarrow]'),
+                's': pd.array(
+                    ['one', 'two', 'three', 'four', None],
+                    dtype='string[pyarrow]'
+                ),
             }
         )
         n1 = len(df1)
@@ -167,8 +172,11 @@ class TestPandasDetect(ReferenceTestCase, DFDetectBase):
 
         df2 = pd.DataFrame(
             {
-                'i': [1, 2, 3, 2, np.nan],
-                's': ['one', 'two', 'three', 'two', np.nan],
+                'i': pd.array([1, 2, 3, 2, None], dtype='int64[pyarrow]'),
+                's': pd.array(
+                    ['one', 'two', 'three', 'two', None],
+                    dtype='string[pyarrow]'
+                ),
             }
         )
         n2 = len(df2)
@@ -183,7 +191,12 @@ class TestPandasDetect(ReferenceTestCase, DFDetectBase):
         self.assertEqual(v2.passes, 0)
         self.assertEqual(v2.failures, 2)
         ddf2 = v2.detected()
-        self.assertStringCorrect(ddf2.to_string(), 'detect_dups.df')
+        self.assertDataFrameCorrect(
+            ddf2, 'detect_dups.parquet', kind='parquet',
+            type_matching='medium',
+            check_data=self.all_fields_except(['Index']),
+            check_types=self.all_fields_except(['Index']),
+        )
 
 
 TestPandasDetect.set_default_data_location(TESTDATADIR)
@@ -577,52 +590,13 @@ TestPandasVerifyOptionFlags.set_default_data_location(TESTDATADIR)
 # Concrete pandas CLI classes
 # ---------------------------------------------------------------------------
 
-class TestPandasCommandAPI(ReferenceTestCase, DFCommandBase):
+class TestPandasCommandAPI(DFCommandAPIBase, ReferenceTestCase):
     engine = 'pandas'
-
-    @classmethod
-    def setUpClass(cls):
-        cls.setUpHelper()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.tearDownHelper()
-
-    @classmethod
-    def execute_command(cls, argv):
-        return str(main_with_argv(argv, verbose=False))
 
 
 @unittest.skipIf(not which('tdda'), 'tdda not installed')
-class TestPandasCommandLine(ReferenceTestCase, DFCommandBase):
+class TestPandasCommandLine(DFCommandLineBase, ReferenceTestCase):
     engine = 'pandas'
-
-    @classmethod
-    def setUpClass(cls):
-        cls.pythonioencoding = os.environ.get('PYTHONIOENCODING', None)
-        os.environ['PYTHONIOENCODING'] = 'utf-8'
-        cls.setUpHelper()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.tearDownHelper()
-        if cls.pythonioencoding is None:
-            del os.environ['PYTHONIOENCODING']
-        else:
-            os.environ['PYTHONIOENCODING'] = cls.pythonioencoding
-
-    @classmethod
-    def execute_command(cls, argv):
-        try:
-            result = check_shell_output(argv)
-        except Exception:
-            print(
-                '\n\nIf this test fails, it often means you do not have a '
-                'working command-line\ninstallation of the tdda command.\n\n'
-                'To test this, try typing\n\n  tdda version\n\n'
-            )
-            raise
-        return result
 
 
 TestPandasCommandAPI.set_default_data_location(TESTDATADIR)

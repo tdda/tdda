@@ -659,7 +659,7 @@ class DFCommandBase(DFTestBase, CommandLineHelper):
             pass
         argv = (
             ['tdda', 'discover', self.e92csv, self.e92tdda]
-            + self._pandas_backend_flags()
+            + self._engine_flags()
         )
         self.execute_command(argv)
         self.assertTextFileCorrect(
@@ -791,3 +791,54 @@ class DFCommandBase(DFTestBase, CommandLineHelper):
         self.assertTrue(os.path.exists(self.e92bads2))
         self.assertTextFileCorrect(self.e92bads2, 'detect-els-cmdline2.csv')
         os.remove(self.e92bads2)
+
+
+# ---------------------------------------------------------------------------
+# Shared base classes for API and command-line test classes
+# ---------------------------------------------------------------------------
+
+class DFCommandAPIBase(DFCommandBase, CommandLineHelper):
+    """Mixin: runs CLI tests via main_with_argv (in-process)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.setUpHelper()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tearDownHelper()
+
+    @classmethod
+    def execute_command(cls, argv):
+        return str(main_with_argv(argv, verbose=False))
+
+
+class DFCommandLineBase(DFCommandBase, CommandLineHelper):
+    """Mixin: runs CLI tests via shell subprocess."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pythonioencoding = os.environ.get('PYTHONIOENCODING', None)
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+        cls.setUpHelper()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tearDownHelper()
+        if cls.pythonioencoding is None:
+            del os.environ['PYTHONIOENCODING']
+        else:
+            os.environ['PYTHONIOENCODING'] = cls.pythonioencoding
+
+    @classmethod
+    def execute_command(cls, argv):
+        try:
+            result = check_shell_output(argv)
+        except Exception:
+            print(
+                '\n\nIf this test fails, it often means you do not have a '
+                'working command-line\ninstallation of the tdda command.\n\n'
+                'To test this, try typing\n\n  tdda version\n\n'
+            )
+            raise
+        return result
