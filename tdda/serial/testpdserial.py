@@ -1904,10 +1904,10 @@ class TestPandasWritePython(ReferenceTestCase):
 
     def test_write_py_a1k_mixed(self):
         self._run(
-            tdpath('a1k-10-mixed.csv.serial'),
-            tdpath('a1k-10-mixed.csv'),
-            tdpath('a1k-10-mixed-write-pd.py'),
-            tdpath('a1k-10-mixed-write-pd.csv'),
+            tdpath('a10-mixed.csv.serial'),
+            tdpath('a10-mixed.csv'),
+            tdpath('a10-mixed-write-pd.py'),
+            tdpath('a10-mixed-write-pd.csv'),
             expected_warnings=[
                 'Boolean formats cannot be expressed in'
                 ' pandas.DataFrame.to_csv;'

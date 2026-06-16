@@ -104,6 +104,19 @@ def write_data(df, outpath):
 
 """
 
+    POLARS_WRITE_WITH_CAST = """
+import polars as pl
+
+def write_data(df, outpath):
+    df = df.with_columns(
+%s    )
+    df.write_csv(
+        outpath,
+        %s
+    )
+
+"""
+
 
 DataFrameWithMetadata = namedtuple('DataFrameWithMetadata', 'df md')
 

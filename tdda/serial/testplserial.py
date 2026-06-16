@@ -15,6 +15,7 @@ from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.polarsio import (
     csv_to_polars,
     serial_to_polars_read_csv_args,
+    serial_to_polars_write_csv_python,
     #    polars_df_to_csv,
     #    polars_df_to_metadata,
     #    polars_dtype_to_fieldtype,
@@ -1409,6 +1410,87 @@ class TestSerialPolarsAlternateBooleans(ReferenceTestCase):
     def test_alternate_booleans_polars(self):
         df = csv_to_polars(tdpath('bools.csv'), tdpath('bools.serial'))
         self.assertDataFrameCorrect(df, tdpath('bools.parquet'))
+
+
+class TestPolarsWritePython(ReferenceTestCase):
+    """
+    Tests for serial_to_polars_write_csv_python.
+
+    Each test:
+    1. Loads metadata from a .serial file
+    2. Generates Python write code and checks it against a reference .py
+    3. Executes the generated Python and writes a CSV to a temp path
+    4. Checks the written CSV against a reference file
+    """
+
+    def _run(self, serial_path, csv_path, ref_py, ref_csv,
+             expected_warnings=None):
+        md = load_metadata(serial_path)
+        warn, buf = testwarn()
+        py = serial_to_polars_write_csv_python(md, warner=warn)
+        if expected_warnings is not None:
+            self.assertEqual(buf, expected_warnings)
+        self.assertStringCorrect(py, ref_py)
+        df = csv_to_polars(csv_path, serial_path, warner=lambda *a, **k: None)
+        ns = {}
+        exec(py, ns)
+        out = tmppath(os.path.basename(ref_csv))
+        ns['write_data'](df, out)
+        self.assertFileCorrect(out, ref_csv)
+
+    def test_write_py_weird(self):
+        self._run(
+            tdpath('tiny1nd-weird.serial'),
+            tdpath('tiny1nd-weird.ssv'),
+            tdpath('tiny1nd-weird-write-pl.py'),
+            tdpath('tiny1nd-weird-write-pl.ssv'),
+            expected_warnings=[
+                'Boolean formats cannot be expressed in'
+                ' polars.DataFrame.write_csv;'
+                ' booleans will be written as true/false.',
+                "polars.DataFrame.write_csv does not support"
+                " encoding 'latin-1'; output will be UTF-8.",
+            ],
+        )
+
+    def test_write_py_date_with_dt_fmt(self):
+        md = load_metadata(tdpath('tiny-date-dt-fmt.serial'))
+        warn, buf = testwarn()
+        py = serial_to_polars_write_csv_python(md, warner=warn)
+        self.assertEqual(buf, [])
+        self.assertStringCorrect(py, tdpath('tiny-date-dt-fmt-write-pl.py'))
+        df = pl.DataFrame({
+            'd': [datetime.date(2021, 1, 15), datetime.date(2022, 6, 30)],
+            'v': [1, 2],
+        })
+        ns = {}
+        exec(py, ns)
+        out = tmppath('tiny-date-dt-fmt-write-pl.csv')
+        ns['write_data'](df, out)
+        self.assertFileCorrect(out, tdpath('tiny-date-dt-fmt-write-pl.csv'))
+
+    def test_write_py_a1k_mixed(self):
+        serial_path = tdpath('a10-mixed.csv.serial')
+        md = load_metadata(serial_path)
+        warn, buf = testwarn()
+        py = serial_to_polars_write_csv_python(md, warner=warn)
+        self.assertEqual(buf, [
+            'Boolean formats cannot be expressed in'
+            ' polars.DataFrame.write_csv;'
+            ' booleans will be written as true/false.',
+            'Multiple date formats for date fields; using ISO 8601.',
+        ])
+        self.assertStringCorrect(py, tdpath('a10-mixed-write-pl.py'))
+        df = csv_to_polars(
+            tdpath('a10-mixed.csv'), serial_path,
+            warner=lambda *a, **k: None,
+        )
+        df = df.with_columns(pl.col('close_date').cast(pl.Date))
+        ns = {}
+        exec(py, ns)
+        out = tmppath('a10-mixed-write-pl.psv')
+        ns['write_data'](df, out)
+        self.assertFileCorrect(out, tdpath('a10-mixed-write-pl.psv'))
 
 
 if __name__ == '__main__':

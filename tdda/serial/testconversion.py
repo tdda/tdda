@@ -781,11 +781,61 @@ class TestSerialConversions(ReferenceTestCase):
         )
 
 
+class TestPolarsWritePythonCLI(ReferenceTestCase):
+    """Tests for pl.w Python generation via SerialConverter."""
+
+    weird_serial = tdpath('tiny1nd-weird.serial')
+    mixed_serial = tdpath('a10-mixed.csv.serial')
+    IGL = ['tdda.serial-', 'writer']
+
+    def test_plw_weird(self):
+        outpath = tmppath('tiny1nd-weird-write-pl.py')
+        c = SerialConverter(self.weird_serial, outpath, out_format='pl.w')
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, tdpath('tiny1nd-weird-write-pl.py'))
+        self.assertEqual(buf, [
+            'Boolean formats cannot be expressed in'
+            ' polars.DataFrame.write_csv;'
+            ' booleans will be written as true/false.',
+            "polars.DataFrame.write_csv does not support"
+            " encoding 'latin-1'; output will be UTF-8.",
+        ])
+
+    def test_plw_mixed(self):
+        outpath = tmppath('a10-mixed-write-pl.py')
+        c = SerialConverter(self.mixed_serial, outpath, out_format='pl.w')
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertFileCorrect(outpath, tdpath('a10-mixed-write-pl.py'))
+        self.assertEqual(buf, [
+            'Boolean formats cannot be expressed in'
+            ' polars.DataFrame.write_csv;'
+            ' booleans will be written as true/false.',
+            'Multiple date formats for date fields; using ISO 8601.',
+        ])
+
+    def test_plw_for_warns(self):
+        outpath = tmppath('a10-mixed-write-pl-for.py')
+        c = SerialConverter(
+            cli_args=[
+                self.mixed_serial, outpath, '--to', 'pl.w',
+                '--for', 'mydata.csv'
+            ]
+        )
+        Warn, buf = testwarn()
+        c.convert(warner=Warn)
+        self.assertIn(
+            "Ignoring --for 'mydata.csv': not applicable for write functions.",
+            buf,
+        )
+
+
 class TestPandasWritePythonCLI(ReferenceTestCase):
     """Tests for pd.w Python generation via SerialConverter."""
 
     weird_serial = tdpath('tiny1nd-weird.serial')
-    mixed_serial = tdpath('a1k-10-mixed.csv.serial')
+    mixed_serial = tdpath('a10-mixed.csv.serial')
     IGL = ['tdda.serial-', 'writer']
 
     def test_pdw_weird(self):
@@ -801,11 +851,11 @@ class TestPandasWritePythonCLI(ReferenceTestCase):
         ])
 
     def test_pdw_mixed(self):
-        outpath = tmppath('a1k-10-mixed-write-pd.py')
+        outpath = tmppath('a10-mixed-write-pd.py')
         c = SerialConverter(self.mixed_serial, outpath, out_format='pd.w')
         Warn, buf = testwarn()
         c.convert(warner=Warn)
-        self.assertFileCorrect(outpath, tdpath('a1k-10-mixed-write-pd.py'))
+        self.assertFileCorrect(outpath, tdpath('a10-mixed-write-pd.py'))
         self.assertEqual(buf, [
             'Boolean formats cannot be expressed in'
             ' pandas.DataFrame.to_csv;'
@@ -814,7 +864,7 @@ class TestPandasWritePythonCLI(ReferenceTestCase):
         ])
 
     def test_pdw_for_warns(self):
-        outpath = tmppath('a1k-10-mixed-write-pd-for.py')
+        outpath = tmppath('a10-mixed-write-pd-for.py')
         c = SerialConverter(
             cli_args=[
                 self.mixed_serial, outpath, '--to', 'pd.w',

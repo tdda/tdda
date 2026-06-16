@@ -18,6 +18,7 @@ from tdda.serial.polarsio import (
     serial_to_polars_read_csv_args,
     serial_to_polars_read_csv_python,
     serial_to_polars_write_csv_args,
+    serial_to_polars_write_csv_python,
 )
 from tdda.serial.reader import load_metadata
 from tdda.serial.utils import find_metadata_type_from_path
@@ -63,6 +64,7 @@ PYTHON_WRITER = {
     'pandas.read_csv': serial_to_pandas_read_csv_python,
     'pandas.DataFrame.to_csv': serial_to_pandas_write_csv_python,
     'polars.read_csv': serial_to_polars_read_csv_python,
+    'polars.DataFrame.write_csv': serial_to_polars_write_csv_python,
 }
 
 PYTHON_WRITE_FORMATS = {
@@ -479,9 +481,7 @@ class SerialConverter:
                 python_writer = PYTHON_WRITER.get(fmt)
                 if python_writer is None:
                     error(
-                        'Only pd.r (pandas.read_csv),'
-                        ' pd.w (pandas.DataFrame.to_csv),'
-                        ' and pl.r (polars.read_csv) are supported\n'
+                        'Only pd.r, pd.w, pl.r, and pl.w are supported\n'
                         'for Python generation at this time.'
                     )
                 f.write(

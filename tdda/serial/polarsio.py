@@ -1,9 +1,11 @@
 import copy
 import os
+from collections import Counter
 
 import polars as pl
 
 from tdda.serial.metadata import (
+    DateFormat,
     VERBOSITY,
     SerialMetadata,
     TDDASerialError,
@@ -139,6 +141,7 @@ def serial_to_polars_write_csv_args(md, backend=None, warner=None, **kw):
     if POLARS.write_key in md.libs:
         return md.libs[POLARS.write_key]
 
+    Warn = nvl(warner, warn)
     out = {}
     if md.delimiter:
         out['separator'] = md.delimiter
@@ -149,15 +152,36 @@ def serial_to_polars_write_csv_args(md, backend=None, warner=None, **kw):
     if md.header_row_count == 0:
         out['include_header'] = False
 
-    null = md.single_null_indicator()
+    null = md.single_null_indicator(warner=Warn)
     if null is not None:
         out['null_value'] = null
 
-    if md.date_format:
-        out['date_format'] = serial_format_to_strftime(md.date_format)
+    date_fields = [f for f in md.fields if f.fieldtype == 'date']
+    datetime_fields = [f for f in md.fields if f.fieldtype == 'datetime']
+    global_fmt = md.date_format
 
-    if md.datetime_format:
-        out['datetime_format'] = serial_format_to_strftime(md.datetime_format)
+    if date_fields:
+        fmts = Counter(
+            f.format or global_fmt or DateFormat.ISO8601_DATE
+            for f in date_fields
+        )
+        if len(fmts) == 1:
+            out['date_format'] = serial_format_to_strftime(list(fmts)[0])
+        else:
+            Warn('Multiple date formats for date fields; using ISO 8601.')
+            out['date_format'] = '%Y-%m-%d'
+
+    if datetime_fields:
+        fmts = Counter(
+            f.format or md.datetime_format or global_fmt
+            or DateFormat.ISO8601_DATETIME
+            for f in datetime_fields
+        )
+        if len(fmts) == 1:
+            out['datetime_format'] = serial_format_to_strftime(list(fmts)[0])
+        else:
+            Warn('Multiple datetime formats; using ISO 8601.')
+            out['datetime_format'] = '%Y-%m-%dT%H:%M:%S'
 
     if md.quoting:
         style = POLARS_QUOTE_STYLE.get(md.quoting)
@@ -517,6 +541,50 @@ def as_polars_serial_lib_args(kw):
     if dtypes:
         out['schema_overrides'] = {k: repr(v) for k, v in dtypes.items()}
     return out
+
+
+def serial_to_polars_write_csv_python(
+    md, backend=None, warner=None, **kw
+):
+    Warn = nvl(warner, warn)
+    bool_fields = [
+        f for f in md.fields
+        if f.fieldtype == 'bool'
+        and (f.format or f.true_values or f.false_values)
+    ]
+    if bool_fields or md.true_values or md.false_values:
+        Warn(
+            'Boolean formats cannot be expressed in'
+            ' polars.DataFrame.write_csv;'
+            ' booleans will be written as true/false.'
+        )
+    if md.encoding and md.encoding.lower().replace('-', '') not in (
+        'utf8', 'utf8bom'
+    ):
+        Warn(
+            f'polars.DataFrame.write_csv does not support'
+            f' encoding {md.encoding!r}; output will be UTF-8.'
+        )
+    kw = serial_to_polars_write_csv_args(md, warner=Warn)
+    kw = {k: v for k, v in kw.items() if v is not None}
+
+    time_tokens = ('%H', '%M', '%S', '%f', '%3f', '%6f', '%9f')
+    date_fmt = kw.get('date_format', '')
+    if date_fmt and any(t in date_fmt for t in time_tokens):
+        date_cols = [f.name for f in md.fields if f.fieldtype == 'date']
+        if 'datetime_format' not in kw:
+            kw['datetime_format'] = date_fmt
+        del kw['date_format']
+        cast_lines = ''.join(
+            f'        pl.col({c!r}).cast(pl.Datetime),\n'
+            for c in date_cols
+        )
+        args = format_template_args(kw)
+        return (
+            PYTHON_TEMPLATES.POLARS_WRITE_WITH_CAST % (cast_lines, args)
+        ).lstrip()
+
+    return fill_template(PYTHON_TEMPLATES.POLARS_WRITE, kw)
 
 
 def polars_read_df(path, nullable=False, **kw):
