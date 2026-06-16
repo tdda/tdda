@@ -130,4 +130,6 @@ serial_examples/b1k-names-latin1.csv
 serial_examples/b1k-names-latin1.csv.serial
 serial_examples/b1k-names.csv
 serial_examples/b1k-names.csv.serial
+serial_examples/docdata.serial
+serial_examples/docdata.txt
 serial_examples/md.py

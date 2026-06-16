@@ -34,4 +34,6 @@ b1k-names-latin1.csv
 b1k-names-latin1.csv.serial
 b1k-names.csv
 b1k-names.csv.serial
+docdata.serial
+docdata.txt
 md.py
