@@ -297,12 +297,12 @@ def serial_to_pandas_write_csv_args(
     return kw
 
 
-def pandas_read_csv_to_serial(params, backend=None, warner=None, config=None):
-    """Convert a ``pandas.read_csv`` parameter dict to tdda.serial parameters.
+def pdr_params_to_serial(params, backend=None, warner=None, config=None):
+    """Convert a `pandas.read_csv` parameter dict to tdda.serial parameters.
 
-    Typically used with a ``'pandas.read_csv'`` block from a ``.serial``
+    Typically used with a `'pandas.read_csv'` block from a `.serial`
     file. Returns a dict of general SerialMetadata kwargs (including a
-    ``fields`` entry with FieldMetadata dicts where applicable).
+    `fields` entry with FieldMetadata dicts where applicable).
     """
     Warn = nvl(warner, warn)
     kw = {}

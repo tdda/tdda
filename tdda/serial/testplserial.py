@@ -14,6 +14,11 @@ from tdda.serial.metadata import FieldType
 from tdda.serial.csvw import CSVWMetadata
 from tdda.serial.polarsio import (
     csv_to_polars,
+    polars_col_to_field_metadata,
+    polars_df_to_metadata,
+    polars_dtype_to_fieldtype,
+    polars_to_csv,
+    polars_write_to_read_params,
     serial_to_polars_read_csv_args,
     serial_to_polars_write_csv_python,
     #    polars_df_to_csv,
@@ -1491,6 +1496,186 @@ class TestPolarsWritePython(ReferenceTestCase):
         out = tmppath('a10-mixed-write-pl.psv')
         ns['write_data'](df, out)
         self.assertFileCorrect(out, tdpath('a10-mixed-write-pl.psv'))
+
+
+class TestPolarsToMetadata(ReferenceTestCase):
+
+    @tag
+    def test_dtype_fieldtype_mapping(self):
+        cases = [
+            (pl.Int8, FieldType.INT),
+            (pl.Int64, FieldType.INT),
+            (pl.UInt32, FieldType.INT),
+            (pl.Float32, FieldType.FLOAT),
+            (pl.Float64, FieldType.FLOAT),
+            (pl.Boolean, FieldType.BOOL),
+            (pl.String, FieldType.STRING),
+            (pl.Utf8, FieldType.STRING),
+            (pl.Series('c', ['a'], dtype=pl.Categorical).dtype,
+             FieldType.STRING),
+            (pl.Series('e', ['a'], dtype=pl.Enum(['a', 'b'])).dtype,
+             FieldType.STRING),
+            (pl.Date, FieldType.DATE),
+            (pl.Datetime, FieldType.DATETIME),
+            (pl.Datetime('us', 'UTC'), FieldType.DATETIME_WITH_TIMEZONE),
+            (pl.Time, FieldType.TIME),
+            (pl.Duration, None),
+        ]
+        for dtype, expected in cases:
+            self.assertEqual(
+                polars_dtype_to_fieldtype(dtype), expected,
+                msg=f'dtype={dtype}',
+            )
+
+    @tag
+    def test_col_to_field_metadata(self):
+        import datetime as dt
+        df = pl.DataFrame({
+            'b': [True, False],
+            'i': [1, 2],
+            'f': [1.5, 2.5],
+            's': ['a', 'b'],
+            'd': pl.Series(
+                [dt.date(2024, 1, 1), dt.date(2024, 6, 1)], dtype=pl.Date
+            ),
+            't': pl.Series(
+                [dt.datetime(2024, 1, 1), dt.datetime(2024, 6, 1)],
+                dtype=pl.Datetime,
+            ),
+        })
+        expected = {
+            'b': FieldType.BOOL,
+            'i': FieldType.INT,
+            'f': FieldType.FLOAT,
+            's': FieldType.STRING,
+            'd': FieldType.DATE,
+            't': FieldType.DATETIME,
+        }
+        for col in df.columns:
+            fm = polars_col_to_field_metadata(df[col])
+            self.assertEqual(fm.name, col)
+            self.assertEqual(fm.fieldtype, expected[col])
+            self.assertIsNone(fm.format)
+
+        # date_fmt applies to date/datetime columns only
+        fm_d = polars_col_to_field_metadata(df['d'], date_fmt='%d/%m/%Y')
+        self.assertEqual(fm_d.format, '%d/%m/%Y')
+        fm_s = polars_col_to_field_metadata(df['s'], date_fmt='%d/%m/%Y')
+        self.assertIsNone(fm_s.format)
+
+    @tag
+    def test_write_to_read_params(self):
+        df = pl.DataFrame({
+            'n': [1, 2],
+            'd': pl.Series(
+                [datetime.date(2024, 1, 1), datetime.date(2024, 6, 1)],
+                dtype=pl.Date,
+            ),
+            's': ['a', 'b'],
+        })
+        # no write kwargs — schema_overrides still reflects date column
+        self.assertEqual(
+            polars_write_to_read_params(df),
+            {'schema_overrides': {'d': pl.Date}},
+        )
+
+        # with options
+        result = polars_write_to_read_params(
+            df, separator='|', null_value='NULL',
+        )
+        self.assertEqual(result['separator'], '|')
+        self.assertEqual(result['null_values'], 'NULL')
+        self.assertEqual(result['schema_overrides'], {'d': pl.Date})
+        self.assertNotIn('n', result.get('schema_overrides', {}))
+        self.assertNotIn('s', result.get('schema_overrides', {}))
+
+    @tag
+    def test_df_to_metadata(self):
+        md = polars_df_to_metadata(tiny_polars_df())
+        self.assertStringCorrect(
+            str(md),
+            tdpath('tiny1cd-pl.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+    @tag
+    def test_df_to_metadata_with_date_format(self):
+        import datetime as dt
+        df = pl.DataFrame({
+            'n': [1, 2],
+            'd': pl.Series(
+                [dt.date(2024, 1, 1), dt.date(2024, 6, 1)], dtype=pl.Date
+            ),
+        })
+        md = polars_df_to_metadata(df, date_format='%d/%m/%Y')
+        self.assertStringCorrect(
+            str(md),
+            tdpath('tiny-date-eurofmt-pl.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+
+class TestPolarsToCSV(ReferenceTestCase):
+
+    @tag
+    def test_write_csv_no_metadata(self):
+        out = tmppath('tiny1cd-pl.csv')
+        polars_to_csv(tiny_polars_df(), out)
+        self.assertFileCorrect(out, tdpath('tiny1cd-pl.csv'))
+
+    @tag
+    def test_write_csv_with_md_out(self):
+        out = tmppath('tiny1cd-pl.csv')
+        md_out = tmppath('tiny1cd-pl.serial')
+        polars_to_csv(tiny_polars_df(), out, md_outpath=md_out)
+        self.assertFileCorrect(out, tdpath('tiny1cd-pl.csv'))
+        self.assertFileCorrect(
+            md_out,
+            tdpath('tiny1cd-pl.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+    @tag
+    def test_write_csv_with_md_in(self):
+        out = tmppath('tiny1cd-pl-from-serial.csv')
+        polars_to_csv(
+            tiny_polars_df(), out, md_inpath=tdpath('tiny1cd.serial')
+        )
+        self.assertFileCorrect(out, tdpath('tiny1cd-pl-from-serial.csv'))
+
+    @tag
+    def test_round_trip(self):
+        out = tmppath('tiny1cd-pl-rt.csv')
+        md_out = tmppath('tiny1cd-pl-rt.serial')
+        polars_to_csv(
+            tiny_polars_df(), out, md_outpath=md_out, null_value='NULL'
+        )
+        df2 = csv_to_polars(out, md_out)
+        self.assertDataFramesEqual(
+            tiny_polars_df(), df2, type_matching='medium'
+        )
+
+    @tag
+    def test_round_trip_via_pl_serial(self):
+        df2 = csv_to_polars(
+            tdpath('tiny1cd-pl.csv'), tdpath('tiny1cd-pl.serial'),
+            missing_utf8_is_empty_string=True,
+        )
+        self.assertDataFramesEqual(tiny_polars_df(), df2)
+
+    @tag
+    def test_date_eurofmt_round_trip(self):
+        import datetime as dt
+        df = pl.DataFrame({
+            'n': [1, 2],
+            'd': pl.Series(
+                [dt.date(2024, 1, 1), dt.date(2024, 6, 1)], dtype=pl.Date
+            ),
+        })
+        out = tmppath('tiny-date-eurofmt-pl.csv')
+        polars_to_csv(df, out, md_inpath=tdpath('tiny-date-eurofmt-pl.serial'))
+        df2 = csv_to_polars(out, tdpath('tiny-date-eurofmt-pl.serial'))
+        self.assertDataFramesEqual(df, df2)
 
 
 if __name__ == '__main__':

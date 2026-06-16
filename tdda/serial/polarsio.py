@@ -1,17 +1,25 @@
 import copy
 import os
-from collections import Counter
+from collections import Counter, namedtuple
 
 import polars as pl
 
 from tdda.serial.metadata import (
     DateFormat,
+    Defaults,
+    FieldMetadata,
+    FieldType,
     VERBOSITY,
     SerialMetadata,
     TDDASerialError,
     serial_format_to_strftime,
 )
-from tdda.serial.reader import get_metadata_for_reader, set_delimiter_from_path
+from tdda.serial.reader import (
+    get_metadata_for_reader,
+    get_metadata_for_writer,
+    set_delimiter_from_path,
+)
+from tdda.serial.utils import choose_md_path
 from tdda.serial.utils import (
     PYTHON_TEMPLATES,
     fill_template,
@@ -20,7 +28,8 @@ from tdda.serial.utils import (
 )
 
 from tdda.serial.dateutils import infer_date_format_from_strings
-from tdda.utils import listify, warn, nvl
+from tdda.serial.constants import TDDASERIAL
+from tdda.utils import delistify, listify, warn, nvl
 
 
 class POLARS:
@@ -91,6 +100,239 @@ def str_to_pl_dtype(s):
         if s == st:
             return t
     return s
+
+
+def polars_dtype_to_fieldtype(dtype):
+    """Convert a polars dtype to a FieldType constant.
+
+    Args:
+        dtype: A polars dtype (e.g. pl.Int64, pl.Date, pl.Datetime).
+
+    Returns:
+        A FieldType value if recognised, or None.
+    """
+    base = dtype.base_type() if hasattr(dtype, 'base_type') else dtype
+    if base in (pl.Int8, pl.Int16, pl.Int32, pl.Int64,
+                pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64):
+        return FieldType.INT
+    elif base in (pl.Float32, pl.Float64):
+        return FieldType.FLOAT
+    elif base is pl.Boolean:
+        return FieldType.BOOL
+    elif base in (pl.String, pl.Utf8, pl.Categorical, pl.Enum):
+        return FieldType.STRING
+    elif base is pl.Date:
+        return FieldType.DATE
+    elif base is pl.Datetime:
+        if hasattr(dtype, 'time_zone') and dtype.time_zone:
+            return FieldType.DATETIME_WITH_TIMEZONE
+        return FieldType.DATETIME
+    elif base is pl.Time:
+        return FieldType.TIME
+    else:
+        return None
+
+
+def polars_col_to_field_metadata(
+    field, fieldtype=None, fmt=None, date_fmt=None
+):
+    """Return a FieldMetadata object for a polars Series.
+
+    Args:
+        field (pl.Series): The column to describe.
+        fieldtype (str): Optional FieldType override; inferred from
+            dtype if not given.
+        fmt (str): Optional format string for the field.
+        date_fmt (str): Format for date/datetime fields if fmt is
+            not set; a named format or strftime string.
+
+    Returns:
+        FieldMetadata describing the column.
+    """
+    if not fieldtype:
+        fieldtype = polars_dtype_to_fieldtype(field.dtype)
+    if not fmt and date_fmt:
+        if fieldtype in (
+            FieldType.DATE,
+            FieldType.DATETIME,
+            FieldType.DATETIME_WITH_TIMEZONE,
+        ):
+            fmt = date_fmt
+    return FieldMetadata(field.name, fieldtype, format=fmt)
+
+
+
+def polars_write_to_read_params(df, warner=None, **kw):
+    """Convert polars write_csv kwargs to read_csv kwargs for the same file.
+
+    Args:
+        df (pl.DataFrame): The DataFrame that was written.
+        warner: Optional callable for issuing warnings.
+        **kw: The kwargs that were passed to write_csv.
+
+    Returns:
+        Dict of kwargs suitable for polars.read_csv to read back the
+        file that was written.
+    """
+    d = {}
+    sep = kw.get('separator', Defaults.DELIMITER)
+    if sep != Defaults.DELIMITER:
+        d['separator'] = sep
+    qc = kw.get('quote_char', Defaults.QUOTE_CHAR)
+    if qc != Defaults.QUOTE_CHAR:
+        d['quote_char'] = qc
+    null = kw.get('null_value')
+    if null is not None:
+        d['null_values'] = null
+    if kw.get('include_header') is False:
+        d['has_header'] = False
+    schema = {}
+    for col in df.columns:
+        dtype = df[col].dtype
+        ft = polars_dtype_to_fieldtype(dtype)
+        if ft in (FieldType.DATE, FieldType.DATETIME,
+                  FieldType.DATETIME_WITH_TIMEZONE):
+            schema[col] = dtype
+    if schema:
+        d['schema_overrides'] = schema
+    return d
+
+
+def polars_df_to_metadata(df, outpath=None, flavour=None, **kw):
+    """Create SerialMetadata for a DataFrame being written with polars.
+
+    Args:
+        df (pl.DataFrame): Source of field names and type information.
+        outpath (str): Path to write metadata to; if None, not written
+            but the SerialMetadata object is still returned.
+        flavour (str or list): Metadata flavour(s) to include. Defaults
+            to ``tdda.serial``.
+        **kw: Parameters that were passed to write_csv.
+
+    Returns:
+        SerialMetadata describing the DataFrame.
+    """
+    date_fmt = kw.get('date_format')
+    datetime_fmt = kw.get('datetime_format')
+    DATE_TYPES = (
+        FieldType.DATE, FieldType.DATETIME,
+        FieldType.DATETIME_WITH_TIMEZONE, FieldType.TIME,
+        FieldType.ISO8601,
+    )
+    fields = []
+    for c in df.columns:
+        col = df[c]
+        ft = polars_dtype_to_fieldtype(col.dtype)
+        if ft == FieldType.DATE:
+            fmt = date_fmt
+        elif ft in (FieldType.DATETIME, FieldType.DATETIME_WITH_TIMEZONE):
+            fmt = datetime_fmt
+        else:
+            fmt = None
+        fields.append(FieldMetadata(c, ft, format=fmt))
+
+    flavours = listify(flavour)
+    if not flavours:
+        flavours = [TDDASERIAL.key]
+
+    if TDDASERIAL.key in flavours:
+        has_dates = any(f.fieldtype in DATE_TYPES for f in fields)
+        md = SerialMetadata(
+            fields,
+            delimiter=kw.get('separator', Defaults.DELIMITER),
+            quote_char=kw.get('quote_char', Defaults.QUOTE_CHAR),
+            null_indicator=kw.get('null_value',
+                                  delistify(Defaults.NULL_INDICATOR)),
+            header_row_count=0 if kw.get('include_header') is False else 1,
+            date_format=date_fmt or (
+                DateFormat.ISO8601_UNSPECIFIED if has_dates else None
+            ),
+            datetime_format=datetime_fmt,
+        )
+    else:
+        md = SerialMetadata()
+
+    if POLARS.write_key in flavours:
+        md.libs[POLARS.write_key] = {k: repr(v) for k, v in kw.items()}
+
+    if POLARS.read_key in flavours:
+        md.libs[POLARS.read_key] = polars_write_to_read_params(df, **kw)
+
+    if outpath:
+        md.write(outpath)
+
+    return md
+
+
+WriteInfo = namedtuple('WriteInfo', 'path md_outpath md_inpath kw')
+
+
+def polars_to_csv(
+    df,
+    path=None,
+    md_inpath=None,
+    md_outpath=None,
+    auto_md_inpath=False,
+    auto_md_outpath=False,
+    flavour=None,
+    preferred_in_flavour=None,
+    include_data_path_in_md=None,
+    warner=None,
+    **kw_overrides,
+):
+    """Write a Polars DataFrame to a CSV file, optionally using metadata.
+
+    Args:
+        df (pl.DataFrame): The DataFrame to write.
+        path (str): Path to write the CSV data to.
+        md_inpath (str): Optional path to a .serial (or CSVW) metadata
+            file to use when writing the CSV.
+        md_outpath (str or bool): Optional path to write a .serial
+            metadata file describing the format used. If True, the
+            .serial path is derived from the data path.
+        auto_md_inpath (bool): If True, find the input metadata path
+            automatically from filename conventions.
+        auto_md_outpath (bool): If True, choose the output metadata
+            path automatically.
+        flavour (str or list): Flavour(s) to include in the written
+            .serial file. By default only 'tdda.serial' is included.
+        preferred_in_flavour (str): If multiple formats are available
+            in the .serial file, prefer this one.
+        include_data_path_in_md: If set, include the data path in the
+            output metadata.
+        warner: Optional callable for issuing warnings.
+        **kw_overrides: Passed directly to write_csv, overriding any
+            values derived from md_inpath.
+
+    Returns:
+        WriteInfo namedtuple with attributes path, md_outpath,
+        md_inpath, and kw (the write_csv kwargs used).
+    """
+    Warn = nvl(warner, warn)
+    md_in, path, md_inpath = get_metadata_for_writer(
+        path=path,
+        md_path=md_inpath,
+        find_md=auto_md_inpath,
+        preferred=preferred_in_flavour or POLARS.write_key,
+    )
+
+    if md_in:
+        kw = serial_to_polars_write_csv_args(md_in, warner=Warn)
+    else:
+        kw = {}
+    kw.update(kw_overrides)
+
+    if path:
+        df.write_csv(path, **kw)
+
+    if auto_md_outpath and not md_outpath:
+        md_outpath = choose_md_path(path, flavour)
+    if md_outpath:
+        polars_df_to_metadata(
+            df, outpath=md_outpath, flavour=flavour, **kw
+        )
+
+    return WriteInfo(path, md_outpath, md_inpath, kw)
 
 
 def serial_to_polars_read_csv_args(
