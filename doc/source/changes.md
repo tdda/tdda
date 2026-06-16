@@ -4,6 +4,22 @@
 
 ## This Version
 
+* **3.2** Polars support throughout. The gaps in 3.0/3.1 were
+the constraints functionality and a few corners of the tdda
+functionality. So now:
+
+ - `--polars` can be used with the `discover`, `verify`
+   and `detect` subcommands, as well as the ones they
+   already worked with (`diff`, `cat`, `head`, `tail`, `sample`).
+ - Polars works with all the `tdda serial` commands, with options
+   like `pl.w` and `pl.r`.
+ - TDDA Serial now provides `polars_to_csv` for writing flat files
+   from Polars using metadata. This includes options for writing a
+   flat file in a format specified by a `tdda.serial` or other
+   metadata file and writing a metadata file alongside a flat file.
+
+
+
 * **3.1** CI Tests passing on all platforms (Windows as well as Linux/Mac).
 Over 100 tests were failing on Windows, but a huge number of these
 were problems with the tests (like \ vs / as path separator in reference
