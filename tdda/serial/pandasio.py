@@ -1,3 +1,4 @@
+import csv
 import datetime
 import os
 import re
@@ -530,6 +531,7 @@ def pandas_df_to_metadata(df, outpath=None, flavour=None, **kw):
             delimiter=kw.get('sep', Defaults.DELIMITER),
             quote_char=kw.get('quotechar', Defaults.QUOTE_CHAR),
             escape_char=kw.get('escapechar', Defaults.ESCAPE_CHAR),
+            quoting=kw.get('quoting', csv.QUOTE_MINIMAL),
             null_indicator=kw.get(
                 'na_rep', delistify(Defaults.NULL_INDICATOR)
             ),

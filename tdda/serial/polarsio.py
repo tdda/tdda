@@ -14,6 +14,13 @@ from tdda.serial.metadata import (
     TDDASerialError,
     serial_format_to_strftime,
 )
+
+POLARS_QUOTE_STYLE_TO_SERIAL = {
+    'necessary': 'QUOTE_MINIMAL',
+    'always': 'QUOTE_ALL',
+    'non_numeric': 'QUOTE_NONNUMERIC',
+    'never': 'QUOTE_NONE',
+}
 from tdda.serial.reader import (
     get_metadata_for_reader,
     get_metadata_for_writer,
@@ -237,10 +244,14 @@ def polars_df_to_metadata(df, outpath=None, flavour=None, **kw):
 
     if TDDASERIAL.key in flavours:
         has_dates = any(f.fieldtype in DATE_TYPES for f in fields)
+        polars_quote_style = kw.get('quote_style', 'necessary')
         md = SerialMetadata(
             fields,
             delimiter=kw.get('separator', Defaults.DELIMITER),
             quote_char=kw.get('quote_char', Defaults.QUOTE_CHAR),
+            quoting=POLARS_QUOTE_STYLE_TO_SERIAL.get(
+                polars_quote_style, 'QUOTE_MINIMAL'
+            ),
             null_indicator=kw.get('null_value',
                                   delistify(Defaults.NULL_INDICATOR)),
             header_row_count=0 if kw.get('include_header') is False else 1,
@@ -478,7 +489,14 @@ def serial_to_polars_read_csv_args_and_postproc(
         )
 
     if md.null_indicator is not None:
-        kw['null_values'] = listify(md.null_indicator)  # Can do per field
+        # With QUOTE_MINIMAL or QUOTE_NONNUMERIC, polars distinguishes
+        # bare empty cells (null) from quoted "" (empty string) by default,
+        # so passing null_values would incorrectly convert "" to null too.
+        polars_handles_nulls = (
+            md.quoting in ('QUOTE_MINIMAL', 'QUOTE_NONNUMERIC')
+        )
+        if not polars_handles_nulls or md.null_indicator not in ('', ['']):
+            kw['null_values'] = listify(md.null_indicator)
 
     if md.header_row_count == 0:
         kw['has_header'] = False

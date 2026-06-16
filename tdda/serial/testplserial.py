@@ -75,6 +75,7 @@ def dfEqual(self, df, exp):
 
 
 class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
+    @tag
     def test_base_serial(self):
         md = load_metadata(epath('base-csv.serial'))
         warn, buf = testwarn()
@@ -1500,7 +1501,6 @@ class TestPolarsWritePython(ReferenceTestCase):
 
 class TestPolarsToMetadata(ReferenceTestCase):
 
-    @tag
     def test_dtype_fieldtype_mapping(self):
         cases = [
             (pl.Int8, FieldType.INT),
@@ -1527,7 +1527,6 @@ class TestPolarsToMetadata(ReferenceTestCase):
                 msg=f'dtype={dtype}',
             )
 
-    @tag
     def test_col_to_field_metadata(self):
         import datetime as dt
         df = pl.DataFrame({
@@ -1563,7 +1562,6 @@ class TestPolarsToMetadata(ReferenceTestCase):
         fm_s = polars_col_to_field_metadata(df['s'], date_fmt='%d/%m/%Y')
         self.assertIsNone(fm_s.format)
 
-    @tag
     def test_write_to_read_params(self):
         df = pl.DataFrame({
             'n': [1, 2],
@@ -1589,7 +1587,6 @@ class TestPolarsToMetadata(ReferenceTestCase):
         self.assertNotIn('n', result.get('schema_overrides', {}))
         self.assertNotIn('s', result.get('schema_overrides', {}))
 
-    @tag
     def test_df_to_metadata(self):
         md = polars_df_to_metadata(tiny_polars_df())
         self.assertStringCorrect(
@@ -1598,7 +1595,6 @@ class TestPolarsToMetadata(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-    @tag
     def test_df_to_metadata_with_date_format(self):
         import datetime as dt
         df = pl.DataFrame({
@@ -1617,13 +1613,11 @@ class TestPolarsToMetadata(ReferenceTestCase):
 
 class TestPolarsToCSV(ReferenceTestCase):
 
-    @tag
     def test_write_csv_no_metadata(self):
         out = tmppath('tiny1cd-pl.csv')
         polars_to_csv(tiny_polars_df(), out)
         self.assertFileCorrect(out, tdpath('tiny1cd-pl.csv'))
 
-    @tag
     def test_write_csv_with_md_out(self):
         out = tmppath('tiny1cd-pl.csv')
         md_out = tmppath('tiny1cd-pl.serial')
@@ -1635,7 +1629,6 @@ class TestPolarsToCSV(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-    @tag
     def test_write_csv_with_md_in(self):
         out = tmppath('tiny1cd-pl-from-serial.csv')
         polars_to_csv(
@@ -1643,7 +1636,6 @@ class TestPolarsToCSV(ReferenceTestCase):
         )
         self.assertFileCorrect(out, tdpath('tiny1cd-pl-from-serial.csv'))
 
-    @tag
     def test_round_trip(self):
         out = tmppath('tiny1cd-pl-rt.csv')
         md_out = tmppath('tiny1cd-pl-rt.serial')
@@ -1655,7 +1647,6 @@ class TestPolarsToCSV(ReferenceTestCase):
             tiny_polars_df(), df2, type_matching='medium'
         )
 
-    @tag
     def test_round_trip_via_pl_serial(self):
         df2 = csv_to_polars(
             tdpath('tiny1cd-pl.csv'), tdpath('tiny1cd-pl.serial'),
@@ -1663,7 +1654,6 @@ class TestPolarsToCSV(ReferenceTestCase):
         )
         self.assertDataFramesEqual(tiny_polars_df(), df2)
 
-    @tag
     def test_date_eurofmt_round_trip(self):
         import datetime as dt
         df = pl.DataFrame({

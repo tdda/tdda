@@ -1097,6 +1097,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
             },
         )
 
+    @tag
     def testMetadataGeneration_tinycd(self):
         # Write metadata for tiny complete (c: no nulls), default types (d)
         df = tiny_pandas_df(nulls=False, nullable_types=False)
@@ -1156,6 +1157,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
+    @tag
     def testMetadataGeneration_tinynd(self):
         # Write metadata for tiny with nulls (n), default types (d)
         df = tiny_pandas_df(nulls=True, nullable_types=False)
@@ -1211,6 +1213,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
+    @tag
     def testMetadataGeneration_tinycn(self):
         # Write metadata for tiny complete (c: no nulls), nullable types (n)
         df = tiny_pandas_df(nulls=False, nullable_types=True)
@@ -1279,6 +1282,7 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
+    @tag
     def testMetadataGeneration_tinynn(self):
         # Write metadata for tiny with nulls (n), nullable types (n)
         df = tiny_pandas_df(nulls=True, nullable_types=True)
@@ -1436,6 +1440,7 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
+    @tag
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = pandas_df_to_metadata(df, flavours='tdda.serial')
@@ -1766,6 +1771,7 @@ class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
     Verify that the written CSV and companion .serial file are correct.
     """
 
+    @tag
     def test_write_eu_datetime_via_kwargs(self):
         df = pd.read_parquet(tdpath('datetimed.parquet'))
         csv_path = tmppath('eurodt-write-kw.csv')
@@ -1780,6 +1786,7 @@ class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
+    @tag
     def test_write_eu_datetime_via_serial(self):
         df = pd.read_parquet(tdpath('datetimed.parquet'))
         csv_path = tmppath('eurodt-write-serial.csv')
@@ -1803,6 +1810,7 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
     Verify that the written CSV and companion .serial file are correct.
     """
 
+    @tag
     def test_write_small_via_kwargs(self):
         df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-kw.csv')
@@ -1822,6 +1830,7 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
+    @tag
     def test_write_small_via_serial(self):
         df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-serial.csv')
