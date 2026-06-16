@@ -75,7 +75,6 @@ def dfEqual(self, df, exp):
 
 
 class TestPolarsKeywordArgsGeneration(ReferenceTestCase):
-    @tag
     def test_base_serial(self):
         md = load_metadata(epath('base-csv.serial'))
         warn, buf = testwarn()

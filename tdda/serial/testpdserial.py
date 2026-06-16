@@ -1097,7 +1097,6 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
             },
         )
 
-    @tag
     def testMetadataGeneration_tinycd(self):
         # Write metadata for tiny complete (c: no nulls), default types (d)
         df = tiny_pandas_df(nulls=False, nullable_types=False)
@@ -1157,7 +1156,6 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-    @tag
     def testMetadataGeneration_tinynd(self):
         # Write metadata for tiny with nulls (n), default types (d)
         df = tiny_pandas_df(nulls=True, nullable_types=False)
@@ -1213,7 +1211,6 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-    @tag
     def testMetadataGeneration_tinycn(self):
         # Write metadata for tiny complete (c: no nulls), nullable types (n)
         df = tiny_pandas_df(nulls=False, nullable_types=True)
@@ -1282,7 +1279,6 @@ class TestPandasFlatFileRoundTrips(ReferenceTestCase):
         )
         self.assertDataFramesEquivalent(dfa, df, fuzzy_nulls=True)
 
-    @tag
     def testMetadataGeneration_tinynn(self):
         # Write metadata for tiny with nulls (n), nullable types (n)
         df = tiny_pandas_df(nulls=True, nullable_types=True)
@@ -1440,7 +1436,6 @@ class TestPandasToMetadata(ReferenceTestCase):
         self.assertEqual(actual, expected_types)
         self.assertEqual(actual, {})
 
-    @tag
     def testMetadataGeneration(self):
         df, _ = small_wide_pd_df(with_col=False)
         m = pandas_df_to_metadata(df, flavours='tdda.serial')
@@ -1771,7 +1766,6 @@ class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
     Verify that the written CSV and companion .serial file are correct.
     """
 
-    @tag
     def test_write_eu_datetime_via_kwargs(self):
         df = pd.read_parquet(tdpath('datetimed.parquet'))
         csv_path = tmppath('eurodt-write-kw.csv')
@@ -1786,7 +1780,6 @@ class TestSerialPandasNamedDateFormatsWrite(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-    @tag
     def test_write_eu_datetime_via_serial(self):
         df = pd.read_parquet(tdpath('datetimed.parquet'))
         csv_path = tmppath('eurodt-write-serial.csv')
@@ -1810,7 +1803,6 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
     Verify that the written CSV and companion .serial file are correct.
     """
 
-    @tag
     def test_write_small_via_kwargs(self):
         df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-kw.csv')
@@ -1830,7 +1822,6 @@ class TestSerialPandasSmallWrite(ReferenceTestCase):
             ignore_patterns=TDDASERIAL_PATTERNS,
         )
 
-    @tag
     def test_write_small_via_serial(self):
         df = csv_to_pandas(tdpath('small.csv'), md_path=tdpath('small.serial'))
         csv_path = tmppath('small-write-serial.csv')
@@ -1924,6 +1915,54 @@ class TestPandasWritePython(ReferenceTestCase):
                 'Multiple data formats; using ISO 8601.',
             ],
         )
+
+
+class TestPandasToCSV(ReferenceTestCase):
+
+    def test_write_csv_no_metadata(self):
+        out = tmppath('tiny1cd-pd.csv')
+        pandas_to_csv(tiny_pandas_df(), out, index=False)
+        self.assertFileCorrect(out, tdpath('tiny1cd-pd.csv'))
+
+    def test_write_csv_with_md_out(self):
+        out = tmppath('tiny1cd-pd.csv')
+        md_out = tmppath('tiny1cd-pd.serial')
+        pandas_to_csv(tiny_pandas_df(), out, md_outpath=md_out, index=False)
+        self.assertFileCorrect(out, tdpath('tiny1cd-pd.csv'))
+        self.assertFileCorrect(
+            md_out,
+            tdpath('tiny1cd-pd.serial'),
+            ignore_patterns=TDDASERIAL_PATTERNS,
+        )
+
+    def test_write_csv_with_md_in(self):
+        out = tmppath('tiny1cd-pd-from-serial.csv')
+        pandas_to_csv(
+            tiny_pandas_df(), out, md_inpath=tdpath('tiny1cd.serial'),
+            index=False,
+        )
+        self.assertFileCorrect(out, tdpath('tiny1cd-pd-from-serial.csv'))
+
+    def test_round_trip_null_value(self):
+        # With default na_rep='', null and '' are both written as ""
+        # so '' comes back as null on read. Known pandas limitation.
+        out = tmppath('tiny1cd-pd-rt.csv')
+        md_out = tmppath('tiny1cd-pd-rt.serial')
+        pandas_to_csv(tiny_pandas_df(), out, md_outpath=md_out, index=False)
+        df2 = csv_to_pandas(out, md_out)
+        expected = tiny_pandas_df().copy()
+        expected['s'] = expected['s'].where(expected['s'] != '', other=None)
+        self.assertDataFramesEqual(expected, df2, type_matching='medium')
+
+    def test_round_trip_safe_null(self):
+        out = tmppath('tiny1cd-pd-rt-null.csv')
+        md_out = tmppath('tiny1cd-pd-rt-null.serial')
+        pandas_to_csv(
+            tiny_pandas_df(), out, md_outpath=md_out,
+            index=False, na_rep='NULL',
+        )
+        df2 = csv_to_pandas(out, md_out)
+        self.assertDataFramesEqual(tiny_pandas_df(), df2, type_matching='medium')
 
 
 if __name__ == '__main__':
