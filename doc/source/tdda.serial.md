@@ -1096,7 +1096,6 @@ as `type` objects. In this case, `tdda.serial` converts such objects
 to strings and the `csv_to_polars` method handles this when it uses them.
 
 So, considering only the read case, the Polars equivalent conversion is:
-% TODO: pl.w
 
 %% docdata/converttopl.sh
 
@@ -1113,6 +1112,14 @@ code is generated with
 all is handled:
 
 %% docdata/examplereadpl.py
+
+The Polars write equivalent is:
+
+%% docdata/converttoplw.sh
+
+which produces:
+
+%% docdata/exampleplw.serial
 
 
 (tdda-serial-colon-format)=

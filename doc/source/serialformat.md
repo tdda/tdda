@@ -1178,7 +1178,7 @@ will generate a `tdda.serial` file with only those properties specified:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.03",
+    "writer": "tdda.serial-3.1.00",
     "tdda.serial": {
         "delimiter": "|",
         "quote_char": "'",
@@ -1226,7 +1226,7 @@ The result is:
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.0.03",
+    "dc:creator": "tdda.serial-3.1.00",
     "tables": [
         {
             "tableSchema": {
@@ -1419,7 +1419,7 @@ The result is:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.03",
+    "writer": "tdda.serial-3.1.00",
     "pandas.read_csv": {
         "sep": ";",
         "encoding": "latin-1",
@@ -1500,7 +1500,7 @@ The result is the following file:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.03",
+    "writer": "tdda.serial-3.1.00",
     "pandas.read_csv": {
         "sep": "|",
         "encoding": "UTF-8",
@@ -1548,7 +1548,6 @@ as `type` objects. In this case, `tdda.serial` converts such objects
 to strings and the `csv_to_polars` method handles this when it uses them.
 
 So, considering only the read case, the Polars equivalent conversion is:
-% TODO: pl.w
 
 %% docdata/converttopl.sh
 ```bash
@@ -1561,7 +1560,7 @@ which produces:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.0.03",
+    "writer": "tdda.serial-3.1.00",
     "polars.read_csv": {
         "separator": "|",
         "quote_char": "\"",
@@ -1615,6 +1614,30 @@ def read_data(inpath):
     ])
     return df
 
+```
+
+The Polars write equivalent is:
+
+%% docdata/converttoplw.sh
+```bash
+tdda serial example.serial exampleplw.serial --to pl.w
+```
+
+which produces:
+
+%% docdata/exampleplw.serial
+```
+{
+    "format": "http://tdda.info/ns/tdda.serial",
+    "writer": "tdda.serial-3.1.00",
+    "polars.DataFrame.write_csv": {
+        "separator": "|",
+        "quote_char": "\"",
+        "null_value": "",
+        "date_format": "%Y-%m-%d",
+        "datetime_format": "%m/%d/%Y %H:%M:%S"
+    }
+}
 ```
 
 
