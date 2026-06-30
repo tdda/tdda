@@ -597,6 +597,7 @@ class Extractor(object):
         seed=None,
         dialect=DEFAULT_DIALECT,
         verbose=DEFAULT_VERBOSITY,
+        single=None,
     ):
         """Initialize and, unless extract=False, run extraction."""
         self.verbose = self._set_verbosity(verbose)
@@ -641,6 +642,7 @@ class Extractor(object):
         self.min_strings_per_pattern = min_strings_per_pattern
         self.max_patterns = nvl(max_patterns, MAX_PATTERNS)
         self.seed = seed
+        self.single = single
 
         if extract:
             self.extract()  # Stores results
@@ -731,6 +733,8 @@ class Extractor(object):
             self._convert_rex_to_dialect()
         finally:
             self.prng_state.restore()
+        if self.single is True and self.results is not None:
+            self.results.rex = combine_patterns(self.results.rex)
 
     def _show(self, verbosity):
         """
@@ -2413,6 +2417,22 @@ class PRNGState:
             random.setstate(self.saved)
 
 
+def combine_patterns(patterns):
+    """
+    Combine a list of anchored regex patterns into a single alternation.
+
+    Converts ``['^R1$', '^R2$', ...]`` to ``['^(R1|R2|...)$']``.
+    Returns the list unchanged if it has zero or one element.
+    """
+    if len(patterns) <= 1:
+        return patterns
+    stripped = [
+        p[1:-1] if p.startswith('^') and p.endswith('$') else p
+        for p in patterns
+    ]
+    return ['^(' + '|'.join(stripped) + ')$']
+
+
 def extract(
     examples,
     tag=False,
@@ -2430,6 +2450,7 @@ def extract(
     seed=None,
     dialect=DEFAULT_DIALECT,
     verbose=DEFAULT_VERBOSITY,
+    single=None,
 ):
     """
     Extract regular expression(s) from examples and return them.
@@ -2479,6 +2500,9 @@ def extract(
             ``'java'``, ``'perl'``, or ``'posix'``.
         verbose (int): Verbosity level. ``0`` is silent, ``1`` prints
             progress information, ``2`` prints maximum detail.
+        single (bool): If ``True``, combine all extracted patterns into
+            a single regex using alternation: ``^(R1|R2|...)$``.
+            ``None`` (the default) leaves the list unchanged.
 
     Returns:
         A list of regular expressions as unicode strings, or the
@@ -2504,11 +2528,12 @@ def extract(
         seed=seed,
         dialect=dialect,
         verbose=verbose,
+        single=single,
     )
     return r if as_object else r.results.rex if r.results else []
 
 
-def dfextract(cols, seed=None):
+def dfextract(cols, seed=None, single=None):
     """
     Extract regular expression(s) from one or more DataFrame columns.
 
@@ -2539,6 +2564,9 @@ def dfextract(cols, seed=None):
         cols: A Pandas or Polars ``Series``, or list of ``Series`` objects.
         seed (int): Random seed for reproducibility. ``None`` (the
             default) means non-deterministic.
+        single (bool): If ``True``, combine all extracted patterns into
+            a single regex using alternation: ``^(R1|R2|...)$``.
+            ``None`` (the default) leaves the list unchanged.
 
     Returns:
         A list of regular expressions as unicode strings.
@@ -2552,7 +2580,7 @@ def dfextract(cols, seed=None):
         else:
             strings.extend(list(c.dropna().unique()))
     try:
-        return extract(strings, seed=seed)
+        return extract(strings, seed=seed, single=single)
     except:
         if not all(type(s) == str for s in strings):
             raise ValueError('Non-null, non-string values found in input.')
@@ -2815,6 +2843,8 @@ def get_params(args):
                 params['verbose'] = 1
             elif a in ('-VV', '--Verbose'):
                 params['verbose'] = 2
+            elif a in ('-1', '--single'):
+                params['single'] = True
             elif a in ('-vlf', '--variable'):
                 params['variableLengthFrags'] = True
             elif a in ('-flf', '--fixed'):

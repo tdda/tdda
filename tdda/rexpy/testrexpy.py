@@ -229,6 +229,8 @@ except ImportError:
 from tdda.rexpy import *
 from tdda.rexpy.rexpy import Coverage, Examples
 
+TESTDATADIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testdata')
+
 # does re escape all punctuation, or only special ones?
 re_escape_more = re.escape('%') != '%'
 isPython2 = sys.version_info[0] < 3
@@ -490,6 +492,23 @@ class TestUtilityFunctions(ReferenceTestCase):
         self.assertEqual(c.ids.get('four'), 4)  # 'cos added fourth
 
         self.assertEqual(list(c.keys()), ['two', 'three', 'one', 'four'])
+
+    def test_combine_patterns(self):
+        self.assertEqual(combine_patterns([]), [])
+        self.assertEqual(combine_patterns(['^hello$']), ['^hello$'])
+        self.assertEqual(
+            combine_patterns(['^[a-z]{3}$', '^[0-9]{4}$']),
+            ['^([a-z]{3}|[0-9]{4})$'],
+        )
+        self.assertEqual(
+            combine_patterns(['^a$', '^b$', '^c$']),
+            ['^(a|b|c)$'],
+        )
+        # pattern already containing alternation
+        self.assertEqual(
+            combine_patterns(['^(foo|bar)$', '^[0-9]+$']),
+            ['^((foo|bar)|[0-9]+)$'],
+        )
 
 
 class TestHelperMethods(ReferenceTestCase):
@@ -2200,6 +2219,56 @@ class TestExtraction(ReferenceTestCase):
                 [r'''"^[a-z]{3,5} \\\\\\\"\\' [a-z]{3,4}$"'''],
                 [r'''"^[a-z]{3,5} \\\\\"' [a-z]{3,4}$"'''],
             ),
+        )
+
+    def test_single_extract(self):
+        inputs = ['2024-01-01', 'hello', 'world', '1999-12-31']
+        multi = extract(inputs)
+        self.assertEqual(len(multi), 2)
+        combined = extract(inputs, single=True)
+        self.assertEqual(
+            combined,
+            [r'^([a-z]{5}|[0-9]{4}\-[0-9]{2}\-[0-9]{2})$'],
+        )
+        self.assertEqual(extract(inputs, single=None), multi)
+        self.assertEqual(extract(inputs, single=False), multi)
+
+    def test_single_extractor(self):
+        inputs = ['2024-01-01', 'hello', 'world', '1999-12-31']
+        x = Extractor(inputs, single=True)
+        self.assertEqual(
+            x.results.rex,
+            [r'^([a-z]{5}|[0-9]{4}\-[0-9]{2}\-[0-9]{2})$'],
+        )
+
+    @unittest.skipIf(pandas is None, 'No pandas here')
+    def test_single_dfextract(self):
+        df = pd.DataFrame(
+            {'col': ['2024-01-01', 'hello', 'world', '1999-12-31']}
+        )
+        multi = dfextract(df['col'])
+        self.assertEqual(len(multi), 2)
+        combined = dfextract(df['col'], single=True)
+        self.assertEqual(len(combined), 1)
+        self.assertTrue(combined[0].startswith('^('))
+        self.assertTrue(combined[0].endswith(')$'))
+
+    def test_single_get_params(self):
+        p1 = get_params(['-1'])
+        self.assertEqual(p1.get('single'), True)
+        p2 = get_params(['--single'])
+        self.assertEqual(p2.get('single'), True)
+        p3 = get_params([])
+        self.assertNotIn('single', p3)
+
+    def test_single_cli(self):
+        mixed_file = os.path.join(TESTDATADIR, 'mixed.txt')
+        params = get_params(['-1', mixed_file])
+        params['out_path'] = False
+        result = rexpy_streams(**params)
+        self.assertStringCorrect(
+            '\n'.join(result) + '\n',
+            os.path.join(TESTDATADIR, 'rexpy-single-cli.txt'),
         )
 
     def testConstraints(self):
