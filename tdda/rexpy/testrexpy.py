@@ -2233,6 +2233,13 @@ class TestExtraction(ReferenceTestCase):
         self.assertEqual(extract(inputs, single=None), multi)
         self.assertEqual(extract(inputs, single=False), multi)
 
+    def test_single_extract_java(self):
+        inputs = ['2024-01-01', 'hello', 'world', '1999-12-31']
+        self.assertEqual(
+            extract(inputs, dialect='java', single=True),
+            [r'^(\p{Lower}{5}|\p{Digit}{4}\-\p{Digit}{2}\-\p{Digit}{2})$'],
+        )
+
     def test_single_extractor(self):
         inputs = ['2024-01-01', 'hello', 'world', '1999-12-31']
         x = Extractor(inputs, single=True)
