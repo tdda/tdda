@@ -6,6 +6,8 @@ rexpy fits a population of "true positive" strings, in terms of
 regex length, false negative rate and false positive rate.
 """
 
+import math
+
 from collections import namedtuple
 
 from tdda.rexpy.relib import re
@@ -551,3 +553,209 @@ def _merge_ranges(ranges):
         else:
             merged.append((lo, hi))
     return merged
+
+
+def _rate(numerator, denominator):
+    """Compute `numerator / denominator` as a rate, treating the
+    degenerate cases sensibly rather than raising:
+
+    - `0/0` is `0.0` (no false results occurred, regardless of
+      whether there was theoretically room for any).
+    - a positive numerator over a zero denominator is
+      `float('inf')` (the regex admits things entirely outside
+      what the assumed universe accounts for).
+    """
+    if denominator == 0:
+        return 0.0 if numerator == 0 else float('inf')
+    return numerator / denominator
+
+
+class RexMetrics:
+    """
+    Quality metrics for a single regex, scored against a set of
+    positive examples.
+
+    Args:
+        len (int): length of the regex string.
+        fp (int or CountRange): false positive count -- strings the
+            regex admits beyond the true positives it actually
+            matches. A `CountRange` if the pattern has alternation
+            with genuine overlap uncertainty, an `int` otherwise
+            (see `count_strings`).
+        fn (int): false negative count -- true positives the regex
+            fails to match. Always exact (found by directly testing
+            the compiled pattern against the real positives), never
+            a range, regardless of alternation.
+        fpr (float or CountRange): false positive rate (`fp`
+            divided by the number of "invalid" strings in the
+            universe) -- a `CountRange` of rates iff `fp` is a
+            `CountRange`. Optional; `eq()` only compares it when
+            given (on either side).
+        fnr (float): false negative rate (`fn / n_positives`).
+            Optional, compared by `eq()` only when given.
+        universe (int): size of the assumed universe of possible
+            strings. Not itself a quality measure (it's context,
+            not a property of the regex), so `eq()` never compares
+            it directly -- but uses it to derive a default `tol`
+            when one isn't given explicitly.
+    """
+
+    def __init__(self, len, fp, fn, fpr=None, fnr=None, universe=None):
+        self.len = len
+        self.fp = fp
+        self.fn = fn
+        self.fpr = fpr
+        self.fnr = fnr
+        self.universe = universe
+
+    def eq(self, other, tol=None):
+        """Compare quality against `other`.
+
+        `len`, `fp` and `fn` are always compared exactly (`fp`
+        may be an `int` or a `CountRange`; plain `==` already
+        does the right thing either way, including correctly
+        rejecting a mismatch between the two). `fpr` and `fnr`
+        are compared (within `tol`) only if `other` specifies
+        them (is not `None`) -- letting `other` be a
+        partially-specified expected value. Each is compared as a
+        single float, or component-wise if both sides are a
+        `CountRange` of rates; a scalar vs. `CountRange` mismatch
+        is simply unequal (this is a convenience for readable
+        tests, not a general-purpose comparison, so callers are
+        expected to know which shape to expect).
+
+        `tol` defaults to the smaller of `1/(10*universe)` over
+        whichever of `self`/`other` have a `universe` set, or
+        `0.0` (exact comparison) if neither does.
+
+        Returns:
+            bool
+        """
+        if self.len != other.len or self.fp != other.fp:
+            return False
+        if self.fn != other.fn:
+            return False
+        if tol is None:
+            tol = _default_tol(self, other)
+        for attr in ('fpr', 'fnr'):
+            expected = getattr(other, attr)
+            if expected is None:
+                continue
+            actual = getattr(self, attr)
+            if not _rates_close(actual, expected, tol):
+                return False
+        return True
+
+
+def _rates_close(actual, expected, tol):
+    """Compare two rates (each a single `float` or a `CountRange`
+    of rates) within `tol`. A scalar/`CountRange` mismatch is
+    always unequal.
+    """
+    if isinstance(actual, CountRange) != isinstance(expected, CountRange):
+        return False
+    if isinstance(actual, CountRange):
+        return math.isclose(
+            actual.lower, expected.lower, abs_tol=tol
+        ) and math.isclose(actual.upper, expected.upper, abs_tol=tol)
+    return actual is not None and math.isclose(
+        actual, expected, abs_tol=tol
+    )
+
+
+def _default_tol(a, b):
+    """Derive a default tolerance for `RexMetrics.eq()` from
+    whichever of `a`/`b` have a `universe` set: the smaller of
+    `1/(10*universe)` over those that do, or `0.0` if neither does.
+    """
+    candidates = [
+        1 / (10 * m.universe)
+        for m in (a, b)
+        if m.universe is not None and m.universe > 0
+    ]
+    return min(candidates) if candidates else 0.0
+
+
+class ConcreteRexMetric:
+    """
+    A reusable scorer bound to a fixed set of positive examples,
+    alphabet and length range. Call `evaluate(pattern)` once per
+    candidate regex to score it against them.
+    """
+
+    def __init__(
+        self, all_positives, alphabet=None, min_length=None,
+        max_length=None,
+    ):
+        self.all_positives = all_positives
+        self.alphabet = alphabet
+        self.n_positives = len(all_positives)
+        lengths = [len(s) for s in all_positives]
+        self.min_length = min(lengths) if min_length is None else min_length
+        self.max_length = max(lengths) if max_length is None else max_length
+        resolved = _resolve_alphabet(alphabet)
+        self.universe = sum(
+            resolved.size**k
+            for k in range(self.min_length, self.max_length + 1)
+        )
+
+    def evaluate(self, pattern, max_plus=DEFAULT_MAX_PLUS):
+        """Score `pattern` against `self.all_positives`.
+
+        `pattern` may contain alternation: `count_strings` returns
+        an `int` when the admitted count is exact, or a
+        `CountRange` when alternation leaves genuine overlap
+        uncertainty, and `fp`/`fpr` follow suit.
+
+        `max_plus` is passed through to `count_strings`, to size
+        unbounded quantifiers (`+`, `*`, open `{m,}`); it defaults
+        to `DEFAULT_MAX_PLUS` (5), which may not reach `self`'s
+        actual `max_length` for patterns using them.
+
+        Returns:
+            RexMetrics
+        """
+        compiled = re.compile(pattern)
+        fn = sum(
+            1 for s in self.all_positives if not compiled.fullmatch(s)
+        )
+        fnr = _rate(fn, self.n_positives)
+        admitted = count_strings(
+            pattern, max_plus=max_plus, alphabet=self.alphabet
+        )
+        n_true_matched = self.n_positives - fn
+        fp_denominator = self.universe - self.n_positives
+        # fp can never legitimately exceed fp_denominator (a false
+        # positive is, by definition, one of the actual negatives,
+        # so fpr = fp / (fp + TN) <= 1 always). count_strings's
+        # approximations (unbounded quantifiers reaching past
+        # max_length, or alternation's sum-as-upper-bound when
+        # branches overlap) can overshoot that bound; clamping
+        # enforces the invariant rather than reporting fpr > 1.
+        # When fp_denominator is 0 (no room for any false
+        # positives at all), that's a special case handled by
+        # _rate itself (0/0 -> 0.0, positive/0 -> inf) -- clamping
+        # doesn't apply there.
+        if isinstance(admitted, CountRange):
+            fp = CountRange(
+                admitted.lower - n_true_matched,
+                admitted.upper - n_true_matched,
+            )
+            if fp_denominator > 0:
+                fp = CountRange(
+                    min(fp.lower, fp_denominator),
+                    min(fp.upper, fp_denominator),
+                )
+            fpr = CountRange(
+                _rate(fp.lower, fp_denominator),
+                _rate(fp.upper, fp_denominator),
+            )
+        else:
+            fp = admitted - n_true_matched
+            if fp_denominator > 0:
+                fp = min(fp, fp_denominator)
+            fpr = _rate(fp, fp_denominator)
+        return RexMetrics(
+            len=len(pattern), fp=fp, fn=fn, fpr=fpr, fnr=fnr,
+            universe=self.universe,
+        )

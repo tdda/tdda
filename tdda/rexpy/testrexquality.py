@@ -4,13 +4,20 @@
 Tests for tdda.rexpy.quality
 """
 
+import os
+import unittest
+
 from tdda.referencetest import ReferenceTestCase, tag
+
+from tdda.rexpy.relib import re
 
 from tdda.rexpy.quality import (
     Alphabets,
+    ConcreteRexMetric,
     CountRange,
     DIGIT_CHARS,
     Repeat,
+    RexMetrics,
     WHITESPACE_CHARS,
     count_strings,
     count_strings_no_alt,
@@ -31,6 +38,10 @@ from tdda.rexpy.quality import (
     _split_alternation,
     _split_top_level,
     _validate_pattern,
+)
+
+TESTDATADIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'testdata'
 )
 
 
@@ -681,6 +692,362 @@ class TestCountStringsAlternation(ReferenceTestCase):
         self.assertRaises(
             ValueError, count_strings, '^([a-c]|[x-z])$', alphabet='abc'
         )
+
+
+class TestConcreteRexMetricSingleCharAlphabet(ReferenceTestCase):
+    # alphabet='a', all_positives=['a']: n_positives=1, min_length=
+    # max_length=1, universe=1**1=1
+
+    @classmethod
+    def setUpClass(cls):
+        cls.q = ConcreteRexMetric(['a'], alphabet='a')
+
+    def test_dot(self):
+        score = self.q.evaluate('^.$')
+        expected = RexMetrics(len=3, fp=0, fn=0, fpr=0.0, fnr=0.0)
+        self.assertTrue(score.eq(expected))
+
+    def test_literal_a(self):
+        score = self.q.evaluate('^a$')
+        expected = RexMetrics(len=3, fp=0, fn=0, fpr=0.0, fnr=0.0)
+        self.assertTrue(score.eq(expected))
+
+    def test_literal_b_rejected_by_alphabet(self):
+        self.assertRaises(ValueError, self.q.evaluate, '^b$')
+
+    def test_literal_ab_rejected_by_alphabet(self):
+        self.assertRaises(ValueError, self.q.evaluate, '^ab$')
+
+    def test_bracket_a(self):
+        score = self.q.evaluate('^[a]$')
+        expected = RexMetrics(len=5, fp=0, fn=0, fpr=0.0, fnr=0.0)
+        self.assertTrue(score.eq(expected))
+
+    def test_a_one_to_three(self):
+        # admitted = 3 ('a','aa','aaa'); fp = 3 - 1 = 2;
+        # fp_denominator = universe(1) - n_positives(1) = 0;
+        # fp > 0 over a zero denominator -> +inf
+        score = self.q.evaluate('^a{1,3}$')
+        expected = RexMetrics(
+            len=8, fp=2, fn=0, fpr=float('inf'), fnr=0.0
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_a_plus(self):
+        # admitted = 5 (default max_plus): 'a'..'aaaaa'
+        score = self.q.evaluate('^a+$')
+        expected = RexMetrics(
+            len=4, fp=4, fn=0, fpr=float('inf'), fnr=0.0
+        )
+        self.assertTrue(score.eq(expected))
+
+
+class TestConcreteRexMetricEmptyStringPositive(ReferenceTestCase):
+    # alphabet='a', all_positives=['']: n_positives=1, min_length=
+    # max_length=0, universe=1**0=1 -- fully degenerate
+
+    def test_empty_pattern(self):
+        q = ConcreteRexMetric([''], alphabet='a')
+        score = q.evaluate('^$')
+        expected = RexMetrics(len=2, fp=0, fn=0, fpr=0.0, fnr=0.0)
+        self.assertTrue(score.eq(expected))
+
+
+class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
+    # Real UK postcode data: the 55 'E...1AA' postcodes in
+    # testdata/postcode-subset-e.txt, scored against the
+    # loose-to-strict regex progression in
+    # ~/python/fAST/postcodes.txt. Added one pattern at a time,
+    # each with expected values independently derived by hand (not
+    # just copied from running the code), shown in comments.
+
+    ALPHABET = DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '
+
+    @classmethod
+    def setUpClass(cls):
+        path = os.path.join(TESTDATADIR, 'postcode-subset-e.txt')
+        with open(path) as f:
+            cls.positives = [
+                line.rstrip('\n') for line in f if line.strip()
+            ]
+        cls.q = ConcreteRexMetric(cls.positives, alphabet=cls.ALPHABET)
+
+    def test_setup_sanity(self):
+        # 55 postcodes, lengths 6 ('E1 1AA') to 8 ('EC50 1AA'),
+        # alphabet = 10 digits + 26 uppercase + space = 37 chars
+        self.assertEqual(self.q.n_positives, 55)
+        self.assertEqual(self.q.min_length, 6)
+        self.assertEqual(self.q.max_length, 8)
+        # universe = 37**6 + 37**7 + 37**8
+        #          = 2_565_726_409 + 94_931_877_133
+        #            + 3_512_479_453_921
+        self.assertEqual(self.q.universe, 3_609_977_057_463)
+
+    def test_1_anything_non_empty_default_max_plus(self):
+        # default max_plus=5: '.+' only sizes lengths 1-5, well
+        # short of our data's actual 6-8 length range
+        n_true_positives = 55
+        admitted = sum(37**k for k in range(1, 6))  # 71_270_177
+        fp = admitted - n_true_positives  # 71_270_122 (fn=0: '.+' matches)
+        # fp_denominator: 3_609_977_057_408
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^.+$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=4,
+            fp=71_270_122,
+            fn=0,
+            fpr=1.9742541536031995e-05,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_1_anything_non_empty_max_plus_8(self):
+        # max_plus=8: '.+' sizes lengths 1-8, including the 1-5
+        # portion that falls outside the assumed 6-8-length
+        # universe
+        n_true_positives = 55
+        n_len_1_to_5 = sum(37**k for k in range(1, 6))  # 71_270_177
+        n_len_6_to_8 = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
+        admitted = n_len_1_to_5 + n_len_6_to_8  # 3_610_048_327_640
+        uncapped_fp = admitted - n_true_positives  # 3_610_048_327_585
+        # fp_denominator: 3_609_977_057_408
+        fp_denominator = self.q.universe - n_true_positives
+        # uncapped_fp > fp_denominator: a false positive is, by
+        # definition, one of the actual negatives, so fp can never
+        # legitimately exceed fp_denominator -- clamped, since
+        # this is proof of overestimation (admitted counts lengths
+        # 1-5, outside the universe), not a bug
+
+        pattern = r'^.+$'
+        score = self.q.evaluate(pattern, max_plus=8)
+        expected = RexMetrics(
+            len=4,
+            fp=3_609_977_057_408,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_2_right_length(self):
+        # '{6,8}' matches exactly our data's length range, so
+        # admitted == universe: every string of the right length
+        # is admitted, regardless of content
+        n_true_positives = 55
+        admitted = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
+        fp = admitted - n_true_positives  # 3_609_977_057_408 (fn=0)
+        # fp_denominator: 3_609_977_057_408 (same number as fp)
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^.{6,8}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=8,
+            fp=3_609_977_057_408,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        # fpr == 1.0 exactly (fp == fp_denominator): the least
+        # discriminating pattern in the progression, matching any
+        # string of the right length whatsoever
+        self.assertTrue(score.eq(expected))
+
+    def test_3_right_character_set(self):
+        # '[A-Z0-9 ]' is the same 37-char alphabet exactly, so
+        # this is equivalent to '.{6,9}' -- one length wider than
+        # our data's actual 6-8 range (postcodes.txt's general
+        # comment allows up to 9; our subset just doesn't reach
+        # it)
+        n_true_positives = 55
+        n_len_9 = 37**9  # 129_961_739_795_077
+        admitted = self.q.universe + n_len_9  # 133_571_716_852_540
+        uncapped_fp = admitted - n_true_positives  # 133_571_716_852_485
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_977_057_408
+        # uncapped_fp >> fp_denominator (length 9 is far more
+        # numerous than lengths 6-8 combined) -- clamped, same
+        # reasoning as test_1_anything_non_empty_max_plus_8
+
+        pattern = r'^[A-Z0-9 ]{6,9}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=16,
+            fp=3_609_977_057_408,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4_broad_structure(self):
+        # [A-Z0-9]{2,4} (outward code, 36-char alphabet: letters
+        # and digits, no space) + literal space + [0-9] (10) +
+        # [A-Z]{2} (676)
+        n_outward = sum(36**k for k in range(2, 5))  # 1_727_568
+        admitted = n_outward * 10 * 676  # 11_678_359_680
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 11_678_359_625
+        # fp_denominator: 3_609_977_057_408 (fp is well below it,
+        # no clamp needed here)
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=29,
+            fp=11_678_359_625,
+            fn=0,
+            fpr=0.003235023225711351,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4_specialized_to_1aa(self):
+        # rexpy's own extraction for this data is exactly this
+        # specialization of #4: outward code kept generic, inward
+        # code fixed to our data's literal '1AA'
+        n_outward = sum(36**k for k in range(2, 5))  # 1_727_568
+        admitted = n_outward  # 1_727_568 (literal ' 1AA' suffix)
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 1_727_513
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^[A-Z0-9]{2,4} 1AA$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=19,
+            fp=1_727_513,
+            fn=0,
+            fpr=4.785384983139953e-07,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_e_specialization(self):
+        # 'E' area: 'E' + optional 2nd letter (EC, EH, EN, EX...)
+        # + 1-2 digits + optional trailing letter (like the 'W'
+        # in E1W), then the general inward code
+        n_second_letter = 27  # empty (1) + any of 26 letters
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        n_outward = n_second_letter * n_digits * n_trailing_letter
+        # n_outward: 80_190
+        admitted = n_outward * 10 * 676  # 542_084_400
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 542_084_345
+        # fp_denominator: 3_609_977_057_408
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^E[A-Z]?[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=39,
+            fp=542_084_345,
+            fn=0,
+            fpr=0.0001501628227491346,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_e_specialization_with_d_escape(self):
+        # same as test_e_specialization but with '\d' instead of
+        # '[0-9]': identical metrics, shorter pattern (each '[0-9]'
+        # -> '\d' saves 3 chars, 2 occurrences -> 6 shorter)
+        n_second_letter = 27  # empty (1) + any of 26 letters
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        n_outward = n_second_letter * n_digits * n_trailing_letter
+        # n_outward: 80_190
+        admitted = n_outward * 10 * 676  # 542_084_400
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 542_084_345
+        # fp_denominator: 3_609_977_057_408
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^E[A-Z]?\d{1,2}[A-Z]? \d[A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=33,
+            fp=542_084_345,
+            fn=0,
+            fpr=0.0001501628227491346,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_e_specialization_1aa(self):
+        n_second_letter = 27  # empty (1) + any of 26 letters
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        admitted = n_second_letter * n_digits * n_trailing_letter
+        # admitted: 80_190 (literal ' 1AA' suffix, factor 1)
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 80_135
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^E[A-Z]?[0-9]{1,2}[A-Z]? 1AA$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=29,
+            fp=80_135,
+            fn=0,
+            fpr=2.2198202017809426e-08,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_5_core_structure_no_alternation(self):
+        # postcodes.txt pattern 5 without its '|GIR|NPT'
+        # alternation (none of our data is GIR/NPT, and
+        # count_strings doesn't yet support alternation embedded
+        # in a larger sequence anyway): '[A-Z]{1,2}' (1-2 letters)
+        # + '[0-9]{1,2}' (1-2 digits) + optional trailing letter,
+        # then the general inward code
+        n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        n_outward = n_letters * n_digits * n_trailing_letter
+        # n_outward: 2_084_940
+        admitted = n_outward * 10 * 676  # 14_094_194_400
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 14_094_194_345
+        # fp_denominator: 3_609_977_057_408
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=42,
+            fp=14_094_194_345,
+            fn=0,
+            fpr=0.0039042337723663467,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_5_core_structure_no_alternation_1aa(self):
+        n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        admitted = n_letters * n_digits * n_trailing_letter
+        # admitted: 2_084_940 (literal ' 1AA' suffix, factor 1)
+        n_true_positives = 55
+        fp = admitted - n_true_positives  # 2_084_885
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? 1AA$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=32,
+            fp=2_084_885,
+            fn=0,
+            fpr=5.775341413102965e-07,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
 
 
 if __name__ == '__main__':
