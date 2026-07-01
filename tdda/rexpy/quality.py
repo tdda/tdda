@@ -50,7 +50,57 @@ class Repeat(namedtuple('Repeat', 'min max')):
     """
 
 
+class CountRange(namedtuple('CountRange', 'lower upper')):
+    """
+    A `(lower, upper)` bound on the number of strings admitted by
+    a regex that may contain alternation. `lower == upper` when
+    the count is exact (no alternation).
+    """
+
+
 def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
+    """Count the strings admitted by an anchored regex, which may
+    contain top-level alternation, e.g. the `^(R1|R2|...)$` form
+    produced by `combine_patterns`.
+
+    Exact counting across alternation would require knowing how
+    much the branches overlap, which isn't attempted: `upper` is
+    the sum of the branches' counts (as if they were completely
+    disjoint); `lower` is the max of the branches' counts (as if
+    every branch's matches were a subset of the largest one). The
+    true count lies somewhere in `[lower, upper]`.
+
+    Args:
+        pattern (str): an anchored regex, optionally containing one
+            or more (possibly nested) levels of alternation.
+        max_plus (int): see `count_strings_no_alt`.
+        alphabet (str): see `count_strings_no_alt`.
+
+    Returns:
+        int: the count, when it's exact -- always true when
+        `pattern` has no alternation, and also whenever `lower`
+        and `upper` happen to coincide anyway.
+        CountRange: `(lower, upper)` bound otherwise.
+    """
+    branches = _split_alternation(pattern)
+    if len(branches) == 1:
+        return count_strings_no_alt(branches[0], max_plus, alphabet)
+    ranges = [
+        _as_range(count_strings(b, max_plus, alphabet)) for b in branches
+    ]
+    lower = max(r.lower for r in ranges)
+    upper = sum(r.upper for r in ranges)
+    return lower if lower == upper else CountRange(lower, upper)
+
+
+def _as_range(n_or_range):
+    """Normalize an `int` or `CountRange` to a `CountRange`."""
+    if isinstance(n_or_range, CountRange):
+        return n_or_range
+    return CountRange(n_or_range, n_or_range)
+
+
+def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     """Count the number of strings admitted by an anchored,
     alternation-free rexpy regex, within a given alphabet.
 
@@ -96,8 +146,86 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     return total
 
 
+def _split_alternation(pattern):
+    """Split an anchored pattern into its top-level alternatives
+    (as produced by `combine_patterns`), each re-anchored with
+    `^...$`. Returns `[pattern]` unchanged if `pattern` has no
+    top-level alternation.
+
+    Raises:
+        ValueError: if `pattern` is not anchored with `^...$`.
+    """
+    if not (pattern.startswith('^') and pattern.endswith('$')):
+        raise ValueError(
+            f'count_strings requires an anchored pattern (^...$): '
+            f'{pattern!r}'
+        )
+    body = pattern[1:-1]
+    if body.startswith('(') and _matching_paren(body, 0) == len(body) - 1:
+        body = body[1:-1]
+    parts = _split_top_level(body, '|')
+    if len(parts) == 1:
+        return [pattern]
+    return ['^%s$' % p for p in parts]
+
+
+def _matching_paren(s, i):
+    """Return the index of the `)` matching the `(` at `s[i]`,
+    treating bracket expressions and escapes as opaque units.
+    """
+    depth = 0
+    j, n = i, len(s)
+    while j < n:
+        c = s[j]
+        if c == '\\':
+            j += 2
+        elif c == '[':
+            j = _charclass_end(s, j, s)
+        elif c == '(':
+            depth += 1
+            j += 1
+        elif c == ')':
+            depth -= 1
+            if depth == 0:
+                return j
+            j += 1
+        else:
+            j += 1
+    raise ValueError(f"unterminated '(' in pattern: {s!r}")
+
+
+def _split_top_level(s, sep):
+    """Split `s` on `sep`, ignoring any occurrence nested inside a
+    bracket expression, a parenthesised group, or an escape.
+    """
+    parts = []
+    depth = 0
+    start = 0
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if c == '\\':
+            i += 2
+        elif c == '[':
+            i = _charclass_end(s, i, s)
+        elif c == '(':
+            depth += 1
+            i += 1
+        elif c == ')':
+            depth -= 1
+            i += 1
+        elif c == sep and depth == 0:
+            parts.append(s[start:i])
+            i += 1
+            start = i
+        else:
+            i += 1
+    parts.append(s[start:])
+    return parts
+
+
 def _validate_pattern(pattern):
-    """Check that `pattern` is a pattern `count_strings` can
+    """Check that `pattern` is a pattern `count_strings_no_alt` can
     handle: a valid regex that is anchored, alternation-free, and
     uses only known escapes.
 
@@ -110,8 +238,8 @@ def _validate_pattern(pattern):
         raise ValueError(f'not a valid regex: {pattern!r} ({e})')
     if not (pattern.startswith('^') and pattern.endswith('$')):
         raise ValueError(
-            f'count_strings requires an anchored pattern (^...$): '
-            f'{pattern!r}'
+            f'count_strings_no_alt requires an anchored pattern '
+            f'(^...$): {pattern!r}'
         )
     body = pattern[1:-1]
     i, n = 0, len(body)
@@ -132,8 +260,8 @@ def _validate_pattern(pattern):
             i = _charclass_end(body, i, pattern)
         elif c in '()|':
             raise ValueError(
-                'count_strings does not support alternation or '
-                f'groups: {pattern!r}'
+                'count_strings_no_alt does not support alternation '
+                f'or groups: {pattern!r}'
             )
         else:
             i += 1
