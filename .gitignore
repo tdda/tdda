@@ -81,3 +81,5 @@ privatedata
 
 tdda/serial/examples2
 tdda/serial/torture
+
+tdda/rexpy/testdata/postcodes-full.parquet

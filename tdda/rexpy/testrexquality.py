@@ -7,6 +7,8 @@ Tests for tdda.rexpy.quality
 import os
 import unittest
 
+import polars as pl
+
 from tdda.referencetest import ReferenceTestCase, tag
 
 from tdda.rexpy.relib import re
@@ -43,6 +45,17 @@ from tdda.rexpy.quality import (
 TESTDATADIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'testdata'
 )
+
+FULL_POSTCODES_PATH = os.path.join(TESTDATADIR, 'postcodes-full.parquet')
+
+
+def full_postcode_data_available():
+    """Whether the full (~2.5M-row) UK postcode dataset is present
+    locally. Not shipped or committed (see .gitignore) -- nobody
+    outside this repo's own development has a way to get hold of
+    it, so tests that need it are skipped rather than failing.
+    """
+    return os.path.exists(FULL_POSTCODES_PATH)
 
 
 class TestAlphabets(ReferenceTestCase):
@@ -1107,6 +1120,237 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         self.assertTrue(score.eq(expected))
         self.assertIsInstance(score.fp, int)
         self.assertIsInstance(score.fpr, float)
+
+
+@unittest.skipUnless(
+    full_postcode_data_available(),
+    'full UK postcode dataset not available '
+    f'({FULL_POSTCODES_PATH!r}) -- dev-only data, not shipped',
+)
+class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
+    # The complete (~2.5M-row) UK postcode dataset, rather than just
+    # the 55-postcode 'E...1AA' subset used above. Skipped, rather
+    # than run, when the data isn't present locally -- see
+    # full_postcode_data_available(). testtdda.py additionally
+    # removes this class from its own namespace when the data's
+    # absent (see there), so the aggregate suite doesn't carry a
+    # permanently-skipped test around -- but the normal (non
+    # underscore-prefixed) name here matters: pytest's default
+    # collection only picks up classes matching `Test*`, and this
+    # package is also usable via pytest (see the pytest11 entry
+    # point in setup.py), so hiding it behind a leading underscore
+    # would make it invisible there, not skipped.
+
+    ALPHABET = DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '
+
+    @classmethod
+    def setUpClass(cls):
+        cls.positives = (
+            pl.read_parquet(FULL_POSTCODES_PATH)['Postcode'].to_list()
+        )
+        cls.q = ConcreteRexMetric(cls.positives, alphabet=cls.ALPHABET)
+
+    def test_setup_sanity(self):
+        # 2_527_213 postcodes, lengths 6 ('B1 1AA') to 8
+        # ('AB10 1AA'), alphabet = 10 digits + 26 uppercase + space
+        # = 37 chars
+        self.assertEqual(self.q.n_positives, 2_527_213)
+        self.assertEqual(self.q.min_length, 6)
+        self.assertEqual(self.q.max_length, 8)
+        # universe = 37**6 + 37**7 + 37**8 -- same as the E-subset's,
+        # since it depends only on alphabet/length range, not on
+        # which or how many postcodes are in the data
+        self.assertEqual(self.q.universe, 3_609_977_057_463)
+
+    def test_1_anything_non_empty_default_max_plus(self):
+        # default max_plus=5: '.+' only sizes lengths 1-5, well
+        # short of our data's actual 6-8 length range. cardinality
+        # is identical to the E-subset's (depends only on
+        # alphabet/max_plus, not on the data); fp/fpr differ because
+        # n_true_positives is now 2_527_213, not 55
+        n_true_positives = 2_527_213
+        cardinality = sum(37**k for k in range(1, 6))  # 71_270_177
+        fp = cardinality - n_true_positives  # 68_742_964 (fn=0)
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        pattern = r'^.+$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=4,
+            fp=68_742_964,
+            fn=0,
+            fpr=1.9042506650383314e-05,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_1_anything_non_empty_max_plus_8(self):
+        # max_plus=8: '.+' sizes lengths 1-8, including the 1-5
+        # portion outside the assumed 6-8-length universe
+        n_true_positives = 2_527_213
+        n_len_1_to_5 = sum(37**k for k in range(1, 6))  # 71_270_177
+        n_len_6_to_8 = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
+        cardinality = n_len_1_to_5 + n_len_6_to_8  # 3_610_048_327_640
+        uncapped_fp = cardinality - n_true_positives  # 3_610_045_800_427
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250 -- uncapped_fp exceeds
+        # it, so fp is clamped (same overestimation-not-a-bug
+        # reasoning as the E-subset version of this test)
+
+        pattern = r'^.+$'
+        score = self.q.evaluate(pattern, max_plus=8)
+        expected = RexMetrics(
+            len=4,
+            fp=3_609_974_530_250,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_2_right_length(self):
+        # '{6,8}' matches exactly our data's length range (still
+        # true for the full dataset), so cardinality == universe
+        n_true_positives = 2_527_213
+        cardinality = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
+        fp = cardinality - n_true_positives  # 3_609_974_530_250 (fn=0)
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250 (same number as fp)
+
+        pattern = r'^.{6,8}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=8,
+            fp=3_609_974_530_250,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_3_right_character_set(self):
+        # '[A-Z0-9 ]' is the same 37-char alphabet exactly, so this
+        # is equivalent to '.{6,9}' -- one length wider than the
+        # data's actual 6-8 range
+        n_true_positives = 2_527_213
+        n_len_9 = 37**9  # 129_961_739_795_077
+        cardinality = self.q.universe + n_len_9  # 133_571_716_852_540
+        uncapped_fp = cardinality - n_true_positives  # 133_571_714_325_327
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250 -- uncapped_fp far
+        # exceeds it (length 9 dwarfs lengths 6-8 combined), clamped
+
+        pattern = r'^[A-Z0-9 ]{6,9}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=16,
+            fp=3_609_974_530_250,
+            fn=0,
+            fpr=1.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4_broad_structure(self):
+        # [A-Z0-9]{2,4} (outward code, 36-char alphabet: letters and
+        # digits, no space) + literal space + [0-9] (10) +
+        # [A-Z]{2} (676). fn=0: every real postcode fits this
+        # general shape, not just the E-subset's
+        n_outward = sum(36**k for k in range(2, 5))  # 1_727_568
+        cardinality = n_outward * 10 * 676  # 11_678_359_680
+        n_true_positives = 2_527_213
+        fp = cardinality - n_true_positives  # 11_675_832_467
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        pattern = r'^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=29,
+            fp=11_675_832_467,
+            fn=0,
+            fpr=0.003234325441678786,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_5_core_structure_no_alternation(self):
+        # postcodes.txt pattern 5 without its '|GIR|NPT' alternation
+        # (count_strings doesn't support alternation embedded in a
+        # larger sequence -- see the E-subset version of this test).
+        # Unlike the E-subset (all fn=0), the full dataset actually
+        # includes GIR/NPT-prefixed postcodes (special/reserved
+        # codes, e.g. 'GIR 0AA', 'NPT 0AD'), which this alternation-
+        # free pattern can't match: fn=2_418
+        n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        n_outward = n_letters * n_digits * n_trailing_letter
+        # n_outward: 2_084_940
+        cardinality = n_outward * 10 * 676  # 14_094_194_400
+        n_true_positives = 2_527_213
+        fn = 2_418
+        n_true_matched = n_true_positives - fn  # 2_524_795
+        fp = cardinality - n_true_matched  # 14_091_669_605
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=42,
+            fp=14_091_669_605,
+            fn=2_418,
+            fpr=0.003903537126624579,
+            fnr=0.0009567852017222134,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_6_valid_letters_only_no_alternation(self):
+        # Same shape as test_5, but each letter position restricted
+        # to the letters actually observed there in the real data
+        # (checked directly against the full dataset, not assumed):
+        # first area letter never J/Q/V/X; second area letter never
+        # I/J/Z; subdistrict letter never I/L/O/Q/Z; each of the two
+        # unit letters never C/I/K/M/O/V (the well-known "no
+        # confusable letters" rule, confirmed empirically here
+        # rather than hard-coded from memory). Still no alternation
+        # -- just four narrower character classes -- and fn is
+        # unchanged from test_5 (still misses the same GIR/NPT
+        # special codes)
+        first = 'ABCDEFGHIKLMNOPRSTUWYZ'  # no J/Q/V/X
+        second = 'ABCDEFGHKLMNOPQRSTUVWXY'  # no I/J/Z
+        subdistrict = 'ABCDEFGHJKMNPRSTUVWXY'  # no I/L/O/Q/Z
+        unit = 'ABDEFGHJLNPQRSTUWXYZ'  # no C/I/K/M/O/V
+        n_first = len(first)  # 22
+        n_second = len(second) + 1  # 24 (empty + one of 23)
+        n_digits = sum(10**k for k in range(1, 3))  # 110
+        n_subdistrict = len(subdistrict) + 1  # 22 (empty + one of 21)
+        n_unit = len(unit)  # 20
+        n_outward = n_first * n_second * n_digits * n_subdistrict
+        # n_outward: 1_277_760
+        cardinality = n_outward * 10 * n_unit * n_unit  # 5_111_040_000
+        n_true_positives = 2_527_213
+        fn = 2_418
+        n_true_matched = n_true_positives - fn  # 2_524_795
+        fp = cardinality - n_true_matched  # 5_108_515_205
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        pattern = (
+            r'^[' + first + r'][' + second + r']?[0-9]{1,2}'
+            r'[' + subdistrict + r']? [0-9][' + unit + r']{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=117,
+            fp=5_108_515_205,
+            fn=2_418,
+            fpr=0.001415111148899497,
+            fnr=0.0009567852017222134,
+        )
+        self.assertTrue(score.eq(expected))
 
 
 if __name__ == '__main__':
