@@ -724,7 +724,7 @@ class TestConcreteRexMetricSingleCharAlphabet(ReferenceTestCase):
         self.assertTrue(score.eq(expected))
 
     def test_a_one_to_three(self):
-        # admitted = 3 ('a','aa','aaa'); fp = 3 - 1 = 2;
+        # cardinality = 3 ('a','aa','aaa'); fp = 3 - 1 = 2;
         # fp_denominator = universe(1) - n_positives(1) = 0;
         # fp > 0 over a zero denominator -> +inf
         score = self.q.evaluate('^a{1,3}$')
@@ -734,7 +734,7 @@ class TestConcreteRexMetricSingleCharAlphabet(ReferenceTestCase):
         self.assertTrue(score.eq(expected))
 
     def test_a_plus(self):
-        # admitted = 5 (default max_plus): 'a'..'aaaaa'
+        # cardinality = 5 (default max_plus): 'a'..'aaaaa'
         score = self.q.evaluate('^a+$')
         expected = RexMetrics(
             len=4, fp=4, fn=0, fpr=float('inf'), fnr=0.0
@@ -787,8 +787,8 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # default max_plus=5: '.+' only sizes lengths 1-5, well
         # short of our data's actual 6-8 length range
         n_true_positives = 55
-        admitted = sum(37**k for k in range(1, 6))  # 71_270_177
-        fp = admitted - n_true_positives  # 71_270_122 (fn=0: '.+' matches)
+        cardinality = sum(37**k for k in range(1, 6))  # 71_270_177
+        fp = cardinality - n_true_positives  # 71_270_122 (fn=0: '.+' matches)
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
@@ -810,14 +810,14 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_true_positives = 55
         n_len_1_to_5 = sum(37**k for k in range(1, 6))  # 71_270_177
         n_len_6_to_8 = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
-        admitted = n_len_1_to_5 + n_len_6_to_8  # 3_610_048_327_640
-        uncapped_fp = admitted - n_true_positives  # 3_610_048_327_585
+        cardinality = n_len_1_to_5 + n_len_6_to_8  # 3_610_048_327_640
+        uncapped_fp = cardinality - n_true_positives  # 3_610_048_327_585
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
         # uncapped_fp > fp_denominator: a false positive is, by
         # definition, one of the actual negatives, so fp can never
         # legitimately exceed fp_denominator -- clamped, since
-        # this is proof of overestimation (admitted counts lengths
+        # this is proof of overestimation (cardinality counts lengths
         # 1-5, outside the universe), not a bug
 
         pattern = r'^.+$'
@@ -833,11 +833,11 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
 
     def test_2_right_length(self):
         # '{6,8}' matches exactly our data's length range, so
-        # admitted == universe: every string of the right length
-        # is admitted, regardless of content
+        # cardinality == universe: every string of the right length
+        # is matched, regardless of content
         n_true_positives = 55
-        admitted = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
-        fp = admitted - n_true_positives  # 3_609_977_057_408 (fn=0)
+        cardinality = sum(37**k for k in range(6, 9))  # 3_609_977_057_463
+        fp = cardinality - n_true_positives  # 3_609_977_057_408 (fn=0)
         # fp_denominator: 3_609_977_057_408 (same number as fp)
         fp_denominator = self.q.universe - n_true_positives
 
@@ -863,8 +863,8 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # it)
         n_true_positives = 55
         n_len_9 = 37**9  # 129_961_739_795_077
-        admitted = self.q.universe + n_len_9  # 133_571_716_852_540
-        uncapped_fp = admitted - n_true_positives  # 133_571_716_852_485
+        cardinality = self.q.universe + n_len_9  # 133_571_716_852_540
+        uncapped_fp = cardinality - n_true_positives  # 133_571_716_852_485
         fp_denominator = self.q.universe - n_true_positives
         # fp_denominator: 3_609_977_057_408
         # uncapped_fp >> fp_denominator (length 9 is far more
@@ -887,9 +887,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # and digits, no space) + literal space + [0-9] (10) +
         # [A-Z]{2} (676)
         n_outward = sum(36**k for k in range(2, 5))  # 1_727_568
-        admitted = n_outward * 10 * 676  # 11_678_359_680
+        cardinality = n_outward * 10 * 676  # 11_678_359_680
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 11_678_359_625
+        fp = cardinality - n_true_positives  # 11_678_359_625
         # fp_denominator: 3_609_977_057_408 (fp is well below it,
         # no clamp needed here)
         fp_denominator = self.q.universe - n_true_positives
@@ -910,9 +910,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # specialization of #4: outward code kept generic, inward
         # code fixed to our data's literal '1AA'
         n_outward = sum(36**k for k in range(2, 5))  # 1_727_568
-        admitted = n_outward  # 1_727_568 (literal ' 1AA' suffix)
+        cardinality = n_outward  # 1_727_568 (literal ' 1AA' suffix)
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 1_727_513
+        fp = cardinality - n_true_positives  # 1_727_513
         fp_denominator = self.q.universe - n_true_positives
 
         pattern = r'^[A-Z0-9]{2,4} 1AA$'
@@ -935,9 +935,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_trailing_letter = 27  # empty (1) + any of 26 letters
         n_outward = n_second_letter * n_digits * n_trailing_letter
         # n_outward: 80_190
-        admitted = n_outward * 10 * 676  # 542_084_400
+        cardinality = n_outward * 10 * 676  # 542_084_400
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 542_084_345
+        fp = cardinality - n_true_positives  # 542_084_345
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
@@ -961,9 +961,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_trailing_letter = 27  # empty (1) + any of 26 letters
         n_outward = n_second_letter * n_digits * n_trailing_letter
         # n_outward: 80_190
-        admitted = n_outward * 10 * 676  # 542_084_400
+        cardinality = n_outward * 10 * 676  # 542_084_400
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 542_084_345
+        fp = cardinality - n_true_positives  # 542_084_345
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
@@ -982,10 +982,10 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_second_letter = 27  # empty (1) + any of 26 letters
         n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
         n_trailing_letter = 27  # empty (1) + any of 26 letters
-        admitted = n_second_letter * n_digits * n_trailing_letter
-        # admitted: 80_190 (literal ' 1AA' suffix, factor 1)
+        cardinality = n_second_letter * n_digits * n_trailing_letter
+        # cardinality: 80_190 (literal ' 1AA' suffix, factor 1)
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 80_135
+        fp = cardinality - n_true_positives  # 80_135
         fp_denominator = self.q.universe - n_true_positives
 
         pattern = r'^E[A-Z]?[0-9]{1,2}[A-Z]? 1AA$'
@@ -1011,9 +1011,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_trailing_letter = 27  # empty (1) + any of 26 letters
         n_outward = n_letters * n_digits * n_trailing_letter
         # n_outward: 2_084_940
-        admitted = n_outward * 10 * 676  # 14_094_194_400
+        cardinality = n_outward * 10 * 676  # 14_094_194_400
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 14_094_194_345
+        fp = cardinality - n_true_positives  # 14_094_194_345
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
@@ -1032,10 +1032,10 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
         n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
         n_trailing_letter = 27  # empty (1) + any of 26 letters
-        admitted = n_letters * n_digits * n_trailing_letter
-        # admitted: 2_084_940 (literal ' 1AA' suffix, factor 1)
+        cardinality = n_letters * n_digits * n_trailing_letter
+        # cardinality: 2_084_940 (literal ' 1AA' suffix, factor 1)
         n_true_positives = 55
-        fp = admitted - n_true_positives  # 2_084_885
+        fp = cardinality - n_true_positives  # 2_084_885
         fp_denominator = self.q.universe - n_true_positives
 
         pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? 1AA$'
@@ -1048,6 +1048,65 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
             fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
+
+    def test_e_area_and_subdistrict_letters_restricted(self):
+        # Two refinements at once, hand-crafted from the actual
+        # data rather than derived from postcodes.txt: restrict
+        # the area's second letter to the ones actually seen
+        # ('C', 'H', 'N', 'X', e.g. 'EC', 'EH', 'EN', 'EX') and
+        # the subdistrict letter (the trailing letter on London
+        # outcodes, e.g. the 'W' in 'E1W', the 'A' in 'EC1A') to
+        # the ones actually seen ('A', 'M', 'N', 'P', 'R', 'W',
+        # 'Y'), instead of any of the 26 letters for either.
+        n_second_letter = 4 + 1  # empty + one of C/H/N/X
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_subdistrict_letter = 7 + 1  # empty + one of AMNPRWY
+        cardinality = n_second_letter * n_digits * n_subdistrict_letter
+        # cardinality: 4_400 (literal ' 1AA' suffix, factor 1)
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 4_345
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = r'^E[CNHX]?[0-9]{1,2}[AMNPRWY]? 1AA$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=34,
+            fp=4_345,
+            fn=0,
+            fpr=1.2036087573143065e-09,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_e_full_alternation_all_55(self):
+        # The fully specific pattern: a top-level alternation over
+        # all 55 actual postcodes (each branch a full literal, since
+        # count_strings only supports alternation spanning the
+        # entire '^(...)$' body -- the ' 1AA' suffix can't be
+        # factored out). Every branch is a distinct literal string,
+        # so the true cardinality is exactly 55: no false positives,
+        # no false negatives.
+        #
+        # count_strings's branch heuristic (lower=max branches,
+        # upper=sum branches) can't see that the 55 literal branches
+        # are disjoint, so cardinality itself comes out as
+        # CountRange(1, 55), not the scalar 55. That makes
+        # fp.lower = 1 - 55 = -54 before clamping -- an impossible
+        # negative false-positive count -- which evaluate() now
+        # clamps to 0, then collapses fp/fpr to plain scalars since
+        # lower == upper (0) after clamping.
+        pattern = '^(' + '|'.join(self.positives) + ')$'
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=473,
+            fp=0,
+            fn=0,
+            fpr=0.0,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+        self.assertIsInstance(score.fp, int)
+        self.assertIsInstance(score.fpr, float)
 
 
 if __name__ == '__main__':

@@ -703,9 +703,9 @@ class ConcreteRexMetric:
         """Score `pattern` against `self.all_positives`.
 
         `pattern` may contain alternation: `count_strings` returns
-        an `int` when the admitted count is exact, or a
-        `CountRange` when alternation leaves genuine overlap
-        uncertainty, and `fp`/`fpr` follow suit.
+        an `int` when the cardinality is exact, or a `CountRange`
+        when alternation leaves genuine overlap uncertainty, and
+        `fp`/`fpr` follow suit.
 
         `max_plus` is passed through to `count_strings`, to size
         unbounded quantifiers (`+`, `*`, open `{m,}`); it defaults
@@ -720,7 +720,7 @@ class ConcreteRexMetric:
             1 for s in self.all_positives if not compiled.fullmatch(s)
         )
         fnr = _rate(fn, self.n_positives)
-        admitted = count_strings(
+        cardinality = count_strings(
             pattern, max_plus=max_plus, alphabet=self.alphabet
         )
         n_true_matched = self.n_positives - fn
@@ -736,22 +736,35 @@ class ConcreteRexMetric:
         # positives at all), that's a special case handled by
         # _rate itself (0/0 -> 0.0, positive/0 -> inf) -- clamping
         # doesn't apply there.
-        if isinstance(admitted, CountRange):
+        if isinstance(cardinality, CountRange):
             fp = CountRange(
-                admitted.lower - n_true_matched,
-                admitted.upper - n_true_matched,
+                cardinality.lower - n_true_matched,
+                cardinality.upper - n_true_matched,
             )
+            # fp can also never legitimately be negative: the
+            # max()-of-branches heuristic behind cardinality.lower
+            # can undershoot the true cardinality (e.g. many
+            # disjoint literal branches), making the subtraction
+            # dip below zero even though the real fp cannot.
+            fp = CountRange(max(fp.lower, 0), max(fp.upper, 0))
             if fp_denominator > 0:
                 fp = CountRange(
                     min(fp.lower, fp_denominator),
                     min(fp.upper, fp_denominator),
                 )
-            fpr = CountRange(
-                _rate(fp.lower, fp_denominator),
-                _rate(fp.upper, fp_denominator),
-            )
+            # Collapse to a scalar when the bounds coincide, e.g.
+            # after clamping -- matching count_strings's own
+            # lower/upper-collapse convention for cardinality.
+            if fp.lower == fp.upper:
+                fp = fp.lower
+                fpr = _rate(fp, fp_denominator)
+            else:
+                fpr = CountRange(
+                    _rate(fp.lower, fp_denominator),
+                    _rate(fp.upper, fp_denominator),
+                )
         else:
-            fp = admitted - n_true_matched
+            fp = cardinality - n_true_matched
             if fp_denominator > 0:
                 fp = min(fp, fp_denominator)
             fpr = _rate(fp, fp_denominator)
