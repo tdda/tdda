@@ -22,6 +22,7 @@ from tdda.rexpy.quality import (
     _check_subset,
     _escape_for_charclass,
     _escape_size,
+    _intersect_alphabet,
     _matching_paren,
     _merge_ranges,
     _parse_pattern,
@@ -328,12 +329,41 @@ class TestCheckSubset(ReferenceTestCase):
         )
 
 
+class TestIntersectAlphabet(ReferenceTestCase):
+    def test_full_overlap(self):
+        alphabet = _resolve_alphabet('abcdef')
+        self.assertEqual(
+            _intersect_alphabet('abc', alphabet, '^[abc]$'), frozenset('abc')
+        )
+
+    def test_partial_overlap(self):
+        alphabet = _resolve_alphabet('bcd')
+        self.assertEqual(
+            _intersect_alphabet('abc', alphabet, '^[abc]$'), frozenset('bc')
+        )
+
+    def test_raises_when_fully_disjoint(self):
+        alphabet = _resolve_alphabet('xyz')
+        self.assertRaises(
+            ValueError, _intersect_alphabet, 'abc', alphabet, '^[abc]$'
+        )
+
+
 class TestEscapeSize(ReferenceTestCase):
     def test_dot(self):
+        # ASCII includes '\n', which '.' never matches (no DOTALL)
         alphabet = _resolve_alphabet(Alphabets.ASCII)
-        self.assertEqual(_escape_size('.', alphabet, '^.$'), 128)
+        self.assertEqual(_escape_size('.', alphabet, '^.$'), 127)
 
     def test_dot_custom_alphabet(self):
+        alphabet = _resolve_alphabet('abc')
+        self.assertEqual(_escape_size('.', alphabet, '^.$'), 3)
+
+    def test_dot_excludes_newline_from_alphabet(self):
+        alphabet = _resolve_alphabet('ab\n')
+        self.assertEqual(_escape_size('.', alphabet, '^.$'), 2)
+
+    def test_dot_unaffected_when_alphabet_has_no_newline(self):
         alphabet = _resolve_alphabet('abc')
         self.assertEqual(_escape_size('.', alphabet, '^.$'), 3)
 
@@ -375,9 +405,20 @@ class TestEscapeSize(ReferenceTestCase):
         alphabet = _resolve_alphabet(WHITESPACE_CHARS + 'abc')
         self.assertEqual(_escape_size('S', alphabet, r'^\S$'), 3)
 
+    def test_whitespace_partial_overlap_not_rejected(self):
+        # alphabet has ' ' (one of the 6 canonical whitespace
+        # chars) but not tab/newline/etc -- partial, not rejected
+        alphabet = _resolve_alphabet('[0-9A-Z ]')
+        self.assertEqual(_escape_size('s', alphabet, r'^\s$'), 1)
+
+    def test_whitespace_rejected_when_fully_disjoint(self):
+        # no whitespace characters in this alphabet at all
+        alphabet = _resolve_alphabet('[0-9A-Z]')
+        self.assertRaises(ValueError, _escape_size, 's', alphabet, r'^\s$')
+
     def test_word_raises_when_alphabet_missing_uppercase(self):
-        # canonical \w needs uppercase letters too, which this
-        # alphabet doesn't have
+        # \w needs uppercase letters too, which this alphabet
+        # doesn't have -- unlike \s, \w is strict about this
         alphabet = _resolve_alphabet('abcdefghijklmnopqrstuvwxyz0123456789')
         self.assertRaises(ValueError, _escape_size, 'w', alphabet, r'^\w$')
 
@@ -407,8 +448,9 @@ class TestAtomSize(ReferenceTestCase):
         )
 
     def test_dot(self):
+        # ASCII includes '\n', which '.' never matches (no DOTALL)
         alphabet = _resolve_alphabet(Alphabets.ASCII)
-        self.assertEqual(_atom_size('charclass', '.', alphabet, '^.$'), 128)
+        self.assertEqual(_atom_size('charclass', '.', alphabet, '^.$'), 127)
 
     def test_escape(self):
         alphabet = _resolve_alphabet(Alphabets.ASCII)
@@ -464,7 +506,8 @@ class TestCountStringsNoAlt(ReferenceTestCase):
         self.assertEqual(count_strings_no_alt(pattern), expected)
 
     def test_dot_matches_whole_default_alphabet(self):
-        self.assertEqual(count_strings_no_alt('^.$'), 128)
+        # ASCII includes '\n', which '.' never matches (no DOTALL)
+        self.assertEqual(count_strings_no_alt('^.$'), 127)
 
     def test_dot_matches_whole_custom_alphabet(self):
         self.assertEqual(count_strings_no_alt('^.$', alphabet='abc'), 3)

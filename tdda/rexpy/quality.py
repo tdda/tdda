@@ -389,21 +389,54 @@ def _escape_size(code, alphabet, pattern):
     `\\d`/`\\D`/`\\w`/`\\W`/`\\s`/`\\S` shorthand escape (`code`
     one of `'dDwWsS'`).
 
-    `.` matches the whole alphabet. `\\d`/`\\w`/`\\s` have fixed,
-    alphabet-independent sizes (see `CANONICAL_CLASSES`); their
-    upper-case negations are the complement within `alphabet`.
+    `.` matches the whole alphabet, except `\\n` (matching Python's
+    `re` semantics without `re.DOTALL`, which we never use).
+
+    `\\d` and `\\w` behave like their expanded bracket-class
+    equivalents (`[0-9]`, `[A-Za-z0-9_]`): fixed sets (see
+    `CANONICAL_CLASSES`) that must be fully present in `alphabet`.
+
+    `\\s` is treated more loosely: whitespace is a soft concept,
+    so only whichever of its canonical members are actually in
+    `alphabet` count, and it's rejected only if none of them are.
+
+    Upper-case negations are the complement of whatever their
+    lower-case counterpart resolved to, within `alphabet`.
 
     Raises:
-        ValueError: if the escape's canonical members aren't all
-            present in `alphabet`.
+        ValueError: for `\\d`/`\\w`, if any canonical member is
+            missing from `alphabet`; for `\\s`, only if none of
+            its canonical members are in `alphabet` at all.
     """
     if code == '.':
-        return alphabet.size
+        return alphabet.size - (1 if alphabet.pattern.fullmatch('\n') else 0)
     members = CANONICAL_CLASSES[code.lower()]
-    _check_subset(members, alphabet, pattern)
+    if code.lower() == 's':
+        present = _intersect_alphabet(members, alphabet, pattern)
+    else:
+        _check_subset(members, alphabet, pattern)
+        present = members
     if code.isupper():
-        return alphabet.size - len(members)
-    return len(members)
+        return alphabet.size - len(present)
+    return len(present)
+
+
+def _intersect_alphabet(members, alphabet, pattern):
+    """Return the subset of `members` that `alphabet.pattern`
+    matches.
+
+    Raises:
+        ValueError: if none of `members` is in `alphabet` --
+            i.e. the canonical class is entirely disjoint from
+            `alphabet`, rather than merely a partial overlap.
+    """
+    present = frozenset(c for c in members if alphabet.pattern.fullmatch(c))
+    if not present:
+        raise ValueError(
+            f'none of the canonical members {sorted(members)!r} are '
+            f'in alphabet: {pattern!r}'
+        )
+    return present
 
 
 def _check_subset(chars, alphabet, pattern):
