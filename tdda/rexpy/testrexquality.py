@@ -14,14 +14,19 @@ from tdda.rexpy.quality import (
     WHITESPACE_CHARS,
     count_strings,
     count_strings_no_alt,
+    _alphabet_spec,
     _as_range,
     _atom_size,
     _charclass_members,
+    _charclass_ranges,
     _check_subset,
+    _escape_for_charclass,
     _escape_size,
     _matching_paren,
+    _merge_ranges,
     _parse_pattern,
     _parse_quantifier,
+    _resolve_alphabet,
     _split_alternation,
     _split_top_level,
     _validate_pattern,
@@ -29,10 +34,15 @@ from tdda.rexpy.quality import (
 
 
 class TestAlphabets(ReferenceTestCase):
-    def test_ascii(self):
-        self.assertEqual(len(Alphabets.ASCII), 128)
-        self.assertEqual(Alphabets.ASCII[0], chr(0))
-        self.assertEqual(Alphabets.ASCII[-1], chr(127))
+    def test_ascii_is_a_bracket_expression(self):
+        self.assertEqual(Alphabets.ASCII, '[' + chr(0) + '-' + chr(127) + ']')
+
+    def test_ascii_resolves_to_128(self):
+        resolved = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(resolved.size, 128)
+        self.assertTrue(resolved.pattern.fullmatch('A'))
+        self.assertTrue(resolved.pattern.fullmatch(chr(0)))
+        self.assertTrue(resolved.pattern.fullmatch(chr(127)))
 
 
 class TestValidatePattern(ReferenceTestCase):
@@ -175,6 +185,100 @@ class TestCharclassMembers(ReferenceTestCase):
         )
 
 
+class TestCharclassRanges(ReferenceTestCase):
+    def test_simple_set(self):
+        self.assertEqual(
+            _charclass_ranges('[abc]'),
+            (False, [(ord('a'), ord('a')), (ord('b'), ord('b')),
+                     (ord('c'), ord('c'))]),
+        )
+
+    def test_range(self):
+        self.assertEqual(
+            _charclass_ranges('[a-c]'), (False, [(ord('a'), ord('c'))])
+        )
+
+    def test_negated(self):
+        self.assertEqual(
+            _charclass_ranges('[^a-c]'), (True, [(ord('a'), ord('c'))])
+        )
+
+    def test_ascii_alphabet(self):
+        self.assertEqual(
+            _charclass_ranges(Alphabets.ASCII), (False, [(0, 127)])
+        )
+
+
+class TestMergeRanges(ReferenceTestCase):
+    def test_no_overlap(self):
+        self.assertEqual(
+            _merge_ranges([(0, 2), (5, 7)]), [(0, 2), (5, 7)]
+        )
+
+    def test_adjacent_ranges_merge(self):
+        self.assertEqual(_merge_ranges([(0, 2), (3, 5)]), [(0, 5)])
+
+    def test_overlapping_ranges_merge(self):
+        self.assertEqual(_merge_ranges([(0, 5), (3, 8)]), [(0, 8)])
+
+    def test_unsorted_input(self):
+        self.assertEqual(
+            _merge_ranges([(5, 7), (0, 2)]), [(0, 2), (5, 7)]
+        )
+
+    def test_duplicate_singleton_ranges_merge(self):
+        # e.g. from a literal alphabet string with repeated chars
+        self.assertEqual(
+            _merge_ranges([(97, 97), (97, 97), (98, 98)]), [(97, 98)]
+        )
+
+
+class TestEscapeForCharclass(ReferenceTestCase):
+    def test_plain_chars(self):
+        self.assertEqual(_escape_for_charclass('cba'), 'abc')
+
+    def test_dedupes(self):
+        self.assertEqual(_escape_for_charclass('aabbcc'), 'abc')
+
+    def test_escapes_specials(self):
+        # sorted by codepoint: '-' (45), '\' (92), ']' (93), '^' (94)
+        self.assertEqual(_escape_for_charclass(']^-\\'), r'\-\\\]\^')
+
+
+class TestAlphabetSpec(ReferenceTestCase):
+    def test_bracket_expression_used_as_is(self):
+        self.assertEqual(_alphabet_spec('[a-c]'), '[a-c]')
+
+    def test_literal_string_converted(self):
+        self.assertEqual(_alphabet_spec('cba'), '[abc]')
+
+    def test_literal_string_with_specials_escaped(self):
+        self.assertEqual(_alphabet_spec('a-b'), r'[\-ab]')
+
+
+class TestResolveAlphabet(ReferenceTestCase):
+    def test_none_defaults_to_ascii(self):
+        resolved = _resolve_alphabet(None)
+        self.assertEqual(resolved.size, 128)
+
+    def test_literal_string(self):
+        resolved = _resolve_alphabet('abc')
+        self.assertEqual(resolved.size, 3)
+        self.assertTrue(resolved.pattern.fullmatch('b'))
+        self.assertFalse(resolved.pattern.fullmatch('z'))
+
+    def test_bracket_expression_string(self):
+        resolved = _resolve_alphabet('[A-Z0-3]')
+        # 26 letters + 4 digits (0-3)
+        self.assertEqual(resolved.size, 30)
+        self.assertTrue(resolved.pattern.fullmatch('K'))
+        self.assertTrue(resolved.pattern.fullmatch('2'))
+        self.assertFalse(resolved.pattern.fullmatch('7'))
+
+    def test_rejects_negated_alphabet(self):
+        self.assertRaises(ValueError, _resolve_alphabet, '[^a-c]')
+
+
 class TestCheckSubset(ReferenceTestCase):
     # The four ways `chars` (what the pattern references) and
     # `alphabet` (what's allowed) can relate: only a proper subset
@@ -183,117 +287,133 @@ class TestCheckSubset(ReferenceTestCase):
     # `alphabet`) should raise.
 
     def test_accepts_exact_match(self):
-        _check_subset('abc', 'abc', '^[abc]$')  # no exception
+        _check_subset(
+            'abc', _resolve_alphabet('abc'), '^[abc]$'
+        )  # no exception
 
     def test_accepts_proper_subset(self):
-        _check_subset('abc', 'abcdef', '^[abc]$')  # no exception
+        _check_subset(
+            'abc', _resolve_alphabet('abcdef'), '^[abc]$'
+        )  # no exception
 
     def test_rejects_partial_overlap(self):
         # 'a' is in chars but not alphabet; 'd' is in alphabet but
         # not chars -- neither is a subset of the other
         self.assertRaises(
-            ValueError, _check_subset, 'abc', 'bcd', '^[a-c]$'
+            ValueError,
+            _check_subset,
+            'abc',
+            _resolve_alphabet('bcd'),
+            '^[a-c]$',
         )
 
     def test_rejects_disjoint(self):
         self.assertRaises(
-            ValueError, _check_subset, 'abc', 'xyz', '^[abc]$'
+            ValueError,
+            _check_subset,
+            'abc',
+            _resolve_alphabet('xyz'),
+            '^[abc]$',
         )
 
     def test_rejects_chars_superset_of_alphabet(self):
         # alphabet is a proper subset of chars, but chars has
         # members ('d' onwards) outside alphabet too
         self.assertRaises(
-            ValueError, _check_subset, 'abcdefgh', 'abc', '^[a-h]$'
+            ValueError,
+            _check_subset,
+            'abcdefgh',
+            _resolve_alphabet('abc'),
+            '^[a-h]$',
         )
 
 
 class TestEscapeSize(ReferenceTestCase):
     def test_dot(self):
-        self.assertEqual(_escape_size('.', Alphabets.ASCII, '^.$'), 128)
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('.', alphabet, '^.$'), 128)
 
     def test_dot_custom_alphabet(self):
-        self.assertEqual(_escape_size('.', 'abc', '^.$'), 3)
+        alphabet = _resolve_alphabet('abc')
+        self.assertEqual(_escape_size('.', alphabet, '^.$'), 3)
 
     def test_digit(self):
-        self.assertEqual(_escape_size('d', Alphabets.ASCII, r'^\d$'), 10)
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('d', alphabet, r'^\d$'), 10)
 
     def test_non_digit(self):
-        self.assertEqual(
-            _escape_size('D', Alphabets.ASCII, r'^\D$'), 128 - 10
-        )
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('D', alphabet, r'^\D$'), 128 - 10)
 
     def test_word(self):
-        self.assertEqual(_escape_size('w', Alphabets.ASCII, r'^\w$'), 63)
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('w', alphabet, r'^\w$'), 63)
 
     def test_non_word(self):
-        self.assertEqual(
-            _escape_size('W', Alphabets.ASCII, r'^\W$'), 128 - 63
-        )
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('W', alphabet, r'^\W$'), 128 - 63)
 
     def test_whitespace(self):
-        self.assertEqual(_escape_size('s', Alphabets.ASCII, r'^\s$'), 6)
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('s', alphabet, r'^\s$'), 6)
 
     def test_non_whitespace(self):
-        self.assertEqual(
-            _escape_size('S', Alphabets.ASCII, r'^\S$'), 128 - 6
-        )
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_escape_size('S', alphabet, r'^\S$'), 128 - 6)
 
     def test_raises_if_canonical_members_outside_alphabet(self):
         # alphabet has no digits at all, but \d needs them
-        self.assertRaises(ValueError, _escape_size, 'd', 'abc', r'^\d$')
+        alphabet = _resolve_alphabet('abc')
+        self.assertRaises(ValueError, _escape_size, 'd', alphabet, r'^\d$')
 
     def test_non_digit_small_custom_alphabet(self):
         # digits plus one extra char: \D is just that extra char
-        self.assertEqual(
-            _escape_size('D', DIGIT_CHARS + ' ', r'^\D$'), 1
-        )
+        alphabet = _resolve_alphabet(DIGIT_CHARS + ' ')
+        self.assertEqual(_escape_size('D', alphabet, r'^\D$'), 1)
 
     def test_non_whitespace_small_custom_alphabet(self):
-        self.assertEqual(
-            _escape_size('S', WHITESPACE_CHARS + 'abc', r'^\S$'), 3
-        )
+        alphabet = _resolve_alphabet(WHITESPACE_CHARS + 'abc')
+        self.assertEqual(_escape_size('S', alphabet, r'^\S$'), 3)
 
     def test_word_raises_when_alphabet_missing_uppercase(self):
         # canonical \w needs uppercase letters too, which this
         # alphabet doesn't have
-        alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        alphabet = _resolve_alphabet('abcdefghijklmnopqrstuvwxyz0123456789')
         self.assertRaises(ValueError, _escape_size, 'w', alphabet, r'^\w$')
 
 
 class TestAtomSize(ReferenceTestCase):
     def test_literal(self):
-        self.assertEqual(
-            _atom_size('literal', 'a', Alphabets.ASCII, '^a$'), 1
-        )
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_atom_size('literal', 'a', alphabet, '^a$'), 1)
 
     def test_literal_outside_alphabet(self):
+        alphabet = _resolve_alphabet('012')
         self.assertRaises(
-            ValueError, _atom_size, 'literal', 'a', '012', '^a$'
+            ValueError, _atom_size, 'literal', 'a', alphabet, '^a$'
         )
 
     def test_bracket(self):
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
         self.assertEqual(
-            _atom_size('charclass', '[A-Z]', Alphabets.ASCII, '^[A-Z]$'),
-            26,
+            _atom_size('charclass', '[A-Z]', alphabet, '^[A-Z]$'), 26
         )
 
     def test_negated_bracket(self):
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
         self.assertEqual(
-            _atom_size(
-                'charclass', '[^A-Z]', Alphabets.ASCII, '^[^A-Z]$'
-            ),
+            _atom_size('charclass', '[^A-Z]', alphabet, '^[^A-Z]$'),
             128 - 26,
         )
 
     def test_dot(self):
-        self.assertEqual(
-            _atom_size('charclass', '.', Alphabets.ASCII, '^.$'), 128
-        )
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
+        self.assertEqual(_atom_size('charclass', '.', alphabet, '^.$'), 128)
 
     def test_escape(self):
+        alphabet = _resolve_alphabet(Alphabets.ASCII)
         self.assertEqual(
-            _atom_size('charclass', r'\d', Alphabets.ASCII, r'^\d$'), 10
+            _atom_size('charclass', r'\d', alphabet, r'^\d$'), 10
         )
 
 
@@ -321,7 +441,9 @@ class TestCountStringsNoAlt(ReferenceTestCase):
 
     def test_open_brace_expansion(self):
         # sum(26**k for k in 2..3) = 676 + 17576 = 18252
-        self.assertEqual(count_strings_no_alt('^[A-Z]{2,}$', max_plus=3), 18252)
+        self.assertEqual(
+            count_strings_no_alt('^[A-Z]{2,}$', max_plus=3), 18252
+        )
 
     def test_open_brace_min_above_max_plus(self):
         # min already exceeds max_plus, so no expansion beyond it:

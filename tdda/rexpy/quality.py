@@ -35,18 +35,28 @@ LITERAL_ESCAPES = r'.^$*+?{}[]()|\-'
 
 class Alphabets:
     """
-    Named, reusable alphabets for `count_strings`. Add further
-    named alphabets here as they're needed.
+    Named, reusable alphabets for `count_strings`, each a
+    bracket-expression string. Add further named alphabets here as
+    they're needed.
     """
 
     #: All 128 ASCII code points, `chr(0)` to `chr(127)`.
-    ASCII = ''.join(chr(c) for c in range(128))
+    ASCII = '[\x00-\x7f]'
 
 
 class Repeat(namedtuple('Repeat', 'min max')):
     """
     A repeat range for a single regex atom (e.g. `{2,4}` gives
     `Repeat(min=2, max=4)`).
+    """
+
+
+class ResolvedAlphabet(namedtuple('ResolvedAlphabet', 'pattern size')):
+    """
+    An alphabet resolved from whatever form it was given in (see
+    `_resolve_alphabet`) to a compiled `pattern` (`.fullmatch`
+    tests membership) and its `size` -- computed arithmetically
+    from ranges, without enumerating characters.
     """
 
 
@@ -125,7 +135,9 @@ def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
             trailing `+` is expanded as if it were `{1,max_plus}`
             and a trailing `*` as if it were `{0,max_plus}`.
         alphabet (str): the universe of characters this pattern is
-            evaluated against. Defaults to `Alphabets.ASCII`.
+            evaluated against -- a bracket-expression string (e.g.
+            `'[A-Za-z0-9]'`), a plain string of characters (treated
+            as that literal set), or `None` for `Alphabets.ASCII`.
 
     Returns:
         int: number of distinct strings the pattern can match.
@@ -137,7 +149,7 @@ def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
             `alphabet` (e.g. a literal character, or a member or
             range endpoint of a bracket expression).
     """
-    alphabet = Alphabets.ASCII if alphabet is None else alphabet
+    alphabet = _resolve_alphabet(alphabet)
     _validate_pattern(pattern)
     total = 1
     for kind, value, repeat in _parse_pattern(pattern, max_plus):
@@ -351,8 +363,9 @@ def _parse_quantifier(body, i, max_plus):
 
 
 def _atom_size(kind, value, alphabet, pattern):
-    """Return the number of characters in `alphabet` admitted by a
-    single parsed atom (as returned by `_parse_pattern`).
+    """Return the number of characters in `alphabet` (a
+    `ResolvedAlphabet`) admitted by a single parsed atom (as
+    returned by `_parse_pattern`).
 
     Raises:
         ValueError: if the atom explicitly references a character
@@ -367,13 +380,14 @@ def _atom_size(kind, value, alphabet, pattern):
         return _escape_size(code, alphabet, pattern)
     negated, members = _charclass_members(value)
     _check_subset(members, alphabet, pattern)
-    return len(alphabet) - len(members) if negated else len(members)
+    return alphabet.size - len(members) if negated else len(members)
 
 
 def _escape_size(code, alphabet, pattern):
-    """Return the number of characters in `alphabet` matched by
-    `.` (`code='.'`) or a `\\d`/`\\D`/`\\w`/`\\W`/`\\s`/`\\S`
-    shorthand escape (`code` one of `'dDwWsS'`).
+    """Return the number of characters in `alphabet` (a
+    `ResolvedAlphabet`) matched by `.` (`code='.'`) or a
+    `\\d`/`\\D`/`\\w`/`\\W`/`\\s`/`\\S` shorthand escape (`code`
+    one of `'dDwWsS'`).
 
     `.` matches the whole alphabet. `\\d`/`\\w`/`\\s` have fixed,
     alphabet-independent sizes (see `CANONICAL_CLASSES`); their
@@ -384,17 +398,18 @@ def _escape_size(code, alphabet, pattern):
             present in `alphabet`.
     """
     if code == '.':
-        return len(alphabet)
+        return alphabet.size
     members = CANONICAL_CLASSES[code.lower()]
     _check_subset(members, alphabet, pattern)
     if code.isupper():
-        return len(alphabet) - len(members)
+        return alphabet.size - len(members)
     return len(members)
 
 
 def _check_subset(chars, alphabet, pattern):
-    """Raise if any character in `chars` is not in `alphabet`."""
-    extra = sorted(set(chars) - set(alphabet))
+    """Raise if any character in `chars` isn't matched by
+    `alphabet.pattern` (a `ResolvedAlphabet`)."""
+    extra = sorted(c for c in set(chars) if not alphabet.pattern.fullmatch(c))
     if extra:
         raise ValueError(
             f'pattern uses characters outside alphabet {extra!r}: '
@@ -402,18 +417,78 @@ def _check_subset(chars, alphabet, pattern):
         )
 
 
+def _resolve_alphabet(alphabet):
+    """Resolve `alphabet` (`None`, a bracket-expression string, or
+    a plain string of characters) into a `ResolvedAlphabet`.
+
+    Raises:
+        ValueError: if `alphabet` is a negated character class
+            (`'[^...]'`), which has no well-defined size on its
+            own.
+    """
+    if alphabet is None:
+        alphabet = Alphabets.ASCII
+    spec = _alphabet_spec(alphabet)
+    negated, ranges = _charclass_ranges(spec)
+    if negated:
+        raise ValueError(
+            f'alphabet cannot be a negated character class: '
+            f'{alphabet!r}'
+        )
+    size = sum(hi - lo + 1 for lo, hi in _merge_ranges(ranges))
+    return ResolvedAlphabet(re.compile(spec), size)
+
+
+def _alphabet_spec(alphabet):
+    """Normalize `alphabet` into a canonical bracket-expression
+    string: used as-is if it already is one (starts with `[` and
+    spans the whole string), otherwise built from its characters.
+    """
+    if (
+        alphabet.startswith('[')
+        and _charclass_end(alphabet, 0, alphabet) == len(alphabet)
+    ):
+        return alphabet
+    return '[%s]' % _escape_for_charclass(alphabet)
+
+
+def _escape_for_charclass(chars):
+    """Escape characters that are special inside a bracket
+    expression (`]`, `^`, `-`, `\\`), for building one from a
+    literal set of characters.
+    """
+    specials = set('\\]^-')
+    return ''.join(
+        ('\\' + c if c in specials else c) for c in sorted(set(chars))
+    )
+
+
 def _charclass_members(value):
     """Parse a bracket expression such as `'[a-z0-9_]'` or
     `'[^abc]'` into `(negated, members)`, where `members` is the
-    explicit set of characters listed (individually or via ranges)
-    -- the characters the class matches if not negated, or the
-    characters it excludes if negated.
+    explicit, expanded set of characters listed (individually or
+    via ranges) -- the characters the class matches if not
+    negated, or the characters it excludes if negated.
+    """
+    negated, ranges = _charclass_ranges(value)
+    members = set()
+    for lo, hi in ranges:
+        members.update(chr(cp) for cp in range(lo, hi + 1))
+    return negated, frozenset(members)
+
+
+def _charclass_ranges(value):
+    """Parse a bracket expression such as `'[a-z0-9_]'` or
+    `'[^abc]'` into `(negated, ranges)`, where `ranges` is a list
+    of `(lo, hi)` codepoint tuples -- the range endpoints listed
+    (individually or via `x-y` ranges) -- without expanding them
+    into individual characters.
     """
     body = value[1:-1]  # strip outer '[' and ']'
     negated = body.startswith('^')
     if negated:
         body = body[1:]
-    members = set()
+    ranges = []
     i, n = 0, len(body)
     while i < n:
         if body[i] == '\\':
@@ -426,7 +501,20 @@ def _charclass_members(value):
                 d, i = body[i + 1], i + 2
             else:
                 d, i = body[i], i + 1
-            members.update(chr(cp) for cp in range(ord(c), ord(d) + 1))
+            ranges.append((ord(c), ord(d)))
         else:
-            members.add(c)
-    return negated, frozenset(members)
+            ranges.append((ord(c), ord(c)))
+    return negated, ranges
+
+
+def _merge_ranges(ranges):
+    """Merge overlapping or adjacent `(lo, hi)` codepoint ranges,
+    so that summing their sizes doesn't double-count.
+    """
+    merged = []
+    for lo, hi in sorted(ranges):
+        if merged and lo <= merged[-1][1] + 1:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], hi))
+        else:
+            merged.append((lo, hi))
+    return merged
