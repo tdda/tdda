@@ -75,12 +75,16 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     contain top-level alternation, e.g. the `^(R1|R2|...)$` form
     produced by `combine_patterns`.
 
-    Exact counting across alternation would require knowing how
-    much the branches overlap, which isn't attempted: `upper` is
-    the sum of the branches' counts (as if they were completely
-    disjoint); `lower` is the max of the branches' counts (as if
-    every branch's matches were a subset of the largest one). The
-    true count lies somewhere in `[lower, upper]`.
+    Exact counting across alternation in general would require
+    knowing how much the branches overlap, which isn't attempted
+    beyond one tractable, common case: if every branch is either a
+    fixed literal string, or there's exactly one non-literal branch
+    and none of the literals match it, the branches are provably
+    disjoint and the count is exact. Otherwise, `upper` is the sum of
+    the branches' counts (as if they were completely disjoint) and
+    `lower` is the max of the branches' counts (as if every branch's
+    matches were a subset of the largest one); the true count lies
+    somewhere in `[lower, upper]`.
 
     Args:
         pattern (str): an anchored regex, optionally containing one
@@ -97,6 +101,38 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     branches = _split_alternation(pattern)
     if len(branches) == 1:
         return count_strings_no_alt(branches[0], max_plus, alphabet)
+
+    literal_values = {}
+    non_literal_branches = []
+    for b in branches:
+        value = _literal_branch_value(b, max_plus)
+        if value is None:
+            non_literal_branches.append(b)
+        else:
+            literal_values[b] = value
+
+    if not non_literal_branches:
+        # All branches are fixed strings -- distinct literals are
+        # always pairwise disjoint, so this is exact.
+        return len(set(literal_values.values()))
+
+    if len(non_literal_branches) == 1:
+        non_literal = non_literal_branches[0]
+        distinct_values = set(literal_values.values())
+        if not any(re.fullmatch(non_literal, v) for v in distinct_values):
+            # None of the literals overlap the one non-literal
+            # branch, so the branches are provably disjoint: exact
+            # count is the literal count plus however precisely the
+            # non-literal branch's own count is known (int or, if it
+            # still has unresolved internal overlap, a CountRange).
+            offset = len(distinct_values)
+            inner = _as_range(
+                count_strings(non_literal, max_plus, alphabet)
+            )
+            lower = offset + inner.lower
+            upper = offset + inner.upper
+            return lower if lower == upper else CountRange(lower, upper)
+
     ranges = [
         _as_range(count_strings(b, max_plus, alphabet)) for b in branches
     ]
@@ -110,6 +146,31 @@ def _as_range(n_or_range):
     if isinstance(n_or_range, CountRange):
         return n_or_range
     return CountRange(n_or_range, n_or_range)
+
+
+def _literal_branch_value(branch, max_plus):
+    """Return the fixed string an alternation branch denotes, if it
+    is a plain literal (a sequence of unrepeated literal characters,
+    no character classes/escapes/groups/quantifiers) -- or `None` if
+    it isn't.
+
+    Deliberately conservative: a branch such as `'^[A]$'` has
+    cardinality 1 but is *not* treated as literal here, since two
+    differently-written singleton branches could coincidentally admit
+    the same one string, which would break the disjointness
+    reasoning in `count_strings`.
+    """
+    try:
+        _validate_pattern(branch)
+    except ValueError:
+        return None
+    atoms = _parse_pattern(branch, max_plus)
+    if all(
+        kind == 'literal' and repeat == Repeat(1, 1)
+        for kind, value, repeat in atoms
+    ):
+        return ''.join(value for kind, value, repeat in atoms)
+    return None
 
 
 def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):

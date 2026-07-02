@@ -707,6 +707,96 @@ class TestCountStringsAlternation(ReferenceTestCase):
         )
 
 
+class TestCountStringsDisjointAlternation(ReferenceTestCase):
+    # Plan A: exact cardinality for provably-disjoint alternation
+    # branches (all-literal branches, or literal branches plus one
+    # non-literal branch that none of the literals match).
+
+    def test_all_literal_branches_exact(self):
+        # 3 distinct literals, pairwise disjoint by construction
+        result = count_strings('^(cat|dog|fish)$')
+        self.assertEqual(result, 3)
+        self.assertIsInstance(result, int)
+
+    def test_all_literal_branches_with_duplicate(self):
+        # 'cat' appears twice -- dedupe to 2, not 3
+        result = count_strings('^(cat|cat|dog)$')
+        self.assertEqual(result, 2)
+        self.assertIsInstance(result, int)
+
+    def test_literals_plus_one_nonliteral_disjoint_exact(self):
+        # GIR, NPT (3 chars each) can't match the general branch
+        # (1-2 letters + 1-2 digits + optional letter -- always has
+        # a digit), so all 3 branches are disjoint:
+        # 2 + count_strings_no_alt('[A-Z]{1,2}[0-9]{1,2}[A-Z]?')
+        #   = 2 + 2084940 = 2084942
+        result = count_strings('^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?)$')
+        self.assertEqual(result, 2084942)
+        self.assertIsInstance(result, int)
+
+    def test_literal_matches_nonliteral_branch_falls_back(self):
+        # 'AB' matches [A-Z]{2} -- branches overlap, so this must
+        # stay a CountRange, not be claimed exact
+        result = count_strings('^(AB|[A-Z]{2})$')
+        self.assertIsInstance(result, CountRange)
+        self.assertEqual(result, CountRange(676, 677))
+
+    def test_two_nonliteral_branches_unchanged(self):
+        # 2+ non-literal branches: unchanged, existing loose bound
+        # (lower=max(676,100)=676, upper=676+100=776)
+        result = count_strings('^([A-Z]{2}|[0-9]{2})$')
+        self.assertIsInstance(result, CountRange)
+        self.assertEqual(result, CountRange(676, 776))
+
+    def test_single_literal_single_nonliteral_edge(self):
+        # GIR (3 chars) can't match [A-Z]{1,2} (1-2 chars) -- disjoint
+        # 1 + count_strings_no_alt('[A-Z]{1,2}') = 1 + (26+676) = 703
+        result = count_strings('^(GIR|[A-Z]{1,2})$')
+        self.assertEqual(result, 703)
+        self.assertIsInstance(result, int)
+
+    def test_embedded_alternation_still_raises(self):
+        # Alternation embedded in a larger sequence, or multiple
+        # separate alternation groups, is Plan B's territory --
+        # still unsupported, still raises
+        self.assertRaises(ValueError, count_strings, '^A(B|C)D$')
+        self.assertRaises(ValueError, count_strings, '^(A|B)-(C|D)$')
+
+    def test_literal_plus_nested_alternation_nonliteral_branch(self):
+        # Depth-first: the non-literal branch '(NPT|[A-Z]{1,2}[0-9]
+        # {1,2}[A-Z]?)' is itself resolved exactly by the same logic
+        # one level down (NPT doesn't match the general branch), so
+        # the outer level should match the flat 3-branch equivalent:
+        # 2 + 2084940 = 2084942
+        result = count_strings(
+            '^(GIR|(NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?))$'
+        )
+        self.assertEqual(result, 2084942)
+        self.assertIsInstance(result, int)
+
+    def test_all_literal_branches_nested_exact(self):
+        # Outer split: '(cat|dog)' (non-literal-looking, has parens/
+        # '|') and 'fish' (literal). Inner resolves exactly to 2
+        # (cat, dog); neither matches 'fish', so outer is exact too:
+        # 2 + 1 = 3
+        result = count_strings('^((cat|dog)|fish)$')
+        self.assertEqual(result, 3)
+        self.assertIsInstance(result, int)
+
+    def test_nested_disjointness_partial_tightening(self):
+        # Inner branch '(AB|[A-Z]{2})' overlaps internally (AB
+        # matches [A-Z]{2}), so it stays CountRange(676, 677) --
+        # same as test_literal_matches_nonliteral_branch_falls_back.
+        # But GIR (3 chars) can't match the inner branch as a whole
+        # (only admits 2-char strings), so the outer level's
+        # disjointness check succeeds and tightens the bound:
+        # CountRange(1 + 676, 1 + 677) = CountRange(677, 678) --
+        # tighter than the naive CountRange(676, 678).
+        result = count_strings('^(GIR|(AB|[A-Z]{2}))$')
+        self.assertIsInstance(result, CountRange)
+        self.assertEqual(result, CountRange(677, 678))
+
+
 class TestConcreteRexMetricSingleCharAlphabet(ReferenceTestCase):
     # alphabet='a', all_positives=['a']: n_positives=1, min_length=
     # max_length=1, universe=1**1=1
@@ -1014,11 +1104,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
 
     def test_5_core_structure_no_alternation(self):
         # postcodes.txt pattern 5 without its '|GIR|NPT'
-        # alternation (none of our data is GIR/NPT, and
-        # count_strings doesn't yet support alternation embedded
-        # in a larger sequence anyway): '[A-Z]{1,2}' (1-2 letters)
-        # + '[0-9]{1,2}' (1-2 digits) + optional trailing letter,
-        # then the general inward code
+        # alternation: '[A-Z]{1,2}' (1-2 letters) + '[0-9]{1,2}'
+        # (1-2 digits) + optional trailing letter, then the general
+        # inward code
         n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
         n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
         n_trailing_letter = 27  # empty (1) + any of 26 letters
@@ -1037,6 +1125,49 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
             fp=14_094_194_345,
             fn=0,
             fpr=0.0039042337723663467,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_5_with_alternation(self):
+        # The real postcodes.txt pattern 5, with its '|GIR|NPT'
+        # alternation restored: '(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}
+        # [A-Z]?)' followed by the inward code ' [0-9][A-Z]{2}'.
+        # This is alternation embedded in a larger sequence (the
+        # group isn't the entire ^(...)$ body -- the inward-code
+        # suffix follows it), which count_strings can't yet handle
+        # (Plan A only proves disjointness *within* an existing
+        # top-level alternation clause.
+        # Expected values below are hand-derived for what
+        # the pattern's cardinality/fp/fpr genuinely are -- this
+        # currently errors (ValueError from count_strings) rather
+        # than returning them, so this test fails until Plan B is
+        # done. TDD: written to state what should be true, not what
+        # the code currently does.
+        n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        general = n_letters * n_digits * n_trailing_letter  # 2_084_940
+        n_inward = 10 * 26**2  # 6_760 (digit + 2 letters)
+        # general outward codes, plus GIR/NPT, each paired with
+        # every inward code: 2_084_940 * 6_760 + 2 * 6_760
+        # = 14_094_194_400 + 13_520 = 14_094_207_920
+        cardinality = general * n_inward + 2 * n_inward
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 14_094_207_865
+        # fp_denominator: 3_609_977_057_408 (same as the
+        # no-alternation version -- doesn't depend on the pattern)
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?) [0-9][A-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=52,
+            fp=14_094_207_865,
+            fn=0,
+            fpr=0.0039042375175425033,
             fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
@@ -1100,14 +1231,16 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # so the true cardinality is exactly 55: no false positives,
         # no false negatives.
         #
-        # count_strings's branch heuristic (lower=max branches,
-        # upper=sum branches) can't see that the 55 literal branches
-        # are disjoint, so cardinality itself comes out as
-        # CountRange(1, 55), not the scalar 55. That makes
-        # fp.lower = 1 - 55 = -54 before clamping -- an impossible
-        # negative false-positive count -- which evaluate() now
-        # clamps to 0, then collapses fp/fpr to plain scalars since
-        # lower == upper (0) after clamping.
+        # count_strings now proves this directly (all branches are
+        # distinct literals, hence pairwise disjoint by construction
+        # -- see TestCountStringsDisjointAlternation), returning the
+        # exact scalar 55 rather than a CountRange. (Before that was
+        # added, cardinality came out as the imprecise CountRange(1,
+        # 55), which relied on evaluate()'s fp-clamping -- fp.lower
+        # = 1 - 55 = -54, clamped to 0 -- to reach the same fp=0
+        # result; that clamping still exists as a safety net for
+        # cases that remain imprecise, but isn't what's exercised
+        # here any more.)
         pattern = '^(' + '|'.join(self.positives) + ')$'
         score = self.q.evaluate(pattern)
         expected = RexMetrics(
@@ -1304,6 +1437,51 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
             fn=2_418,
             fpr=0.003903537126624579,
             fnr=0.0009567852017222134,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_5_with_alternation(self):
+        # The real postcodes.txt pattern 5, with its '|GIR|NPT'
+        # alternation restored -- same genuine limitation as the
+        # E-subset version of this test (alternation embedded in a
+        # larger sequence, not the entire ^(...)$ body
+        # Unlike the E-subset (fn=0 either way), the full
+        # dataset actually includes GIR/NPT-prefixed postcodes
+        # (special/reserved codes, e.g. 'GIR 0AA', 'NPT 0AD') --
+        # restoring the alternation should recover exactly those
+        # 2_418 previously-missed matches, taking fn to 0 (confirmed
+        # directly against the full dataset via re.fullmatch, since
+        # evaluate() itself can't be used here -- see below). TDD:
+        # expected values are what should be true once Plan B lands;
+        # this currently errors (ValueError from count_strings)
+        # rather than returning them, so this test fails until then.
+        n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
+        n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
+        n_trailing_letter = 27  # empty (1) + any of 26 letters
+        general = n_letters * n_digits * n_trailing_letter  # 2_084_940
+        n_inward = 10 * 26**2  # 6_760 (digit + 2 letters)
+        # general outward codes, plus GIR/NPT, each paired with
+        # every inward code: 2_084_940 * 6_760 + 2 * 6_760
+        # = 14_094_194_400 + 13_520 = 14_094_207_920
+        cardinality = general * n_inward + 2 * n_inward
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp = cardinality - n_true_matched  # 14_091_680_707
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250 (same as the
+        # no-alternation version -- doesn't depend on the pattern)
+
+        pattern = (
+            r'^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?) [0-9][A-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=52,
+            fp=14_091_680_707,
+            fn=0,
+            fpr=0.0039035402019925373,
+            fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
 
