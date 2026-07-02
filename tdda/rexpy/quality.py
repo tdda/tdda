@@ -89,8 +89,8 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     Args:
         pattern (str): an anchored regex, optionally containing one
             or more (possibly nested) levels of alternation.
-        max_plus (int): see `count_strings_no_alt`.
-        alphabet (str): see `count_strings_no_alt`.
+        max_plus (int): see `_count_sequence`.
+        alphabet (str): see `_count_sequence`.
 
     Returns:
         int: the count, when it's exact -- always true when
@@ -100,7 +100,7 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
     """
     branches = _split_alternation(pattern)
     if len(branches) == 1:
-        return count_strings_no_alt(branches[0], max_plus, alphabet)
+        return _count_sequence(branches[0], max_plus, alphabet)
 
     literal_values = {}
     non_literal_branches = []
@@ -173,9 +173,13 @@ def _literal_branch_value(branch, max_plus):
     return None
 
 
-def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
-    """Count the number of strings admitted by an anchored,
-    alternation-free rexpy regex, within a given alphabet.
+def _count_sequence(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
+    """Count the number of strings admitted by an anchored rexpy
+    regex with no top-level `|`, within a given alphabet. May
+    contain unquantified `(...)` groups, each of which may itself
+    contain alternation -- handled by recursing into `count_strings`
+    for each one, so nested/embedded alternation composes depth-first
+    through ordinary function recursion.
 
     The count only makes sense relative to an alphabet: `.` is
     taken to mean "any character in `alphabet`", and `\\D`, `\\W`
@@ -193,7 +197,8 @@ def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
 
     Args:
         pattern (str): an anchored regex with no top-level
-            alternation, e.g. `'^[A-Z]{2}\\d{4}$'`.
+            alternation, e.g. `'^[A-Z]{2}\\d{4}$'` or
+            `'^A(B|C)D$'`.
         max_plus (int): cap used for unbounded quantifiers. A
             trailing `+` is expanded as if it were `{1,max_plus}`
             and a trailing `*` as if it were `{0,max_plus}`.
@@ -203,22 +208,34 @@ def count_strings_no_alt(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
             as that literal set), or `None` for `Alphabets.ASCII`.
 
     Returns:
-        int: number of distinct strings the pattern can match.
+        int: the count, when it's exact.
+        CountRange: `(lower, upper)` bound, if any group's own count
+        (see `count_strings`) is itself inexact.
 
     Raises:
-        ValueError: if the pattern is not anchored, contains
-            alternation or groups, uses an unsupported escape, or
-            explicitly references a character that isn't in
-            `alphabet` (e.g. a literal character, or a member or
+        ValueError: if the pattern is not anchored, contains a
+            top-level `|` or a quantified group, uses an unsupported
+            escape, or explicitly references a character that isn't
+            in `alphabet` (e.g. a literal character, or a member or
             range endpoint of a bracket expression).
     """
-    alphabet = _resolve_alphabet(alphabet)
+    resolved_alphabet = _resolve_alphabet(alphabet)
     _validate_pattern(pattern)
-    total = 1
+    total = CountRange(1, 1)
     for kind, value, repeat in _parse_pattern(pattern, max_plus):
-        card = _atom_size(kind, value, alphabet, pattern)
-        total *= sum(card**k for k in range(repeat.min, repeat.max + 1))
-    return total
+        if kind == 'group':
+            factor = _as_range(
+                count_strings('^%s$' % value, max_plus, alphabet)
+            )
+        else:
+            card = _atom_size(kind, value, resolved_alphabet, pattern)
+            factor = _as_range(
+                sum(card**k for k in range(repeat.min, repeat.max + 1))
+            )
+        total = CountRange(
+            total.lower * factor.lower, total.upper * factor.upper
+        )
+    return total.lower if total.lower == total.upper else total
 
 
 def _split_alternation(pattern):
@@ -300,9 +317,12 @@ def _split_top_level(s, sep):
 
 
 def _validate_pattern(pattern):
-    """Check that `pattern` is a pattern `count_strings_no_alt` can
-    handle: a valid regex that is anchored, alternation-free, and
-    uses only known escapes.
+    """Check that `pattern` is a pattern `_count_sequence` can
+    handle: a valid, anchored regex using only known escapes, with no
+    top-level `|` and no *quantified* groups. Unquantified groups
+    (which may themselves contain alternation, handled recursively by
+    `count_strings`) are fine -- this pre-check only skips over them
+    opaquely, the same way it skips over bracket expressions.
 
     Raises:
         ValueError: if the pattern is not supported.
@@ -313,7 +333,7 @@ def _validate_pattern(pattern):
         raise ValueError(f'not a valid regex: {pattern!r} ({e})')
     if not (pattern.startswith('^') and pattern.endswith('$')):
         raise ValueError(
-            f'count_strings_no_alt requires an anchored pattern '
+            f'_count_sequence requires an anchored pattern '
             f'(^...$): {pattern!r}'
         )
     body = pattern[1:-1]
@@ -333,10 +353,18 @@ def _validate_pattern(pattern):
             i += 2
         elif c == '[':
             i = _charclass_end(body, i, pattern)
-        elif c in '()|':
+        elif c == '(':
+            j = _matching_paren(body, i)
+            if j + 1 < n and body[j + 1] in '?*+{':
+                raise ValueError(
+                    '_count_sequence does not support a quantifier '
+                    f'on a group: {pattern!r}'
+                )
+            i = j + 1
+        elif c in ')|':
             raise ValueError(
-                'count_strings_no_alt does not support alternation '
-                f'or groups: {pattern!r}'
+                '_count_sequence does not support a top-level '
+                f"'|' outside a group: {pattern!r}"
             )
         else:
             i += 1
@@ -360,12 +388,16 @@ def _charclass_end(body, i, pattern):
 
 
 def _parse_pattern(pattern, max_plus):
-    """Split an anchored, alternation-free regex into a list of
-    `(kind, value, repeat)` atoms, where `kind` is `'charclass'`
-    for a character class/escape/dot and `'literal'` for a single
-    literal character, and `repeat` is a `Repeat`.
+    """Split an anchored regex into a list of `(kind, value, repeat)`
+    atoms, where `kind` is `'charclass'` for a character class/
+    escape/dot, `'literal'` for a single literal character, or
+    `'group'` for an unquantified `(...)` group (`value` is the
+    group's inner content, unanchored -- `count_strings` recurses
+    into it, since it may itself contain alternation), and `repeat`
+    is a `Repeat`.
 
-    Assumes `pattern` has already passed `_validate_pattern`.
+    Assumes `pattern` has already passed `_validate_pattern` (so any
+    group here is unquantified, and there's no top-level `|`).
     """
     body = pattern[1:-1]
     i = 0
@@ -384,6 +416,10 @@ def _parse_pattern(pattern, max_plus):
             j = _charclass_end(body, i, pattern)
             kind, value = 'charclass', body[i:j]
             i = j
+        elif c == '(':
+            j = _matching_paren(body, i)
+            kind, value = 'group', body[i + 1 : j]
+            i = j + 1
         elif c == '.':
             kind, value = 'charclass', '.'
             i += 1

@@ -22,13 +22,13 @@ from tdda.rexpy.quality import (
     RexMetrics,
     WHITESPACE_CHARS,
     count_strings,
-    count_strings_no_alt,
     _alphabet_spec,
     _as_range,
     _atom_size,
     _charclass_members,
     _charclass_ranges,
     _check_subset,
+    _count_sequence,
     _escape_for_charclass,
     _escape_size,
     _intersect_alphabet,
@@ -82,10 +82,20 @@ class TestValidatePattern(ReferenceTestCase):
         self.assertRaises(ValueError, _validate_pattern, '^ab')
         _validate_pattern('^ab$')  # ok, no exception
 
-    def test_rejects_alternation_and_groups(self):
-        self.assertRaises(ValueError, _validate_pattern, '^(a|b)$')
+    def test_accepts_unquantified_groups(self):
+        _validate_pattern('^(a|b)$')  # ok, no exception
+        _validate_pattern('^(ab)$')  # ok, no exception
+
+    def test_rejects_top_level_pipe(self):
+        # a bare '|' not inside a group is still invalid here --
+        # count_strings strips top-level alternation via
+        # _split_alternation before ever reaching _validate_pattern
         self.assertRaises(ValueError, _validate_pattern, '^a|b$')
-        self.assertRaises(ValueError, _validate_pattern, '^(ab)$')
+
+    def test_rejects_quantified_group(self):
+        self.assertRaises(ValueError, _validate_pattern, '^(a|b){2,3}$')
+        self.assertRaises(ValueError, _validate_pattern, '^(a|b)+$')
+        self.assertRaises(ValueError, _validate_pattern, '^(a|b)?$')
 
     def test_rejects_unknown_escapes(self):
         self.assertRaises(ValueError, _validate_pattern, r'^\p{L}$')
@@ -483,93 +493,104 @@ class TestAtomSize(ReferenceTestCase):
         )
 
 
-class TestCountStringsNoAlt(ReferenceTestCase):
+class TestCountSequence(ReferenceTestCase):
     def test_single_literal(self):
-        self.assertEqual(count_strings_no_alt('^ab$'), 1)
+        self.assertEqual(_count_sequence('^ab$'), 1)
 
     def test_optional_literal(self):
-        self.assertEqual(count_strings_no_alt('^a?b$'), 2)
+        self.assertEqual(_count_sequence('^a?b$'), 2)
 
     def test_fixed_charclass(self):
-        self.assertEqual(count_strings_no_alt(r'^\d{4}$'), 10000)
+        self.assertEqual(_count_sequence(r'^\d{4}$'), 10000)
 
     def test_charclass_range(self):
         # 3**2 + 3**3 + 3**4 = 9 + 27 + 81 = 117
-        self.assertEqual(count_strings_no_alt('^[a-c]{2,4}$'), 117)
+        self.assertEqual(_count_sequence('^[a-c]{2,4}$'), 117)
 
     def test_plus_expansion(self):
         # sum(26**k for k in 1..3) = 26 + 676 + 17576 = 18278
-        self.assertEqual(count_strings_no_alt('^[A-Z]+$', max_plus=3), 18278)
+        self.assertEqual(_count_sequence('^[A-Z]+$', max_plus=3), 18278)
 
     def test_star_expansion(self):
         # sum(26**k for k in 0..3) = 1 + 26 + 676 + 17576 = 18279
-        self.assertEqual(count_strings_no_alt('^[A-Z]*$', max_plus=3), 18279)
+        self.assertEqual(_count_sequence('^[A-Z]*$', max_plus=3), 18279)
 
     def test_open_brace_expansion(self):
         # sum(26**k for k in 2..3) = 676 + 17576 = 18252
         self.assertEqual(
-            count_strings_no_alt('^[A-Z]{2,}$', max_plus=3), 18252
+            _count_sequence('^[A-Z]{2,}$', max_plus=3), 18252
         )
 
     def test_open_brace_min_above_max_plus(self):
         # min already exceeds max_plus, so no expansion beyond it:
         # exactly 26**5
         self.assertEqual(
-            count_strings_no_alt('^[A-Z]{5,}$', max_plus=3), 26**5
+            _count_sequence('^[A-Z]{5,}$', max_plus=3), 26**5
         )
 
     def test_empty_min_brace_expansion(self):
         # sum(26**k for k in 0..3) = 1 + 26 + 676 + 17576 = 18279
-        self.assertEqual(count_strings_no_alt('^[A-Z]{,3}$'), 18279)
+        self.assertEqual(_count_sequence('^[A-Z]{,3}$'), 18279)
 
     def test_combined_postcode_like_pattern(self):
         # 'E' + one or two digits + optional letter, space, digit,
         # two letters
         pattern = r'^E\d{1,2}[A-Z]? \d[A-Z]{2}$'
         expected = (10 + 100) * 27 * 10 * 676
-        self.assertEqual(count_strings_no_alt(pattern), expected)
+        self.assertEqual(_count_sequence(pattern), expected)
 
     def test_dot_matches_whole_default_alphabet(self):
         # ASCII includes '\n', which '.' never matches (no DOTALL)
-        self.assertEqual(count_strings_no_alt('^.$'), 127)
+        self.assertEqual(_count_sequence('^.$'), 127)
 
     def test_dot_matches_whole_custom_alphabet(self):
-        self.assertEqual(count_strings_no_alt('^.$', alphabet='abc'), 3)
+        self.assertEqual(_count_sequence('^.$', alphabet='abc'), 3)
 
     def test_negated_escape(self):
-        self.assertEqual(count_strings_no_alt(r'^\D$'), 128 - 10)
+        self.assertEqual(_count_sequence(r'^\D$'), 128 - 10)
 
     def test_negated_bracket(self):
-        self.assertEqual(count_strings_no_alt('^[^A-Z]$'), 128 - 26)
+        self.assertEqual(_count_sequence('^[^A-Z]$'), 128 - 26)
 
     def test_whitespace_size(self):
-        self.assertEqual(count_strings_no_alt(r'^\s$'), 6)
+        self.assertEqual(_count_sequence(r'^\s$'), 6)
 
     def test_custom_alphabet_bracket_still_exact(self):
-        self.assertEqual(count_strings_no_alt('^[a-c]$', alphabet='abcdef'), 3)
+        self.assertEqual(_count_sequence('^[a-c]$', alphabet='abcdef'), 3)
 
     def test_rejects_bracket_char_outside_alphabet(self):
         # disjoint: no overlap at all
         self.assertRaises(
-            ValueError, count_strings_no_alt, '^[a-c]$', alphabet='xyz'
+            ValueError, _count_sequence, '^[a-c]$', alphabet='xyz'
         )
 
     def test_rejects_bracket_partial_overlap_with_alphabet(self):
         # partial overlap: 'a' outside alphabet, 'd' unused by class
         self.assertRaises(
-            ValueError, count_strings_no_alt, '^[a-c]$', alphabet='bcd'
+            ValueError, _count_sequence, '^[a-c]$', alphabet='bcd'
         )
 
     def test_rejects_literal_outside_alphabet(self):
         self.assertRaises(
-            ValueError, count_strings_no_alt, '^Z$', alphabet='abc'
+            ValueError, _count_sequence, '^Z$', alphabet='abc'
         )
 
-    def test_rejects_alternation(self):
-        self.assertRaises(ValueError, count_strings_no_alt, '^(a|b)$')
+    def test_accepts_unquantified_group(self):
+        # (a|b): 2 disjoint literals, exact 2
+        self.assertEqual(_count_sequence('^(a|b)$'), 2)
+
+    def test_embedded_group_in_sequence(self):
+        # 1('X') * 2('(a|b)') * 1('Y') = 2
+        self.assertEqual(_count_sequence('^X(a|b)Y$'), 2)
+
+    def test_rejects_quantified_group(self):
+        self.assertRaises(ValueError, _count_sequence, '^(a|b){2,3}$')
+
+    def test_rejects_top_level_pipe(self):
+        self.assertRaises(ValueError, _count_sequence, '^a|b$')
 
     def test_rejects_unanchored(self):
-        self.assertRaises(ValueError, count_strings_no_alt, 'ab')
+        self.assertRaises(ValueError, _count_sequence, 'ab')
 
 
 class TestCountStringsPostcodeAlphabet(ReferenceTestCase):
@@ -583,7 +604,7 @@ class TestCountStringsPostcodeAlphabet(ReferenceTestCase):
         pattern = r'^E\d{1,2}[A-Z]? \d[A-Z]{2}$'
         expected = (10 + 100) * 27 * 10 * 676
         self.assertEqual(
-            count_strings_no_alt(pattern, alphabet=self.ALPHABET),
+            _count_sequence(pattern, alphabet=self.ALPHABET),
             expected,
         )
 
@@ -592,7 +613,7 @@ class TestCountStringsPostcodeAlphabet(ReferenceTestCase):
         # alphabet
         self.assertRaises(
             ValueError,
-            count_strings_no_alt,
+            _count_sequence,
             r'^\w+$',
             alphabet=self.ALPHABET,
         )
@@ -728,7 +749,7 @@ class TestCountStringsDisjointAlternation(ReferenceTestCase):
         # GIR, NPT (3 chars each) can't match the general branch
         # (1-2 letters + 1-2 digits + optional letter -- always has
         # a digit), so all 3 branches are disjoint:
-        # 2 + count_strings_no_alt('[A-Z]{1,2}[0-9]{1,2}[A-Z]?')
+        # 2 + _count_sequence('[A-Z]{1,2}[0-9]{1,2}[A-Z]?')
         #   = 2 + 2084940 = 2084942
         result = count_strings('^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?)$')
         self.assertEqual(result, 2084942)
@@ -750,17 +771,57 @@ class TestCountStringsDisjointAlternation(ReferenceTestCase):
 
     def test_single_literal_single_nonliteral_edge(self):
         # GIR (3 chars) can't match [A-Z]{1,2} (1-2 chars) -- disjoint
-        # 1 + count_strings_no_alt('[A-Z]{1,2}') = 1 + (26+676) = 703
+        # 1 + _count_sequence('[A-Z]{1,2}') = 1 + (26+676) = 703
         result = count_strings('^(GIR|[A-Z]{1,2})$')
         self.assertEqual(result, 703)
         self.assertIsInstance(result, int)
 
-    def test_embedded_alternation_still_raises(self):
-        # Alternation embedded in a larger sequence, or multiple
-        # separate alternation groups, is Plan B's territory --
-        # still unsupported, still raises
-        self.assertRaises(ValueError, count_strings, '^A(B|C)D$')
-        self.assertRaises(ValueError, count_strings, '^(A|B)-(C|D)$')
+    def test_embedded_alternation_exact(self):
+        # Plan B: group '(B|C)' is two disjoint literals, exact 2;
+        # sequence total = 1('A') * 2 * 1('D') = 2
+        result = count_strings('^A(B|C)D$')
+        self.assertEqual(result, 2)
+        self.assertIsInstance(result, int)
+
+    def test_multiple_embedded_groups_exact(self):
+        # Two groups, each exact 2 (disjoint literals); literal '-'
+        # contributes 1: total = 2 * 1 * 2 = 4
+        result = count_strings('^(A|B)-(C|D)$')
+        self.assertEqual(result, 4)
+        self.assertIsInstance(result, int)
+
+    def test_embedded_group_overlap_propagates_range(self):
+        # Group '(AB|[A-Z]{2})' overlaps internally, same numbers as
+        # test_literal_matches_nonliteral_branch_falls_back:
+        # CountRange(676, 677). Sequence total =
+        # CountRange(676, 677) * 1('X') = CountRange(676, 677)
+        result = count_strings('^(AB|[A-Z]{2})X$')
+        self.assertIsInstance(result, CountRange)
+        self.assertEqual(result, CountRange(676, 677))
+
+    def test_two_groups_one_exact_one_range(self):
+        # group1 '(A|B)' exact 2; group2 '(AB|[A-Z]{2})'
+        # CountRange(676, 677); elementwise product:
+        # CountRange(2*676, 2*677) = CountRange(1352, 1354)
+        result = count_strings('^(A|B)(AB|[A-Z]{2})$')
+        self.assertIsInstance(result, CountRange)
+        self.assertEqual(result, CountRange(1352, 1354))
+
+    def test_quantified_group_still_raises(self):
+        # A quantifier on a group is still out of scope -- must
+        # raise, not be silently mishandled
+        self.assertRaises(ValueError, count_strings, '^(A|B){2,3}$')
+        self.assertRaises(ValueError, count_strings, '^(A|B)+$')
+
+    def test_nested_group_inside_embedded_group(self):
+        # Inner '(C|D)' exact 2; outer group '(B|(C|D))' is a
+        # top-level alternation with one literal branch ('B') and
+        # one nested-alternation branch ('(C|D)', itself exact 2) --
+        # all-literal-branches-style exactness from Plan A: 1 + 2 = 3
+        # sequence total = 1('A') * 3 * 1('E') = 3
+        result = count_strings('^A(B|(C|D))E$')
+        self.assertEqual(result, 3)
+        self.assertIsInstance(result, int)
 
     def test_literal_plus_nested_alternation_nonliteral_branch(self):
         # Depth-first: the non-literal branch '(NPT|[A-Z]{1,2}[0-9]
@@ -1135,15 +1196,11 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # [A-Z]?)' followed by the inward code ' [0-9][A-Z]{2}'.
         # This is alternation embedded in a larger sequence (the
         # group isn't the entire ^(...)$ body -- the inward-code
-        # suffix follows it), which count_strings can't yet handle
-        # (Plan A only proves disjointness *within* an existing
-        # top-level alternation clause.
-        # Expected values below are hand-derived for what
-        # the pattern's cardinality/fp/fpr genuinely are -- this
-        # currently errors (ValueError from count_strings) rather
-        # than returning them, so this test fails until Plan B is
-        # done. TDD: written to state what should be true, not what
-        # the code currently does.
+        # suffix follows it), handled by Plan B (embedded groups in
+        # a sequence, resolved via range-aware multiplication -- see
+        # TestCountSequence). GIR/NPT (3 chars each) can't match the
+        # general branch (which always contains a digit), so this
+        # resolves exactly.
         n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
         n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
         n_trailing_letter = 27  # empty (1) + any of 26 letters
@@ -1168,6 +1225,281 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
             fp=14_094_207_865,
             fn=0,
             fpr=0.0039042375175425033,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_6_letters_restricted_with_alternation(self):
+        # postcodes.txt group 6: restrict letters to those actually
+        # used anywhere, GIR/NPT restored.
+        # general: [A-PR-UWYZ](23) * [A-HK-Y]?(1+23=24) *
+        # [0-9]{1,2}(110) * [A-HJKMNPR-VWXY]?(1+21=22)
+        # = 23*24*110*22 = 1_335_840
+        general = 23 * 24 * 110 * 22
+        n_outward = general + 2  # GIR, NPT: 1_335_842
+        # inward: [0-9](10) * [ABD-HJLNP-VW-Z]{2}(21**2=441)
+        n_inward = 10 * 21**2  # 4_410
+        cardinality = n_outward * n_inward  # 5_891_063_220
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 5_891_063_165
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^([A-PR-UWYZ][A-HK-Y]?[0-9]{1,2}[A-HJKMNPR-VWXY]?'
+            r'|GIR|NPT) [0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=84,
+            fp=5_891_063_165,
+            fn=0,
+            fpr=0.00163188382400132,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_7_explicit_area_codes(self):
+        # postcodes.txt group 7: all 124 valid postal area codes
+        # listed explicitly (each a literal), plus GIR/NPT, all
+        # disjoint from each other (distinct literals) and from the
+        # digit-requiring suffix -- resolves exactly via the same
+        # all-literal-branches logic as TestCountStringsDisjointAlternation.
+        n_areas = 124
+        # each area code + 1-2 digits(110) + optional trailing
+        # letter (1+21=22): 124 * 110 * 22 = 300_080
+        general = n_areas * 110 * 22
+        n_outward = general + 2  # GIR, NPT: 300_082
+        n_inward = 10 * 21**2  # 4_410 (same as test_6)
+        cardinality = n_outward * n_inward  # 1_323_361_620
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 1_323_361_565
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|'
+            'CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|'
+            'EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|'
+            'IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|'
+            'NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|'
+            'SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|'
+            'TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)'
+            '[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=429,
+            fp=1_323_361_565,
+            fn=0,
+            fpr=0.00036658448071971597,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_8_government_transfer_spec(self):
+        # postcodes.txt group 8: sourced from the UK government's
+        # official "Bulk Data Transfer - additional validation"
+        # spec (valid from 12 November 2015):
+        # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/488478/Bulk_Data_Transfer_-_additional_validation_valid_from_12_November_2015.pdf
+        #
+        # Original (mixed-case) regex from that document:
+        # ^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|
+        # (([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9]
+        # [A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))
+        # [0-9][A-Za-z]{2})$
+        #
+        # postcodes.txt's version below strips the lowercase
+        # alternatives (uppercase-only, matching this codebase's
+        # convention elsewhere) and wraps the whole alternation in
+        # one group so it's valid input to count_strings (the
+        # original, as published, has a bare top-level '|' outside
+        # any wrapping group -- harmless under re.fullmatch, since
+        # fullmatch anchors regardless of internal ^/$ placement, but
+        # not valid as a single ^(...)$ body). Confirmed behaviorally
+        # identical to the properly-nested version below by
+        # fullmatch-testing 200,000 random candidate strings, zero
+        # mismatches.
+        #
+        # 'GIR 0AA' as an explicit literal, plus 4 non-literal
+        # structural forms (2+ non-literal branches in the embedded
+        # group -- Plan A's exactness doesn't reach this, so it's a
+        # genuine CountRange, not a bug). Each form's cardinality
+        # (all disjoint from 'GIR 0AA' by construction/length):
+        # b1 = [A-Z][0-9]{1,2} = 26*110 = 2_860
+        # b2 = [A-Z][A-HJ-Y][0-9]{1,2} = 26*23*110 = 65_780
+        # b3 = [A-Z][0-9][A-Z] = 26*10*26 = 6_760
+        # b4 = [A-Z][A-HJ-Y][0-9]?[A-Z] = 26*23*11*26 = 171_028
+        b1 = 26 * 110
+        b2 = 26 * 23 * 110
+        b3 = 26 * 10 * 26
+        b4 = 26 * 23 * 11 * 26
+        # lower=max(branches), upper=sum(branches) -- existing
+        # 2+-non-literal-branch bound, unchanged by Plan A/B
+        grp_lower = max(b1, b2, b3, b4)  # 171_028
+        grp_upper = b1 + b2 + b3 + b4  # 246_428
+        n_inward = 10 * 26**2  # 6_760
+        # group's contribution, paired with inward, plus 'GIR 0AA'
+        # (1 string) at the outer level (disjoint: different length/
+        # shape from every form above):
+        cardinality_lower = 1 + grp_lower * n_inward  # 1_156_349_681...
+        cardinality_upper = 1 + grp_upper * n_inward
+        n_true_positives = 55
+        fp_lower = cardinality_lower - n_true_positives
+        fp_upper = cardinality_upper - n_true_positives
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^(GIR 0AA|([A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}'
+            r'|[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9]?[A-Z]) '
+            r'[0-9][A-Z]{2})$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=108,
+            fp=CountRange(1_206_416_586, 1_735_454_186),
+            fn=0,
+            fpr=CountRange(
+                0.00033418954381561063, 0.00048073828680952164
+            ),
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_9_full_royal_mail_spec(self):
+        # postcodes.txt group 9: the full Royal Mail spec as a
+        # single combined regex, restricted letter classes (same
+        # spirit as test_8, tighter classes). 4 non-literal forms,
+        # each requiring exactly one digit -- unlike test_8's form
+        # b4, there's no optional-digit form here, so (unlike
+        # pattern 8) this genuinely does NOT match NPT (see
+        # test_9_full_royal_mail_spec in
+        # TestConcreteRexMetricFullPostcodes for the real-data
+        # confirmation; the E-subset has no NPT postcodes, so fn=0
+        # here regardless).
+        # c1 = [A-PR-UWYZ][0-9][0-9A-HJKPSTUW]? = 23*10*(1+25)=5_980
+        # c2 = [A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?
+        #    = 23*23*10*(1+22) = 121_670
+        # c3 = [A-PR-UWYZ][0-9][A-HJKSTUW] = 23*10*14 = 3_220
+        # c4 = [A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY] = 23*23*10*12
+        #    = 63_480
+        c1 = 23 * 10 * (1 + 25)
+        c2 = 23 * 23 * 10 * (1 + 22)
+        c3 = 23 * 10 * 14
+        c4 = 23 * 23 * 10 * 12
+        grp_lower = max(c1, c2, c3, c4)  # 121_670
+        grp_upper = c1 + c2 + c3 + c4  # 194_350
+        n_inward = 10 * 21**2  # 4_410
+        cardinality_lower = grp_lower * n_inward + 1  # 'GIR 0AA'
+        cardinality_upper = grp_upper * n_inward + 1
+        n_true_positives = 55
+        fp_lower = cardinality_lower - n_true_positives
+        fp_upper = cardinality_upper - n_true_positives
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^(([A-PR-UWYZ][0-9][0-9A-HJKPSTUW]?'
+            r'|[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?'
+            r'|[A-PR-UWYZ][0-9][A-HJKSTUW]'
+            r'|[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY]) '
+            r'[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=181,
+            fp=CountRange(536_564_646, 857_083_446),
+            fn=0,
+            fpr=CountRange(
+                0.00014863381053874586, 0.00023742074599648414
+            ),
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_10_london_and_area_groups(self):
+        # postcodes.txt group 10: London areas (with optional
+        # subdistrict letter) and non-London areas (without), plus
+        # GIR, NPT -- 4 branches in the embedded group, 2 of them
+        # non-literal (London-shaped, area-list-shaped), so this
+        # falls to the loose bound (2+ non-literal branches, same as
+        # test_two_nonliteral_branches_unchanged).
+        # London: 8 areas * 1-2 digits(110) * optional letter(1+26=27)
+        london = 8 * 110 * 27  # 23_760
+        # non-London: 116 areas * 1-2 digits(110)
+        area_list = 116 * 110  # 12_760
+        grp_lower = max(london, area_list, 1, 1)  # 23_760 (GIR/NPT=1 each)
+        grp_upper = london + area_list + 1 + 1  # 36_522
+        n_inward = 10 * 21**2  # 4_410
+        cardinality_lower = grp_lower * n_inward
+        cardinality_upper = grp_upper * n_inward
+        n_true_positives = 55
+        fp_lower = cardinality_lower - n_true_positives
+        fp_upper = cardinality_upper - n_true_positives
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+            'WS|WV|YO|ZE)[0-9]{1,2}|GIR|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=430,
+            fp=CountRange(104_781_545, 161_061_965),
+            fn=0,
+            fpr=CountRange(
+                2.9025543191466766e-05, 4.461578631628316e-05
+            ),
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_11_gir_handled_explicitly(self):
+        # postcodes.txt group 11: as test_10, but GIR pulled out to
+        # a separate top-level literal branch ('GIR 0AA'), removing
+        # the over-acceptance test_10's comment flags. Inner group
+        # is now (London|area-list|NPT) -- still 2 non-literal
+        # branches, still a range -- combined with 'GIR 0AA' at the
+        # outer level (disjoint by construction: different length/
+        # inward shape).
+        london = 8 * 110 * 27  # 23_760 (same as test_10)
+        area_list = 116 * 110  # 12_760
+        grp_lower = max(london, area_list, 1)  # NPT=1
+        grp_upper = london + area_list + 1
+        n_inward = 10 * 21**2  # 4_410
+        inner_lower = grp_lower * n_inward
+        inner_upper = grp_upper * n_inward
+        cardinality_lower = 1 + inner_lower  # 'GIR 0AA'
+        cardinality_upper = 1 + inner_upper
+        n_true_positives = 55
+        fp_lower = cardinality_lower - n_true_positives
+        fp_upper = cardinality_upper - n_true_positives
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^(((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+            'WS|WV|YO|ZE)[0-9]{1,2}|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=436,
+            fp=CountRange(104_781_546, 161_057_556),
+            fn=0,
+            fpr=CountRange(
+                2.9025543468476836e-05, 4.461456497888132e-05
+            ),
             fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
@@ -1442,19 +1774,14 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
 
     def test_5_with_alternation(self):
         # The real postcodes.txt pattern 5, with its '|GIR|NPT'
-        # alternation restored -- same genuine limitation as the
-        # E-subset version of this test (alternation embedded in a
-        # larger sequence, not the entire ^(...)$ body
-        # Unlike the E-subset (fn=0 either way), the full
-        # dataset actually includes GIR/NPT-prefixed postcodes
-        # (special/reserved codes, e.g. 'GIR 0AA', 'NPT 0AD') --
-        # restoring the alternation should recover exactly those
-        # 2_418 previously-missed matches, taking fn to 0 (confirmed
-        # directly against the full dataset via re.fullmatch, since
-        # evaluate() itself can't be used here -- see below). TDD:
-        # expected values are what should be true once Plan B lands;
-        # this currently errors (ValueError from count_strings)
-        # rather than returning them, so this test fails until then.
+        # alternation restored -- same shape as the E-subset version
+        # of this test (alternation embedded in a larger sequence,
+        # not the entire ^(...)$ body), handled by Plan B. Unlike
+        # the E-subset (fn=0 either way), the full dataset actually
+        # includes GIR/NPT-prefixed postcodes (special/reserved
+        # codes, e.g. 'GIR 0AA', 'NPT 0AD') -- restoring the
+        # alternation recovers exactly those 2_418 previously-missed
+        # matches, taking fn to 0.
         n_letters = sum(26**k for k in range(1, 3))  # 702 (1-2 letters)
         n_digits = sum(10**k for k in range(1, 3))  # 110 (1-2 digits)
         n_trailing_letter = 27  # empty (1) + any of 26 letters
@@ -1527,6 +1854,256 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
             fn=2_418,
             fpr=0.001415111148899497,
             fnr=0.0009567852017222134,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_6_with_alternation(self):
+        # postcodes.txt group 6 (the literal regex, not the
+        # empirically-narrower test_6_valid_letters_only_no_alternation
+        # above): letters restricted to those actually used anywhere,
+        # GIR/NPT restored. Same formula as the E-subset version of
+        # this test; fn=0 here too (GIR/NPT ARE present in the full
+        # dataset, but this pattern explicitly covers them as
+        # literal branches).
+        general = 23 * 24 * 110 * 22  # 1_335_840 (see E-subset version)
+        n_outward = general + 2  # 1_335_842
+        n_inward = 10 * 21**2  # 4_410
+        cardinality = n_outward * n_inward  # 5_891_063_220
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp = cardinality - n_true_matched  # 5_888_536_007
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^([A-PR-UWYZ][A-HK-Y]?[0-9]{1,2}[A-HJKMNPR-VWXY]?'
+            r'|GIR|NPT) [0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=84,
+            fp=5_888_536_007,
+            fn=0,
+            fpr=0.0016311849176930907,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_7_explicit_area_codes(self):
+        # postcodes.txt group 7: all 124 valid area codes listed
+        # explicitly, plus GIR/NPT -- all disjoint literals, exact.
+        # Same formula as the E-subset version; fn=0 (the 124-code
+        # list is exhaustive over the real data too).
+        n_areas = 124
+        general = n_areas * 110 * 22  # 300_080
+        n_outward = general + 2  # 300_082
+        n_inward = 10 * 21**2  # 4_410
+        cardinality = n_outward * n_inward  # 1_323_361_620
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp = cardinality - n_true_matched  # 1_320_834_407
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|'
+            'CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|'
+            'EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|'
+            'IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|'
+            'NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|'
+            'SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|'
+            'TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)'
+            '[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=429,
+            fp=1_320_834_407,
+            fn=0,
+            fpr=0.00036588468864031813,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_8_government_transfer_spec(self):
+        # postcodes.txt group 8 -- see the E-subset version of this
+        # test for the source (UK government "Bulk Data Transfer"
+        # spec PDF), the original mixed-case regex, and the
+        # 200,000-candidate behavioral-equivalence check confirming
+        # the uppercase-only, properly-nested version below matches
+        # it exactly under fullmatch.
+        #
+        # 'GIR 0AA' literal plus 4 non-literal structural forms --
+        # same 2+-non-literal-branch CountRange as the E-subset
+        # version. fn=0: this pattern's form 4 has an *optional*
+        # digit ([0-9]?), which is why NPT (letter-letter-letter, no
+        # digit) still matches here, unlike test_9 below.
+        b1 = 26 * 110  # 2_860
+        b2 = 26 * 23 * 110  # 65_780
+        b3 = 26 * 10 * 26  # 6_760
+        b4 = 26 * 23 * 11 * 26  # 171_028
+        grp_lower = max(b1, b2, b3, b4)
+        grp_upper = b1 + b2 + b3 + b4
+        n_inward = 10 * 26**2  # 6_760
+        cardinality_lower = 1 + grp_lower * n_inward
+        cardinality_upper = 1 + grp_upper * n_inward
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp_lower = cardinality_lower - n_true_matched
+        fp_upper = cardinality_upper - n_true_matched
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^(GIR 0AA|([A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}'
+            r'|[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9]?[A-Z]) '
+            r'[0-9][A-Z]{2})$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=108,
+            fp=CountRange(1_203_889_428, 1_732_927_028),
+            fn=0,
+            fpr=CountRange(
+                0.00033348972905817913, 0.00048003857464334806
+            ),
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_9_full_royal_mail_spec(self):
+        # postcodes.txt group 9: same shape as test_8, tighter
+        # letter classes. Unlike test_8's form 4, there's no
+        # optional-digit form here -- every one of the 4 structural
+        # forms requires exactly one digit. NPT (letter-letter-
+        # letter, no digit) genuinely doesn't match any of them, so
+        # fn=7084 (all 7_084 real NPT-prefixed postcodes) -- verified
+        # directly two ways: `re.fullmatch` over the full dataset
+        # here, and independently via ~/python/fAST/check_postcodes.py
+        # (a pre-existing standalone script, polars `str.contains`
+        # over a separately-loaded copy of the same data), which
+        # reports 2,520,129 / 2,527,213 matched for this exact
+        # pattern -- 2,527,213 - 2,520,129 = 7,084, confirming this
+        # isn't a derivation error.
+        c1 = 23 * 10 * (1 + 25)  # 5_980
+        c2 = 23 * 23 * 10 * (1 + 22)  # 121_670
+        c3 = 23 * 10 * 14  # 3_220
+        c4 = 23 * 23 * 10 * 12  # 63_480
+        grp_lower = max(c1, c2, c3, c4)
+        grp_upper = c1 + c2 + c3 + c4
+        n_inward = 10 * 21**2  # 4_410
+        cardinality_lower = grp_lower * n_inward + 1  # 'GIR 0AA'
+        cardinality_upper = grp_upper * n_inward + 1
+        n_true_positives = 2_527_213
+        fn = 7_084
+        n_true_matched = n_true_positives - fn  # 2_520_129
+        fp_lower = cardinality_lower - n_true_matched
+        fp_upper = cardinality_upper - n_true_matched
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            r'^(([A-PR-UWYZ][0-9][0-9A-HJKPSTUW]?'
+            r'|[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?'
+            r'|[A-PR-UWYZ][0-9][A-HJKSTUW]'
+            r'|[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY]) '
+            r'[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=181,
+            fp=CountRange(534_044_572, 854_563_372),
+            fn=7_084,
+            fpr=CountRange(
+                0.0001479358282239781, 0.00023672282583689567
+            ),
+            fnr=0.00280308782837062,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_10_london_and_area_groups(self):
+        # postcodes.txt group 10: London areas (optional subdistrict
+        # letter) and non-London areas, plus GIR, NPT -- 2
+        # non-literal branches in the embedded group, so a loose
+        # bound, same shape as the E-subset version. fn=0: GIR and
+        # NPT are both still explicit literal branches here.
+        london = 8 * 110 * 27  # 23_760
+        area_list = 116 * 110  # 12_760
+        grp_lower = max(london, area_list, 1, 1)
+        grp_upper = london + area_list + 1 + 1
+        n_inward = 10 * 21**2  # 4_410
+        cardinality_lower = grp_lower * n_inward
+        cardinality_upper = grp_upper * n_inward
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp_lower = cardinality_lower - n_true_matched
+        fp_upper = cardinality_upper - n_true_matched
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+            'WS|WV|YO|ZE)[0-9]{1,2}|GIR|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=430,
+            fp=CountRange(102_254_387, 158_534_807),
+            fn=0,
+            fpr=CountRange(
+                2.832551480437138e-05, 4.3915768843117314e-05
+            ),
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_11_gir_handled_explicitly(self):
+        # postcodes.txt group 11: as test_10, but GIR pulled out to
+        # a separate top-level literal branch. fn=0: NPT stays an
+        # explicit literal branch inside the inner group.
+        london = 8 * 110 * 27  # 23_760
+        area_list = 116 * 110  # 12_760
+        grp_lower = max(london, area_list, 1)  # NPT=1
+        grp_upper = london + area_list + 1
+        n_inward = 10 * 21**2  # 4_410
+        inner_lower = grp_lower * n_inward
+        inner_upper = grp_upper * n_inward
+        cardinality_lower = 1 + inner_lower  # 'GIR 0AA'
+        cardinality_upper = 1 + inner_upper
+        n_true_positives = 2_527_213
+        fn = 0
+        n_true_matched = n_true_positives - fn
+        fp_lower = cardinality_lower - n_true_matched
+        fp_upper = cardinality_upper - n_true_matched
+        fp_denominator = self.q.universe - n_true_positives
+
+        pattern = (
+            '^(((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+            'WS|WV|YO|ZE)[0-9]{1,2}|NPT) '
+            '[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
+        )
+        score = self.q.evaluate(pattern)
+        expected = RexMetrics(
+            len=436,
+            fp=CountRange(102_254_388, 158_530_398),
+            fn=0,
+            fpr=CountRange(
+                2.8325515081381648e-05, 4.391454750486047e-05
+            ),
+            fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
 
