@@ -15,6 +15,7 @@ from tdda.rexpy.rexutils import PRNGState
 from tdda.xerpy.xerpy import Xerpy
 
 DEFAULT_MAX_PLUS = 5
+DEFAULT_N_SAMPLES = 100_000
 
 #: The canonical (alphabet-independent) character sets matched by
 #: `\\d`, `\\w` and `\\s`. `\\D`, `\\W` and `\\S` are their
@@ -845,27 +846,38 @@ class RexMetrics:
 
     Args:
         len (int): length of the regex string.
-        fp (int or CountRange): false positive count -- strings the
-            regex admits beyond the true positives it actually
-            matches. A `CountRange` if the pattern has alternation
-            with genuine overlap uncertainty, an `int` otherwise
-            (see `count_strings`).
+        fp (int or CountRange): false positive count. In
+            `ConcreteRexMetric`'s default (cardinality-based) mode:
+            strings the regex admits beyond the true positives it
+            actually matches -- a `CountRange` if the pattern has
+            alternation with genuine overlap uncertainty, an `int`
+            otherwise (see `count_strings`). In validator mode (see
+            `ConcreteRexMetric.evaluate`): a plain `int` count of
+            samples drawn from the candidate pattern that fail the
+            validator -- a different statistic, computed without
+            `count_strings` at all.
         fn (int): false negative count -- true positives the regex
             fails to match. Always exact (found by directly testing
             the compiled pattern against the real positives), never
             a range, regardless of alternation.
-        fpr (float or CountRange): false positive rate (`fp`
-            divided by the number of "invalid" strings in the
-            universe) -- a `CountRange` of rates iff `fp` is a
-            `CountRange`. Optional; `eq()` only compares it when
-            given (on either side).
+        fpr (float or CountRange): false positive rate. In the
+            default mode: `fp` divided by the number of "invalid"
+            strings in the universe -- a `CountRange` of rates iff
+            `fp` is a `CountRange`. In validator mode: `fp` divided
+            by the number of (deduped) candidate samples drawn --
+            a rate over the *candidate pattern's own output*, not
+            over the full alphabet/length universe, and not
+            comparable in scale to the default mode's `fpr`.
+            Optional; `eq()` only compares it when given (on either
+            side).
         fnr (float): false negative rate (`fn / n_positives`).
             Optional, compared by `eq()` only when given.
         universe (int): size of the assumed universe of possible
             strings. Not itself a quality measure (it's context,
             not a property of the regex), so `eq()` never compares
             it directly -- but uses it to derive a default `tol`
-            when one isn't given explicitly.
+            when one isn't given explicitly. `None` in validator
+            mode, which has no notion of a universe.
     """
 
     def __init__(self, len, fp, fn, fpr=None, fnr=None, universe=None):
@@ -990,19 +1002,40 @@ class ConcreteRexMetric:
             universe. Defaults to the longest of `all_positives`.
         n_positives (int): number of times to call `all_positives`
             when it's a callable or str, before deduping. Ignored
-            when it's a list/tuple. Defaults to 100,000.
-        seed (int): PRNG seed used only while materializing a
-            callable/str `all_positives` (see `PRNGState`);
-            restored afterwards regardless. `None` leaves the
-            caller's PRNG state untouched (and the sample
+            when it's a list/tuple. Defaults to `DEFAULT_N_SAMPLES`
+            (100,000).
+        seed (int): PRNG seed used while materializing a callable/
+            str `all_positives` (see `PRNGState`), and reused by
+            `evaluate()` for candidate-sampling when `validator` is
+            set; restored afterwards regardless. `None` leaves the
+            caller's PRNG state untouched (and samples
             unreproducible).
+        validator (callable): an optional `str -> bool` oracle used
+            by `evaluate()` to compute `fp`/`fpr` by sampling from
+            the *candidate* pattern and checking each sample against
+            it, instead of the cardinality-based calculation (see
+            `evaluate()`). If `all_positives` is a regex string and
+            `validator` isn't given explicitly, one is derived
+            automatically (`lambda s: bool(re.fullmatch(spec, s))`).
+            Needed because the cardinality-based `fp` calculation
+            assumes `all_positives` is the *complete* population of
+            true positives -- true for a real, near-exhaustive
+            dataset, but not for a sample drawn from a generator,
+            where "matched by the candidate but not in this sample"
+            conflates real false positives with true positives that
+            simply weren't drawn.
     """
 
     def __init__(
         self, all_positives, alphabet=None, min_length=None,
-        max_length=None, n_positives=100_000, seed=None,
+        max_length=None, n_positives=DEFAULT_N_SAMPLES, seed=None,
+        validator=None,
     ):
         self.seed = seed
+        spec = all_positives if isinstance(all_positives, str) else None
+        if validator is None and spec is not None:
+            validator = lambda s: bool(re.fullmatch(spec, s))
+        self.validator = validator
         if isinstance(all_positives, str):
             all_positives = Xerpy(all_positives).generate
         if callable(all_positives):
@@ -1026,7 +1059,10 @@ class ConcreteRexMetric:
             for k in range(self.min_length, self.max_length + 1)
         )
 
-    def evaluate(self, pattern, max_plus=DEFAULT_MAX_PLUS):
+    def evaluate(
+        self, pattern, max_plus=DEFAULT_MAX_PLUS,
+        n_candidates=DEFAULT_N_SAMPLES,
+    ):
         """Score `pattern` against `self.all_positives`.
 
         `pattern` may contain alternation: `count_strings` returns
@@ -1039,9 +1075,26 @@ class ConcreteRexMetric:
         to `DEFAULT_MAX_PLUS` (5), which may not reach `self`'s
         actual `max_length` for patterns using them.
 
+        If `self.validator` is set, `fp`/`fpr` are computed
+        differently: `n_candidates` strings are sampled from
+        `pattern` itself (via `Xerpy`, seeded/restored the same way
+        as `all_positives`), deduped, and checked against
+        `self.validator` -- `fp` is how many fail it, `fpr` is that
+        count over the deduped sample size. This is a different
+        statistic from the cardinality-based `fpr` (a rate over
+        *this pattern's own generated output*, not over the full
+        alphabet/length universe), and doesn't use `self.universe`
+        at all. `count_strings`/`max_plus` aren't used in this mode
+        either -- `pattern` only needs to be valid for `Xerpy`, not
+        for `count_strings`'s more restricted grammar.
+
         Args:
             pattern (str): the candidate regex to score.
-            max_plus (int): see `count_strings`.
+            max_plus (int): see `count_strings`. Unused when
+                `self.validator` is set.
+            n_candidates (int): number of samples to draw from
+                `pattern` when `self.validator` is set. Unused
+                otherwise.
 
         Returns:
             RexMetrics
@@ -1051,6 +1104,21 @@ class ConcreteRexMetric:
             1 for s in self.all_positives if not compiled.fullmatch(s)
         )
         fnr = _rate(fn, self.n_positives)
+        if self.validator is not None:
+            generate = Xerpy(pattern).generate
+            prng_state = PRNGState(self.seed)
+            try:
+                candidates = list(
+                    {generate() for _ in range(n_candidates)}
+                )
+            finally:
+                prng_state.restore()
+            fp = sum(1 for s in candidates if not self.validator(s))
+            fpr = _rate(fp, len(candidates))
+            return RexMetrics(
+                len=len(pattern), fp=fp, fn=fn, fpr=fpr, fnr=fnr,
+                universe=None,
+            )
         cardinality = count_strings(
             pattern, max_plus=max_plus, alphabet=self.alphabet
         )

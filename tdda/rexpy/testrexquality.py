@@ -1834,22 +1834,20 @@ class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
     # a real dataset, and score a looser candidate (POSTCODE_RE_7)
     # against it -- the first concrete test of using a regex spec as
     # a synthetic ground truth (see the 2026-07-03 ideas file).
-    # Deliberately unseeded. len is a true invariant (just
-    # len(pattern), doesn't look at the sample at all). fn/fnr are
-    # asserted as 0/0.0 as a belief this test exists to keep
-    # challenging on every future run, not a proof -- if a still-
-    # undiscovered discrepancy between TIGHT2 and POSTCODE_RE_7 ever
-    # exists, that's exactly what running this unseeded, repeatedly,
-    # is meant to catch. universe depends on self.min_length/
-    # max_length, themselves computed from the sample's own lengths
-    # -- not invariant by construction -- but empirically TIGHT2
-    # generates length 6 (the rarest of the 4 possible lengths) about
-    # 2% of the time, so missing it across 100_000 draws has
-    # probability ~(1-0.02)**100_000, negligible enough to assert on
-    # in practice. fp/fpr are left unasserted -- they genuinely vary
-    # with the sample, and that's the point: running this repeatedly,
-    # unseeded, is meant to build confidence across many different
-    # random draws rather than pin down one fixed number.
+    # Since the spec is a regex string, ConcreteRexMetric derives a
+    # validator automatically, so evaluate() uses candidate-sampling
+    # for fp/fpr rather than the cardinality-based calculation (see
+    # ConcreteRexMetric.evaluate) -- no universe involved, so it
+    # isn't asserted. Deliberately unseeded. len is a true invariant
+    # (just len(pattern)). fn/fnr are asserted as 0/0.0 as a belief
+    # this test exists to keep challenging on every future run, not
+    # a proof. fp/fpr are left unasserted -- they genuinely vary with
+    # the sample -- but in this specific pairing they've turned out
+    # to be a real, substantial finding: roughly half of what
+    # POSTCODE_RE_7 generates doesn't satisfy TIGHT2, because (like
+    # the bug already fixed in POSTCODE_RE_10/TIGHT1/TIGHT2 itself)
+    # it applies the optional subdistrict letter to all 124 areas
+    # instead of restricting it to London.
 
     @tag
     def test_postcode_re_7_against_tight2_xerpy_sample(self):
@@ -1861,8 +1859,30 @@ class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
         self.assertEqual(score.len, 426)
         self.assertEqual(score.fn, 0)
         self.assertEqual(score.fnr, 0.0)
-        self.assertEqual(score.universe, 133_571_716_852_540)
+        self.assertIsNone(score.universe)
         print(vars(score))
+
+    @tag
+    def test_tight2_against_itself(self):
+        # Candidate == spec, so both sides of the invariant apply at
+        # once: fn=0 because every positive was generated FROM this
+        # pattern (Xerpy's basic contract), and fp=0 because the
+        # validator-mode candidate-sampling checks samples of this
+        # same pattern against its own fullmatch, which must always
+        # succeed. A true, zero-tolerance invariant, not a belief --
+        # if this ever fails, it's a real Xerpy bug (it generated a
+        # string that doesn't satisfy its own input pattern).
+        q = ConcreteRexMetric(
+            POSTCODE_RE_TIGHT2,
+            alphabet=DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        )
+        score = q.evaluate(POSTCODE_RE_TIGHT2)
+        self.assertEqual(score.len, len(POSTCODE_RE_TIGHT2))
+        self.assertEqual(score.fn, 0)
+        self.assertEqual(score.fnr, 0.0)
+        self.assertEqual(score.fp, 0)
+        self.assertEqual(score.fpr, 0.0)
+        self.assertIsNone(score.universe)
 
 
 @unittest.skipUnless(
