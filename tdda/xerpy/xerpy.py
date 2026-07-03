@@ -4,8 +4,8 @@
 #
 # Copyright (c) Stochastic Solutions Limited, 2018-2026
 #
-# All rights reserved
-#
+# Copied from Miro (Stochastic Solutions) and now
+# MIT licensed like the rest of TDDA.
 
 
 import random
