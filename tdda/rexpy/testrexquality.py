@@ -4,7 +4,9 @@
 Tests for tdda.rexpy.quality
 """
 
+import itertools
 import os
+import random
 import unittest
 
 import polars as pl
@@ -118,11 +120,12 @@ POSTCODE_RE_9 = (
 )
 
 # postcodes.txt group 10: London areas (with optional subdistrict
-# letter) and non-London areas (without), plus GIR, NPT -- GIR is
-# folded into the inward-code alternation here, which over-accepts
-# slightly (see POSTCODE_RE_TIGHT1, which fixes this).
+# letter, restricted to the 21 letters real data actually uses --
+# excludes I, L, O, Q, Z) and non-London areas (without), plus GIR,
+# NPT -- GIR is folded into the inward-code alternation here, which
+# over-accepts slightly (see POSTCODE_RE_TIGHT1, which fixes this).
 POSTCODE_RE_10 = (
-    '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+    '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-HJKMNPR-VWXY]?|(AB|AL|B|BA|'
     'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
     'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
     'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
@@ -137,9 +140,13 @@ POSTCODE_RE_10 = (
 # postcodes.txt group 11: the tightest, most structurally-correct
 # pattern in the progression -- London areas get the optional
 # subdistrict letter that non-London areas don't (unlike group 7,
-# which allows it everywhere), and GIR is its own exact literal
-# ('GIR 0AA'), not folded into the inward-code alternation the way
-# group 10 leaves it (which over-accepts). Shared between
+# which allows it everywhere), restricted to the 21 letters real
+# data actually uses (no I, L, O, Q, Z -- found only once this was
+# used as an xerpy positives spec, since being over-permissive here
+# never shows up as fn against real data, only as fn once you
+# generate from it), and GIR is its own exact literal ('GIR 0AA'),
+# not folded into the inward-code alternation the way group 10
+# leaves it (which over-accepts). Shared between
 # test_11_gir_handled_explicitly and any xerpy-based positives spec
 # that wants a trustworthy generator for real postcode structure.
 POSTCODE_RE_TIGHT1 = (
@@ -148,7 +155,7 @@ POSTCODE_RE_TIGHT1 = (
         '('
             '(EC|WC|NW|SE|SW|E|N|W)'  # London postal areas
             '[0-9]{1,2}'              # District
-            '[A-Z]?'                  # Optional subdistrict
+            '[A-HJKMNPR-VWXY]?'       # Optional subdistrict, no I,L,O,Q,Z
         '|'
             '('                       # Normal non-London postal areas
                 'AB|AL|B|BA|'
@@ -171,6 +178,37 @@ POSTCODE_RE_TIGHT1 = (
         'GIR 0AA'                      # Special Girobank full postcode
     ')'
     '$'
+)
+
+
+# Even tighter than TIGHT1: real data shows the inward code's letter
+# exclusions (C, I, K, M, O) hold everywhere *except* NPT, which has
+# exactly one real postcode ('NPT 0VA') using V as its first inward
+# letter -- never as the second, and never for any other area. So
+# NPT gets pulled out with its own asymmetric inward-code spec
+# (first letter's class keeps V, second's excludes it), letting the
+# shared inward code used by every other branch exclude V entirely.
+# London subdistrict letter also restricted to the 21 real letters
+# (no I, L, O, Q, Z), same fix as TIGHT1.
+# Verified fn=0 against the full ~2.5M postcode dataset.
+POSTCODE_RE_TIGHT2 = (
+    '^('
+        '('
+            '(EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-HJKMNPR-VWXY]?'
+            '|'
+            '(AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|'
+            'HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|'
+            'ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|'
+            'SK|SL|SM|SN|SO|SP|SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|'
+            'WN|WR|WS|WV|YO|ZE)[0-9]{1,2}'
+        ')'
+        ' [0-9][ABD-HJLNP-UW-Z]{2}'   # shared inward code: V excluded
+        '|'
+        'NPT [0-9][ABD-HJLNP-VW-Z][ABD-HJLNP-UW-Z]'  # NPT: V, 1st letter only
+        '|'
+        'GIR 0AA'
+    ')$'
 )
 
 
@@ -1042,8 +1080,6 @@ class TestConcreteRexMetricGeneratorPositives(ReferenceTestCase):
     # deduped, since that's the caller's explicit data).
 
     def test_materializes_exactly_n_positives_when_all_distinct(self):
-        import itertools
-
         counter = itertools.count()
         q = ConcreteRexMetric(
             lambda: str(next(counter)), alphabet='[0-9]', n_positives=17
@@ -1061,11 +1097,7 @@ class TestConcreteRexMetricGeneratorPositives(ReferenceTestCase):
         self.assertEqual(q.all_positives, ['a'])
 
     def test_same_seed_gives_same_sample(self):
-        import random
-
-        def generate():
-            return random.choice('ab')
-
+        generate = lambda: random.choice('ab')
         q1 = ConcreteRexMetric(
             generate, alphabet='ab', n_positives=50, seed=42
         )
@@ -1077,11 +1109,7 @@ class TestConcreteRexMetricGeneratorPositives(ReferenceTestCase):
         )
 
     def test_different_seeds_give_different_samples(self):
-        import random
-
-        def generate():
-            return random.choice('abcdefghijklmnopqrstuvwxyz')
-
+        generate = lambda: random.choice('abcdefghijklmnopqrstuvwxyz')
         q1 = ConcreteRexMetric(
             generate, alphabet='[a-z]', n_positives=5, seed=1
         )
@@ -1097,17 +1125,19 @@ class TestConcreteRexMetricGeneratorPositives(ReferenceTestCase):
         self.assertEqual(q.seed, 7)
 
     def test_restores_global_prng_state(self):
-        import random
-
-        random.seed(12345)
-        state_before = random.getstate()
-        ConcreteRexMetric(
-            lambda: str(random.random()),
-            alphabet='[0-9.]',
-            n_positives=10,
-            seed=1,
-        )
-        self.assertEqual(random.getstate(), state_before)
+        true_ambient_state = random.getstate()
+        try:
+            random.seed(12345)
+            state_before = random.getstate()
+            ConcreteRexMetric(
+                lambda: str(random.random()),
+                alphabet='[0-9.]',
+                n_positives=10,
+                seed=1,
+            )
+            self.assertEqual(random.getstate(), state_before)
+        finally:
+            random.setstate(true_ambient_state)
 
     def test_list_input_is_not_deduped(self):
         # Unlike the generator path, a supplied list/tuple is the
@@ -1654,12 +1684,13 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # non-literal (London-shaped, area-list-shaped), so this
         # falls to the loose bound (2+ non-literal branches, same as
         # test_two_nonliteral_branches_unchanged).
-        # London: 8 areas * 1-2 digits(110) * optional letter(1+26=27)
-        london = 8 * 110 * 27  # 23_760
+        # London: 8 areas * 1-2 digits(110) * optional letter,
+        # restricted to the 21 real letters (1+21=22)
+        london = 8 * 110 * 22  # 19_360
         # non-London: 116 areas * 1-2 digits(110)
         area_list = 116 * 110  # 12_760
-        grp_lower = max(london, area_list, 1, 1)  # 23_760 (GIR/NPT=1 each)
-        grp_upper = london + area_list + 1 + 1  # 36_522
+        grp_lower = max(london, area_list, 1, 1)  # 19_360 (GIR/NPT=1 each)
+        grp_upper = london + area_list + 1 + 1  # 32_122
         n_inward = 10 * 21**2  # 4_410
         cardinality_lower = grp_lower * n_inward
         cardinality_upper = grp_upper * n_inward
@@ -1670,11 +1701,11 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
 
         score = self.q.evaluate(POSTCODE_RE_10)
         expected = RexMetrics(
-            len=427,
-            fp=CountRange(104_781_545, 161_061_965),
+            len=438,
+            fp=CountRange(85_377_545, 141_657_965),
             fn=0,
             fpr=CountRange(
-                2.9025543191466766e-05, 4.461578631628316e-05
+                2.365043977905553e-05, 3.924068290387193e-05
             ),
             fnr=0.0,
         )
@@ -1688,7 +1719,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # branches, still a range -- combined with 'GIR 0AA' at the
         # outer level (disjoint by construction: different length/
         # inward shape).
-        london = 8 * 110 * 27  # 23_760 (same as test_10)
+        london = 8 * 110 * 22  # 19_360 (same as test_10)
         area_list = 116 * 110  # 12_760
         grp_lower = max(london, area_list, 1)  # NPT=1
         grp_upper = london + area_list + 1
@@ -1704,11 +1735,11 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
 
         score = self.q.evaluate(POSTCODE_RE_TIGHT1)
         expected = RexMetrics(
-            len=433,
-            fp=CountRange(104_781_546, 161_057_556),
+            len=444,
+            fp=CountRange(85_377_546, 141_653_556),
             fn=0,
             fpr=CountRange(
-                2.9025543468476836e-05, 4.461456497888132e-05
+                2.3650440056065605e-05, 3.923946156647009e-05
             ),
             fnr=0.0,
         )
@@ -1795,6 +1826,43 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         self.assertTrue(score.eq(expected))
         self.assertIsInstance(score.fp, int)
         self.assertIsInstance(score.fpr, float)
+
+
+class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
+    # Use POSTCODE_RE_TIGHT2 (verified fn=0 against the real ~2.5M
+    # postcode dataset) as an xerpy-sampled positives spec instead of
+    # a real dataset, and score a looser candidate (POSTCODE_RE_7)
+    # against it -- the first concrete test of using a regex spec as
+    # a synthetic ground truth (see the 2026-07-03 ideas file).
+    # Deliberately unseeded. len is a true invariant (just
+    # len(pattern), doesn't look at the sample at all). fn/fnr are
+    # asserted as 0/0.0 as a belief this test exists to keep
+    # challenging on every future run, not a proof -- if a still-
+    # undiscovered discrepancy between TIGHT2 and POSTCODE_RE_7 ever
+    # exists, that's exactly what running this unseeded, repeatedly,
+    # is meant to catch. universe depends on self.min_length/
+    # max_length, themselves computed from the sample's own lengths
+    # -- not invariant by construction -- but empirically TIGHT2
+    # generates length 6 (the rarest of the 4 possible lengths) about
+    # 2% of the time, so missing it across 100_000 draws has
+    # probability ~(1-0.02)**100_000, negligible enough to assert on
+    # in practice. fp/fpr are left unasserted -- they genuinely vary
+    # with the sample, and that's the point: running this repeatedly,
+    # unseeded, is meant to build confidence across many different
+    # random draws rather than pin down one fixed number.
+
+    @tag
+    def test_postcode_re_7_against_tight2_xerpy_sample(self):
+        q = ConcreteRexMetric(
+            POSTCODE_RE_TIGHT2,
+            alphabet=DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        )
+        score = q.evaluate(POSTCODE_RE_7)
+        self.assertEqual(score.len, 426)
+        self.assertEqual(score.fn, 0)
+        self.assertEqual(score.fnr, 0.0)
+        self.assertEqual(score.universe, 133_571_716_852_540)
+        print(vars(score))
 
 
 @unittest.skipUnless(
@@ -2201,7 +2269,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         # non-literal branches in the embedded group, so a loose
         # bound, same shape as the E-subset version. fn=0: GIR and
         # NPT are both still explicit literal branches here.
-        london = 8 * 110 * 27  # 23_760
+        london = 8 * 110 * 22  # 19_360 (letter restricted to 21 real ones)
         area_list = 116 * 110  # 12_760
         grp_lower = max(london, area_list, 1, 1)
         grp_upper = london + area_list + 1 + 1
@@ -2217,11 +2285,11 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
 
         score = self.q.evaluate(POSTCODE_RE_10)
         expected = RexMetrics(
-            len=427,
-            fp=CountRange(102_254_387, 158_534_807),
+            len=438,
+            fp=CountRange(82_850_387, 139_130_807),
             fn=0,
             fpr=CountRange(
-                2.832551480437138e-05, 4.3915768843117314e-05
+                2.2950407629125958e-05, 3.854066166787189e-05
             ),
             fnr=0.0,
         )
@@ -2231,7 +2299,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         # postcodes.txt group 11: as test_10, but GIR pulled out to
         # a separate top-level literal branch. fn=0: NPT stays an
         # explicit literal branch inside the inner group.
-        london = 8 * 110 * 27  # 23_760
+        london = 8 * 110 * 22  # 19_360 (letter restricted to 21 real ones)
         area_list = 116 * 110  # 12_760
         grp_lower = max(london, area_list, 1)  # NPT=1
         grp_upper = london + area_list + 1
@@ -2249,11 +2317,11 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
 
         score = self.q.evaluate(POSTCODE_RE_TIGHT1)
         expected = RexMetrics(
-            len=433,
-            fp=CountRange(102_254_388, 158_530_398),
+            len=444,
+            fp=CountRange(82_850_388, 139_126_398),
             fn=0,
             fpr=CountRange(
-                2.8325515081381648e-05, 4.391454750486047e-05
+                2.2950407906136225e-05, 3.8539440329615053e-05
             ),
             fnr=0.0,
         )
