@@ -73,6 +73,13 @@ standard output.
 `-flf`, `--fixed`  
   Use fixed-length fragments.
 
+`-1`, `--single`  
+  Combine multiple regular expressions found into a single regular
+  expression, using alternation.  
+  e.g.    `    ^[A-Z]{2}$`  
+  `    ^[0-9]{3}$`  
+  becomes `^([A-Z]{2}|[0-9]{3})$`
+
 `-v`, `--version`  
   Print the version number.
 

@@ -1,6 +1,6 @@
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.1.00",
+    "writer": "tdda.serial-3.2.01",
     "polars.read_csv": {
         "separator": "|",
         "quote_char": "\"",

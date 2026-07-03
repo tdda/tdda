@@ -71,6 +71,13 @@ OPTIONS
   [1m‐flf[22m, [1m‐‐fixed[0m
     Use fixed‐length fragments.
 
+  [1m‐1[22m, [1m‐‐single[0m
+    Combine multiple regular expressions found into a single regular
+    expression, using alternation.
+    e.g.    [1mˆ[A‐Z]{2}$[0m
+    [1mˆ[0‐9]{3}$[0m
+    becomes [1mˆ([A‐Z]{2}|[0‐9]{3})$[0m
+
   [1m‐v[22m, [1m‐‐version[0m
     Print the version number.
 
@@ -83,13 +90,6 @@ OPTIONS
 SEE ALSO
 
   [1mtdda[0m
-
-
-
-
-
-
-
 
 
 
