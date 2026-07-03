@@ -101,6 +101,18 @@ standard output.
   Use fixed-length fragments.
 
 .PP
+\fB-1\fR, \fB--single\fR
+.br
+  Combine multiple regular expressions found into a single regular
+  expression, using alternation.
+.br
+  e.g.    \fB^[A-Z]{2}$\fR
+.br
+  \fB^[0-9]{3}$\fR
+.br
+  becomes \fB^([A-Z]{2}|[0-9]{3})$\fR
+
+.PP
 \fB-v\fR, \fB--version\fR
 .br
   Print the version number.
