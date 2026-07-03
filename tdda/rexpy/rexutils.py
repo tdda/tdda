@@ -1,3 +1,5 @@
+import random
+
 from html import escape as htmlescape
 
 from tdda.utils import Dummy, DQuote
@@ -169,3 +171,20 @@ class Frag:
 def colour_regexes(regex_list):
     r = [Regex2Rex(r).frags for r in regex_list]
     return Dummy(html=Rex2HTML(r, group=True, anchor=True, asList=False))
+
+
+class PRNGState:
+    """
+    Seeds the Python PRNG and after captures its state.
+
+    restore() cam be used to set them back to the captured state.
+    """
+
+    def __init__(self, n):
+        if n is not None:
+            self.saved = random.getstate()
+            random.seed(n)
+
+    def restore(self):
+        if hasattr(self, 'saved'):
+            random.setstate(self.saved)

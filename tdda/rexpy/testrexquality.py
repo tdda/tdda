@@ -58,6 +58,122 @@ def full_postcode_data_available():
     return os.path.exists(FULL_POSTCODES_PATH)
 
 
+# postcodes.txt groups 1-10: the loose-to-strict progression, each
+# regex byte-identical between TestConcreteRexMetricEPostcodes (55
+# real postcodes) and TestConcreteRexMetricFullPostcodes (~2.5M),
+# shared here rather than duplicated in both. Each test's own
+# comment (explaining its cardinality/fp/fn reasoning) stays local
+# to that test -- those genuinely differ between the two classes
+# (e.g. findings only visible against the full dataset), unlike the
+# regex itself.
+POSTCODE_RE_1 = '^.+$'
+POSTCODE_RE_2 = '^.{6,8}$'
+POSTCODE_RE_3 = '^[A-Z0-9 ]{6,9}$'
+POSTCODE_RE_4 = '^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
+
+# group 5, without the GIR/NPT alternation (a stepping-stone variant,
+# not itself one of postcodes.txt's numbered groups).
+POSTCODE_RE_5_NO_ALT = '^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
+
+# postcodes.txt group 5.
+POSTCODE_RE_5 = '^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?) [0-9][A-Z]{2}$'
+
+# postcodes.txt group 6: letters restricted to those actually used.
+POSTCODE_RE_6 = (
+    '^([A-PR-UWYZ][A-HK-Y]?[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
+    '[0-9][ABD-HJLNP-Z]{2}$'
+)
+
+# postcodes.txt group 7: all 124 valid postal area codes listed
+# explicitly, plus GIR/NPT.
+POSTCODE_RE_7 = (
+    '^((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|'
+    'CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|'
+    'EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|'
+    'IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|'
+    'NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|'
+    'SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|'
+    'TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)'
+    '[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
+    '[0-9][ABD-HJLNP-Z]{2}$'
+)
+
+# postcodes.txt group 8: the UK government's "Bulk Data Transfer"
+# spec (uppercase only, handles NPT via an optional digit).
+POSTCODE_RE_8 = (
+    '^(GIR 0AA|([A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}|'
+    '[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9]?[A-Z]) [0-9][A-Z]{2})$'
+)
+
+# postcodes.txt group 9: the full Royal Mail spec as a single
+# combined regex (factors out the shared inward code).
+# Note P-VW-Z in inward code is same as P-Z, but this is
+# how they specified it.
+POSTCODE_RE_9 = (
+    '^(([A-PR-UWYZ][0-9][0-9A-HJKPSTUW]?|'
+    '[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?|'
+    '[A-PR-UWYZ][0-9][A-HJKSTUW]|'
+    '[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY]) '
+    '[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
+)
+
+# postcodes.txt group 10: London areas (with optional subdistrict
+# letter) and non-London areas (without), plus GIR, NPT -- GIR is
+# folded into the inward-code alternation here, which over-accepts
+# slightly (see POSTCODE_RE_TIGHT1, which fixes this).
+POSTCODE_RE_10 = (
+    '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
+    'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+    'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+    'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+    'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+    'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+    'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+    'WS|WV|YO|ZE)[0-9]{1,2}|GIR|NPT) '
+    '[0-9][ABD-HJLNP-Z]{2}$'
+)
+
+
+# postcodes.txt group 11: the tightest, most structurally-correct
+# pattern in the progression -- London areas get the optional
+# subdistrict letter that non-London areas don't (unlike group 7,
+# which allows it everywhere), and GIR is its own exact literal
+# ('GIR 0AA'), not folded into the inward-code alternation the way
+# group 10 leaves it (which over-accepts). Shared between
+# test_11_gir_handled_explicitly and any xerpy-based positives spec
+# that wants a trustworthy generator for real postcode structure.
+POSTCODE_RE_TIGHT1 = (
+    '^'
+    '('
+        '('
+            '(EC|WC|NW|SE|SW|E|N|W)'  # London postal areas
+            '[0-9]{1,2}'              # District
+            '[A-Z]?'                  # Optional subdistrict
+        '|'
+            '('                       # Normal non-London postal areas
+                'AB|AL|B|BA|'
+                'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+                'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
+                'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
+                'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
+                'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
+                'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
+                'WS|WV|YO|ZE'
+            ')'
+            '[0-9]{1,2}'               # District (non-London postcodes)
+        '|'
+            'NPT'                      # Special Newport PA. No districts
+        ')'
+        ' '                            # Outward code / inward code separator
+        '[0-9]'                        # Common inward code: digit plus...
+        '[ABD-HJLNP-Z]{2}'             # ... two letters, no C, I, K, M, or O
+    '|'
+        'GIR 0AA'                      # Special Girobank full postcode
+    ')'
+    '$'
+)
+
+
 class TestAlphabets(ReferenceTestCase):
     def test_ascii_is_a_bracket_expression(self):
         self.assertEqual(Alphabets.ASCII, '[' + chr(0) + '-' + chr(127) + ']')
@@ -917,6 +1033,158 @@ class TestConcreteRexMetricEmptyStringPositive(ReferenceTestCase):
         self.assertTrue(score.eq(expected))
 
 
+class TestConcreteRexMetricGeneratorPositives(ReferenceTestCase):
+    # Exercises the callable-positives path of ConcreteRexMetric:
+    # `all_positives` may be a zero-arg callable instead of a list,
+    # materialized in __init__ via `n_positives` calls, then deduped
+    # (duplicates are an artifact of sampling with replacement, not
+    # meaningful data -- unlike a supplied list/tuple, which is never
+    # deduped, since that's the caller's explicit data).
+
+    def test_materializes_exactly_n_positives_when_all_distinct(self):
+        import itertools
+
+        counter = itertools.count()
+        q = ConcreteRexMetric(
+            lambda: str(next(counter)), alphabet='[0-9]', n_positives=17
+        )
+        self.assertEqual(q.n_positives, 17)
+        self.assertEqual(len(q.all_positives), 17)
+
+    def test_low_cardinality_generator_dedupes_down(self):
+        # A constant generator drawn 10 times materializes to a
+        # single distinct positive, not 10 -- duplicates collapse.
+        q = ConcreteRexMetric(
+            lambda: 'a', alphabet='a', n_positives=10, seed=1
+        )
+        self.assertEqual(q.n_positives, 1)
+        self.assertEqual(q.all_positives, ['a'])
+
+    def test_same_seed_gives_same_sample(self):
+        import random
+
+        def generate():
+            return random.choice('ab')
+
+        q1 = ConcreteRexMetric(
+            generate, alphabet='ab', n_positives=50, seed=42
+        )
+        q2 = ConcreteRexMetric(
+            generate, alphabet='ab', n_positives=50, seed=42
+        )
+        self.assertEqual(
+            sorted(q1.all_positives), sorted(q2.all_positives)
+        )
+
+    def test_different_seeds_give_different_samples(self):
+        import random
+
+        def generate():
+            return random.choice('abcdefghijklmnopqrstuvwxyz')
+
+        q1 = ConcreteRexMetric(
+            generate, alphabet='[a-z]', n_positives=5, seed=1
+        )
+        q2 = ConcreteRexMetric(
+            generate, alphabet='[a-z]', n_positives=5, seed=2
+        )
+        self.assertNotEqual(
+            sorted(q1.all_positives), sorted(q2.all_positives)
+        )
+
+    def test_seed_stored_on_instance(self):
+        q = ConcreteRexMetric(lambda: 'a', alphabet='a', seed=7)
+        self.assertEqual(q.seed, 7)
+
+    def test_restores_global_prng_state(self):
+        import random
+
+        random.seed(12345)
+        state_before = random.getstate()
+        ConcreteRexMetric(
+            lambda: str(random.random()),
+            alphabet='[0-9.]',
+            n_positives=10,
+            seed=1,
+        )
+        self.assertEqual(random.getstate(), state_before)
+
+    def test_list_input_is_not_deduped(self):
+        # Unlike the generator path, a supplied list/tuple is the
+        # caller's explicit data and is never silently deduped.
+        q = ConcreteRexMetric(
+            ['a', 'a', 'a'], alphabet='a', n_positives=100
+        )
+        self.assertEqual(q.n_positives, 3)
+
+    def test_evaluate_works_against_materialized_sample(self):
+        q = ConcreteRexMetric(
+            lambda: 'a', alphabet='a', n_positives=10, seed=1
+        )
+        score = q.evaluate('^a$')
+        expected = RexMetrics(len=3, fp=0, fn=0, fpr=0.0, fnr=0.0)
+        self.assertTrue(score.eq(expected))
+
+
+class TestConcreteRexMetricXerpyPositives(ReferenceTestCase):
+    # Exercises the string-positives path: a regex spec string is
+    # handed to Xerpy internally instead of a list or callable.
+    # `[a-c]{3}` has only 27 distinct possible values, so n_positives
+    # is kept below that here to avoid dedup collapsing the count in
+    # ways unrelated to what each test is actually checking.
+
+    def test_materializes_at_most_n_positives(self):
+        # No seed: dedup means the distinct count after 5 draws is
+        # always between 1 (all collided) and 5 (none did) --
+        # true regardless of which values actually came out.
+        q = ConcreteRexMetric('^[a-c]{3}$', alphabet='abc', n_positives=5)
+        self.assertGreaterEqual(q.n_positives, 1)
+        self.assertLessEqual(q.n_positives, 5)
+        self.assertEqual(len(q.all_positives), q.n_positives)
+
+    def test_samples_match_the_spec_regex(self):
+        q = ConcreteRexMetric(
+            '^[a-c]{3}$', alphabet='abc', n_positives=5, seed=1
+        )
+        self.assertTrue(
+            all(re.fullmatch('[a-c]{3}', s) for s in q.all_positives)
+        )
+
+    def test_same_seed_gives_same_sample(self):
+        q1 = ConcreteRexMetric(
+            '^[a-c]{3}$', alphabet='abc', n_positives=5, seed=1
+        )
+        q2 = ConcreteRexMetric(
+            '^[a-c]{3}$', alphabet='abc', n_positives=5, seed=1
+        )
+        self.assertEqual(
+            sorted(q1.all_positives), sorted(q2.all_positives)
+        )
+
+    def test_unanchored_spec_also_works(self):
+        # Xerpy generates a complete string for the whole pattern
+        # regardless of anchoring -- see Xerpy.maybe_wrap -- so a
+        # spec without ^...$ should work identically.
+        q = ConcreteRexMetric(
+            '[a-c]{3}', alphabet='abc', n_positives=5, seed=1
+        )
+        self.assertTrue(
+            all(re.fullmatch('[a-c]{3}', s) for s in q.all_positives)
+        )
+
+    def test_evaluate_works_against_xerpy_sample(self):
+        # Every xerpy-generated positive matches its own generating
+        # pattern by construction, regardless of how many distinct
+        # values survive dedup -- fn/fnr are the invariant worth
+        # checking, not specific fp/fpr numbers.
+        q = ConcreteRexMetric(
+            '^[a-c]{3}$', alphabet='abc', n_positives=200, seed=1
+        )
+        score = q.evaluate('^[a-c]{3}$')
+        self.assertEqual(score.fn, 0)
+        self.assertEqual(score.fnr, 0.0)
+
+
 class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
     # Real UK postcode data: the 55 'E...1AA' postcodes in
     # testdata/postcode-subset-e.txt, scored against the
@@ -956,8 +1224,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = r'^.+$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_1)
         expected = RexMetrics(
             len=4,
             fp=71_270_122,
@@ -984,8 +1251,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # this is proof of overestimation (cardinality counts lengths
         # 1-5, outside the universe), not a bug
 
-        pattern = r'^.+$'
-        score = self.q.evaluate(pattern, max_plus=8)
+        score = self.q.evaluate(POSTCODE_RE_1, max_plus=8)
         expected = RexMetrics(
             len=4,
             fp=3_609_977_057_408,
@@ -1005,8 +1271,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # fp_denominator: 3_609_977_057_408 (same number as fp)
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = r'^.{6,8}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_2)
         expected = RexMetrics(
             len=8,
             fp=3_609_977_057_408,
@@ -1035,8 +1300,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # numerous than lengths 6-8 combined) -- clamped, same
         # reasoning as test_1_anything_non_empty_max_plus_8
 
-        pattern = r'^[A-Z0-9 ]{6,9}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_3)
         expected = RexMetrics(
             len=16,
             fp=3_609_977_057_408,
@@ -1058,8 +1322,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # no clamp needed here)
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = r'^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_4)
         expected = RexMetrics(
             len=29,
             fp=11_678_359_625,
@@ -1179,8 +1442,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # fp_denominator: 3_609_977_057_408
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_5_NO_ALT)
         expected = RexMetrics(
             len=42,
             fp=14_094_194_345,
@@ -1216,10 +1478,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # no-alternation version -- doesn't depend on the pattern)
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?) [0-9][A-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_5)
         expected = RexMetrics(
             len=52,
             fp=14_094_207_865,
@@ -1237,20 +1496,16 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         # = 23*24*110*22 = 1_335_840
         general = 23 * 24 * 110 * 22
         n_outward = general + 2  # GIR, NPT: 1_335_842
-        # inward: [0-9](10) * [ABD-HJLNP-VW-Z]{2}(21**2=441)
+        # inward: [0-9](10) * [ABD-HJLNP-Z]{2}(21**2=441)
         n_inward = 10 * 21**2  # 4_410
         cardinality = n_outward * n_inward  # 5_891_063_220
         n_true_positives = 55
         fp = cardinality - n_true_positives  # 5_891_063_165
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^([A-PR-UWYZ][A-HK-Y]?[0-9]{1,2}[A-HJKMNPR-VWXY]?'
-            r'|GIR|NPT) [0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_6)
         expected = RexMetrics(
-            len=84,
+            len=81,
             fp=5_891_063_165,
             fn=0,
             fpr=0.00163188382400132,
@@ -1275,20 +1530,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         fp = cardinality - n_true_positives  # 1_323_361_565
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|'
-            'CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|'
-            'EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|'
-            'IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|'
-            'NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|'
-            'SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|'
-            'TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)'
-            '[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_7)
         expected = RexMetrics(
-            len=429,
+            len=426,
             fp=1_323_361_565,
             fn=0,
             fpr=0.00036658448071971597,
@@ -1348,12 +1592,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_positives
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^(GIR 0AA|([A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}'
-            r'|[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9]?[A-Z]) '
-            r'[0-9][A-Z]{2})$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_8)
         expected = RexMetrics(
             len=108,
             fp=CountRange(1_206_416_586, 1_735_454_186),
@@ -1396,14 +1635,7 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_positives
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^(([A-PR-UWYZ][0-9][0-9A-HJKPSTUW]?'
-            r'|[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?'
-            r'|[A-PR-UWYZ][0-9][A-HJKSTUW]'
-            r'|[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY]) '
-            r'[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_9)
         expected = RexMetrics(
             len=181,
             fp=CountRange(536_564_646, 857_083_446),
@@ -1436,20 +1668,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_positives
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
-            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
-            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
-            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
-            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
-            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
-            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
-            'WS|WV|YO|ZE)[0-9]{1,2}|GIR|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_10)
         expected = RexMetrics(
-            len=430,
+            len=427,
             fp=CountRange(104_781_545, 161_061_965),
             fn=0,
             fpr=CountRange(
@@ -1481,20 +1702,9 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_positives
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^(((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
-            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
-            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
-            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
-            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
-            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
-            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
-            'WS|WV|YO|ZE)[0-9]{1,2}|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_TIGHT1)
         expected = RexMetrics(
-            len=436,
+            len=433,
             fp=CountRange(104_781_546, 161_057_556),
             fn=0,
             fpr=CountRange(
@@ -1639,8 +1849,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_denominator = self.q.universe - n_true_positives
         # fp_denominator: 3_609_974_530_250
 
-        pattern = r'^.+$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_1)
         expected = RexMetrics(
             len=4,
             fp=68_742_964,
@@ -1663,8 +1872,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         # it, so fp is clamped (same overestimation-not-a-bug
         # reasoning as the E-subset version of this test)
 
-        pattern = r'^.+$'
-        score = self.q.evaluate(pattern, max_plus=8)
+        score = self.q.evaluate(POSTCODE_RE_1, max_plus=8)
         expected = RexMetrics(
             len=4,
             fp=3_609_974_530_250,
@@ -1683,8 +1891,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_denominator = self.q.universe - n_true_positives
         # fp_denominator: 3_609_974_530_250 (same number as fp)
 
-        pattern = r'^.{6,8}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_2)
         expected = RexMetrics(
             len=8,
             fp=3_609_974_530_250,
@@ -1706,8 +1913,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         # fp_denominator: 3_609_974_530_250 -- uncapped_fp far
         # exceeds it (length 9 dwarfs lengths 6-8 combined), clamped
 
-        pattern = r'^[A-Z0-9 ]{6,9}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_3)
         expected = RexMetrics(
             len=16,
             fp=3_609_974_530_250,
@@ -1729,8 +1935,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_denominator = self.q.universe - n_true_positives
         # fp_denominator: 3_609_974_530_250
 
-        pattern = r'^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_4)
         expected = RexMetrics(
             len=29,
             fp=11_675_832_467,
@@ -1761,8 +1966,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_denominator = self.q.universe - n_true_positives
         # fp_denominator: 3_609_974_530_250
 
-        pattern = r'^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_5_NO_ALT)
         expected = RexMetrics(
             len=42,
             fp=14_091_669_605,
@@ -1799,10 +2003,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         # fp_denominator: 3_609_974_530_250 (same as the
         # no-alternation version -- doesn't depend on the pattern)
 
-        pattern = (
-            r'^(GIR|NPT|[A-Z]{1,2}[0-9]{1,2}[A-Z]?) [0-9][A-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_5)
         expected = RexMetrics(
             len=52,
             fp=14_091_680_707,
@@ -1875,13 +2076,9 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp = cardinality - n_true_matched  # 5_888_536_007
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^([A-PR-UWYZ][A-HK-Y]?[0-9]{1,2}[A-HJKMNPR-VWXY]?'
-            r'|GIR|NPT) [0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_6)
         expected = RexMetrics(
-            len=84,
+            len=81,
             fp=5_888_536_007,
             fn=0,
             fpr=0.0016311849176930907,
@@ -1905,20 +2102,9 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp = cardinality - n_true_matched  # 1_320_834_407
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|'
-            'CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|'
-            'EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|'
-            'IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|'
-            'NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|'
-            'SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|'
-            'TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)'
-            '[0-9]{1,2}[A-HJKMNPR-VWXY]?|GIR|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_7)
         expected = RexMetrics(
-            len=429,
+            len=426,
             fp=1_320_834_407,
             fn=0,
             fpr=0.00036588468864031813,
@@ -1955,12 +2141,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_matched
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^(GIR 0AA|([A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}'
-            r'|[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9]?[A-Z]) '
-            r'[0-9][A-Z]{2})$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_8)
         expected = RexMetrics(
             len=108,
             fp=CountRange(1_203_889_428, 1_732_927_028),
@@ -2002,14 +2183,7 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_matched
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            r'^(([A-PR-UWYZ][0-9][0-9A-HJKPSTUW]?'
-            r'|[A-PR-UWYZ][A-HK-Y][0-9][0-9ABEHMNPRVWXY]?'
-            r'|[A-PR-UWYZ][0-9][A-HJKSTUW]'
-            r'|[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVWXY]) '
-            r'[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_9)
         expected = RexMetrics(
             len=181,
             fp=CountRange(534_044_572, 854_563_372),
@@ -2041,20 +2215,9 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_matched
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
-            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
-            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
-            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
-            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
-            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
-            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
-            'WS|WV|YO|ZE)[0-9]{1,2}|GIR|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_10)
         expected = RexMetrics(
-            len=430,
+            len=427,
             fp=CountRange(102_254_387, 158_534_807),
             fn=0,
             fpr=CountRange(
@@ -2084,20 +2247,9 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
         fp_upper = cardinality_upper - n_true_matched
         fp_denominator = self.q.universe - n_true_positives
 
-        pattern = (
-            '^(((EC|WC|NW|SE|SW|E|N|W)[0-9]{1,2}[A-Z]?|(AB|AL|B|BA|'
-            'BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
-            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|'
-            'HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|'
-            'LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|'
-            'PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|SK|SL|SM|SN|SO|SP|'
-            'SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|WN|WR|'
-            'WS|WV|YO|ZE)[0-9]{1,2}|NPT) '
-            '[0-9][ABD-HJLNP-VW-Z]{2}|GIR 0AA)$'
-        )
-        score = self.q.evaluate(pattern)
+        score = self.q.evaluate(POSTCODE_RE_TIGHT1)
         expected = RexMetrics(
-            len=436,
+            len=433,
             fp=CountRange(102_254_388, 158_530_398),
             fn=0,
             fpr=CountRange(

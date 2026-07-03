@@ -68,6 +68,7 @@ from pprint import pprint
 
 from tdda import __version__
 from tdda.abstractdf import is_polars_series
+from tdda.rexpy.rexutils import PRNGState
 from tdda.utils import nvl, TDDAError
 
 
@@ -2404,23 +2405,6 @@ class ResultsSummary(object):
 
     def __str__(self):
         return self.to_string()
-
-
-class PRNGState:
-    """
-    Seeds the Python PRNG and after captures its state.
-
-    restore() cam be used to set them back to the captured state.
-    """
-
-    def __init__(self, n):
-        if n is not None:
-            self.saved = random.getstate()
-            random.seed(n)
-
-    def restore(self):
-        if hasattr(self, 'saved'):
-            random.setstate(self.saved)
 
 
 def combine_patterns(patterns):

@@ -13,6 +13,7 @@ from tdda.testexamples import *
 from tdda.rexpy.testrexpy import *
 from tdda.rexpy.testrexquality import *
 from tdda.rexpy.testrexquality import full_postcode_data_available
+from tdda.xerpy.testxerpy import *
 
 if not full_postcode_data_available():
     del TestConcreteRexMetricFullPostcodes

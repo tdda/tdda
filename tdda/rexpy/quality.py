@@ -11,6 +11,8 @@ import math
 from collections import namedtuple
 
 from tdda.rexpy.relib import re
+from tdda.rexpy.rexutils import PRNGState
+from tdda.xerpy.xerpy import Xerpy
 
 DEFAULT_MAX_PLUS = 5
 
@@ -142,7 +144,16 @@ def count_strings(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
 
 
 def _as_range(n_or_range):
-    """Normalize an `int` or `CountRange` to a `CountRange`."""
+    """Normalize an `int` or `CountRange` to a `CountRange`.
+
+    Args:
+        n_or_range (int or CountRange): a count or range to
+            normalize.
+
+    Returns:
+        CountRange: `n_or_range` unchanged if already a
+        `CountRange`, otherwise `(n_or_range, n_or_range)`.
+    """
     if isinstance(n_or_range, CountRange):
         return n_or_range
     return CountRange(n_or_range, n_or_range)
@@ -159,6 +170,15 @@ def _literal_branch_value(branch, max_plus):
     differently-written singleton branches could coincidentally admit
     the same one string, which would break the disjointness
     reasoning in `count_strings`.
+
+    Args:
+        branch (str): an anchored alternation branch, e.g. `'^AB$'`.
+        max_plus (int): see `_count_sequence`.
+
+    Returns:
+        str: the fixed string `branch` denotes, if it's a plain
+        literal.
+        None: if it isn't.
     """
     try:
         _validate_pattern(branch)
@@ -244,6 +264,15 @@ def _split_alternation(pattern):
     `^...$`. Returns `[pattern]` unchanged if `pattern` has no
     top-level alternation.
 
+    Args:
+        pattern (str): an anchored regex, as produced by
+            `combine_patterns`.
+
+    Returns:
+        list of str: `pattern`'s top-level alternatives, each
+        re-anchored with `^...$` -- or `[pattern]` unchanged if it
+        has no top-level alternation.
+
     Raises:
         ValueError: if `pattern` is not anchored with `^...$`.
     """
@@ -264,6 +293,13 @@ def _split_alternation(pattern):
 def _matching_paren(s, i):
     """Return the index of the `)` matching the `(` at `s[i]`,
     treating bracket expressions and escapes as opaque units.
+
+    Args:
+        s (str): the string to scan.
+        i (int): index of the `(` to match.
+
+    Returns:
+        int: the index of the matching `)`.
     """
     depth = 0
     j, n = i, len(s)
@@ -289,6 +325,13 @@ def _matching_paren(s, i):
 def _split_top_level(s, sep):
     """Split `s` on `sep`, ignoring any occurrence nested inside a
     bracket expression, a parenthesised group, or an escape.
+
+    Args:
+        s (str): the string to split.
+        sep (str): the single-character separator to split on.
+
+    Returns:
+        list of str: the parts of `s`, split on top-level `sep`.
     """
     parts = []
     depth = 0
@@ -323,6 +366,9 @@ def _validate_pattern(pattern):
     (which may themselves contain alternation, handled recursively by
     `count_strings`) are fine -- this pre-check only skips over them
     opaquely, the same way it skips over bracket expressions.
+
+    Args:
+        pattern (str): the candidate regex to validate.
 
     Raises:
         ValueError: if the pattern is not supported.
@@ -373,6 +419,17 @@ def _validate_pattern(pattern):
 def _charclass_end(body, i, pattern):
     """Return the index just past the closing `]` of the bracket
     expression starting at `body[i]` (which must be `'['`).
+
+    Args:
+        body (str): the pattern body containing the bracket
+            expression (may differ from `pattern`, e.g. with
+            anchors already stripped).
+        i (int): index of the opening `[`.
+        pattern (str): the full original pattern, used only for
+            error messages.
+
+    Returns:
+        int: the index just past the closing `]`.
     """
     n = len(body)
     j = i + 1
@@ -398,6 +455,14 @@ def _parse_pattern(pattern, max_plus):
 
     Assumes `pattern` has already passed `_validate_pattern` (so any
     group here is unquantified, and there's no top-level `|`).
+
+    Args:
+        pattern (str): an anchored regex that has already passed
+            `_validate_pattern`.
+        max_plus (int): see `_count_sequence`.
+
+    Returns:
+        list of tuple: `(kind, value, repeat)` atoms, in order.
     """
     body = pattern[1:-1]
     i = 0
@@ -434,9 +499,17 @@ def _parse_pattern(pattern, max_plus):
 def _parse_quantifier(body, i, max_plus):
     """Parse an optional quantifier starting at `body[i]`.
 
-    Returns `(repeat, i)`: the atom's `Repeat` range, and the
-    index immediately after the quantifier (unchanged if there is
-    none).
+    Args:
+        body (str): the pattern body being scanned.
+        i (int): index immediately after the atom whose quantifier
+            (if any) starts here.
+        max_plus (int): cap used for unbounded quantifiers (`+`,
+            `*`, open `{m,}`).
+
+    Returns:
+        tuple: `(repeat, i)` -- the atom's `Repeat` range, and the
+        index immediately after the quantifier (unchanged if there
+        is none).
     """
     n = len(body)
     if i >= n:
@@ -465,6 +538,19 @@ def _atom_size(kind, value, alphabet, pattern):
     """Return the number of characters in `alphabet` (a
     `ResolvedAlphabet`) admitted by a single parsed atom (as
     returned by `_parse_pattern`).
+
+    Args:
+        kind (str): `'literal'` or `'charclass'`, as returned by
+            `_parse_pattern`.
+        value (str): the atom's value, as returned by
+            `_parse_pattern`.
+        alphabet (ResolvedAlphabet): the alphabet to size against.
+        pattern (str): the full original pattern, used only for
+            error messages.
+
+    Returns:
+        int: the number of characters in `alphabet` admitted by
+        this atom.
 
     Raises:
         ValueError: if the atom explicitly references a character
@@ -502,6 +588,15 @@ def _escape_size(code, alphabet, pattern):
     Upper-case negations are the complement of whatever their
     lower-case counterpart resolved to, within `alphabet`.
 
+    Args:
+        code (str): `'.'`, or one of `'dDwWsS'`.
+        alphabet (ResolvedAlphabet): the alphabet to size against.
+        pattern (str): the full original pattern, used only for
+            error messages.
+
+    Returns:
+        int: the number of characters in `alphabet` matched.
+
     Raises:
         ValueError: for `\\d`/`\\w`, if any canonical member is
             missing from `alphabet`; for `\\s`, only if none of
@@ -524,6 +619,17 @@ def _intersect_alphabet(members, alphabet, pattern):
     """Return the subset of `members` that `alphabet.pattern`
     matches.
 
+    Args:
+        members (iterable of str): the canonical class members to
+            intersect (see `CANONICAL_CLASSES`).
+        alphabet (ResolvedAlphabet): the alphabet to intersect
+            against.
+        pattern (str): the full original pattern, used only for
+            error messages.
+
+    Returns:
+        frozenset: the subset of `members` present in `alphabet`.
+
     Raises:
         ValueError: if none of `members` is in `alphabet` --
             i.e. the canonical class is entirely disjoint from
@@ -540,7 +646,16 @@ def _intersect_alphabet(members, alphabet, pattern):
 
 def _check_subset(chars, alphabet, pattern):
     """Raise if any character in `chars` isn't matched by
-    `alphabet.pattern` (a `ResolvedAlphabet`)."""
+    `alphabet.pattern` (a `ResolvedAlphabet`).
+
+    Args:
+        chars (iterable of str): the characters that must all be
+            in `alphabet`.
+        alphabet (ResolvedAlphabet): the alphabet to check
+            against.
+        pattern (str): the full original pattern, used only for
+            error messages.
+    """
     extra = sorted(c for c in set(chars) if not alphabet.pattern.fullmatch(c))
     if extra:
         raise ValueError(
@@ -552,6 +667,15 @@ def _check_subset(chars, alphabet, pattern):
 def _resolve_alphabet(alphabet):
     """Resolve `alphabet` (`None`, a bracket-expression string, or
     a plain string of characters) into a `ResolvedAlphabet`.
+
+    Args:
+        alphabet (str or None): a bracket-expression string (e.g.
+            `'[A-Za-z0-9]'`), a plain string of characters
+            (treated as that literal set), or `None` for
+            `Alphabets.ASCII`.
+
+    Returns:
+        ResolvedAlphabet
 
     Raises:
         ValueError: if `alphabet` is a negated character class
@@ -575,6 +699,12 @@ def _alphabet_spec(alphabet):
     """Normalize `alphabet` into a canonical bracket-expression
     string: used as-is if it already is one (starts with `[` and
     spans the whole string), otherwise built from its characters.
+
+    Args:
+        alphabet (str): as accepted by `_resolve_alphabet`.
+
+    Returns:
+        str: a canonical bracket-expression string.
     """
     if (
         alphabet.startswith('[')
@@ -588,6 +718,14 @@ def _escape_for_charclass(chars):
     """Escape characters that are special inside a bracket
     expression (`]`, `^`, `-`, `\\`), for building one from a
     literal set of characters.
+
+    Args:
+        chars (iterable of str): the characters to build a
+            bracket expression from.
+
+    Returns:
+        str: `chars`, sorted and de-duplicated, with any
+        character special inside a bracket expression escaped.
     """
     specials = set('\\]^-')
     return ''.join(
@@ -601,6 +739,15 @@ def _charclass_members(value):
     explicit, expanded set of characters listed (individually or
     via ranges) -- the characters the class matches if not
     negated, or the characters it excludes if negated.
+
+    Args:
+        value (str): a bracket expression, e.g. `'[a-z0-9_]'` or
+            `'[^abc]'`.
+
+    Returns:
+        tuple: `(negated, members)` -- `negated` (bool), and
+        `members` (frozenset of str), the explicit, expanded set
+        of characters listed.
     """
     negated, ranges = _charclass_ranges(value)
     members = set()
@@ -615,6 +762,16 @@ def _charclass_ranges(value):
     of `(lo, hi)` codepoint tuples -- the range endpoints listed
     (individually or via `x-y` ranges) -- without expanding them
     into individual characters.
+
+    Args:
+        value (str): a bracket expression, e.g. `'[a-z0-9_]'` or
+            `'[^abc]'`.
+
+    Returns:
+        tuple: `(negated, ranges)` -- `negated` (bool), and
+        `ranges` (list of `(lo, hi)` codepoint tuples), the range
+        endpoints listed, without expanding them into individual
+        characters.
     """
     body = value[1:-1]  # strip outer '[' and ']'
     negated = body.startswith('^')
@@ -642,6 +799,13 @@ def _charclass_ranges(value):
 def _merge_ranges(ranges):
     """Merge overlapping or adjacent `(lo, hi)` codepoint ranges,
     so that summing their sizes doesn't double-count.
+
+    Args:
+        ranges (list of tuple): `(lo, hi)` codepoint ranges.
+
+    Returns:
+        list of tuple: the merged, non-overlapping `(lo, hi)`
+        ranges.
     """
     merged = []
     for lo, hi in sorted(ranges):
@@ -661,6 +825,13 @@ def _rate(numerator, denominator):
     - a positive numerator over a zero denominator is
       `float('inf')` (the regex admits things entirely outside
       what the assumed universe accounts for).
+
+    Args:
+        numerator (int): the numerator.
+        denominator (int): the denominator.
+
+    Returns:
+        float: the rate, per the degenerate-case rules above.
     """
     if denominator == 0:
         return 0.0 if numerator == 0 else float('inf')
@@ -725,6 +896,13 @@ class RexMetrics:
         whichever of `self`/`other` have a `universe` set, or
         `0.0` (exact comparison) if neither does.
 
+        Args:
+            other (RexMetrics): the expected value to compare
+                against.
+            tol (float): tolerance for `fpr`/`fnr` comparison.
+                Defaults to `_default_tol(self, other)` when not
+                given.
+
         Returns:
             bool
         """
@@ -748,6 +926,14 @@ def _rates_close(actual, expected, tol):
     """Compare two rates (each a single `float` or a `CountRange`
     of rates) within `tol`. A scalar/`CountRange` mismatch is
     always unequal.
+
+    Args:
+        actual (float or CountRange): the computed rate.
+        expected (float or CountRange): the expected rate.
+        tol (float): absolute tolerance for the comparison.
+
+    Returns:
+        bool
     """
     if isinstance(actual, CountRange) != isinstance(expected, CountRange):
         return False
@@ -764,6 +950,13 @@ def _default_tol(a, b):
     """Derive a default tolerance for `RexMetrics.eq()` from
     whichever of `a`/`b` have a `universe` set: the smaller of
     `1/(10*universe)` over those that do, or `0.0` if neither does.
+
+    Args:
+        a (RexMetrics): one side of the comparison.
+        b (RexMetrics): the other side.
+
+    Returns:
+        float
     """
     candidates = [
         1 / (10 * m.universe)
@@ -778,12 +971,49 @@ class ConcreteRexMetric:
     A reusable scorer bound to a fixed set of positive examples,
     alphabet and length range. Call `evaluate(pattern)` once per
     candidate regex to score it against them.
+
+    Args:
+        all_positives (list/tuple, callable, or str): the positive
+            examples to score candidate regexes against. A list or
+            tuple is used as-is, including any duplicates -- never
+            deduped, since it's the caller's explicit data. A
+            zero-argument callable is called `n_positives` times to
+            materialize a sample (e.g. `lambda: xerpy(regex)`),
+            then deduped (duplicates there are an artifact of
+            sampling with replacement, not meaningful data). A str
+            is treated as a regex and handed to `Xerpy` internally,
+            then materialized the same way as a callable.
+        alphabet (str): see `_resolve_alphabet`.
+        min_length (int): minimum string length in the assumed
+            universe. Defaults to the shortest of `all_positives`.
+        max_length (int): maximum string length in the assumed
+            universe. Defaults to the longest of `all_positives`.
+        n_positives (int): number of times to call `all_positives`
+            when it's a callable or str, before deduping. Ignored
+            when it's a list/tuple. Defaults to 100,000.
+        seed (int): PRNG seed used only while materializing a
+            callable/str `all_positives` (see `PRNGState`);
+            restored afterwards regardless. `None` leaves the
+            caller's PRNG state untouched (and the sample
+            unreproducible).
     """
 
     def __init__(
         self, all_positives, alphabet=None, min_length=None,
-        max_length=None,
+        max_length=None, n_positives=100_000, seed=None,
     ):
+        self.seed = seed
+        if isinstance(all_positives, str):
+            all_positives = Xerpy(all_positives).generate
+        if callable(all_positives):
+            generate = all_positives
+            prng_state = PRNGState(seed)
+            try:
+                all_positives = list(
+                    {generate() for _ in range(n_positives)}
+                )
+            finally:
+                prng_state.restore()
         self.all_positives = all_positives
         self.alphabet = alphabet
         self.n_positives = len(all_positives)
@@ -808,6 +1038,10 @@ class ConcreteRexMetric:
         unbounded quantifiers (`+`, `*`, open `{m,}`); it defaults
         to `DEFAULT_MAX_PLUS` (5), which may not reach `self`'s
         actual `max_length` for patterns using them.
+
+        Args:
+            pattern (str): the candidate regex to score.
+            max_plus (int): see `count_strings`.
 
         Returns:
             RexMetrics
@@ -862,6 +1096,13 @@ class ConcreteRexMetric:
                 )
         else:
             fp = cardinality - n_true_matched
+            # Unlike the CountRange branch, this can never
+            # legitimately be negative: cardinality is exact here
+            # (that's why it's a plain int, not a CountRange), and
+            # n_true_matched counts distinct positives (all_positives
+            # has no duplicates), so it's a subset-count of the
+            # cardinality-count set and can't exceed it.
+            assert fp >= 0
             if fp_denominator > 0:
                 fp = min(fp, fp_denominator)
             fpr = _rate(fp, fp_denominator)
