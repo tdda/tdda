@@ -1287,20 +1287,20 @@ class Extractor(object):
                 m = re.match(regex, example)
                 assert m is not None
                 f = group_map_function(m, n_frags)
-                for i, frag in enumerate(vrle):
+                for j, frag in enumerate(vrle):
                     try:
-                        g = m.group(f(i + 1))
+                        g = m.group(f(j + 1))
                     except:
                         print('>>>', regex.pattern)
-                        print(n_frags, i)
+                        print(n_frags, j)
                         raise
 
-                    if n_strings[i] <= size.max_strings_in_group:
-                        frag_strings[i].add(g)
-                        n_strings[i] = len(frag_strings[i])
-                    frag_chars[i] = frag_chars[i].union(set(list(g)))
-                    (frag_rlefcs[i], frag_rlecs[i]) = self._rle_fc_c(
-                        g, frag, frag_rlefcs[i], frag_rlecs[i]
+                    if n_strings[j] <= size.max_strings_in_group:
+                        frag_strings[j].add(g)
+                        n_strings[j] = len(frag_strings[j])
+                    frag_chars[j] = frag_chars[j].union(set(list(g)))
+                    (frag_rlefcs[j], frag_rlecs[j]) = self._rle_fc_c(
+                        g, frag, frag_rlefcs[j], frag_rlecs[j]
                     )
         if self.verbose >= 2:
             print('Fine Class VRLE:', frag_rlefcs)
