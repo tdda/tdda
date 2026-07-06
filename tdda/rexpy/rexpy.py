@@ -941,8 +941,8 @@ class Extractor(object):
     def _poss_show_items(self, mask, items, header):
         if self._show(mask):
             print(f'{header}:')
-            for items in items:
-                print(items)
+            for item in items:
+                print(item)
             print()
 
     def _convert_rex_to_dialect(self):
