@@ -2651,7 +2651,7 @@ def get_only_present_at_pos(fragFreqCounters, *args, **kwargs):
     out = []
     for frag, fragFreqs in fragFreqCounters.items():
         if len(fragFreqs) == 1:
-            pos = fragFreqs.keys()[0]  # the only position
+            pos = next(iter(fragFreqs))  # the only position
             out.append((frag, pos))
     out.sort(key=lambda x: x[1])
     return out

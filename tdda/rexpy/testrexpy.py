@@ -351,6 +351,16 @@ class TestUtilityFunctions(ReferenceTestCase):
 
         self.assertEqual(get_omnipresent_at_pos({}, 0), [])
 
+    def test_get_only_present_at_pos(self):
+        c = {
+            ('a', 1, 1, 'fixed'): {1: 7, -1: 7, 3: 4},
+            ('b', 1, 1, 'fixed'): {2: 6},
+        }
+        self.assertEqual(
+            get_only_present_at_pos(c), [(('b', 1, 1, 'fixed'), 2)]
+        )
+        self.assertEqual(get_only_present_at_pos({}), [])
+
     def test_length_stats(self):
         # Testing with strings, but works with lists etc. too
         self.assertEqual(length_stats(['abc', 'def', 'ghi']), (True, 3))
