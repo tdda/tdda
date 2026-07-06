@@ -754,6 +754,11 @@ class TestHelperMethods(ReferenceTestCase):
         x = Extractor([])
         self.assertEqual(x._vrle2re(rrle), expected)
 
+    def test_results_to_string(self):
+        x = Extractor(['abc123', 'def456'])
+        s = x.results.to_string()
+        self.assertIn(x.results.rex[0], s)
+
     def test_sort_by_len(self):
         # Really designed for sorting lists/tuples, but everything with
         # a length will behave the same

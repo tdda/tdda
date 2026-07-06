@@ -2365,9 +2365,9 @@ class ResultsSummary(object):
 
     def to_re(self, patterns, grouped=False, as_re=True):
         f = (
-            self.extractor.rle2re
+            self.extractor._rle2re
             if not patterns or len(patterns[0]) == 2
-            else self.extractor.vrle2re
+            else self.extractor._vrle2re
         )
         return f(patterns, tagged=grouped, as_re=as_re)
 
