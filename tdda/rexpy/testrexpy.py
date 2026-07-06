@@ -503,6 +503,11 @@ class TestUtilityFunctions(ReferenceTestCase):
 
         self.assertEqual(list(c.keys()), ['two', 'three', 'one', 'four'])
 
+    def test_size_unknown_parameter(self):
+        with self.assertRaises(TDDAError) as cm:
+            Size(not_a_real_param=1)
+        self.assertIn('not_a_real_param', str(cm.exception))
+
     def test_combine_patterns(self):
         self.assertEqual(combine_patterns([]), [])
         self.assertEqual(combine_patterns(['^hello$']), ['^hello$'])

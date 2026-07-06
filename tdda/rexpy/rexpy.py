@@ -234,7 +234,7 @@ class Size(object):
                 else:
                     self.__dict__[k] = v
             else:
-                raise TDDAError('Unknown parameter to Size: "%s" % k')
+                raise TDDAError(f'Unknown parameter to Size: "{k}"')
 
 
 nCalls = 0
