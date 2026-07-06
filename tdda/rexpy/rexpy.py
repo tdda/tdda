@@ -80,7 +80,7 @@ VERBOSITY_LEVEL_RE = r'^-v(-?[0-9]+)$'
 
 class VERBOSITY:
     PASSES = 0b1  # 1; old verbose
-    ALL = 0b01  # 2; same as MAX
+    ALL = 0b10  # 2; same as MAX
     INPUTS = 0b100
     SORTED = 0b1000
     RLE = 0b10000
