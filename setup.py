@@ -75,7 +75,6 @@ setup(
                                     ['init']),
         'tdda.rexpy': data(['tdda', 'rexpy'], ['examples', 'testdata'],
                            exclusions=['postcodes-full.parquet']),
-        'tdda.xerpy': data(['tdda', 'xerpy'], ['testdata']),
         'tdda.gentest': data(['tdda', 'gentest'], ['examples']),
         'tdda.serial': data(['tdda', 'serial'], ['testdata', 'examples',
                                                  'accounts_examples']),

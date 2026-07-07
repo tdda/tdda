@@ -9,3 +9,4 @@ To run the rexpy tool::
 """
 
 from tdda.rexpy.rexpy import *
+from tdda.rexpy.xerpy import Xerpy

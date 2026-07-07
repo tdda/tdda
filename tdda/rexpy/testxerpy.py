@@ -7,7 +7,7 @@ from tdda.rexpy.relib import re, reIsRegex
 
 from tdda.referencetest import ReferenceTestCase, tag
 
-from tdda.xerpy.xerpy import *
+from tdda.rexpy.xerpy import *
 
 class TestXerpy(ReferenceTestCase):
     def test_get_number(self):

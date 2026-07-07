@@ -12,7 +12,7 @@ from collections import namedtuple
 
 from tdda.rexpy.relib import re
 from tdda.rexpy.rexutils import PRNGState
-from tdda.xerpy.xerpy import Xerpy
+from tdda.rexpy.xerpy import Xerpy
 
 DEFAULT_MAX_PLUS = 5
 DEFAULT_N_SAMPLES = 100_000

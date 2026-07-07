@@ -32,13 +32,14 @@ For usage details:
     >>> help(rexpy)
 
 
-The tdda.xerpy library generates example strings matching a
-regular expression -- the inverse of rexpy.
+tdda.rexpy also includes Xerpy, which generates example strings
+matching a regular expression -- the inverse of rexpy's own
+inference.
 
 For usage details:
 
-    >>> from tdda import xerpy
-    >>> help(xerpy)
+    >>> from tdda.rexpy import Xerpy
+    >>> help(Xerpy)
 
 """
 
@@ -54,4 +55,3 @@ from tdda.version import version as __version__
 from . import referencetest
 from . import constraints
 from . import rexpy
-from . import xerpy
