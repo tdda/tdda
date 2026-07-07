@@ -233,7 +233,6 @@ TESTDATADIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testdata
 
 # does re escape all punctuation, or only special ones?
 re_escape_more = re.escape('%') != '%'
-isPython2 = sys.version_info[0] < 3
 PC = re.escape('%')
 UNDERSCORE = re.escape('_')
 
@@ -2336,16 +2335,7 @@ class TestExtraction(ReferenceTestCase):
         r = extract(inputs, size=Size(n_per_length=1, do_all=2), seed=12345678)
         self.assertEqual(random.getstate(), state)
 
-        expected_with_seed = choose23(
-            [
-                '^a$',
-                '^a\\.a$',
-                '^a\\.a\\.a$',
-                '^a\\.a\\.a\\.a$',
-                '^a\\.a\\.a\\.a\\.a$',
-            ],
-            ['^a$', '^a\\.a$'],
-        )
+        expected_with_seed = ['^a$', '^a\\.a$']
 
         self.assertEqual(r, expected_with_seed)
         # but not always True
@@ -2375,24 +2365,6 @@ def CtoUC(s):
         return s.replace('C', UNIC)
     else:
         return s
-
-
-def choose23(two, three):
-    """
-    Choose between results based on whether running in Python2 or Python3
-    """
-    return two if isPython2 else three
-
-
-if isPython2:
-    # Quieten down Python3's vexatious complaining
-    TestExtraction.assertRaisesRegex = TestExtraction.assertRaisesRegexp
-
-    # def testextractcli(self):
-    #     examples_dir = os.path.join(os.path.abspath(__file__), 'examples')
-    #     ids_path = os.path.join(examples_dir, 'ids.txt')
-    #     params = get_params(ids_path)
-    #     main(params)
 
 
 if __name__ == '__main__':

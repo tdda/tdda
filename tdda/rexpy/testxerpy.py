@@ -7,7 +7,233 @@ from tdda.rexpy.relib import re, reIsRegex
 
 from tdda.referencetest import ReferenceTestCase, tag
 
+from tdda.rexpy.testrexquality import POSTCODE_RE_4C, POSTCODE_RE_TIGHT3
 from tdda.rexpy.xerpy import *
+
+
+def check_xerpy(pattern, expected, weighted, n=8, N=1024):
+    """Generate samples from `pattern` (with `weighted` passed to
+    `Xerpy`), doubling the sample size (starting at `n`, capped at
+    `N`) until every regex in `expected` has its observed match
+    proportion inside its given `[low, high]` range, or `N` samples
+    have been generated.
+
+    Each regex in `expected` is checked independently -- a sample
+    may fullmatch more than one (overlapping regexes are allowed,
+    not treated as an error).
+
+    Args:
+        pattern (str): the regex to sample from.
+        expected (dict): regex string -> [low, high] proportion
+            range.
+        weighted (bool): passed through to
+            `Xerpy(pattern, weighted=...)`.
+        n (int): initial sample size.
+        N (int): sample size cap.
+
+    Returns:
+        tuple: (observed proportions dict, n samples drawn,
+            ok bool -- whether every range was satisfied)
+    """
+    compiled = {r: re.compile(r) for r in expected}
+    x = Xerpy(pattern, weighted=weighted)
+    counts = {r: 0 for r in expected}
+    drawn = 0
+    target = n
+    while True:
+        while drawn < target:
+            s = x.generate()
+            for r, c in compiled.items():
+                if c.fullmatch(s):
+                    counts[r] += 1
+            drawn += 1
+        observed = {r: counts[r] / drawn for r in expected}
+        ok = all(
+            low <= observed[r] <= high
+            for r, (low, high) in expected.items()
+        )
+        if ok or target >= N:
+            break
+        target = min(target * 2, N)
+    return observed, drawn, ok
+
+
+class TestXerpyWeighted(ReferenceTestCase):
+    def test_equal_cardinality_branches(self):
+        # true p=0.5 for each branch; [0.4, 0.6] at n=1024 alone
+        # (the last doubling step) has a ~1.3e-10 chance of landing
+        # outside that range by chance (exact binomial tail) -- an
+        # upper bound on this test's false-failure rate, since it
+        # can also succeed at any earlier checkpoint (8/16/.../512)
+        expected = {'^a$': [0.4, 0.6]}
+        for weighted in (False, True):
+            observed, drawn, ok = check_xerpy(
+                '(a|b)', expected, weighted=weighted,
+            )
+            self.assertTrue(ok, (weighted, observed, drawn))
+
+    def test_unequal_cardinality_branches_unweighted(self):
+        # 'a' (cardinality 1) vs '[c-z]' (cardinality 24): unweighted
+        # picks each branch uniformly regardless, so still p=0.5
+        expected = {'^a$': [0.4, 0.6]}
+        observed, drawn, ok = check_xerpy(
+            '(a|[c-z])', expected, weighted=False,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    def test_unequal_cardinality_branches_weighted(self):
+        # weighted: true p('a') = 1/25 = 4%; [0.01, 0.10] at
+        # N=2048 alone has a ~1.0e-16 chance of landing outside
+        # that range by chance (exact binomial tail) -- an upper
+        # bound on this test's false-failure rate, since it can
+        # also succeed at any earlier checkpoint
+        expected = {'^a$': [0.01, 0.10]}
+        observed, drawn, ok = check_xerpy(
+            '(a|[c-z])', expected, weighted=True, n=32, N=2048,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    def test_nested_alternation_unweighted(self):
+        # unweighted picks uniformly at both levels: p('a')=0.5,
+        # p('b')=0.25 (0.5 outer * 0.5 inner). Both ranges at
+        # N=4096 alone have a chance of ~1.6e-14 ('a') / ~2.6e-18
+        # ('b') of landing outside by chance (exact binomial tail)
+        # -- upper bounds on this test's false-failure rate, since
+        # it can also succeed at any earlier checkpoint. Ranges are
+        # deliberately non-overlapping with the weighted case
+        # below, since the true proportions genuinely differ.
+        expected = {'^a$': [0.44, 0.56], '^b$': [0.19, 0.31]}
+        observed, drawn, ok = check_xerpy(
+            '(a|(b|c))', expected, weighted=False, n=32, N=4096,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    def test_nested_alternation_weighted(self):
+        # weighted: 'a' has cardinality 1, '(b|c)' has cardinality
+        # 2 (1 + 1), so p('a')=p('b')=1/3 (the inner 'b'/'c' split
+        # is itself 1:1). [0.28, 0.39] at N=4096 alone has a
+        # ~1.1e-13 chance of landing outside that range by chance
+        # (exact binomial tail) for each -- an upper bound on this
+        # test's false-failure rate, since it can also succeed at
+        # any earlier checkpoint.
+        expected = {'^a$': [0.28, 0.39], '^b$': [0.28, 0.39]}
+        observed, drawn, ok = check_xerpy(
+            '(a|(b|c))', expected, weighted=True, n=32, N=4096,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    # POSTCODE_RE_TIGHT3's outward code is a 3-way alternation
+    # (general area/digit shape | NPT | GIR) whose true cardinality
+    # shares (computed directly from the parsed Group tree, not by
+    # hand) are 61_280_000 : 4_200 : 1 out of 61_284_201 total --
+    # wildly unequal. Within the general shape, London (8 areas)
+    # vs non-London (~100 areas) split 10_240_000 : 51_040_000.
+    #
+    # Within London, the digit-part is itself an alternation
+    # ('[0-9][A-HJKMNPR-VWXY]?' vs '[0-9]{2}', cardinality 220 vs
+    # 100 -- correctly cardinality-weighted), but the trailing
+    # subdistrict letter within the first branch is an optional
+    # quantifier ('?'), not a further alternation -- its own
+    # present/absent choice is always a uniform 50/50 draw,
+    # regardless of `weighted` (that flag only reweights alternation
+    # branch choice, not a quantifier's repeat count). So
+    # P(subdistrict letter | London) = P(digit+letter branch) * 0.5,
+    # giving 0.5*0.5=0.25 unweighted and 0.6875*0.5=0.34375 weighted
+    # -- confirmed against direct sampling before finalizing these
+    # numbers, since naively treating branch cardinality as if it
+    # were the letter's own presence probability (220/320=0.6875)
+    # was wrong by a factor of 2 in an earlier version of this test.
+    NPT_RE = r'^NPT .*$'
+    GIR_RE = r'^GIR 0AA$'
+    GENERAL_RE = r'^(?!GIR |NPT ).*$'
+    LONDON_RE = r'^(?:EC|WC|NW|SE|SW|E|N|W)[0-9].*$'
+    LONDON_SUBDISTRICT_RE = (
+        r'^(?:EC|WC|NW|SE|SW|E|N|W)[0-9][A-HJKMNPR-VWXY] .*$'
+    )
+
+    def test_tight3_branches_unweighted(self):
+        # unweighted: uniform at every alternation point regardless
+        # of cardinality -- 1/3 each for GIR/NPT/general, 1/6 for
+        # London (1/3 general * 1/2 London-vs-not), 1/24 for
+        # London-with-subdistrict (1/6 London * 1/2 branch * 1/2
+        # quantifier). London's true weighted share (16.71%) happens
+        # to coincide almost exactly with unweighted's 1/6 (16.67%)
+        # here -- a coincidence of this particular pattern's
+        # cardinalities, not a general property -- so that check
+        # alone wouldn't distinguish the two modes; the
+        # subdistrict-letter split (1/24=4.17% here vs 5.74%
+        # weighted) does, though only modestly, since the quantifier
+        # draw dilutes the underlying cardinality difference.
+        expected = {
+            self.GIR_RE: [0.28, 0.39],
+            self.NPT_RE: [0.28, 0.39],
+            self.GENERAL_RE: [0.28, 0.39],
+            self.LONDON_RE: [0.13, 0.21],
+            self.LONDON_SUBDISTRICT_RE: [0.033, 0.047],
+        }
+        observed, drawn, ok = check_xerpy(
+            POSTCODE_RE_TIGHT3, expected, weighted=False,
+            n=128, N=65536,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    def test_tight3_branches_weighted(self):
+        # weighted: GIR (~1.6e-8) and NPT (~6.85e-5) are both
+        # essentially never seen; general is ~99.993%; London is
+        # ~16.71% (see the unweighted test's coincidence note); the
+        # subdistrict-letter split is ~5.74%, genuinely apart from
+        # unweighted's 4.17% (see the class comment above on why
+        # this isn't simply 220/320=68.75%).
+        expected = {
+            self.GIR_RE: [0, 1e-4],
+            self.NPT_RE: [0, 0.01],
+            self.GENERAL_RE: [0.99, 1.0],
+            self.LONDON_RE: [0.13, 0.21],
+            self.LONDON_SUBDISTRICT_RE: [0.050, 0.065],
+        }
+        observed, drawn, ok = check_xerpy(
+            POSTCODE_RE_TIGHT3, expected, weighted=True,
+            n=128, N=65536,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    # POSTCODE_RE_4C is a simpler contrast to TIGHT3: a flat 3-way
+    # alternation (GIR | NPT | general shape) with no further
+    # nesting -- cardinalities (confirmed via the parsed Group tree)
+    # are 1 : 1 : 259_740 out of 259_742 total. Unlike TIGHT3's GIR,
+    # this pattern's inward code isn't fixed to '0AA' (it's the
+    # general '[0-9][A-Z]{2}'), so GIR/NPT are matched by prefix only.
+    RE4C_GIR_RE = r'^GIR .*$'
+    RE4C_NPT_RE = r'^NPT .*$'
+    RE4C_GENERAL_RE = r'^(?!GIR |NPT ).*$'
+
+    def test_4c_branches_unweighted(self):
+        # unweighted: 1/3 each, regardless of the general branch's
+        # true 259_740-to-1 cardinality advantage over GIR/NPT
+        expected = {
+            self.RE4C_GIR_RE: [0.28, 0.39],
+            self.RE4C_NPT_RE: [0.28, 0.39],
+            self.RE4C_GENERAL_RE: [0.28, 0.39],
+        }
+        observed, drawn, ok = check_xerpy(
+            POSTCODE_RE_4C, expected, weighted=False, n=32, N=4096,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
+    def test_4c_branches_weighted(self):
+        # weighted: true p(GIR)=p(NPT)=1/259_742 (~3.85e-6, so
+        # essentially never seen even at N=65536, where the expected
+        # count is only ~0.25); general is ~99.9992%
+        expected = {
+            self.RE4C_GIR_RE: [0, 1e-4],
+            self.RE4C_NPT_RE: [0, 1e-4],
+            self.RE4C_GENERAL_RE: [0.99, 1.0],
+        }
+        observed, drawn, ok = check_xerpy(
+            POSTCODE_RE_4C, expected, weighted=True, n=128, N=65536,
+        )
+        self.assertTrue(ok, (observed, drawn))
+
 
 class TestXerpy(ReferenceTestCase):
     def test_get_number(self):

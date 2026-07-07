@@ -12,8 +12,11 @@ import random
 import sys
 import time
 
+from tdda.rexpy.rexutils import Repeat, range_weight, repeat_cardinality
+
 
 VERBOSE = False
+DEFAULT_MAX_PLUS = 5
 
 def crange(chars):
     assert len(chars) == 2
@@ -111,9 +114,10 @@ class Xerpy:
     """
     Class for constructing example instances of a regular expression.
     """
-    def __init__(self, rex):
+    def __init__(self, rex, weighted=False):
         self.original_rex = rex
         self.rex, self.wrap_start, self.wrap_close = self.maybe_wrap(rex)
+        self.weighted = weighted
 
     def maybe_wrap(self, rex):
         """
@@ -170,30 +174,44 @@ class Xerpy:
             self.error('Unbalanced group parentheses', p)
         self.generators.reset()
 
-    def generate(self, min_len=None, max_len=None, verbose=VERBOSE):
+    def generate(
+        self, min_len=None, max_len=None, verbose=VERBOSE, weighted=None,
+    ):
+        """Generate one example string matching the pattern.
+
+        `weighted` controls whether alternation branches are chosen
+        with uniform probability (`False`, the long-standing
+        default) or weighted by each branch's estimated cardinality
+        (`True`) -- a branch admitting a billion strings is picked
+        far more often than one admitting two, rather than equally
+        often. Falls back to `self.weighted` (set in `__init__`,
+        itself defaulting to `False`) when not given explicitly.
+        """
+        if weighted is None:
+            weighted = self.weighted
         if not hasattr(self, 'generators'):
             self.compile()
         out = []
         for f, q in self.generators:
-            out.append(self.generate_frag(f, q()))
+            out.append(self.generate_frag(f, q(), weighted))
         s = ''.join(out)
         if min_len is not None or max_len is not None:
-            s = self.improve_length(len(s), out, min_len, max_len)
+            s = self.improve_length(len(s), out, min_len, max_len, weighted)
         if verbose:
             print("'%s': '%s'" % (self.original_rex, s))
         return s
 
-    def generate_frag(self, f, n):
+    def generate_frag(self, f, n, weighted=False):
         frag = []
         for i in range(n):
             if getattr(f, 'kind', None) == 'Group':
-                frag.append(f.generate())
+                frag.append(f.generate(weighted))
             else:
                 frag.append(f())
         return ''.join(frag)
 
 
-    def improve_length(self, L, out, min_len, max_len):
+    def improve_length(self, L, out, min_len, max_len, weighted=False):
         m = nvl(min_len, L)
         M = nvl(max_len, L)
         if not (m <= L <= M):
@@ -201,14 +219,14 @@ class Xerpy:
             random.shuffle(indexes)
             for i in indexes:
                 if L < m:
-                    L += self.lengthen(i, out, m - L, M - L)
+                    L += self.lengthen(i, out, m - L, M - L, weighted)
                 elif L > M:
-                    L -= self.shorten(i, out, L - M, L - m)
+                    L -= self.shorten(i, out, L - M, L - m, weighted)
                 if (m <= L <= M):
                     break
         return ''.join(out)
 
-    def lengthen(self, i, out, target_extra, max_extra):
+    def lengthen(self, i, out, target_extra, max_extra, weighted=False):
         (f, q) = self.generators[i]
         frag = out[i]
         L = len(frag)
@@ -223,13 +241,13 @@ class Xerpy:
             n = None
             xtra = 0
         if n is not None:
-            s = self.generate_frag(f, n)
+            s = self.generate_frag(f, n, weighted)
             if len(s) > L:
                 out[i] = s
             xtra = len(s) - L
         return xtra
 
-    def shorten(self, i, out, target_reduction, max_reduction):
+    def shorten(self, i, out, target_reduction, max_reduction, weighted=False):
         (f, q) = self.generators[i]
         frag = out[i]
         L = len(frag)
@@ -248,7 +266,7 @@ class Xerpy:
             n = None
             reduction = 0
         if n is not None:
-            s = self.generate_frag(f, n)
+            s = self.generate_frag(f, n, weighted)
             if len(s) < L:
                 out[i] = s
             reduction = L - len(s)
@@ -558,14 +576,26 @@ class Group:
         self.depth = 0 if self.is_root() else parent.depth + 1
         self.min_alt_len = None     # min length of alternatives, if any
         self.max_alt_len = None     # max length of alternatives, if any
+        self._cardinality = None    # cache: cardinality() is invariant
+        self._weights = None        # cache: weighted generate()'s weights
 
     def is_root(self):
         return self.root is self
 
-    def generate(self):
+    def generate(self, weighted=False, max_plus=DEFAULT_MAX_PLUS):
         n = len(self.alternatives)
         if n > 1:
-            a = random.randint(0, n - 1)
+            if weighted:
+                if self._weights is None:
+                    self._weights = [
+                        range_weight(
+                            self._alternative_cardinality(frags, max_plus)
+                        )
+                        for frags in self.alternatives
+                    ]
+                a = random.choices(range(n), weights=self._weights)[0]
+            else:
+                a = random.randint(0, n - 1)
         else:
             a = 0
 
@@ -574,11 +604,48 @@ class Group:
         for f, q in frags:
             for i in range(q()):
                 if getattr(f, 'kind', None) == 'Group':
-                    out.append(f.generate())
+                    out.append(f.generate(weighted, max_plus))
                 else:
                     out.append(f())
         s = ''.join(out)
         return s
+
+    def _alternative_cardinality(self, frags, max_plus):
+        """Estimated cardinality of one alternative: the product of
+        each fragment's own cardinality (an atom's alphabet size, or
+        a nested Group's own `cardinality()`) raised across its
+        quantifier's repeat range.
+        """
+        product = 1
+        for f, q in frags:
+            atom_size = (
+                f.cardinality(max_plus)
+                if getattr(f, 'kind', None) == 'Group'
+                else f.size
+            )
+            # q.m is None only for the "no quantifier" sentinel
+            # (exactly one repetition) -- unlike an open-ended '*'/
+            # '+', which has q.m set (0 or 1) with only q.M None.
+            repeat = Repeat(1, 1) if q.m is None else Repeat(q.m, q.M)
+            product *= repeat_cardinality(atom_size, repeat, max_plus)
+        return product
+
+    def cardinality(self, max_plus):
+        """Estimated cardinality of this group: the sum of its
+        alternatives' cardinalities (an over-estimate when
+        alternatives overlap, since it doesn't attempt the
+        disjointness reasoning `quality.py`'s `count_strings` does
+        -- fine for use as a relative sampling weight, not intended
+        as an exact count). Cached: the pattern tree is built once
+        at parse time and never mutated afterward, so this is
+        invariant across calls.
+        """
+        if self._cardinality is None:
+            self._cardinality = sum(
+                self._alternative_cardinality(frags, max_plus)
+                for frags in self.alternatives
+            )
+        return self._cardinality
 
 
 class RootGroup(Group):
@@ -668,17 +735,24 @@ def any_character():
     return random.choice(DOT_CHARS)
 
 
+any_character.size = len(DOT_CHARS)
+
+
 @memoize
 def brackets(charlist):
     """
     Returns function that randomly chooses one from charlist
     """
-    return lambda: random.choice(charlist)
+    f = lambda: random.choice(charlist)
+    f.size = len(charlist)
+    return f
 
 
 @memoize
 def fixed(c):
-    return lambda: c
+    f = lambda: c
+    f.size = 1
+    return f
 
 
 if __name__ == '__main__':

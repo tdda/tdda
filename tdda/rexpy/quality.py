@@ -1015,20 +1015,28 @@ class ConcreteRexMetric:
             where "matched by the candidate but not in this sample"
             conflates real false positives with true positives that
             simply weren't drawn.
+        weighted (bool): passed through to every `Xerpy` used
+            internally (both for materializing `all_positives` and,
+            in `evaluate()`, for candidate-sampling) -- see
+            `Xerpy.__init__`. Defaults to `False` (uniform
+            alternation-branch choice), matching `Xerpy`'s own
+            default.
     """
 
     def __init__(
         self, all_positives, alphabet=None, min_length=None,
         max_length=None, n_positives=DEFAULT_N_SAMPLES, seed=None,
-        validator=None,
+        validator=None, weighted=False,
     ):
         self.seed = seed
+        self.weighted = weighted
         spec = all_positives if isinstance(all_positives, str) else None
         if validator is None and spec is not None:
-            validator = lambda s: bool(re.fullmatch(spec, s))
+            compiled_spec = re.compile(spec)
+            validator = lambda s: bool(compiled_spec.fullmatch(s))
         self.validator = validator
         if isinstance(all_positives, str):
-            all_positives = Xerpy(all_positives).generate
+            all_positives = Xerpy(all_positives, weighted=weighted).generate
         if callable(all_positives):
             generate = all_positives
             prng_state = PRNGState(seed)
@@ -1096,7 +1104,7 @@ class ConcreteRexMetric:
         )
         fnr = _rate(fn, self.n_positives)
         if self.validator is not None:
-            generate = Xerpy(pattern).generate
+            generate = Xerpy(pattern, weighted=self.weighted).generate
             prng_state = PRNGState(self.seed)
             try:
                 candidates = list(
