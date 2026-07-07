@@ -1965,7 +1965,6 @@ class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
         self.assertEqual(score.fn, 0)
         self.assertEqual(score.fnr, 0.0)
         self.assertIsNone(score.universe)
-        print(vars(score))
 
     @tag
     def test_tight2_against_itself(self):
