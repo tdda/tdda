@@ -73,6 +73,30 @@ POSTCODE_RE_2 = '^.{6,8}$'
 POSTCODE_RE_3 = '^[A-Z0-9 ]{6,9}$'
 POSTCODE_RE_4 = '^[A-Z0-9]{2,4} [0-9][A-Z]{2}$'
 
+# not one of postcodes.txt's numbered groups -- a meaningful
+# intermediate between group 4 and group 5, not intended as a fix to
+# rexpy's own extraction algorithm: real outward codes always start
+# with a letter (rexpy's group-4-equivalent output loses this,
+# allowing an all-digit outward code), so this just adds that one
+# constraint back onto group 4's shape while still folding GIR/NPT
+# in for free (both start with a letter and are short enough to fit
+# '[A-Z0-9]{1,3}'), unlike group 5, which needs an explicit
+# alternation to cover them.
+POSTCODE_RE_4B = '^[A-Z][A-Z0-9]{1,3} [0-9][A-Z]{2}$'
+
+# another intermediate, tighter than 4B: matches the Royal Mail
+# general outward-code shape (1-2 letters, a mandatory digit, then
+# an optional trailing letter-or-digit) almost exactly -- close to
+# group 9's case-split alternation, but without splitting into
+# separate branches per digit count. Outside GIR/NPT (added back as
+# an explicit alternation, same as group 5, since neither has a
+# digit and so can't fit the general shape) this is fn=0 against the
+# full dataset, and substantially tighter than 4B: fpr ~0.0486%
+# vs 4B's ~0.234%.
+POSTCODE_RE_4C = (
+    '^(GIR|NPT|[A-Z]{1,2}[0-9][A-Z0-9]?) [0-9][A-Z]{2}$'
+)
+
 # group 5, without the GIR/NPT alternation (a stepping-stone variant,
 # not itself one of postcodes.txt's numbered groups).
 POSTCODE_RE_5_NO_ALT = '^[A-Z]{1,2}[0-9]{1,2}[A-Z]? [0-9][A-Z]{2}$'
@@ -206,6 +230,41 @@ POSTCODE_RE_TIGHT2 = (
         ' [0-9][ABD-HJLNP-UW-Z]{2}'   # shared inward code: V excluded
         '|'
         'NPT [0-9][ABD-HJLNP-VW-Z][ABD-HJLNP-UW-Z]'  # NPT: V, 1st letter only
+        '|'
+        'GIR 0AA'
+    ')$'
+)
+
+
+# Fixes TIGHT2's one remaining over-generation, found via xerpy-
+# sampling TIGHT2 and scoring POSTCODE_RE_4C against the sample
+# (test_postcode_re_4c_against_tight2_xerpy_sample): TIGHT2's London
+# branch applies the subdistrict letter after either 1 or 2 district
+# digits (`[0-9]{1,2}[A-HJKMNPR-VWXY]?`), but real data only ever
+# has it after a single digit (e.g. 'W1A', never a 2-digit-plus-
+# letter district like a hypothetical 'EC12A'). Restricted to
+# `([0-9][A-HJKMNPR-VWXY]?|[0-9]{2})`: a letter is only reachable
+# after exactly one digit; two digits never take a trailing letter.
+# Verified fn=0 against the full ~2.5M postcode dataset, same as
+# TIGHT2 -- this tightens generation without losing any real match.
+# Prefer this over TIGHT2 as the xerpy-sampled ground-truth spec
+# from here on.
+POSTCODE_RE_TIGHT3 = (
+    '^('
+        '('
+            '(EC|WC|NW|SE|SW|E|N|W)'
+            '([0-9][A-HJKMNPR-VWXY]?|[0-9]{2})'
+            '|'
+            '(AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|'
+            'DA|DD|DE|DG|DH|DL|DN|DT|DY|EH|EN|EX|FK|FY|G|GL|GU|GY|HA|HD|HG|HP|'
+            'HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|'
+            'ME|MK|ML|NE|NG|NN|NP|NR|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SG|'
+            'SK|SL|SM|SN|SO|SP|SR|SS|ST|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|WA|WD|WF|'
+            'WN|WR|WS|WV|YO|ZE)[0-9]{1,2}'
+        ')'
+        ' [0-9][ABD-HJLNP-UW-Z]{2}'
+        '|'
+        'NPT [0-9][ABD-HJLNP-VW-Z][ABD-HJLNP-UW-Z]'
         '|'
         'GIR 0AA'
     ')$'
@@ -1383,6 +1442,52 @@ class TestConcreteRexMetricEPostcodes(ReferenceTestCase):
         )
         self.assertTrue(score.eq(expected))
 
+    def test_4b_broad_structure_letter_first(self):
+        # '[A-Z][A-Z0-9]{1,3}' (outward code, first char forced to
+        # a letter, 1-3 more alnum chars, 36-char alphabet) +
+        # literal space + [0-9] (10) + [A-Z]{2} (676). fn=0: GIR and
+        # NPT both start with a letter and are short enough (2 more
+        # chars each) to fit '[A-Z0-9]{1,3}', so this also folds
+        # them in without a separate alternation, unlike group 5.
+        n_outward = 26 * sum(36**k for k in range(1, 4))  # 1_247_688
+        cardinality = n_outward * 10 * 676  # 8_434_370_880
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 8_434_370_825
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_977_057_408
+
+        score = self.q.evaluate(POSTCODE_RE_4B)
+        expected = RexMetrics(
+            len=34,
+            fp=8_434_370_825,
+            fn=0,
+            fpr=0.0023364056587816553,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4c_general_shape_with_gir_npt(self):
+        # '(GIR|NPT|[A-Z]{1,2}[0-9][A-Z0-9]?)': GIR/NPT (2 literals)
+        # + general shape (1-2 letters, mandatory digit, optional
+        # trailing alnum): (26+676) * 10 * 37 = 259_740; plus 2 for
+        # GIR/NPT = 259_742
+        n_outward = 2 + sum(26**k for k in range(1, 3)) * 10 * 37
+        cardinality = n_outward * 10 * 676  # 1_755_855_920
+        n_true_positives = 55
+        fp = cardinality - n_true_positives  # 1_755_855_865
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_977_057_408
+
+        score = self.q.evaluate(POSTCODE_RE_4C)
+        expected = RexMetrics(
+            len=50,
+            fp=1_755_855_865,
+            fn=0,
+            fpr=0.00048638975735228694,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
     def test_e_specialization(self):
         # 'E' area: 'E' + optional 2nd letter (EC, EH, EN, EX...)
         # + 1-2 digits + optional trailing letter (like the 'W'
@@ -1884,6 +1989,56 @@ class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
         self.assertEqual(score.fpr, 0.0)
         self.assertIsNone(score.universe)
 
+    @tag
+    def test_postcode_re_4c_against_tight2_xerpy_sample_finds_bug(self):
+        # This is the finding that motivated TIGHT3: TIGHT2 lets a
+        # London district take a subdistrict letter after either 1
+        # or 2 digits, so it generates unreal strings like a
+        # hypothetical 2-digit-plus-letter London district; 4C
+        # (correctly, per real data) never generates those, so it
+        # comes back with nonzero fn against a TIGHT2-sampled set --
+        # a genuine defect in TIGHT2, not in 4C. fn is asserted (not
+        # just left to vary) because it's the whole point of this
+        # test: it should stay nonzero until/unless TIGHT2 itself is
+        # revisited.
+        q = ConcreteRexMetric(
+            POSTCODE_RE_TIGHT2,
+            alphabet=DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        )
+        score = q.evaluate(POSTCODE_RE_4C)
+        self.assertGreater(score.fn, 0)
+
+    @tag
+    def test_tight3_against_itself(self):
+        # Same self-consistency invariant as test_tight2_against_itself
+        q = ConcreteRexMetric(
+            POSTCODE_RE_TIGHT3,
+            alphabet=DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        )
+        score = q.evaluate(POSTCODE_RE_TIGHT3)
+        self.assertEqual(score.len, len(POSTCODE_RE_TIGHT3))
+        self.assertEqual(score.fn, 0)
+        self.assertEqual(score.fnr, 0.0)
+        self.assertEqual(score.fp, 0)
+        self.assertEqual(score.fpr, 0.0)
+        self.assertIsNone(score.universe)
+
+    @tag
+    def test_postcode_re_4c_against_tight3_xerpy_sample_bug_fixed(self):
+        # As test_postcode_re_4c_against_tight2_xerpy_sample_finds_bug,
+        # but against TIGHT3: the fix (subdistrict letter only
+        # reachable after a single digit) means TIGHT3 no longer
+        # generates the unreal strings 4C was correctly rejecting,
+        # so fn returns to 0 -- confirms TIGHT3 fixes the bug rather
+        # than just hiding it.
+        q = ConcreteRexMetric(
+            POSTCODE_RE_TIGHT3,
+            alphabet=DIGIT_CHARS + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        )
+        score = q.evaluate(POSTCODE_RE_4C)
+        self.assertEqual(score.fn, 0)
+        self.assertEqual(score.fnr, 0.0)
+
 
 @unittest.skipUnless(
     full_postcode_data_available(),
@@ -2029,6 +2184,50 @@ class TestConcreteRexMetricFullPostcodes(ReferenceTestCase):
             fp=11_675_832_467,
             fn=0,
             fpr=0.003234325441678786,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4b_broad_structure_letter_first(self):
+        # As the E-subset version of this test, but against the
+        # full dataset: still fn=0, since every real outward code
+        # (including GIR and NPT) starts with a letter and fits
+        # within '[A-Z0-9]{1,3}' for the rest
+        n_outward = 26 * sum(36**k for k in range(1, 4))  # 1_247_688
+        cardinality = n_outward * 10 * 676  # 8_434_370_880
+        n_true_positives = 2_527_213
+        fp = cardinality - n_true_positives  # 8_431_843_667
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        score = self.q.evaluate(POSTCODE_RE_4B)
+        expected = RexMetrics(
+            len=34,
+            fp=8_431_843_667,
+            fn=0,
+            fpr=0.002335707245673025,
+            fnr=0.0,
+        )
+        self.assertTrue(score.eq(expected))
+
+    def test_4c_general_shape_with_gir_npt(self):
+        # As the E-subset version of this test, but against the
+        # full dataset: still fn=0 -- GIR/NPT are folded in via the
+        # explicit alternation, same as group 5 needs, since neither
+        # has a digit and so can't fit the general shape on its own
+        n_outward = 2 + sum(26**k for k in range(1, 3)) * 10 * 37
+        cardinality = n_outward * 10 * 676  # 1_755_855_920
+        n_true_positives = 2_527_213
+        fp = cardinality - n_true_positives  # 1_753_328_707
+        fp_denominator = self.q.universe - n_true_positives
+        # fp_denominator: 3_609_974_530_250
+
+        score = self.q.evaluate(POSTCODE_RE_4C)
+        expected = RexMetrics(
+            len=50,
+            fp=1_753_328_707,
+            fn=0,
+            fpr=0.00048569004914241805,
             fnr=0.0,
         )
         self.assertTrue(score.eq(expected))
