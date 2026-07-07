@@ -1,5 +1,7 @@
+import math
 import random
 
+from collections import namedtuple
 from html import escape as htmlescape
 
 from tdda.utils import Dummy, DQuote
@@ -15,6 +17,55 @@ COLOURS7 = [
 ]
 COLOURS = ['#303030'] + [COLOURS7[i] for i in (0, 4, 1, 3, 5)]
 N_COLOURS = len(COLOURS)
+
+
+class Repeat(namedtuple('Repeat', 'min max')):
+    """
+    A repeat range for a single regex atom (e.g. `{2,4}` gives
+    `Repeat(min=2, max=4)`). `max` is `None` for an open-ended
+    repeat (`*`, `+`, `{n,}`).
+    """
+
+
+def repeat_cardinality(atom_size, repeat, max_plus):
+    """Number of strings admitted by repeating an atom of size
+    `atom_size` between `repeat.min` and `repeat.max` times
+    (inclusive). An open-ended repeat (`repeat.max is None`) is
+    capped at `max_plus`, the same compromise `quality.py`'s
+    `count_strings` makes for unbounded quantifiers.
+
+    Args:
+        atom_size (int): number of distinct values the atom itself
+            (one repetition) can take.
+        repeat (Repeat): the repeat range.
+        max_plus (int): cap used in place of an open-ended `max`.
+
+    Returns:
+        int
+    """
+    upper = max_plus if repeat.max is None else repeat.max
+    return sum(atom_size**k for k in range(repeat.min, upper + 1))
+
+
+def range_weight(value):
+    """Collapse a scalar or `(lower, upper)` pair into a single
+    positive weight, suitable for use with `random.choices`.
+    Cardinality is a multiplicative quantity (each additional
+    character multiplies the count, rather than adding to it), so a
+    range is collapsed via its geometric mean rather than its
+    arithmetic mean.
+
+    Args:
+        value (int, float or tuple): a scalar weight, or a
+            `(lower, upper)` pair (e.g. a `CountRange`).
+
+    Returns:
+        float
+    """
+    if isinstance(value, (int, float)):
+        return value
+    lower, upper = value
+    return math.sqrt(lower * upper)
 
 
 def Rex2String(rexes, group=True, anchor=True, asList=False):

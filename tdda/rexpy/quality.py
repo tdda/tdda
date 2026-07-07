@@ -11,7 +11,7 @@ import math
 from collections import namedtuple
 
 from tdda.rexpy.relib import re
-from tdda.rexpy.rexutils import PRNGState
+from tdda.rexpy.rexutils import PRNGState, Repeat, repeat_cardinality
 from tdda.rexpy.xerpy import Xerpy
 
 DEFAULT_MAX_PLUS = 5
@@ -47,13 +47,6 @@ class Alphabets:
 
     #: All 128 ASCII code points, `chr(0)` to `chr(127)`.
     ASCII = '[\x00-\x7f]'
-
-
-class Repeat(namedtuple('Repeat', 'min max')):
-    """
-    A repeat range for a single regex atom (e.g. `{2,4}` gives
-    `Repeat(min=2, max=4)`).
-    """
 
 
 class ResolvedAlphabet(namedtuple('ResolvedAlphabet', 'pattern size')):
@@ -250,9 +243,7 @@ def _count_sequence(pattern, max_plus=DEFAULT_MAX_PLUS, alphabet=None):
             )
         else:
             card = _atom_size(kind, value, resolved_alphabet, pattern)
-            factor = _as_range(
-                sum(card**k for k in range(repeat.min, repeat.max + 1))
-            )
+            factor = _as_range(repeat_cardinality(card, repeat, max_plus))
         total = CountRange(
             total.lower * factor.lower, total.upper * factor.upper
         )

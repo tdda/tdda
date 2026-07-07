@@ -20,7 +20,6 @@ from tdda.rexpy.quality import (
     ConcreteRexMetric,
     CountRange,
     DIGIT_CHARS,
-    Repeat,
     RexMetrics,
     WHITESPACE_CHARS,
     count_strings,
@@ -43,6 +42,7 @@ from tdda.rexpy.quality import (
     _split_top_level,
     _validate_pattern,
 )
+from tdda.rexpy.rexutils import Repeat
 
 TESTDATADIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'testdata'
