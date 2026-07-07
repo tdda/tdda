@@ -830,6 +830,32 @@ def _rate(numerator, denominator):
     return numerator / denominator
 
 
+def _range_ratio(numerator, denominator):
+    """`_rate(numerator, denominator)`, but either side may be a
+    `CountRange` instead of a scalar -- paired lower-with-lower,
+    upper-with-upper. Collapses to a scalar when the resulting bounds
+    coincide, matching `count_strings`'s own convention.
+
+    Args:
+        numerator (int, float or CountRange): the numerator.
+        denominator (int, float or CountRange): the denominator.
+
+    Returns:
+        float or CountRange
+    """
+    num_lower, num_upper = (
+        (numerator.lower, numerator.upper)
+        if isinstance(numerator, CountRange) else (numerator, numerator)
+    )
+    den_lower, den_upper = (
+        (denominator.lower, denominator.upper)
+        if isinstance(denominator, CountRange) else (denominator, denominator)
+    )
+    lower = _rate(num_lower, den_lower)
+    upper = _rate(num_upper, den_upper)
+    return lower if lower == upper else CountRange(lower, upper)
+
+
 class RexMetrics:
     """
     Quality metrics for a single regex, scored against a set of
@@ -851,32 +877,54 @@ class RexMetrics:
             fails to match. Always exact (found by directly testing
             the compiled pattern against the real positives), never
             a range, regardless of alternation.
-        fpr (float or CountRange): false positive rate. In the
-            default mode: `fp` divided by the number of "invalid"
-            strings in the universe -- a `CountRange` of rates iff
-            `fp` is a `CountRange`. In validator mode: `fp` divided
-            by the number of (deduped) candidate samples drawn --
-            a rate over the *candidate pattern's own output*, not
-            over the full alphabet/length universe, and not
-            comparable in scale to the default mode's `fpr`.
-            Optional; `eq()` only compares it when given (on either
-            side).
+        fpr (float or CountRange): false positive rate, `fp` divided
+            by the number of "invalid" strings in the assumed
+            universe (`universe - n_positives`) -- the same
+            statistic, comparable in scale, in both modes. In the
+            default mode this is exact (up to `count_strings`'s own
+            bounds). In validator mode there's no real per-string
+            enumeration of the universe, so it's derived instead by
+            extrapolating the sampled `fgr` up to the candidate
+            pattern's own cardinality (via `count_strings`) and
+            dividing by `universe - n_positives` -- approximating
+            what exhaustive enumeration-and-cross-check against the
+            validator would give. A `CountRange` of rates iff the
+            underlying cardinality is a `CountRange`. Optional;
+            `eq()` only compares it when given (on either side).
         fnr (float): false negative rate (`fn / n_positives`).
             Optional, compared by `eq()` only when given.
+        fgr (float or CountRange): false generation rate -- the
+            fraction of what the candidate pattern matches/generates
+            that isn't a real positive (`fp` over the candidate's own
+            matched space, not the universe). In the default mode:
+            `fp / cardinality(pattern)`, exact up to the same bounds
+            as `fpr`. In validator mode: `fp` divided by the number
+            of (deduped) candidate samples drawn from the pattern --
+            a sampling estimate of the same ratio. This is the
+            statistic validator mode used to (mis)report as `fpr`
+            before `fpr` was given its proper, universe-relative
+            meaning. Optional; `eq()` only compares it when given.
         universe (int): size of the assumed universe of possible
             strings. Not itself a quality measure (it's context,
             not a property of the regex), so `eq()` never compares
             it directly -- but uses it to derive a default `tol`
             when one isn't given explicitly. `None` in validator
-            mode, which has no notion of a universe.
+            mode: `self.universe` is still used internally there to
+            derive `fpr`, but isn't exposed via this field, since the
+            candidate pattern's cardinality (not the full alphabet/
+            length universe) is what validator mode actually samples
+            over.
     """
 
-    def __init__(self, len, fp, fn, fpr=None, fnr=None, universe=None):
+    def __init__(
+        self, len, fp, fn, fpr=None, fnr=None, fgr=None, universe=None,
+    ):
         self.len = len
         self.fp = fp
         self.fn = fn
         self.fpr = fpr
         self.fnr = fnr
+        self.fgr = fgr
         self.universe = universe
 
     def eq(self, other, tol=None):
@@ -902,7 +950,7 @@ class RexMetrics:
         Args:
             other (RexMetrics): the expected value to compare
                 against.
-            tol (float): tolerance for `fpr`/`fnr` comparison.
+            tol (float): tolerance for `fpr`/`fnr`/`fgr` comparison.
                 Defaults to `_default_tol(self, other)` when not
                 given.
 
@@ -915,7 +963,7 @@ class RexMetrics:
             return False
         if tol is None:
             tol = _default_tol(self, other)
-        for attr in ('fpr', 'fnr'):
+        for attr in ('fpr', 'fnr', 'fgr'):
             expected = getattr(other, attr)
             if expected is None:
                 continue
@@ -1067,30 +1115,31 @@ class ConcreteRexMetric:
         `pattern` may contain alternation: `count_strings` returns
         an `int` when the cardinality is exact, or a `CountRange`
         when alternation leaves genuine overlap uncertainty, and
-        `fp`/`fpr` follow suit.
+        `fp`/`fpr`/`fgr` follow suit.
 
         `max_plus` is passed through to `count_strings`, to size
         unbounded quantifiers (`+`, `*`, open `{m,}`); it defaults
         to `DEFAULT_MAX_PLUS` (5), which may not reach `self`'s
         actual `max_length` for patterns using them.
 
-        If `self.validator` is set, `fp`/`fpr` are computed
+        If `self.validator` is set, `fp`/`fgr` are computed
         differently: `n_candidates` strings are sampled from
         `pattern` itself (via `Xerpy`, seeded/restored the same way
         as `all_positives`), deduped, and checked against
-        `self.validator` -- `fp` is how many fail it, `fpr` is that
-        count over the deduped sample size. This is a different
-        statistic from the cardinality-based `fpr` (a rate over
-        *this pattern's own generated output*, not over the full
-        alphabet/length universe), and doesn't use `self.universe`
-        at all. `count_strings`/`max_plus` aren't used in this mode
-        either -- `pattern` only needs to be valid for `Xerpy`, not
-        for `count_strings`'s more restricted grammar.
+        `self.validator` -- `fp` is how many fail it, `fgr` is that
+        count over the deduped sample size (a sampling estimate of
+        the fraction of `pattern`'s own output that isn't a real
+        positive). `fpr` is then derived by extrapolating `fgr` up to
+        `pattern`'s cardinality (via `count_strings`, run in this
+        mode too, unlike before) and dividing by `self.universe -
+        self.n_positives` -- approximating what exhaustively
+        enumerating `pattern`'s matches and cross-checking each
+        against the validator would give, the same statistic the
+        default mode computes.
 
         Args:
             pattern (str): the candidate regex to score.
-            max_plus (int): see `count_strings`. Unused when
-                `self.validator` is set.
+            max_plus (int): see `count_strings`.
             n_candidates (int): number of samples to draw from
                 `pattern` when `self.validator` is set. Unused
                 otherwise.
@@ -1113,10 +1162,39 @@ class ConcreteRexMetric:
             finally:
                 prng_state.restore()
             fp = sum(1 for s in candidates if not self.validator(s))
-            fpr = _rate(fp, len(candidates))
+            fgr = _rate(fp, len(candidates))
+            cardinality = count_strings(
+                pattern, max_plus=max_plus, alphabet=self.alphabet
+            )
+            fp_denominator = self.universe - self.n_positives
+            if isinstance(cardinality, CountRange):
+                fp_estimate = CountRange(
+                    fgr * cardinality.lower, fgr * cardinality.upper
+                )
+            else:
+                fp_estimate = fgr * cardinality
+            # Same clamping rationale as the default mode below: an
+            # extrapolated estimate can in principle land outside
+            # [0, fp_denominator] (sampling noise, or count_strings's
+            # own over/under-estimation), which isn't a legitimate
+            # fpr; clamp before deriving the rate.
+            if isinstance(fp_estimate, CountRange):
+                fp_estimate = CountRange(
+                    max(fp_estimate.lower, 0), max(fp_estimate.upper, 0)
+                )
+                if fp_denominator > 0:
+                    fp_estimate = CountRange(
+                        min(fp_estimate.lower, fp_denominator),
+                        min(fp_estimate.upper, fp_denominator),
+                    )
+            else:
+                fp_estimate = max(fp_estimate, 0)
+                if fp_denominator > 0:
+                    fp_estimate = min(fp_estimate, fp_denominator)
+            fpr = _range_ratio(fp_estimate, fp_denominator)
             return RexMetrics(
                 len=len(pattern), fp=fp, fn=fn, fpr=fpr, fnr=fnr,
-                universe=None,
+                fgr=fgr, universe=None,
             )
         cardinality = count_strings(
             pattern, max_plus=max_plus, alphabet=self.alphabet
@@ -1173,7 +1251,13 @@ class ConcreteRexMetric:
             if fp_denominator > 0:
                 fp = min(fp, fp_denominator)
             fpr = _rate(fp, fp_denominator)
+        # fgr: what fraction of what `pattern` itself matches isn't
+        # a real positive -- unlike fpr (relative to the universe),
+        # this is relative to `pattern`'s own cardinality. Uses the
+        # (clamped) fp computed above and the original, unclamped
+        # cardinality.
+        fgr = _range_ratio(fp, cardinality)
         return RexMetrics(
-            len=len(pattern), fp=fp, fn=fn, fpr=fpr, fnr=fnr,
+            len=len(pattern), fp=fp, fn=fn, fpr=fpr, fnr=fnr, fgr=fgr,
             universe=self.universe,
         )

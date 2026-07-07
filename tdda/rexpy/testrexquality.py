@@ -2039,6 +2039,79 @@ class TestConcreteRexMetricPostcodesViaXerpy(ReferenceTestCase):
         self.assertEqual(score.fnr, 0.0)
 
 
+class TestConcreteRexMetricValidatorModeFprDerivation(ReferenceTestCase):
+    # Checks that validator mode's fpr (derived from the sampled fgr,
+    # extrapolated via count_strings's cardinality -- see
+    # ConcreteRexMetric.evaluate) actually approximates the true,
+    # exhaustive-enumeration fpr, rather than just trusting the
+    # formula by construction.
+    #
+    # Deliberately simple, alternation-free patterns, both fixed
+    # length 8, over a 17-character alphabet (hex digits plus 'g'):
+    #   validator: ^[0-9a-f]{8}$        cardinality 16**8
+    #   candidate: ^[0-9a-f]{7}[0-9a-g]$  cardinality 16**7 * 17
+    # The candidate's last position admits one extra, invalid
+    # character ('g') alongside the 16 valid hex digits, so the
+    # candidate's cardinality splits exactly (no overlap reasoning
+    # needed -- it's just a per-position character count):
+    #   valid completions:   16**7 * 16 (== validator's cardinality)
+    #   invalid completions: 16**7 * 1
+    # giving an exact true fgr of 1/17 and an exact true fpr of
+    # 16**7 / (universe - n_positives), independent of sampling.
+    #
+    # The validator's true cardinality (16**8 ~ 4.3 billion) is kept
+    # vastly larger than any feasible n_positives sample (a few tens
+    # of thousands here), matching the real, heavily-undersampled
+    # regime rexquality_stats.py actually runs in -- unlike a small,
+    # fully-covered validator, which would test an easier case that
+    # never occurs in practice.
+
+    ALPHABET = '0123456789abcdefg'
+    VALIDATOR = '^[0-9a-f]{8}$'
+    CANDIDATE = '^[0-9a-f]{7}[0-9a-g]$'
+
+    TRUE_FGR = 1 / 17  # 16**7 / (16**7 * 17), exactly
+    N = 20_000
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        q = ConcreteRexMetric(
+            cls.VALIDATOR, alphabet=cls.ALPHABET, n_positives=cls.N,
+            seed=1,
+        )
+        cls.score = q.evaluate(cls.CANDIDATE, n_candidates=cls.N)
+        universe = len(cls.ALPHABET) ** 8
+        true_fp = 16 ** 7
+        cls.true_fpr = true_fp / (universe - q.n_positives)
+
+    @tag
+    def test_fgr_matches_true_value(self):
+        # 6 sigma at n=20,000 (p=1/17) is ~0.01 -- generous enough
+        # not to be flaky, tight enough to catch a real formula bug.
+        self.assertAlmostEqual(self.score.fgr, self.TRUE_FGR, delta=0.01)
+
+    @tag
+    def test_fpr_matches_true_value(self):
+        # Propagated from the same sampling noise as fgr, scaled by
+        # roughly candidate_cardinality/universe (~0.65 here), so a
+        # tighter absolute tolerance than fgr's is still safe.
+        self.assertAlmostEqual(self.score.fpr, self.true_fpr, delta=0.01)
+
+    @tag
+    def test_fgr_and_fpr_are_plain_floats_not_countranges(self):
+        # Neither pattern involves alternation, so count_strings
+        # returns exact scalars throughout -- fpr/fgr should never
+        # collapse into CountRange machinery here.
+        q = ConcreteRexMetric(
+            self.VALIDATOR, alphabet=self.ALPHABET, n_positives=100,
+            seed=1,
+        )
+        score = q.evaluate(self.CANDIDATE, n_candidates=100)
+        self.assertIsInstance(score.fgr, float)
+        self.assertIsInstance(score.fpr, float)
+
+
 @unittest.skipUnless(
     full_postcode_data_available(),
     'full UK postcode dataset not available '
