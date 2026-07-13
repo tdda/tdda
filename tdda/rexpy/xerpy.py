@@ -8,10 +8,12 @@
 # MIT licensed like the rest of TDDA.
 
 
+import argparse
 import random
 import sys
 import time
 
+from tdda.man.utils import print_help
 from tdda.rexpy.rexutils import Repeat, range_weight, repeat_cardinality
 
 
@@ -755,20 +757,44 @@ def fixed(c):
     return f
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('USAGE: python xerpy.py REGEX [n]', file=sys.stderr)
-        sys.exit(1)
-    rex = sys.argv[1]
-    if len(sys.argv) > 2:
-        n = int(sys.argv[2])
-    else:
-        n = 1
+def parse_args(args):
+    parser = argparse.ArgumentParser(prog='xerpy', add_help=False)
+    parser.add_argument('-h', '-?', '--help', dest='help',
+                         action='store_true')
+    parser.add_argument('rex', nargs='?', help='regular expression to '
+                                                'generate strings matching')
+    parser.add_argument('n', nargs='?', type=int, default=1,
+                         help='number of strings to generate (default: 1)')
+    parser.add_argument('seed', nargs='?', type=int, default=None,
+                         help='random seed to use (default: current time)')
+    weighting = parser.add_mutually_exclusive_group()
+    weighting.add_argument('-w', '--weighted', action='store_true',
+                            help='choose alternation branches weighted '
+                                 'by their estimated cardinality')
+    weighting.add_argument('-e', '--even', action='store_true',
+                            help='choose alternation branches uniformly '
+                                 '(default)')
+    parser.add_argument('-s', '--seed', dest='show_seed',
+                         action='store_true',
+                         help='print the random seed used before the '
+                              'generated strings')
+    return parser.parse_args(args)
 
-    t = int(time.time())
-    random.seed(t)
-    print('Seed: %s\n' % t)
-    x = Xerpy(rex)
-    for i in range(n):
+
+def main():
+    params = parse_args(sys.argv[1:])
+    if params.help or not params.rex:
+        print_help('xerpy', sys.stdout)
+        sys.exit(0 if params.help else 1)
+    seed = params.seed if params.seed is not None else int(time.time())
+    random.seed(seed)
+    if params.show_seed:
+        print('Seed: %s\n' % seed)
+    x = Xerpy(params.rex, weighted=params.weighted)
+    for i in range(params.n):
         print(x.generate())
+
+
+if __name__ == '__main__':
+    main()
 

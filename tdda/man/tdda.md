@@ -38,6 +38,6 @@
 
 ## SEE ALSO
 
-`rexpy(1)`, `tdda-installman(1)`
+`rexpy(1)`, `xerpy(1)`, `tdda-installman(1)`
 
 [TDDA Book](https://book.tdda.info)

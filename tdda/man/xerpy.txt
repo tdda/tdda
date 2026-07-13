@@ -1,0 +1,132 @@
+NAME
+
+  [1mxerpy [22mâ generate example strings matching a regular expression
+
+SYNOPSIS
+
+  [1mxerpy [22m[[1m‐w [22m| [1m‐e[22m] [[1m‐s[22m] [4mREX[24m [[4mN[24m [[4mSEED[24m]]
+
+DESCRIPTION
+
+  [1mxerpy [22mgenerates random example strings that match a given (simple,
+  Unix‐style) regular expression. It is the inverse of [1mrexpy(1)[22m,
+  which infers regular expressions from example strings.
+
+  [4mREX[24m is the regular expression to generate strings for.
+
+  [4mN[24m is the number of strings to generate (default: 1).
+
+  [4mSEED[24m is the random seed to use (default: derived from the current
+  time).
+
+SUPPORTED REGULAR EXPRESSION SYNTAX
+
+  [1mxerpy [22munderstands a Unix‐style subset of regular expression syntax:
+  Character classes, e.g. [1m[a‐z0‐9][22m, including negation
+  ([1m[ˆ0‐9][22m) and POSIX classes ([1m[:digit:][22m, [1m[:alpha:][22m,
+  [1m[:upper:][22m, [1m[:lower:][22m, [1m[:punct:][22m, [1m[:xdigit:][22m, [1m[:space:][22m,
+  [1m[:blank:][22m, [1m[:graph:][22m, [1m[:cntrl:][22m).
+  Alternation, e.g. [1m(cat|dog|bat)[22m.
+  Quantifiers [1m*[22m, [1m+[22m, [1m? [22mand [1m{m,n}[22m.
+  [1m.[22m, matching any (printable) character.
+  Escapes [1m\d [22m(digits, same as [1m[0‐9][22m), [1m\w [22m(word characters,
+  similar to [1m[a‐zA‐Z0‐9_][22m), [1m\s [22m(whitespace), and [1m\t[22m, [1m\r[22m,
+  [1m\n[22m, [1m\f[22m, [1m\v[22m.
+  Unicode‐style property classes [1m\p{...}[22m/[1m\P{...} [22m(negated),
+  e.g. [1m\p{alpha}[22m, [1m\p{digit}[22m, [1m\p{upper}[22m, [1m\p{punct}[22m.
+  [1mˆ [22mat the start and [1m$ [22mat the end, as start/end anchors. These
+  are effectively always present whether written or not.
+  Alternations without parentheses are treated as if they had
+  parentheses, specifically [1mA|B [22mis treated as [1mˆ(A|B)$ [22m‐‐‐ not
+  [1m(ˆA|B$)[22m.
+
+OPTIONS
+
+  [1m‐w[22m, [1m‐‐weighted[0m
+    Choose among alternation branches (e.g. [1ma|b|ccc[22m) weighted by each
+    branch’s estimated cardinality, so that branches admitting more
+    possible strings are chosen more often.
+
+  [1m‐e[22m, [1m‐‐even[0m
+    Choose among alternation branches uniformly, regardless of each
+    branch’s cardinality. This is the default; it explores rare
+    branches (e.g. narrow literal alternatives) more than [1m‐w [22mwould.
+
+  [1m‐s[22m, [1m‐‐seed[0m
+    Print the random seed used, as [1mSeed: SEED[22m, before the generated
+    strings.
+
+EXAMPLES
+
+  1) [1mxerpy ’[A‐Z]{2}[0‐9]{3}’[0m
+
+  Generate one random string matching [1m[A‐Z]{2}[0‐9]{3}[22m.
+
+  2) [1mxerpy ’[A‐Z]{2}[0‐9]{3}’ 5[0m
+
+  Generate five such strings.
+
+  3) [1mxerpy ’[A‐Z]{2}[0‐9]{3}’ 5 42 ‐s[0m
+
+  Generate five such strings using seed [1m42[22m, printing the seed first.
+
+  4) [1mxerpy ’([0‐9]|[a‐z]{3})’ 10 ‐w[0m
+
+  Generate ten strings, favouring the [1m[a‐z]{3} [22mbranch over [1m[0‐9][0m
+  since it admits many more strings.
+
+SEE ALSO
+
+  [1mrexpy[0m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

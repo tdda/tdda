@@ -83,6 +83,7 @@ setup(
         'console_scripts': [
             'tdda = tdda.constraints.console:main',
             'rexpy = tdda.rexpy.rexpy:main',
+            'xerpy = tdda.rexpy.xerpy:main',
         ],
         'pytest11': [
             'tdda = tdda.referencetest.pytestconfig',

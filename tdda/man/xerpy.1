@@ -1,0 +1,98 @@
+.nh
+.TH "XERPY" 1 "May 2026" "3.0" "xerpy manual"
+.SH NAME
+\fBxerpy\fR — generate example strings matching a regular expression
+
+.SH SYNOPSIS
+\fBxerpy\fR [\fB-w\fR | \fB-e\fR] [\fB-s\fR] \fIREX\fP [\fIN\fP [\fISEED\fP]]
+
+.SH DESCRIPTION
+\fBxerpy\fR generates random example strings that match a given (simple,
+Unix-style) regular expression. It is the inverse of \fBrexpy(1)\fR,
+which infers regular expressions from example strings.
+
+.PP
+\fIREX\fP is the regular expression to generate strings for.
+
+.PP
+\fIN\fP is the number of strings to generate (default: 1).
+
+.PP
+\fISEED\fP is the random seed to use (default: derived from the current
+time).
+
+.SH SUPPORTED REGULAR EXPRESSION SYNTAX
+\fBxerpy\fR understands a Unix-style subset of regular expression syntax:
+.IP \(bu 2
+Character classes, e.g. \fB[a-z0-9]\fR, including negation
+(\fB[^0-9]\fR) and POSIX classes (\fB[:digit:]\fR, \fB[:alpha:]\fR,
+\fB[:upper:]\fR, \fB[:lower:]\fR, \fB[:punct:]\fR, \fB[:xdigit:]\fR, \fB[:space:]\fR,
+\fB[:blank:]\fR, \fB[:graph:]\fR, \fB[:cntrl:]\fR).
+.IP \(bu 2
+Alternation, e.g. \fB(cat|dog|bat)\fR\&.
+.IP \(bu 2
+Quantifiers \fB*\fR, \fB+\fR, \fB?\fR and \fB{m,n}\fR\&.
+.IP \(bu 2
+\fB\&.\fR, matching any (printable) character.
+.IP \(bu 2
+Escapes \fB\\d\fR (digits, same as \fB[0-9]\fR), \fB\\w\fR (word characters,
+similar to \fB[a-zA-Z0-9_]\fR), \fB\\s\fR (whitespace), and \fB\\t\fR, \fB\\r\fR,
+\fB\\n\fR, \fB\\f\fR, \fB\\v\fR\&.
+.IP \(bu 2
+Unicode-style property classes \fB\\p{...}\fR/\fB\\P{...}\fR (negated),
+e.g. \fB\\p{alpha}\fR, \fB\\p{digit}\fR, \fB\\p{upper}\fR, \fB\\p{punct}\fR\&.
+.IP \(bu 2
+\fB^\fR at the start and \fB$\fR at the end, as start/end anchors. These
+are effectively always present whether written or not.
+.IP \(bu 2
+Alternations without parentheses are treated as if they had
+parentheses, specifically \fBA|B\fR is treated as \fB^(A|B)$\fR --- not
+\fB(^A|B$)\fR\&.
+
+.SH OPTIONS
+\fB-w\fR, \fB--weighted\fR
+.br
+  Choose among alternation branches (e.g. \fBa|b|ccc\fR) weighted by each
+  branch's estimated cardinality, so that branches admitting more
+  possible strings are chosen more often.
+
+.PP
+\fB-e\fR, \fB--even\fR
+.br
+  Choose among alternation branches uniformly, regardless of each
+  branch's cardinality. This is the default; it explores rare
+  branches (e.g. narrow literal alternatives) more than \fB-w\fR would.
+
+.PP
+\fB-s\fR, \fB--seed\fR
+.br
+  Print the random seed used, as \fBSeed: SEED\fR, before the generated
+  strings.
+
+.SH EXAMPLES
+1) \fBxerpy '[A-Z]{2}[0-9]{3}'\fR
+
+.PP
+Generate one random string matching \fB[A-Z]{2}[0-9]{3}\fR\&.
+
+.PP
+2) \fBxerpy '[A-Z]{2}[0-9]{3}' 5\fR
+
+.PP
+Generate five such strings.
+
+.PP
+3) \fBxerpy '[A-Z]{2}[0-9]{3}' 5 42 -s\fR
+
+.PP
+Generate five such strings using seed \fB42\fR, printing the seed first.
+
+.PP
+4) \fBxerpy '([0-9]|[a-z]{3})' 10 -w\fR
+
+.PP
+Generate ten strings, favouring the \fB[a-z]{3}\fR branch over \fB[0-9]\fR
+since it admits many more strings.
+
+.SH SEE ALSO
+\fBrexpy(1)\fR

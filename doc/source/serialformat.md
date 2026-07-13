@@ -1178,7 +1178,7 @@ will generate a `tdda.serial` file with only those properties specified:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.2.01",
+    "writer": "tdda.serial-3.2.03",
     "tdda.serial": {
         "delimiter": "|",
         "quote_char": "'",
@@ -1226,7 +1226,7 @@ The result is:
 {
     "@context": "http://www.w3.org/ns/csvw",
     "dc:conformsTo": "data-package",
-    "dc:creator": "tdda.serial-3.2.01",
+    "dc:creator": "tdda.serial-3.2.03",
     "tables": [
         {
             "tableSchema": {
@@ -1419,7 +1419,7 @@ The result is:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.2.01",
+    "writer": "tdda.serial-3.2.03",
     "pandas.read_csv": {
         "sep": ";",
         "encoding": "latin-1",
@@ -1500,7 +1500,7 @@ The result is the following file:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.2.01",
+    "writer": "tdda.serial-3.2.03",
     "pandas.read_csv": {
         "sep": "|",
         "encoding": "UTF-8",
@@ -1560,7 +1560,7 @@ which produces:
 ```
 {
     "format": "http://tdda.info/ns/tdda.serial",
-    "writer": "tdda.serial-3.2.01",
+    "writer": "tdda.serial-3.2.03",
     "polars.read_csv": {
         "separator": "|",
         "quote_char": "\"",

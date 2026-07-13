@@ -23,9 +23,10 @@ DESCRIPTION
   [1mman tdda‐discover[0m
   [1mman tdda‐gentest[0m
 
-  The [1mrexpy [22mman page is accessed as:
+  The [1mrexpy [22mand [1mxerpy [22mman pages are accessed as:
 
   [1mman rexpy[0m
+  [1mman xerpy[0m
 
   By default, man pages are installed to [1m˜/.local/share/man/man1[22m.
   On MacOS, this directory may not be in the default man search path;
@@ -55,7 +56,6 @@ EXAMPLES
 SEE ALSO
 
   [1mtdda help[0m
-
 
 
 

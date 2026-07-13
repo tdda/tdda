@@ -25,9 +25,10 @@ For example:
 `man tdda-discover`  
 `man tdda-gentest`
 
-The `rexpy` man page is accessed as:
+The `rexpy` and `xerpy` man pages are accessed as:
 
-`man rexpy`
+`man rexpy`  
+`man xerpy`
 
 By default, man pages are installed to `~/.local/share/man/man1`.
 On MacOS, this directory may not be in the default man search path;

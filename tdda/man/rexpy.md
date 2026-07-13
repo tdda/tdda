@@ -91,4 +91,4 @@ standard output.
 
 ## SEE ALSO
 
-`tdda(1)`, `tdda-discover(1)`
+`tdda(1)`, `tdda-discover(1)`, `xerpy(1)`
