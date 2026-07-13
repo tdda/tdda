@@ -1,5 +1,5 @@
-DATE    = May 2026
-VERSION = 3.0
+DATE    = July 2026
+VERSION = 3.3
 
 TARGETS = tdda.txt \
           tdda-discover.txt \
